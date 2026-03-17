@@ -18,8 +18,13 @@ import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 import { Types } from "../Types";
 import { VscSettings } from "../vscode/doc/VscSettings";
+import * as fs from "fs";
+import * as path from "path";
+import * as crypto from "crypto";
 
 export class ProfilesCache {
+    private profileInfo: imperative.ProfileInfo;
+
     public profilesForValidation: Validation.IValidationProfile[] = [];
     public profilesValidationSetting: Validation.IValidationSetting[] = [];
     public allProfiles: imperative.IProfileLoaded[] = [];
@@ -39,7 +44,7 @@ export class ProfilesCache {
         this.cwd = cwd != null ? FileManagement.getFullPath(cwd) : undefined;
     }
 
-    public static requireKeyring(this: void): NodeModule {
+    public static requireKeyring(this: void): NodeJS.Module {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-var-requires
         return require("@zowe/secrets-for-zowe-sdk").keyring;
     }
@@ -74,19 +79,63 @@ export class ProfilesCache {
      *
      * @returns {imperative.ICommandProfileTypeConfiguration[]}
      */
-    public getConfigArray(): imperative.ICommandProfileTypeConfiguration[] {
+    public static getConfigArray(): imperative.ICommandProfileTypeConfiguration[] {
         return ProfilesCache.sessionProfileTypeConfigurations;
     }
 
+    /**
+     * Consider using the static ProfilesCache.getConfigArray() instead as `sessionProfileTypeConfigurations` (return value) is a static property.
+     * @returns {imperative.ICommandProfileTypeConfiguration[]}
+     */
+    public getConfigArray(): imperative.ICommandProfileTypeConfiguration[] {
+        return ProfilesCache.getConfigArray();
+    }
+
+    /**
+     * Get the credential manager options from imperative.json
+     * @returns Record<string, any> | undefined the credential manager options, or undefined if not specified
+     */
+    public static getCredentialManagerOptions(): Record<string, any> | undefined {
+        try {
+            const settingsFilePath = path.join(FileManagement.getZoweDir(), "settings", "imperative.json");
+            if (!fs.existsSync(settingsFilePath)) {
+                return undefined;
+            }
+            const settingsFile = fs.readFileSync(settingsFilePath, "utf-8");
+            const imperativeConfig = JSON.parse(settingsFile);
+            const credentialManagerOptions = imperativeConfig?.credentialManagerOptions;
+            if (credentialManagerOptions && typeof credentialManagerOptions === "object") {
+                return credentialManagerOptions as Record<string, any>;
+            }
+            return undefined;
+        } catch (err) {
+            // Log the error but don't throw - credential manager options are optional
+            imperative.Logger.getAppLogger().warn(
+                `Failed to read credential manager options from imperative.json: ${err instanceof Error ? err.message : String(err)}`
+            );
+            return undefined;
+        }
+    }
+
     public async getProfileInfo(_envTheia = false): Promise<imperative.ProfileInfo> {
-        const mProfileInfo = new imperative.ProfileInfo("zowe", {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            overrideWithEnv: this.overrideWithEnv,
-            credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
-        });
-        await mProfileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: this.cwd ?? undefined });
+        if (this.profileInfo == null) {
+            // Get credential manager options from imperative.json if available
+            const credMgrOptions = ProfilesCache.getCredentialManagerOptions();
+            const defaultCredentialManager = imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring);
+
+            // Apply options to the credential manager if they exist
+            if (credMgrOptions && defaultCredentialManager) {
+                defaultCredentialManager.options = credMgrOptions;
+            }
+
+            this.profileInfo = new imperative.ProfileInfo("zowe", {
+                overrideWithEnv: this.overrideWithEnv,
+                credMgrOverride: defaultCredentialManager,
+            });
+        }
+        await this.profileInfo.readProfilesFromDisk({ homeDir: FileManagement.getZoweDir(), projectDir: this.cwd });
         this.checkForEnvVarAndUpdate();
-        return mProfileInfo;
+        return this.profileInfo;
     }
 
     /**
@@ -94,16 +143,20 @@ export class ProfilesCache {
      *
      * @param {string} name Name of Profile
      * @param {string} type Type of Profile, optional
+     * @param {boolean} optional Whether or not to throw an error if profile is not found
      *
+     * @throws {Error} Throws an error if profile is not found (unless optional is true)
      * @returns {IProfileLoaded}
      */
-    public loadNamedProfile(name: string, type?: string): imperative.IProfileLoaded {
+    public loadNamedProfile(name: string, type?: string, optional = false): imperative.IProfileLoaded {
         for (const profile of this.allProfiles) {
             if (profile.name === name && (!type || profile.type === type)) {
                 return profile;
             }
         }
-        throw new Error(`Zowe Explorer Profiles Cache error: Could not find profile named: ${name}.`);
+        if (!optional) {
+            throw new Error(`Zowe Explorer Profiles Cache error: Could not find profile named: ${name}.`);
+        }
     }
 
     /**
@@ -125,21 +178,17 @@ export class ProfilesCache {
         }
     }
 
-    public async updateCachedProfile(
+    public updateCachedProfile(
         profileLoaded: imperative.IProfileLoaded,
         profileNode?: Types.IZoweNodeType,
-        zeRegister?: Types.IApiRegisterClient
-    ): Promise<void> {
-        if ((await this.getProfileInfo()).getTeamConfig().properties.autoStore) {
-            await this.refresh(zeRegister);
-        } else {
-            // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
-            const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
-            this.allProfiles[profIndex].profile = profileLoaded.profile;
-            const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
-            if (defaultProf != null && defaultProf.name === profileLoaded.name) {
-                this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
-            }
+        _zeRegister?: Types.IApiRegisterClient
+    ): void {
+        // Note: When autoStore is disabled, nested profiles within this service profile may not have their credentials updated.
+        const profIndex = this.allProfiles.findIndex((profile) => profile.type === profileLoaded.type && profile.name === profileLoaded.name);
+        this.allProfiles[profIndex].profile = profileLoaded.profile;
+        const defaultProf = this.defaultProfileByType.get(profileLoaded.type);
+        if (defaultProf != null && defaultProf.name === profileLoaded.name) {
+            this.defaultProfileByType.set(profileLoaded.type, profileLoaded);
         }
         profileNode?.setProfileToChoice(profileLoaded);
     }
@@ -225,10 +274,38 @@ export class ProfilesCache {
             this.profilesByType.delete(oldType);
             this.defaultProfileByType.delete(oldType);
         }
-        // check for proper merging of apiml tokens
-        this.checkMergingConfigAllProfiles();
         this.checkForEnvVarAndUpdate();
         this.profilesForValidation = [];
+
+        imperative.Censor.setCensoredOptions({
+            config: mProfileInfo.getTeamConfig(),
+            profiles: [...this.getCoreProfileTypes(), ...ProfilesCache.getConfigArray()],
+        });
+    }
+
+    /**
+     * Used to check validity of a profile's certfile used for authentication
+     *
+     * @param {string} certFile Path to certFile from profile
+     *
+     * @returns {boolean} True if certFile is valid and false otherwise
+     */
+    public isCertFileValid(certFile: string): boolean {
+        try {
+            const certPem = fs.readFileSync(certFile, "utf8");
+            const certificate = new crypto.X509Certificate(certPem);
+
+            // Check validity dates
+            const now = new Date();
+            if (now >= new Date(certificate.validFrom) && now <= new Date(certificate.validTo)) {
+                return true;
+            } else {
+                this.log.error(`Certificate file ${certFile} is outside its validity period.`);
+            }
+        } catch (e) {
+            this.log.error(`Certificate file validation failed for ${certFile}: ${(e as Error).message}`);
+        }
+        return false;
     }
 
     public validateAndParseUrl(newUrl: string): Validation.IValidationUrl {
@@ -291,8 +368,7 @@ export class ProfilesCache {
         if (profilesForType && profilesForType.length > 0) {
             for (const prof of profilesForType) {
                 const profAttr = this.getMergedAttrs(mProfileInfo, prof);
-                let profile = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
-                profile = this.checkMergingConfigSingleProfile(profile);
+                const profile = this.getProfileLoaded(prof.profName, prof.profType, profAttr);
                 profByType.push(profile);
             }
         }
@@ -427,24 +503,6 @@ export class ProfilesCache {
 
     public getCoreProfileTypes(): imperative.IProfileTypeConfiguration[] {
         return [ZosmfProfile, ZosTsoProfile, ZosUssProfile];
-    }
-
-    // used by refresh to check correct merging of allProfiles
-    protected checkMergingConfigAllProfiles(): void {
-        for (const profs of this.profilesByType.values()) {
-            profs.forEach((profile) => {
-                this.checkMergingConfigSingleProfile(profile);
-            });
-        }
-    }
-
-    // check correct merging of a single profile
-    protected checkMergingConfigSingleProfile(profile: imperative.IProfileLoaded): imperative.IProfileLoaded {
-        const baseProfile = this.defaultProfileByType.get("base");
-        if (this.shouldRemoveTokenFromProfile(profile, baseProfile)) {
-            profile.profile.tokenType = profile.profile.tokenValue = undefined;
-        }
-        return profile;
     }
 
     protected getMergedAttrs(mProfileInfo: imperative.ProfileInfo, profAttrs: imperative.IProfAttrs): imperative.IProfile {

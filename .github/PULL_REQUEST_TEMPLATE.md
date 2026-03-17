@@ -25,6 +25,8 @@ Changelog:
 
 <!-- Put an `x` in all boxes that apply. You can also fill these out after creating the PR. If you're unsure about any of them, don't hesitate to ask. We're here to help! This checklist will be used as reference for both the contributor and the reviewer. -->
 
+**All checks must pass before this pull request is reviewed by the Zowe Explorer squad.**
+
 **General**
 
 - [ ] I have read the [CONTRIBUTOR GUIDANCE](https://github.com/zowe/zowe-explorer-vscode/wiki/Best-Practices:-Contributor-Guidance) wiki
@@ -33,6 +35,7 @@ Changelog:
 - [ ] The pre-publish command has been executed:
   - **v2 and below:** `yarn workspace vscode-extension-for-zowe vscode:prepublish`
   - **v3:** `pnpm --filter vscode-extension-for-zowe vscode:prepublish`
+- [ ] New ZE APIs are tested with extender types that haven't adopted yet to determine breaking changes. Can use Zowe zFTP marketplace extension.
 
 **Code coverage**
 
@@ -42,6 +45,7 @@ Changelog:
 
 **Deployment**
 
+- [ ] I have tested new functionality with the FTP extension and profile verifying no extender profile type breakages introduced
 - [ ] I have added developer documentation (if applicable)
 - [ ] Documentation should be added to Zowe Docs
   - If you're an outside contributor, please post in the [#zowe-doc Slack channel](https://openmainframeproject.slack.com/archives/CC961JYMQ) to coordinate documentation.

@@ -14,7 +14,7 @@ import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { createIJobFile, createIJobObject, createJobNode, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";
-import { imperative, IZoweJobTreeNode, ProfilesCache, Gui, Sorting } from "@zowe/zowe-explorer-api";
+import { imperative, IZoweJobTreeNode, ProfilesCache, Gui, Sorting, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 import {
     createIProfile,
@@ -967,6 +967,14 @@ describe("ZoweJobNode unit tests - Function setEncoding", () => {
 });
 
 describe("ZosJobsProvider - Function searchPrompt", () => {
+    beforeEach(() => {
+        jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+            getCommonApi: () => ({
+                getSession: () => createISession(),
+            }),
+        } as any);
+    });
+
     it("should exit if searchCriteria is undefined", async () => {
         const globalMocks = await createGlobalMocks();
         jest.spyOn(globalMocks.testJobsProvider, "applyRegularSessionSearchLabel").mockReturnValue(undefined);

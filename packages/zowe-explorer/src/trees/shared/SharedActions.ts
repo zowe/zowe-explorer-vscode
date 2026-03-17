@@ -264,6 +264,38 @@ export class SharedActions {
         }
     }
 
+    /**
+     * Updates tooltips for all session nodes in a tree provider.
+     * This ensures profile hover information stays in sync with the current config state.
+     * @param treeProvider The tree provider whose session nodes need tooltip updates
+     */
+    public static async updateSessionNodeTooltips(treeProvider: IZoweTree<IZoweTreeNode>): Promise<void> {
+        ZoweLogger.trace("SharedActions.updateSessionNodeTooltips called.");
+
+        const updatePromises = treeProvider.mSessionNodes.map(async (sessNode) => {
+            const isFavoritesFolder = SharedContext.isFavoriteContext(sessNode);
+            if (isFavoritesFolder) {
+                return;
+            }
+
+            // Use getProfileName() instead of parsing label
+            const profileName = sessNode.getProfileName ? sessNode.getProfileName() : sessNode.label.toString().trim();
+            const profile = Profiles.getInstance().allProfiles.find((p) => p.name === profileName);
+
+            if (profile) {
+                try {
+                    AuthUtils.updateNodeToolTip(sessNode, profile);
+                    await Profiles.getInstance().updateProfileHoverInfo(sessNode);
+                    (treeProvider as unknown as ZoweTreeProvider<IZoweTreeNode>).nodeDataChanged(sessNode);
+                } catch (error) {
+                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                    ZoweLogger.warn(`Failed to update tooltip for session node ${profileName}: ${error.message || error}`);
+                }
+            }
+        });
+        await Promise.all(updatePromises);
+    }
+
     public static async refreshProvider(treeProvider: IZoweTree<IZoweTreeNode>, refreshProfiles?: boolean): Promise<void> {
         if (refreshProfiles) {
             await SharedActions.refreshProfiles();
@@ -286,6 +318,10 @@ export class SharedActions {
         for (const profType of ZoweExplorerApiRegister.getInstance().registeredApiTypes()) {
             await TreeViewUtils.addDefaultSession(treeProvider, profType);
         }
+
+        // Update tooltips for all session nodes after refresh
+        await SharedActions.updateSessionNodeTooltips(treeProvider);
+
         treeProvider.refresh();
     }
 

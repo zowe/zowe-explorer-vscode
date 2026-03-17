@@ -25,6 +25,8 @@ import {
     ZoweVsCodeExtension,
     ErrorCorrelator,
     ILocalStorageAccess,
+    TableProviderRegistry,
+    TableActionProvider,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
@@ -232,10 +234,33 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
         });
         // profileType is used to load a default extender profile if no other profiles are populating the trees
         await this.datasetProvider?.addSession({ profileType });
-        await this.datasetProvider?.refreshFavorites();
+        await this.datasetProvider?.refreshFavorites(profileType);
         await this.ussFileProvider?.addSession({ profileType });
-        await this.ussFileProvider?.refreshFavorites();
+        await this.ussFileProvider?.refreshFavorites(profileType);
         await this.jobsProvider?.addSession({ profileType });
-        await this.jobsProvider?.refreshFavorites();
+        await this.jobsProvider?.refreshFavorites(profileType);
+
+        // Release deferred promise for extender profile type
+        await ProfilesUtils.resolveTypePromise(profileType, this.getProfilesCache());
+    }
+
+    /**
+     * Register a table action provider for a specific table
+     * @param tableId The table identifier to register for
+     * @param provider The action provider implementation
+     */
+    public registerTableActionProvider(tableId: string, provider: TableActionProvider): vscode.Disposable {
+        this.getTableProviderRegistry().registerProvider(tableId, provider);
+        return new vscode.Disposable(() => this.getTableProviderRegistry().unregisterProvider(tableId, provider));
+    }
+
+    /**
+     * Get the table provider registry instance for advanced usage.
+     * Most extenders should use registerTableActionProvider instead.
+     *
+     * @returns The singleton table provider registry instance
+     */
+    public getTableProviderRegistry(): TableProviderRegistry {
+        return TableProviderRegistry.getInstance();
     }
 }

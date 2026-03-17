@@ -31,6 +31,7 @@ import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProv
 jest.mock("fs");
 jest.mock("vscode");
 jest.mock("../../../../src/tools/ZoweLogger");
+jest.mock("../../../../src/tools/ZoweLocalStorage");
 
 describe("Dataset Search Unit Tests - function search", () => {
     beforeEach(() => {
@@ -198,6 +199,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 mainframeSearch: false,
                 continueSearch: expect.any(Function),
                 abortSearch: expect.any(Function),
+                searchExactName: true,
             });
             expect(continueSearchPromptSpy).toHaveBeenCalledTimes(1);
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
@@ -227,6 +229,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 mainframeSearch: false,
                 continueSearch: expect.any(Function),
                 abortSearch: expect.any(Function),
+                searchExactName: true,
             });
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
             expect(loggerErrorSpy).not.toHaveBeenCalled();
@@ -264,6 +267,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 continueSearch: expect.any(Function),
                 abortSearch: expect.any(Function),
                 caseSensitive: true,
+                searchExactName: true,
             });
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
             expect(loggerErrorSpy).not.toHaveBeenCalled();
@@ -301,6 +305,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 continueSearch: expect.any(Function),
                 abortSearch: expect.any(Function),
                 regex: true,
+                searchExactName: true,
             });
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
             expect(loggerErrorSpy).not.toHaveBeenCalled();
@@ -332,6 +337,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 mainframeSearch: false,
                 continueSearch: expect.any(Function),
                 abortSearch: expect.any(Function),
+                searchExactName: true,
             });
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
             expect(loggerErrorSpy).toHaveBeenCalledWith("test error message");
@@ -363,6 +369,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 mainframeSearch: false,
                 continueSearch: expect.any(Function),
                 abortSearch: expect.any(Function),
+                searchExactName: true,
             });
             expect(authErrorHandlingSpy).not.toHaveBeenCalled();
             expect(loggerErrorSpy).toHaveBeenCalledWith("test error message");
@@ -395,6 +402,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 mainframeSearch: false,
                 continueSearch: expect.any(Function),
                 abortSearch: expect.any(Function),
+                searchExactName: true,
             });
             expect(authErrorHandlingSpy).toHaveBeenCalledWith(error);
             expect(loggerErrorSpy).not.toHaveBeenCalled();

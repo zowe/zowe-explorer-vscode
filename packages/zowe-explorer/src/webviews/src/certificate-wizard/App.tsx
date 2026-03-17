@@ -41,70 +41,68 @@ export function App() {
   }, [localizationState]);
 
   return (
-    <div>
+    <div style={{ minWidth: "25em" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1>{l10n.t("Log in to Authentication Service")}</h1>
       </div>
       <VSCodeDivider />
       <div style={{ marginTop: "1em" }}>
-        <div style={{ maxWidth: "fit-content" }}>
-          <VSCodeDataGrid style={{ marginTop: "1em" }} gridTemplateColumns="15vw 45vw 30vw">
-            <h3>{l10n.t("Select a certificate and certificate key in PEM format:")}</h3>
-            <VSCodeDataGridRow rowType="header">
-              <VSCodeDataGridCell cellType="columnheader" gridColumn="1"></VSCodeDataGridCell>
-              <VSCodeDataGridCell cellType="columnheader" gridColumn="2">
-                {l10n.t("Value")}
-              </VSCodeDataGridCell>
-              <VSCodeDataGridCell cellType="columnheader" gridColumn="3">
-                {l10n.t("Actions")}
-              </VSCodeDataGridCell>
-            </VSCodeDataGridRow>
-            <VSCodeDataGridRow>
-              <VSCodeDataGridCell gridColumn="1">
-                <strong>{l10n.t("Certificate File")}</strong>
-              </VSCodeDataGridCell>
-              <VSCodeDataGridCell gridColumn="2">
-                <i>{certPath}</i>
-              </VSCodeDataGridCell>
-              <VSCodeDataGridCell gridColumn="3">
-                <VSCodeButton appearance="secondary" onClick={() => vscodeApi.postMessage({ command: "promptCert" })}>
-                  {l10n.t("Browse")}
-                </VSCodeButton>
-              </VSCodeDataGridCell>
-            </VSCodeDataGridRow>
-            <VSCodeDataGridRow>
-              <VSCodeDataGridCell gridColumn="1">
-                <strong>{l10n.t("Certificate Key File")}</strong>
-              </VSCodeDataGridCell>
-              <VSCodeDataGridCell gridColumn="2">
-                <i>{certKeyPath}</i>
-              </VSCodeDataGridCell>
-              <VSCodeDataGridCell gridColumn="3">
-                <VSCodeButton appearance="secondary" onClick={() => vscodeApi.postMessage({ command: "promptCertKey" })}>
-                  {l10n.t("Browse")}
-                </VSCodeButton>
-              </VSCodeDataGridCell>
-            </VSCodeDataGridRow>
-          </VSCodeDataGrid>
-          <div style={{ display: "flex" }}>
-            <VSCodeButton
-              style={{ marginTop: "1em" }}
-              onClick={() => {
-                vscodeApi.postMessage({ command: "submitted" });
-              }}
-            >
-              {l10n.t("Submit")}
-            </VSCodeButton>
-            <VSCodeButton
-              appearance="secondary"
-              style={{ marginTop: "1em", marginLeft: "1em" }}
-              onClick={() => {
-                vscodeApi.postMessage({ command: "close" });
-              }}
-            >
-              {l10n.t("Cancel")}
-            </VSCodeButton>
-          </div>
+        <VSCodeDataGrid style={{ marginTop: "1em" }} gridTemplateColumns="9em 1fr auto">
+          <h3>{l10n.t("Select a certificate and certificate key in PEM format:")}</h3>
+          <VSCodeDataGridRow rowType="header">
+            <VSCodeDataGridCell cellType="columnheader" gridColumn="1"></VSCodeDataGridCell>
+            <VSCodeDataGridCell cellType="columnheader" gridColumn="2">
+              {l10n.t("Value")}
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell cellType="columnheader" gridColumn="3">
+              {l10n.t("Actions")}
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+          <VSCodeDataGridRow>
+            <VSCodeDataGridCell gridColumn="1">
+              <strong>{l10n.t("Certificate File")}</strong>
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell gridColumn="2">
+              <i>{certPath}</i>
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell gridColumn="3">
+              <VSCodeButton appearance="secondary" onClick={() => vscodeApi.postMessage({ command: "promptCert" })}>
+                {l10n.t("Browse")}
+              </VSCodeButton>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+          <VSCodeDataGridRow>
+            <VSCodeDataGridCell gridColumn="1">
+              <strong>{l10n.t("Certificate Key File")}</strong>
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell gridColumn="2">
+              <i>{certKeyPath}</i>
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell gridColumn="3">
+              <VSCodeButton appearance="secondary" onClick={() => vscodeApi.postMessage({ command: "promptCertKey" })}>
+                {l10n.t("Browse")}
+              </VSCodeButton>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+        </VSCodeDataGrid>
+        <div style={{ display: "flex" }}>
+          <VSCodeButton
+            style={{ marginTop: "1em" }}
+            onClick={() => {
+              vscodeApi.postMessage({ command: "submitted" });
+            }}
+          >
+            {l10n.t("Submit")}
+          </VSCodeButton>
+          <VSCodeButton
+            appearance="secondary"
+            style={{ marginTop: "1em", marginLeft: "1em" }}
+            onClick={() => {
+              vscodeApi.postMessage({ command: "close" });
+            }}
+          >
+            {l10n.t("Cancel")}
+          </VSCodeButton>
         </div>
       </div>
     </div>

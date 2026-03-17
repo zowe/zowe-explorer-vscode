@@ -22,6 +22,7 @@ import { SharedInit } from "../shared/SharedInit";
 import { SharedUtils } from "../shared/SharedUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import { DatasetSearch } from "./DatasetSearch";
+import { DatasetTableView } from "./DatasetTableView";
 
 export class DatasetInit {
     public static async createDatasetTree(log: imperative.Logger): Promise<DatasetTree> {
@@ -86,7 +87,9 @@ export class DatasetInit {
             vscode.commands.registerCommand("zowe.ds.createMember", async (node) => DatasetActions.createMember(node, datasetProvider))
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.deleteDataset", async (node?) => DatasetActions.deleteDatasetPrompt(datasetProvider, node))
+            vscode.commands.registerCommand("zowe.ds.deleteDataset", async (node, nodeList) =>
+                DatasetActions.deleteDatasetPrompt(datasetProvider, node, nodeList)
+            )
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.allocateLike", async (node) => DatasetActions.allocateLike(datasetProvider, node))
@@ -95,7 +98,14 @@ export class DatasetInit {
             vscode.commands.registerCommand("zowe.ds.uploadDialog", async (node) => DatasetActions.uploadDialog(node, datasetProvider))
         );
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.ds.deleteMember", async (node?) => DatasetActions.deleteDatasetPrompt(datasetProvider, node))
+            vscode.commands.registerCommand("zowe.ds.uploadDialogWithEncoding", async (node) =>
+                DatasetActions.uploadDialogWithEncoding(node, datasetProvider)
+            )
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.deleteMember", async (node, nodeList) =>
+                DatasetActions.deleteDatasetPrompt(datasetProvider, node, nodeList)
+            )
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.editDataSet", async (node, nodeList) => {
@@ -118,6 +128,7 @@ export class DatasetInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.submitJcl", async (file) => DatasetActions.submitJcl(datasetProvider, file))
         );
+        context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.zoom", async () => DatasetActions.zoom()));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.ds.submitMember", async (node) => DatasetActions.submitMember(node)));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.showAttributes", async (node, nodeList) => {
@@ -202,6 +213,44 @@ export class DatasetInit {
             vscode.commands.registerCommand("zowe.ds.filteredDataSetsSearchFor", async (node: IZoweDatasetTreeNode) =>
                 DatasetSearch.search(context, node)
             )
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.tableView", async (node, nodeList) =>
+                DatasetTableView.getInstance().handleCommand(context, node, nodeList)
+            )
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.listDataSets", async () => DatasetTableView.getInstance().handlePatternSearch(context))
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.setDataSetFilter", async (session, datasetPattern) => {
+                if (session && datasetPattern) {
+                    await DatasetActions.filterDatasetTree(datasetProvider, session, datasetPattern);
+                } else {
+                    await DatasetActions.filterDatasetTreePrompt(datasetProvider);
+                }
+            })
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.downloadAllMembers", async (node: IZoweDatasetTreeNode): Promise<void> => {
+                await DatasetActions.downloadAllMembers(node);
+            })
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.downloadMember", async (node: IZoweDatasetTreeNode): Promise<void> => {
+                await DatasetActions.downloadMember(node);
+            })
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.ds.downloadDataSet", async (node: IZoweDatasetTreeNode): Promise<void> => {
+                await DatasetActions.downloadDataSet(node);
+            })
         );
 
         SharedInit.initSubscribers(context, datasetProvider);

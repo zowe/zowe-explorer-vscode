@@ -102,6 +102,18 @@ describe("Test src/uss/extension", () => {
                 mock: [{ spy: jest.spyOn(USSActions, "uploadDialog"), arg: [test.value, ussFileProvider, true] }],
             },
             {
+                name: "zowe.uss.uploadDialogWithEncoding",
+                mock: [{ spy: jest.spyOn(USSActions, "uploadDialogWithEncoding"), arg: [test.value, ussFileProvider] }],
+            },
+            {
+                name: "zowe.uss.downloadFile",
+                mock: [{ spy: jest.spyOn(USSActions, "downloadUssFile"), arg: [test.value] }],
+            },
+            {
+                name: "zowe.uss.downloadDirectory",
+                mock: [{ spy: jest.spyOn(USSActions, "downloadUssDirectory"), arg: [test.value] }],
+            },
+            {
                 name: "zowe.uss.copyPath",
                 mock: [{ spy: jest.spyOn(USSActions, "copyPath"), arg: [test.value] }],
             },
@@ -120,6 +132,16 @@ describe("Test src/uss/extension", () => {
             {
                 name: "zowe.uss.editAttributes",
                 mock: [{ spy: jest.spyOn(USSActions, "editAttributes"), arg: [test.context, ussFileProvider, test.value] }],
+            },
+            {
+                name: "zowe.uss.setUssPath",
+                parm: [undefined, undefined],
+                mock: [{ spy: jest.spyOn(USSActions, "filterUssTreePrompt"), arg: [ussFileProvider] }],
+            },
+            {
+                name: "zowe.uss.setUssPath",
+                parm: ["testSession", "/u/myuser"],
+                mock: [{ spy: jest.spyOn(USSActions, "filterUssTree"), arg: [ussFileProvider, "testSession", "/u/myuser"] }],
             },
             {
                 name: "onDidChangeConfiguration",

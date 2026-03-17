@@ -164,7 +164,6 @@ export abstract class ZoweCommandProvider {
                 return;
             }
             const profile = this.profileInstance.allProfiles.find((tempProfile) => tempProfile.name === sesName);
-            await this.profileInstance.checkCurrentProfile(profile);
             if (this.profileInstance.validProfile === Validation.ValidationType.INVALID) {
                 Gui.errorMessage(vscode.l10n.t("Profile is invalid"));
                 return;
@@ -264,6 +263,9 @@ export abstract class ZoweCommandProvider {
     public async checkCurrentProfile(node: IZoweTreeNode): Promise<Validation.IValidationProfile> {
         ZoweLogger.trace("ZoweCommandProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
+        if (!SettingsConfig.getDirectValue(Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION)) {
+            return { status: "unverified", name: profile.name };
+        }
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile, node);
         if (profileStatus.status === "inactive") {
             if (

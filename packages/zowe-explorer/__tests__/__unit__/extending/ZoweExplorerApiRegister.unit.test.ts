@@ -146,6 +146,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
                         return profilesForValidation;
                     }),
                     validateProfiles: jest.fn(),
+                    getProfiles: jest.fn(() => []),
                 };
             }),
         });
@@ -287,5 +288,10 @@ describe("ZoweExplorerApiRegister unit testing", () => {
     it("provides access to the onJobChanged event", () => {
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.Jobs, JobFSProvider.instance.onDidChangeFile);
         expect(ZoweExplorerApiRegister.onResourceChanged(ZoweScheme.Jobs)).toBe(JobFSProvider.instance.onDidChangeFile);
+    });
+
+    it("allows access to the DataSetAttributesProvider instance", () => {
+        const ZEApiRegister = ZoweExplorerApiRegister.getInstance();
+        expect(ZEApiRegister.getDataSetAttrProvider()).toBeDefined();
     });
 });

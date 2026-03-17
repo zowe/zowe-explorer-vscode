@@ -11,6 +11,13 @@
 
 import { Progress, ProgressOptions, QuickPick, QuickPickItem } from "vscode";
 
+export class MarkdownString {
+    public value: string;
+    public constructor(value?: string) {
+        this.value = value || "";
+    }
+}
+
 /**
  * A location in the editor at which progress information can be shown. It depends on the
  * location how progress is visually represented.
@@ -596,6 +603,22 @@ export namespace window {
             };
         }
     ): Disposable {
+        return new Disposable();
+    }
+
+    /**
+     * Registers a webview panel serializer.
+     *
+     * Extensions that support reviving should have an `"onWebviewPanel:viewType"` activation event and
+     * make sure that `registerWebviewPanelSerializer` is called during activation.
+     *
+     * Only a single serializer may be registered at a time for a given `viewType`.
+     *
+     * @param viewType Type of the webview panel that can be serialized.
+     * @param serializer Webview serializer.
+     * @returns A {@link Disposable disposable} that unregisters the serializer.
+     */
+    export function registerWebviewPanelSerializer(viewType: string, serializer: any): Disposable {
         return new Disposable();
     }
 
@@ -1454,6 +1477,10 @@ export namespace workspace {
         return true;
     }
 
+    export function openTextDocument(uri: Uri) {
+        return;
+    }
+
     /**
      * A workspace folder is one of potentially many roots opened by the editor. All workspace folders
      * are equal which means there is no notion of an active or master workspace folder.
@@ -1624,7 +1651,9 @@ export interface TextDocument {
 export class Uri {
     private static _regexp = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
     public static file(path: string): Uri {
-        return Uri.parse(path);
+        const uri = Uri.parse(path);
+        uri.fsPath = path;
+        return uri;
     }
     public static parse(value: string, _strict?: boolean): Uri {
         const match = Uri._regexp.exec(value);
@@ -1791,6 +1820,11 @@ export namespace env {
      * The application name of the editor, like 'VS Code'.
      */
     export const appName = "Visual Studio Code";
+
+    /**
+     * Represents the preferred user-language, like `de-CH`, `fr`, or `en-US`.
+     */
+    export let language = "en";
 
     /**
      * The system clipboard.

@@ -14,7 +14,16 @@ const defaultHeaders = { "Content-Type": "application/x-www-form-urlencoded" };
         method: "POST",
         body: `api_token=${poeditorToken}&id=${projectId}`,
         headers: defaultHeaders
-    }).then(r => r.json());
+    }).then(r => r.json()).catch(e => {
+        console.error(`Error downloading languages list: ${e.message}`);
+        console.error(`Response: ${JSON.stringify(e)}`);
+        process.exit(1);
+    });
+    if (listResponse.response?.status !== "success") {
+        console.error(`Error downloading languages list: ${listResponse.response?.code} - ${listResponse.response?.message}`);
+        console.error(`Response: ${JSON.stringify(listResponse.response)}`);
+        process.exit(1);
+    }
     for (const { code } of listResponse.result.languages.filter(lang => lang.percentage > 0)) {
         const exportResponse = await fetch("https://api.poeditor.com/v2/projects/export", {
             method: "POST",

@@ -130,6 +130,16 @@ export class JobInit {
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.startPolling", spoolFileTogglePoll(true)));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.jobs.stopPolling", spoolFileTogglePoll(false)));
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.jobs.startPollingActiveJobs", async (node: IZoweTreeNode) => {
+                await jobsProvider.pollActiveJobs(node as IZoweJobTreeNode);
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.jobs.stopPollingActiveJobs", async (node: IZoweTreeNode) => {
+                await jobsProvider.pollActiveJobs(node as IZoweJobTreeNode);
+            })
+        );
+        context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {
                 await jobsProvider.onDidChangeConfiguration(e);
             })

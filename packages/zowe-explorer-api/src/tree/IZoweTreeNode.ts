@@ -30,7 +30,11 @@ interface OtherEncoding {
     codepage: string;
 }
 
-export type ZosEncoding = TextEncoding | BinaryEncoding | OtherEncoding;
+interface AutoDetectEncoding {
+    kind: "auto-detect";
+}
+
+export type ZosEncoding = TextEncoding | BinaryEncoding | OtherEncoding | AutoDetectEncoding;
 
 export type EncodingMap = Record<string, ZosEncoding>;
 
@@ -185,6 +189,11 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * Use Dataset-specific tree node for children.
      */
     children?: IZoweDatasetTreeNode[];
+
+    /**
+     * Whether the node is currently being updated through a filter prompt
+     */
+    inFilterPrompt?: boolean;
 
     /**
      * Retrieves child nodes of this IZoweDatasetTreeNode

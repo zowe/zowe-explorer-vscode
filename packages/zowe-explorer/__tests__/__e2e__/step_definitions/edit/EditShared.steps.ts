@@ -11,6 +11,8 @@
 
 import { Then, When } from "@cucumber/cucumber";
 import { TreeItem } from "wdio-vscode-service";
+import { getDatasetExtension } from "../utils/datasetExtensions";
+import { ProfileNode } from "../../../__pageobjects__/ProfileNode";
 
 Then("the user should be able to save it successfully", async function () {
     await this.editorForFile.save();
@@ -24,12 +26,12 @@ Then("the user can right-click on the child node and add it as a favorite", asyn
     // Determine which action button to use to add the child node to favorites
     let addToFavsBtn;
     if (this.tree.toLowerCase() === "data sets") {
-        this.pds = await this.profileNode.findChildItem(process.env.ZE_TEST_PDS);
+        this.pds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
         const pdsMember: TreeItem = await this.pds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
         await pdsMember.elem.moveTo();
         addToFavsBtn = (await pdsMember.getActionButtons())[0];
     } else {
-        this.ussDir = await this.profileNode.findChildItem(process.env.ZE_TEST_USS_DIR);
+        this.ussDir = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_USS_DIR);
         const ussFile: TreeItem = await this.ussDir.findChildItem(process.env.ZE_TEST_USS_FILE);
         await expect(ussFile).toBeDefined();
         await ussFile.elem.moveTo();
@@ -38,29 +40,35 @@ Then("the user can right-click on the child node and add it as a favorite", asyn
     await addToFavsBtn.elem.click();
 });
 When("the user finds the child node in Favorites", async function () {
-    const favoritesNode = await this.treePane.findItem("Favorites");
-    await favoritesNode.expand();
-    await browser.waitUntil((): Promise<boolean> => favoritesNode.isExpanded());
-    this.profileNode = await favoritesNode.findChildItem(process.env.ZE_TEST_PROFILE_NAME);
-    await this.profileNode.expand();
+    this.profileNode = new ProfileNode(browser, this.treePane, process.env.ZE_TEST_PROFILE_NAME, true);
+    await (await this.profileNode.find()).expand();
+    await this.profileNode.waitUntilExpanded();
     if (this.tree.toLowerCase() === "data sets") {
         // PDS member
-        const pds: TreeItem = await this.profileNode.findChildItem(process.env.ZE_TEST_PDS);
-        await browser.waitUntil(async (): Promise<boolean> => pds.hasChildren());
-        this.pdsMember = await pds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
+        await this.pds.collapse();
+        await this.profileNode.waitUntilHasChildren();
+        this.pds = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
+        this.pdsMember = await this.pds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
+        await expect(this.pdsMember).toBeDefined();
     } else {
         // USS file
-        this.ussFile = await this.profileNode.findChildItem(process.env.ZE_TEST_USS_FILE);
+        await this.ussDir.collapse();
+        this.ussFile = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_USS_FILE);
+        await expect(this.ussFile).toBeDefined();
     }
 });
 Then("the user can select the favorite in the list and open it", async function () {
     this.editingFavorite = true;
     this.editorView = (await browser.getWorkbench()).getEditorView();
     if (this.tree.toLowerCase() === "data sets") {
+        const pdsName = process.env.ZE_TEST_PDS as string;
+        const pdsMemberName = process.env.ZE_TEST_PDS_MEMBER as string;
+        const pdsExtension = getDatasetExtension(pdsName);
+        const memberEditorTitle = `${pdsMemberName}${pdsExtension ?? ""}`;
         await expect(this.pdsMember).toBeDefined();
         await this.pdsMember.select();
-        await browser.waitUntil(async () => (await this.editorView.getTabByTitle(process.env.ZE_TEST_PDS_MEMBER)) !== undefined);
-        this.editorForFile = await this.editorView.openEditor(process.env.ZE_TEST_PDS_MEMBER);
+        await browser.waitUntil(async () => (await this.editorView.getTabByTitle(memberEditorTitle)) !== undefined);
+        this.editorForFile = await this.editorView.openEditor(memberEditorTitle);
     } else {
         await expect(this.ussFile).toBeDefined();
         await this.ussFile.select();

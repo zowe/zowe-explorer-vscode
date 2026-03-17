@@ -135,13 +135,23 @@ describe("Context helper tests", () => {
                 case DS_PDS_CONTEXT + Constants.FAV_SUFFIX:
                     expect(SharedContext.isFavoritePsDs(treeItem)).toBe(true);
                     expect(SharedContext.isFavoriteDs(treeItem)).toBe(false);
+                    expect(SharedContext.isDs(ctx)).toBe(false);
+                    expect(SharedContext.isDs(treeItem)).toBe(false);
                     break;
                 case DS_DS_CONTEXT + Constants.FAV_SUFFIX:
                     expect(SharedContext.isFavoritePsDs(treeItem)).toBe(true);
                     expect(SharedContext.isFavoriteDs(treeItem)).toBe(true);
+                    expect(SharedContext.isDs(ctx)).toBe(true);
+                    expect(SharedContext.isDs(treeItem)).toBe(true);
+                    break;
+                case DS_DS_CONTEXT:
+                    expect(SharedContext.isDs(ctx)).toBe(true);
+                    expect(SharedContext.isDs(treeItem)).toBe(true);
                     break;
                 default:
                     expect(SharedContext.isFavoritePsDs(treeItem)).toBe(false);
+                    expect(SharedContext.isDs(ctx)).toBe(false);
+                    expect(SharedContext.isDs(treeItem)).toBe(false);
             }
         }
     });
@@ -152,9 +162,11 @@ describe("Context helper tests", () => {
                 case DS_MEMBER_CONTEXT:
                 case DS_MEMBER_CONTEXT + Constants.FAV_SUFFIX:
                     expect(SharedContext.isDsMember(treeItem)).toBe(true);
+                    expect(SharedContext.isDsMember(ctx)).toBe(true);
                     break;
                 default:
                     expect(SharedContext.isDsMember(treeItem)).toBe(false);
+                    expect(SharedContext.isDsMember(ctx)).toBe(false);
             }
         }
     });
@@ -184,6 +196,8 @@ describe("Context helper tests", () => {
             switch (ctx) {
                 case PDS_FAV_CONTEXT:
                     expect(SharedContext.isFavoritePds(treeItem)).toBe(true);
+                    expect(SharedContext.isPds(ctx)).toBe(true);
+                    expect(SharedContext.isPds(treeItem)).toBe(true);
                     break;
                 default:
                     expect(SharedContext.isFavoritePds(treeItem)).toBe(false);
@@ -202,6 +216,7 @@ describe("Context helper tests", () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
             expect(SharedContext.isPds(treeItem)).toBe(treeItem.contextValue.indexOf(DS_PDS_CONTEXT) >= 0);
+            expect(SharedContext.isPds(ctx)).toBe(ctx.indexOf(DS_PDS_CONTEXT) >= 0);
         }
     });
 

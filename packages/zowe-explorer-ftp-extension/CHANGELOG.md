@@ -4,9 +4,60 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### New features and enhancements
 
-- Updated Zowe SDKs to `8.20.0` for technical currency. [#3631](https://github.com/zowe/zowe-explorer-vscode/pull/3631)
+### Bug fixes
+
+- Updated Zowe SDKs to `8.30.4` for technical currency. [#4117](https://github.com/zowe/zowe-explorer-vscode/pull/4117)
+- Fixed an issue where the `zftp` session type is set to `none` on VS Code reload. [#4049](https://github.com/zowe/zowe-explorer-vscode/pull/4049)
+
+## `3.4.1`
 
 ### Bug fixes
+
+- Updated Zowe SDKs to `8.29.9` for technical currency. [#4040](https://github.com/zowe/zowe-explorer-vscode/pull/4040)
+
+## `3.4.0`
+
+### New features and enhancements
+
+- Updated minimum VS Code version from 1.79 to 1.90. We are dropping support for VS Code releases that bundle versions of Node.js no longer receiving security updates. [#3684](https://github.com/zowe/zowe-explorer-vscode/issues/3684)
+
+### Bug fixes
+
+- Fixed an issue where Zowe Explorer could not detect the volume in data set attributes returned from the FTP extension. Renamed the `volume` property in the data sets list response object to `vols`, establishing consistency with the z/OSMF API. [#3946](https://github.com/zowe/zowe-explorer-vscode/issues/3946)
+- Updated Zowe SDKs to `8.28.0` for technical currency. [#3877](https://github.com/zowe/zowe-explorer-vscode/pull/3877)
+
+## `3.3.1`
+
+### Bug fixes
+
+- Updated Zowe SDKs to `8.27.3` for technical currency. [#3896](https://github.com/zowe/zowe-explorer-vscode/pull/3896)
+- Updated extension name that is displayed in log messages. [#3900](https://github.com/zowe/zowe-explorer-vscode/pull/3900)
+
+## `3.3.0`
+
+### New features and enhancements
+
+- Changed the response field names for the `FtpMvsApi.allMembers` function from "created" and "changed" to "c4date" and "m4date" to be consistent with the z/OSMF API response format for a PDS member list. [#3751](https://github.com/zowe/zowe-explorer-vscode/issues/3751)
+- Replaced use of `tmp` dependency with Node.js functions for temporary file creation when downloading data sets and USS file contents. [#3805](https://github.com/zowe/zowe-explorer-vscode/pull/3805)
+- Updated Zowe SDKs to `8.26.1` for technical currency. [#3696](https://github.com/zowe/zowe-explorer-vscode/pull/3696)
+- Updated the extension name to "Zowe® Explorer for IBM® z/OS® FTP" to align with Zowe branding standards. [#3836](https://github.com/zowe/zowe-explorer-vscode/pull/3836)
+
+### Bug fixes
+
+- Fixed an issue where USS directories could not be loaded via FTP as virtual workspaces. [#3763](https://github.com/zowe/zowe-explorer-vscode/pull/3763)
+- Fixed an issue where the `UssApi.uploadDirectory` function did not properly parse the file name from the input file paths, causing incorrect file paths to be used for the USS destination path. [#3805](https://github.com/zowe/zowe-explorer-vscode/pull/3805)
+
+## `3.2.2`
+
+### Bug fixes
+
+- Updated Zowe SDKs to `8.24.1` for technical currency. [#3728](https://github.com/zowe/zowe-explorer-vscode/issues/3728)
+
+## `3.2.1`
+
+### New features and enhancements
+
+- Updated Zowe SDKs to `8.21.0` for technical currency. [#3668](https://github.com/zowe/zowe-explorer-vscode/pull/3668)
 
 ## `3.2.0`
 

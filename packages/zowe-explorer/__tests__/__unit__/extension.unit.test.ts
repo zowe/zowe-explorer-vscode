@@ -35,6 +35,7 @@ import { ZoweExplorerApiRegister } from "../../src/extending/ZoweExplorerApiRegi
 
 jest.mock("../../src/utils/LoggerUtils");
 jest.mock("../../src/tools/ZoweLogger");
+jest.mock("../../src/utils/ReleaseNotes");
 jest.mock("vscode");
 jest.mock("fs");
 jest.mock("fs-extra");
@@ -122,6 +123,7 @@ async function createGlobalMocks() {
         testProfile: createIProfile(),
         testProfileOps: {
             allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+            getProfiles: jest.fn().mockReturnValue([]),
             defaultProfile: { name: "firstName" },
             getDefaultProfile: null,
             getBaseProfile: jest.fn(),
@@ -161,10 +163,12 @@ async function createGlobalMocks() {
             "zowe.ds.deleteDataset",
             "zowe.ds.allocateLike",
             "zowe.ds.uploadDialog",
+            "zowe.ds.uploadDialogWithEncoding",
             "zowe.ds.deleteMember",
             "zowe.ds.editDataSet",
             "zowe.ds.editMember",
             "zowe.ds.submitJcl",
+            "zowe.ds.zoom",
             "zowe.ds.submitMember",
             "zowe.ds.showAttributes",
             "zowe.ds.renameDataSet",
@@ -179,6 +183,12 @@ async function createGlobalMocks() {
             "zowe.ds.copyName",
             "zowe.ds.pdsSearchFor",
             "zowe.ds.filteredDataSetsSearchFor",
+            "zowe.ds.tableView",
+            "zowe.ds.listDataSets",
+            "zowe.ds.setDataSetFilter",
+            "zowe.ds.downloadAllMembers",
+            "zowe.ds.downloadMember",
+            "zowe.ds.downloadDataSet",
             "zowe.uss.addSession",
             "zowe.uss.refreshAll",
             "zowe.uss.refresh",
@@ -194,12 +204,16 @@ async function createGlobalMocks() {
             "zowe.uss.renameNode",
             "zowe.uss.uploadDialog",
             "zowe.uss.uploadDialogBinary",
+            "zowe.uss.uploadDialogWithEncoding",
+            "zowe.uss.downloadFile",
+            "zowe.uss.downloadDirectory",
             "zowe.uss.copyPath",
             "zowe.uss.editFile",
             "zowe.uss.editAttributes",
             "zowe.uss.pasteUssFile",
             "zowe.uss.copyUssFile",
             "zowe.uss.copyRelativePath",
+            "zowe.uss.setUssPath",
             "zowe.jobs.deleteJob",
             "zowe.jobs.runModifyCommand",
             "zowe.jobs.runStopCommand",
@@ -220,6 +234,8 @@ async function createGlobalMocks() {
             "zowe.jobs.search",
             "zowe.jobs.startPolling",
             "zowe.jobs.stopPolling",
+            "zowe.jobs.startPollingActiveJobs",
+            "zowe.jobs.stopPollingActiveJobs",
             "zowe.jobs.cancelJob",
             "zowe.jobs.sortBy",
             "zowe.jobs.filterJobs",
@@ -229,6 +245,7 @@ async function createGlobalMocks() {
             "zowe.updateSecureCredentials",
             "zowe.manualPoll",
             "zowe.editHistory",
+            "zowe.displayReleaseNotes",
             "zowe.promptCredentials",
             "zowe.profileManagement",
             "zowe.updateSchema",
@@ -262,6 +279,7 @@ async function createGlobalMocks() {
             "zowe.revealOutputChannel",
             "zowe.troubleshootError",
             "zowe.placeholderCommand",
+            "zowe.setupRemoteWorkspaceFolders",
         ],
     };
 
@@ -399,6 +417,11 @@ async function createGlobalMocks() {
                         packageInfo: "Zowe Explorer",
                         version: "2.x.x",
                     },
+                },
+                globalState: {
+                    get: jest.fn(),
+                    update: jest.fn(),
+                    keys: jest.fn(() => []),
                 },
             } as unknown as vscode.ExtensionContext)
     );

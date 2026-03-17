@@ -88,6 +88,8 @@ export const config: Options.Testrunner = {
                 // optional VS Code settings
                 userSettings: {
                     "editor.fontSize": 14,
+                    "zowe.settings.displayReleaseNotes": false,
+                    "zowe.automaticProfileValidation": false,
                 },
                 vscodeArgs: {
                     // installExtension: profileVsixs,
@@ -143,6 +145,8 @@ export const config: Options.Testrunner = {
         timeout: 60000,
         // <boolean> Enable this config to treat undefined definitions as warnings.
         ignoreUndefinedDefinitions: false,
+        // <boolean> Treat ambiguous definitions as errors.
+        failAmbiguousDefinitions: true,
     },
 
     // Hooks

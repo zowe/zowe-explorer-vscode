@@ -10,6 +10,7 @@
  */
 
 import * as imperative from "@zowe/imperative";
+import { IAttributesProvider, AttributeInfo } from "../../src/dataset/DatasetAttributesProvider";
 
 export function createConfigInstance() {
     return {
@@ -91,4 +92,14 @@ export function createTeamConfigMock(): imperative.IConfig {
         },
         autoStore: true,
     };
+}
+export class ExtenderAttr implements IAttributesProvider {
+    public fetchAttributes(): AttributeInfo {
+        return [];
+    }
+}
+export class FailExtenderAttr implements IAttributesProvider {
+    public fetchAttributes(): AttributeInfo {
+        throw new Error("TEST: Fetching attributes failed");
+    }
 }

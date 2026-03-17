@@ -56,7 +56,7 @@ export namespace Types {
 
         reject?<T = never>(reason?: any): Promise<T>;
         resolve?: (uniqueId: string, data: any) => any;
-        request: () => Promise<unknown>;
+        request: () => unknown | Promise<unknown>;
 
         // Indexable for storing custom items
         [key: string]: any;
@@ -68,6 +68,8 @@ export namespace Types {
         createdDate: Date;
         // built from "m4date", "mtime" and "msec" variables from z/OSMF API response
         modifiedDate: Date;
+        // Indexable for storing custom items
+        [key: string]: any;
     };
 
     export type KeytarModule = {

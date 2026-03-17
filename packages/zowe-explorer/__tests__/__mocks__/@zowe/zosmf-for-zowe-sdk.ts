@@ -18,6 +18,7 @@ export namespace ZosmfSession {
             password: "fake",
             hostname: "fake",
             port: 2,
+            type: "zosmf",
         };
     }
 }

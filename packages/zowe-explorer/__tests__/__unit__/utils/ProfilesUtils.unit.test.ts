@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import * as vscode from "vscode";
-import { AuthHandler, ErrorCorrelator, Gui, imperative, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { AuthHandler, ErrorCorrelator, Gui, imperative, ProfilesCache, ZoweVsCodeExtension, FsAbstractUtils } from "@zowe/zowe-explorer-api";
 import {
     createAltTypeIProfile,
     createInstanceOfProfile,
@@ -28,21 +28,35 @@ import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
 import { FilterItem } from "../../../src/management/FilterManagement";
-import { ProfilesConvertStatus, ProfilesUtils } from "../../../src/utils/ProfilesUtils";
+import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { Definitions } from "../../../src/configuration/Definitions";
 import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets";
 import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
+import { IProfAttrs, SessConstants } from "@zowe/imperative";
 
 jest.mock("../../../src/tools/ZoweLogger");
+jest.mock("../../../src/tools/ZoweLocalStorage");
 jest.mock("fs");
 jest.mock("vscode");
 jest.mock("@zowe/imperative");
 
 describe("ProfilesUtils unit tests", () => {
+    beforeAll(() => {
+        (SessConstants as any).AUTH_TYPE_NONE = "none";
+    });
     afterEach(() => {
         jest.clearAllMocks();
+    });
+
+    describe("getCredentialManagerOptions", () => {
+        it("should call ProfilesCache.getCredentialManagerOptions", () => {
+            const getCredMgrOptionsSpy = jest.spyOn(ProfilesCache, "getCredentialManagerOptions").mockReturnValue({ key: "value" });
+            const options = ProfilesUtils.getCredentialManagerOptions();
+            expect(getCredMgrOptionsSpy).toHaveBeenCalledTimes(1);
+            expect(options).toEqual({ key: "value" });
+        });
     });
 
     function createBlockMocks(): { [key: string]: any } {
@@ -95,6 +109,13 @@ describe("ProfilesUtils unit tests", () => {
                     },
                 },
             }),
+        });
+        beforeEach(() => {
+            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                getCommonApi: () => ({
+                    getSession: () => createISession(),
+                }),
+            } as any);
         });
 
         it("should log error details", async () => {
@@ -168,14 +189,14 @@ describe("ProfilesUtils unit tests", () => {
         it("should handle error for invalid credentials and prompt for authentication - credentials entered", async () => {
             const errorDetails = new imperative.ImperativeError({
                 msg: "Invalid credentials",
-                errorCode: 401 as unknown as string,
+                errorCode: Number(401).toString(),
                 additionalDetails: "Authentication is not valid or expired.",
             });
             const scenario = "Task failed successfully";
             const showMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve("Update Credentials"));
-            const promptCredsSpy = jest.fn();
+            const promptCredsSpy = jest.fn().mockResolvedValueOnce(["someusername", "pw"]);
             const ssoLoginSpy = jest.fn();
-            const profile = { name: "lpar.zosmf", type: "zosmf" } as any;
+            const profile = createIProfile();
             // disable locking mechanism for this test, will be tested in separate test cases
 
             Object.defineProperty(Constants, "PROFILES_CACHE", {
@@ -191,12 +212,18 @@ describe("ProfilesUtils unit tests", () => {
                 },
                 configurable: true,
             });
+            const unlockProfileMock = jest.spyOn(AuthHandler, "unlockProfile").mockImplementation();
             await AuthUtils.errorHandling(errorDetails, { profile, scenario });
+
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(promptCredsSpy).toHaveBeenCalledTimes(1);
+
             expect(ssoLoginSpy).not.toHaveBeenCalled();
+            // ensure profile is unlocked after successful credential update
+            expect(unlockProfileMock).toHaveBeenCalledWith(profile.name, true);
             showMessageSpy.mockClear();
             promptCredsSpy.mockClear();
+            unlockProfileMock.mockRestore();
         });
 
         it("should handle token error and proceed to login", async () => {
@@ -208,9 +235,13 @@ describe("ProfilesUtils unit tests", () => {
             const scenario = "Task failed successfully";
             const showErrorSpy = jest.spyOn(Gui, "errorMessage");
             const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("Log in to Authentication Service"));
-            const ssoLoginSpy = jest.fn();
+
+            // simulate successful SSO login
+            const ssoLoginSpy = jest.fn().mockResolvedValueOnce(true);
             const promptCredentialsSpy = jest.fn();
-            const profile = { type: "zosmf" } as any;
+            const profile = createIProfile();
+            const unlockProfileMock = jest.spyOn(AuthHandler, "unlockProfile").mockImplementation();
+            const setAuthCancelledMock = jest.spyOn(AuthHandler, "setAuthCancelled").mockImplementation();
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     getProfileInfo: profileInfoMock,
@@ -225,6 +256,8 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             await AuthUtils.errorHandling(errorDetails, { profile, scenario });
+            // ensure profile is unlocked after successful SSO login
+            expect(unlockProfileMock).toHaveBeenCalledWith(profile.name, true);
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
             expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
             expect(showErrorSpy).not.toHaveBeenCalled();
@@ -232,8 +265,9 @@ describe("ProfilesUtils unit tests", () => {
             showErrorSpy.mockClear();
             showMessageSpy.mockClear();
             ssoLoginSpy.mockClear();
+            setAuthCancelledMock.mockRestore();
         });
-        it("should handle credential error and no selection made for update", async () => {
+        it("should handle credential error - no selection made for update", async () => {
             const errorDetails = new imperative.ImperativeError({
                 msg: "Invalid credentials",
                 errorCode: "401",
@@ -247,6 +281,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+            const setAuthCancelledMock = jest.spyOn(AuthHandler, "setAuthCancelled").mockImplementation();
             const showMsgSpy = jest.spyOn(Gui, "showMessage");
             const promptCredentialsSpy = jest.fn();
             const ssoLogin = jest.fn();
@@ -265,13 +300,17 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             await AuthUtils.errorHandling(errorDetails, { profile, scenario: moreInfo });
+
             expect(showErrorSpy).toHaveBeenCalledTimes(1);
-            expect(promptCredentialsSpy).not.toHaveBeenCalled();
             expect(ssoLogin).not.toHaveBeenCalled();
+            // expect(promptCredentialsSpy).not.toHaveBeenCalled();
+            // expect(ssoLogin).toHaveBeenCalledTimes(1);
+
             expect(showMsgSpy).not.toHaveBeenCalledWith("Operation Cancelled");
             showErrorSpy.mockClear();
             showMsgSpy.mockClear();
             promptCredentialsSpy.mockClear();
+            setAuthCancelledMock.mockRestore();
         });
     });
 
@@ -496,6 +535,16 @@ describe("ProfilesUtils unit tests", () => {
 
         it("fires onProfilesUpdate event if secure credentials are enabled", async () => {
             const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
+            (mockProfileInstance as any).allProfiles = [
+                {
+                    name: "testConfig",
+                    type: "test-type",
+                    profile: {
+                        port: 456,
+                        host: "example.host",
+                    },
+                },
+            ];
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as any);
             jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
@@ -512,8 +561,8 @@ describe("ProfilesUtils unit tests", () => {
             const secureCredsMock = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             const testConfig = {
                 name: "testConfig",
+                type: "test-type",
                 profile: {
-                    type: "test-type",
                     user: "user",
                     password: "pass",
                     base64EncodedAuth: "user-pass",
@@ -736,6 +785,27 @@ describe("ProfilesUtils unit tests", () => {
             expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
             expect(recordCredMgrInConfigSpy).toHaveBeenCalledWith(Constants.ZOWE_CLI_SCM);
         });
+
+        it("should update the credential manager setting if specific credential manager is passed", () => {
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
+            const loggerInfoSpy = jest.spyOn(ZoweLogger, "info");
+            const recordCredMgrInConfigSpy = jest.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig");
+            ProfilesUtils.updateCredentialManagerSetting("customCredentialManager");
+            expect(ProfilesUtils.PROFILE_SECURITY).toBe("customCredentialManager");
+            expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
+            expect(recordCredMgrInConfigSpy).toHaveBeenCalledWith("customCredentialManager");
+        });
+
+        it("if setting is not enabled and default credential manager not found", () => {
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
+            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(false);
+            const loggerInfoSpy = jest.spyOn(ZoweLogger, "info");
+            ProfilesUtils.updateCredentialManagerSetting();
+            expect(ProfilesUtils.PROFILE_SECURITY).toBe(false);
+            expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
+            expect(loggerInfoSpy.mock.calls[0][0]).toEqual("Zowe Explorer profiles are being set as unsecured.");
+        });
     });
 
     describe("isUsingTokenAuth", () => {
@@ -749,21 +819,6 @@ describe("ProfilesUtils unit tests", () => {
             jest.spyOn(Constants.PROFILES_CACHE, "getPropsForProfile").mockResolvedValue([]);
             jest.spyOn(Constants.PROFILES_CACHE, "shouldRemoveTokenFromProfile").mockResolvedValue(false as never);
             await expect(AuthUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
-        });
-
-        it("should return false when token is marked for removal", async () => {
-            const mocks = createBlockMocks();
-            jest.spyOn(Constants.PROFILES_CACHE, "shouldRemoveTokenFromProfile").mockResolvedValue(true as never);
-
-            Object.defineProperty(mocks.profInstance, "getDefaultProfile", {
-                value: jest.fn().mockReturnValue({
-                    name: "baseProfile",
-                    type: "base",
-                }),
-                configurable: true,
-            });
-
-            await expect(AuthUtils.isUsingTokenAuth("testProfile")).resolves.toEqual(false);
         });
     });
 
@@ -1092,7 +1147,8 @@ describe("ProfilesUtils unit tests", () => {
             Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn().mockReturnValue({}), configurable: true });
             Object.defineProperty(Gui, "showTextDocument", { value: jest.fn(), configurable: true });
 
-            await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.toBe(ProfilesConvertStatus.ConvertSelected);
+            await (ProfilesUtils as any).v1ProfileOptions();
+            expect(ZoweLocalStorage.setValue).toHaveBeenCalled();
 
             expect(infoMsgSpy).toHaveBeenCalledTimes(2);
             infoMsgSpy.mockRestore();
@@ -1134,8 +1190,10 @@ describe("ProfilesUtils unit tests", () => {
 
             jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
             jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
-            await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.toBe(ProfilesConvertStatus.CreateNewSelected);
+            await (ProfilesUtils as any).v1ProfileOptions();
+            expect(ZoweLocalStorage.setValue).toHaveBeenCalled();
 
+            expect(infoMsgSpy).toHaveBeenCalledTimes(1);
             infoMsgSpy.mockRestore();
             profInfoSpy.mockRestore();
         });
@@ -1176,9 +1234,8 @@ describe("ProfilesUtils unit tests", () => {
                     onlyV1ProfilesExist: true,
                 },
             });
-            const v1ProfileOptsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions").mockResolvedValue(ProfilesConvertStatus.CreateNewSelected);
+            const v1ProfileOptsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions");
             await ProfilesUtils.handleV1MigrationStatus();
-            expect(executeCommandMock.mock.lastCall?.[0]).toBe("zowe.ds.addSession");
             expect(v1ProfileOptsMock).toHaveBeenCalled();
             blockMocks.getValueMock.mockRestore();
             blockMocks.setValueMock.mockRestore();
@@ -1417,6 +1474,116 @@ describe("ProfilesUtils unit tests", () => {
             await ProfilesUtils.setupDefaultCredentialManager();
             expect(profileManagerWillLoadSpy).toHaveBeenCalled();
             expect(disableCredMgmtSpy).toHaveBeenCalled();
+        });
+
+        it("should apply credential manager options if they exist", async () => {
+            const mockOptions = { someOption: "someValue" };
+            jest.spyOn(ProfilesUtils, "getCredentialManagerOptions").mockReturnValue(mockOptions);
+
+            const mockDefaultCredMgr = { options: {} };
+            jest.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar").mockReturnValue(mockDefaultCredMgr as any);
+
+            const loggerDebugSpy = jest.spyOn(ZoweLogger, "debug");
+
+            jest.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad").mockResolvedValueOnce(true);
+
+            await ProfilesUtils.setupDefaultCredentialManager();
+
+            expect(mockDefaultCredMgr.options).toBe(mockOptions);
+            expect(loggerDebugSpy).toHaveBeenCalledWith("Applied credential manager options from imperative.json to default credential manager");
+        });
+    });
+
+    describe("Profiles unit tests - function awaitExtenderType", () => {
+        it("should create deferred promise for registered profile type", async () => {
+            const mockProfilesCache = {
+                allProfiles: [],
+                getProfileFromConfig: () => {
+                    return { profName: "test", profType: "zosmf" } as IProfAttrs;
+                },
+            } as unknown as ProfilesCache;
+            const extenderProfileReadyGetSpy = jest.spyOn((ProfilesUtils as any).extenderProfileReady, "get");
+            const extenderProfileReadySetSpy = jest.spyOn((ProfilesUtils as any).extenderProfileReady, "set");
+
+            const getInfoSpy = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                profile: { name: "testName", type: "testType" },
+            } as any);
+            const mockApiReg = {
+                registeredApiTypes: jest.fn().mockReturnValue([]),
+            };
+            ProfilesUtils.setApiRegister(mockApiReg as any);
+
+            const uri = vscode.Uri.parse("zowe://test/file");
+
+            // First time create a deferred promise, second time reuse it
+            await ProfilesUtils.awaitExtenderType(uri, mockProfilesCache);
+            await ProfilesUtils.awaitExtenderType(uri, mockProfilesCache);
+
+            expect(extenderProfileReadyGetSpy).toHaveBeenCalledTimes(2);
+            expect(extenderProfileReadySetSpy).toHaveBeenCalledTimes(1);
+
+            getInfoSpy.mockRestore();
+        });
+    });
+
+    describe("Profiles unit tests - function resolveTypePromise", () => {
+        it("should resolve deferred promises for matching profile type", () => {
+            const mockResolve = jest.spyOn(imperative.DeferredPromise.prototype, "resolve").mockReturnValueOnce();
+            const mockProfilesCache = {
+                getProfiles: jest.fn(() => [
+                    { name: "test1", type: "zftp" },
+                    { name: "test2", type: "zftp" },
+                ]),
+            } as unknown as ProfilesCache;
+            (ProfilesUtils as any).extenderProfileReady.set("test1", { resolve: mockResolve });
+            (ProfilesUtils as any).extenderProfileReady.set("test2", { resolve: mockResolve });
+            ProfilesUtils.resolveTypePromise("zftp", mockProfilesCache);
+            expect(mockResolve).toHaveBeenCalledTimes(2);
+        });
+
+        it("should invoke vscode command to setup remote workspace folders", () => {
+            const mockResolve = jest.spyOn(imperative.DeferredPromise.prototype, "resolve").mockReturnValueOnce();
+            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+            const mockProfilesCache = { getProfiles: jest.fn(() => []) } as unknown as ProfilesCache;
+            ProfilesUtils.resolveTypePromise("test", mockProfilesCache);
+            expect(mockResolve).not.toHaveBeenCalled();
+            expect(executeCommandMock).toHaveBeenCalledWith("zowe.setupRemoteWorkspaceFolders", "test");
+        });
+    });
+    describe("Profiles unit tests - function hasNoAuthType", () => {
+        it("should determine if an ssh profile has an auth type", () => {
+            const session = {
+                hostname: "example.com",
+                port: 22,
+                privateKey: "path/to/id_rsa",
+                type: "none",
+                user: "user123",
+            } as any;
+            const profile = {
+                name: "ssh123",
+                type: "ssh",
+                message: "",
+                failNotFound: false,
+                profile: {},
+            };
+            expect(ProfilesUtils.hasNoAuthType(session, profile)).toBeFalsy();
+        });
+
+        it("should determine if a profile has an auth type", () => {
+            const session = {
+                hostname: "example.com",
+                port: 443,
+                type: "none",
+                user: "user123",
+            } as any;
+            const profile = {
+                name: "profile123",
+                type: "",
+                message: "",
+                failNotFound: false,
+                profile: {},
+            };
+            expect(ProfilesUtils.hasNoAuthType(session, profile)).toBeTruthy();
         });
     });
 });

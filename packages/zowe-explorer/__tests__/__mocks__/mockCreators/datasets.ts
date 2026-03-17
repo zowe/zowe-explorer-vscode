@@ -46,7 +46,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         mSessionNodes: [sessionNode],
         mFavorites: [],
         mFileHistory: [],
-        mHistory: [],
+        mPersistence: [],
         mOnDidChangeTreeData: {
             fire: jest.fn(),
         },
@@ -56,11 +56,13 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         addFileHistory: jest.fn().mockImplementation((newFile) => testDatasetTree.mFileHistory.push(newFile)),
         addFavorite: jest.fn().mockImplementation((newFavorite) => testDatasetTree.mFavorites.push(newFavorite)),
         addSearchedKeywordHistory: jest.fn(),
+        addSortSetting: jest.fn(),
         getSearchHistory: jest.fn(),
         getSearchedKeywordHistory: jest.fn(),
         getFileHistory: jest.fn().mockImplementation(() => testDatasetTree.mFileHistory),
         getSessions: jest.fn().mockReturnValue([]),
         getFavorites: jest.fn(),
+        getSortSettings: jest.fn().mockReturnValue({}),
         removeSearchHistory: jest.fn(),
         removeSearchedKeywordHistory: jest.fn(),
         resetSearchHistory: jest.fn(),
@@ -102,6 +104,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         getDsTemplates: jest.fn(),
         addDsTemplate: jest.fn(),
     });
+    jest.spyOn(testDatasetTree, "persistence", "get").mockReturnValue({ getSortSetting: jest.fn() });
     if (!favoritesNode) {
         return testDatasetTree;
     }

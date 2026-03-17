@@ -80,7 +80,7 @@ export class USSInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.refreshDirectory", async (node, nodeList) => {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
-                selectedNodes = selectedNodes.filter((x) => SharedContext.isUssDirectory(x));
+                selectedNodes = selectedNodes.filter((x) => SharedContext.isUssDirectory(x) || SharedContext.isUssSession(x));
                 for (const item of selectedNodes) {
                     await USSActions.refreshDirectory(item, ussFileProvider);
                 }
@@ -123,6 +123,21 @@ export class USSInit {
         };
         context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.uploadDialog", uploadDialogHandler(false)));
         context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.uploadDialogBinary", uploadDialogHandler(true)));
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.uss.uploadDialogWithEncoding", async (node: IZoweUSSTreeNode): Promise<void> => {
+                await USSActions.uploadDialogWithEncoding(node, ussFileProvider);
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.uss.downloadFile", async (node: IZoweUSSTreeNode): Promise<void> => {
+                await USSActions.downloadUssFile(node);
+            })
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.uss.downloadDirectory", async (node: IZoweUSSTreeNode): Promise<void> => {
+                await USSActions.downloadUssDirectory(node);
+            })
+        );
         context.subscriptions.push(vscode.commands.registerCommand("zowe.uss.copyPath", (node: IZoweUSSTreeNode): void => USSActions.copyPath(node)));
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.editFile", async (node: IZoweUSSTreeNode): Promise<void> => {
@@ -151,6 +166,15 @@ export class USSInit {
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.uss.copyRelativePath", async (node: IZoweUSSTreeNode) => USSActions.copyRelativePath(node))
+        );
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.uss.setUssPath", async (session, ussPath) => {
+                if (session && ussPath) {
+                    await USSActions.filterUssTree(ussFileProvider, session, ussPath);
+                } else {
+                    await USSActions.filterUssTreePrompt(ussFileProvider);
+                }
+            })
         );
         context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {

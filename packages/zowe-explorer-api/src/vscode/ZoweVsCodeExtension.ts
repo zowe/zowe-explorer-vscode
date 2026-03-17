@@ -21,6 +21,7 @@ import { Types } from "../Types";
 import type { BaseProfileAuthOptions } from "./doc/BaseProfileAuth";
 import { FileManagement } from "../utils";
 import { VscSettings } from "./doc/VscSettings";
+import { ZoweExplorerZosmf } from "../profiles/ZoweExplorerZosmfApi";
 
 /**
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
@@ -38,9 +39,14 @@ export class ZoweVsCodeExtension {
     }
 
     /**
-     * @internal
+     * @internal This is used to access the profiles cache through the Zowe Explorer API. For internal use only.
      */
     public static get profilesCache(): ProfilesCache {
+        const api = this.getZoweExplorerApi();
+        if (api) {
+            return api.getExplorerExtenderApi().getProfilesCache();
+        }
+
         const workspacePath = this.workspaceRoot?.uri.fsPath;
         return new ProfilesCache(imperative.Logger.getAppLogger(), workspacePath);
     }
@@ -54,10 +60,10 @@ export class ZoweVsCodeExtension {
 
     /**
      * @param {string} [requiredVersion] Optional semver string specifying the minimal required version
-     *           of Zowe Explorer that needs to be installed for the API to be usable to the client.
+     * of Zowe Explorer that needs to be installed for the API to be usable to the client.
      * @returns an initialized instance `IApiRegisterClient` that extenders can use
-     *          to access the Zowe Explorer APIs or `undefined`. Also `undefined` if requiredVersion
-     *          is larger than the version of Zowe Explorer found.
+     * to access the Zowe Explorer APIs or `undefined`. Also `undefined` if requiredVersion
+     * is larger than the version of Zowe Explorer found.
      */
     public static getZoweExplorerApi(requiredVersion?: string): Types.IApiRegisterClient {
         const zoweExplorerApi = vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe");
@@ -101,7 +107,8 @@ export class ZoweVsCodeExtension {
             loadProfile.profile.password = loadSession.password = creds[1];
 
             let shouldSave = true;
-            if (!setSecure) {
+            const autoStoreValue = (await this.profilesCache.getProfileInfo()).getTeamConfig().properties.autoStore;
+            if (!setSecure && autoStoreValue) {
                 shouldSave = await ZoweVsCodeExtension.saveCredentials(loadProfile);
             }
 
@@ -111,7 +118,8 @@ export class ZoweVsCodeExtension {
                 await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure });
                 await profInfo.updateProperty({ ...upd, property: "password", value: creds[1], setSecure });
             }
-            await cache.updateCachedProfile(loadProfile, undefined, apiRegister);
+            cache.updateCachedProfile(loadProfile, undefined, apiRegister);
+            imperative.AuthOrder.addCredsToSession(loadSession, ZoweExplorerZosmf.CommonApi.getCommandArgs(loadProfile));
             ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(loadProfile);
 
             return loadProfile;
@@ -121,8 +129,8 @@ export class ZoweVsCodeExtension {
 
     /**
      * Trigger a login operation with the merged contents between the service profile and the base profile.
-     *  If the connection details (host:port) do not match (service vs base), the token will be stored in the service profile.
-     *  If there is no API registered for the profile type, this method defaults the login behavior to that of the APIML.
+     * If the connection details (host:port) do not match (service vs base), the token will be stored in the service profile.
+     * If there is no API registered for the profile type, this method defaults the login behavior to that of the APIML.
      * @deprecated Use `ZoweVsCodeExtension.ssoLogin` instead
      * @param serviceProfile Profile to be used for login purposes (either the name of the IProfileLoaded instance)
      * @param loginTokenType The tokenType value for compatibility purposes
@@ -142,8 +150,8 @@ export class ZoweVsCodeExtension {
 
     /**
      * Trigger a login operation with the merged contents between the service profile and the base profile.
-     *  If the connection details (host:port) do not match (service vs base), the token will be stored in the service profile.
-     *  If there is no API registered for the profile type, this method defaults the login behavior to that of the APIML.
+     * If the connection details (host:port) do not match (service vs base), the token will be stored in the service profile.
+     * If there is no API registered for the profile type, this method defaults the login behavior to that of the APIML.
      * @param {BaseProfileAuthOptions} opts Object defining options for base profile authentication
      */
     public static async ssoLogin(opts: BaseProfileAuthOptions): Promise<boolean> {
@@ -164,14 +172,15 @@ export class ZoweVsCodeExtension {
         const updSession = new imperative.Session({
             hostname: serviceProfile.profile.host,
             port: serviceProfile.profile.port,
-            user: "Username",
-            password: "Password",
+            user: opts.profileNode?.getSession().ISession.user ?? "Username",
+            password: opts.profileNode?.getSession().ISession.password ?? "Password",
             rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
             tokenType,
-            type: imperative.SessConstants.AUTH_TYPE_TOKEN,
         });
-        delete updSession.ISession.user;
-        delete updSession.ISession.password;
+
+        // record that this request is to get a token
+        imperative.AuthOrder.makingRequestForToken(updSession.ISession);
+
         const qpItems: vscode.QuickPickItem[] = [
             { label: "$(account) User and Password", description: "Log in with basic authentication" },
             { label: "$(note) Certificate", description: "Log in with PEM format certificate file" },
@@ -185,16 +194,24 @@ export class ZoweVsCodeExtension {
             if (!creds) {
                 return false;
             }
+            updSession.ISession.user = creds[0];
+            updSession.ISession.password = creds[1];
             updSession.ISession.base64EncodedAuth = imperative.AbstractSession.getBase64Auth(creds[0], creds[1]);
+
+            // The user has told us to use basic to login, so put basic to the front of authOrder
+            // in this session. We will not store this authOrder to the profile on disk.
+            imperative.AuthOrder.putNewAuthsFirstInSess(updSession.ISession, [imperative.SessConstants.AUTH_TYPE_BASIC], { onlyTheseAuths: true });
         } else if (response === qpItems[1]) {
             try {
                 await ZoweVsCodeExtension.promptCertificate({ profile: serviceProfile, session: updSession.ISession, rePrompt: true });
             } catch (err) {
                 return false;
             }
-            delete updSession.ISession.base64EncodedAuth;
             updSession.ISession.storeCookie = true;
-            updSession.ISession.type = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
+
+            // The user has told us to use a cert to login, so put cert-pem to the front of authOrder
+            // in this session. We will not store this authOrder to the profile on disk.
+            imperative.AuthOrder.putNewAuthsFirstInSess(updSession.ISession, [imperative.SessConstants.AUTH_TYPE_CERT_PEM], { onlyTheseAuths: true });
         } else {
             return false;
         }
@@ -205,6 +222,9 @@ export class ZoweVsCodeExtension {
             tokenValue: loginToken,
         };
         updSession.ISession.storeCookie = false;
+
+        // Remove authTypeOrder from session to avoid it being stored in the profile
+        delete updSession.ISession.authTypeOrder;
 
         // A simplified version of the ProfilesCache.shouldRemoveTokenFromProfile `private` method
         const connOk =
@@ -223,7 +243,22 @@ export class ZoweVsCodeExtension {
 
         await cache.updateBaseProfileFileLogin(profileToUpdate, updBaseProfile, !connOk);
         serviceProfile.profile = { ...serviceProfile.profile, ...updBaseProfile };
-        await cache.updateCachedProfile(serviceProfile, opts.profileNode);
+        cache.updateCachedProfile(serviceProfile, opts.profileNode);
+
+        if (opts.profileNode) {
+            imperative.AuthOrder.putNewAuthsFirstInSess(opts.profileNode.getSession().ISession, [
+                imperative.SessConstants.AUTH_TYPE_TOKEN,
+                imperative.SessConstants.AUTH_TYPE_BEARER,
+            ]);
+            serviceProfile.profile.authOrder = opts.profileNode.getSession().ISession.authTypeOrder.join(", ");
+        }
+
+        await imperative.AuthOrder.putNewAuthsFirstOnDisk(
+            serviceProfile.name,
+            [imperative.SessConstants.AUTH_TYPE_TOKEN, imperative.SessConstants.AUTH_TYPE_BEARER],
+            { onlyTheseAuths: true, clientConfig: await (await cache.getProfileInfo()).getTeamConfig() }
+        );
+
         return true;
     }
 
@@ -254,7 +289,7 @@ export class ZoweVsCodeExtension {
         session.ISession.user = creds[0];
         session.ISession.password = creds[1];
         await zeCommon?.login(session);
-        await this.profilesCache.updateCachedProfile(serviceProfile, node);
+        this.profilesCache.updateCachedProfile(serviceProfile, node);
         return true;
     }
 
@@ -300,9 +335,8 @@ export class ZoweVsCodeExtension {
             hostname: serviceProfile.profile.host,
             port: serviceProfile.profile.port,
             rejectUnauthorized: serviceProfile.profile.rejectUnauthorized,
-            tokenType: tokenType,
+            tokenType,
             tokenValue: primaryProfile.profile.tokenValue ?? secondaryProfile.profile.tokenValue,
-            type: imperative.SessConstants.AUTH_TYPE_TOKEN,
         });
         await (opts.zeRegister?.getCommonApi(serviceProfile).logout ?? Logout.apimlLogout)(updSession);
 
@@ -313,7 +347,7 @@ export class ZoweVsCodeExtension {
             !serviceProfile.name.startsWith(baseProfile.name + ".");
         await cache.updateBaseProfileFileLogout(connOk ? baseProfile : serviceProfile);
         serviceProfile.profile = { ...serviceProfile.profile, tokenType: undefined, tokenValue: undefined };
-        await cache.updateCachedProfile(serviceProfile, opts.profileNode);
+        cache.updateCachedProfile(serviceProfile, opts.profileNode);
         return true;
     }
 
@@ -338,7 +372,7 @@ export class ZoweVsCodeExtension {
             session = zeCommon?.getSession();
         }
         await zeCommon?.logout(session);
-        await this.profilesCache.updateCachedProfile(serviceProfile, node);
+        this.profilesCache.updateCachedProfile(serviceProfile, node);
         return true;
     }
 
@@ -539,8 +573,13 @@ export class ZoweVsCodeExtension {
             return null;
         }
         const createButton = "Create New";
-        const message =
-            `A Team Configuration File already exists in this location\n{0}\n` + `Continuing may alter the existing file, would you like to proceed?`;
+        const message = [
+            `A Team Configuration File already exists in this location:\n`,
+            `\n`,
+            `${foundLayer.path}\n`,
+            `\n`,
+            `Continuing may alter the existing file, would you like to proceed?`,
+        ].join("");
         const response = await Gui.infoMessage(message, { items: [createButton], vsCodeOpts: { modal: true } });
         if (response) {
             return path.basename(foundLayer.path);

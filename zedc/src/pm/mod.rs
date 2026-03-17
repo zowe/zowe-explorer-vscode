@@ -1,6 +1,9 @@
 //! "Root" module containing all related logic for the `pkg-manager` command.
 
-use std::{path::Path, process::Command};
+use std::{
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 mod cmd;
 pub use cmd::handle_cmd;
@@ -34,8 +37,9 @@ pub fn detect_pkg_mgr(ze_dir: &Path) -> anyhow::Result<String> {
 /// # Arguments
 /// * `name` - The name of the package manager (`npm, pnpm, yarn`)
 pub fn pkg_mgr(name: &str) -> Command {
-    #[cfg(windows)]
-    return Command::new(format!("{}.cmd", name));
-    #[cfg(not(windows))]
-    return Command::new(name);
+    crate::cmd::as_binary(name)
+}
+
+pub fn check_dependencies(ze_dir: &PathBuf) -> bool {
+    ze_dir.join("node_modules").exists()
 }

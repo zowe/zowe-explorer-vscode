@@ -102,7 +102,7 @@ export class ZoweLogger {
         if (+MessageSeverity[this.getLogSetting()] <= +severity) {
             const severityName = MessageSeverity[severity];
             this.imperativeLogger[severityName?.toLowerCase()](message);
-            this.zeOutputChannel?.appendLine(this.createMessage(message, severityName));
+            this.zeOutputChannel?.appendLine(this.createMessage(imperative.Censor.censorRawData(message), severityName));
         }
     }
 

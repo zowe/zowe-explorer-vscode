@@ -458,6 +458,12 @@ describe("ZosmfUssApi", () => {
             args: ["ussPath", fakeProperties],
         },
         {
+            name: "downloadDirectory",
+            spy: jest.spyOn(zosfiles.Download, "ussDir"),
+            args: ["ussDirectoryPath", fakeProperties, undefined],
+            transform: (args) => [args[0], fakeProperties, args[2]],
+        },
+        {
             name: "putContent",
             spy: jest.spyOn(zosfiles.Upload, "fileToUssFile"),
             args: ["localPath", "ussPath", fakeProperties],
@@ -511,6 +517,11 @@ describe("ZosmfMvsApi", () => {
         {
             name: "getContents",
             spy: jest.spyOn(zosfiles.Download, "dataSet"),
+            args: ["dsname", fakeProperties],
+        },
+        {
+            name: "downloadAllMembers",
+            spy: jest.spyOn(zosfiles.Download, "allMembers"),
             args: ["dsname", fakeProperties],
         },
         {
@@ -588,6 +599,11 @@ describe("ZosmfMvsApi", () => {
             args: ["dsname", fakeProperties],
         },
         {
+            name: "deleteDataSet",
+            spy: jest.spyOn(zosfiles.Delete, "vsam"),
+            args: ["dsname", { volume: "*VSAM*", ...fakeProperties }],
+        },
+        {
             name: "dataSetsMatchingPattern",
             spy: jest.spyOn(zosfiles.List, "dataSetsMatchingPattern"),
             args: [["SAMPLE.A*", "SAMPLE.B*"], fakeProperties],
@@ -623,6 +639,83 @@ describe("ZosmfMvsApi", () => {
         const zosmfApi = new ZoweExplorerZosmf.MvsApi(loadedProfile);
         await zosmfApi.copyDataSetCrossLpar("TO.NAME", "TO.MEMBER", undefined as any, loadedProfile);
         expect(copySpy).toHaveBeenCalled();
+    });
+
+    describe("deleteDataSet with undefined options", () => {
+        it("should call Delete.dataSet and not throw TypeError when options is undefined", async () => {
+            const mvsApi = new ZoweExplorerZosmf.MvsApi(loadedProfile);
+            const deleteDataSetSpy = jest.spyOn(zosfiles.Delete, "dataSet").mockResolvedValue({ success: true });
+            const deleteVsamSpy = jest.spyOn(zosfiles.Delete, "vsam").mockResolvedValue({ success: true });
+
+            deleteDataSetSpy.mockClear();
+            deleteVsamSpy.mockClear();
+
+            expect(async () => {
+                await mvsApi.deleteDataSet("DATASET.NAME", undefined);
+            }).not.toThrow();
+
+            expect(deleteDataSetSpy).toHaveBeenCalled();
+            expect(deleteVsamSpy).not.toHaveBeenCalled();
+            expect(deleteDataSetSpy).toHaveBeenCalledWith(
+                expect.any(Object), // session
+                "DATASET.NAME",
+                expect.objectContaining({ responseTimeout: 60 })
+            );
+        });
+    });
+
+    describe("MvsApi.getCount", () => {
+        let mvsApi: ZoweExplorerZosmf.MvsApi;
+        let dataSetsMatchingPatternSpy: jest.SpyInstance;
+        const patterns = ["SAMPLE.A*", "SAMPLE.B*"];
+        beforeEach(() => {
+            jest.clearAllMocks();
+            mvsApi = new ZoweExplorerZosmf.MvsApi(loadedProfile);
+            dataSetsMatchingPatternSpy = jest.spyOn(zosfiles.List, "dataSetsMatchingPattern");
+        });
+        test("returns correct count when successful and response is array", async () => {
+            const mockResponse = {
+                success: true,
+                apiResponse: [{ dsname: "DATASET1" }, { dsname: "DATASET2" }],
+            };
+            dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
+            const result = await mvsApi.getCount(patterns);
+            expect(result).toStrictEqual({ count: 2, lastItem: "DATASET2" });
+            expect(dataSetsMatchingPatternSpy).toHaveBeenCalledWith(
+                expect.any(Object), // session
+                patterns,
+                expect.objectContaining({ attributes: false }) // options
+            );
+        });
+        test("returns 0 when response is not successful", async () => {
+            const mockResponse = {
+                success: false,
+                apiResponse: [],
+            };
+            dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
+            const result = await mvsApi.getCount(patterns);
+            expect(result).toStrictEqual({ count: 0, lastItem: undefined });
+        });
+        test("returns 0 when apiResponse is empty or undefined", async () => {
+            const mockResponse = {
+                success: true,
+                apiResponse: undefined,
+            };
+            dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
+            const result = await mvsApi.getCount(patterns);
+            expect(result).toStrictEqual({ count: 0, lastItem: undefined });
+        });
+        test("handles mixed format: array and items fallback", async () => {
+            const mockResponse = {
+                success: true,
+                apiResponse: {
+                    items: [{ dsname: "DS1" }, { dsname: "DS2" }, { dsname: "DS3" }, { dsname: "DS4" }], // 4 items
+                },
+            };
+            dataSetsMatchingPatternSpy.mockResolvedValueOnce(mockResponse);
+            const result = await mvsApi.getCount(patterns);
+            expect(result).toStrictEqual({ count: 4, lastItem: "DS4" });
+        });
     });
 });
 
@@ -660,13 +753,13 @@ describe("ZosmfJesApi", () => {
         },
         {
             name: "getJclForJob",
-            spy: jest.spyOn(zosjobs.GetJobs, "getJclForJob"),
+            spy: jest.spyOn(zosjobs.GetJobs, "getJclCommon"),
             args: [{} as any],
         },
         {
             name: "submitJcl",
             spy: jest.spyOn(zosjobs.SubmitJobs, "submitJcl"),
-            args: ["jcl", "FB", "80"],
+            args: ["jcl", "FB", "80", undefined],
         },
         {
             name: "submitJob",
@@ -718,6 +811,37 @@ describe("ZosmfJesApi", () => {
                     retcode: "ACTIVE",
                 } as zosjobs.IJob)
             ).toBe(false);
+        });
+    });
+
+    describe("submitJcl", () => {
+        it("uses job encoding if specified in profile", async () => {
+            const api = new ZoweExplorerZosmf.JesApi();
+            api.profile = {
+                profile: {
+                    jobEncoding: "IBM-1147",
+                },
+            } as unknown as imperative.IProfileLoaded;
+            const submitJclSpy = jest.spyOn(zosjobs.SubmitJobs, "submitJcl");
+            await api.submitJcl("iefbr14");
+            expect(submitJclSpy).toHaveBeenLastCalledWith(undefined, "iefbr14", undefined, undefined, "IBM-1147");
+        });
+    });
+
+    describe("submitJob", () => {
+        it("uses encoding if specified in profile", async () => {
+            const api = new ZoweExplorerZosmf.JesApi();
+            api.profile = {
+                profile: {
+                    encoding: "IBM-1047",
+                    jobEncoding: "IBM-1147",
+                },
+            } as unknown as imperative.IProfileLoaded;
+            const getDatasetSpy = jest.spyOn(zosfiles.Get, "dataSet").mockResolvedValue(Buffer.from("fakeJcl"));
+            const submitJclSpy = jest.spyOn(zosjobs.SubmitJobs, "submitJcl");
+            await api.submitJob("IBMUSER.JCL(IEFBR14)");
+            expect(getDatasetSpy).toHaveBeenLastCalledWith(undefined, "IBMUSER.JCL(IEFBR14)", { encoding: "IBM-1047" });
+            expect(submitJclSpy).toHaveBeenLastCalledWith(undefined, "fakeJcl", undefined, undefined, "IBM-1147");
         });
     });
 });

@@ -43,11 +43,12 @@ export class SharedContext {
 
     /**
      * Helper function which identifies if the node is a ds
-     * @param node
+     * @param nodeOrContextValue
      * @return true if a ds, false otherwise
      */
-    public static isDs(node: TreeItem): boolean {
-        return new RegExp("^" + Constants.DS_DS_CONTEXT).test(node.contextValue);
+    public static isDs(nodeOrContextValue: TreeItem | string): boolean {
+        const contextValue = typeof nodeOrContextValue === "string" ? nodeOrContextValue : nodeOrContextValue.contextValue;
+        return new RegExp("^" + Constants.DS_DS_CONTEXT).test(contextValue);
     }
 
     /**
@@ -254,11 +255,12 @@ export class SharedContext {
 
     /**
      * Helper function which identifies if the node is a dataset member
-     * @param node
+     * @param nodeOrContextValue
      * @return true if a dataset member, false otherwise
      */
-    public static isDsMember(node: TreeItem): boolean {
-        return new RegExp("^(" + Constants.DS_MEMBER_CONTEXT + ")").test(node.contextValue);
+    public static isDsMember(nodeOrContextValue: TreeItem | string): boolean {
+        const contextValue = typeof nodeOrContextValue === "string" ? nodeOrContextValue : nodeOrContextValue.contextValue;
+        return new RegExp("^(" + Constants.DS_MEMBER_CONTEXT + ")").test(contextValue);
     }
 
     /**
@@ -281,11 +283,12 @@ export class SharedContext {
 
     /**
      * Helper function which identifies if the node is a partitioned dataset
-     * @param node
+     * @param nodeOrContextValue
      * @return true if a partitioned dataset, false otherwise
      */
-    public static isPds(node: TreeItem): boolean {
-        return new RegExp("^(" + Constants.DS_PDS_CONTEXT + ")").test(node.contextValue);
+    public static isPds(nodeOrContextValue: TreeItem | string): boolean {
+        const contextValue = typeof nodeOrContextValue === "string" ? nodeOrContextValue : nodeOrContextValue.contextValue;
+        return new RegExp("^(" + Constants.DS_PDS_CONTEXT + ")").test(contextValue);
     }
 
     /**

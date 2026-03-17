@@ -35,6 +35,7 @@ import { USSUtils } from "../../../../src/trees/uss/USSUtils";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 jest.mock("fs");
 
@@ -178,7 +179,6 @@ function createGlobalMocks() {
 describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
     it("Checks that the ZoweUSSNode structure matches the snapshot", async () => {
         const globalMocks = createGlobalMocks();
-
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -217,7 +217,6 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
 
     it("Tests that creating a new USS node initializes all methods and properties", async () => {
         const globalMocks = createGlobalMocks();
-
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -228,7 +227,6 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
             profile: globalMocks.profileOne,
         });
         testNode.contextValue = Constants.USS_SESSION_CONTEXT;
-
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
         expect(testNode.label).toBeDefined();
@@ -238,7 +236,6 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
 
     it("Tests that creating a new binary USS node initializes all methods and properties", async () => {
         const globalMocks = createGlobalMocks();
-
         globalMocks.withProgress.mockImplementation((progLocation, callback) => {
             return callback();
         });
@@ -249,12 +246,27 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
             profile: globalMocks.profileOne,
         });
         testNode.contextValue = Constants.USS_SESSION_CONTEXT;
-
         expect(testNode.label).toBeDefined();
         expect(testNode.collapsibleState).toBeDefined();
         expect(testNode.label).toBeDefined();
         expect(testNode.getParent()).toBeUndefined();
         expect(testNode.getSession()).toBeDefined();
+    });
+
+    it("Sets tooltip to label for INFORMATION_CONTEXT", async () => {
+        const globalMocks = createGlobalMocks();
+
+        const placeholderNode = new ZoweUSSNode({
+            label: vscode.l10n.t("Use the Search button to list USS files"),
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: {} as any,
+            contextOverride: Constants.INFORMATION_CONTEXT,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        expect(placeholderNode.contextValue).toBe(Constants.INFORMATION_CONTEXT);
+        expect(placeholderNode.tooltip).toBe("Use the Search button to list USS files");
+        expect(placeholderNode.command?.command).toBe("zowe.placeholderCommand");
     });
 });
 
@@ -435,7 +447,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
                 uss: { addSingleSession: jest.fn(), mSessionNodes: [], setStatusForSession: jest.fn(), refresh: jest.fn() } as any,
                 job: { addSingleSession: jest.fn(), mSessionNodes: [], setStatusForSession: jest.fn(), refresh: jest.fn() } as any,
             }),
-            renameSpy: jest.spyOn(vscode.workspace.fs, "rename").mockImplementation(),
+            renameSpy: jest.spyOn(UssFSProvider.instance, "rename").mockImplementation(),
             getEncodingForFile: jest.spyOn(UssFSProvider.instance as any, "getEncodingForFile").mockReturnValue(undefined),
         };
         newMocks.ussDir.contextValue = Constants.USS_DIR_CONTEXT;
@@ -448,7 +460,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
 
         const newFullPath = "/u/user/newName";
         const errMessageMock = jest.spyOn(Gui, "errorMessage").mockImplementation();
-        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(new Error("Rename error: file is busy"));
+        const renameMock = jest.spyOn(UssFSProvider.instance, "rename").mockRejectedValueOnce(new Error("Rename error: file is busy"));
         await blockMocks.ussDir.rename(newFullPath);
 
         errMessageMock.mockRestore();
@@ -500,14 +512,86 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         const newFullPath = "/u/user/newName";
         await blockMocks.ussDir.rename(newFullPath);
 
-        // Expect renamed ussDir's subdirectory's short labels to be updated with newName
-        expect(ussSubDir.fullPath).toContain(newFullPath);
-        expect(ussSubDir.tooltip).toContain(newFullPath);
+        // Expect renamed ussDir's loaded descendants to have USS paths (without profile prefix)
+        expect(ussSubDir.fullPath).toEqual(`${newFullPath}/ussSubDir`);
+        expect(ussSubDir.tooltip).toContain(`${newFullPath}/ussSubDir`);
+        expect(ussSubDirChild.fullPath).toEqual(`${newFullPath}/ussSubDir/ussChildFile`);
+        expect(ussSubDirChild.tooltip).toContain(`${newFullPath}/ussSubDir/ussChildFile`);
+        expect(ussSubDir.fullPath.startsWith(`/${globalMocks.profileOne.name}/`)).toBe(false);
+        expect(ussSubDirChild.fullPath.startsWith(`/${globalMocks.profileOne.name}/`)).toBe(false);
+    });
 
-        // Expect ussDir's nested file's short labels to be updated with newName
-        const updatedChild = blockMocks.ussDir.children;
-        expect(updatedChild[0].fullPath).toContain(newFullPath);
-        expect(updatedChild[0].tooltip).toContain(newFullPath);
+    it("Uses node resourceUri as source path during rename", async () => {
+        const globalMocks = createGlobalMocks();
+        createBlockMocks(globalMocks);
+        const ussFile = new ZoweUSSNode({
+            label: "testFile3.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u/user",
+        });
+        ussFile.contextValue = Constants.USS_TEXT_FILE_CONTEXT;
+
+        // Simulate a stale/corrupted fullPath that already includes the profile name.
+        ussFile.fullPath = `/${globalMocks.profileOne.name}/u/user/testFile3.txt`;
+        ussFile.resourceUri = vscode.Uri.from({
+            scheme: ZoweScheme.USS,
+            path: `/${globalMocks.profileOne.name}/u/user/testFile3.txt`,
+        });
+
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockResolvedValue(undefined);
+        await ussFile.rename(`/${globalMocks.profileOne.name}/u/user/testFile4.txt`);
+
+        const [actualOldUri, actualNewUri] = renameMock.mock.calls.at(-1);
+        expect(actualOldUri.path).toBe(`/${globalMocks.profileOne.name}/u/user/testFile3.txt`);
+        expect(actualNewUri.path).toBe(`/${globalMocks.profileOne.name}/u/user/testFile4.txt`);
+        expect(ussFile.fullPath).toBe("/u/user/testFile4.txt");
+        renameMock.mockRestore();
+    });
+
+    it("Retries rename after catching FileExists error and deleting local entry", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const newFullPath = "/u/user/newName";
+        const entries = new Map();
+        entries.set("newName", { dummy: "entry" });
+
+        const parentMock = {
+            entries,
+        };
+
+        const newUri = vscode.Uri.from({
+            scheme: "zowe-uss",
+            path: "/sestest/u/user/newName",
+        });
+
+        const fileExistsError = Object.assign(vscode.FileSystemError.FileExists("file exists"), { code: "FileExists" });
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(fileExistsError).mockResolvedValueOnce(undefined);
+
+        const lookupParentSpy = jest.spyOn(UssFSProvider.instance, "lookupParentDirectory").mockReturnValue(parentMock);
+
+        await blockMocks.ussDir.rename(newFullPath);
+        expect(renameMock).toHaveBeenCalledTimes(2);
+        expect(lookupParentSpy).toHaveBeenCalledWith(newUri);
+        expect(parentMock.entries.has("newName")).toBe(false);
+    });
+    it("Throws unexpected error during rename", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const newFullPath = "/u/user/newName";
+
+        const unexpectedError = new Error("Unexpected failure");
+
+        const renameMock = jest.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(unexpectedError);
+
+        await expect(blockMocks.ussDir.rename(newFullPath)).rejects.toThrow("Unexpected failure");
+
+        expect(renameMock).toHaveBeenCalledTimes(3);
+
+        renameMock.mockRestore();
     });
 });
 
@@ -923,7 +1007,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 
         blockMocks.rootNode.contextValue = Constants.USS_SESSION_CONTEXT;
         const expectedNode = new ZoweUSSNode({
-            label: "Use the search button to list USS files",
+            label: "Use the Search button to list USS files",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.rootNode,
             contextOverride: Constants.INFORMATION_CONTEXT,
@@ -1494,20 +1578,25 @@ describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
     it("fetches the attributes for a file from host", async () => {
         const globalMocks = createGlobalMocks();
         const fileEntry = new UssFile("testFile");
+        fileEntry.type = vscode.FileType.File;
         fileEntry.attributes = attrs1;
-        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
-        const node = new ZoweUSSNode({
+        const lookupMock = jest.spyOn(UssFSProvider.instance, "lookup").mockReturnValue(fileEntry);
+
+        const uss_node = new ZoweUSSNode({
             label: "testFile",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentPath: "/",
             profile: globalMocks.profileOne,
         });
-        jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+
+        jest.spyOn(uss_node as any, "getUssFiles").mockResolvedValueOnce({
             success: true,
             apiResponse: { items: fileAttrs },
             commandResponse: "",
         });
-        jest.spyOn(node, "setAttributes").mockImplementation();
-        expect(await node.fetchAttributes()).toStrictEqual(attrs2);
+
+        jest.spyOn(uss_node, "setAttributes").mockImplementation();
+        expect(await uss_node.fetchAttributes()).toStrictEqual(attrs2);
         lookupMock.mockRestore();
     });
     it("returns undefined if no entry is found", async () => {
@@ -1657,5 +1746,134 @@ describe("ZoweUSSNode Unit Tests - Function getUssFiles", () => {
         expect(warnLoggerSpy).toHaveBeenCalledTimes(1);
         expect(warnLoggerSpy).toHaveBeenCalledWith("[ZoweUSSNode.getUssFiles] Session undefined for profile sestest");
         ussApiMock.mockRestore();
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function getUssFiles() with showHidden setting", () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    function createBlockMocks(globalMocks) {
+        const newMocks = {
+            rootNode: new ZoweUSSNode({
+                label: "/u/user",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session: globalMocks.session,
+                profile: globalMocks.profileOne,
+                parentPath: "/u",
+            }),
+            mockListFiles: jest.fn(),
+            mockFilterHiddenFiles: jest.fn(),
+        };
+
+        return newMocks;
+    }
+
+    it("should filter hidden files when ShowHiddenFiles.disabled is true", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+
+        const mockResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    { name: "visibleFile.txt", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: ".hiddenDir", mode: "drwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: ".hiddenFile", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: "anotherFile.js", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                ],
+            },
+        };
+
+        const filteredResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    { name: "visibleFile.txt", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: "anotherFile.js", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                ],
+            },
+        };
+
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce(mockResponse);
+        const filterHiddenFilesSpy = jest.spyOn(USSUtils, "filterHiddenFiles").mockResolvedValue(filteredResponse);
+
+        blockMocks.rootNode.dirty = true;
+        await blockMocks.rootNode.getChildren();
+
+        expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.files.showHiddenFiles");
+        expect(filterHiddenFilesSpy).not.toHaveBeenCalled();
+
+        getDirectValueSpy.mockRestore();
+        filterHiddenFilesSpy.mockRestore();
+    });
+
+    it("should not filter hidden files when ShowHiddenFiles.disabled is false", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+
+        const mockResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    { name: "visibleFile.txt", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: ".hiddenFile", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: "anotherFile.js", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: ".hiddenDir", mode: "drwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                ],
+            },
+        };
+
+        const filteredResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [
+                    { name: "visibleFile.txt", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                    { name: "anotherFile.js", mode: "-rwxr-xr-x", uid: 1000, gid: 1000, user: "user", group: "group" },
+                ],
+            },
+        };
+
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce(mockResponse);
+        const filterHiddenFilesSpy = jest.spyOn(USSUtils, "filterHiddenFiles").mockResolvedValueOnce(filteredResponse);
+
+        blockMocks.rootNode.dirty = true;
+        const children = await blockMocks.rootNode.getChildren();
+
+        expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.files.showHiddenFiles");
+        expect(filterHiddenFilesSpy).toHaveBeenCalled();
+        expect(children.length).toBe(2);
+        expect(children[0].label).toBe("anotherFile.js");
+        expect(children[1].label).toBe("visibleFile.txt");
+
+        getDirectValueSpy.mockRestore();
+        filterHiddenFilesSpy.mockRestore();
+    });
+
+    it("should handle error when getUssFiles fails with showHidden setting", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+
+        jest.spyOn(UssFSProvider.instance, "listFiles").mockRejectedValue(new Error("Connection failed"));
+
+        blockMocks.rootNode.dirty = true;
+        const children = await blockMocks.rootNode.getChildren();
+
+        expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.files.showHiddenFiles");
+        expect(children.length).toBe(0);
+        expect(globalMocks.showErrorMessage).toHaveBeenCalled();
+
+        getDirectValueSpy.mockRestore();
     });
 });

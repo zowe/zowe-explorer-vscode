@@ -10,14 +10,14 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
+import { AuthHandler, Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { Profiles } from "../configuration/Profiles";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
-import { AuthUtils } from "../utils/AuthUtils";
 import { Definitions } from "../configuration/Definitions";
+import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 
 export class ProfileManagement {
     public static getRegisteredProfileNameList(registeredTree: Definitions.Trees): string[] {
@@ -40,24 +40,17 @@ export class ProfileManagement {
     }
     public static async manageProfile(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
+        const sessTypeFromProf = AuthHandler.sessTypeFromSession(AuthHandler.getSessFromProfile(profile));
         let selected: vscode.QuickPickItem;
-        switch (true) {
-            case AuthUtils.isProfileUsingBasicAuth(profile): {
-                ZoweLogger.debug(`Profile ${profile.name} is using basic authentication.`);
-                selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, node);
-                break;
-            }
-            case await AuthUtils.isUsingTokenAuth(profile.name): {
-                ZoweLogger.debug(`Profile ${profile.name} is using token authentication.`);
-                selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_TOKEN, node);
-                break;
-            }
-            // will need a case for isUsingCertAuth
-            default: {
-                ZoweLogger.debug(`Profile ${profile.name} authentication method is unkown.`);
-                selected = await this.setupProfileManagementQp(null, node);
-                break;
-            }
+        if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BASIC) {
+            ZoweLogger.debug(`Profile ${profile.name} is using basic authentication.`);
+            selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_BASIC, node);
+        } else if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER) {
+            ZoweLogger.debug(`Profile ${profile.name} is using token authentication.`);
+            selected = await this.setupProfileManagementQp(imperative.SessConstants.AUTH_TYPE_TOKEN, node);
+        } else {
+            ZoweLogger.debug(`Profile ${profile.name} authentication method is unknown.`);
+            selected = await this.setupProfileManagementQp(null, node);
         }
         await this.handleAuthSelection(selected, node, profile);
     }
@@ -167,7 +160,11 @@ export class ProfileManagement {
                 break;
             }
             case this.tokenAuthLoginQpItem[this.AuthQpLabels.login]: {
-                await Profiles.getInstance().ssoLogin(node, profile.name);
+                const checkNode = await Profiles.getInstance().ssoLogin(node, profile.name);
+                if (checkNode) {
+                    node.collapsibleState = vscode.TreeItemCollapsibleState.None;
+                    SharedTreeProviders.getProviderForNode(node).nodeDataChanged(node);
+                }
                 break;
             }
             case this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]: {

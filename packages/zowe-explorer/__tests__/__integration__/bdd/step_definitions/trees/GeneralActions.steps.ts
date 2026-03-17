@@ -12,7 +12,7 @@
 import { Given, Then, When } from "@cucumber/cucumber";
 import { TreeItem } from "wdio-vscode-service";
 import { Key } from "webdriverio";
-import { getZoweExplorerContainer, paneDivForTree } from "../../../../__common__/shared.wdio";
+import { clickContextMenuItem, getZoweExplorerContainer, paneDivForTree } from "../../../../__common__/shared.wdio";
 import quickPick from "../../../../__pageobjects__/QuickPick";
 
 //
@@ -92,9 +92,7 @@ When(/a user hides the (.*) view using the context menu/, async (tree: string) =
     const zeContainer = await activityBar.getViewControl("Zowe Explorer");
     const zeView = await zeContainer.openView();
     const zeTitlePart = zeView.getTitlePart();
-    const ctxMenu = await zeTitlePart.openContextMenu();
-    const menuItem = await ctxMenu.getItem(tree);
-    await (await menuItem.elem).click();
+    await clickContextMenuItem(zeTitlePart, tree);
 });
 Then(/the (.*) view is no longer displayed/, async (tree: string) => {
     const activityBar = (await browser.getWorkbench()).getActivityBar();
@@ -106,10 +104,7 @@ Then(/the (.*) view is no longer displayed/, async (tree: string) => {
 
     // re-enable the view for the next test scenario
     const zeTitlePart = zeView.getTitlePart();
-    const ctxMenu = await zeTitlePart.openContextMenu();
-    const menuItem = await ctxMenu.getItem(tree);
-    await (await menuItem.elem).click();
-    await ctxMenu.close();
+    await clickContextMenuItem(zeTitlePart, tree);
 });
 
 // This step may fail if the VS Code version that's used for testing has an issue with tree item selection.

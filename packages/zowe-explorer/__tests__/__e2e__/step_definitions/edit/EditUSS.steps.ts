@@ -24,4 +24,5 @@ Then("the user can select a USS file in the list and open it", async function ()
 When("the user edits the USS file", async function () {
     await this.editorForFile.clearText();
     await this.editorForFile.setText(`Hello from a USS test on a ${this.editingFavorite ? "favorited " : ""}file!`);
+    await this.ussDir.collapse();
 });
