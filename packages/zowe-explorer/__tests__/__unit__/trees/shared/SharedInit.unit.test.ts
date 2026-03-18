@@ -314,6 +314,49 @@ describe("Test src/shared/extension", () => {
                 mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: cmdProviders.uss }],
             },
         ];
+
+        beforeAll(() => {
+            test.context.extension = {
+                packageJSON: {
+                    version: "2.3.4",
+                },
+            };
+            const registerCommand = (cmd: string, fun: () => void) => {
+                return { [cmd]: fun };
+            };
+            const onDidChangeConfiguration = (fun: () => void) => {
+                return { onDidChangeConfiguration: fun };
+            };
+            const onDidSaveTextDocument = (fun: () => void) => {
+                return { onDidSaveTextDocument: fun };
+            };
+            Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
+            Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
+            Object.defineProperty(core, "getZoweDir", { value: () => test.value });
+            Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand.fun });
+            Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
+            SharedInit.registerCommonCommands(test.context, test.value.providers);
+        });
+
+        afterAll(() => {
+            mockOnProfileUpdated[Symbol.dispose]();
+            jest.restoreAllMocks();
+        });
+
+        processSubscriptions(commands, test);
+
+        it("registers an onProfileUpdated event", () => {
+            expect(mockOnProfileUpdated.mock).toHaveBeenCalledTimes(1);
+            expect(onProfileUpdated).toHaveBeenCalledTimes(1);
+        });
+
+        it("should register setupRemoteWorkspaces", () => {
+            jest.spyOn(vscode.commands, "registerCommand").mockImplementation(() => {
+                return {} as vscode.Disposable;
+            });
+            SharedInit.registerCommonCommands(test.context, test.value.providers);
+            expect(vscode.commands.registerCommand).toHaveBeenCalledWith("zowe.setupRemoteWorkspaceFolders", expect.any(Function));
+        });
     });
 
     describe("onDidChangeTabs - tab close focus restoration", () => {
@@ -329,23 +372,22 @@ describe("Test src/shared/extension", () => {
             context = { subscriptions: [] };
             jest.useFakeTimers();
 
-            Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {
-                value: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+            Object.defineProperty(vscode, "workspace", {
+                value: {
+                    ...vscode.workspace,
+                    onDidChangeConfiguration: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+                    onDidSaveTextDocument: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+                },
                 configurable: true,
                 writable: true,
             });
-            Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", {
-                value: jest.fn().mockReturnValue({ dispose: jest.fn() }),
-                configurable: true,
-                writable: true,
-            });
-            Object.defineProperty(vscode.commands, "registerCommand", {
-                value: jest.fn().mockReturnValue({ dispose: jest.fn() }),
-                configurable: true,
-                writable: true,
-            });
-            Object.defineProperty(vscode.commands, "executeCommand", {
-                value: jest.fn(),
+
+            Object.defineProperty(vscode, "commands", {
+                value: {
+                    ...vscode.commands,
+                    registerCommand: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+                    executeCommand: jest.fn(),
+                },
                 configurable: true,
                 writable: true,
             });
@@ -376,6 +418,16 @@ describe("Test src/shared/extension", () => {
         });
 
         afterEach(() => {
+            Object.defineProperty(vscode, "workspace", {
+                value: { ...vscode.workspace },
+                configurable: true,
+                writable: true,
+            });
+            Object.defineProperty(vscode, "commands", {
+                value: { ...vscode.commands },
+                configurable: true,
+                writable: true,
+            });
             jest.useRealTimers();
             jest.restoreAllMocks();
         });
