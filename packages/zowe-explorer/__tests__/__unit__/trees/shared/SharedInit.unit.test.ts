@@ -321,7 +321,6 @@ describe("Test src/shared/extension", () => {
         let onDidChangeTabs: jest.Mock;
         let capturedTabsHandler: (e: any) => Promise<void>;
         const mockReveal = jest.fn().mockResolvedValue(undefined);
-        const mockDispose = jest.fn();
         const mockGetTreeView = jest.fn().mockReturnValue({ reveal: mockReveal });
         const mockProvider = { getTreeView: mockGetTreeView };
         const mockNode = { label: "TEST.DS" };
