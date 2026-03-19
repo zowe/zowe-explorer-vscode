@@ -46,6 +46,7 @@ import { IconUtils } from "../../icons/IconUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { DataSetTemplates } from "./DatasetTemplates";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
+import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
 
 /**
  * A tree that contains nodes of sessions and data sets
@@ -2065,5 +2066,9 @@ Would you like to do this now?`,
             node.setEncoding(encoding);
             await node.openDs(true, false, this);
         }
+    }
+
+    public get persistence(): ZowePersistentFilters {
+        return this.mPersistence;
     }
 }

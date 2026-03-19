@@ -69,7 +69,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public sort?: Sorting.NodeSort;
     public filter?: Sorting.DatasetFilter;
     public resourceUri?: vscode.Uri;
-    public persistence = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
     public inFilterPrompt = false;
 
     private paginator?: Paginator<IZosFilesResponse>;
@@ -471,7 +470,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 .map((label) => elementChildren[label]);
 
             // Determine sort options: node > persistence > session
-            const sortOpts = this.sort ?? this.persistence.getSortSetting(this) ?? this.getSessionNode().sort;
+            const sortOpts = this.sort ?? (SharedTreeProviders.ds as DatasetTree).persistence.getSortSetting(this) ?? this.getSessionNode().sort;
 
             // use the PDS filter if one is set, otherwise try using the session filter
             const sessionFilter = SharedContext.isSession(this) ? this.filter : this.getSessionNode().filter;
