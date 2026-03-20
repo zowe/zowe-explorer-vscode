@@ -32,6 +32,7 @@ import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ReleaseNotes } from "../../../../src/utils/ReleaseNotes";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -154,6 +155,17 @@ describe("Test src/shared/extension", () => {
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: true },
                     { spy: jest.spyOn(executeCommand, "fun"), arg: ["zowe.updateSecureCredentials"] },
+                ],
+            },
+            {
+                name: "onDidChangeConfiguration:6",
+                mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: true },
+                    { spy: jest.spyOn(SettingsConfig, "getDirectValue"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: 10 },
+                    { spy: jest.spyOn(core.ZosmfRestClient, "setThrottlingOptions"), arg: [{ maxConcurrentRequests: 10 }] },
                 ],
             },
             {
