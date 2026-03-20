@@ -700,3 +700,233 @@ describe("onCloseEvent", () => {
         visibleTextEditorsMock[Symbol.dispose]();
     });
 });
+
+describe("getQueryKey", () => {
+    let prov: any;
+
+    beforeEach(() => {
+        prov = new (BaseProvider as any)();
+    });
+
+    it("should return an empty string if the URI has no query parameters", () => {
+        const uri = { query: "" } as vscode.Uri;
+        const result = prov.getQueryKey(uri);
+        expect(result).toBe("");
+    });
+
+    it('should return an empty string if no parameters have the value "true"', () => {
+        const uri = { query: "foo=false&bar=123&baz=string" } as vscode.Uri;
+        const result = prov.getQueryKey(uri);
+        expect(result).toBe("");
+    });
+
+    it('should return a sorted, underscore-separated string of only parameters equal to "true"', () => {
+        const uri = { query: "c=true&b=false&a=true" } as vscode.Uri;
+        const result = prov.getQueryKey(uri);
+
+        expect(result).toBe("_a=true_c=true");
+    });
+});
+
+describe("executeWithReuse", () => {
+    let prov: any;
+    let keyGenSpy: jest.Mock;
+    let checkLocalSpy: jest.Mock;
+    let executeSpy: jest.Mock;
+    let testUri: vscode.Uri;
+
+    beforeEach(() => {
+        prov = new (BaseProvider as any)();
+        keyGenSpy = jest.fn((uri: vscode.Uri) => uri.toString());
+        checkLocalSpy = jest.fn(() => false);
+        executeSpy = jest.fn().mockResolvedValue("result");
+        testUri = vscode.Uri.from({ scheme: "zowe", path: "/test" });
+    });
+
+    it("executes the operation and caches the promise, then cleans up after resolution", async () => {
+        const options = {
+            keyGenerator: (uri: vscode.Uri) => uri.toString(),
+            checkLocal: () => false,
+            execute: async () => {
+                return "success";
+            },
+        };
+        const promise = prov.executeWithReuse(testUri, options);
+        const expectedKey = testUri.with({ query: "fetch=true" }).toString();
+
+        expect(prov.requestCache.has(expectedKey)).toBe(true);
+        await promise;
+        expect(prov.requestCache.has(expectedKey)).toBe(false);
+    });
+
+    it("reuses an in-flight request for the same key", async () => {
+        let resolveRequest!: (val: any) => void;
+
+        executeSpy.mockImplementation(
+            () =>
+                new Promise((resolve) => {
+                    resolveRequest = resolve;
+                })
+        );
+
+        const promise1 = prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+        });
+        const promise2 = prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+        });
+
+        resolveRequest("result");
+
+        await Promise.all([promise1, promise2]);
+
+        expect(executeSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("uses a fetch key and ignores local check if query param fetch=true", async () => {
+        const fetchUri = testUri.with({ query: "fetch=true" });
+
+        await prov.executeWithReuse(fetchUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+        });
+
+        expect(keyGenSpy).toHaveBeenCalled();
+        expect(checkLocalSpy).not.toHaveBeenCalled();
+        expect(executeSpy).toHaveBeenCalled();
+    });
+
+    it("reuses an existing explicit fetch request even if current request is normal", async () => {
+        const fetchUri = testUri.with({ query: "fetch=true" });
+        const cachedPromise = Promise.resolve("cached");
+        prov.requestCache.set(fetchUri.toString(), cachedPromise);
+
+        checkLocalSpy.mockReturnValue(false);
+
+        const result = await prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+        });
+
+        expect(result).toBe("cached");
+        expect(executeSpy).not.toHaveBeenCalled();
+    });
+
+    it("avoids network if local entry is found", async () => {
+        checkLocalSpy.mockReturnValue(true);
+
+        await prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+        });
+
+        expect(checkLocalSpy).toHaveBeenCalled();
+        expect(prov.requestCache.has(testUri.toString())).toBe(false);
+    });
+
+    it("forces network if local entry is missing", async () => {
+        checkLocalSpy.mockReturnValue(false);
+        keyGenSpy.mockImplementation((u: vscode.Uri) => u.query);
+
+        const promise = prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+        });
+
+        expect(executeSpy).toHaveBeenCalled();
+        expect(prov.requestCache.has("fetch=true")).toBe(true);
+
+        await promise;
+    });
+
+    it("does not perform local check if conflict or diff query params exist", async () => {
+        const conflictUri = testUri.with({ query: "conflict=true" });
+
+        await prov.executeWithReuse(conflictUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+        });
+
+        expect(checkLocalSpy).not.toHaveBeenCalled();
+        expect(executeSpy).toHaveBeenCalled();
+    });
+
+    it("returns successfully for readDirectory action with a directory result", async () => {
+        executeSpy.mockResolvedValue({ type: vscode.FileType.Directory });
+
+        const result = await prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+            action: "readDirectory",
+        });
+
+        expect(result).toEqual({ type: vscode.FileType.Directory });
+    });
+
+    it("throws FileNotADirectory for readDirectory action with a file result", async () => {
+        executeSpy.mockResolvedValue({ type: vscode.FileType.File });
+
+        const promise = prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+            action: "readDirectory",
+        });
+
+        await expect(promise).rejects.toThrow(vscode.FileSystemError.FileNotADirectory(testUri));
+    });
+
+    it("returns successfully for readFile action with a file result", async () => {
+        executeSpy.mockResolvedValue({ type: vscode.FileType.File });
+
+        const result = await prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+            action: "readFile",
+        });
+
+        expect(result).toEqual({ type: vscode.FileType.File });
+    });
+
+    it("throws FileIsADirectory for readFile action with a directory result", async () => {
+        executeSpy.mockResolvedValue({ type: vscode.FileType.Directory });
+
+        const promise = prov.executeWithReuse(testUri, {
+            keyGenerator: keyGenSpy,
+            checkLocal: checkLocalSpy,
+            execute: executeSpy,
+            action: "readFile",
+        });
+
+        await expect(promise).rejects.toThrow(vscode.FileSystemError.FileIsADirectory(testUri));
+    });
+
+    describe("validateResult", () => {
+        it("throws FileNotADirectory if action is readDirectory and result type is File", () => {
+            const fileResult = { type: vscode.FileType.File };
+
+            expect(() => {
+                prov.validateResult(fileResult, testUri, "readDirectory");
+            }).toThrow(vscode.FileSystemError.FileNotADirectory(testUri));
+        });
+
+        it("throws FileIsADirectory if action is readFile and result type is Directory", () => {
+            const dirResult = { type: vscode.FileType.Directory };
+
+            expect(() => {
+                prov.validateResult(dirResult, testUri, "readFile");
+            }).toThrow(vscode.FileSystemError.FileIsADirectory(testUri));
+        });
+    });
+});
