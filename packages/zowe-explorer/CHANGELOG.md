@@ -7,24 +7,43 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### New features and enhancements
 
 - Enhanced "Show Attributes" feature with improved visual presentation: aligned all attribute table columns consistently across core and extender sections, added thousands separators for numeric values, and automatically appends the `%` symbol to "Used Space" values for better readability. [#3927](https://github.com/zowe/zowe-explorer-vscode/issues/3927)
-- Expose commands to drive search in the USS views. [#3933](https://github.com/zowe/zowe-explorer-vscode/issues/3933)
 - Added a new `Poll For Job Completion` button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting `Zowe > Jobs: Poll Interval`. [#3967](https://github.com/zowe/zowe-explorer-vscode/pull/3967)
-- Expose commands to drive filtering in the Data Sets views. [#3992](https://github.com/zowe/zowe-explorer-vscode/issues/3992)
 - Add localization support to release notes and changelogs. [#4047](https://github.com/zowe/zowe-explorer-vscode/pull/4047)
+- Added a new VS Code toggle setting that allows users to show or hide hidden files in the Unix System Service (USS) tree view.[#3912](https://github.com/zowe/zowe-explorer-vscode/issues/3912)
+
+### Bug fixes
+
+- Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. [#3554](https://github.com/zowe/zowe-explorer-vscode/issues/3554)
+- Fixed an issue where file system URIs with trailing slashes failed to resolve. [#3904](https://github.com/zowe/zowe-explorer-vscode/issues/3904)
+- Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. [#4032](https://github.com/zowe/zowe-explorer-vscode/issues/4032)
+- Fixed an issue where pasting data sets failed with "e.getChildren is not a function" when using extenders that don't support `allocateLikeDataSet`, a function that allocates a copy of a data set with specified options. [#4107](https://github.com/zowe/zowe-explorer-vscode/pull/4107)
+- Fixed an issue where the "Created Date" and "Modified Date" columns were not sortable in the data sets table view, specifically when the user's locale differs from the default value (`en (en-US)`). Now, sorting works regardless of the VS Code language setting, and dates are now formatted with the user's locale. [#4008](https://github.com/zowe/zowe-explorer-vscode/pull/4008)
+- Fixed an issue where an error appeared when moving an empty PDS across LPARs. [#4001](https://github.com/zowe/zowe-explorer-vscode/pull/4001)
+- Fixed an issue with the "Create New Data Set" feature where a data set attribute's original value was deleted after the user dismissed the input box. Now, the attribute's value is preserved when the user cancels their input. [#4003](https://github.com/zowe/zowe-explorer-vscode/issues/4003)
+- Updated Zowe SDKs to `8.30.4` for technical currency. [#4117](https://github.com/zowe/zowe-explorer-vscode/pull/4117)
+- Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.[#4023](https://github.com/zowe/zowe-explorer-vscode/issues/4023)
+- Corrected description of the `mnorc` attribute for PDS members. [#4116](https://github.com/zowe/zowe-explorer-vscode/pull/4116)
+- Fixed slow performance when listing a large number of data sets or members. [#4116](https://github.com/zowe/zowe-explorer-vscode/pull/4116)
+
+### Bug fixes
+
+## `3.4.2`
+
+### New features and enhancements
+
+- Exposed commands to drive search in the USS views. [#3933](https://github.com/zowe/zowe-explorer-vscode/issues/3933)
+- Exposed commands to drive filtering in the Data Sets views [#3992](https://github.com/zowe/zowe-explorer-vscode/issues/3992)
 
 ### Bug fixes
 
 - Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. [#4049](https://github.com/zowe/zowe-explorer-vscode/pull/4049)
-- Fixed an issue where the "Created Date" and "Modified Date" columns were not sortable in the data sets table view, specifically when the user's locale differs from the default value (`en (en-US)`). Now, sorting works regardless of the VS Code language setting, and dates are now formatted with the user's locale. [#4008](https://github.com/zowe/zowe-explorer-vscode/pull/4008)
-- Fixed an issue where an error appeared when moving an empty PDS across LPARs. [#4001](https://github.com/zowe/zowe-explorer-vscode/pull/4001)
-- Fixed an issue with the "Create New Data Set" feature where a data set attribute's original value was deleted after the user dismissed the input box. Now, the attribute's value is preserved when the user cancels their input. [#4003](https://github.com/zowe/zowe-explorer-vscode/issues/4003)
-- Fixed an accessibility issue where the "Create File" and "Create Directory" actions used the same generic instruction "Name of file or directory". The instructions are now specific to the selected action and clearly indicate what is required. [#4027](https://github.com/zowe/zowe-explorer-vscode/issues/4027)
-- Fixed an accessibility issue in the "Add Profile" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference "Create a New Team Configuration File" and "Edit Team Configuration File" to guide keyboard and screen reader users. [#4028](https://github.com/zowe/zowe-explorer-vscode/issues/4028)
-- Fixed an accessibility issue in the "Create New Data Set" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. [#4026](https://github.com/zowe/zowe-explorer-vscode/issues/4026)
 - Fixed an issue where the data set sort persistence was overriding the selected sort direction. [#4048](https://github.com/zowe/zowe-explorer-vscode/pull/4048)
+- Fixed an accessibility issue in the "Create New Data Set" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. [#4026](https://github.com/zowe/zowe-explorer-vscode/issues/4026)
 - Updated Zowe SDKs to `8.30.1` for technical currency. [#4079](https://github.com/zowe/zowe-explorer-vscode/pull/4079)
-- Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.[#4023](https://github.com/zowe/zowe-explorer-vscode/issues/4023)
+- Fixed an issue where screen readers could not read data set attributes from the data set attribute webview.[#4023](https://github.com/zowe/zowe-explorer-vscode/issues/4023)
 - Fixed tooltip for Unix System Services profiles to display relevant text. [#4019](https://github.com/zowe/zowe-explorer-vscode/issues/4019)
+- Fixed an accessibility issue in the "Add Profile" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference "Create a New Team Configuration File" and "Edit Team Configuration File" to guide keyboard and screen reader users. [#4028](https://github.com/zowe/zowe-explorer-vscode/issues/4028)
+- Fixed an accessibility issue where the "Create File" and "Create Directory" actions used the same generic instruction "Name of file or directory". The instructions are now specific to the selected action and clearly indicate what is required. [#4027](https://github.com/zowe/zowe-explorer-vscode/issues/4027)
 
 ## `3.4.1`
 
@@ -48,6 +67,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for loading credential manager options from the imperative.json file. Add a `credentialManagerOptions` object in the JSON object in `imperative.json` to specify options for the current credential manager. [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
 - Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, refer to the ["Troubleshooting Zowe CLI credentials"](https://docs.zowe.org/stable/troubleshoot/cli/troubleshoot-cli-credentials/#secrets-sdk-persistence-level-for-windows) page on Zowe Docs. [#3935](https://github.com/zowe/zowe-explorer-vscode/pull/3935)
 - Updated minimum VS Code version from 1.79 to 1.90. We are dropping support for VS Code releases that bundle versions of Node.js no longer receiving security updates. [#3684](https://github.com/zowe/zowe-explorer-vscode/issues/3684)
+- Added support for downloading data sets, data set members, USS files, and USS directories. [#3843](https://github.com/zowe/zowe-explorer-vscode/pull/3843)
 
 ### Bug fixes
 

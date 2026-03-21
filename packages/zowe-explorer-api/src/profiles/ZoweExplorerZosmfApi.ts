@@ -123,8 +123,11 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
      * An implementation of the Zowe Explorer USS API interface for zOSMF.
      */
     export class UssApi extends CommonApi implements MainframeInteraction.IUss {
-        public fileList(ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.List.fileList(this.getSession(), ussFilePath, { responseTimeout: this.profile?.profile?.responseTimeout });
+        public fileList(ussFilePath: string, options?: zosfiles.IUSSListOptions): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.List.fileList(this.getSession(), ussFilePath, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
 
         public isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
@@ -136,6 +139,22 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 ...options,
             });
+        }
+
+        public downloadDirectory(
+            ussDirectoryPath: string,
+            fileOptions?: zosfiles.IDownloadOptions,
+            listOptions?: zosfiles.IUSSListOptions
+        ): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.Download.ussDir(
+                this.getSession(),
+                ussDirectoryPath,
+                {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...fileOptions,
+                },
+                listOptions
+            );
         }
 
         public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
@@ -264,6 +283,13 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
 
         public getContents(dataSetName: string, options?: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Download.dataSet(this.getSession(), dataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
+        }
+
+        public downloadAllMembers(dataSetName: string, options?: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.Download.allMembers(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 ...options,
             });
