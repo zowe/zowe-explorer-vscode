@@ -21,6 +21,7 @@ import {
   stringifyValueByType,
   getProfileType,
   getOriginalProfileKeyWithNested,
+  getRenamedProfileKeyWithNested,
   getPropertyTypeForConfigEditor,
   getSortOrderDisplayName,
   getNestedProperty,
@@ -238,7 +239,10 @@ export const RenderConfig = ({
         const entriesForSorting = Object.entries(filteredCombinedConfig);
 
         // Add secure properties from the parent object if they're not already in the properties
-        const parentConfigPath = path.slice(0, -1);
+        const currentProfileKeyForDisk = extractProfileKeyFromPath(path);
+        const originalProfileKeyForDisk = getOriginalProfileKeyWithNested(currentProfileKeyForDisk, configPath, renames);
+        
+        const parentConfigPath = ["profiles", ...originalProfileKeyForDisk.split(".")];
         const parentConfig = getNestedProperty(configurations[selectedTab!]?.properties, parentConfigPath);
         if (parentConfig?.secure && Array.isArray(parentConfig.secure)) {
           parentConfig.secure.forEach((securePropertyName: string) => {
@@ -251,9 +255,8 @@ export const RenderConfig = ({
 
         // Fallback: If we couldn't find secure properties through getNestedProperty, try to find them directly
         if (!parentConfig?.secure || parentConfig.secure.length === 0) {
-          const currentProfileKey = extractProfileKeyFromPath(path);
           const flatProfiles = flattenProfiles(configurations[selectedTab!]?.properties?.profiles || {});
-          const currentProfile = flatProfiles[currentProfileKey];
+          const currentProfile = flatProfiles[originalProfileKeyForDisk];
           if (currentProfile?.secure && Array.isArray(currentProfile.secure)) {
             currentProfile.secure.forEach((securePropertyName: string) => {
               if (
@@ -267,10 +270,19 @@ export const RenderConfig = ({
         }
 
         // Also add pending secure properties that might not be in the parent's secure array yet
-        const currentProfileKey = extractProfileKeyFromPath(path);
-        if (configPath && currentProfileKey) {
+        const currentProfileKeyForSecure = extractProfileKeyFromPath(path);
+        const originalProfileKeyForSecure = getOriginalProfileKeyWithNested(currentProfileKeyForSecure, configPath, renames);
+        const renamedProfileKeyForSecure = getRenamedProfileKeyWithNested(originalProfileKeyForSecure, configPath, renames);
+
+        if (configPath && currentProfileKeyForSecure) {
           Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
-            if (entry.profile === currentProfileKey && entry.secure) {
+            const entryProfile = entry.profile;
+            const matches =
+              entryProfile === currentProfileKeyForSecure ||
+              entryProfile === originalProfileKeyForSecure ||
+              entryProfile === renamedProfileKeyForSecure;
+
+            if (matches && entry.secure) {
               const keyParts = key.split(".");
               const propertyName = keyParts[keyParts.length - 1];
               // Only add if not already in the properties and not already added as a secure property

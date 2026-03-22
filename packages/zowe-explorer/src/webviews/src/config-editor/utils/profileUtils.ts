@@ -609,19 +609,11 @@ export function mergePendingChangesForProfile(
     pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
     renames: { [configPath: string]: { [originalKey: string]: string } }
 ): any {
-    const fullPath = path.join(".");
     const currentProfileKey = extractProfileKeyFromPath(path);
     const pendingChangesAtLevel: { [key: string]: any } = {};
 
     // Check if this profile was renamed and get the original profile name (handle nested profiles)
     const originalProfileKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
-
-    const originalPathArray: string[] = ["profiles"];
-    originalProfileKey.split(".").forEach((part, i, parts) => {
-        originalPathArray.push(part);
-        if (i < parts.length - 1) originalPathArray.push("profiles");
-    });
-    const originalFullPath = originalPathArray.join(".");
 
     // Helper function to check if a profile key matches considering renames
     const isProfileKeyMatch = (entryProfileKey: string): boolean => {
@@ -677,17 +669,62 @@ export function mergePendingChangesForProfile(
     };
 
     Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
-        const keyUnderCurrentPath = key === fullPath || key.startsWith(fullPath + ".");
-        const keyUnderOriginalPath = currentProfileKey !== originalProfileKey && (key === originalFullPath || key.startsWith(originalFullPath + "."));
-        if (!isProfileKeyMatch(entry.profile) || (!keyUnderCurrentPath && !keyUnderOriginalPath)) {
+        if (!isProfileKeyMatch(entry.profile)) {
             return;
         }
-        const keyParts = key.split(".");
-        const relativePath = keyUnderCurrentPath ? keyParts.slice(path.length) : keyParts.slice(originalPathArray.length);
 
-        if (relativePath.length === 1 && !entry.secure) {
-            pendingChangesAtLevel[relativePath[0]] = entry.value;
-        } else if (relativePath.length > 1 && relativePath[0] !== "profiles" && !entry.secure) {
+        let relativePath: string[] = [];
+        const propertiesMarker = ".properties.";
+        const markerIndex = key.indexOf(propertiesMarker);
+
+        const isCurrentlyInsideProperties = path[path.length - 1] === "properties";
+
+        if (markerIndex !== -1) {
+            // This is a change to a property within the "properties" section
+            const propertyPath = key.substring(markerIndex + propertiesMarker.length);
+            const propertyPathParts = propertyPath.split(".");
+
+            if (isCurrentlyInsideProperties) {
+                // We are already inside the "properties" section, so the relative path is just the property path
+                relativePath = propertyPathParts;
+            } else {
+                // We are at the profile root, so the relative path must include the "properties" prefix
+                relativePath = ["properties", ...propertyPathParts];
+            }
+        } else {
+            // This is a change to a top-level profile field (like "type", "secure", etc.)
+            if (isCurrentlyInsideProperties) {
+                // Top-level fields don't belong inside the "properties" section
+                return;
+            }
+
+            // Extract the field name from the end of the key
+            const keyParts = key.split(".");
+            // A profile key "a.b" has path segments ["profiles", "a", "profiles", "b"]
+            // We need to skip these segments to find the field name
+            let i = 2;
+            while (i < keyParts.length && keyParts[i] === "profiles" && i + 1 < keyParts.length) {
+                i += 2;
+            }
+            // If there's a field after the profile segments, it's our relative path
+            if (i < keyParts.length) {
+                relativePath = keyParts.slice(i);
+            } else {
+                // It matches the profile itself, no relative field
+                relativePath = [];
+            }
+        }
+
+        if (relativePath.length === 0) {
+            return; // No specific field to merge
+        }
+
+        if (relativePath.length === 1) {
+            // Double check: structural fields should never be merged as simple values
+            if (relativePath[0] !== "properties" && relativePath[0] !== "profiles") {
+                pendingChangesAtLevel[relativePath[0]] = entry.value;
+            }
+        } else if (relativePath.length > 1 && relativePath[0] !== "profiles") {
             let current = baseObj;
             for (let i = 0; i < relativePath.length - 1; i++) {
                 if (!current[relativePath[i]]) {
@@ -696,13 +733,16 @@ export function mergePendingChangesForProfile(
                 current = current[relativePath[i]];
             }
             current[relativePath[relativePath.length - 1]] = entry.value;
-        } else if (entry.secure && path[path.length - 1] !== "properties") {
-            // Handle secure properties - they should be added to the secure array
-            if (!baseObj.secure) {
+        }
+
+        // Always handle secure property tracking at the profile's root level
+        if (entry.secure && !isCurrentlyInsideProperties) {
+            if (!Array.isArray(baseObj.secure)) {
                 baseObj.secure = [];
             }
 
-            // For secure properties, the key format is typically "profiles.profileName.secure.propertyName"
+            // For secure properties, the key format is usually profiles.profileName.properties.propertyName
+            // We need to extract the property name
             const keyParts = key.split(".");
             const propertyName = keyParts[keyParts.length - 1];
 
@@ -713,9 +753,7 @@ export function mergePendingChangesForProfile(
         }
     });
 
-    const result = { ...baseObj, ...pendingChangesAtLevel };
-
-    return result;
+    return { ...baseObj, ...pendingChangesAtLevel };
 }
 
 export function isMergedPropertySecure(_displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean): boolean {
@@ -824,7 +862,36 @@ export function isPropertySecure(
         const config = configurations[selectedTab];
         if (config) {
             const configPath = config.configPath;
-            const pendingChange = pendingChanges[configPath]?.[fullKey];
+            let pendingChange = pendingChanges[configPath]?.[fullKey];
+
+            // If not found, it might have been renamed, so we need to construct the current (new) full key
+            if (!pendingChange && renames && renames[configPath]) {
+                const currentProfileKey = extractProfileKeyFromPath(path);
+                const renamedProfileKey = getRenamedProfileKeyWithNested(currentProfileKey, configPath, renames);
+
+                if (renamedProfileKey !== currentProfileKey) {
+                    // Calculate the new path prefix for the renamed profile
+                    const newProfileParts: string[] = ["profiles"];
+                    renamedProfileKey.split(".").forEach((p, idx, arr) => {
+                      newProfileParts.push(p);
+                      if (idx < arr.length - 1) newProfileParts.push("profiles");
+                    });
+                    const newPrefix = newProfileParts.join(".");
+
+                    // Calculate the property part by skipping the current profile segments in original fullKey
+                    // Each profile part "a" in currentProfileKey contributes 2 segments to fullKey (profiles.a)
+                    // unless it's a nested profile which also adds "profiles" segments.
+                    const currentProfilePartsCount = currentProfileKey.split(".").length;
+                    const segmentsToSkip = currentProfilePartsCount * 2;
+                    const originalFullKeyParts = fullKey.split(".");
+                    const propertyPart = originalFullKeyParts.slice(segmentsToSkip).join(".");
+
+                    const renamedFullKey = propertyPart ? `${newPrefix}.${propertyPart}` : newPrefix;
+
+                    pendingChange = pendingChanges[configPath]?.[renamedFullKey];
+                }
+            }
+
             if (pendingChange && pendingChange.secure !== undefined) {
                 return pendingChange.secure;
             }
@@ -896,9 +963,31 @@ export function isPropertySecure(
                 let i = 1;
 
                 // Navigate through the actual path structure to find the profile
+                // We need to resolve renames for each path segment to find the profile on disk
                 while (i < path.length && currentProfile) {
-                    const currentPathSegment = path[i];
+                    let currentPathSegment = path[i];
                     const nextPathSegment = path[i + 1];
+
+                    // Check if the current segment name exists on disk
+                    // If it doesn't, it might have been renamed, so we need to find the original key
+                    if (!currentProfile[currentPathSegment] && renames && renames[config.configPath]) {
+                        // Look for an original key that maps to this currentPathSegment (new name)
+                        for (const [originalKey, newKey] of Object.entries(renames[config.configPath])) {
+                            // The rename might be a simple renamed profile or a part of a nested profile path
+                            if (newKey === currentPathSegment) {
+                                currentPathSegment = originalKey;
+                                break;
+                            }
+                            // Also check for nested profile renames like "test -> test1" when path is "test1.zosmf"
+                            if (currentPathSegment.startsWith(newKey + ".") ) {
+                                const originalSegment = currentPathSegment.replace(newKey + ".", originalKey + ".");
+                                if(currentProfile[originalSegment]) {
+                                    currentPathSegment = originalSegment;
+                                    break;
+                                }
+                            }
+                        }
+                    }
 
                     if (nextPathSegment === "profiles") {
                         // This is a nested profile, go deeper
@@ -1270,7 +1359,9 @@ export function filterSecureProperties(
         const filteredProperties = { ...value };
 
         Object.keys(filteredProperties).forEach((propKey) => {
-            if (secureProperties.includes(propKey)) {
+            const isSecure = secureProperties.includes(propKey);
+            
+            if (isSecure) {
                 // Check if this property is in merged properties and has secure: false
                 // If so, don't filter it out even though it's in the local secure array
                 const isInsecureInMergedProps = mergedProps && mergedProps[propKey] && mergedProps[propKey].secure === false;
@@ -1307,84 +1398,38 @@ export function mergePendingSecureProperties(
     pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
     renames?: { [configPath: string]: { [originalKey: string]: string } }
 ): any[] {
-    const expectedSecurePath = pathFromArray(path.concat(["secure"]));
+    // Identify all pending changes for this profile that are marked as secure
+    const profileKey = extractProfileKeyFromPath(path);
+    const originalProfileKey = renames ? getOriginalProfileKeyWithNested(profileKey, configPath, renames) : profileKey;
+    const renamedProfileKey = renames ? getRenamedProfileKeyWithNested(profileKey, configPath, renames) : profileKey;
 
     const pendingSecureProps: string[] = Object.entries(pendingChanges[configPath] ?? {})
         .filter(([key, entry]) => {
             if (!entry.secure) return false;
 
-            const keyUnderSecurePath = key === expectedSecurePath || key.startsWith(expectedSecurePath + ".");
-
-            let currentProfileName: string;
-            if (path.length >= 2 && path[0] === "profiles") {
-                const profileSegments = [];
-                for (let i = 1; i < path.length; i++) {
-                    if (path[i] !== "profiles" && path[i] !== "secure") {
-                        profileSegments.push(path[i]);
-                    }
-                }
-                currentProfileName = profileSegments.join(".");
-            } else {
-                currentProfileName = path[1] || "";
-            }
-
-            // Check if the entry profile matches the current profile name
-            // This handles both direct matches and renamed profiles
-            const entryProfileMatches =
-                entry.profile === currentProfileName || entry.profile.split(".").slice(0, -2).join(".") === currentProfileName;
-
-            // check if this is a renamed profile by looking at the renames mapping
-            let renamedProfileMatches = false;
-            if (renames && renames[configPath]) {
-                // Check if the current profile name is a renamed version of the entry profile
-                for (const [originalKey, newKey] of Object.entries(renames[configPath])) {
-                    if (newKey === currentProfileName && originalKey === entry.profile) {
-                        renamedProfileMatches = true;
-                        break;
-                    }
-                    // check for nested profile renames
-                    if (newKey.startsWith(currentProfileName + ".") && originalKey.startsWith(entry.profile + ".")) {
-                        renamedProfileMatches = true;
-                        break;
-                    }
-                }
-
-                // check if the entry profile is a renamed version of the current profile name
-                // This handles the case where the entry.profile has been updated to the new name
-                for (const [originalKey, newKey] of Object.entries(renames[configPath])) {
-                    if (originalKey === currentProfileName && newKey === entry.profile) {
-                        renamedProfileMatches = true;
-                        break;
-                    }
-                    // Also check for nested profile renames
-                    if (originalKey.startsWith(currentProfileName + ".") && newKey.startsWith(entry.profile + ".")) {
-                        renamedProfileMatches = true;
-                        break;
-                    }
-                }
-            }
-
-            return keyUnderSecurePath && (entryProfileMatches || renamedProfileMatches);
+            // Check if the change belongs to the profile we are rendering (by original or current name)
+            const entryProfile = entry.profile;
+            return entryProfile === profileKey || entryProfile === originalProfileKey || entryProfile === renamedProfileKey;
         })
-        .map(([, entry]) => String(entry.path[entry.path.length - 1]));
+        .map(([key]) => {
+            // Extract the property name (the part after the last dot)
+            const parts = key.split(".");
+            return parts[parts.length - 1];
+        });
 
-    const baseArray: any[] = Array.isArray(value) ? value : [];
-
-    // Filter out secure properties from the base array if there's a pending insecure property with the same key
-    const filteredBaseArray = baseArray.filter((prop) => {
+    // Combine with existing secure properties and remove duplicates
+    const combined = [...(value || []), ...pendingSecureProps];
+    const filtered = combined.filter((prop) => {
+        // Also respect pending deletions or insecure toggles
         const hasPendingInsecureProperty = Object.entries(pendingChanges[configPath] ?? {}).some(([key, entry]) => {
             const keyParts = key.split(".");
             const propertyName = keyParts[keyParts.length - 1];
-            return propertyName === prop && !entry.secure && key.includes("properties");
+            return propertyName === prop && !entry.secure;
         });
         return !hasPendingInsecureProperty;
     });
 
-    // add pending secure props that aren't already in the filtered base array
-    const newSecureProps = pendingSecureProps.filter((prop) => !filteredBaseArray.includes(prop));
-    const result = newSecureProps.length > 0 ? [...filteredBaseArray, ...newSecureProps] : filteredBaseArray;
-    // sort alphabetically
-    return result.sort();
+    return Array.from(new Set(filtered)).sort();
 }
 
 export function isPropertyFromMergedProps(

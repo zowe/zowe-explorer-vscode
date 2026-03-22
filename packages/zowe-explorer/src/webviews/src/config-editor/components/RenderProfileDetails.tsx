@@ -236,10 +236,7 @@ export const RenderProfileDetails = ({
             }
 
             let effectivePath: string[];
-            const hasPendingChanges = Array.isArray(pendingProfiles)
-              ? pendingProfiles.includes(selectedProfileKey)
-              : Object.prototype.hasOwnProperty.call(pendingProfiles, selectedProfileKey);
-            const pathProfileKey = hasPendingChanges || selectedProfileKey !== effectiveProfileKey ? selectedProfileKey : effectiveProfileKey;
+            const pathProfileKey = pendingProfiles[selectedProfileKey] ? selectedProfileKey : effectiveProfileKey;
 
             const profilePathParts = pathProfileKey.split(".");
             if (profilePathParts.length === 1) {
@@ -254,13 +251,8 @@ export const RenderProfileDetails = ({
               }
             }
 
-            const flatProfilesRecord = flatProfiles as Record<string, any>;
-            const pendingProfilesRecord = pendingProfiles as Record<string, any>;
             const effectiveProfile =
-              flatProfilesRecord[effectiveProfileKey] ||
-              pendingProfilesRecord[effectiveProfileKey] ||
-              pendingProfilesRecord[selectedProfileKey] ||
-              {};
+              flatProfiles[effectiveProfileKey] || pendingProfiles[effectiveProfileKey] || pendingProfiles[selectedProfileKey] || {};
 
             Object.values(renames[currentConfigPath] || {}).some((newKey) => {
               if (newKey === selectedProfileKey) return true;
