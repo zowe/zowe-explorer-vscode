@@ -9,7 +9,7 @@
  *
  */
 
-import { flattenProfiles, extractProfileKeyFromPath, pathFromArray } from "./configUtils";
+import { flattenProfiles, extractProfileKeyFromPath } from "./configUtils";
 import { Configuration, PendingChange, schemaValidation } from "../types";
 
 export function getProfileType(
@@ -393,9 +393,7 @@ export function getAllProfileKeys(profiles: any, parentKey = ""): string[] {
  * logic is still applied using the filtered list so the same level is preferred over the parent.
  */
 export function getReplacementProfileAfterDelete(orderedList: string[], deletedProfileKey: string): string | null {
-    const filteredSet = new Set(
-        orderedList.filter((p) => p !== deletedProfileKey && !p.startsWith(deletedProfileKey + "."))
-    );
+    const filteredSet = new Set(orderedList.filter((p) => p !== deletedProfileKey && !p.startsWith(deletedProfileKey + ".")));
     if (filteredSet.size === 0) return null;
 
     const deletedIndex = orderedList.indexOf(deletedProfileKey);
@@ -873,8 +871,8 @@ export function isPropertySecure(
                     // Calculate the new path prefix for the renamed profile
                     const newProfileParts: string[] = ["profiles"];
                     renamedProfileKey.split(".").forEach((p, idx, arr) => {
-                      newProfileParts.push(p);
-                      if (idx < arr.length - 1) newProfileParts.push("profiles");
+                        newProfileParts.push(p);
+                        if (idx < arr.length - 1) newProfileParts.push("profiles");
                     });
                     const newPrefix = newProfileParts.join(".");
 
@@ -979,9 +977,9 @@ export function isPropertySecure(
                                 break;
                             }
                             // Also check for nested profile renames like "test -> test1" when path is "test1.zosmf"
-                            if (currentPathSegment.startsWith(newKey + ".") ) {
+                            if (currentPathSegment.startsWith(newKey + ".")) {
                                 const originalSegment = currentPathSegment.replace(newKey + ".", originalKey + ".");
-                                if(currentProfile[originalSegment]) {
+                                if (currentProfile[originalSegment]) {
                                     currentPathSegment = originalSegment;
                                     break;
                                 }
@@ -1360,7 +1358,7 @@ export function filterSecureProperties(
 
         Object.keys(filteredProperties).forEach((propKey) => {
             const isSecure = secureProperties.includes(propKey);
-            
+
             if (isSecure) {
                 // Check if this property is in merged properties and has secure: false
                 // If so, don't filter it out even though it's in the local secure array
@@ -1404,7 +1402,7 @@ export function mergePendingSecureProperties(
     const renamedProfileKey = renames ? getRenamedProfileKeyWithNested(profileKey, configPath, renames) : profileKey;
 
     const pendingSecureProps: string[] = Object.entries(pendingChanges[configPath] ?? {})
-        .filter(([key, entry]) => {
+        .filter(([_, entry]) => {
             if (!entry.secure) return false;
 
             // Check if the change belongs to the profile we are rendering (by original or current name)
