@@ -1185,7 +1185,7 @@ describe("ZosJobsProvider unit tests - function pollData", () => {
             spool: globalMocks.mockIJobFile,
         });
 
-        const getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(5000);
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(5000);
         const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("5000");
 
         await globalMocks.testJobsProvider.pollData(spoolNode);
