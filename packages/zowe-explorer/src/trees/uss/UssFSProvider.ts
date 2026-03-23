@@ -44,6 +44,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.USS, this.onDidChangeFile);
         this.root = new UssDirectory();
+        this.root.allFetched = true; // Root is always considered loaded or will be fetched
     }
 
     public encodingMap: Record<string, ZosEncoding> = {};
@@ -73,7 +74,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param uri The URI of the resource to stat.
      * @returns A promise that resolves to a vscode.FileStat object.
      */
-    private async statImplementation(uri: vscode.Uri, isActiveEditor: boolean = false): Promise<vscode.FileStat> {
+    private async statImplementation(uri: vscode.Uri, isVisibleEditor: boolean = false): Promise<vscode.FileStat> {
         ZoweLogger.trace(`[UssFSProvider] statImplementation called with ${uri.toString()}`);
 
         let isFetching = false;
@@ -88,7 +89,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
 
-        const shouldFetch = isFetching || isActiveEditor;
+        const shouldFetch = isFetching || isVisibleEditor;
 
         const entry = isFetching ? await this.remoteLookupForResource(uri) : await this.lookupWithCache(uri);
 
@@ -319,9 +320,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         let resp: IZosFilesResponse;
         if (!entryExists) {
-            resp = await this.listFiles(uriInfo.profile, uri);
+            // We use keepRelative=true to get "." and ".." so we can accurately update mtime
+            resp = await this.listFiles(uriInfo.profile, uri, true);
             if (!resp.success) {
                 throw vscode.FileSystemError.FileNotFound(uri);
+            }
+
+            // Since keepRelative=true prevents listFiles from auto-creating the directory,
+            // we must detect if this is a directory listing (contains ".") and create it manually.
+            const isDirectoryListing = resp.apiResponse.items?.some((item) => item.name === ".");
+            if (isDirectoryListing && !this.exists(uri)) {
+                this._createDirectoryRecursive(uri);
             }
         }
 
@@ -331,9 +340,24 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             return entry;
         }
 
+        if (FsAbstractUtils.isDirectoryEntry(entry) && (!entryExists || resp?.success)) {
+            entry.allFetched = true;
+        }
+
+        // If listFiles was called above, resp is set. If not, we fetch it now.
+        const fileList = entryExists ? await this.listFiles(entry.metadata.profile, uri, true) : resp;
+
+        // Update the directory's own mtime using the "." entry
+        if (FsAbstractUtils.isDirectoryEntry(entry) && fileList.success && fileList.apiResponse?.items) {
+            const dotEntry = fileList.apiResponse.items.find((i) => i.name === ".");
+            if (dotEntry && dotEntry.mtime) {
+                entry.mtime = dayjs(dotEntry.mtime).valueOf();
+            }
+        }
+
         // TODO fix: Undefined behavior when creating FS entries with dot-segments i.e "/u/users/<user>/a/b/c/../../../TEST";
         if (entry == null && resp?.success) {
-            // if entry is null, listFiles did not create a new directory entry - this is a file
+            // If entry is still null, it means it wasn't a directory listing (no "."), so treat as file.
             let parentDir = this.lookupParentDirectory(uri, true);
             if (parentDir == null) {
                 const parentPath = path.posix.join(uri.path, "..");
@@ -356,9 +380,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             return parentDir.entries.get(filename) as UssFile;
         }
 
-        const fileList = entryExists ? await this.listFiles(entry.metadata.profile, uri) : resp;
         for (const item of fileList.apiResponse?.items ?? []) {
             const itemName = item.name as string;
+
+            // Skip relative path entries when populating the tree
+            if (itemName === "." || itemName === "..") {
+                continue;
+            }
 
             const isDirectory = item.mode?.startsWith("d") ?? false;
             const newEntryType = isDirectory ? vscode.FileType.Directory : vscode.FileType.File;
@@ -402,30 +430,102 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // profile entry; check if "pattern" is in query.
             const urlQuery = new URLSearchParams(uri.query);
             if (!urlQuery.has("searchPath")) {
-                return this._lookupAsDirectory(profileUri, false) as UssDirectory;
+                const rootDir = this._lookupAsDirectory(profileUri, false) as UssDirectory;
+                rootDir.allFetched = true;
+                return rootDir;
             }
         }
 
         return this.fetchEntries(uri, uriInfo);
     }
 
-    private async readDirectoryImplementation(uri: vscode.Uri): Promise<UssDirectory> {
+    private async readDirectoryImplementation(uri: vscode.Uri, forceRemote: boolean = false): Promise<UssDirectory> {
         /**
          * TODOs:
          * - Look into pre-fetching a directory level below the one given
          * - Should we support symlinks and can we use z/OSMF "report" option?
          */
-        let dir: UssDirectory;
+        let dir: UssDirectory | undefined;
         try {
-            this._lookupAsDirectory(uri, false) as UssDirectory;
+            dir = this._lookupAsDirectory(uri, false) as UssDirectory;
         } catch (err) {
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
                 throw err;
             }
         }
 
-        // check to see if contents have updated on the remote system before returning its children.
-        dir = (await this.remoteLookupForResource(uri)) as UssDirectory;
+        const queryParams = new URLSearchParams(uri.query || "");
+        const isExplicitFetch = queryParams.get("fetch") === "true";
+
+        let shouldFetch = forceRemote || isExplicitFetch || !dir || !dir.allFetched;
+
+        const parentPath = path.posix.dirname(uri.path);
+
+        if (!shouldFetch && dir && uri.path !== "/" && parentPath !== uri.path && parentPath !== "/") {
+            try {
+                const now = Date.now();
+                const lastValidated = dir.mtimeValidatedAt || 0;
+
+                if (now - lastValidated < 50) {
+                    shouldFetch = false;
+                } else {
+                    const uriInfo = this._getInfoFromUri(uri);
+                    const parentUri = uri.with({ path: parentPath });
+
+                    const parentResponse = await this.executeWithReuse<IZosFilesResponse>(parentUri, {
+                        keyGenerator: (u) => `check_parent_${this.pathWithoutTrailingSlash(u)}`,
+                        checkLocal: () => false, // Force the network call
+                        execute: () => this.listFiles(uriInfo.profile, parentUri),
+                    });
+
+                    if (parentResponse && parentResponse.success && parentResponse.apiResponse?.items) {
+                        const fileName = path.posix.basename(uri.path);
+                        const remoteEntry = parentResponse.apiResponse.items.find((item) => item.name === fileName);
+
+                        if (remoteEntry) {
+                            const remoteMtime = remoteEntry.mtime ? dayjs(remoteEntry.mtime).valueOf() : 0;
+
+                            if (remoteMtime !== dir.mtime) {
+                                shouldFetch = true;
+                            } else {
+                                dir.mtimeValidatedAt = Date.now();
+                            }
+                        } else {
+                            shouldFetch = true;
+                        }
+
+                        // Batch-update the validation timer for all local siblings
+                        const parentDirLocal = this._lookupAsDirectory(parentUri, true) as UssDirectory;
+                        if (parentDirLocal && parentDirLocal.entries) {
+                            const validationTime = Date.now();
+                            for (const item of parentResponse.apiResponse.items) {
+                                const siblingLocal = parentDirLocal.entries.get(item.name as string);
+                                if (siblingLocal && FsAbstractUtils.isDirectoryEntry(siblingLocal)) {
+                                    const siblingMtime = item.mtime ? dayjs(item.mtime).valueOf() : 0;
+                                    if (siblingLocal.mtime === siblingMtime) {
+                                        siblingLocal.mtimeValidatedAt = validationTime;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                ZoweLogger.warn(`[UssFSProvider] Failed to validate mtime against parent: ${err instanceof Error ? err.message : err}`);
+            }
+        }
+
+        if (shouldFetch) {
+            dir = (await this.remoteLookupForResource(uri)) as UssDirectory;
+            if (dir) {
+                dir.allFetched = true;
+                dir.mtimeValidatedAt = Date.now();
+            }
+        }
+
+        if (!dir) {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
 
         return dir;
     }

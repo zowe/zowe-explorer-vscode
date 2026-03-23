@@ -48,6 +48,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, this.onDidChangeFile);
         this.root = new DirEntry("");
+        this.root.allFetched = true; // Root is always considered loaded or will be fetched
     }
 
     public encodingMap: Record<string, ZosEncoding> = {};
@@ -169,12 +170,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const segments = uri.path.split("/").filter((s) => s.length > 0);
         const isMemberRequest = segments.length === 3;
 
-        const targetPrefix = uri.path.split("/").slice(0, 3).join("/") + "/";
-
-        const isVisibleEditor = vscode.window.visibleTextEditors.some((editor) => {
-            const editorUri = editor.document.uri;
-            return editorUri.toString() === uri.toString() || editorUri.path.startsWith(targetPrefix);
-        });
+        const isVisibleEditor = vscode.window.visibleTextEditors.some((editor) => editor.document.uri.toString() === uri.toString());
 
         if (isMemberRequest) {
             const memberName = segments[2];
@@ -277,6 +273,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         }
 
+        profileEntry.allFetched = true;
         return profileEntry;
     }
 
@@ -320,6 +317,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             entry.entries.set(fullMemberName, tempEntry);
         }
+
+        entry.allFetched = true;
     }
 
     private async fetchDataset(uri: vscode.Uri, uriInfo: UriFsInfo, forceFetch?: boolean): Promise<PdsEntry | DsEntry> {
@@ -437,10 +436,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         if (uriInfo.isRoot) {
             // profile entry; check if "pattern" filter is in query.
-
             const urlQuery = new URLSearchParams(uri.query);
             if (!urlQuery.has("pattern")) {
-                return this._lookupAsDirectory(profileUri, false);
+                const rootDir = this._lookupAsDirectory(profileUri, false);
+                rootDir.allFetched = true;
+                return rootDir;
             }
 
             return this.fetchEntriesForProfile(uri, uriInfo, urlQuery.get("pattern"));
@@ -450,37 +450,81 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
     }
 
-    //TODO: forceRemote is required to differentiate between stat calls on PDS members and readDirectory calls on a PDS.
-    //TODO: if they are not differentiated, PDS member calls will also always fetch.
-    //TODO: this will be removed when readDirectory caching is implemented
     public async readDirectoryImplementation(uri: vscode.Uri, forceRemote: boolean = false): Promise<DirEntry> {
-        let dsEntry: DirEntry | DsEntry = null;
+        let dir: DirEntry | undefined;
+
+        try {
+            dir = this._lookupAsDirectory(uri, false);
+        } catch (err) {
+            if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
+                throw err;
+            }
+        }
 
         const queryParams = new URLSearchParams(uri.query);
         const isExplicitFetch = queryParams.get("fetch") === "true";
 
-        // Fetch if the URI explicitly asks for it, OR if the caller forces it
-        const shouldFetch = forceRemote || isExplicitFetch;
+        let shouldFetch = forceRemote || isExplicitFetch || !dir || !dir.allFetched;
 
-        try {
-            dsEntry = shouldFetch ? await this.remoteLookupForResource(uri) : this._lookupAsDirectory(uri, false);
-        } catch (err) {
-            if (!(err instanceof vscode.FileSystemError)) {
-                throw err;
+        const parentPath = path.posix.dirname(uri.path);
+
+        if (!shouldFetch && dir && uri.path !== "/" && parentPath !== uri.path && parentPath !== "/") {
+            try {
+                const now = Date.now();
+                const lastValidated = dir.mtimeValidatedAt || 0;
+
+                if (now - lastValidated < 50) {
+                    shouldFetch = false;
+                } else {
+                    const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+                    const fileName = path.posix.basename(uri.path);
+
+                    const statResponse = await this.executeWithReuse<IZosFilesResponse>(uri, {
+                        keyGenerator: (u) => `stat_${uriInfo.profileName}_${fileName}`,
+                        checkLocal: () => false,
+                        execute: async () => {
+                            const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
+                            return await mvsApi.dataSet(fileName, { attributes: true });
+                        },
+                    });
+
+                    if (statResponse && statResponse.success && statResponse.apiResponse?.items?.length) {
+                        const remoteEntry = statResponse.apiResponse.items[0];
+                        let remoteMtime = 0;
+
+                        if (remoteEntry.m4date && remoteEntry.mtime) {
+                            remoteMtime = dayjs(`${remoteEntry.m4date} ${remoteEntry.mtime}:${remoteEntry.msec || "00"}`).valueOf();
+                        }
+
+                        if (remoteMtime && remoteMtime !== dir.mtime) {
+                            shouldFetch = true;
+                        } else {
+                            dir.mtimeValidatedAt = Date.now();
+                        }
+                    } else {
+                        shouldFetch = true;
+                    }
+                }
+            } catch (err) {
+                ZoweLogger.warn(`[DatasetFSProvider] Failed to validate mtime: ${err instanceof Error ? err.message : err}`);
             }
-            // If the local lookup fails (e.g. it wasn't cached yet), fallback to network
-            if (err.code === "FileNotFound" && !shouldFetch) {
-                dsEntry = await this.remoteLookupForResource(uri);
+        }
+
+        if (shouldFetch) {
+            dir = (await this.remoteLookupForResource(uri)) as DirEntry;
+            if (dir) {
+                dir.allFetched = true;
+                dir.mtimeValidatedAt = Date.now(); // Reset validation timer upon a full fetch
             }
         }
 
         this.validatePath(uri);
 
-        if (dsEntry == null || FsDatasetsUtils.isDsEntry(dsEntry)) {
+        if (dir == null || FsDatasetsUtils.isDsEntry(dir)) {
             throw vscode.FileSystemError.FileNotFound(uri);
         }
 
-        return dsEntry;
+        return dir;
     }
 
     /**
@@ -491,8 +535,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         const dirEntry = await this.executeWithReuse<DirEntry>(uri, {
             keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
-            checkLocal: () => false,
-            execute: () => this.readDirectoryImplementation(uri, true),
+            checkLocal: () => {
+                const localDir = this._lookupAsDirectory(uri, true);
+                return !!localDir && localDir.allFetched === true;
+            },
+            execute: () => this.readDirectoryImplementation(uri, false),
             action: "readDirectory",
         });
 
@@ -610,9 +657,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     };
                 } else {
                     dsEntry.data = data;
+                    if (dsEntry.etag !== resp.apiResponse.etag) {
+                        dsEntry.mtime = Date.now();
+                    }
                     dsEntry.etag = resp.apiResponse.etag;
                     dsEntry.size = dsEntry.data.byteLength;
-                    dsEntry.mtime = Date.now();
                 }
             });
             ZoweLogger.trace(`[DatasetFSProvider] fetchDatasetAtUri fired a change event for ${uri.toString()}`);
