@@ -1084,6 +1084,10 @@ Would you like to do this now?`,
                 args: [path.posix.basename(uri.path)],
                 comment: ["URI path"],
             }),
+            prompt: vscode.l10n.t(
+                "Polling automatically checks for job status updates at regular intervals. Enter the time in milliseconds between each check (minimum 1000ms)."
+            ),
+            placeHolder: vscode.l10n.t("e.g., 5000 for checking every 5 seconds"),
             value: pollValue.toString(),
             validateInput: (value: string) => this.validatePollInterval(value),
         });
@@ -1196,6 +1200,12 @@ Would you like to do this now?`,
             this.updatePollContext(session);
             return;
         }
+
+        // Show informational message about polling before prompting for interval
+        const infoMessage = vscode.l10n.t(
+            "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again."
+        );
+        await Gui.infoMessage(infoMessage, { items: [vscode.l10n.t("Continue")], vsCodeOpts: { modal: false } });
 
         // Always prompt the user for a poll interval
         const pollInterval = await this.showPollOptions(session.resourceUri);

@@ -1165,6 +1165,38 @@ describe("ZosJobsProvider unit tests - function pollData", () => {
         expect(globalMocks.testJobsProvider.validatePollInterval("1000")).toStrictEqual(undefined);
         expect(globalMocks.testJobsProvider.validatePollInterval("1001")).toStrictEqual(undefined);
     });
+
+    it("shows accessibility-friendly prompt and placeholder in polling input box", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testJobNode = new ZoweJobNode({
+            label: "SOME(JOBNODE) - Input",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testJobsProvider.mSessionNodes[1],
+            session: globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+            profile: globalMocks.testProfile,
+            job: globalMocks.testIJob,
+        });
+        const spoolNode = new ZoweSpoolNode({
+            label: "exampleSpool",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testJobNode,
+            session: globalMocks.testSession,
+            job: globalMocks.testIJob,
+            spool: globalMocks.mockIJobFile,
+        });
+
+        const getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(5000);
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("5000");
+
+        await globalMocks.testJobsProvider.pollData(spoolNode);
+
+        expect(inputBoxSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                prompt: expect.stringContaining("Polling automatically checks for job status updates"),
+                placeHolder: expect.stringContaining("e.g., 5000 for checking every 5 seconds"),
+            })
+        );
+    });
 });
 
 describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
@@ -1235,12 +1267,41 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
 
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
         const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
 
         await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
 
+        expect(infoMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job polling will automatically check active jobs"),
+            expect.objectContaining({
+                items: expect.arrayContaining([expect.any(String)]),
+            })
+        );
         expect(inputBoxSpy).toHaveBeenCalled();
         expect(Poller.pollRequests).toStrictEqual({});
+    });
+
+    it("should show accessibility-friendly informational message before polling starts", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        // Verify informational message is shown with accessibility-friendly text
+        expect(infoMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job polling will automatically check active jobs for status changes"),
+            expect.objectContaining({
+                items: expect.arrayContaining([expect.any(String)]),
+                vsCodeOpts: { modal: false },
+            })
+        );
+        // Verify both the info message and input box were called
+        expect(infoMessageSpy).toHaveBeenCalled();
+        expect(inputBoxSpy).toHaveBeenCalled();
     });
 
     it("should prompt user for a filter if filter is not set", async () => {
