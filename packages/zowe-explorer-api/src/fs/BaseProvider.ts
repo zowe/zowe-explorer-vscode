@@ -32,6 +32,8 @@ export class BaseProvider {
 
     protected constructor() {}
 
+    public requestCache = new Map<string, Promise<unknown>>();
+
     /**
      * Compares the data for 2 Uint8Arrays, byte by byte.
      * @param a The first Uint8Array to compare
@@ -492,5 +494,105 @@ export class BaseProvider {
             }),
             silent ?? false
         );
+    }
+
+    // Helper function to parse uri query params into a string for the requestCache key
+    protected getQueryKey(uri: vscode.Uri): string {
+        if (!uri.query) {
+            return "";
+        }
+        const params = new URLSearchParams(uri.query);
+        const activeParams: string[] = [];
+
+        params.forEach((value, key) => {
+            if (value === "true") {
+                activeParams.push(`${key}=${value}`);
+            }
+        });
+
+        return activeParams.length > 0 ? "_" + activeParams.sort().join("_") : "";
+    }
+
+    /**
+     * Validates the result of a file system operation to ensure the type matches the requested action.
+     * @param result The result object to validate
+     * @param uri The URI of the resource being requested
+     * @param action The action being performed
+     * @returns The validated result
+     */
+    protected validateResult<T>(result: any, uri: vscode.Uri, action?: "readFile" | "readDirectory" | "stat"): T {
+        if (action === "readDirectory" && result?.type === vscode.FileType.File) {
+            throw vscode.FileSystemError.FileNotADirectory(uri);
+        } else if (action === "readFile" && result?.type === vscode.FileType.Directory) {
+            throw vscode.FileSystemError.FileIsADirectory(uri);
+        }
+        return result as T;
+    }
+
+    /**
+     * Executes the given operation with reuse logic to avoid duplicate network requests.
+     * @param uri The URI of the resource being requested
+     * @param options Logic options for key generation, local checks, and execution
+     */
+    protected async executeWithReuse<T>(
+        uri: vscode.Uri,
+        options: {
+            keyGenerator: (uri: vscode.Uri) => string;
+            checkLocal: () => boolean;
+            execute: () => Promise<T>;
+            action?: "readFile" | "readDirectory" | "stat";
+        }
+    ): Promise<T> {
+        const queryParams = new URLSearchParams(uri.query);
+        const isExplicitFetch = queryParams.get("fetch") === "true";
+        const hasConflictOrDiff = queryParams.has("conflict") || queryParams.has("inDiff");
+
+        // Generate fetch key (simulate fetch=true)
+        const fetchQueryParams = new URLSearchParams(uri.query);
+        fetchQueryParams.set("fetch", "true");
+        const fetchUri = uri.with({ query: fetchQueryParams.toString() });
+        const fetchKey = options.keyGenerator(fetchUri);
+
+        // Generate actual key (simulate no fetch param)
+        const actualQueryParams = new URLSearchParams(uri.query);
+        actualQueryParams.delete("fetch");
+        const actualUri = uri.with({ query: actualQueryParams.toString() });
+        const actualKey = options.keyGenerator(actualUri);
+
+        // Check local entry to see if it will fallback to a remote lookup
+        let localEntryFound = false;
+        if (!isExplicitFetch && !hasConflictOrDiff) {
+            try {
+                if (options.checkLocal()) {
+                    localEntryFound = true;
+                }
+            } catch {} // eslint-disable-line no-empty
+        }
+
+        const needNetwork = isExplicitFetch || (!hasConflictOrDiff && !localEntryFound);
+
+        if (needNetwork && this.requestCache.has(fetchKey)) {
+            return this.validateResult(await this.requestCache.get(fetchKey), uri, options.action);
+        }
+
+        const keyToUse = needNetwork ? fetchKey : actualKey;
+
+        if (this.requestCache.has(keyToUse)) {
+            return this.validateResult(await this.requestCache.get(keyToUse), uri, options.action);
+        }
+
+        const requestPromise = (async (): Promise<T> => {
+            try {
+                return this.validateResult(await options.execute(), uri, options.action);
+            } finally {
+                if (this.requestCache.get(keyToUse) === requestPromise) {
+                    this.requestCache.delete(keyToUse);
+                }
+            }
+        })();
+
+        this.requestCache.set(keyToUse, requestPromise);
+
+        return requestPromise;
     }
 }
