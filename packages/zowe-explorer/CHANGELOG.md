@@ -24,8 +24,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.[#4023](https://github.com/zowe/zowe-explorer-vscode/issues/4023)
 - Corrected description of the `mnorc` attribute for PDS members. [#4116](https://github.com/zowe/zowe-explorer-vscode/pull/4116)
 - Fixed slow performance when listing a large number of data sets or members. [#4116](https://github.com/zowe/zowe-explorer-vscode/pull/4116)
-
-### Bug fixes
+- Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Replaced the inaccessible markdown link with keyboard-accessible "Open Job" button that can be navigated using Tab and activated with Enter or Space keys. [#4030](https://github.com/zowe/zowe-explorer-vscode/issues/4030)
 
 ## `3.4.2`
 
