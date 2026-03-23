@@ -68,8 +68,7 @@ export class SharedInit {
 
         context.subscriptions.push(
             vscode.window.tabGroups.onDidChangeTabs(async (e) => {
-                // Check if a tab was closed and we have a last focused node
-                if (e.closed.length > 0 && SharedInit.lastFocusedNode && !SharedInit.isRestoringFocus) {
+                if (e.closed.length > 0 && !SharedInit.isRestoringFocus) {
                     const closedTab = e.closed[0];
 
                     const isZoweResource =
@@ -81,27 +80,73 @@ export class SharedInit {
                     if (isZoweResource) {
                         SharedInit.isRestoringFocus = true;
                         try {
-                            const { provider, node } = SharedInit.lastFocusedNode;
-                            const nodeLabel = typeof node.label === "string" ? node.label : node.label?.label || "item";
-
                             // Small delay to ensure the tab close operation completes
+                            // and the active editor is updated
                             await new Promise((resolve) => setTimeout(resolve, 150));
+
+                            const activeEditor = vscode.window.activeTextEditor;
+                            let uriToFocus: vscode.Uri;
+                            if (activeEditor) {
+                                const activeUri = activeEditor.document.uri;
+                                const activeScheme = activeUri.scheme;
+
+                                // Only focus tree if the new active editor is also a Zowe resource
+                                if (activeScheme !== ZoweScheme.DS && activeScheme !== ZoweScheme.USS && activeScheme !== ZoweScheme.Jobs) {
+                                    return;
+                                }
+                                uriToFocus = activeUri;
+                            } else {
+                                // No active editor, focus on the closed tab's node
+                                uriToFocus = (closedTab.input as vscode.TabInputText).uri;
+                            }
+
+                            const findNodeByUri = async (provider: IZoweTree<IZoweTreeNode>, uri: vscode.Uri): Promise<IZoweTreeNode | undefined> => {
+                                const searchInChildren = async (nodes: IZoweTreeNode[]): Promise<IZoweTreeNode | undefined> => {
+                                    for (const node of nodes) {
+                                        if (node.resourceUri?.path === uri.path) {
+                                            return node;
+                                        }
+                                        if (node.children && node.children.length > 0) {
+                                            const found = await searchInChildren(node.children);
+                                            if (found) {
+                                                return found;
+                                            }
+                                        }
+                                    }
+                                    return undefined;
+                                };
+
+                                const rootNodes = await provider.getChildren();
+                                return searchInChildren(rootNodes);
+                            };
+
+                            // Find the provider that matches the URI scheme
+                            const uriScheme = uriToFocus.scheme;
+                            let provider: IZoweTree<IZoweTreeNode> | undefined;
+                            if (uriScheme === ZoweScheme.DS && SharedTreeProviders.ds) {
+                                provider = SharedTreeProviders.ds;
+                            } else if (uriScheme === ZoweScheme.USS && SharedTreeProviders.uss) {
+                                provider = SharedTreeProviders.uss;
+                            } else if (uriScheme === ZoweScheme.Jobs && SharedTreeProviders.job) {
+                                provider = SharedTreeProviders.job;
+                            }
+
+                            if (!provider) {
+                                return;
+                            }
+
+                            const node = await findNodeByUri(provider, uriToFocus);
+                            if (!node) {
+                                return;
+                            }
+
                             await provider.getTreeView().reveal(node, { select: true, focus: true });
 
-                            // Additional delay to ensure focus is set before announcement
-                            await new Promise((resolve) => setTimeout(resolve, 50));
-
-                            // Announce to screen reader
-                            // Use setStatusBarMessage which is picked up by screen readers
-                            const message = vscode.l10n.t("Editor closed. Focus returned to {0}", nodeLabel);
-                            const statusMsg = vscode.window.setStatusBarMessage(message);
-
-                            // Dispose after screen reader has time to announce
-                            setTimeout(() => statusMsg.dispose(), 4000);
+                            const nodeLabel = typeof node.label === "string" ? node.label : node.label?.label || "item";
 
                             ZoweLogger.trace(`Focus restored to tree node: ${nodeLabel}`);
                         } catch (err) {
-                            ZoweLogger.trace(`Could not restore focus to tree node: ${err}`);
+                            ZoweLogger.trace(`Could not restore focus to tree node: ${(err as Error).message ?? String(err)}`);
                         } finally {
                             SharedInit.isRestoringFocus = false;
                         }
