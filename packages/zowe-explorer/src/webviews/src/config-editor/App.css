@@ -1158,6 +1158,7 @@ ul {
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 0;
+    min-width: 0;
     position: relative;
 }
 
@@ -1189,6 +1190,7 @@ ul {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    min-width: 0;
 }
 
 .wizard-label {
@@ -1347,12 +1349,12 @@ ul {
     overflow: auto;
     background-color: transparent;
     min-height: 200px;
+    min-width: 0;
     max-height: 400px;
 }
 
 .wizard-property-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     min-height: 32px;
     padding: 6px 8px;
@@ -1373,18 +1375,29 @@ ul {
 
 .wizard-property-key {
     font-weight: bold;
-    flex: 0 0 180px;
+    flex: 0 0 50%;
     font-size: 1em;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     min-width: 0;
-    max-width: 180px;
+    max-width: 50%;
+    display: block;
 }
 
-.wizard-property-value-container {
+.wizard-property-item > .wizard-property-value-container {
     display: flex;
     align-items: center;
+    flex: 0 0 50%;
+    min-width: 0;
+    width: 50%;
+}
+
+.wizard-property-actions .wizard-property-value-container {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
 }
 
 .wizard-property-value-display {
@@ -1404,8 +1417,8 @@ ul {
 
 .wizard-property-actions .wizard-property-value-display,
 .wizard-property-value-container .wizard-property-value-display {
-    width: calc(216px + 0.5rem);
-    flex: none;
+    flex: 1;
+    min-width: 0;
 }
 
 .wizard-property-value-input-small {
@@ -1419,6 +1432,9 @@ ul {
 .wizard-property-actions {
     display: flex;
     gap: 0.5rem;
+    flex: 0 0 50%;
+    min-width: 0;
+    justify-content: flex-end;
 }
 
 .wizard-property-secure-toggle {
