@@ -249,7 +249,6 @@ export const RenderConfig = ({
         // Filter out deleted properties from combinedConfig before adding to entriesForSorting
         const filteredCombinedConfig = { ...combinedConfig };
         const configPath = configurations[selectedTab!]?.configPath;
-        const deletionsList = deletions[configPath] ?? [];
 
         // Remove deleted properties from the combined config.
         // Deleted properties should remain hidden in pending state.
