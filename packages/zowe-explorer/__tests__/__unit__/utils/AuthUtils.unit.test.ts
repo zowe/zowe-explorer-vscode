@@ -195,10 +195,9 @@ describe("AuthUtils", () => {
 
             // Setup common mocks
             loadNamedProfileMock = jest.fn().mockReturnValue(createIProfile());
-            getProfileFromConfigMock = jest.fn().mockReturnValue({ profType: "zosmf", profName: "test" } as IProfAttrs);
             jest.spyOn(Profiles, "getInstance").mockReturnValue({
                 loadNamedProfile: loadNamedProfileMock,
-                getProfileFromConfig: getProfileFromConfigMock,
+                allProfiles: [{ name: "test", type: "zosmf" }],
             } as any);
 
             mockMvsApi = {
@@ -279,10 +278,13 @@ describe("AuthUtils", () => {
                 // Act
                 const runSequentialMock = jest.spyOn(AuthHandler, "runSequentialIfEnabled").mockImplementation((_profile, action) => action());
                 try {
-                    const statResult = await DatasetFSProvider.instance.stat(testUris.ps);
+                    const statResult = await DatasetFSProvider.instance.stat(
+                        testUris.ps.with({
+                            query: "fetch=true",
+                        })
+                    );
                     const fetchResult = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
 
-                    // Assert
                     expect(statResult).toBeDefined();
                     expect(fetchResult).toBeDefined();
                     expect(promptForAuthErrorMock).toHaveBeenCalledTimes(2);

@@ -29,4 +29,4 @@ zip = "3"
 
 [target.'cfg(not(windows))'.dependencies]
 flate2 = "1.0.30"
-tar = "0.4.40"
+tar = "0.4.45"

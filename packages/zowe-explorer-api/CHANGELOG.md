@@ -6,11 +6,19 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Implemented request caching capabilities for filesystem providers that extend the `BaseProvider` class. [#3844](https://github.com/zowe/zowe-explorer-vscode/issues/3554)
+- Introduced a `FeatureFlag` class to manage experimental features via toggleable flags. [#3963](https://github.com/zowe/zowe-explorer-vscode/pull/3963)
 - Enhanced `DataSetAttributesProvider` to pass raw API response attributes to extenders via the `DsInfo` context object. Extenders can now access the `attributes` field in the context to retrieve data set information without making additional API calls. [#3927](https://github.com/zowe/zowe-explorer-vscode/issues/3927)
 
 ### Bug fixes
 
 - Updated Zowe SDKs to `8.30.4` for technical currency. [#4117](https://github.com/zowe/zowe-explorer-vscode/pull/4117)
+
+## `3.4.2`
+
+### Bug fixes
+
+- Updated Zowe SDKs to `8.30.1` for technical currency. [#4079](https://github.com/zowe/zowe-explorer-vscode/pull/4079)
 
 ## `3.4.1`
 

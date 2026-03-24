@@ -446,6 +446,7 @@
       "USS node label"
     ]
   },
+  "Corrected description of the mnorc attribute for PDS members. <a>#4116</a>": "Corrected description of the mnorc attribute for PDS members. <a>#4116</a>",
   "Create {0}/Node type": {
     "message": "Create {0}",
     "comment": [
@@ -762,8 +763,8 @@
     ]
   },
   "Execute": "Execute",
-  "Expose commands to drive filtering in the Data Sets views. <a>#3992</a>": "Expose commands to drive filtering in the Data Sets views. <a>#3992</a>",
-  "Expose commands to drive search in the USS views. <a>#3933</a>": "Expose commands to drive search in the USS views. <a>#3933</a>",
+  "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>": "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>",
+  "Exposed commands to drive search in the USS views. <a>#3933</a>": "Exposed commands to drive search in the USS views. <a>#3933</a>",
   "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>": "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>",
   "Failed to copy {0} to {1}/Source pathDestination path": {
     "message": "Failed to copy {0} to {1}",
@@ -1004,6 +1005,8 @@
   "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>": "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>",
   "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>": "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>",
   "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>": "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>",
+  "Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. <a>#3554</a>": "Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. <a>#3554</a>",
+  "Fixed an issue where file system URIs with trailing slashes failed to resolve. <a>#3904</a>": "Fixed an issue where file system URIs with trailing slashes failed to resolve. <a>#3904</a>",
   "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>": "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>",
   "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>": "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>",
   "Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. <a>#3923</a>": "Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. <a>#3923</a>",
@@ -1024,6 +1027,7 @@
   "Fixed an issue where renaming or deleting a USS file or data set did not update the opened editor. <a>#3260</a>": "Fixed an issue where renaming or deleting a USS file or data set did not update the opened editor. <a>#3260</a>",
   "Fixed an issue where renaming or deleting the team configuration file caused an unhandled exception in Zowe Explorer, causing old, non-existent profiles to remain in the tree views. <a>#3772</a>": "Fixed an issue where renaming or deleting the team configuration file caused an unhandled exception in Zowe Explorer, causing old, non-existent profiles to remain in the tree views. <a>#3772</a>",
   "Fixed an issue where right-click menu for data set shows wrong options after deleting multiple PDS members. <a>#3516</a>": "Fixed an issue where right-click menu for data set shows wrong options after deleting multiple PDS members. <a>#3516</a>",
+  "Fixed an issue where screen readers could not read data set attributes from the data set attribute webview.<a>#4023</a>": "Fixed an issue where screen readers could not read data set attributes from the data set attribute webview.<a>#4023</a>",
   "Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.<a>#4023</a>": "Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.<a>#4023</a>",
   "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>": "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>",
   "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>": "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>",
@@ -1186,6 +1190,7 @@
   "Fixed secure credential storage not possible to enable in Theia.": "Fixed secure credential storage not possible to enable in Theia.",
   "Fixed settings not persisting in Theia versions >=1.29.0. <a>#2065</a>": "Fixed settings not persisting in Theia versions >=1.29.0. <a>#2065</a>",
   "Fixed several linter errors throughout the codebase and consolidated linter rules. <a>#2184</a>": "Fixed several linter errors throughout the codebase and consolidated linter rules. <a>#2184</a>",
+  "Fixed slow performance when listing a large number of data sets or members. <a>#4116</a>": "Fixed slow performance when listing a large number of data sets or members. <a>#4116</a>",
   "Fixed submitting local JCL using command pallet option Zowe Explorer: Submit as JCL by adding a check for chosen profile returned to continue the action. <a>#1625</a>": "Fixed submitting local JCL using command pallet option Zowe Explorer: Submit as JCL by adding a check for chosen profile returned to continue the action. <a>#1625</a>",
   "Fixed the \"Edit Profile\" operation to open the correct files when both global and project team configs are present. <a>#3125</a>": "Fixed the \"Edit Profile\" operation to open the correct files when both global and project team configs are present. <a>#3125</a>",
   "Fixed the allocate-like functionality by removing the inclusion of DS item in the filter history. <a>#2620</a>": "Fixed the allocate-like functionality by removing the inclusion of DS item in the filter history. <a>#2620</a>",
@@ -2202,6 +2207,7 @@
   "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>": "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>",
   "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>": "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>",
   "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>": "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>",
+  "Updated Zowe SDKs to 8.30.4 for technical currency. <a>#4117</a>": "Updated Zowe SDKs to 8.30.4 for technical currency. <a>#4117</a>",
   "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>": "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>",
   "Updating data set templates.": "Updating data set templates.",
   "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
