@@ -574,18 +574,30 @@ describe("Test src/shared/extension", () => {
             expect(mockReveal).not.toHaveBeenCalled();
         });
 
-        it("should restore focus to closed tab node when there is no active editor", async () => {
-            mockActiveTab(null);
-
-            const closedTab = {
-                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
+        it("should not restore focus when the last tab is closed", async () => {
+            (vscode.window.tabGroups.all as any) = [];
+            (vscode.window.tabGroups.activeTabGroup as any) = {
+                activeTab: null,
             };
 
-            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            const closedTab = {
+                input: new vscode.TabInputText(
+                    vscode.Uri.from({
+                        scheme: ZoweScheme.DS,
+                        path: "/profile/TEST.DS",
+                    })
+                ),
+            };
+
+            const handlerPromise = capturedTabsHandler({
+                closed: [closedTab],
+                opened: [],
+                changed: [],
+            });
+
             await jest.runAllTimersAsync();
             await handlerPromise;
-
-            expect(mockReveal).toHaveBeenCalledWith(mockNode, { select: true, focus: true });
+            expect(mockReveal).not.toHaveBeenCalled();
         });
 
         it("should handle errors during focus restoration", async () => {

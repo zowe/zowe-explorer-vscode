@@ -83,26 +83,30 @@ export class SharedInit {
                     try {
                         const closedUri = closedTab.input.uri;
 
+                        const allTabs = vscode.window.tabGroups.all.flatMap((group) => group.tabs);
+                        if (allTabs.length === 0) {
+                            return;
+                        }
+
                         const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 
                         let uriToFocus: vscode.Uri;
 
                         if (!activeTab || !(activeTab.input instanceof vscode.TabInputText)) {
-                            // No active tab left — focus the closed node
-                            uriToFocus = closedUri;
-                        } else {
-                            const activeUri = activeTab.input.uri;
-                            const activeScheme = activeUri.scheme;
+                            // No active tab left (only tab was closed) — don't shift tree focus
+                            return;
+                        }
+                        const activeUri = activeTab.input.uri;
+                        const activeScheme = activeUri.scheme;
 
-                            if (activeUri.path === closedUri.path) {
-                                // Active tab is same as closed — focus closed node
-                                uriToFocus = closedUri;
-                            } else if (activeScheme !== ZoweScheme.DS && activeScheme !== ZoweScheme.USS && activeScheme !== ZoweScheme.Jobs) {
-                                return;
-                            } else {
-                                // Active tab is a different Zowe resource — focus it
-                                uriToFocus = activeUri;
-                            }
+                        if (activeUri.path === closedUri.path) {
+                            // Active tab is same as closed — focus closed node
+                            return;
+                        } else if (activeScheme !== ZoweScheme.DS && activeScheme !== ZoweScheme.USS && activeScheme !== ZoweScheme.Jobs) {
+                            return;
+                        } else {
+                            // Active tab is a different Zowe resource — focus it
+                            uriToFocus = activeUri;
                         }
 
                         const findNodeByUri = async (provider: IZoweTree<IZoweTreeNode>, uri: vscode.Uri): Promise<IZoweTreeNode | undefined> => {
