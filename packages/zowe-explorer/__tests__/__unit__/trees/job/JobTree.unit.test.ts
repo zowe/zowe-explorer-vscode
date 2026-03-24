@@ -1520,7 +1520,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
         jest.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
 
-        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
         const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
             mockActiveJob.job.status = "OUTPUT";
         });
@@ -1535,7 +1535,12 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         await pollRequest.request();
 
         expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB001)]"));
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB001) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Go To Job")],
+            })
+        );
         expect(mockActiveJob.contextValue).not.toContain(Constants.POLL_CONTEXT);
     });
 
@@ -1569,7 +1574,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
         jest.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
 
-        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
         const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
             mockActiveJob1.job.status = "OUTPUT";
         });
@@ -1584,7 +1589,12 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         await pollRequest.request();
 
         expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB001)]"));
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB001) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Go To Job")],
+            })
+        );
         expect(mockActiveJob1.contextValue).not.toContain(Constants.POLL_CONTEXT);
         expect(mockActiveJob2.contextValue).toBe(Constants.JOBS_JOB_CONTEXT + Constants.POLL_CONTEXT);
     });
@@ -1619,7 +1629,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
         jest.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
 
-        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
         const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
             mockActiveJob1.job.status = "OUTPUT";
             mockActiveJob2.job.status = "ABEND";
@@ -1634,8 +1644,18 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
 
         expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
         expect(showMessageSpy).toHaveBeenCalledTimes(3);
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB001)]"));
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB002)]"));
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB001) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Go To Job")],
+            })
+        );
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB002) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Go To Job")],
+            })
+        );
         expect(mockActiveJob1.contextValue).not.toContain(Constants.POLL_CONTEXT);
         expect(mockActiveJob2.contextValue).not.toContain(Constants.POLL_CONTEXT);
     });

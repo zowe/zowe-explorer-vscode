@@ -1282,15 +1282,18 @@ Would you like to do this now?`,
                         if (status && status !== "ACTIVE") {
                             const sessProfileName = session.getProfileName();
                             const args = [sessProfileName, job.job.jobid];
-                            const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                             const jobDisplayName = `${job.job.jobname}(${job.job.jobid})`;
-                            Gui.showMessage(
-                                vscode.l10n.t({
-                                    message: "Job {0} completed - {1}",
-                                    args: [`[${jobDisplayName}](${setJobCmd})`, job.job.retcode],
-                                    comment: ["Job name and ID with clickable link", "Job status"],
-                                })
-                            );
+                            const goToJobButton = vscode.l10n.t("Go To Job");
+                            const message = vscode.l10n.t({
+                                message: "Job {0} completed - {1}",
+                                args: [jobDisplayName, job.job.retcode],
+                                comment: ["Job name and ID", "Job status"],
+                            });
+                            Gui.showMessage(message, { items: [goToJobButton] }).then((selection) => {
+                                if (selection === goToJobButton) {
+                                    vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                                }
+                            });
 
                             // Remove polling context from completed jobs
                             this.updatePollContext(job);

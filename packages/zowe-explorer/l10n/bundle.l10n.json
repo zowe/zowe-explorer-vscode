@@ -1227,6 +1227,7 @@
   "Getting data set templates.": "Getting data set templates.",
   "Global": "Global",
   "Global: in the Zowe home directory": "Global: in the Zowe home directory",
+  "Go To Job": "Go To Job",
   "Go to Local Filtering": "Go to Local Filtering",
   "Group": "Group",
   "Grouped Common methods into Singleton classes. <a>#2109</a>": "Grouped Common methods into Singleton classes. <a>#2109</a>",
@@ -1339,17 +1340,10 @@
   "Item invalid.": "Item invalid.",
   "items": "items",
   "JES API": "JES API",
-  "Job {0} completed - {1}/Job ID with clickable linkJob status": {
+  "Job {0} completed - {1}/Job name and IDJob status": {
     "message": "Job {0} completed - {1}",
     "comment": [
-      "Job ID with clickable link",
-      "Job status"
-    ]
-  },
-  "Job {0} completed - {1}/Job name and ID with clickable linkJob status": {
-    "message": "Job {0} completed - {1}",
-    "comment": [
-      "Job name and ID with clickable link",
+      "Job name and ID",
       "Job status"
     ]
   },

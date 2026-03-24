@@ -1690,7 +1690,10 @@ describe("Job Actions - Function pollSubmittedJob", () => {
         expect(statusMsgDisposeSpy).toHaveBeenCalledTimes(1);
         expect(Poller.pollRequests["submitted-job-testProfile-JOB12345"].dispose).toBe(true);
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            expect.stringContaining("Job [TESTJOB(JOB12345)](command:zowe.jobs.setJobSpool") && expect.stringContaining("completed - CC 0000")
+            expect.stringContaining("Job TESTJOB(JOB12345) completed - CC 0000"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Go To Job")],
+            })
         );
     });
 
@@ -1701,7 +1704,12 @@ describe("Job Actions - Function pollSubmittedJob", () => {
 
         await pollRequest();
 
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(expect.stringContaining("unknown retcode"));
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
+            expect.stringContaining("unknown retcode"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Go To Job")],
+            })
+        );
     });
 
     it("should handle polling errors gracefully", async () => {
