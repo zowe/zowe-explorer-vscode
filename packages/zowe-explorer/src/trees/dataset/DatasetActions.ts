@@ -2975,15 +2975,15 @@ export class DatasetActions {
 
                     const args = [sessProfileName, jobId];
                     const retcode = job?.retcode || vscode.l10n.t("unknown retcode");
-                    const goToJobButton = vscode.l10n.t("Go To Job");
+                    const openJobButton = vscode.l10n.t("Open Job");
                     const message = vscode.l10n.t({
                         message: "Job {0} completed - {1}",
                         args: [displayName, retcode],
                         comment: ["Job name and ID", "Job status"],
                     });
 
-                    Gui.showMessage(message, { items: [goToJobButton] }).then((selection) => {
-                        if (selection === goToJobButton) {
+                    Gui.showMessage(message, { items: [openJobButton] }).then((selection) => {
+                        if (selection === openJobButton) {
                             vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
                         }
                     });

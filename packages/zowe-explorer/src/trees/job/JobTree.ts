@@ -1283,14 +1283,14 @@ Would you like to do this now?`,
                             const sessProfileName = session.getProfileName();
                             const args = [sessProfileName, job.job.jobid];
                             const jobDisplayName = `${job.job.jobname}(${job.job.jobid})`;
-                            const goToJobButton = vscode.l10n.t("Go To Job");
+                            const openJobButton = vscode.l10n.t("Open Job");
                             const message = vscode.l10n.t({
                                 message: "Job {0} completed - {1}",
                                 args: [jobDisplayName, job.job.retcode],
                                 comment: ["Job name and ID", "Job status"],
                             });
-                            Gui.showMessage(message, { items: [goToJobButton] }).then((selection) => {
-                                if (selection === goToJobButton) {
+                            Gui.showMessage(message, { items: [openJobButton] }).then((selection) => {
+                                if (selection === openJobButton) {
                                     vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
                                 }
                             });

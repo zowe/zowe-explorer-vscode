@@ -1692,7 +1692,7 @@ describe("Job Actions - Function pollSubmittedJob", () => {
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             expect.stringContaining("Job TESTJOB(JOB12345) completed - CC 0000"),
             expect.objectContaining({
-                items: [expect.stringContaining("Go To Job")],
+                items: [expect.stringContaining("Open Job")],
             })
         );
     });
@@ -1707,7 +1707,7 @@ describe("Job Actions - Function pollSubmittedJob", () => {
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             expect.stringContaining("unknown retcode"),
             expect.objectContaining({
-                items: [expect.stringContaining("Go To Job")],
+                items: [expect.stringContaining("Open Job")],
             })
         );
     });
