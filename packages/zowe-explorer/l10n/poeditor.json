@@ -584,6 +584,9 @@
   "zowe.settings.zosmfMaxConcurrentRequests": {
     "The maximum number of REST requests to process concurrently. Set to 0 to disable throttling.": ""
   },
+  "zowe.settings.zosmfRequestQueueTimeout": {
+    "The maximum amount of time a REST request should wait in the request queue before being cancelled, in milliseconds.": ""
+  },
   "zowe.table.maxPinnedRows": {
     "Maximum number of rows that can be pinned to the top of table views.": ""
   },

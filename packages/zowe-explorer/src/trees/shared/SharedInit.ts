@@ -178,12 +178,22 @@ export class SharedInit {
                 if (e.affectsConfiguration(Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS)) {
                     const maxConcurrentRequests = SettingsConfig.getDirectValue(
                         Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS,
-                        Constants.DEFAULT_MAX_CONCURRENT_REQUESTS
+                        Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS
                     );
                     ZosmfRestClient.setThrottlingOptions({
                         maxConcurrentRequests,
                     });
                     ZoweLogger.info(`z/OSMF throttling set to ${maxConcurrentRequests} concurrent requests.`);
+                }
+                if (e.affectsConfiguration(Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT)) {
+                    const queueTimeout = SettingsConfig.getDirectValue(
+                        Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT,
+                        Constants.ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT
+                    );
+                    ZosmfRestClient.setThrottlingOptions({
+                        queueTimeout,
+                    });
+                    ZoweLogger.info(`z/OSMF queue timeout set to ${queueTimeout} milliseconds.`);
                 }
             })
         );
@@ -361,10 +371,12 @@ export class SharedInit {
 
         const maxConcurrentRequests = SettingsConfig.getDirectValue(
             Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS,
-            Constants.DEFAULT_MAX_CONCURRENT_REQUESTS
+            Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS
         );
-        ZosmfRestClient.setThrottlingOptions({ maxConcurrentRequests });
+        const queueTimeout = SettingsConfig.getDirectValue(Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT, Constants.ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT);
+        ZosmfRestClient.setThrottlingOptions({ maxConcurrentRequests, queueTimeout });
         ZoweLogger.info(`z/OSMF throttling set to ${maxConcurrentRequests} concurrent requests.`);
+        ZoweLogger.info(`z/OSMF queue timeout set to ${queueTimeout} milliseconds.`);
 
         SharedInit.onDidActivateExtension((_e) => vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", "zosmf"));
 
