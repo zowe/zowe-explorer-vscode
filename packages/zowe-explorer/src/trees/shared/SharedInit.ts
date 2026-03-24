@@ -563,11 +563,8 @@ export class SharedInit {
 
     public static async setupRemoteWorkspaceFolders(e?: vscode.WorkspaceFoldersChangeEvent, profileType?: string): Promise<void> {
         const profInfo = Profiles.getInstance();
-
         let uriMap = new Map<string, UriFsInfo>();
-
         const profileNames = new Set<string>(profInfo.getProfiles(profileType).map((prof) => prof.name));
-
         // Perform remote lookup for workspace folders that fit the `zowe-ds` or `zowe-uss` schemes.
         const newWorkspaces = (e?.added ?? vscode.workspace.workspaceFolders ?? [])
             .filter((f) => f.uri.scheme === ZoweScheme.DS || f.uri.scheme === ZoweScheme.USS)
@@ -576,7 +573,6 @@ export class SharedInit {
                 uriMap[f.uri.path] = uriInfo;
                 return profileNames.has(uriInfo.profileName);
             });
-
         const readDirRequests = [];
         for (const folder of newWorkspaces) {
             const uriInfo: UriFsInfo = uriMap[folder.uri.path];
@@ -588,14 +584,13 @@ export class SharedInit {
                 ) {
                     continue;
                 }
-                readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri.with({ query: "fetch=true" })));
+                readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri));
             } catch (err) {
                 if (err instanceof Error) {
                     ZoweLogger.error(err.message);
                 }
             }
         }
-
         try {
             await Promise.all(readDirRequests);
         } catch (err) {
@@ -603,7 +598,6 @@ export class SharedInit {
                 ZoweLogger.error(err.message);
             }
         }
-
         if (profileType !== "zosmf" && newWorkspaces.length > 0) {
             await vscode.commands.executeCommand("workbench.files.action.refreshFilesExplorer");
         }
