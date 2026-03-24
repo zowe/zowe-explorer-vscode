@@ -21,7 +21,7 @@ zowe-explorer-vscode/
 ## High-Level Architecture
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#fff','primaryTextColor':'#000','primaryBorderColor':'#000','lineColor':'#000','secondaryColor':'#f4f4f4','tertiaryColor':'#fff','edgeLabelBackground':'#fff'}}}%%
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#fff','primaryTextColor':'#000','primaryBorderColor':'#666','lineColor':'#666','secondaryColor':'#f4f4f4','tertiaryColor':'#fff','edgeLabelBackground':'#fff'}}}%%
 graph TB
     subgraph VSCode["VS Code Extension Host"]
         subgraph ZE["Zowe Explorer Extension<br/>(packages/zowe-explorer)"]
@@ -241,10 +241,10 @@ flowchart TD
     FTPActivate --> RegJes["Register FtpJesApi via registerJesApi()"]
     FTPActivate --> InitProfile["Initialize 'zftp' profile type via initForZowe()"]
 
-    style Start fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
-    style Activate fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
-    style Return fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
-    style FTPActivate fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
+    style Start fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style Activate fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style Return fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style FTPActivate fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
 ```
 
 ### 2. API Call Flow (Example: List Datasets)
@@ -267,9 +267,9 @@ flowchart TD
     CallAPI --> Response["Returns IZosFilesResponse with dataset list"]
     Response --> Display["DatasetTree displays results in tree view"]
 
-    style Click fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
-    style CheckType fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
-    style Display fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
+    style Click fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style CheckType fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Display fill:#e1f5ff,stroke:#01579b,stroke-width:2px
 ```
 
 ### 3. Extension Registration Flow
@@ -295,10 +295,10 @@ flowchart TD
     GetExtender --> Init["initForZowe(profileType, schemas)"]
     GetExtender --> Reload["reloadProfiles(profileType)"]
 
-    style Ext fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
-    style Import fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
-    style Returns fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
-    style GetExtender fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
+    style Ext fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style Import fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style Returns fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style GetExtender fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
 ```
 
 ---
@@ -386,9 +386,9 @@ flowchart TD
     Lookup --> Returns["Returns appropriate API implementation"]
     Returns --> Use["Tree provider uses API to perform operations"]
 
-    style Select fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
-    style Lookup fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
-    style Use fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
+    style Select fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style Lookup fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style Use fill:#e1f5ff,stroke:#01579b,stroke-width:2px
 ```
 
 ---
