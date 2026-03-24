@@ -748,7 +748,10 @@ export class ConfigEditor extends WebView {
             this.simulateProfileRenames(renames, teamConfig);
         }
 
-        const parsedChanges = ConfigUtils.parseConfigChanges(changes);
+        const effectiveChanges =
+            renames && renames.length > 0 ? await this.updateProfileChangesForRenames(changes, renames) : changes;
+
+        const parsedChanges = ConfigUtils.parseConfigChanges(effectiveChanges);
         for (const change of parsedChanges) {
             if (change.defaultsChanges || change.defaultsDeleteKeys) {
                 await ConfigChangeHandlers.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);

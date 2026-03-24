@@ -71,5 +71,5 @@ export function isCurrentProfileUntyped(
 ): boolean {
     if (!selectedProfileKey) return false;
     const profileType = getProfileType(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
-    return !profileType || profileType.trim() === "";
+    return !profileType || profileType.trim() === "" || profileType.toLowerCase() === "default";
 }

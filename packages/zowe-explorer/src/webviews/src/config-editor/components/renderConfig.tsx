@@ -177,6 +177,34 @@ export const RenderConfig = ({
       // Sort properties according to the specified order
       let sortedEntries: [string, any][];
 
+      const isPropertyDeletedConsideringRenames = (propertyKey: string): boolean => {
+        const deletionsList = deletions[configPath] ?? [];
+        const currentFullKey = [...path, propertyKey].join(".");
+        if (deletionsList.includes(currentFullKey)) {
+          return true;
+        }
+
+        const currentProfileKey = extractProfileKeyFromPath(path);
+        const originalProfileKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
+        if (originalProfileKey === currentProfileKey) {
+          return false;
+        }
+
+        const currentParts = currentProfileKey.split(".");
+        const suffixIndex = 2 * currentParts.length;
+        const suffix = path.slice(suffixIndex);
+
+        const originalParts = originalProfileKey.split(".");
+        const originalPathPrefix = ["profiles"];
+        for (let i = 0; i < originalParts.length; i++) {
+          if (i > 0) originalPathPrefix.push("profiles");
+          originalPathPrefix.push(originalParts[i]);
+        }
+
+        const originalFullKey = [...originalPathPrefix, ...suffix, propertyKey].join(".");
+        return deletionsList.includes(originalFullKey);
+      };
+
       // Special handling for properties section - use custom sorting
       if (path.length > 0 && path[path.length - 1] === "properties") {
         // Lock the sort order at this level to prevent any external interference
@@ -224,14 +252,12 @@ export const RenderConfig = ({
         const deletionsList = deletions[configPath] ?? [];
 
         // Remove deleted properties from the combined config.
-        // Exception: when a property is deleted but exists in mergedProps (lower-priority layer),
+        // Deleted properties should remain hidden in pending state.
         Object.keys(filteredCombinedConfig).forEach((key) => {
-          const propertyFullKey = [...path, key].join(".");
-          if (deletionsList.includes(propertyFullKey)) {
-            const hasMergedReplacement = showMergedProperties !== "hide" && mergedProps?.[key] !== undefined;
-            if (!hasMergedReplacement) {
-              delete filteredCombinedConfig[key];
-            }
+          const isDeleted = isPropertyDeletedConsideringRenames(key);
+
+          if (isDeleted) {
+            delete filteredCombinedConfig[key];
           }
         });
 
@@ -242,7 +268,12 @@ export const RenderConfig = ({
         const currentProfileKeyForDisk = extractProfileKeyFromPath(path);
         const originalProfileKeyForDisk = getOriginalProfileKeyWithNested(currentProfileKeyForDisk, configPath, renames);
         
-        const parentConfigPath = ["profiles", ...originalProfileKeyForDisk.split(".")];
+        const originalPartsForDisk = originalProfileKeyForDisk.split(".");
+        const parentConfigPath = ["profiles"];
+        for (let i = 0; i < originalPartsForDisk.length; i++) {
+          if (i > 0) parentConfigPath.push("profiles");
+          parentConfigPath.push(originalPartsForDisk[i]);
+        }
         const parentConfig = getNestedProperty(configurations[selectedTab!]?.properties, parentConfigPath);
         if (parentConfig?.secure && Array.isArray(parentConfig.secure)) {
           parentConfig.secure.forEach((securePropertyName: string) => {
@@ -304,13 +335,11 @@ export const RenderConfig = ({
 
           Object.entries(mergedProps).forEach(([propertyName, propData]: [string, any]) => {
             const isAllowedBySchema = !profileType || allowedProperties.includes(propertyName);
-            const propertyFullKey = [...path, propertyName].join(".");
-            const isInDeletions = deletionsList.includes(propertyFullKey);
+            const isInDeletions = isPropertyDeletedConsideringRenames(propertyName);
             const alreadyInEntries = entriesForSorting.some(([existingKey]) => existingKey === propertyName);
             const wasInOriginal = originalProperties?.hasOwnProperty(propertyName);
 
-            // Add when not already in entries
-            const shouldAdd = !alreadyInEntries && isAllowedBySchema && (!wasInOriginal || (isInDeletions && typeof propData?.value !== "object"));
+            const shouldAdd = !alreadyInEntries && isAllowedBySchema && (!wasInOriginal || isInDeletions);
 
             if (shouldAdd) {
               entriesForSorting.push([
@@ -338,58 +367,16 @@ export const RenderConfig = ({
 
         // Check if this property is in deletions, considering profile renames
         const isInDeletions = (() => {
-          const deletionsList = deletions[configPath] ?? [];
-
-          // Direct check with current fullKey
-          if (deletionsList.includes(fullKey)) {
-            return true;
-          }
-
-          // Check if this property was deleted using the original profile name
-          const currentProfileKey = extractProfileKeyFromPath(path);
-          const originalProfileKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
-
-          if (originalProfileKey !== currentProfileKey) {
-            // Construct the fullKey using the original profile name
-            const originalPath = [...path];
-            // Replace the profile key in the path with the original profile key
-            const profileKeyIndex = originalPath.findIndex((_, index) => {
-              // Find where the profile key starts in the path
-              const pathUpToIndex = originalPath.slice(0, index + 1).join(".");
-              return pathUpToIndex.includes(currentProfileKey);
-            });
-
-            if (profileKeyIndex !== -1) {
-              // Reconstruct the path with the original profile key
-              const pathBeforeProfile = originalPath.slice(0, profileKeyIndex);
-              const pathAfterProfile = originalPath.slice(profileKeyIndex + 1);
-              const originalProfileParts = originalProfileKey.split(".");
-
-              // Insert the original profile parts into the path
-              const reconstructedPath = [...pathBeforeProfile, ...originalProfileParts, ...pathAfterProfile];
-              const originalFullKey = reconstructedPath.join(".");
-
-              if (deletionsList.includes(originalFullKey)) {
-                return true;
-              }
-            }
-          }
-
-          return false;
+          return isPropertyDeletedConsideringRenames(key);
         })();
 
-        const hasMergedReplacement = showMergedProperties !== "hide" && displayKey != null && mergedProps?.[displayKey] !== undefined;
-
-        // When deleted: hide only if there is no merged value to show (truly removed)
-        // When deleted with merged replacement: show it (override removed; lower-priority value shows through)
-        if (isInDeletions && !hasMergedReplacement) {
+        const isInheritedReplacementForDeletion = typeof value === "object" && value !== null && value._isMergedProperty === true;
+        if (isInDeletions && !isInheritedReplacementForDeletion) {
           return null;
         }
 
-        // When showing a deleted property with merged replacement, treat it as a merged property for UI
-        // (disabled input, overwrite button) since we're displaying the inherited value
-        const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, configPath) || (isInDeletions && hasMergedReplacement);
-        const isDeletedMergedProperty = isFromMergedProps && isInDeletions && !hasMergedReplacement;
+        const isFromMergedProps = isPropertyFromMergedProps(displayKey, path, mergedProps, configPath);
+        const isDeletedMergedProperty = false;
 
         // Filter secure properties from properties object
         if (key === "properties") {

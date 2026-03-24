@@ -153,7 +153,18 @@ export const RenderProfileDetails = ({
                     handleSetAsDefault(selectedProfileKey);
                   }
                 }}
-                title={isProfileDefault(selectedProfileKey) ? l10n.t("Click to remove default") : l10n.t("Set as default")}
+                disabled={isCurrentProfileUntyped()}
+                title={
+                  isCurrentProfileUntyped()
+                    ? l10n.t("Cannot set as default: Profile must have a valid type")
+                    : isProfileDefault(selectedProfileKey)
+                    ? l10n.t("Click to remove default")
+                    : l10n.t("Set as default")
+                }
+                style={{
+                  opacity: isCurrentProfileUntyped() ? 0.5 : 1,
+                  cursor: isCurrentProfileUntyped() ? "not-allowed" : "pointer",
+                }}
               >
                 <span className={`codicon codicon-${isProfileDefault(selectedProfileKey) ? "star-full" : "star-empty"}`}></span>
               </button>
