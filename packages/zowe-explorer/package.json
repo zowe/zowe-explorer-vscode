@@ -2219,7 +2219,7 @@
           "type": "integer",
           "default": 4,
           "description": "%zowe.settings.zosmfMaxConcurrentRequests%",
-          "scope": "machine",
+          "scope": "window",
           "minimum": 0,
           "maximum": 2147483647
         },

@@ -176,9 +176,14 @@ export class SharedInit {
                     await vscode.commands.executeCommand("zowe.updateSecureCredentials");
                 }
                 if (e.affectsConfiguration(Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS)) {
+                    const maxConcurrentRequests = SettingsConfig.getDirectValue(
+                        Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS,
+                        Constants.DEFAULT_MAX_CONCURRENT_REQUESTS
+                    );
                     ZosmfRestClient.setThrottlingOptions({
-                        maxConcurrentRequests: SettingsConfig.getDirectValue(Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS),
+                        maxConcurrentRequests,
                     });
+                    ZoweLogger.info(`z/OSMF throttling set to ${maxConcurrentRequests} concurrent requests.`);
                 }
             })
         );
@@ -354,9 +359,12 @@ export class SharedInit {
             LocalFileManagement.resetCompareSelection();
         }
 
-        ZosmfRestClient.setThrottlingOptions({
-            maxConcurrentRequests: SettingsConfig.getDirectValue(Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS),
-        });
+        const maxConcurrentRequests = SettingsConfig.getDirectValue(
+            Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS,
+            Constants.DEFAULT_MAX_CONCURRENT_REQUESTS
+        );
+        ZosmfRestClient.setThrottlingOptions({ maxConcurrentRequests });
+        ZoweLogger.info(`z/OSMF throttling set to ${maxConcurrentRequests} concurrent requests.`);
 
         SharedInit.onDidActivateExtension((_e) => vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", "zosmf"));
 

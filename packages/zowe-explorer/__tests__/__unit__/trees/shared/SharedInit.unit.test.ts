@@ -164,7 +164,11 @@ describe("Test src/shared/extension", () => {
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: true },
-                    { spy: jest.spyOn(SettingsConfig, "getDirectValue"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: 10 },
+                    {
+                        spy: jest.spyOn(SettingsConfig, "getDirectValue"),
+                        arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS, Constants.DEFAULT_MAX_CONCURRENT_REQUESTS],
+                        ret: 10,
+                    },
                     { spy: jest.spyOn(core.ZosmfRestClient, "setThrottlingOptions"), arg: [{ maxConcurrentRequests: 10 }] },
                 ],
             },

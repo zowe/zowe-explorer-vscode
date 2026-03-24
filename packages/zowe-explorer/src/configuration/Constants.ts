@@ -26,6 +26,7 @@ export class Constants {
     public static readonly ACTIVE_JOBS_POLLING_TIMEOUT_MS = 1000;
     public static readonly MIN_WARN_ACTIVE_JOBS_TO_POLL = 10;
     public static readonly MIN_WARN_DOWNLOAD_FILES = 100;
+    public static readonly DEFAULT_MAX_CONCURRENT_REQUESTS = 4;
     public static readonly CONTEXT_PREFIX = "_";
     public static readonly FAV_SUFFIX = Constants.CONTEXT_PREFIX + "fav";
     public static readonly HOME_SUFFIX = Constants.CONTEXT_PREFIX + "home";
