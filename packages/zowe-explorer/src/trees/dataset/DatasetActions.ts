@@ -1738,14 +1738,14 @@ export class DatasetActions {
                         comment: ["Job ID", "Profile name"],
                     })
                 );
-                Gui.showMessage(message, { items: [openJobButton, notifyButton] }).then((selection) => {
-                    if (selection === openJobButton) {
-                        vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
-                    }
-                    if (selection === notifyButton) {
-                        DatasetActions.pollSubmittedJob(sessProfile, sessProfileName, job.jobid, job.jobname);
-                    }
-                });
+                // Accessibility: Capture the button response to ensure screen readers properly announce
+                // the buttons as actionable elements rather than just informational text.
+                const selection = await Gui.showMessage(message, { items: [openJobButton, notifyButton] });
+                if (selection === openJobButton) {
+                    vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                } else if (selection === notifyButton) {
+                    DatasetActions.pollSubmittedJob(sessProfile, sessProfileName, job.jobid, job.jobname);
+                }
             } catch (error) {
                 if (error instanceof Error) {
                     await AuthUtils.errorHandling(error, {
@@ -1985,13 +1985,14 @@ export class DatasetActions {
                         comment: ["Job ID", "Session name"],
                     })
                 );
-                Gui.showMessage(message, { items: [openJobButton, notifyButton] }).then((selection) => {
-                    if (selection === openJobButton) {
-                        vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
-                    } else if (selection === notifyButton) {
-                        DatasetActions.pollSubmittedJob(sessProfile, sesName, job.jobid, job.jobname);
-                    }
-                });
+                // Accessibility: Capture the button response to ensure screen readers properly announce
+                // the buttons as actionable elements rather than just informational text.
+                const selection = await Gui.showMessage(message, { items: [openJobButton, notifyButton] });
+                if (selection === openJobButton) {
+                    vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                } else if (selection === notifyButton) {
+                    DatasetActions.pollSubmittedJob(sessProfile, sesName, job.jobid, job.jobname);
+                }
             } catch (error) {
                 if (error instanceof Error) {
                     await AuthUtils.errorHandling(error, {
