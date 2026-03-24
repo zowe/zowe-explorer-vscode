@@ -473,7 +473,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 const now = Date.now();
                 const lastValidated = dir.mtimeValidatedAt || 0;
 
-                if (now - lastValidated < 50) {
+                if (now - lastValidated < this.FS_DIRECTORY_TTL) {
                     shouldFetch = false;
                 } else {
                     const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
