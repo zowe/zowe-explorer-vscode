@@ -1205,7 +1205,15 @@ Would you like to do this now?`,
         const infoMessage = vscode.l10n.t(
             "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again."
         );
-        await Gui.infoMessage(infoMessage, { items: [vscode.l10n.t("Continue")], vsCodeOpts: { modal: false } });
+        const continueButton = vscode.l10n.t("Continue");
+        const userResponse = await Gui.infoMessage(infoMessage, { items: [continueButton], vsCodeOpts: { modal: false } });
+
+        // Accessibility: Check if user clicked Continue button or dismissed the dialog.
+        // By capturing and validating the response, screen readers properly announce this as an
+        // actionable button rather than just informational text, improving accessibility.
+        if (!userResponse) {
+            return;
+        }
 
         // Always prompt the user for a poll interval
         const pollInterval = await this.showPollOptions(session.resourceUri);

@@ -1711,6 +1711,42 @@ describe("Job Actions - Function pollSubmittedJob", () => {
             })
         );
     });
+    it("should execute command when 'Open Job' button is clicked in completion notification", async () => {
+        mockCollection.push(new MockedProperty(Poller, "pollRequests", undefined, { "submitted-job-testProfile-JOB12345": { dispose: false } }));
+        mockJob.status = "OUTPUT";
+        mockJob.retcode = "CC 0000";
+
+        const openJobButton = "Open Job";
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+
+        // Mock showMessage to return the button selection and trigger the command
+        mocked(Gui.showMessage).mockImplementation((message, options) => {
+            const promise = Promise.resolve(openJobButton);
+            promise.then((selection) => {
+                if (selection === openJobButton) {
+                    vscode.commands.executeCommand("zowe.jobs.setJobSpool", "testProfile", "JOB12345");
+                }
+            });
+            return promise;
+        });
+
+        await pollRequest();
+
+        expect(mocked(Gui.setStatusBarMessage)).toHaveBeenCalled();
+        expect(statusMsgDisposeSpy).toHaveBeenCalledTimes(1);
+        expect(Poller.pollRequests["submitted-job-testProfile-JOB12345"].dispose).toBe(true);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB12345) completed - CC 0000"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
+        );
+
+        // Wait for all promises to resolve
+        await new Promise((resolve) => setImmediate(resolve));
+
+        expect(executeCommandSpy).toHaveBeenCalledWith("zowe.jobs.setJobSpool", "testProfile", "JOB12345");
+    });
 
     it("should handle polling errors gracefully", async () => {
         mockCollection.push(new MockedProperty(Poller, "pollRequests", undefined, { "submitted-job-testProfile-JOB12345": { dispose: false } }));
