@@ -24,7 +24,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.[#4023](https://github.com/zowe/zowe-explorer-vscode/issues/4023)
 - Corrected description of the `mnorc` attribute for PDS members. [#4116](https://github.com/zowe/zowe-explorer-vscode/pull/4116)
 - Fixed slow performance when listing a large number of data sets or members. [#4116](https://github.com/zowe/zowe-explorer-vscode/pull/4116)
-- Fixed an issue where the whole USS tree is collapsed down to the top level set from the initial filter.[#3932]
+- Fixed an issue where the whole USS tree is collapsed down to the top level set from the initial filter.[#3932](https://github.com/zowe/zowe-explorer-vscode/issues/3932)
 
 ### Bug fixes
 
