@@ -21,6 +21,7 @@ zowe-explorer-vscode/
 ## High-Level Architecture
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#fff','primaryTextColor':'#000','primaryBorderColor':'#000','lineColor':'#000','secondaryColor':'#f4f4f4','tertiaryColor':'#fff','edgeLabelBackground':'#fff'}}}%%
 graph TB
     subgraph VSCode["VS Code Extension Host"]
         subgraph ZE["Zowe Explorer Extension<br/>(packages/zowe-explorer)"]
