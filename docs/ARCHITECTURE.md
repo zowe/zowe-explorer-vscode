@@ -20,74 +20,59 @@ zowe-explorer-vscode/
 
 ## High-Level Architecture
 
-```
-┌───────────────────────────────────────────────────────────────────┐
-│                      VS Code Extension Host                       │
-│                                                                   │
-│  ┌─────────────────────────────────────────────────────────────┐  │
-│  │              Zowe Explorer Extension                        │  │
-│  │            (packages/zowe-explorer)                         │  │
-│  │                                                             │  │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐             │  │
-│  │  │  Dataset   │  │    USS     │  │    Jobs    │             │  │
-│  │  │ Tree View  │  │ Tree View  │  │ Tree View  │             │  │
-│  │  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘             │  │
-│  │        │               │               │                    │  │
-│  │        └───────────────┴───────────────┘                    │  │
-│  │                         │                                   │  │
-│  │               ┌─────────▼──────────┐                        │  │
-│  │               │ ZoweExplorerApi    │                        │  │
-│  │               │    Register        │                        │  │
-│  │               └─────────┬──────────┘                        │  │
-│  │                         │                                   │  │
-│  └─────────────────────────┼───────────────────────────-───────┘  │
-│                            │                                      │
-│  ┌─────────────────────────▼──────────────────────────────────┐   │
-│  │           Zowe Explorer API Package                        │   │
-│  │         (packages/zowe-explorer-api)                       │   │
-│  │                                                            │   │
-│  │  ┌───────────────────────────────────────────────────┐     │   │
-│  │  │      MainframeInteraction Interfaces              │     │   │
-│  │  │  ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐   │     │   │
-│  │  │  │  IMvs  │  │  IUss  │  │  IJes  │  │ICommand│   │     │   │
-│  │  │  └────────┘  └────────┘  └────────┘  └────────┘   │     │   │
-│  │  └───────────────────────────────────────────────────┘     │   │
-│  │                                                            │   │
-│  │  ┌───────────────────────────────────────────────────┐     │   │
-│  │  │      IApiRegisterClient Interface                 │     │   │
-│  │  │  - registerMvsApi()                               │     │   │
-│  │  │  - registerUssApi()                               │     │   │
-│  │  │  - registerJesApi()                               │     │   │
-│  │  │  - getExplorerExtenderApi()                       │     │   │
-│  │  └───────────────────────────────────────────────────┘     │   │
-│  │                                                            │   │
-│  │  ┌───────────────────────────────────────────────────┐     │   │
-│  │  │      ZoweVsCodeExtension (Accessor)               │     │   │
-│  │  │  - getZoweExplorerApi()                           │     │   │
-│  │  └───────────────────────────────────────────────────┘     │   │
-│  └─────────────────────────┬───────────────────────────---────┘   │
-│                            │                                      │
-│  ┌─────────────────────────▼────────────────────────────-───┐     │
-│  │      zFTP Extension (External Extension)                 │     │
-│  │   (packages/zowe-explorer-ftp-extension)                 │     │
-│  │                                                          │     │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐          │     │
-│  │  │ FtpMvsApi  │  │ FtpUssApi  │  │ FtpJesApi  │          │     │
-│  │  │(implements │  │(implements │  │(implements │          │     │
-│  │  │   IMvs)    │  │   IUss)    │  │   IJes)    │          │     │
-│  │  └────────────┘  └────────────┘  └────────────┘          │     │
-│  │                                                          │     │
-│  │  Registers via ZoweVsCodeExtension.getZoweExplorerApi()  │     │
-│  └──────────────────────────────────────────────────────────┘     │
-│                                                                   │
-└────────────────────────────────┬────────────────────────────---───┘
-                                 │
-                                 ▼
-                    ┌────────────────────────┐
-                    │   Mainframe Systems    │
-                    │ (z/OS via z/OSMF, FTP, │
-                    │   or other protocols)  │
-                    └────────────────────────┘
+```mermaid
+graph TB
+    subgraph VSCode["VS Code Extension Host"]
+        subgraph ZE["Zowe Explorer Extension<br/>(packages/zowe-explorer)"]
+            DSTree["Dataset<br/>Tree View"]
+            USSTree["USS<br/>Tree View"]
+            JobsTree["Jobs<br/>Tree View"]
+            APIReg["ZoweExplorerApi<br/>Register"]
+
+            DSTree --> APIReg
+            USSTree --> APIReg
+            JobsTree --> APIReg
+        end
+
+        subgraph API["Zowe Explorer API Package<br/>(packages/zowe-explorer-api)"]
+            subgraph Interfaces["MainframeInteraction Interfaces"]
+                IMvs["IMvs"]
+                IUss["IUss"]
+                IJes["IJes"]
+                ICommand["ICommand"]
+            end
+
+            subgraph RegClient["IApiRegisterClient Interface"]
+                RegMethods["- registerMvsApi()<br/>- registerUssApi()<br/>- registerJesApi()<br/>- getExplorerExtenderApi()"]
+            end
+
+            subgraph Accessor["ZoweVsCodeExtension (Accessor)"]
+                GetAPI["- getZoweExplorerApi()"]
+            end
+        end
+
+        subgraph FTP["zFTP Extension (External Extension)<br/>(packages/zowe-explorer-ftp-extension)"]
+            FtpMvs["FtpMvsApi<br/>(implements IMvs)"]
+            FtpUss["FtpUssApi<br/>(implements IUss)"]
+            FtpJes["FtpJesApi<br/>(implements IJes)"]
+            FtpReg["Registers via<br/>ZoweVsCodeExtension.getZoweExplorerApi()"]
+
+            FtpMvs -.-> FtpReg
+            FtpUss -.-> FtpReg
+            FtpJes -.-> FtpReg
+        end
+
+        APIReg --> API
+        FtpReg --> Accessor
+    end
+
+    VSCode --> Mainframe["Mainframe Systems<br/>(z/OS via z/OSMF, FTP,<br/>or other protocols)"]
+
+    style VSCode fill:#f9f9f9,stroke:#333,stroke-width:2px,color:#000
+    style ZE fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
+    style API fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    style FTP fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
+    style Mainframe fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
 ```
 
 ---
@@ -233,86 +218,86 @@ zowe-explorer-vscode/
 
 ### 1. Extension Activation Flow
 
-```
-VS Code starts
-    │
-    ▼
-extension.activate() in zowe-explorer
-    │
-    ├─► Initialize ZoweLocalStorage
-    ├─► Initialize ZoweLogger
-    ├─► Initialize Profiles
-    ├─► Create Tree Providers (Dataset, USS, Jobs)
-    ├─► Create ZoweExplorerExtender instance
-    │
-    ▼
-Return ZoweExplorerApiRegister.getInstance()
-    │
-    ▼
-zFTP extension.activate()
-    │
-    ├─► Call ZoweVsCodeExtension.getZoweExplorerApi("1.15.0")
-    ├─► Register FtpMvsApi via registerMvsApi()
-    ├─► Register FtpUssApi via registerUssApi()
-    ├─► Register FtpJesApi via registerJesApi()
-    └─► Initialize "zftp" profile type via initForZowe()
+```mermaid
+flowchart TD
+    Start["VS Code starts"] --> Activate["extension.activate() in zowe-explorer"]
+    Activate --> Storage["Initialize ZoweLocalStorage"]
+    Activate --> Logger["Initialize ZoweLogger"]
+    Activate --> Profiles["Initialize Profiles"]
+    Activate --> Trees["Create Tree Providers<br/>(Dataset, USS, Jobs)"]
+    Activate --> Extender["Create ZoweExplorerExtender instance"]
+
+    Storage --> Return["Return ZoweExplorerApiRegister.getInstance()"]
+    Logger --> Return
+    Profiles --> Return
+    Trees --> Return
+    Extender --> Return
+
+    Return --> FTPActivate["zFTP extension.activate()"]
+    FTPActivate --> GetAPI["Call ZoweVsCodeExtension.getZoweExplorerApi('1.15.0')"]
+    FTPActivate --> RegMvs["Register FtpMvsApi via registerMvsApi()"]
+    FTPActivate --> RegUss["Register FtpUssApi via registerUssApi()"]
+    FTPActivate --> RegJes["Register FtpJesApi via registerJesApi()"]
+    FTPActivate --> InitProfile["Initialize 'zftp' profile type via initForZowe()"]
+
+    style Start fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
+    style Activate fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
+    style Return fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    style FTPActivate fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
 ```
 
 ### 2. API Call Flow (Example: List Datasets)
 
-```
-User clicks on profile in Dataset tree
-    │
-    ▼
-DatasetTree.getChildren()
-    │
-    ▼
-ZoweExplorerApiRegister.getMvsApi(profile)
-    │
-    ├─► Checks profile type (e.g., "zosmf" or "zftp")
-    │
-    ├─► If "zosmf": Returns ZoweExplorerZosmfApi instance
-    │   └─► Uses @zowe/zos-files-for-zowe-sdk
-    │
-    └─► If "zftp": Returns FtpMvsApi instance
-        └─► Uses @zowe/zos-ftp-for-zowe-cli
-    │
-    ▼
-api.dataSet(filter, options)
-    │
-    ▼
-Returns IZosFilesResponse with dataset list
-    │
-    ▼
-DatasetTree displays results in tree view
+```mermaid
+flowchart TD
+    Click["User clicks on profile in Dataset tree"] --> GetChildren["DatasetTree.getChildren()"]
+    GetChildren --> GetAPI["ZoweExplorerApiRegister.getMvsApi(profile)"]
+    GetAPI --> CheckType{"Checks profile type"}
+
+    CheckType -->|"zosmf"| ZosmfAPI["Returns ZoweExplorerZosmfApi instance"]
+    ZosmfAPI --> ZosmfSDK["Uses @zowe/zos-files-for-zowe-sdk"]
+
+    CheckType -->|"zftp"| FtpAPI["Returns FtpMvsApi instance"]
+    FtpAPI --> FtpCLI["Uses @zowe/zos-ftp-for-zowe-cli"]
+
+    ZosmfSDK --> CallAPI["api.dataSet(filter, options)"]
+    FtpCLI --> CallAPI
+
+    CallAPI --> Response["Returns IZosFilesResponse with dataset list"]
+    Response --> Display["DatasetTree displays results in tree view"]
+
+    style Click fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
+    style CheckType fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    style Display fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
 ```
 
 ### 3. Extension Registration Flow
 
-```
-External Extension (e.g., zFTP)
-    │
-    ▼
-Import: import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api"
-    │
-    ▼
-Call: ZoweVsCodeExtension.getZoweExplorerApi(minVersion)
-    │
-    ├─► Validates Zowe Explorer is installed
-    ├─► Validates version compatibility
-    │
-    ▼
-Returns: IApiRegisterClient instance
-    │
-    ├─► registerMvsApi(new CustomMvsApi())
-    ├─► registerUssApi(new CustomUssApi())
-    ├─► registerJesApi(new CustomJesApi())
-    │
-    ▼
-Call: getExplorerExtenderApi()
-    │
-    ├─► initForZowe(profileType, schemas)
-    └─► reloadProfiles(profileType)
+```mermaid
+flowchart TD
+    Ext["External Extension (e.g., zFTP)"] --> Import["Import: import { ZoweVsCodeExtension }<br/>from '@zowe/zowe-explorer-api'"]
+    Import --> Call["Call: ZoweVsCodeExtension.getZoweExplorerApi(minVersion)"]
+    Call --> Validate1["Validates Zowe Explorer is installed"]
+    Call --> Validate2["Validates version compatibility"]
+
+    Validate1 --> Returns["Returns: IApiRegisterClient instance"]
+    Validate2 --> Returns
+
+    Returns --> RegMvs["registerMvsApi(new CustomMvsApi())"]
+    Returns --> RegUss["registerUssApi(new CustomUssApi())"]
+    Returns --> RegJes["registerJesApi(new CustomJesApi())"]
+
+    RegMvs --> GetExtender["Call: getExplorerExtenderApi()"]
+    RegUss --> GetExtender
+    RegJes --> GetExtender
+
+    GetExtender --> Init["initForZowe(profileType, schemas)"]
+    GetExtender --> Reload["reloadProfiles(profileType)"]
+
+    style Ext fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
+    style Import fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
+    style Returns fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    style GetExtender fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
 ```
 
 ---
@@ -393,20 +378,16 @@ Call: getExplorerExtenderApi()
 
 ### Profile Resolution
 
-```
-User selects profile in tree view
-    │
-    ▼
-Profile has type property (e.g., "zftp")
-    │
-    ▼
-ZoweExplorerApiRegister looks up registered API for that type
-    │
-    ▼
-Returns appropriate API implementation
-    │
-    ▼
-Tree provider uses API to perform operations
+```mermaid
+flowchart TD
+    Select["User selects profile in tree view"] --> Type["Profile has type property<br/>(e.g., 'zftp')"]
+    Type --> Lookup["ZoweExplorerApiRegister looks up<br/>registered API for that type"]
+    Lookup --> Returns["Returns appropriate API implementation"]
+    Returns --> Use["Tree provider uses API to perform operations"]
+
+    style Select fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
+    style Lookup fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    style Use fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
 ```
 
 ---
