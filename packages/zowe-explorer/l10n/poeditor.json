@@ -1172,6 +1172,8 @@
   "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>": "",
   "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>": "",
   "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>": "",
+  "Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. <a>#3554</a>": "",
+  "Fixed an issue where file system URIs with trailing slashes failed to resolve. <a>#3904</a>": "",
   "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>": "",
   "Fixed an issue where filtering a data set by Date Modified showed members without date attributes. <a>#4075</a>": "",
   "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>": "",
