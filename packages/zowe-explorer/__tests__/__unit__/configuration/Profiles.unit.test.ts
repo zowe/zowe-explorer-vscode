@@ -919,6 +919,7 @@ describe("Profiles Unit Tests - function profileHasSecureToken", () => {
             ],
             configurable: true,
         });
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValueOnce(imperative.SessConstants.AUTH_TYPE_TOKEN);
     };
 
     beforeEach(() => {
@@ -1082,6 +1083,24 @@ describe("Profiles Unit Tests - function profileHasSecureToken", () => {
 
         const result = await (Profiles.getInstance() as any).profileHasSecureToken({ name: "test2" });
         expect(result).toBeTruthy();
+    });
+
+    it("should return false when session type from profile is basic auth", async () => {
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReset().mockReturnValueOnce(imperative.SessConstants.AUTH_TYPE_BASIC);
+        const getProfileInfoSpy = jest.spyOn(Profiles.getInstance(), "getProfileInfo");
+
+        const result = await (Profiles.getInstance() as any).profileHasSecureToken({ name: "test2" });
+        expect(result).toBeFalsy();
+        expect(getProfileInfoSpy).not.toHaveBeenCalled();
+    });
+
+    it("should return false when session type from profile is certificate auth", async () => {
+        jest.spyOn(AuthHandler, "sessTypeFromProfile").mockReset().mockReturnValueOnce(imperative.SessConstants.AUTH_TYPE_CERT_PEM);
+        const getProfileInfoSpy = jest.spyOn(Profiles.getInstance(), "getProfileInfo");
+
+        const result = await (Profiles.getInstance() as any).profileHasSecureToken({ name: "test2" });
+        expect(result).toBeFalsy();
+        expect(getProfileInfoSpy).not.toHaveBeenCalled();
     });
 });
 
