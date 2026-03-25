@@ -1178,6 +1178,7 @@
   "Fixed an issue where focus was lost on a previously selected tree item after opening a Zowe resource (Data set, USS file, or Job) in the editor and closing it using Ctrl+W. Screen readers will now announce when focus is restored. <a>#4025</a>": "",
   "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>": "",
   "Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. <a>#3923</a>": "",
+  "Fixed an issue where loading profiles could wrongly assume token authentication if parent profile defines multiple auth types. <a>#4105</a>": "",
   "Fixed an issue where logical record length truncation detection failed for extenders. <a>#4002</a>": "",
   "Fixed an issue where moving a PDS member into the \"No members found\" placeholder of an empty PDS deleted the member without transferring its data. <a>#3950</a>": "",
   "Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. <a>#3590</a>": "",
