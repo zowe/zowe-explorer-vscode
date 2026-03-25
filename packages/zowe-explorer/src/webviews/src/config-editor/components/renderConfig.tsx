@@ -917,12 +917,14 @@ export const RenderConfig = ({
                     : undefined;
 
                   if (isSecureProperty || isLocalSecureProperty || isSecureForSorting) {
+                    const storedInKeyring = !isFromMergedProps && displayKey && mergedProps?.[displayKey] !== undefined;
+                    const secureDisplayValue = isFromMergedProps && !isDeletedMergedProperty ? "••••••••" : stringifyValueByType(pendingValue);
                     return (
                       <input
                         className="config-input"
                         type="password"
-                        placeholder="••••••••"
-                        value={isFromMergedProps && !isDeletedMergedProperty ? "••••••••" : stringifyValueByType(pendingValue)}
+                        placeholder={storedInKeyring || secureDisplayValue ? "••••••••" : ""}
+                        value={secureDisplayValue}
                         onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
                         disabled={isFromMergedProps && !isDeletedMergedProperty}
                         style={

@@ -157,7 +157,7 @@ export const EnvVarAutocomplete: React.FC<EnvVarAutocompleteProps> = ({
     [value, onChange, getCurrentVarName]
   );
 
-  const filteredSuggestions = suggestions.filter((suggestion) => suggestion.toLowerCase().includes(getCurrentVarName(value).toLowerCase()));
+  const filteredSuggestions = suggestions.filter((suggestion) => suggestion.toLowerCase().startsWith(getCurrentVarName(value).toLowerCase()));
 
   return (
     <div className="env-var-autocomplete-container" style={{ position: "relative" }}>

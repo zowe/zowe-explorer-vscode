@@ -408,20 +408,17 @@ export class ConfigEditorProfileOperations {
         // Handle array case
         if (Array.isArray(knownArgs)) {
             return knownArgs.map((item) => {
-                // For array items, check if the item itself is secure
                 if (item && typeof item === "object" && "secure" in item && item.secure === true) {
                     const redactedItem = { ...item };
 
-                    // Check for different possible value field names
-                    if ("argValue" in redactedItem) {
+                    if ("argValue" in redactedItem && redactedItem.argValue != null) {
                         redactedItem.argValue = "REDACTED";
-                    } else if ("value" in redactedItem) {
+                    } else if ("value" in redactedItem && redactedItem.value != null) {
                         redactedItem.value = "REDACTED";
                     }
 
                     return redactedItem;
                 } else {
-                    // Recursively process nested objects
                     return this.redactSecureValues(item);
                 }
             });
@@ -430,21 +427,17 @@ export class ConfigEditorProfileOperations {
         const redacted = { ...knownArgs };
         for (const [key, value] of Object.entries(redacted)) {
             if (value && typeof value === "object") {
-                // Check if this is a secure field
                 if ("secure" in value && value.secure === true) {
-                    // Redact the appropriate value field based on the data structure
                     const redactedValue = { ...value };
 
-                    // Check for different possible value field names
-                    if ("argValue" in redactedValue) {
+                    if ("argValue" in redactedValue && redactedValue.argValue != null) {
                         redactedValue.argValue = "REDACTED";
-                    } else if ("value" in redactedValue) {
+                    } else if ("value" in redactedValue && redactedValue.value != null) {
                         redactedValue.value = "REDACTED";
                     }
 
                     redacted[key] = redactedValue;
                 } else {
-                    // Recursively process nested objects
                     redacted[key] = this.redactSecureValues(value);
                 }
             }
