@@ -38,6 +38,15 @@ jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
 jest.mock("../../../../src/utils/ReleaseNotes");
 
+jest.mock("../../../../src/tools/ZoweLocalStorage", () => ({
+    ZoweLocalStorage: {
+        globalState: { get: jest.fn(), update: jest.fn() },
+        workspaceState: { get: jest.fn(), update: jest.fn() },
+        getValue: jest.fn(),
+        setValue: jest.fn(),
+    },
+}));
+
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
         const executeCommand = { fun: jest.fn() };
@@ -381,12 +390,14 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
             SharedInit.registerCommonCommands(test.context, test.value.providers);
         });
+
         afterAll(() => {
             mockOnProfileUpdated[Symbol.dispose]();
             jest.restoreAllMocks();
         });
 
         processSubscriptions(commands, test);
+
         it("registers an onProfileUpdated event", () => {
             expect(mockOnProfileUpdated.mock).toHaveBeenCalledTimes(1);
             expect(onProfileUpdated).toHaveBeenCalledTimes(1);
@@ -398,6 +409,288 @@ describe("Test src/shared/extension", () => {
             });
             SharedInit.registerCommonCommands(test.context, test.value.providers);
             expect(vscode.commands.registerCommand).toHaveBeenCalledWith("zowe.setupRemoteWorkspaceFolders", expect.any(Function));
+        });
+    });
+
+    describe("onDidChangeTabs - tab close focus restoration", () => {
+        let context: any;
+        let onDidChangeTabs: jest.Mock;
+        let capturedTabsHandler: (e: any) => Promise<void>;
+        const mockReveal = jest.fn().mockResolvedValue(undefined);
+        const mockGetTreeView = jest.fn().mockReturnValue({ reveal: mockReveal });
+        const mockNode = { label: "TEST.DS", resourceUri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" }) };
+        const mockProvider = {
+            getTreeView: mockGetTreeView,
+            mSessionNodes: [mockNode],
+        };
+
+        const mockActiveTab = (uri: vscode.Uri | null) => {
+            Object.defineProperty(vscode.window, "tabGroups", {
+                value: {
+                    onDidChangeTabs,
+                    activeTabGroup: {
+                        activeTab: uri ? { input: new vscode.TabInputText(uri) } : null,
+                    },
+                    all: uri ? [{ tabs: [{ input: new vscode.TabInputText(uri) }] }] : [{ tabs: [] }],
+                },
+                configurable: true,
+                writable: true,
+            });
+        };
+
+        beforeEach(() => {
+            context = { subscriptions: [] };
+            jest.useFakeTimers();
+
+            Object.defineProperty(vscode, "workspace", {
+                value: {
+                    ...vscode.workspace,
+                    onDidChangeConfiguration: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+                    onDidSaveTextDocument: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+                },
+                configurable: true,
+                writable: true,
+            });
+
+            Object.defineProperty(vscode, "commands", {
+                value: {
+                    ...vscode.commands,
+                    registerCommand: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+                    executeCommand: jest.fn(),
+                },
+                configurable: true,
+                writable: true,
+            });
+
+            jest.spyOn(MvsCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: jest.fn() } as any);
+            jest.spyOn(TsoCommandHandler, "getInstance").mockReturnValue({ issueTsoCommand: jest.fn() } as any);
+            jest.spyOn(UnixCommandHandler, "getInstance").mockReturnValue({ issueUnixCommand: jest.fn() } as any);
+
+            onDidChangeTabs = jest.fn().mockImplementation((handler) => {
+                capturedTabsHandler = handler;
+                return { dispose: jest.fn() };
+            });
+
+            Object.defineProperty(vscode.window, "tabGroups", {
+                value: { onDidChangeTabs, activeTabGroup: { activeTab: null }, all: [{ tabs: [] }] },
+                configurable: true,
+                writable: true,
+            });
+
+            jest.spyOn(vscode.window, "setStatusBarMessage").mockReturnValue({ dispose: jest.fn() } as any);
+            jest.spyOn(vscode.l10n, "t").mockImplementation((msg: string, ...args: any[]) => args.reduce((m, a) => m.replace("{0}", a), msg));
+
+            SharedInit.isRestoringFocus = false;
+            mockReveal.mockClear();
+
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockProvider as any);
+            jest.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockProvider as any);
+            jest.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockProvider as any);
+
+            SharedInit.registerCommonCommands(context, { ds: mockProvider, uss: mockProvider, job: mockProvider } as any);
+        });
+
+        afterEach(() => {
+            Object.defineProperty(vscode, "workspace", {
+                value: { ...vscode.workspace },
+                configurable: true,
+                writable: true,
+            });
+            Object.defineProperty(vscode, "commands", {
+                value: { ...vscode.commands },
+                configurable: true,
+                writable: true,
+            });
+            jest.useRealTimers();
+            jest.restoreAllMocks();
+        });
+
+        it("should register the onDidChangeTabs event listener", () => {
+            expect(onDidChangeTabs).toHaveBeenCalledTimes(1);
+            expect(typeof capturedTabsHandler).toBe("function");
+        });
+
+        it("should restore focus when a Zowe DS tab is closed and active editor is a Zowe DS resource", async () => {
+            const activeUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" });
+            mockActiveTab(activeUri);
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/CLOSED.DS" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            await jest.runAllTimersAsync();
+            await handlerPromise;
+
+            expect(mockReveal).toHaveBeenCalledWith(mockNode, { select: true, focus: true });
+        });
+
+        it("should restore focus when a Zowe USS tab is closed and active editor is a Zowe USS resource", async () => {
+            const ussNode = {
+                label: "file.txt",
+                resourceUri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/profile/u/user/file.txt" }),
+            };
+            const ussProvider = { getTreeView: mockGetTreeView, mSessionNodes: [ussNode] };
+            jest.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(ussProvider as any);
+
+            const activeUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/profile/u/user/file.txt" });
+            mockActiveTab(activeUri);
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            await jest.runAllTimersAsync();
+            await handlerPromise;
+
+            expect(mockReveal).toHaveBeenCalledWith(ussNode, { select: true, focus: true });
+        });
+
+        it("should restore focus when a Zowe Jobs tab is closed and active editor is a Zowe Jobs resource", async () => {
+            const jobNode = {
+                label: "JOB123",
+                resourceUri: vscode.Uri.from({ scheme: ZoweScheme.Jobs, path: "/profile/JOB123" }),
+            };
+            const jobProvider = { getTreeView: mockGetTreeView, mSessionNodes: [jobNode] };
+            jest.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(jobProvider as any);
+
+            const activeUri = vscode.Uri.from({ scheme: ZoweScheme.Jobs, path: "/profile/JOB123" });
+            mockActiveTab(activeUri);
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            await jest.runAllTimersAsync();
+            await handlerPromise;
+
+            expect(mockReveal).toHaveBeenCalledWith(jobNode, { select: true, focus: true });
+        });
+
+        it("should not restore focus when active editor is not a Zowe resource", async () => {
+            const activeUri = vscode.Uri.from({ scheme: "file", path: "/local/file.txt" });
+            mockActiveTab(activeUri);
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            await jest.runAllTimersAsync();
+            await handlerPromise;
+
+            expect(mockReveal).not.toHaveBeenCalled();
+        });
+
+        it("should not restore focus when no tabs are closed", async () => {
+            await capturedTabsHandler({ closed: [], opened: [], changed: [] });
+            expect(mockReveal).not.toHaveBeenCalled();
+        });
+
+        it("should not restore focus when isRestoringFocus is true", async () => {
+            SharedInit.isRestoringFocus = true;
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
+            };
+
+            await capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            expect(mockReveal).not.toHaveBeenCalled();
+        });
+
+        it("should not restore focus when closed tab is not a Zowe resource", async () => {
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: "file", path: "/a/b/c.txt" })),
+            };
+
+            await capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            expect(mockReveal).not.toHaveBeenCalled();
+        });
+
+        it("should not restore focus when node is not found in tree", async () => {
+            const activeUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/NOT.FOUND" });
+            mockActiveTab(activeUri);
+
+            const notFoundProvider = { getTreeView: mockGetTreeView, mSessionNodes: [] };
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(notFoundProvider as any);
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            await jest.runAllTimersAsync();
+            await handlerPromise;
+
+            expect(mockReveal).not.toHaveBeenCalled();
+        });
+
+        it("should not restore focus when the last tab is closed", async () => {
+            (vscode.window.tabGroups.all as any) = [];
+            (vscode.window.tabGroups.activeTabGroup as any) = {
+                activeTab: null,
+            };
+
+            const closedTab = {
+                input: new vscode.TabInputText(
+                    vscode.Uri.from({
+                        scheme: ZoweScheme.DS,
+                        path: "/profile/TEST.DS",
+                    })
+                ),
+            };
+
+            const handlerPromise = capturedTabsHandler({
+                closed: [closedTab],
+                opened: [],
+                changed: [],
+            });
+
+            await jest.runAllTimersAsync();
+            await handlerPromise;
+            expect(mockReveal).not.toHaveBeenCalled();
+        });
+
+        it("should handle errors during focus restoration", async () => {
+            const activeUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" });
+            mockActiveTab(activeUri);
+            mockReveal.mockRejectedValueOnce(new Error("reveal failed"));
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            await jest.runAllTimersAsync();
+            await handlerPromise;
+
+            expect(SharedInit.isRestoringFocus).toBe(false);
+        });
+
+        it("should reset isRestoringFocus flag after successful restoration", async () => {
+            const activeUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" });
+            mockActiveTab(activeUri);
+
+            const closedTab = {
+                input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
+            };
+
+            const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            await jest.runAllTimersAsync();
+            await handlerPromise;
+
+            expect(SharedInit.isRestoringFocus).toBe(false);
+        });
+
+        it("should not restore focus for non-TabInputText input types", async () => {
+            const closedTab = {
+                input: { uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" }) },
+            };
+
+            await capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
+            expect(mockReveal).not.toHaveBeenCalled();
         });
     });
 
@@ -519,7 +812,11 @@ describe("Test src/shared/extension", () => {
         const spyOnCollapsibleStateChange = jest.fn();
         let context: any;
         const provider: any = { getTreeView: () => treeView, onCollapsibleStateChange: spyOnCollapsibleStateChange };
-        const treeView = { onDidCollapseElement: spyCollapse, onDidExpandElement: spyExpand };
+        const treeView = {
+            onDidCollapseElement: spyCollapse,
+            onDidExpandElement: spyExpand,
+            onDidChangeSelection: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+        };
 
         beforeEach(() => {
             context = { subscriptions: [] };
@@ -535,6 +832,7 @@ describe("Test src/shared/extension", () => {
             expect(spyCollapse).toHaveBeenCalled();
             expect(spyExpand).toHaveBeenCalled();
             expect(spyOnCollapsibleStateChange).toHaveBeenCalled();
+            expect(treeView.onDidChangeSelection).toHaveBeenCalled();
         });
     });
 
