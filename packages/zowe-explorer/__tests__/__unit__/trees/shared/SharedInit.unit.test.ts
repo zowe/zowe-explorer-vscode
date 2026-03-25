@@ -365,10 +365,14 @@ describe("Test src/shared/extension", () => {
             },
         ];
 
+        let zosmfRestClientSetThrottleOptionsSpy: jest.SpyInstance;
         beforeAll(() => {
             jest.spyOn(MvsCommandHandler, "getInstance").mockReturnValue(cmdProviders.mvs as any);
             jest.spyOn(TsoCommandHandler, "getInstance").mockReturnValue(cmdProviders.tso as any);
             jest.spyOn(UnixCommandHandler, "getInstance").mockReturnValue(cmdProviders.uss as any);
+            jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string, defaultValue?: unknown): unknown => {
+                return defaultValue;
+            });
             test.context.extension = {
                 packageJSON: {
                     version: "2.3.4",
@@ -388,12 +392,23 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(core, "getZoweDir", { value: () => test.value });
             Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand.fun });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
+            zosmfRestClientSetThrottleOptionsSpy = jest.spyOn(core.ZosmfRestClient, "setThrottlingOptions");
             SharedInit.registerCommonCommands(test.context, test.value.providers);
         });
 
         afterAll(() => {
             mockOnProfileUpdated[Symbol.dispose]();
             jest.restoreAllMocks();
+        });
+
+        it("should set up throttling for z/OSMF", () => {
+            // This test needs to be first.
+            const spyCalls = zosmfRestClientSetThrottleOptionsSpy.mock.calls;
+            zosmfRestClientSetThrottleOptionsSpy.mockReset();
+            expect(spyCalls[0][0]).toEqual({
+                maxConcurrentRequests: Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS,
+                queueTimeout: Constants.ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT,
+            });
         });
 
         processSubscriptions(commands, test);
