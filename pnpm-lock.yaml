@@ -3284,6 +3284,10 @@ packages:
     resolution: {integrity: sha512-qejHi7bcSD4hQAZE0tNAawRK1ZtafHDmMTMkrrIGgSLl7hTnQHmKCeB45xAcbfTqK2zowkM3j3bHt/4b/ARbYQ==}
     engines: {node: '>=0.3.1'}
 
+  diff@8.0.4:
+    resolution: {integrity: sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw==}
+    engines: {node: '>=0.3.1'}
+
   dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
@@ -9722,7 +9726,7 @@ snapshots:
       dataobject-parser: 1.2.25
       dayjs: 1.11.13
       deepmerge: 4.3.1
-      diff: 8.0.3
+      diff: 8.0.4
       diff2html: 3.4.56
       fast-glob: 3.3.3
       fastest-levenshtein: 1.0.16
@@ -10794,7 +10798,7 @@ snapshots:
   diff2html@3.4.56:
     dependencies:
       '@profoundlogic/hogan': 3.0.4
-      diff: 8.0.3
+      diff: 8.0.4
     optionalDependencies:
       highlight.js: 11.11.1
 
@@ -10803,6 +10807,8 @@ snapshots:
   diff@5.2.2: {}
 
   diff@8.0.3: {}
+
+  diff@8.0.4: {}
 
   dir-glob@3.0.1:
     dependencies:

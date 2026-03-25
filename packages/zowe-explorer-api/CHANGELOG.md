@@ -12,7 +12,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
-- Updated Zowe SDKs to `8.31.0` for technical currency. [#4130](https://github.com/zowe/zowe-explorer-vscode/pull/4130)
+- Fixed an issue where `Gui.openFileDialog` method could fail if default URL with `vscode-remote` scheme is provided. [#4127](https://github.com/zowe/zowe-explorer-vscode/pull/4127)
+- Updated Zowe SDKs to `8.31.0` for technical currency. [#4117](https://github.com/zowe/zowe-explorer-vscode/pull/4117)
 
 ## `3.4.2`
 
