@@ -1015,6 +1015,212 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             }
         );
     });
+
+    it("handles localization keys for confirmation dialog options", async () => {
+        createGlobalMocks();
+
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockClear();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const dataset = new ZoweDatasetNode({
+            label: "TESTUSER.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        dataset.contextValue = Constants.DS_DS_CONTEXT;
+
+        // Test with localization key for "Disabled"
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "%zowe.jobs.confirmSubmission.disabled%"]])),
+            configurable: true,
+        });
+        await DatasetActions.submitMember(dataset);
+        expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
+
+        // Test with localization key for "Your jobs"
+        mocked(Gui.warningMessage).mockClear();
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "%zowe.jobs.confirmSubmission.yourJobs%"]])),
+            configurable: true,
+        });
+        mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
+        await DatasetActions.submitMember(dataset);
+        expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
+            "Are you sure you want to submit the following job?\n\n" + (dataset.getLabel() as string),
+            {
+                items: [{ title: "Submit" }],
+                vsCodeOpts: { modal: true },
+            }
+        );
+
+        // Test with localization key for "Other user jobs"
+        mocked(Gui.warningMessage).mockClear();
+        dataset.label = "OTHERUSER.DATASET";
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "%zowe.jobs.confirmSubmission.otherUserJobs%"]])),
+            configurable: true,
+        });
+        mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
+        await DatasetActions.submitMember(dataset);
+        expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
+            "Are you sure you want to submit the following job?\n\n" + (dataset.getLabel() as string),
+            {
+                items: [{ title: "Submit" }],
+                vsCodeOpts: { modal: true },
+            }
+        );
+
+        // Test with localization key for "All jobs"
+        mocked(Gui.warningMessage).mockClear();
+        dataset.label = "TESTUSER.DATASET";
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "%zowe.jobs.confirmSubmission.allJobs%"]])),
+            configurable: true,
+        });
+        mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
+        await DatasetActions.submitMember(dataset);
+        expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
+            "Are you sure you want to submit the following job?\n\n" + (dataset.getLabel() as string),
+            {
+                items: [{ title: "Submit" }],
+                vsCodeOpts: { modal: true },
+            }
+        );
+    });
+
+    it("handles boolean false for confirmation dialog (legacy support)", async () => {
+        createGlobalMocks();
+
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockClear();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const dataset = new ZoweDatasetNode({
+            label: "TESTUSER.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        dataset.contextValue = Constants.DS_DS_CONTEXT;
+
+        // Test with boolean false (should be treated as Disabled)
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false]])),
+            configurable: true,
+        });
+        await DatasetActions.submitMember(dataset);
+        expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
+    });
+
+    it("handles invalid/unknown confirmation option values", async () => {
+        createGlobalMocks();
+
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockClear();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const dataset = new ZoweDatasetNode({
+            label: "TESTUSER.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        dataset.contextValue = Constants.DS_DS_CONTEXT;
+
+        // Test with undefined value (should default to Disabled)
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", undefined]])),
+            configurable: true,
+        });
+        await DatasetActions.submitMember(dataset);
+        expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
+
+        // Test with unknown string value (should default to Disabled)
+        mocked(Gui.warningMessage).mockClear();
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "unknown-option"]])),
+            configurable: true,
+        });
+        await DatasetActions.submitMember(dataset);
+        expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
+
+        // Test with number value (should default to Disabled)
+        mocked(Gui.warningMessage).mockClear();
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", 123]])),
+            configurable: true,
+        });
+        await DatasetActions.submitMember(dataset);
+        expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
+    });
+
+    it("respects job ownership when using 'Your jobs' option", async () => {
+        createGlobalMocks();
+
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockClear();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+
+        // Test with "Your jobs" option - should show dialog for TESTUSER's job
+        const yourDataset = new ZoweDatasetNode({
+            label: "TESTUSER.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        yourDataset.contextValue = Constants.DS_DS_CONTEXT;
+
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "%zowe.jobs.confirmSubmission.yourJobs%"]])),
+            configurable: true,
+        });
+        mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
+        await DatasetActions.submitMember(yourDataset);
+        expect(mocked(Gui.warningMessage)).toHaveBeenCalled();
+
+        // Test with "Your jobs" option - should NOT show dialog for other user's job
+        mocked(Gui.warningMessage).mockClear();
+        const otherDataset = new ZoweDatasetNode({
+            label: "OTHERUSER.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        otherDataset.contextValue = Constants.DS_DS_CONTEXT;
+
+        await DatasetActions.submitMember(otherDataset);
+        expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
+    });
+
+    it("respects job ownership when using 'Other user jobs' option", async () => {
+        createGlobalMocks();
+
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockClear();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+
+        // Test with "Other user jobs" option - should NOT show dialog for TESTUSER's job
+        const yourDataset = new ZoweDatasetNode({
+            label: "TESTUSER.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        yourDataset.contextValue = Constants.DS_DS_CONTEXT;
+
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "%zowe.jobs.confirmSubmission.otherUserJobs%"]])),
+            configurable: true,
+        });
+        await DatasetActions.submitMember(yourDataset);
+        expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
+
+        // Test with "Other user jobs" option - should show dialog for other user's job
+        mocked(Gui.warningMessage).mockClear();
+        const otherDataset = new ZoweDatasetNode({
+            label: "OTHERUSER.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        otherDataset.contextValue = Constants.DS_DS_CONTEXT;
+
+        mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
+        await DatasetActions.submitMember(otherDataset);
+        expect(mocked(Gui.warningMessage)).toHaveBeenCalled();
+    });
 });
 
 describe("focusing on a job in the tree view", () => {
