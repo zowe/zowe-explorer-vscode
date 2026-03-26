@@ -135,7 +135,7 @@ graph TB
   - `IMvs`: Dataset operations (list, read, write, delete, etc.)
   - `IUss`: USS file operations (list, read, write, delete, etc.)
   - `IJes`: Job operations (submit, list, download spool files, etc.)
-  - `ICommand`: Console command operations
+  - `ICommand`: Tso, Console, and Unix command operations
 
 #### Extensibility Interfaces
 
