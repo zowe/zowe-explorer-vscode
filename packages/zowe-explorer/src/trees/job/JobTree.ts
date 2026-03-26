@@ -391,9 +391,6 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 profile: parentNode.getProfile(),
                 job: new JobDetail(label),
             });
-            if (!JobFSProvider.instance.exists(favJob.resourceUri)) {
-                JobFSProvider.instance.createDirectory(favJob.resourceUri, { job: favJob.job });
-            }
         } else {
             // for search
             favJob = new ZoweJobNode({
@@ -480,6 +477,9 @@ Would you like to do this now?`,
             if (!favorite.owner) {
                 // Needed for setting tooltip
                 favorite.owner = session.ISession.user;
+            }
+            if (SharedContext.isJob(favorite) && !JobFSProvider.instance.exists(favorite.resourceUri)) {
+                JobFSProvider.instance.createDirectory(favorite.resourceUri, { job: favorite.job });
             }
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
             if (favorite.getProfile() && favorite.getSession()) {
