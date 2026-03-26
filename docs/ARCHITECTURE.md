@@ -63,7 +63,7 @@ graph TB
             FtpJes -.-> FtpReg
         end
 
-        APIReg --> API
+        APIReg --> Interfaces
         FtpReg --> Accessor
     end
 
