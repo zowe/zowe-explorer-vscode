@@ -144,6 +144,12 @@ describe("Gui unit tests", () => {
         expect(mocks.showOpenDialog).toHaveBeenCalled();
     });
 
+    it("can show a file open dialog without invalid default URI", async () => {
+        Object.defineProperty(vscode.env, "remoteName", { value: null });
+        await Gui.showOpenDialog({ defaultUri: { scheme: "vscode-remote" } as vscode.Uri });
+        expect(mocks.showOpenDialog).toHaveBeenCalledWith({ defaultUri: undefined });
+    });
+
     it("can show an input box", async () => {
         await Gui.showInputBox({});
         expect(mocks.showInputBox).toHaveBeenCalled();
