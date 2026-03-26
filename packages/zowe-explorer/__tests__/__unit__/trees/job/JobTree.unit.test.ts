@@ -539,7 +539,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             node.iconPath = targetIcon.path;
         }
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile).toEqual(node);
     });
@@ -601,7 +601,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             node.iconPath = targetIcon.path;
         }
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile.label).toEqual("testJob(JOB123)");
     });

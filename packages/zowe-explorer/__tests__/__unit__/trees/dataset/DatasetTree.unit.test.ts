@@ -268,7 +268,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             path: `/${blockMocks.datasetSessionNode.label as string}/${node.label as string}`,
         });
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("BRTVS99.PUBLIC", Constants.DS_PDS_CONTEXT, favProfileNode);
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("BRTVS99.PUBLIC", Constants.DS_PDS_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile).toEqual(node);
     });
@@ -290,7 +290,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         });
         node.command = { command: "vscode.open", title: "", arguments: [node.resourceUri] };
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile(
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile(
             "BRTVS99.PS",
             Constants.DS_DS_CONTEXT,
             blockMocks.datasetSessionNode
@@ -309,7 +309,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
-        await testTree.initializeFavChildNodeForProfile("BRTVS99.BAD", "badContextValue", favProfileNode);
+        testTree.initializeFavChildNodeForProfile("BRTVS99.BAD", "badContextValue", favProfileNode);
 
         expect(showErrorMessageSpy).toHaveBeenCalledTimes(1);
         showErrorMessageSpy.mockClear();

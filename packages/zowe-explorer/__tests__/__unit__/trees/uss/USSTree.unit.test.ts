@@ -331,7 +331,7 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () =>
         if (targetIcon) {
             expectedFavSearchNode.iconPath = targetIcon.path;
         }
-        const favSearchNode = await testTree1.initializeFavChildNodeForProfile(label, "ussSession", favProfileNode);
+        const favSearchNode = testTree1.initializeFavChildNodeForProfile(label, "ussSession", favProfileNode);
         expect(favSearchNode.label).toEqual(expectedFavSearchNode.label);
         expect(favSearchNode.collapsibleState).toEqual(expectedFavSearchNode.collapsibleState);
         expect(favSearchNode.contextValue).toEqual(expectedFavSearchNode.contextValue);
@@ -2075,9 +2075,11 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         favProfileNode.children.push(favFileNode);
         globalMocks.testTree.mFavorites.push(favProfileNode);
 
-        jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
+        jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false).mockReturnValueOnce(false);
+        const createDirectorySpy = jest.spyOn(vscode.workspace.fs, "createDirectory").mockClear();
         const writeFileSpy = jest.spyOn(vscode.workspace.fs, "writeFile");
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        expect(createDirectorySpy).toHaveBeenCalled();
         expect(writeFileSpy).toHaveBeenCalledWith(favFileNode.resourceUri, new Uint8Array());
     });
 });
