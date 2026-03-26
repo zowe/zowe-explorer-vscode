@@ -215,9 +215,11 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
             onClick={() => handleContextMenuAction("open")}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "var(--vscode-menu-selectionBackground)";
+              e.currentTarget.style.color = "var(--vscode-menu-selectionForeground)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.color = "var(--vscode-menu-foreground)";
             }}
             id="tab-open-file"
           >
@@ -241,9 +243,11 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
             onClick={() => handleContextMenuAction("reveal")}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "var(--vscode-menu-selectionBackground)";
+              e.currentTarget.style.color = "var(--vscode-menu-selectionForeground)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.color = "var(--vscode-menu-foreground)";
             }}
           >
             <span className="codicon codicon-folder-opened" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
@@ -267,9 +271,11 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
               onClick={() => handleContextMenuAction("schema")}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = "var(--vscode-menu-selectionBackground)";
+                e.currentTarget.style.color = "var(--vscode-menu-selectionForeground)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = "transparent";
+                e.currentTarget.style.color = "var(--vscode-menu-foreground)";
               }}
               id="tab-open-schema"
             >
@@ -294,9 +300,11 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
             onClick={() => handleContextMenuAction("autostore")}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "var(--vscode-menu-selectionBackground)";
+              e.currentTarget.style.color = "var(--vscode-menu-selectionForeground)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.color = "var(--vscode-menu-foreground)";
             }}
             id="tab-toggle-autostore"
           >
