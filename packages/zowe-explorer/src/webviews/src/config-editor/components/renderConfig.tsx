@@ -138,6 +138,7 @@ export const RenderConfig = ({
   const { setPropertySortOrderWithStorage, setShowMergedPropertiesWithStorage } = useConfigContext();
 
   const MERGED_PROPERTIES_OPTIONS: MergedPropertiesVisibility[] = ["hide", "show", "unfiltered"];
+  const isUntypedProfile = isCurrentProfileUntyped();
 
   const getMergedPropertiesDisplayName = (option: MergedPropertiesVisibility) => {
     switch (option) {
@@ -923,7 +924,8 @@ export const RenderConfig = ({
                       <input
                         className="config-input"
                         type="password"
-                        placeholder={storedInKeyring || secureDisplayValue ? "••••••••" : ""}
+                        //TODO: FIX // Typeless profiles can have secure keys without computed values on-screen; show placeholder instead of treating it as "no value".
+                        placeholder={storedInKeyring || secureDisplayValue || isUntypedProfile ? "••••••••" : ""}
                         value={secureDisplayValue}
                         onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
                         disabled={isFromMergedProps && !isDeletedMergedProperty}
@@ -1209,6 +1211,7 @@ export const RenderConfig = ({
       sortConfigEntries,
       filterSecureProperties,
       isCurrentProfileUntyped,
+      isUntypedProfile,
       getNestedProperty,
       extractProfileKeyFromPath,
       flattenProfiles,
