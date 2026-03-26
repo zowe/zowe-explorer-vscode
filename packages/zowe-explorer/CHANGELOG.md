@@ -21,13 +21,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the "Created Date" and "Modified Date" columns were not sortable in the data sets table view, specifically when the user's locale differs from the default value (`en (en-US)`). Now, sorting works regardless of the VS Code language setting, and dates are now formatted with the user's locale. [#4008](https://github.com/zowe/zowe-explorer-vscode/pull/4008)
 - Fixed an issue where an error appeared when moving an empty PDS across LPARs. [#4001](https://github.com/zowe/zowe-explorer-vscode/pull/4001)
 - Fixed an issue with the "Create New Data Set" feature where a data set attribute's original value was deleted after the user dismissed the input box. Now, the attribute's value is preserved when the user cancels their input. [#4003](https://github.com/zowe/zowe-explorer-vscode/issues/4003)
-- Updated Zowe SDKs to `8.30.4` for technical currency. [#4117](https://github.com/zowe/zowe-explorer-vscode/pull/4117)
+- Updated Zowe SDKs to `8.31.0` for technical currency. [#4117](https://github.com/zowe/zowe-explorer-vscode/pull/4117)
 - Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.[#4023](https://github.com/zowe/zowe-explorer-vscode/issues/4023)
 - Corrected description of the `mnorc` attribute for PDS members. [#4116](https://github.com/zowe/zowe-explorer-vscode/pull/4116)
 - Fixed slow performance when listing a large number of data sets or members. [#4116](https://github.com/zowe/zowe-explorer-vscode/pull/4116)
 - Fixed an issue where filtering a data set by Date Modified showed members without date attributes. [#4075](https://github.com/zowe/zowe-explorer-vscode/pull/4075/)
-
-### Bug fixes
+- Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Replaced the inaccessible markdown link with keyboard-accessible "Open Job" button that can be navigated using Tab and activated with Enter or Space keys. [#4030](https://github.com/zowe/zowe-explorer-vscode/issues/4030)
+- Fixed an issue where focus was lost on a previously selected tree item after opening a Zowe resource (Data set, USS file, or Job) in the editor and closing it using `Ctrl+W`. Screen readers will now announce when focus is restored. [#4025](https://github.com/zowe/zowe-explorer-vscode/issues/4025)
+- Fixed an issue where loading profiles could wrongly assume token authentication if parent profile defines multiple auth types. [#4105](https://github.com/zowe/zowe-explorer-vscode/issues/4105)
 
 ## `3.4.2`
 
