@@ -365,7 +365,7 @@ flowchart TD
 - **`MainframeInteraction.IMvs`**: Dataset operations
 - **`MainframeInteraction.IUss`**: USS file operations
 - **`MainframeInteraction.IJes`**: Job operations
-- **`MainframeInteraction.ICommand`**: Console command operations
+- **`MainframeInteraction.ICommand`**: Tso, Console, and Unix command operations
 - **`MainframeInteraction.ICommon`**: Base interface with common methods
 
 ---
