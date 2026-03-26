@@ -2030,6 +2030,56 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         expect(resultFavDirNode.contextValue).toEqual(expectedFavDirNode.contextValue);
         expect(resultFavDirNode.getProfile()).toEqual(expectedFavDirNode.getProfile());
     });
+    it("Tests that filesystem entry is created for favorited directory that doesn't exist in filesystem", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const favProfileNode = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mFavoriteSession,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
+        const favDirNode = new ZoweUSSNode({
+            label: "favDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
+        favProfileNode.children.push(favDirNode);
+        globalMocks.testTree.mFavorites.push(favProfileNode);
+
+        jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
+        const createDirectorySpy = jest.spyOn(vscode.workspace.fs, "createDirectory");
+        await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        expect(createDirectorySpy).toHaveBeenCalledWith(favDirNode.resourceUri);
+    });
+    it("Tests that filesystem entry is created for favorited file that doesn't exist in filesystem", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const favProfileNode = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mFavoriteSession,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
+        const favFileNode = new ZoweUSSNode({
+            label: "favFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: favProfileNode,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
+        favProfileNode.children.push(favFileNode);
+        globalMocks.testTree.mFavorites.push(favProfileNode);
+
+        jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
+        const writeFileSpy = jest.spyOn(vscode.workspace.fs, "writeFile");
+        await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        expect(writeFileSpy).toHaveBeenCalledWith(favFileNode.resourceUri, new Uint8Array());
+    });
 });
 
 describe("USSTree Unit Tests - Function editSession", () => {

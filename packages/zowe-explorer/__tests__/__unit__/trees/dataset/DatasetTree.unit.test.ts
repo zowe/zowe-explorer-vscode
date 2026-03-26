@@ -806,6 +806,63 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
 
         expect(resultFavPdsNode).toEqual(expectedFavPdsNode);
     });
+    it("Checking that filesystem entry is created for favorited PDS that doesn't exist in filesystem", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const favProfileNode = new ZoweDatasetNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetFavoriteNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.FAV_PROFILE_CONTEXT,
+        });
+        const favPdsNode = new ZoweDatasetNode({
+            label: "favoritePds",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.PDS_FAV_CONTEXT,
+        });
+        const testTree = new DatasetTree();
+        favProfileNode.children.push(favPdsNode);
+        testTree.mFavorites.push(favProfileNode);
+
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false);
+        const createDirectorySpy = jest.spyOn(vscode.workspace.fs, "createDirectory");
+        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        expect(createDirectorySpy).toHaveBeenCalledWith(favPdsNode.resourceUri);
+    });
+
+    it("Checking that filesystem entry is created for favorited DS that doesn't exist in filesystem", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const favProfileNode = new ZoweDatasetNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetFavoriteNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.FAV_PROFILE_CONTEXT,
+        });
+        const favDsNode = new ZoweDatasetNode({
+            label: "favoriteDs",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: favProfileNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.DS_FAV_CONTEXT,
+        });
+        const testTree = new DatasetTree();
+        favProfileNode.children.push(favDsNode);
+        testTree.mFavorites.push(favProfileNode);
+
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false);
+        const writeFileSpy = jest.spyOn(vscode.workspace.fs, "writeFile");
+        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        expect(writeFileSpy).toHaveBeenCalledWith(favDsNode.resourceUri, new Uint8Array());
+    });
 });
 describe("Dataset Tree Unit Tests - Function getParent", () => {
     function createBlockMocks() {
