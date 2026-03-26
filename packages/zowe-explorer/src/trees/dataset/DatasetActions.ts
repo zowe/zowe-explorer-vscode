@@ -1894,24 +1894,53 @@ export class DatasetActions {
             return selection != null && selection?.title === "Submit";
         };
 
-        const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
+        const confirmationOption: string | boolean = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
 
-        switch (Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption)) {
-            case Definitions.JobSubmitDialogOpts.OtherUserJobs:
-                if (!ownsJob && !(await showConfirmationDialog())) {
-                    return false;
+        let dialogOption: Definitions.JobSubmitDialogOpts;
+
+        // Handle boolean false (legacy or test scenarios)
+        if (confirmationOption === false) {
+            dialogOption = Definitions.JobSubmitDialogOpts.Disabled;
+        } else if (typeof confirmationOption === "string") {
+            // Try to match localization keys first
+            switch (confirmationOption) {
+                case "%zowe.jobs.confirmSubmission.yourJobs%":
+                    dialogOption = Definitions.JobSubmitDialogOpts.YourJobs;
+                    break;
+                case "%zowe.jobs.confirmSubmission.otherUserJobs%":
+                    dialogOption = Definitions.JobSubmitDialogOpts.OtherUserJobs;
+                    break;
+                case "%zowe.jobs.confirmSubmission.allJobs%":
+                    dialogOption = Definitions.JobSubmitDialogOpts.AllJobs;
+                    break;
+                case "%zowe.jobs.confirmSubmission.disabled%":
+                    dialogOption = Definitions.JobSubmitDialogOpts.Disabled;
+                    break;
+                default: {
+                    // Fallback: try to match against translated strings (for tests)
+                    const optionIndex = Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption);
+                    dialogOption = optionIndex !== -1 ? optionIndex : Definitions.JobSubmitDialogOpts.Disabled;
+                    break;
+                }
+            }
+        } else {
+            // Default to Disabled for any other unexpected values
+            dialogOption = Definitions.JobSubmitDialogOpts.Disabled;
+        }
+
+        switch (dialogOption) {
+            case Definitions.JobSubmitDialogOpts.YourJobs:
+                if (ownsJob) {
+                    return await showConfirmationDialog();
                 }
                 break;
-            case Definitions.JobSubmitDialogOpts.YourJobs:
-                if (ownsJob && !(await showConfirmationDialog())) {
-                    return false;
+            case Definitions.JobSubmitDialogOpts.OtherUserJobs:
+                if (!ownsJob) {
+                    return await showConfirmationDialog();
                 }
                 break;
             case Definitions.JobSubmitDialogOpts.AllJobs:
-                if (!(await showConfirmationDialog())) {
-                    return false;
-                }
-                break;
+                return await showConfirmationDialog();
             case Definitions.JobSubmitDialogOpts.Disabled:
             default:
                 break;
