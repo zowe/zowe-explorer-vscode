@@ -449,10 +449,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.iconPath = iconPath;
         // Use nodeDataChanged instead of refreshElement to avoid collapsing the tree
         // refreshElement marks the node as dirty which triggers a full parent refresh
-        const ussProvider = SharedTreeProviders.providers.uss;
-        if (ussProvider?.nodeDataChanged) {
-            ussProvider.nodeDataChanged(this);
-        }
+        SharedTreeProviders.providers.uss?.nodeDataChanged?.(this);
     }
 
     public async deleteUSSNode(ussFileProvider: Types.IZoweUSSTreeType, _filePath: string, cancelled: boolean = false): Promise<void> {
