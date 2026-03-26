@@ -6,104 +6,104 @@
 # ============================================================================
 # Data Sets Tree
 # ============================================================================
-packages/zowe-explorer/src/trees/dataset/                   person-a person-b
-packages/zowe-explorer/__tests__/__unit__/trees/dataset/     person-a person-b
-packages/zowe-explorer/__tests__/__mocks__/DatasetTree.ts    person-a person-b
-packages/zowe-explorer-api/src/dataset/                      person-a person-b
+packages/zowe-explorer/src/trees/dataset/                    @JillieBeanSim @zFernand0
+packages/zowe-explorer/__tests__/__unit__/trees/dataset/     @JillieBeanSim @zFernand0
+packages/zowe-explorer/__tests__/__mocks__/DatasetTree.ts    @JillieBeanSim @zFernand0
+packages/zowe-explorer-api/src/dataset/                      @JillieBeanSim @zFernand0
 
 # ============================================================================
 # USS Tree
 # ============================================================================
-packages/zowe-explorer/src/trees/uss/                        person-a person-b
-packages/zowe-explorer/__tests__/__unit__/trees/uss/         person-a person-b
+packages/zowe-explorer/src/trees/uss/                        @traeok @JillieBeanSim
+packages/zowe-explorer/__tests__/__unit__/trees/uss/         @traeok @JillieBeanSim
 
 # ============================================================================
 # Jobs Tree
 # ============================================================================
-packages/zowe-explorer/src/trees/job/                        person-a person-b
-packages/zowe-explorer/__tests__/__unit__/trees/job/         person-a person-b
+packages/zowe-explorer/src/trees/job/                        @JillieBeanSim @traeok
+packages/zowe-explorer/__tests__/__unit__/trees/job/         @JillieBeanSim @traeok
 
 # ============================================================================
 # File system (FS providers, entries, buffers)
 # ============================================================================
-packages/zowe-explorer-api/src/fs/                           @traeok person-b
-packages/zowe-explorer/src/trees/*/**FSProvider.ts           @traeok person-b
-packages/zowe-explorer-api/__tests__/__unit__/fs/            @traeok person-b
+packages/zowe-explorer-api/src/fs/                           @traeok @jace-roell
+packages/zowe-explorer/src/trees/*/**FSProvider.ts           @traeok @jace-roell
+packages/zowe-explorer-api/__tests__/__unit__/fs/            @traeok @jace-roell
 
 # ============================================================================
 # Secure credentials & credential managers
 # ============================================================================
-packages/zowe-explorer-api/src/security/                     person-a person-b
-packages/zowe-explorer-api/__tests__/__unit__/security/      person-a person-b
+packages/zowe-explorer-api/src/security/                     @t1m0thyj @traeok
+packages/zowe-explorer-api/__tests__/__unit__/security/      @t1m0thyj @traeok
 
 # ============================================================================
 # Authentication & related prompts
 # ============================================================================
-packages/zowe-explorer/src/utils/AuthUtils.ts                person-a person-b
-packages/zowe-explorer-api/src/profiles/AuthHandler.ts       person-a person-b
-packages/zowe-explorer-api/src/vscode/doc/BaseProfileAuth.ts person-a person-b
-packages/zowe-explorer-api/src/vscode/doc/PromptCredentials.ts person-a person-b
-packages/zowe-explorer/src/utils/CertificateWizard.ts        person-a person-b
+packages/zowe-explorer/src/utils/AuthUtils.ts                @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/profiles/AuthHandler.ts       @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/vscode/doc/BaseProfileAuth.ts @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/vscode/doc/PromptCredentials.ts @JillieBeanSim @traeok
+packages/zowe-explorer/src/utils/CertificateWizard.ts        @JillieBeanSim @traeok
 
 # ============================================================================
 # Web views
 # ============================================================================
-packages/zowe-explorer/src/webviews/                         @traeok person-b
-packages/zowe-explorer-api/src/vscode/ui/WebView.ts          @traeok person-b
-packages/zowe-explorer-api/src/vscode/ui/TableView*.ts       @traeok person-b
-packages/zowe-explorer-api/src/vscode/ui/utils/              @traeok person-b
-packages/zowe-explorer/src/zosconsole/                       person-a person-b
-webviews/                                                    @traeok person-b
+packages/zowe-explorer/src/webviews/                         @traeok @JWaters02
+packages/zowe-explorer-api/src/vscode/ui/WebView.ts          @traeok @JWaters02
+packages/zowe-explorer-api/src/vscode/ui/TableView*.ts       @traeok @JWaters02
+packages/zowe-explorer-api/src/vscode/ui/utils/              @traeok @JWaters02
+packages/zowe-explorer/src/zosconsole/                       @traeok @JWaters02
+webviews/                                                    @traeok @JWaters02
 
 # ============================================================================
 # Commands & terminals
 # ============================================================================
-packages/zowe-explorer/src/commands/                         person-a person-b
-packages/zowe-explorer/src/tools/ZoweTerminal.ts             person-a person-b
-packages/zowe-explorer/__tests__/__unit__/commands/          person-a person-b
+packages/zowe-explorer/src/commands/                         @zFernand0 @JillieBeanSim
+packages/zowe-explorer/src/tools/ZoweTerminal.ts             @zFernand0 @JillieBeanSim
+packages/zowe-explorer/__tests__/__unit__/commands/          @zFernand0 @JillieBeanSim
 
 # ============================================================================
 # Bundling & packaging
 # ============================================================================
-packages/*/webpack.config.js                                 person-a person-b
-packages/zowe-explorer/src/webviews/vite.config.ts           person-a person-b
-package.json                                                 person-a person-b
-packages/*/package.json                                      person-a person-b
-lerna.json                                                   person-a person-b
-pnpm-workspace.yaml                                         person-a person-b
-scripts/                                                     person-a person-b
+packages/*/webpack.config.js                                 @t1m0thyj @zFernand0
+packages/zowe-explorer/src/webviews/vite.config.ts           @t1m0thyj @zFernand0
+package.json                                                 @t1m0thyj @zFernand0
+packages/*/package.json                                      @t1m0thyj @zFernand0
+lerna.json                                                   @t1m0thyj @zFernand0
+pnpm-workspace.yaml                                         @t1m0thyj @zFernand0
+scripts/                                                     @t1m0thyj @zFernand0
 
 # ============================================================================
 # End-to-end testing
 # ============================================================================
-packages/zowe-explorer/__tests__/__e2e__/                    @traeok person-b
+packages/zowe-explorer/__tests__/__e2e__/                    @traeok @t1m0thyj
 
 # ============================================================================
 # CI/CD
 # ============================================================================
-.github/workflows/                                           person-a person-b
-.codecov.yml                                                 person-a person-b
-packages/zowe-explorer/__tests__/__integration__/ci/         person-a person-b
+.github/workflows/                                           @t1m0thyj @zFernand0
+.codecov.yml                                                 @t1m0thyj @zFernand0
+packages/zowe-explorer/__tests__/__integration__/ci/         @t1m0thyj @zFernand0
 
 # ============================================================================
 # Profiles
 # ============================================================================
-packages/zowe-explorer-api/src/profiles/                     @traeok person-b
-packages/zowe-explorer/src/configuration/Profiles.ts         person-a person-b
-packages/zowe-explorer/src/management/ProfileManagement.ts   person-a person-b
-packages/zowe-explorer/src/utils/ProfilesUtils.ts            person-a person-b
-packages/zowe-explorer-api/__tests__/__unit__/profiles/      @traeok person-b
+packages/zowe-explorer-api/src/profiles/                     @t1m0thyj @JillieBeanSim
+packages/zowe-explorer/src/configuration/Profiles.ts         @t1m0thyj @JillieBeanSim
+packages/zowe-explorer/src/management/ProfileManagement.ts   @t1m0thyj @JillieBeanSim
+packages/zowe-explorer/src/utils/ProfilesUtils.ts            @t1m0thyj @JillieBeanSim
+packages/zowe-explorer-api/__tests__/__unit__/profiles/      @t1m0thyj @JillieBeanSim
 
 # ============================================================================
 # ZE API registration
 # ============================================================================
-packages/zowe-explorer/src/extending/                        person-a person-b
-packages/zowe-explorer-api/src/extend/                       person-a person-b
-packages/zowe-explorer-api/src/vscode/ZoweVsCodeExtension.ts person-a person-b
-packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts person-a person-b
-packages/zowe-explorer-api/src/index.ts                      person-a person-b
+packages/zowe-explorer/src/extending/                        @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/extend/                       @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/vscode/ZoweVsCodeExtension.ts @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/index.ts                      @JillieBeanSim @traeok
 
 # ============================================================================
 # z/FTP extension
 # ============================================================================
-packages/zowe-explorer-ftp-extension/                        person-a person-b
+packages/zowe-explorer-ftp-extension/                        @zFernand0 @t1m0thyj
