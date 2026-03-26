@@ -20,8 +20,6 @@ import { ErrorCorrelator, ZoweExplorerApiType } from "../utils/ErrorCorrelator";
 export class BaseProvider {
     // eslint-disable-next-line no-magic-numbers
     private readonly FS_PROVIDER_UI_TIMEOUT = 4000;
-    // eslint-disable-next-line no-magic-numbers
-    protected readonly FS_DIRECTORY_TTL: number = 50;
     protected _onDidChangeFileEmitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     protected _bufferedEvents: vscode.FileChangeEvent[] = [];
     protected _fireSoonHandle?: NodeJS.Timeout;

@@ -40,6 +40,7 @@ import * as dayjs from "dayjs";
 import { DatasetUtils } from "./DatasetUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private readonly EXPECTED_MEMBER_LENGTH = 2; // /DATA.SET/MEMBER
@@ -464,6 +465,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const queryParams = new URLSearchParams(uri.query);
         const isExplicitFetch = queryParams.get("fetch") === "true";
 
+        const queryTtl = queryParams.get("ttl");
+        const debounceTtl = queryTtl !== null ? parseInt(queryTtl, 10) : SettingsConfig.getDirectValue("zowe.settings.fileSystemDebounce", 50);
+
         let shouldFetch = forceRemote || isExplicitFetch || !dir || !dir.allFetched;
 
         const parentPath = path.posix.dirname(uri.path);
@@ -471,42 +475,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         if (!shouldFetch && dir && uri.path !== "/" && parentPath !== uri.path && parentPath !== "/") {
             try {
                 const now = Date.now();
-                const lastValidated = dir.mtimeValidatedAt || 0;
+                const lastValidated = dir.timestampLastFetched || 0;
 
-                if (now - lastValidated < this.FS_DIRECTORY_TTL) {
+                if (now - lastValidated < debounceTtl) {
                     shouldFetch = false;
                 } else {
-                    const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-                    const fileName = path.posix.basename(uri.path);
-
-                    const statResponse = await this.executeWithReuse<IZosFilesResponse>(uri, {
-                        keyGenerator: (u) => `stat_${uriInfo.profileName}_${fileName}`,
-                        checkLocal: () => false,
-                        execute: async () => {
-                            const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
-                            return await mvsApi.dataSet(fileName, { attributes: true });
-                        },
-                    });
-
-                    if (statResponse && statResponse.success && statResponse.apiResponse?.items?.length) {
-                        const remoteEntry = statResponse.apiResponse.items[0];
-                        let remoteMtime = 0;
-
-                        if (remoteEntry.m4date && remoteEntry.mtime) {
-                            remoteMtime = dayjs(`${remoteEntry.m4date} ${remoteEntry.mtime}:${remoteEntry.msec || "00"}`).valueOf();
-                        }
-
-                        if (remoteMtime && remoteMtime !== dir.mtime) {
-                            shouldFetch = true;
-                        } else {
-                            dir.mtimeValidatedAt = Date.now();
-                        }
-                    } else {
-                        shouldFetch = true;
-                    }
+                    shouldFetch = true;
                 }
             } catch (err) {
-                ZoweLogger.warn(`[DatasetFSProvider] Failed to validate mtime: ${err instanceof Error ? err.message : err}`);
+                ZoweLogger.warn(`[DatasetFSProvider] Failed to validate cache TTL: ${err instanceof Error ? err.message : err}`);
             }
         }
 
@@ -514,7 +491,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             dir = (await this.remoteLookupForResource(uri)) as DirEntry;
             if (dir) {
                 dir.allFetched = true;
-                dir.mtimeValidatedAt = Date.now(); // Reset validation timer upon a full fetch
+                dir.timestampLastFetched = Date.now(); // Reset validation timer upon a full fetch
             }
         }
 

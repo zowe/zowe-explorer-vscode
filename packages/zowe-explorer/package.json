@@ -2178,6 +2178,12 @@
           "description": "%zowe.pollInterval.info%",
           "scope": "window"
         },
+        "zowe.settings.fileSystemDebounce": {
+          "type": "integer",
+          "default": 50,
+          "description": "%zowe.fileSystemDebounce%",
+          "scope": "window"
+        },
         "zowe.jobs.paginate.enabled": {
           "type": "boolean",
           "default": false,

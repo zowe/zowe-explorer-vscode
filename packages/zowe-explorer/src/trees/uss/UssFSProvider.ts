@@ -35,6 +35,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import dayjs = require("dayjs");
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
@@ -457,6 +458,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const queryParams = new URLSearchParams(uri.query || "");
         const isExplicitFetch = queryParams.get("fetch") === "true";
 
+        const queryTtl = queryParams.get("ttl");
+        const debounceTtl = queryTtl !== null ? parseInt(queryTtl, 10) : SettingsConfig.getDirectValue("zowe.settings.fileSystemDebounce", 50);
+
         let shouldFetch = forceRemote || isExplicitFetch || !dir || !dir.allFetched;
 
         const parentPath = path.posix.dirname(uri.path);
@@ -464,9 +468,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (!shouldFetch && dir && uri.path !== "/" && parentPath !== uri.path && parentPath !== "/") {
             try {
                 const now = Date.now();
-                const lastValidated = dir.mtimeValidatedAt || 0;
+                const lastValidated = dir.timestampLastFetched || 0;
 
-                if (now - lastValidated < this.FS_DIRECTORY_TTL) {
+                if (now - lastValidated < debounceTtl) {
                     shouldFetch = false;
                 } else {
                     const uriInfo = this._getInfoFromUri(uri);
@@ -488,7 +492,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                             if (remoteMtime !== dir.mtime) {
                                 shouldFetch = true;
                             } else {
-                                dir.mtimeValidatedAt = Date.now();
+                                dir.timestampLastFetched = Date.now();
                             }
                         } else {
                             shouldFetch = true;
@@ -503,7 +507,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                                 if (siblingLocal && FsAbstractUtils.isDirectoryEntry(siblingLocal)) {
                                     const siblingMtime = item.mtime ? dayjs(item.mtime).valueOf() : 0;
                                     if (siblingLocal.mtime === siblingMtime) {
-                                        siblingLocal.mtimeValidatedAt = validationTime;
+                                        siblingLocal.timestampLastFetched = validationTime;
                                     }
                                 }
                             }
@@ -519,7 +523,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             dir = (await this.remoteLookupForResource(uri)) as UssDirectory;
             if (dir) {
                 dir.allFetched = true;
-                dir.mtimeValidatedAt = Date.now();
+                dir.timestampLastFetched = Date.now();
             }
         }
 

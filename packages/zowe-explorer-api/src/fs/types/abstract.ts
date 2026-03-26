@@ -127,7 +127,7 @@ export class DirEntry implements IFileSystemEntry {
         this.entries = new Map();
     }
     public allFetched?: boolean;
-    public mtimeValidatedAt?: number;
+    public timestampLastFetched?: number;
 }
 
 export class FilterEntry extends DirEntry {
