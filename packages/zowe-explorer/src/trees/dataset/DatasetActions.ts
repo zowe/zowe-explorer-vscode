@@ -1735,12 +1735,13 @@ export class DatasetActions {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
                 const args = [sessProfileName, job.jobid];
                 const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
+                const openJobButton = vscode.l10n.t("Open Job");
                 const notifyButton = vscode.l10n.t("Poll For Job Completion");
                 const jobDisplay = `${job.jobname}(${job.jobid})`;
                 const message = vscode.l10n.t({
                     message: "Job submitted: {0}",
-                    args: [`[${jobDisplay}](${setJobCmd})`],
-                    comment: ["Job name and ID with set job command"],
+                    args: [jobDisplay],
+                    comment: ["Job name and ID"],
                 });
                 ZoweLogger.info(
                     vscode.l10n.t({
@@ -1749,11 +1750,14 @@ export class DatasetActions {
                         comment: ["Job ID", "Profile name"],
                     })
                 );
-                Gui.showMessage(message, { items: [notifyButton] }).then((selection) => {
-                    if (selection === notifyButton) {
-                        DatasetActions.pollSubmittedJob(sessProfile, sessProfileName, job.jobid, job.jobname);
-                    }
-                });
+                // Accessibility: Capture the button response to ensure screen readers properly announce
+                // the buttons as actionable elements rather than just informational text.
+                const selection = await Gui.showMessage(message, { items: [openJobButton, notifyButton] });
+                if (selection === openJobButton) {
+                    vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                } else if (selection === notifyButton) {
+                    DatasetActions.pollSubmittedJob(sessProfile, sessProfileName, job.jobid, job.jobname);
+                }
             } catch (error) {
                 if (error instanceof Error) {
                     await AuthUtils.errorHandling(error, {
@@ -1978,12 +1982,13 @@ export class DatasetActions {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
                 const args = [sesName, job.jobid];
                 const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
+                const openJobButton = vscode.l10n.t("Open Job");
                 const notifyButton = vscode.l10n.t("Poll For Job Completion");
                 const jobDisplay = `${job.jobname}(${job.jobid})`;
                 const message = vscode.l10n.t({
                     message: "Job submitted: {0}",
-                    args: [`[${jobDisplay}](${setJobCmd})`],
-                    comment: ["Job name and ID with set job command"],
+                    args: [jobDisplay],
+                    comment: ["Job name and ID"],
                 });
                 ZoweLogger.info(
                     vscode.l10n.t({
@@ -1992,11 +1997,14 @@ export class DatasetActions {
                         comment: ["Job ID", "Session name"],
                     })
                 );
-                Gui.showMessage(message, { items: [notifyButton] }).then((selection) => {
-                    if (selection === notifyButton) {
-                        DatasetActions.pollSubmittedJob(sessProfile, sesName, job.jobid, job.jobname);
-                    }
-                });
+                // Accessibility: Capture the button response to ensure screen readers properly announce
+                // the buttons as actionable elements rather than just informational text.
+                const selection = await Gui.showMessage(message, { items: [openJobButton, notifyButton] });
+                if (selection === openJobButton) {
+                    vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                } else if (selection === notifyButton) {
+                    DatasetActions.pollSubmittedJob(sessProfile, sesName, job.jobid, job.jobname);
+                }
             } catch (error) {
                 if (error instanceof Error) {
                     await AuthUtils.errorHandling(error, {

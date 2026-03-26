@@ -60,8 +60,106 @@ export class SharedInit {
     public static onDidActivateExtensionEmitter = new vscode.EventEmitter<void>();
     public static onDidActivateExtension = SharedInit.onDidActivateExtensionEmitter.event;
 
+    private static isRestoringFocus = false;
+
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
+
+        context.subscriptions.push(
+            vscode.window.tabGroups.onDidChangeTabs(async (e) => {
+                if (e.closed.length > 0 && !SharedInit.isRestoringFocus) {
+                    const closedTab = e.closed[0];
+
+                    if (
+                        !(closedTab.input instanceof vscode.TabInputText) ||
+                        (closedTab.input.uri.scheme !== ZoweScheme.DS &&
+                            closedTab.input.uri.scheme !== ZoweScheme.USS &&
+                            closedTab.input.uri.scheme !== ZoweScheme.Jobs)
+                    ) {
+                        return;
+                    }
+
+                    SharedInit.isRestoringFocus = true;
+                    try {
+                        const closedUri = closedTab.input.uri;
+
+                        const allTabs = vscode.window.tabGroups.all.flatMap((group) => group.tabs);
+                        if (allTabs.length === 0) {
+                            return;
+                        }
+
+                        const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+
+                        let uriToFocus: vscode.Uri;
+
+                        if (!activeTab || !(activeTab.input instanceof vscode.TabInputText)) {
+                            // No active tab left (only tab was closed) — don't shift tree focus
+                            return;
+                        }
+                        const activeUri = activeTab.input.uri;
+                        const activeScheme = activeUri.scheme;
+
+                        if (activeUri.path === closedUri.path) {
+                            // Active tab is same as closed — focus closed node
+                            return;
+                        } else if (activeScheme !== ZoweScheme.DS && activeScheme !== ZoweScheme.USS && activeScheme !== ZoweScheme.Jobs) {
+                            return;
+                        } else {
+                            // Active tab is a different Zowe resource — focus it
+                            uriToFocus = activeUri;
+                        }
+
+                        const findNodeByUri = async (provider: IZoweTree<IZoweTreeNode>, uri: vscode.Uri): Promise<IZoweTreeNode | undefined> => {
+                            const searchInChildren = async (nodes: IZoweTreeNode[]): Promise<IZoweTreeNode | undefined> => {
+                                for (const node of nodes) {
+                                    if (node.resourceUri?.path === uri.path) {
+                                        return node;
+                                    }
+                                    if (node.children && node.children.length > 0) {
+                                        const found = await searchInChildren(node.children);
+                                        if (found) {
+                                            return found;
+                                        }
+                                    }
+                                }
+                                return undefined;
+                            };
+
+                            const rootNodes = provider.mSessionNodes;
+                            return searchInChildren(rootNodes);
+                        };
+
+                        const uriScheme = uriToFocus.scheme;
+                        let provider: IZoweTree<IZoweTreeNode> | undefined;
+                        if (uriScheme === ZoweScheme.DS && SharedTreeProviders.ds) {
+                            provider = SharedTreeProviders.ds;
+                        } else if (uriScheme === ZoweScheme.USS && SharedTreeProviders.uss) {
+                            provider = SharedTreeProviders.uss;
+                        } else if (uriScheme === ZoweScheme.Jobs && SharedTreeProviders.job) {
+                            provider = SharedTreeProviders.job;
+                        }
+
+                        if (!provider) {
+                            return;
+                        }
+
+                        const node = await findNodeByUri(provider, uriToFocus);
+                        if (!node) {
+                            return;
+                        }
+
+                        await provider.getTreeView().reveal(node, { select: true, focus: true });
+
+                        const nodeLabel = typeof node.label === "string" ? node.label : node.label?.label || "item";
+                        ZoweLogger.trace(`Focus restored to tree node: ${nodeLabel}`);
+                    } catch (err) {
+                        ZoweLogger.trace(`Could not restore focus to tree node: ${(err as Error).message ?? String(err)}`);
+                    } finally {
+                        SharedInit.isRestoringFocus = false;
+                    }
+                }
+            })
+        );
 
         // Update imperative.json to false only when VS Code setting is set to false
         context.subscriptions.push(
@@ -447,15 +545,21 @@ export class SharedInit {
         theTreeView.onDidExpandElement(async (e) => {
             await theProvider.onCollapsibleStateChange?.(e.element, vscode.TreeItemCollapsibleState.Expanded);
         });
+
+        theTreeView.onDidChangeSelection((e) => {
+            if (e.selection.length > 0) {
+                SharedInit.lastFocusedNode = {
+                    provider: theProvider,
+                    node: e.selection[0],
+                };
+            }
+        });
     }
 
     public static async setupRemoteWorkspaceFolders(e?: vscode.WorkspaceFoldersChangeEvent, profileType?: string): Promise<void> {
         const profInfo = Profiles.getInstance();
-
         let uriMap = new Map<string, UriFsInfo>();
-
         const profileNames = new Set<string>(profInfo.getProfiles(profileType).map((prof) => prof.name));
-
         // Perform remote lookup for workspace folders that fit the `zowe-ds` or `zowe-uss` schemes.
         const newWorkspaces = (e?.added ?? vscode.workspace.workspaceFolders ?? [])
             .filter((f) => f.uri.scheme === ZoweScheme.DS || f.uri.scheme === ZoweScheme.USS)
@@ -464,7 +568,6 @@ export class SharedInit {
                 uriMap[f.uri.path] = uriInfo;
                 return profileNames.has(uriInfo.profileName);
             });
-
         const readDirRequests = [];
         for (const folder of newWorkspaces) {
             const uriInfo: UriFsInfo = uriMap[folder.uri.path];
@@ -476,14 +579,13 @@ export class SharedInit {
                 ) {
                     continue;
                 }
-                readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri.with({ query: "fetch=true" })));
+                readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri));
             } catch (err) {
                 if (err instanceof Error) {
                     ZoweLogger.error(err.message);
                 }
             }
         }
-
         try {
             await Promise.all(readDirRequests);
         } catch (err) {
@@ -491,7 +593,6 @@ export class SharedInit {
                 ZoweLogger.error(err.message);
             }
         }
-
         if (profileType !== "zosmf" && newWorkspaces.length > 0) {
             await vscode.commands.executeCommand("workbench.files.action.refreshFilesExplorer");
         }
