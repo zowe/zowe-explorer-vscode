@@ -248,7 +248,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             datasetSessionNode,
         };
     }
-    it("Checking function for PDS favorite", async () => {
+    it("Checking function for PDS favorite", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new DatasetTree();
@@ -272,7 +272,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
 
         expect(favChildNodeForProfile).toEqual(node);
     });
-    it("Checking function for sequential DS favorite", async () => {
+    it("Checking function for sequential DS favorite", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new DatasetTree();
@@ -298,7 +298,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
 
         expect(favChildNodeForProfile).toEqual(node);
     });
-    it("Checking function for invalid context value", async () => {
+    it("Checking function for invalid context value", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new DatasetTree();
