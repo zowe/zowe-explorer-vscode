@@ -10,7 +10,7 @@
  */
 
 import { flattenKeys } from "../utils";
-import type { Configuration, PendingChange, PendingDefault, schemaValidation } from "../types";
+import type { Configuration, PendingChange, PendingDefault, schemaValidation, ConfigParseError } from "../types";
 const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
 export interface MessageHandlerProps {
     // State setters
@@ -41,6 +41,7 @@ export interface MessageHandlerProps {
     setPendingSaveSelection: React.Dispatch<React.SetStateAction<{ tab: number | null; profile: string | null } | null>>;
     setWizardProfileNameValidation: React.Dispatch<React.SetStateAction<{ isValid: boolean; message?: string }>>;
     setRenames: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [originalKey: string]: string } }>>;
+    setConfigParseErrors: React.Dispatch<React.SetStateAction<ConfigParseError[]>>;
 
     // Refs
     configurationsRef: React.MutableRefObject<Configuration[]>;
@@ -80,9 +81,12 @@ export const handleConfigurationsMessage = (data: any, props: MessageHandlerProp
         hasPromptedForZeroConfigs,
         setHasPromptedForZeroConfigs,
         setAddConfigModalOpen,
+        setConfigParseErrors,
     } = props;
 
-    const { contents, secureValuesAllowed } = data;
+    const { contents, secureValuesAllowed, parseErrors } = data;
+    const parseErrorList: ConfigParseError[] = parseErrors ?? [];
+    setConfigParseErrors(parseErrorList);
     const previousConfigurations = configurationsRef.current;
     setConfigurations(contents);
     const newSecureValuesAllowed = secureValuesAllowed !== undefined ? secureValuesAllowed : true;
@@ -156,7 +160,7 @@ export const handleConfigurationsMessage = (data: any, props: MessageHandlerProp
     vscodeApi.postMessage({ command: "CONFIGURATIONS_READY" });
 
     // If there are no configurations and we haven't prompted yet, automatically open the add config modal
-    if (contents.length === 0 && !hasPromptedForZeroConfigs) {
+    if (contents.length === 0 && !hasPromptedForZeroConfigs && parseErrorList.length === 0) {
         setAddConfigModalOpen(true);
         setHasPromptedForZeroConfigs(true);
     } else if (contents.length > 0) {
@@ -325,11 +329,13 @@ export const handleReloadMessage = (props: MessageHandlerProps) => {
         setDefaultsDeletions,
         setProfileSearchTerm,
         setProfileFilterType,
+        setConfigParseErrors,
         vscodeApi,
     } = props;
 
     // Handle explicit reload request from VS Code
     // Clear state and request fresh data
+    setConfigParseErrors([]);
     setConfigurations([]);
     setSelectedTab(null);
     setSelectedProfileKey(null);

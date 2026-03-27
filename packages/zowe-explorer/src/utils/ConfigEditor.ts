@@ -9,7 +9,7 @@
  *
  */
 
-import { DeferredPromise, WebView, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { DeferredPromise, FileManagement, WebView, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import type { ProfileInfo } from "@zowe/imperative";
 import * as path from "path";
@@ -22,7 +22,26 @@ import { ConfigEditorMessageHandlers } from "./ConfigEditorMessageHandlers";
 import { ConfigEditorProfileOperations } from "./ConfigEditorProfileOperations";
 import { ConfigEditorFileOperations } from "./ConfigEditorFileOperations";
 import { ConfigEditorPathUtils } from "./ConfigEditorPathUtils";
-import { ConfigMoveAPI } from "../webviews/src/config-editor/types";
+import { ConfigMoveAPI, type ConfigParseError } from "../webviews/src/config-editor/types";
+
+function parseLineColumnFromErrorMessage(errorMessage: string): { line?: number; column?: number } {
+    const lineMatch = errorMessage.match(/Line (\d+)/);
+    const columnMatch = errorMessage.match(/Column (\d+)/);
+    const line = lineMatch ? parseInt(lineMatch[1], 10) - 1 : undefined;
+    const column = columnMatch ? parseInt(columnMatch[1], 10) - 1 : undefined;
+    return { line, column };
+}
+
+function pushParseError(errors: ConfigParseError[], configPath: string, message: string): void {
+    const { line, column } = parseLineColumnFromErrorMessage(message);
+    const entry: ConfigParseError = { configPath, message, line, column };
+    const existing = errors.findIndex((e) => e.configPath === configPath);
+    if (existing >= 0) {
+        errors[existing] = entry;
+    } else {
+        errors.push(entry);
+    }
+}
 
 export class ConfigEditor extends WebView {
     public userSubmission: DeferredPromise<{
@@ -39,6 +58,7 @@ export class ConfigEditor extends WebView {
     private messageHandlers: ConfigEditorMessageHandlers;
     private profileOperations: ConfigEditorProfileOperations;
     private fileOperations: ConfigEditorFileOperations;
+    private lastParseErrorPaths: Set<string> = new Set();
 
     public constructor(context: vscode.ExtensionContext) {
         super(vscode.l10n.t("Config Editor"), "config-editor", context, {
@@ -62,7 +82,88 @@ export class ConfigEditor extends WebView {
 
         this.panel.onDidDispose(() => {});
 
+        this.context.subscriptions.push(
+            vscode.workspace.onDidSaveTextDocument((doc) => {
+                void this.onDidSaveDocumentForParseErrors(doc);
+            })
+        );
+
         this.initializeWebview();
+    }
+
+    /**
+     * Resolves candidate team config file paths (layer paths from the API when possible, plus default global/project filenames).
+     */
+    private async getKnownTeamConfigFilePaths(): Promise<string[]> {
+        const unique = new Set<string>();
+        try {
+            const layers = await ZoweVsCodeExtension.getConfigLayers();
+            for (const layer of layers) {
+                if (layer?.path) {
+                    unique.add(path.resolve(layer.path));
+                }
+            }
+        } catch {
+            // Config.load can fail when one or more JSON files are invalid; fall back to known locations.
+        }
+        try {
+            const zoweDir = FileManagement.getZoweDir();
+            if (zoweDir) {
+                for (const name of ["zowe.config.json", "zowe.config.user.json"]) {
+                    unique.add(path.resolve(path.join(zoweDir, name)));
+                }
+            }
+        } catch {
+            // Imperative may not be initialized (e.g. unit tests).
+        }
+        const ws = ZoweVsCodeExtension.workspaceRoot?.uri.fsPath;
+        if (ws) {
+            for (const name of ["zowe.config.json", "zowe.config.user.json"]) {
+                unique.add(path.resolve(path.join(ws, name)));
+            }
+        }
+        return [...unique];
+    }
+
+    /**
+     * When ProfileInfo fails to load, imperative often stops at the first bad file. Parse each known config file
+     * independently so all invalid JSON layers appear in one modal.
+     */
+    private async appendJsonParseErrorsForKnownConfigFiles(parseErrors: ConfigParseError[]): Promise<void> {
+        try {
+            const reportedPaths = new Set(
+                parseErrors.map((e) => (e.configPath ? path.resolve(e.configPath) : "")).filter(Boolean)
+            );
+            const candidates = await this.getKnownTeamConfigFilePaths();
+            for (const candidate of candidates) {
+                const resolved = path.resolve(candidate);
+                if (!fs.existsSync(resolved)) {
+                    continue;
+                }
+                if (reportedPaths.has(resolved)) {
+                    continue;
+                }
+                try {
+                    const raw = fs.readFileSync(resolved, { encoding: "utf8" });
+                    JSON.parse(raw);
+                } catch (err) {
+                    const errorMessage = err instanceof Error ? err.message : String(err);
+                    pushParseError(parseErrors, resolved, `Error reading or parsing file ${resolved}: ${errorMessage}`);
+                }
+            }
+        } catch {
+            // Best-effort; primary parse errors are already in parseErrors.
+        }
+    }
+
+    private async onDidSaveDocumentForParseErrors(doc: vscode.TextDocument): Promise<void> {
+        if (!this.panel.visible) {
+            return;
+        }
+        const savedPath = path.resolve(doc.uri.fsPath);
+        if (this.lastParseErrorPaths.has(savedPath)) {
+            await this.refreshConfigurationsAndNotifyWebview();
+        }
     }
 
     private sortRenamesByDepth(renames: any[]): any[] {
@@ -113,13 +214,13 @@ export class ConfigEditor extends WebView {
     }
 
     private async initializeWebview(): Promise<void> {
-        // Send initial data to ensure the webview is properly initialized
-        const configurations = await this.getLocalConfigs();
+        const { configs, parseErrors } = await this.getLocalConfigs();
         const secureValuesAllowed = await this.areSecureValuesAllowed();
 
         await this.panel.webview.postMessage({
             command: "CONFIGURATIONS",
-            contents: configurations,
+            contents: configs,
+            parseErrors,
             secureValuesAllowed,
         });
     }
@@ -136,38 +237,22 @@ export class ConfigEditor extends WebView {
         }
     }
 
-    public async getLocalConfigs(): Promise<any[]> {
+    public async getLocalConfigs(): Promise<{ configs: any[]; parseErrors: ConfigParseError[] }> {
+        const parseErrors: ConfigParseError[] = [];
         let profInfo: ProfileInfo;
         try {
             profInfo = await ConfigUtils.createProfileInfoAndLoad();
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
-            vscode.window.showErrorMessage(`Error reading profiles from disk: ${errorMessage}`);
-
-            // Try to extract file path from error message and open it
             const fileMatch = errorMessage.match(/file '([^']+)'/);
             if (fileMatch && fileMatch[1]) {
-                const filePath = fileMatch[1];
-                try {
-                    // Extract line and column information if available
-                    const lineMatch = errorMessage.match(/Line (\d+)/);
-                    const columnMatch = errorMessage.match(/Column (\d+)/);
-
-                    const line = lineMatch ? parseInt(lineMatch[1]) - 1 : 0;
-                    const column = columnMatch ? parseInt(columnMatch[1]) - 1 : 0;
-
-                    const document = await vscode.workspace.openTextDocument(vscode.Uri.file(filePath));
-                    const editor = await vscode.window.showTextDocument(document);
-
-                    const position = new vscode.Position(line, column);
-                    editor.selection = new vscode.Selection(position, position);
-                    editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
-                } catch (openError) {
-                    // Ignore file open errors
-                }
+                pushParseError(parseErrors, path.resolve(fileMatch[1]), errorMessage);
+            } else {
+                vscode.window.showErrorMessage(`Error reading profiles from disk: ${errorMessage}`);
             }
-
-            return [];
+            await this.appendJsonParseErrorsForKnownConfigFiles(parseErrors);
+            this.lastParseErrorPaths = new Set(parseErrors.map((e) => (e.configPath ? path.resolve(e.configPath) : "")).filter(Boolean));
+            return { configs: [], parseErrors };
         }
         const layers = profInfo.getTeamConfig().layers;
 
@@ -229,37 +314,22 @@ export class ConfigEditor extends WebView {
                     }
                 } catch (err) {
                     const errorMessage = err instanceof Error ? err.message : String(err);
-                    vscode.window.showErrorMessage(`Error reading or parsing file ${configPath}: ${errorMessage}`);
-
-                    try {
-                        const lineMatch = errorMessage.match(/Line (\d+)/);
-                        const columnMatch = errorMessage.match(/Column (\d+)/);
-
-                        const line = lineMatch ? parseInt(lineMatch[1]) - 1 : 0;
-                        const column = columnMatch ? parseInt(columnMatch[1]) - 1 : 0;
-
-                        const document = await vscode.workspace.openTextDocument(vscode.Uri.file(configPath));
-                        const editor = await vscode.window.showTextDocument(document);
-
-                        const position = new vscode.Position(line, column);
-                        editor.selection = new vscode.Selection(position, position);
-                        editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
-                    } catch (openError) {
-                        // Ignore file open errors
-                    }
+                    pushParseError(parseErrors, configPath, `Error reading or parsing file ${configPath}: ${errorMessage}`);
                 }
             }
         }
 
-        return allConfigs;
+        this.lastParseErrorPaths = new Set(parseErrors.map((e) => (e.configPath ? path.resolve(e.configPath) : "")).filter(Boolean));
+        return { configs: allConfigs, parseErrors };
     }
 
     private async refreshConfigurationsAndNotifyWebview(options?: { saveError?: string }): Promise<void> {
-        const configs = await this.getLocalConfigs();
+        const { configs, parseErrors } = await this.getLocalConfigs();
         const secureValuesAllowed = await this.areSecureValuesAllowed();
         await this.panel.webview.postMessage({
             command: "CONFIGURATIONS",
             contents: configs,
+            parseErrors,
             secureValuesAllowed,
         });
         if (options?.saveError) {
@@ -441,11 +511,14 @@ export class ConfigEditor extends WebView {
                 break;
             }
             case "CREATE_NEW_CONFIG": {
-                const configs = await this.fileOperations.createNewConfig(message);
-                if (configs.length > 0) {
+                const result = await this.fileOperations.createNewConfig(message);
+                if (result && result.configs.length > 0) {
+                    const secureValuesAllowed = await this.areSecureValuesAllowed();
                     await this.panel.webview.postMessage({
                         command: "CONFIGURATIONS",
-                        contents: configs,
+                        contents: result.configs,
+                        parseErrors: result.parseErrors,
+                        secureValuesAllowed,
                     });
                 }
                 break;

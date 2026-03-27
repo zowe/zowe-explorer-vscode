@@ -9,6 +9,7 @@ import {
   SaveModal,
   NewLayerModal,
   AddConfigModal,
+  ConfigParseErrorsModal,
   RenameProfileModal,
   RenderProfiles,
   RenderProfileDetails,
@@ -103,6 +104,8 @@ function AppContent() {
     setProfileMenuOpen,
     renameProfileModalOpen,
     setRenameProfileModalOpen,
+    configParseErrors,
+    setConfigParseErrors,
   } = useConfigContext();
 
   const { viewMode, profilesWidthPercent } = configEditorSettings;
@@ -191,9 +194,10 @@ function AppContent() {
   }, [selectedProfileKey, selectedTab, formatPendingChanges, renames, sortOrderVersion]);
 
   useEffect(() => {
-    const isModalOpen = newProfileModalOpen || saveModalOpen || newLayerModalOpen || wizardModalOpen || renameProfileModalOpen;
+    const isModalOpen =
+      newProfileModalOpen || saveModalOpen || newLayerModalOpen || wizardModalOpen || renameProfileModalOpen || configParseErrors.length > 0;
     document.body.classList.toggle("modal-open", isModalOpen);
-  }, [newProfileModalOpen, saveModalOpen, newLayerModalOpen, wizardModalOpen, renameProfileModalOpen]);
+  }, [newProfileModalOpen, saveModalOpen, newLayerModalOpen, wizardModalOpen, renameProfileModalOpen, configParseErrors.length]);
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -391,6 +395,7 @@ function AppContent() {
     setPendingSaveSelection,
     setWizardProfileNameValidation,
     setRenames,
+    setConfigParseErrors,
     configurationsRef,
     pendingSaveSelection,
     selectedTab,
@@ -460,6 +465,8 @@ function AppContent() {
         hasPendingChanges={hasPendingChanges()}
       />
       {/* Modals */}
+
+      <ConfigParseErrorsModal errors={configParseErrors} vscodeApi={vscodeApi} />
 
       <AddProfileModal
         key={`add-profile-${newProfileModalOpen}`}

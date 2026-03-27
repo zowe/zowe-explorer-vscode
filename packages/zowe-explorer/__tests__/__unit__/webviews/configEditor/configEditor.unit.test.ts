@@ -203,6 +203,7 @@ jest.mock("vscode", () => ({
     workspace: {
         workspaceFolders: [],
         openTextDocument: jest.fn(),
+        onDidSaveTextDocument: jest.fn(() => ({ dispose: jest.fn() })),
     },
 }));
 
@@ -338,7 +339,7 @@ const createGlobalMocks = () => ({
     },
 
     mockFileOperations: {
-        createNewConfig: jest.fn().mockResolvedValue([]),
+        createNewConfig: jest.fn().mockResolvedValue({ configs: [], parseErrors: [] }),
     },
 
     // Common mock modules
@@ -393,6 +394,7 @@ describe("configEditor", () => {
     beforeEach(() => {
         mockContext = {
             extensionPath: "/mock/extension/path",
+            subscriptions: [],
         } as ExtensionContext;
 
         ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(createDefaultMockProfileInfo());
@@ -475,8 +477,9 @@ describe("configEditor", () => {
 
             const result = await configEditor.getLocalConfigs();
 
-            expect(result).toHaveLength(1);
-            expect(result[0]).toMatchObject({
+            expect(result.configs).toHaveLength(1);
+            expect(result.parseErrors).toEqual([]);
+            expect(result.configs[0]).toMatchObject({
                 configPath: "/test/config/path",
                 properties: expect.objectContaining({
                     $schema: "zowe.schema.json",
@@ -505,10 +508,17 @@ describe("configEditor", () => {
 
             const result = await configEditor.getLocalConfigs();
 
-            expect(result).toEqual([]);
-            expect(showErrorMessageSpy).toHaveBeenCalled();
-            expect(openTextDocumentSpy).toHaveBeenCalled();
-            expect(showTextDocumentSpy).toHaveBeenCalled();
+            expect(result.configs).toEqual([]);
+            expect(result.parseErrors).toHaveLength(1);
+            expect(result.parseErrors[0]).toMatchObject({
+                configPath: expect.any(String),
+                message: expect.stringContaining("Error reading file"),
+                line: 4,
+                column: 9,
+            });
+            expect(showErrorMessageSpy).not.toHaveBeenCalled();
+            expect(openTextDocumentSpy).not.toHaveBeenCalled();
+            expect(showTextDocumentSpy).not.toHaveBeenCalled();
 
             showErrorMessageSpy.mockRestore();
             openTextDocumentSpy.mockRestore();
@@ -522,7 +532,8 @@ describe("configEditor", () => {
 
             const result = await (configEditor as any).getLocalConfigs();
 
-            expect(result).toEqual([]);
+            expect(result.configs).toEqual([]);
+            expect(result.parseErrors).toEqual([]);
             expect(showErrorMessageSpy).toHaveBeenCalledWith("Error reading profiles from disk: String error message");
 
             showErrorMessageSpy.mockRestore();
@@ -556,7 +567,8 @@ describe("configEditor", () => {
 
             const result = await configEditor.getLocalConfigs();
 
-            expect(result).toEqual([]);
+            expect(result.configs).toEqual([]);
+            expect(result.parseErrors).toEqual([]);
             expect(ConfigUtils.createProfileInfoAndLoad).toHaveBeenCalled();
             expect(mockProfileInfo.getTeamConfig).toHaveBeenCalled();
         });
@@ -628,8 +640,14 @@ describe("configEditor", () => {
 
             const result = await configEditor.getLocalConfigs();
 
-            expect(result).toHaveLength(1);
-            expect(result[0]).toMatchObject({
+            expect(result.configs).toHaveLength(1);
+            expect(result.parseErrors).toHaveLength(1);
+            expect(result.parseErrors[0]).toMatchObject({
+                configPath: "/test/config/path",
+                line: 2,
+                column: 14,
+            });
+            expect(result.configs[0]).toMatchObject({
                 configPath: "/test/config/path",
                 properties: expect.objectContaining({
                     $schema: "zowe.schema.json",
@@ -639,12 +657,9 @@ describe("configEditor", () => {
                 user: true,
             });
 
-            // Should show error message for the invalid file
-            expect(showErrorMessageSpy).toHaveBeenCalledWith(
-                "Error reading or parsing file /test/config/path: Error reading file '/test/invalid/config/path' Line 3 Column 15"
-            );
-            expect(openTextDocumentSpy).toHaveBeenCalledWith(vscode.Uri.file("/test/config/path"));
-            expect(showTextDocumentSpy).toHaveBeenCalled();
+            expect(showErrorMessageSpy).not.toHaveBeenCalled();
+            expect(openTextDocumentSpy).not.toHaveBeenCalled();
+            expect(showTextDocumentSpy).not.toHaveBeenCalled();
 
             showErrorMessageSpy.mockRestore();
             openTextDocumentSpy.mockRestore();
@@ -705,7 +720,8 @@ describe("configEditor", () => {
 
             const result = await (configEditor as any).getLocalConfigs();
 
-            expect(result).toHaveLength(1);
+            expect(result.configs).toHaveLength(1);
+            expect(result.parseErrors).toEqual([]);
             expect(fs.existsSync).toHaveBeenCalledWith("/test/config/zowe.schema.json");
             expect(fs.readFileSync).toHaveBeenCalledWith("/test/config/zowe.schema.json", { encoding: "utf8" });
             expect(ConfigSchemaHelpers.generateSchemaValidation).toHaveBeenCalled();
@@ -748,7 +764,8 @@ describe("configEditor", () => {
 
             const result = await (configEditor as any).getLocalConfigs();
 
-            expect(result).toHaveLength(1);
+            expect(result.configs).toHaveLength(1);
+            expect(result.parseErrors).toEqual([]);
             expect(fs.existsSync).toHaveBeenCalledWith("/test/config/zowe.schema.json");
             // fs.readFileSync may be called for other purposes, so we just check it wasn't called for schema
             // ConfigSchemaHelpers.generateSchemaValidation may be called for other purposes
@@ -795,7 +812,8 @@ describe("configEditor", () => {
 
             const result = await (configEditor as any).getLocalConfigs();
 
-            expect(result).toHaveLength(1);
+            expect(result.configs).toHaveLength(1);
+            expect(result.parseErrors).toEqual([]);
             expect(fs.existsSync).toHaveBeenCalledWith("/test/config/zowe.schema.json");
             expect(fs.readFileSync).toHaveBeenCalledWith("/test/config/zowe.schema.json", { encoding: "utf8" });
             // ConfigSchemaHelpers.generateSchemaValidation may be called for other purposes, so we just check the result
@@ -857,8 +875,9 @@ describe("configEditor", () => {
 
             const result = await (configEditor as any).getLocalConfigs();
 
-            expect(result).toHaveLength(1);
-            expect(result[0]).toMatchObject({
+            expect(result.configs).toHaveLength(1);
+            expect(result.parseErrors).toEqual([]);
+            expect(result.configs[0]).toMatchObject({
                 configPath: "/test/config/path",
                 properties: expect.objectContaining({
                     $schema: "zowe.schema.json",
@@ -898,7 +917,7 @@ describe("configEditor", () => {
             // Mock the required methods
             const handleProfileRenamesSpy = jest.spyOn(configEditor as any, "handleProfileRenames").mockResolvedValue(undefined);
             const handleAutostoreToggleSpy = jest.spyOn(configEditor as any, "handleAutostoreToggle").mockResolvedValue(undefined);
-            const getLocalConfigsSpy = jest.spyOn(configEditor, "getLocalConfigs").mockResolvedValue([]);
+            const getLocalConfigsSpy = jest.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
             const areSecureValuesAllowedSpy = jest.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
             const postMessageSpy = jest.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
 
@@ -918,6 +937,7 @@ describe("configEditor", () => {
             expect(postMessageSpy).toHaveBeenCalledWith({
                 command: "CONFIGURATIONS",
                 contents: [],
+                parseErrors: [],
                 secureValuesAllowed: true,
             });
             expect(postMessageSpy).toHaveBeenCalledWith({
@@ -2016,22 +2036,29 @@ describe("configEditor", () => {
                 configPath: "/test/new/config/path",
             };
 
-            const createNewConfigSpy = jest.spyOn((configEditor as any).fileOperations, "createNewConfig").mockResolvedValue([
-                {
-                    configPath: "/test/new/config/path",
-                    properties: { profiles: {} },
-                    global: false,
-                    user: true,
-                },
-            ]);
+            const createNewConfigSpy = jest.spyOn((configEditor as any).fileOperations, "createNewConfig").mockResolvedValue({
+                configs: [
+                    {
+                        configPath: "/test/new/config/path",
+                        properties: { profiles: {} },
+                        global: false,
+                        user: true,
+                    },
+                ],
+                parseErrors: [],
+            });
+            const areSecureValuesAllowedSpy = jest.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
             const postMessageSpy = jest.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
             expect(createNewConfigSpy).toHaveBeenCalledWith(mockMessage);
+            expect(areSecureValuesAllowedSpy).toHaveBeenCalled();
             expect(postMessageSpy).toHaveBeenCalledWith({
                 command: "CONFIGURATIONS",
                 contents: expect.any(Array),
+                parseErrors: [],
+                secureValuesAllowed: true,
             });
         });
 
@@ -2101,7 +2128,7 @@ describe("configEditor", () => {
                 otherChanges: [],
             };
 
-            const getLocalConfigsSpy = jest.spyOn(configEditor, "getLocalConfigs").mockResolvedValue([]);
+            const getLocalConfigsSpy = jest.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
             const areSecureValuesAllowedSpy = jest.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
             const postMessageSpy = jest.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
 
@@ -2120,6 +2147,7 @@ describe("configEditor", () => {
             expect(postMessageSpy).toHaveBeenCalledWith({
                 command: "CONFIGURATIONS",
                 contents: [],
+                parseErrors: [],
                 secureValuesAllowed: true,
             });
             expect(postMessageSpy).toHaveBeenCalledWith({
@@ -2210,7 +2238,7 @@ describe("configEditor", () => {
                 .spyOn(mockedConfigChangeHandlers.ConfigChangeHandlers, "handleProfileChanges")
                 .mockResolvedValue(undefined);
 
-            const getLocalConfigsSpy = jest.spyOn(configEditor as any, "getLocalConfigs").mockResolvedValue([]);
+            const getLocalConfigsSpy = jest.spyOn(configEditor as any, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
             const areSecureValuesAllowedSpy = jest.spyOn(configEditor as any, "areSecureValuesAllowed").mockResolvedValue(true);
             const postMessageSpy = jest.spyOn((configEditor as any).panel.webview, "postMessage").mockResolvedValue(undefined);
 
@@ -2253,7 +2281,7 @@ describe("configEditor", () => {
                 throw new Error("Parse config changes failed");
             });
 
-            const getLocalConfigsSpy = jest.spyOn(configEditor as any, "getLocalConfigs").mockResolvedValue([]);
+            const getLocalConfigsSpy = jest.spyOn(configEditor as any, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
             const areSecureValuesAllowedSpy = jest.spyOn(configEditor as any, "areSecureValuesAllowed").mockResolvedValue(true);
             const postMessageSpy = jest.spyOn((configEditor as any).panel.webview, "postMessage").mockResolvedValue(undefined);
 
@@ -2270,6 +2298,7 @@ describe("configEditor", () => {
             expect(postMessageSpy).toHaveBeenCalledWith({
                 command: "CONFIGURATIONS",
                 contents: [],
+                parseErrors: [],
                 secureValuesAllowed: true,
             });
             expect(postMessageSpy).toHaveBeenCalledWith({

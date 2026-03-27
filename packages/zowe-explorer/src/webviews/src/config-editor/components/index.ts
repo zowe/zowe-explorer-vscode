@@ -20,6 +20,7 @@ export { AddProfileModal } from "./modals/AddProfileModal";
 export { SaveModal } from "./modals/SaveModal";
 export { NewLayerModal } from "./modals/NewLayerModal";
 export { ProfileWizardModal } from "./modals/ProfileWizardModal";
+export { ConfigParseErrorsModal } from "./modals/ConfigParseErrorsModal";
 export { AddConfigModal } from "./modals/AddConfigModal";
 export { RenameProfileModal } from "./modals/RenameProfileModal";
 export { DeleteConfirmationModal } from "./modals/DeleteConfirmationModal";

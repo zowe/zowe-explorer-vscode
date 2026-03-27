@@ -13,6 +13,9 @@ import { ConfigEditorMessageHandlers } from "../../../../src/utils/ConfigEditorM
 
 // Mock vscode module
 jest.mock("vscode", () => ({
+    workspace: {
+        openTextDocument: jest.fn(),
+    },
     window: {
         showTextDocument: jest.fn(),
         showErrorMessage: jest.fn(),
@@ -24,6 +27,10 @@ jest.mock("vscode", () => ({
     Uri: {
         file: jest.fn((path) => ({ fsPath: path })),
     },
+    Position: jest.fn((line, col) => ({ line, character: col })),
+    Selection: jest.fn(),
+    Range: jest.fn(),
+    TextEditorRevealType: { InCenter: 1 },
 }));
 
 // Mock Zowe dependencies
@@ -79,14 +86,18 @@ describe("ConfigEditorMessageHandlers", () => {
     let mockGetLocalConfigs: jest.Mock;
     let mockAreSecureValuesAllowed: jest.Mock;
     let mockPanel: { webview: { postMessage: jest.Mock } };
+    let mockProfileOperations: { validateProfileName: jest.Mock };
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        mockGetLocalConfigs = jest.fn().mockResolvedValue([
-            { name: "config1", path: "/path/to/config1.json" },
-            { name: "config2", path: "/path/to/config2.json" },
-        ]);
+        mockGetLocalConfigs = jest.fn().mockResolvedValue({
+            configs: [
+                { name: "config1", path: "/path/to/config1.json" },
+                { name: "config2", path: "/path/to/config2.json" },
+            ],
+            parseErrors: [],
+        });
 
         mockAreSecureValuesAllowed = jest.fn().mockResolvedValue(true);
 
@@ -96,7 +107,18 @@ describe("ConfigEditorMessageHandlers", () => {
             },
         };
 
-        messageHandlers = new ConfigEditorMessageHandlers(mockGetLocalConfigs, mockAreSecureValuesAllowed, mockPanel);
+        mockProfileOperations = {
+            validateProfileName: jest.fn(),
+        };
+
+        messageHandlers = new ConfigEditorMessageHandlers(
+            mockGetLocalConfigs,
+            mockAreSecureValuesAllowed,
+            mockPanel,
+            mockProfileOperations as any
+        );
+
+        vscode.workspace.openTextDocument.mockResolvedValue({});
 
         // Setup default mocks
         const mockProfileInfo = {
@@ -125,6 +147,7 @@ describe("ConfigEditorMessageHandlers", () => {
                     { name: "config1", path: "/path/to/config1.json" },
                     { name: "config2", path: "/path/to/config2.json" },
                 ],
+                parseErrors: [],
                 secureValuesAllowed: true,
             });
         });
@@ -136,11 +159,12 @@ describe("ConfigEditorMessageHandlers", () => {
 
             await messageHandlers.handleOpenConfigFile(message);
 
-            expect(vscode.window.showTextDocument).toHaveBeenCalledWith(
+            expect(vscode.workspace.openTextDocument).toHaveBeenCalledWith(
                 expect.objectContaining({
                     fsPath: "/path/to/config.json",
                 })
             );
+            expect(vscode.window.showTextDocument).toHaveBeenCalled();
         });
 
         it("should handle file open error", async () => {

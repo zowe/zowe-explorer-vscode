@@ -17,6 +17,14 @@ export type Configuration = {
     schemaPath?: string;
 };
 
+/** A team config layer file that failed to load (JSON parse, schema read, etc.). */
+export type ConfigParseError = {
+    configPath: string;
+    message: string;
+    line?: number;
+    column?: number;
+};
+
 export type PendingChange = {
     value: string | number | boolean | Record<string, any>;
     path: string[];

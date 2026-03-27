@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { Configuration, PendingChange, PendingDefault, ConfigEditorSettings, schemaValidation } from "../types";
+import { Configuration, PendingChange, PendingDefault, ConfigEditorSettings, schemaValidation, ConfigParseError } from "../types";
 
 export function useConfigState(vscodeApi: any) {
     const [configurations, setConfigurations] = useState<Configuration[]>([]);
@@ -43,6 +43,7 @@ export function useConfigState(vscodeApi: any) {
     const [expandedNodesByConfig, setExpandedNodesByConfig] = useState<{ [configPath: string]: Set<string> }>({});
     const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
     const [renameProfileModalOpen, setRenameProfileModalOpen] = useState(false);
+    const [configParseErrors, setConfigParseErrors] = useState<ConfigParseError[]>([]);
 
     const configurationsRef = useRef<Configuration[]>([]);
     const pendingChangesRef = useRef<{ [configPath: string]: { [key: string]: PendingChange } }>({});
@@ -216,6 +217,8 @@ export function useConfigState(vscodeApi: any) {
         setProfileMenuOpen,
         renameProfileModalOpen,
         setRenameProfileModalOpen,
+        configParseErrors,
+        setConfigParseErrors,
         configurationsRef,
         pendingChangesRef,
         deletionsRef,

@@ -15,10 +15,11 @@ import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
 import { Definitions } from "../configuration/Definitions";
 import { ConfigEditorProfileOperations } from "./ConfigEditorProfileOperations";
 import { ConfigUtils } from "./ConfigUtils";
+import type { ConfigParseError } from "../webviews/src/config-editor/types";
 
 export class ConfigEditorMessageHandlers {
     constructor(
-        private getLocalConfigs: () => Promise<any[]>,
+        private getLocalConfigs: () => Promise<{ configs: any[]; parseErrors: ConfigParseError[] }>,
         private areSecureValuesAllowed: () => Promise<boolean>,
         private panel: { webview: { postMessage: (message: any) => Thenable<boolean> } },
         private profileOperations: ConfigEditorProfileOperations
@@ -29,18 +30,26 @@ export class ConfigEditorMessageHandlers {
             await ConfigUtils.createProfileInfoAndLoad();
         } catch (err) {}
 
-        const configurations = await this.getLocalConfigs();
+        const { configs, parseErrors } = await this.getLocalConfigs();
         const secureValuesAllowed = await this.areSecureValuesAllowed();
         await this.panel.webview.postMessage({
             command: "CONFIGURATIONS",
-            contents: configurations,
+            contents: configs,
+            parseErrors,
             secureValuesAllowed,
         });
     }
 
     async handleOpenConfigFile(message: any): Promise<void> {
         try {
-            vscode.window.showTextDocument(vscode.Uri.file(message.filePath));
+            const uri = vscode.Uri.file(message.filePath);
+            const document = await vscode.workspace.openTextDocument(uri);
+            const editor = await vscode.window.showTextDocument(document);
+            if (message.line !== undefined && message.column !== undefined) {
+                const position = new vscode.Position(message.line, message.column);
+                editor.selection = new vscode.Selection(position, position);
+                editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
+            }
         } catch {
             vscode.window.showErrorMessage(`Error opening file: ${message.filePath as string}:`);
         }

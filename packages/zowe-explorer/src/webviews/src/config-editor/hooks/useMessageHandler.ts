@@ -27,11 +27,13 @@ export function useMessageHandler(props: UseMessageHandlerProps) {
         setProfileSearchTerm,
         setProfileFilterType,
         setHasPromptedForZeroConfigs,
+        setConfigParseErrors,
         vscodeApi,
         selectedProfileKeyRef,
     } = props;
 
     useEffect(() => {
+        setConfigParseErrors([]);
         setConfigurations([]);
         setSelectedTab(null);
         setSelectedProfileKey(null);

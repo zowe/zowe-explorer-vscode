@@ -88,7 +88,7 @@ describe("ConfigEditorFileOperations", () => {
         // Reset all mocks
         jest.clearAllMocks();
 
-        mockGetLocalConfigs = jest.fn().mockResolvedValue([]);
+        mockGetLocalConfigs = jest.fn().mockResolvedValue({ configs: [], parseErrors: [] });
         fileOperations = new ConfigEditorFileOperations(mockGetLocalConfigs);
 
         vscode.workspace.openTextDocument.mockResolvedValue({
@@ -151,7 +151,7 @@ describe("ConfigEditorFileOperations", () => {
 
                 const result = await fileOperations.createNewConfig(message);
 
-                expect(result).toEqual([]);
+                expect(result).toEqual({ configs: [], parseErrors: [] });
                 // Just check that the message starts with "Configuration file created:" without checking the exact path
                 // since different config types use different root paths (global vs project)
                 expect(vscode.window.showInformationMessage).toHaveBeenCalledWith(expect.stringContaining("Configuration file created:"));
@@ -207,13 +207,13 @@ describe("ConfigEditorFileOperations", () => {
             // Test Error object
             Config.load.mockRejectedValue(new Error("Config load failed"));
             let result = await fileOperations.createNewConfig(message);
-            expect(result).toEqual([]);
+            expect(result).toBeUndefined();
             expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Error creating new configuration: Config load failed");
 
             // Test non-Error object
             Config.load.mockRejectedValue("String error");
             result = await fileOperations.createNewConfig(message);
-            expect(result).toEqual([]);
+            expect(result).toBeUndefined();
             expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Error creating new configuration: String error");
         });
 
@@ -226,7 +226,7 @@ describe("ConfigEditorFileOperations", () => {
 
             const result = await fileOperations.createNewConfig(message);
 
-            expect(result).toEqual([]);
+            expect(result).toEqual({ configs: [], parseErrors: [] });
             expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(expect.stringContaining("Failed to create configuration file at:"));
         });
     });

@@ -15,13 +15,15 @@ import * as fs from "fs";
 import { Config, ConfigBuilder, ConfigSchema } from "@zowe/imperative";
 import { ZoweVsCodeExtension, FileManagement } from "@zowe/zowe-explorer-api";
 import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
+import type { ConfigParseError } from "../webviews/src/config-editor/types";
+
 export class ConfigEditorFileOperations {
-    constructor(private getLocalConfigs: () => Promise<any[]>) {}
+    constructor(private getLocalConfigs: () => Promise<{ configs: any[]; parseErrors: ConfigParseError[] }>) {}
 
     /**
      * Creates a new configuration file
      */
-    async createNewConfig(message: any): Promise<any[]> {
+    async createNewConfig(message: any): Promise<{ configs: any[]; parseErrors: ConfigParseError[] } | undefined> {
         try {
             const configType = message.configType;
             let global = false;
@@ -119,12 +121,11 @@ export class ConfigEditorFileOperations {
                 vscode.window.showErrorMessage(`Failed to create configuration file at: ${configFilePath}. Please check permissions and try again.`);
             }
 
-            const configs = await this.getLocalConfigs();
-            return configs;
+            return await this.getLocalConfigs();
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             vscode.window.showErrorMessage(`Error creating new configuration: ${errorMessage}`);
-            return [];
+            return undefined;
         }
     }
 
