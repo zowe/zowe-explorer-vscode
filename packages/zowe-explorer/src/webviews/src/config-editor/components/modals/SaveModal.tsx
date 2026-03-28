@@ -1,4 +1,3 @@
-import * as l10n from "@vscode/l10n";
 interface SaveModalProps {
   isOpen: boolean;
 }
@@ -6,9 +5,5 @@ interface SaveModalProps {
 export function SaveModal({ isOpen }: SaveModalProps) {
   if (!isOpen) return null;
 
-  return (
-    <div className="modal-backdrop">
-      <div className="modal">{l10n.t("Saving....")}</div>
-    </div>
-  );
+  return <div className="save-modal-blocker" aria-hidden="true" />;
 }

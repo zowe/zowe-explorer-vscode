@@ -708,6 +708,14 @@ ul {
     z-index: 999;
 }
 
+/* Full-viewport pointer capture while saving; no tint or inner chrome */
+.save-modal-blocker {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: transparent;
+}
+
 .modal-actions {
     display: flex;
     justify-content: flex-end;
