@@ -22,6 +22,7 @@ import { ConfigEditorMessageHandlers } from "./ConfigEditorMessageHandlers";
 import { ConfigEditorProfileOperations } from "./ConfigEditorProfileOperations";
 import { ConfigEditorFileOperations } from "./ConfigEditorFileOperations";
 import { ConfigEditorPathUtils } from "./ConfigEditorPathUtils";
+import { FavoritePersistenceUtils } from "./FavoritePersistenceUtils";
 import { ConfigMoveAPI, type ConfigParseError } from "../webviews/src/config-editor/types";
 
 function parseLineColumnFromErrorMessage(errorMessage: string): { line?: number; column?: number } {
@@ -628,6 +629,8 @@ export class ConfigEditor extends WebView {
 
         await teamConfig.save();
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+        await FavoritePersistenceUtils.applyProfileRenameToStoredFavorites(rename);
+        await FavoritePersistenceUtils.rebuildFavoritesTreesFromPersistence();
     }
 
     private getProfileFromTeamConfig(teamConfig: any, path: string): any {
