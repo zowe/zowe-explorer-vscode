@@ -171,9 +171,6 @@ export class AuthUtils {
                 (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
                     imperativeError.message.includes("All configured authentication methods failed"))
             ) {
-                if (!AuthHandler.isProfileLocked(profile)) {
-                    await AuthHandler.lockProfile(profile);
-                }
                 const addDet = imperativeError.mDetails.additionalDetails;
                 if (addDet?.includes("Auth order:") && addDet?.includes("Auth type:") && addDet?.includes("Available creds:")) {
                     const additionalDetails = [addDet.split("\n")[0]];
@@ -202,7 +199,7 @@ export class AuthUtils {
                 }
 
                 const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
-                return await AuthHandler.promptForAuthentication(profile, {
+                await AuthHandler.getOrCreateAuthFlow(profile, {
                     authMethods: Constants.PROFILES_CACHE,
                     imperativeError,
                     isUsingTokenAuth:
@@ -210,6 +207,7 @@ export class AuthUtils {
                         sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
                     errorCorrelation,
                 });
+                return !AuthHandler.wasAuthCancelled(profile);
             }
         }
         if (errorDetails.toString().includes("Could not find profile")) {

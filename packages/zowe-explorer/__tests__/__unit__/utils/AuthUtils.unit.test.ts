@@ -1306,17 +1306,20 @@ describe("AuthUtils", () => {
                 errorCode: "401",
                 additionalDetails: "\nAuth order: token,basic\nAuth type: token\nAvailable creds: token,basic\n",
             });
-            const promptForAuthenticationMock = jest.spyOn(AuthHandler, "promptForAuthentication").mockResolvedValue(true);
+            const getOrCreateAuthFlowMock = jest.spyOn(AuthHandler, "getOrCreateAuthFlow").mockResolvedValue();
+            const wasAuthCancelledMock = jest.spyOn(AuthHandler, "wasAuthCancelled").mockReturnValue(false);
             const moreInfo = {
                 profile: "testProfile",
                 apiType: ZoweExplorerApiType.Mvs,
             };
             await expect(AuthUtils.errorHandling(testError, moreInfo)).resolves.toBe(true);
-            expect(promptForAuthenticationMock.mock.calls[0][1]).toEqual(
+            expect(getOrCreateAuthFlowMock.mock.calls[0][1]).toEqual(
                 expect.objectContaining({
                     imperativeError: testError,
                 })
             );
+            getOrCreateAuthFlowMock.mockRestore();
+            wasAuthCancelledMock.mockRestore();
         });
     });
 });
