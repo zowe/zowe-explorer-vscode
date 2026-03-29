@@ -669,16 +669,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         let resp: IZosFilesResponse;
         try {
-            await AuthUtils.retryRequest(entry.metadata.profile, async () => {
-                await this.autoDetectEncoding(entry);
-                const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
+            await this.autoDetectEncoding(entry);
+            const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
-                resp = await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
-                    binary: entry.encoding?.kind === "binary",
-                    encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
-                    etag: options?.forceUpload || entry.etag == null ? undefined : entry.etag,
-                    returnEtag: true,
-                });
+            resp = await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
+                binary: entry.encoding?.kind === "binary",
+                encoding: entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding,
+                etag: options?.forceUpload || entry.etag == null ? undefined : entry.etag,
+                returnEtag: true,
             });
         } catch (err) {
             statusMsg.dispose();
@@ -698,6 +696,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * - `overwrite` - Overwrites the content if the file exists
      */
     public async writeFile(
+        uri: vscode.Uri,
+        content: Uint8Array,
+        options: { create: boolean; overwrite: boolean; noStatusMsg?: boolean }
+    ): Promise<void> {
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+        return AuthUtils.retryRequest(uriInfo.profile, async () => {
+            await this.writeFileImplementation(uri, content, options);
+        });
+    }
+
+    private async writeFileImplementation(
         uri: vscode.Uri,
         content: Uint8Array,
         options: { create: boolean; overwrite: boolean; noStatusMsg?: boolean }

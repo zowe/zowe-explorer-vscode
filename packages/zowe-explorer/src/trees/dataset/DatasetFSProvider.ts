@@ -816,6 +816,17 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * - `overwrite` - Overwrites the content if the data set exists
      */
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+        return AuthUtils.retryRequest(uriInfo.profile, async () => {
+            await this.writeFileImplementation(uri, content, options);
+        });
+    }
+
+    private async writeFileImplementation(
+        uri: vscode.Uri,
+        content: Uint8Array,
+        options: { readonly create: boolean; readonly overwrite: boolean }
+    ): Promise<void> {
         const basename = path.posix.basename(uri.path);
         const parent = this.lookupParentDirectory(uri);
         const isPdsMember = FsDatasetsUtils.isPdsEntry(parent);
@@ -898,6 +909,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         groupedLines.push({ start: line, end: line, text: text as string });
                     }
                 }
+
                 const rangeStrings = groupedLines.map((g) => (g.start === g.end ? `${g.start}` : `${g.start}-${g.end}`));
                 const maxRanges = 5;
                 const linesToReview = rangeStrings.length > maxRanges ? rangeStrings.slice(0, maxRanges).join(", ") + "..." : rangeStrings.join(", ");
@@ -950,6 +962,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     public async delete(uri: vscode.Uri, _options: { readonly recursive: boolean }): Promise<void> {
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+        return AuthUtils.retryRequest(uriInfo.profile, async () => {
+            await this.deleteImplementation(uri, _options);
+        });
+    }
+
+    private async deleteImplementation(uri: vscode.Uri, _options: { readonly recursive: boolean }): Promise<void> {
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const entry = this.lookup(uri, false) as DsEntry | PdsEntry;
         const parent = this.lookupParentDirectory(uri);
         let fullName: string = "";
