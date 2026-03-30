@@ -97,10 +97,6 @@ export class FavoritePersistenceUtils {
      * Drops session nodes whose profile name changed, then re-adds them so labels, profiles, and URIs match the new name.
      */
     public static async rebuildSessionNodesAfterProfileRename(rename: ProfileRenameForFavorites): Promise<void> {
-        // loadNamedProfile reads ProfilesCache.allProfiles, which is only updated by refresh(). readProfilesFromDisk
-        // on ProfileInfo does not update this cache; without refresh, the new name is missing and re-add fails.
-        await Profiles.getInstance().refresh();
-
         const renameMap = new Map([
             [rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath }],
         ]);
