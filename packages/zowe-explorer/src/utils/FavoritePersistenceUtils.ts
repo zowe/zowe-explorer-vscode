@@ -9,9 +9,11 @@
  *
  */
 
-import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
+import { IZoweTreeNode, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { Definitions } from "../configuration/Definitions";
+import { Profiles } from "../configuration/Profiles";
 import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
+import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { ConfigEditorPathUtils } from "./ConfigEditorPathUtils";
 
@@ -67,6 +69,71 @@ export class FavoritePersistenceUtils {
                 await tree.refreshFavorites();
             }
             tree.refreshElement(tree.mFavoriteSession);
+        }
+    }
+
+    /**
+     * Updates Dataset, USS, and Jobs persisted session lists after a profile rename is saved (tree open-session history).
+     */
+    public static async applyProfileRenameToStoredSessions(rename: ProfileRenameForFavorites): Promise<void> {
+        const renameMap = new Map([
+            [rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath }],
+        ]);
+        for (const schema of FAVORITES_SCHEMAS) {
+            const settings = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(schema);
+            if (!settings?.persistence) {
+                continue;
+            }
+            const sessions = settings.sessions ?? [];
+            const updated = sessions.map((s) => ConfigEditorPathUtils.getNewProfilePath(s, rename.configPath, renameMap));
+            if (updated.some((u, i) => u !== sessions[i])) {
+                settings.sessions = updated;
+                await ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(schema, settings);
+            }
+        }
+    }
+
+    /**
+     * Drops session nodes whose profile name changed, then re-adds them so labels, profiles, and URIs match the new name.
+     */
+    public static async rebuildSessionNodesAfterProfileRename(rename: ProfileRenameForFavorites): Promise<void> {
+        // loadNamedProfile reads ProfilesCache.allProfiles, which is only updated by refresh(). readProfilesFromDisk
+        // on ProfileInfo does not update this cache; without refresh, the new name is missing and re-add fails.
+        await Profiles.getInstance().refresh();
+
+        const renameMap = new Map([
+            [rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath }],
+        ]);
+        const trees = [SharedTreeProviders.ds, SharedTreeProviders.uss, SharedTreeProviders.job].filter(Boolean);
+        const profiles = Profiles.getInstance();
+        for (const tree of trees) {
+            tree.reloadSessionsFromPersistence();
+            const sessionNodes = tree.mSessionNodes.filter((n: IZoweTreeNode) => n !== tree.mFavoriteSession);
+            const newNamesToAdd: string[] = [];
+            const nodesToRemove: IZoweTreeNode[] = [];
+            for (const node of sessionNodes) {
+                const name = node.getProfileName?.() ?? String(node.label).trim();
+                const newName = ConfigEditorPathUtils.getNewProfilePath(name, rename.configPath, renameMap);
+                if (newName !== name) {
+                    nodesToRemove.push(node);
+                    newNamesToAdd.push(newName);
+                }
+            }
+            if (nodesToRemove.length === 0) {
+                continue;
+            }
+            for (const node of nodesToRemove) {
+                tree.mSessionNodes = tree.mSessionNodes.filter((n) => n !== node);
+            }
+            for (const newName of newNamesToAdd) {
+                try {
+                    const loaded = profiles.loadNamedProfile(newName.trim());
+                    await tree.addSingleSession(loaded);
+                } catch (e) {
+                    ZoweLogger.warn(`Could not reload session tree node for renamed profile "${newName}": ${String(e)}`);
+                }
+            }
+            tree.refresh();
         }
     }
 }

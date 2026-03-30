@@ -167,6 +167,14 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         return this.persistenceSchema;
     }
 
+    /**
+     * Syncs the in-memory session list with persisted storage after storage was updated externally.
+     */
+    public reloadSessionsFromPersistence(): void {
+        ZoweLogger.trace("ZoweTreeProvider.reloadSessionsFromPersistence called.");
+        this.mPersistence.reloadSessionsFromStorage();
+    }
+
     public addSearchHistory(criteria: string): void {
         ZoweLogger.trace("ZoweTreeProvider.addSearchHistory called.");
         if (criteria) {

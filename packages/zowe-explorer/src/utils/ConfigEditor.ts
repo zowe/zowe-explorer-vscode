@@ -630,6 +630,8 @@ export class ConfigEditor extends WebView {
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
         await FavoritePersistenceUtils.applyProfileRenameToStoredFavorites(rename);
         await FavoritePersistenceUtils.rebuildFavoritesTreesFromPersistence();
+        await FavoritePersistenceUtils.applyProfileRenameToStoredSessions(rename);
+        await FavoritePersistenceUtils.rebuildSessionNodesAfterProfileRename(rename);
     }
 
     private getProfileFromTeamConfig(teamConfig: any, path: string): any {

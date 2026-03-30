@@ -196,6 +196,17 @@ export class ZowePersistentFilters {
         return this.mSessions;
     }
 
+    /**
+     * Reloads the in-memory session list from VS Code storage (e.g. after external updates such as profile renames).
+     */
+    public reloadSessionsFromStorage(): void {
+        ZoweLogger.trace("PersistentFilters.reloadSessionsFromStorage called.");
+        const settings = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
+        if (settings?.persistence) {
+            this.mSessions = settings.sessions ?? [];
+        }
+    }
+
     public getFileHistory(): string[] {
         ZoweLogger.trace("PersistentFilters.getFileHistory called.");
         return this.mFileHistory;

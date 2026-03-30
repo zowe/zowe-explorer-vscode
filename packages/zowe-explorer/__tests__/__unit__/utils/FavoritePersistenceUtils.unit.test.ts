@@ -9,6 +9,7 @@
  *
  */
 
+import { ConfigEditorPathUtils } from "../../../src/utils/ConfigEditorPathUtils";
 import { FavoritePersistenceUtils } from "../../../src/utils/FavoritePersistenceUtils";
 
 describe("FavoritePersistenceUtils", () => {
@@ -54,6 +55,24 @@ describe("FavoritePersistenceUtils", () => {
                     configPath: cfg,
                 })
             ).toBe("not-a-favorite");
+        });
+    });
+
+    describe("persisted session list mapping (same rules as favorites)", () => {
+        it("replaces renamed profile keys in a session name list", () => {
+            const renameMap = new Map([
+                ["oldp", { oldKey: "oldp", newKey: "newp", configPath: cfg }],
+            ]);
+            const sessions = ["oldp", "other"];
+            const updated = sessions.map((s) => ConfigEditorPathUtils.getNewProfilePath(s, cfg, renameMap));
+            expect(updated).toEqual(["newp", "other"]);
+        });
+
+        it("updates nested session keys when a parent segment is renamed", () => {
+            const renameMap = new Map([
+                ["parent", { oldKey: "parent", newKey: "renamed", configPath: cfg }],
+            ]);
+            expect(ConfigEditorPathUtils.getNewProfilePath("parent.child", cfg, renameMap)).toBe("renamed.child");
         });
     });
 });
