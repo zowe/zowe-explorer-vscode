@@ -45,7 +45,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.USS, this.onDidChangeFile);
         this.root = new UssDirectory();
-        this.root.allFetched = true; // Root is always considered loaded or will be fetched
+        this.root.timestampLastFetched = Date.now(); // Root is always considered loaded or will be fetched
     }
 
     public encodingMap: Record<string, ZosEncoding> = {};
@@ -341,21 +341,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             return entry;
         }
 
-        if (FsAbstractUtils.isDirectoryEntry(entry) && (!entryExists || resp?.success)) {
-            entry.allFetched = true;
-        }
-
-        // If listFiles was called above, resp is set. If not, we fetch it now.
-        const fileList = entryExists ? await this.listFiles(entry.metadata.profile, uri, true) : resp;
-
-        // Update the directory's own mtime using the "." entry
-        if (FsAbstractUtils.isDirectoryEntry(entry) && fileList.success && fileList.apiResponse?.items) {
-            const dotEntry = fileList.apiResponse.items.find((i) => i.name === ".");
-            if (dotEntry && dotEntry.mtime) {
-                entry.mtime = dayjs(dotEntry.mtime).valueOf();
-            }
-        }
-
         // TODO fix: Undefined behavior when creating FS entries with dot-segments i.e "/u/users/<user>/a/b/c/../../../TEST";
         if (entry == null && resp?.success) {
             // If entry is still null, it means it wasn't a directory listing (no "."), so treat as file.
@@ -381,13 +366,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             return parentDir.entries.get(filename) as UssFile;
         }
 
+        const fileList = entryExists ? await this.listFiles(entry.metadata.profile, uri) : resp;
         for (const item of fileList.apiResponse?.items ?? []) {
             const itemName = item.name as string;
-
-            // Skip relative path entries when populating the tree
-            if (itemName === "." || itemName === "..") {
-                continue;
-            }
 
             const isDirectory = item.mode?.startsWith("d") ?? false;
             const newEntryType = isDirectory ? vscode.FileType.Directory : vscode.FileType.File;
@@ -432,7 +413,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             const urlQuery = new URLSearchParams(uri.query);
             if (!urlQuery.has("searchPath")) {
                 const rootDir = this._lookupAsDirectory(profileUri, false) as UssDirectory;
-                rootDir.allFetched = true;
+                rootDir.timestampLastFetched = Date.now();
                 return rootDir;
             }
         }
@@ -461,7 +442,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const queryTtl = queryParams.get("ttl");
         const debounceTtl = queryTtl !== null ? parseInt(queryTtl, 10) : SettingsConfig.getDirectValue("zowe.settings.fileSystemDebounce", 50);
 
-        let shouldFetch = forceRemote || isExplicitFetch || !dir || !dir.allFetched;
+        let shouldFetch = forceRemote || isExplicitFetch || !dir || !dir.timestampLastFetched;
 
         const parentPath = path.posix.dirname(uri.path);
 
@@ -473,56 +454,16 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 if (now - lastValidated < debounceTtl) {
                     shouldFetch = false;
                 } else {
-                    const uriInfo = this._getInfoFromUri(uri);
-                    const parentUri = uri.with({ path: parentPath });
-
-                    const parentResponse = await this.executeWithReuse<IZosFilesResponse>(parentUri, {
-                        keyGenerator: (u) => `check_parent_${this.pathWithoutTrailingSlash(u)}`,
-                        checkLocal: () => false, // Force the network call
-                        execute: () => this.listFiles(uriInfo.profile, parentUri),
-                    });
-
-                    if (parentResponse && parentResponse.success && parentResponse.apiResponse?.items) {
-                        const fileName = path.posix.basename(uri.path);
-                        const remoteEntry = parentResponse.apiResponse.items.find((item) => item.name === fileName);
-
-                        if (remoteEntry) {
-                            const remoteMtime = remoteEntry.mtime ? dayjs(remoteEntry.mtime).valueOf() : 0;
-
-                            if (remoteMtime !== dir.mtime) {
-                                shouldFetch = true;
-                            } else {
-                                dir.timestampLastFetched = Date.now();
-                            }
-                        } else {
-                            shouldFetch = true;
-                        }
-
-                        // Batch-update the validation timer for all local siblings
-                        const parentDirLocal = this._lookupAsDirectory(parentUri, true) as UssDirectory;
-                        if (parentDirLocal && parentDirLocal.entries) {
-                            const validationTime = Date.now();
-                            for (const item of parentResponse.apiResponse.items) {
-                                const siblingLocal = parentDirLocal.entries.get(item.name as string);
-                                if (siblingLocal && FsAbstractUtils.isDirectoryEntry(siblingLocal)) {
-                                    const siblingMtime = item.mtime ? dayjs(item.mtime).valueOf() : 0;
-                                    if (siblingLocal.mtime === siblingMtime) {
-                                        siblingLocal.timestampLastFetched = validationTime;
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    shouldFetch = true;
                 }
             } catch (err) {
-                ZoweLogger.warn(`[UssFSProvider] Failed to validate mtime against parent: ${err instanceof Error ? err.message : err}`);
+                ZoweLogger.warn(`[UssFSProvider] Failed to validate cache TTL: ${err instanceof Error ? err.message : err}`);
             }
         }
 
         if (shouldFetch) {
             dir = (await this.remoteLookupForResource(uri)) as UssDirectory;
             if (dir) {
-                dir.allFetched = true;
                 dir.timestampLastFetched = Date.now();
             }
         }
@@ -542,7 +483,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         const dir = await this.executeWithReuse<UssDirectory>(uri, {
             keyGenerator: (u) => "list_" + this.getQueryKey(u) + this.pathWithoutTrailingSlash(u),
-            checkLocal: () => !!this._lookupAsDirectory(uri, true),
+            checkLocal: () => {
+                const localDir = this._lookupAsDirectory(uri, true);
+                return !!localDir && !!localDir.timestampLastFetched;
+            },
             execute: () => this.readDirectoryImplementation(uri),
             action: "readDirectory",
         });

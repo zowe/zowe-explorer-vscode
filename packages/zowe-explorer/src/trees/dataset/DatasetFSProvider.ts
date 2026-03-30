@@ -49,7 +49,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, this.onDidChangeFile);
         this.root = new DirEntry("");
-        this.root.allFetched = true; // Root is always considered loaded or will be fetched
+        this.root.timestampLastFetched = Date.now(); // Root is always considered loaded or will be fetched
     }
 
     public encodingMap: Record<string, ZosEncoding> = {};
@@ -274,7 +274,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         }
 
-        profileEntry.allFetched = true;
+        profileEntry.timestampLastFetched = Date.now();
         return profileEntry;
     }
 
@@ -319,7 +319,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entry.entries.set(fullMemberName, tempEntry);
         }
 
-        entry.allFetched = true;
+        entry.timestampLastFetched = Date.now();
     }
 
     private async fetchDataset(uri: vscode.Uri, uriInfo: UriFsInfo, forceFetch?: boolean): Promise<PdsEntry | DsEntry> {
@@ -440,7 +440,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const urlQuery = new URLSearchParams(uri.query);
             if (!urlQuery.has("pattern")) {
                 const rootDir = this._lookupAsDirectory(profileUri, false);
-                rootDir.allFetched = true;
+                rootDir.timestampLastFetched = Date.now();
                 return rootDir;
             }
 
@@ -468,7 +468,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const queryTtl = queryParams.get("ttl");
         const debounceTtl = queryTtl !== null ? parseInt(queryTtl, 10) : SettingsConfig.getDirectValue("zowe.settings.fileSystemDebounce", 50);
 
-        let shouldFetch = forceRemote || isExplicitFetch || !dir || !dir.allFetched;
+        let shouldFetch = forceRemote || isExplicitFetch || !dir || !dir.timestampLastFetched;
 
         const parentPath = path.posix.dirname(uri.path);
 
@@ -490,7 +490,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         if (shouldFetch) {
             dir = (await this.remoteLookupForResource(uri)) as DirEntry;
             if (dir) {
-                dir.allFetched = true;
                 dir.timestampLastFetched = Date.now(); // Reset validation timer upon a full fetch
             }
         }
@@ -514,7 +513,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
             checkLocal: () => {
                 const localDir = this._lookupAsDirectory(uri, true);
-                return !!localDir && localDir.allFetched === true;
+                return !!localDir && !!localDir.timestampLastFetched;
             },
             execute: () => this.readDirectoryImplementation(uri, false),
             action: "readDirectory",

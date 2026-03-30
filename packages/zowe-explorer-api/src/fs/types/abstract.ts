@@ -126,7 +126,6 @@ export class DirEntry implements IFileSystemEntry {
         this.size = 0;
         this.entries = new Map();
     }
-    public allFetched?: boolean;
     public timestampLastFetched?: number;
 }
 
