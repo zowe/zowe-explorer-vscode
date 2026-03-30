@@ -22,7 +22,7 @@ interface ConfigHandlersParams {
 export function useConfigHandlers(params: ConfigHandlersParams) {
     const { setPendingProfileDeletion, setPendingPropertyDeletion } = params;
 
-    const { formatPendingChanges, doesProfileExist } = useProfileUtils();
+    const { doesProfileExist } = useProfileUtils();
 
     const {
         configurations,
@@ -198,15 +198,6 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
                 const configPath = currentSelectedTab !== null ? configurations[currentSelectedTab]?.configPath : undefined;
                 if (configPath && doesProfileExist(originalSelectedProfileKey, configPath)) {
                     setSelectedProfileKey(originalSelectedProfileKey);
-
-                    const changes = formatPendingChanges();
-                    vscodeApi.postMessage({
-                        command: "GET_MERGED_PROPERTIES",
-                        profilePath: originalSelectedProfileKey,
-                        configPath: configPath,
-                        changes: changes,
-                        renames: changes.renames,
-                    });
                 } else {
                     setSelectedProfileKey(null);
                     setMergedProperties(null);
@@ -238,7 +229,6 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
         setSelectedTab,
         setSelectedProfileKey,
         doesProfileExist,
-        formatPendingChanges,
         setMergedProperties,
     ]);
 
@@ -278,16 +268,6 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
                 const previouslySelectedProfile = selectedProfilesByConfig[configPath];
                 if (previouslySelectedProfile && doesProfileExist(previouslySelectedProfile, configPath)) {
                     setSelectedProfileKey(previouslySelectedProfile);
-
-                    const profileNameForMergedProperties = getProfileNameForMergedProperties(previouslySelectedProfile, configPath, renames);
-                    const changes = formatPendingChanges();
-                    vscodeApi.postMessage({
-                        command: "GET_MERGED_PROPERTIES",
-                        profilePath: profileNameForMergedProperties,
-                        configPath: configPath,
-                        changes: changes,
-                        renames: changes.renames,
-                    });
                 } else {
                     setSelectedProfileKey(null);
                     setMergedProperties(null);
@@ -303,9 +283,6 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
             selectedProfilesByConfig,
             doesProfileExist,
             setSelectedProfileKey,
-            renames,
-            formatPendingChanges,
-            vscodeApi,
             setMergedProperties,
         ]
     );

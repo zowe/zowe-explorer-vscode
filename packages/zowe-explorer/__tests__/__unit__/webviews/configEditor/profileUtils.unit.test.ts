@@ -119,6 +119,15 @@ describe("profileUtils", () => {
             };
             expect(getProfileType("p1", 0, configs, pendingChanges, {})).toBe("other");
         });
+        it("returns null when pending type is cleared (Select a type)", () => {
+            const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } } as any];
+            const pendingChanges = {
+                [configPath]: {
+                    "profiles.p1.type": { value: "", path: [], profile: "p1" },
+                },
+            };
+            expect(getProfileType("p1", 0, configs, pendingChanges, {})).toBeNull();
+        });
         it("returns type for nested profile using original path when profile was renamed", () => {
             const configs = [
                 {

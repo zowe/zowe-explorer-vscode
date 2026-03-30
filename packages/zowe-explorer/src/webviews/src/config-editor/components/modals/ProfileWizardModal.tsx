@@ -206,10 +206,11 @@ export function ProfileWizardModal() {
 
     return authMethods.every((method) => validAuthTypes.includes(method));
   };
-  if (!isOpen) return null;
 
   const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, "input[type='text']");
+
+  if (!isOpen) return null;
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
@@ -288,12 +289,17 @@ export function ProfileWizardModal() {
             {/* Profile Name */}
             <div>
               <label className="wizard-label" id="profile-name-label">
-                {l10n.t("Profile Name")}
+                {l10n.t("Profile Name")}{" "}
+                <span className="wizard-required-mark" aria-hidden="true">
+                  *
+                </span>
               </label>
               <input
                 id="profile-name-input"
                 type="text"
                 value={wizardProfileName}
+                aria-required="true"
+                required
                 onKeyDown={(e) => {
                   // Handle Enter key to create profile
                   if (e.key === "Enter") {
@@ -322,11 +328,15 @@ export function ProfileWizardModal() {
                 className={`modal-input wizard-input ${isProfileNameTakenValue ? "error" : ""}`}
                 placeholder={l10n.t("Enter profile name")}
               />
-              {isProfileNameTakenValue && (
+              {isProfileNameTakenValue ? (
                 <div className="wizard-error" id="profile-name-error">
                   {l10n.t("Profile name already exists under this root")}
                 </div>
-              )}
+              ) : !wizardProfileName.trim() ? (
+                <div className="wizard-hint" id="profile-name-required-hint">
+                  {l10n.t("A profile name is required to create a profile.")}
+                </div>
+              ) : null}
             </div>
 
             {/* Type Selection with Populate Defaults Button */}
@@ -840,6 +850,15 @@ export function ProfileWizardModal() {
             onClick={onCreateProfile}
             disabled={!wizardProfileName.trim() || isProfileNameTakenValue || isParentProfileInvalid}
             className="wizard-button primary"
+            title={
+              !wizardProfileName.trim()
+                ? l10n.t("Enter a profile name to create the profile.")
+                : isProfileNameTakenValue
+                  ? l10n.t("Profile name already exists under this root.")
+                  : isParentProfileInvalid
+                    ? l10n.t("Invalid parent profile selection.")
+                    : undefined
+            }
           >
             {l10n.t("Create Profile")}
           </button>

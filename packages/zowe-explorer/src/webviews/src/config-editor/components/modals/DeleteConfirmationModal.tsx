@@ -21,10 +21,10 @@ interface DeleteConfirmationModalProps {
 }
 
 export function DeleteConfirmationModal({ isOpen, type, name, onConfirm, onCancel }: DeleteConfirmationModalProps) {
-  if (!isOpen) return null;
-
   const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, ".delete-confirm-button");
+
+  if (!isOpen) return null;
 
   const getTitle = () => {
     if (type === "profile") {

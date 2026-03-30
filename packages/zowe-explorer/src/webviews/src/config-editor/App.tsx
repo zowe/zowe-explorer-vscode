@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 import "./App.css";
 
@@ -98,6 +98,7 @@ function AppContent() {
     setHasPromptedForZeroConfigs,
     configurationsRef,
     selectedProfileKeyRef,
+    mergedPropertiesLatestRequestSeqRef,
     setLocalStorageValue,
     setViewModeWithStorage,
     profileMenuOpen,
@@ -133,6 +134,11 @@ function AppContent() {
   const [isSecure, setIsSecure] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [addConfigModalOpen, setAddConfigModalOpen] = useState(false);
+
+  const prevMergedFetchSelectionRef = useRef<{ profileKey: string | null; tab: number | null }>({
+    profileKey: null,
+    tab: null,
+  });
 
   // renameProfileModalOpen moved to context
   const [pendingPropertyDeletion, setPendingPropertyDeletion] = useState<string | null>(null);
@@ -173,25 +179,51 @@ function AppContent() {
   }, [selectedTab, configurations, isSaving, isNavigating]);
 
   useEffect(() => {
-    if (selectedProfileKey) {
-      const configPath = configurations[selectedTab!]?.configPath;
-      if (configPath) {
-        const profileNameForMergedProperties = getProfileNameForMergedProperties(selectedProfileKey, configPath, renames);
-        const timeoutId = setTimeout(() => {
-          const changes = formatPendingChanges();
-          vscodeApi.postMessage({
-            command: "GET_MERGED_PROPERTIES",
-            profilePath: profileNameForMergedProperties,
-            configPath: configPath,
-            changes: changes,
-            renames: changes.renames,
-          });
-        }, 100);
-
-        return () => clearTimeout(timeoutId);
-      }
+    if (!selectedProfileKey) {
+      mergedPropertiesLatestRequestSeqRef.current += 1;
+      setMergedProperties(null);
+      prevMergedFetchSelectionRef.current = { profileKey: null, tab: selectedTab };
+      return;
     }
-  }, [selectedProfileKey, selectedTab, formatPendingChanges, renames, sortOrderVersion]);
+
+    const configPath = configurations[selectedTab!]?.configPath;
+    if (!configPath) {
+      return;
+    }
+
+    const selectionChanged =
+      prevMergedFetchSelectionRef.current.profileKey !== selectedProfileKey ||
+      prevMergedFetchSelectionRef.current.tab !== selectedTab;
+    prevMergedFetchSelectionRef.current = { profileKey: selectedProfileKey, tab: selectedTab };
+
+    if (selectionChanged && !isSaving && !isNavigating) {
+      setMergedProperties(null);
+    }
+
+    mergedPropertiesLatestRequestSeqRef.current += 1;
+    const seq = mergedPropertiesLatestRequestSeqRef.current;
+    const profileNameForMergedProperties = getProfileNameForMergedProperties(selectedProfileKey, configPath, renames);
+    const changes = formatPendingChanges();
+    vscodeApi.postMessage({
+      command: "GET_MERGED_PROPERTIES",
+      profilePath: profileNameForMergedProperties,
+      configPath: configPath,
+      changes: changes,
+      renames: changes.renames,
+      mergedPropertiesRequestSeq: seq,
+    });
+  }, [
+    selectedProfileKey,
+    selectedTab,
+    formatPendingChanges,
+    renames,
+    sortOrderVersion,
+    isSaving,
+    isNavigating,
+    configurations,
+    vscodeApi,
+    setMergedProperties,
+  ]);
 
   useEffect(() => {
     const isModalOpen =
@@ -397,6 +429,7 @@ function AppContent() {
     setRenames,
     setConfigParseErrors,
     configurationsRef,
+    mergedPropertiesLatestRequestSeqRef,
     pendingSaveSelection,
     selectedTab,
     selectedProfilesByConfig,
@@ -476,7 +509,7 @@ function AppContent() {
         showDropdown={showDropdown}
         typeOptions={
           newProfileKeyPath
-            ? fetchTypeOptions(newProfileKeyPath, selectedTab, configurations, schemaValidations, getProfileType, pendingChanges, renames)
+            ? fetchTypeOptions(newProfileKeyPath, selectedTab, configurations, schemaValidations, getProfileType, pendingChanges, renames, deletions)
             : []
         }
         propertyDescriptions={

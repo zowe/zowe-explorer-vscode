@@ -147,6 +147,8 @@ export function ProfileTree({
 }: ProfileTreeProps) {
   const hasNestedProfiles = profileKeys.some((key) => key.includes("."));
 
+  const isLightTheme = useIsLightTheme();
+
   // Drag and drop state
   const [draggedProfile, setDraggedProfile] = useState<string | null>(null);
   const [dragOverProfile, setDragOverProfile] = useState<string | null>(null);
@@ -603,7 +605,7 @@ export function ProfileTree({
                   }
                 }}
                 style={
-                  useIsLightTheme()
+                  isLightTheme
                     ? (() => {
                         const profileType = getProfileType(node.key);
                         const bgColor = getColorForProfileType(profileType!);

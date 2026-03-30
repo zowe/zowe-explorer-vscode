@@ -1250,6 +1250,17 @@ ul {
     margin-top: 2px;
 }
 
+.wizard-hint {
+    font-size: 0.8em;
+    color: var(--vscode-descriptionForeground);
+    margin-top: 2px;
+}
+
+.wizard-required-mark {
+    color: var(--vscode-descriptionForeground);
+    font-weight: normal;
+}
+
 .wizard-add-property-section {
     margin-top: auto;
 }

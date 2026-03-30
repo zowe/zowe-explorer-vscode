@@ -10,10 +10,10 @@ interface AddConfigModalProps {
 }
 
 export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, onCancel }: AddConfigModalProps) {
-  if (!isOpen) return null;
-
   const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, "button:not([disabled])");
+
+  if (!isOpen) return null;
 
   const getAllConfigTypes = () => {
     const currentConfigs = configurations.length;

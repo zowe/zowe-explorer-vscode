@@ -476,6 +476,7 @@ export class ConfigEditor extends WebView {
                     await this.panel.webview.postMessage({
                         command: "MERGED_PROPERTIES",
                         mergedArgs,
+                        mergedPropertiesRequestSeq: message.mergedPropertiesRequestSeq,
                     });
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : String(error);

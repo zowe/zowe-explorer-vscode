@@ -59,6 +59,10 @@ describe("webview configUtils", () => {
         it("should parse number", () => {
             expect(parseValueByType("443", "number")).toBe(443);
         });
+        it("should return empty string for blank number input", () => {
+            expect(parseValueByType("", "number")).toBe("");
+            expect(parseValueByType("   ", "number")).toBe("");
+        });
         it("should return value as-is when no type", () => {
             expect(parseValueByType("hello", undefined)).toBe("hello");
         });

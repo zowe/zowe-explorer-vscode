@@ -32,7 +32,11 @@ export function getProfileType(
     });
 
     if (pendingType) {
-        return pendingType[1].value as string;
+        const raw = pendingType[1].value;
+        if (raw == null || String(raw).trim() === "") {
+            return null;
+        }
+        return raw as string;
     }
 
     const config = configurations[selectedTab!].properties;

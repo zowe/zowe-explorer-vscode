@@ -28,7 +28,7 @@ import {
   PropertySortOrder,
   schemaValidation,
 } from "../utils";
-import { isFileProperty } from "../utils/propertyUtils";
+import { isFileProperty, isPropertyPendingDeletion } from "../utils/propertyUtils";
 import type { Configuration, PendingChange, MergedPropertiesVisibility } from "../types";
 import { useConfigContext } from "../context/ConfigContext";
 
@@ -178,33 +178,8 @@ export const RenderConfig = ({
       // Sort properties according to the specified order
       let sortedEntries: [string, any][];
 
-      const isPropertyDeletedConsideringRenames = (propertyKey: string): boolean => {
-        const deletionsList = deletions[configPath] ?? [];
-        const currentFullKey = [...path, propertyKey].join(".");
-        if (deletionsList.includes(currentFullKey)) {
-          return true;
-        }
-
-        const currentProfileKey = extractProfileKeyFromPath(path);
-        const originalProfileKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
-        if (originalProfileKey === currentProfileKey) {
-          return false;
-        }
-
-        const currentParts = currentProfileKey.split(".");
-        const suffixIndex = 2 * currentParts.length;
-        const suffix = path.slice(suffixIndex);
-
-        const originalParts = originalProfileKey.split(".");
-        const originalPathPrefix = ["profiles"];
-        for (let i = 0; i < originalParts.length; i++) {
-          if (i > 0) originalPathPrefix.push("profiles");
-          originalPathPrefix.push(originalParts[i]);
-        }
-
-        const originalFullKey = [...originalPathPrefix, ...suffix, propertyKey].join(".");
-        return deletionsList.includes(originalFullKey);
-      };
+      const isPropertyDeletedConsideringRenames = (propertyKey: string) =>
+        isPropertyPendingDeletion(propertyKey, path, configPath, deletions, renames);
 
       // Special handling for properties section - use custom sorting
       if (path.length > 0 && path[path.length - 1] === "properties") {

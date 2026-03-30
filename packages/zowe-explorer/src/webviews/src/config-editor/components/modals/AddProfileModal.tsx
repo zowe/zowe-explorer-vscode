@@ -46,10 +46,10 @@ export function AddProfileModal({
   onCancel,
   focusValueInput = false,
 }: AddProfileModalProps) {
-  if (!isOpen) return null;
-
   const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, focusValueInput ? ".add-profile-input" : "#profile-type-input");
+
+  if (!isOpen) return null;
 
   const isAuthOrderProperty = (key: string): boolean => {
     if (!key || typeof key !== "string") {

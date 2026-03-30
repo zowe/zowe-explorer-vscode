@@ -1976,10 +1976,13 @@ describe("configEditor", () => {
                 mockMessage.changes,
                 mockMessage.renames
             );
-            expect(postMessageSpy).toHaveBeenCalledWith({
-                command: "MERGED_PROPERTIES",
-                mergedArgs: expect.any(Array),
-            });
+            expect(postMessageSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    command: "MERGED_PROPERTIES",
+                    mergedArgs: expect.any(Array),
+                    mergedPropertiesRequestSeq: undefined,
+                })
+            );
         });
 
         it("should handle GET_WIZARD_MERGED_PROPERTIES command", async () => {

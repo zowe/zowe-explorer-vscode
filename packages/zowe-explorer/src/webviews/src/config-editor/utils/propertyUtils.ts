@@ -10,7 +10,7 @@
  */
 
 import { extractProfileKeyFromPath, flattenProfiles } from "./configUtils";
-import { getProfileType } from "./profileUtils";
+import { getProfileType, getOriginalProfileKeyWithNested } from "./profileUtils";
 import { PendingChange, Configuration, schemaValidation } from "../types";
 
 /**
@@ -115,6 +115,48 @@ export function getPropertyDescriptions(
     return propertyDescriptions;
 }
 
+/**
+ * True when this property key is listed in pending deletions for the given properties path,
+ * including when the profile was renamed and the deletion key uses the original path.
+ */
+export function isPropertyPendingDeletion(
+    propertyKey: string,
+    path: string[],
+    configPath: string,
+    deletions: { [configPath: string]: string[] },
+    renames: { [configPath: string]: { [originalKey: string]: string } }
+): boolean {
+    if (path.length === 0 || path[path.length - 1] !== "properties") {
+        return false;
+    }
+
+    const deletionsList = deletions[configPath] ?? [];
+    const currentFullKey = [...path, propertyKey].join(".");
+    if (deletionsList.includes(currentFullKey)) {
+        return true;
+    }
+
+    const currentProfileKey = extractProfileKeyFromPath(path);
+    const originalProfileKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
+    if (originalProfileKey === currentProfileKey) {
+        return false;
+    }
+
+    const currentParts = currentProfileKey.split(".");
+    const suffixIndex = 2 * currentParts.length;
+    const suffix = path.slice(suffixIndex);
+
+    const originalParts = originalProfileKey.split(".");
+    const originalPathPrefix = ["profiles"];
+    for (let i = 0; i < originalParts.length; i++) {
+        if (i > 0) originalPathPrefix.push("profiles");
+        originalPathPrefix.push(originalParts[i]);
+    }
+
+    const originalFullKey = [...originalPathPrefix, ...suffix, propertyKey].join(".");
+    return deletionsList.includes(originalFullKey);
+}
+
 export function fetchTypeOptions(
     path: string[],
     selectedTab: number | null,
@@ -122,7 +164,8 @@ export function fetchTypeOptions(
     schemaValidations: { [configPath: string]: schemaValidation | undefined },
     getProfileTypeFn: typeof getProfileType,
     pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [originalKey: string]: string } }
+    renames: { [configPath: string]: { [originalKey: string]: string } },
+    deletions: { [configPath: string]: string[] }
 ): string[] {
     const { configPath } = configurations[selectedTab!]!;
     const profileKey = extractProfileKeyFromPath(path);
@@ -168,10 +211,10 @@ export function fetchTypeOptions(
         }
     });
 
-    const deletedProperties = new Set<string>();
-
-    deletedProperties.forEach((deletedProperty) => {
-        existingProperties.delete(deletedProperty);
+    Array.from(existingProperties).forEach((propName) => {
+        if (isPropertyPendingDeletion(propName, path, configPath, deletions, renames)) {
+            existingProperties.delete(propName);
+        }
     });
 
     return Array.from(allPropertyKeys).filter((key) => !existingProperties.has(key));

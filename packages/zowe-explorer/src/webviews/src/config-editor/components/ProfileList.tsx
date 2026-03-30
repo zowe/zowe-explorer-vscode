@@ -64,6 +64,7 @@ export function ProfileList({
   const [isFilteringActive, setIsFilteringActive] = useState<boolean>(false);
   const [lastSelectedProfileKey, setLastSelectedProfileKey] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isLightTheme = useIsLightTheme();
 
   // Handle profile sort order change with auto-switch to flat view for type sorting
   const handleProfileSortOrderChange = (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults") => {
@@ -346,7 +347,7 @@ export function ProfileList({
                       }
                     }}
                     style={
-                      useIsLightTheme()
+                      isLightTheme
                         ? (() => {
                             const profileType = getProfileType(profileKey);
                             const bgColor = getColorForProfileType(profileType!);

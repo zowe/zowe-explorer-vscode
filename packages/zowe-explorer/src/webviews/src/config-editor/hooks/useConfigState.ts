@@ -53,6 +53,8 @@ export function useConfigState(vscodeApi: any) {
     const autostoreChangesRef = useRef<{ [configPath: string]: boolean }>({});
     const renamesRef = useRef<{ [configPath: string]: { [originalKey: string]: string } }>({});
     const selectedProfileKeyRef = useRef<string | null>(null);
+    /** Latest GET_MERGED_PROPERTIES request id; MERGED_PROPERTIES applies only when seq matches (stale response guard). */
+    const mergedPropertiesLatestRequestSeqRef = useRef(0);
 
     useEffect(() => {
         pendingChangesRef.current = pendingChanges;
@@ -227,6 +229,7 @@ export function useConfigState(vscodeApi: any) {
         autostoreChangesRef,
         renamesRef,
         selectedProfileKeyRef,
+        mergedPropertiesLatestRequestSeqRef,
         setLocalStorageValue,
         setShowMergedPropertiesWithStorage,
         setViewModeWithStorage,

@@ -45,6 +45,7 @@ export interface MessageHandlerProps {
 
     // Refs
     configurationsRef: React.MutableRefObject<Configuration[]>;
+    mergedPropertiesLatestRequestSeqRef: React.MutableRefObject<number>;
 
     // State values
     pendingSaveSelection: { tab: number | null; profile: string | null } | null;
@@ -206,7 +207,12 @@ function convertValueToProperType(value: any, dataType?: string): any {
 
 // Handle MERGED_PROPERTIES message
 export const handleMergedPropertiesMessage = (data: any, props: MessageHandlerProps) => {
-    const { setMergedProperties, setPendingMergedPropertiesRequest } = props;
+    const { setMergedProperties, setPendingMergedPropertiesRequest, mergedPropertiesLatestRequestSeqRef } = props;
+
+    const responseSeq = data.mergedPropertiesRequestSeq;
+    if (responseSeq !== undefined && responseSeq !== mergedPropertiesLatestRequestSeqRef.current) {
+        return;
+    }
 
     // Store the full merged properties data including jsonLoc and osLoc information
     const mergedPropsData: { [key: string]: any } = {};

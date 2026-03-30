@@ -32,13 +32,10 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
         configurations,
         renames,
         selectedProfileKey,
-        pendingMergedPropertiesRequest,
-        formatPendingChanges,
         extractPendingProfiles,
         vscodeApi,
         setRenames,
         setSelectedProfileKey,
-        setPendingMergedPropertiesRequest,
         setSortOrderVersion,
         setSelectedProfilesByConfig,
         setExpandedNodesByConfig,
@@ -239,31 +236,9 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
     if (newSelectedProfileKey !== selectedProfileKey) {
         setSelectedProfileKey(newSelectedProfileKey);
 
-        // Refresh merged properties for the renamed profile to maintain sorting order
         if (newSelectedProfileKey) {
-            const profileNameForMergedProperties = getProfileNameForMergedProperties(newSelectedProfileKey, configPath, renames);
-            const changes = formatPendingChanges();
-
-            // Create a unique request key to prevent duplicate requests
-            const requestKey = `${configPath}:${newSelectedProfileKey}`;
-
-            // Only request if we don't already have a pending request
-            if (pendingMergedPropertiesRequest !== requestKey) {
-                setPendingMergedPropertiesRequest(requestKey);
-
-                // Increment sort order version to trigger re-render with updated merged properties
-                setSortOrderVersion((prev) => prev + 1);
-
-                vscodeApi.postMessage({
-                    command: "GET_MERGED_PROPERTIES",
-                    profilePath: profileNameForMergedProperties,
-                    configPath: configPath,
-                    changes: changes,
-                    renames: changes.renames,
-                    currentProfileKey: newSelectedProfileKey,
-                    originalProfileKey: profileNameForMergedProperties,
-                });
-            }
+            // Increment sort order version to trigger re-render with updated merged properties
+            setSortOrderVersion((prev) => prev + 1);
         }
     }
 
@@ -732,9 +707,7 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
         setSelectedProfileKey,
         setSelectedProfilesByConfig,
         setPendingDefaults,
-        formatPendingChanges,
         getAvailableProfilesForConfig,
-        vscodeApi,
     } = props;
 
     if (selectedTab === null) return;
@@ -856,20 +829,6 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
             }));
         }
 
-        // If we found a nearest profile, get its merged properties
-        if (nearestProfileKey) {
-            // Get the correct profile name for merged properties (handles renames)
-            const profileNameForMergedProperties = getProfileNameForMergedProperties(nearestProfileKey, configPath, renames);
-
-            const changes = formatPendingChanges();
-            vscodeApi.postMessage({
-                command: "GET_MERGED_PROPERTIES",
-                profilePath: profileNameForMergedProperties,
-                configPath: configPath,
-                changes: changes,
-                renames: changes.renames,
-            });
-        }
     }
 };
 
@@ -992,17 +951,7 @@ export const handleNavigateToSource = (props: HandlerContext) => {
 };
 
 export const handleProfileSelection = (profileKey: string, props: HandlerContext): void => {
-    const {
-        selectedTab,
-        configurations,
-        renames,
-        pendingMergedPropertiesRequest,
-        setSelectedProfileKey,
-        setSelectedProfilesByConfig,
-        setPendingMergedPropertiesRequest,
-        formatPendingChanges,
-        vscodeApi,
-    } = props;
+    const { selectedTab, configurations, setSelectedProfileKey, setSelectedProfilesByConfig } = props;
 
     if (profileKey === "") {
         // Deselect profile
@@ -1020,31 +969,5 @@ export const handleProfileSelection = (profileKey: string, props: HandlerContext
             ...prev,
             [configPath]: profileKey,
         }));
-
-        // Get the correct profile name for merged properties (handles renames)
-        const profileNameForMergedProperties = getProfileNameForMergedProperties(profileKey, configPath, renames);
-
-        // Create a unique request key to prevent duplicate requests
-        const requestKey = `${configPath}:${profileKey}`;
-
-        // Check if we already have a pending request for this profile
-        if (pendingMergedPropertiesRequest === requestKey) {
-            return;
-        }
-
-        const changes = formatPendingChanges();
-
-        // Mark this request as pending
-        setPendingMergedPropertiesRequest(requestKey);
-
-        vscodeApi.postMessage({
-            command: "GET_MERGED_PROPERTIES",
-            profilePath: profileNameForMergedProperties, // Send original profile key for backend lookup
-            configPath: configPath,
-            changes: changes,
-            renames: changes.renames,
-            currentProfileKey: profileKey,
-            originalProfileKey: profileNameForMergedProperties,
-        });
     }
 };

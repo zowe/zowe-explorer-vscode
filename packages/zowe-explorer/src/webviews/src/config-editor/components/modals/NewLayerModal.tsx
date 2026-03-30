@@ -10,10 +10,10 @@ interface NewLayerModalProps {
 }
 
 export function NewLayerModal({ isOpen, newLayerName, onNewLayerNameChange, onAdd, onCancel }: NewLayerModalProps) {
-  if (!isOpen) return null;
-
   const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
   const modalRef = useModalFocus(isOpen, "input");
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-backdrop" onMouseDown={handleBackdropMouseDown} onClick={handleBackdropClick}>

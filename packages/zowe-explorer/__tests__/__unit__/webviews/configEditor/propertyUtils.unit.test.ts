@@ -93,7 +93,7 @@ describe("propertyUtils", () => {
                     },
                 },
             ] as any;
-            const result = fetchTypeOptions(["profiles", "p1", "properties"], 0, configsWithHost, schema, getProfileType, {}, {});
+            const result = fetchTypeOptions(["profiles", "p1", "properties"], 0, configsWithHost, schema, getProfileType, {}, {}, {});
             expect(result).toContain("port");
             expect(result).not.toContain("host");
         });
@@ -106,7 +106,7 @@ describe("propertyUtils", () => {
                     },
                 },
             ] as any;
-            const result = fetchTypeOptions(["profiles", "p1", "properties"], 0, configsSecure, schema, getProfileType, {}, {});
+            const result = fetchTypeOptions(["profiles", "p1", "properties"], 0, configsSecure, schema, getProfileType, {}, {}, {});
             expect(result).not.toContain("token");
         });
         it("excludes properties from pending changes for same profile", () => {
@@ -122,6 +122,7 @@ describe("propertyUtils", () => {
                 { [configPath]: { propertySchema: { zowe: { host: {}, port: {}, reject: {} } } } },
                 getProfileType,
                 pending,
+                {},
                 {}
             );
             expect(result).not.toContain("reject");
@@ -136,7 +137,22 @@ describe("propertyUtils", () => {
                     },
                 },
             };
-            const result = fetchTypeOptions(["profiles", "p1", "properties"], 0, configsUntyped, schemaMulti, getProfileType, {}, {});
+            const result = fetchTypeOptions(["profiles", "p1", "properties"], 0, configsUntyped, schemaMulti, getProfileType, {}, {}, {});
+            expect(result).toContain("host");
+            expect(result).toContain("port");
+        });
+        it("includes schema keys that are pending deletion (not treated as still present)", () => {
+            const configsWithHost = [
+                {
+                    configPath,
+                    properties: {
+                        profiles: { p1: { type: "zowe", properties: { host: "x" } } },
+                    },
+                },
+            ] as any;
+            const result = fetchTypeOptions(["profiles", "p1", "properties"], 0, configsWithHost, schema, getProfileType, {}, {}, {
+                [configPath]: ["profiles.p1.properties.host"],
+            });
             expect(result).toContain("host");
             expect(result).toContain("port");
         });

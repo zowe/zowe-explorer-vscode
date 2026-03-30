@@ -9,7 +9,7 @@
  *
  */
 
-import { useCallback } from "react";
+import { useCallback, type SetStateAction } from "react";
 import { ProfileList } from "./ProfileList";
 import {
   getRenamedProfileKeyWithNested,
@@ -74,6 +74,19 @@ export const RenderProfiles = ({
     setExpandedNodesForConfig,
     isProfileOrParentDeletedForComponent: isProfileOrParentDeleted,
   } = useUtilityHelpers();
+
+  const setExpandedNodesForProfileList = useCallback(
+    (newExpandedNodes: SetStateAction<Set<string>>) => {
+      const configPath = configurations[selectedTab!]?.configPath || "";
+      if (typeof newExpandedNodes === "function") {
+        setExpandedNodesForConfig(configPath, newExpandedNodes(getExpandedNodesForConfig(configPath)));
+      } else {
+        setExpandedNodesForConfig(configPath, newExpandedNodes);
+      }
+    },
+    [selectedTab, configurations, setExpandedNodesForConfig, getExpandedNodesForConfig]
+  );
+
   const renderProfiles = useCallback(
     (profilesObj: any) => {
       if (!profilesObj || typeof profilesObj !== "object") return null;
@@ -259,17 +272,7 @@ export const RenderProfiles = ({
           profileSortOrder={profileSortOrder || "natural"}
           onProfileSortOrderChange={setProfileSortOrderWithStorage}
           expandedNodes={getExpandedNodesForConfig(configurations[selectedTab!]?.configPath || "")}
-          setExpandedNodes={useCallback(
-            (newExpandedNodes) => {
-              const configPath = configurations[selectedTab!]?.configPath || "";
-              if (typeof newExpandedNodes === "function") {
-                setExpandedNodesForConfig(configPath, newExpandedNodes(getExpandedNodesForConfig(configPath)));
-              } else {
-                setExpandedNodesForConfig(configPath, newExpandedNodes);
-              }
-            },
-            [selectedTab, configurations, setExpandedNodesForConfig, getExpandedNodesForConfig]
-          )}
+          setExpandedNodes={setExpandedNodesForProfileList}
           onProfileRename={handleRenameProfile}
           configurations={configurations}
           selectedTab={selectedTab}
@@ -306,6 +309,7 @@ export const RenderProfiles = ({
       getRenamedProfileKeyWithNested,
       profileSortOrder || "natural",
       sortProfilesAtLevel,
+      setExpandedNodesForProfileList,
     ]
   );
 

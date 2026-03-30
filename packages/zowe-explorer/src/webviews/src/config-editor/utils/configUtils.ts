@@ -115,9 +115,14 @@ export function parseValueByType(value: string, type: string | undefined): strin
     switch (type) {
         case "boolean":
             return value.toLowerCase() === "true";
-        case "number":
-            const num = parseFloat(value);
+        case "number": {
+            const trimmed = value.trim();
+            if (trimmed === "") {
+                return "";
+            }
+            const num = parseFloat(trimmed);
             return isNaN(num) ? 0 : num;
+        }
         default:
             return value;
     }
