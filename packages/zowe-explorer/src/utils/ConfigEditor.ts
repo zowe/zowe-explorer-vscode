@@ -482,7 +482,6 @@ export class ConfigEditor extends WebView {
                     console.error("Failed to get merged properties:", errorMessage);
                     vscode.window.showErrorMessage(`Cannot show merged properties: ${errorMessage}`);
                 }
-                await ConfigUtils.createProfileInfoAndLoad();
                 break;
             }
             case "GET_WIZARD_MERGED_PROPERTIES": {
@@ -631,9 +630,8 @@ export class ConfigEditor extends WebView {
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
         // loadNamedProfile (favorites + session rebuild) reads ProfilesCache.allProfiles, updated only by refresh().
         await Profiles.getInstance().refresh();
-        await FavoritePersistenceUtils.applyProfileRenameToStoredFavorites(rename);
+        await FavoritePersistenceUtils.applyProfileRenameToStoredTreePersistence(rename);
         await FavoritePersistenceUtils.rebuildFavoritesTreesFromPersistence();
-        await FavoritePersistenceUtils.applyProfileRenameToStoredSessions(rename);
         await FavoritePersistenceUtils.rebuildSessionNodesAfterProfileRename(rename);
     }
 

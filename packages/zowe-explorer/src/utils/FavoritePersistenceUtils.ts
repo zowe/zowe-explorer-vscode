@@ -41,25 +41,36 @@ export class FavoritePersistenceUtils {
     }
 
     /**
-     * Updates Dataset, USS, and Jobs favorites in local storage after a profile rename is saved.
+     * Rewrites favorites and session history for all trees in one read/modify/write per schema (fewer awaited storage round-trips than separate calls).
      */
-    public static async applyProfileRenameToStoredFavorites(rename: ProfileRenameForFavorites): Promise<void> {
-        for (const schema of FAVORITES_SCHEMAS) {
-            const settings = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(schema);
-            if (!settings?.persistence) {
-                continue;
-            }
-            const lines = settings.favorites ?? [];
-            const updated = lines.map((line) => FavoritePersistenceUtils.rewriteFavoriteLine(line, rename));
-            if (updated.some((u, i) => u !== lines[i])) {
-                settings.favorites = updated;
+    public static async applyProfileRenameToStoredTreePersistence(rename: ProfileRenameForFavorites): Promise<void> {
+        const renameMap = new Map([
+            [rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath }],
+        ]);
+        await Promise.all(
+            FAVORITES_SCHEMAS.map(async (schema) => {
+                const settings = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(schema);
+                if (!settings?.persistence) {
+                    return;
+                }
+                const lines = settings.favorites ?? [];
+                const sessions = settings.sessions ?? [];
+                const updatedFavorites = lines.map((line) => FavoritePersistenceUtils.rewriteFavoriteLine(line, rename));
+                const updatedSessions = sessions.map((s) => ConfigEditorPathUtils.getNewProfilePath(s, rename.configPath, renameMap));
+                const favoritesChanged = updatedFavorites.some((u, i) => u !== lines[i]);
+                const sessionsChanged = updatedSessions.some((u, i) => u !== sessions[i]);
+                if (!favoritesChanged && !sessionsChanged) {
+                    return;
+                }
+                settings.favorites = updatedFavorites;
+                settings.sessions = updatedSessions;
                 await ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(
                     schema,
                     settings,
                     ZoweLocalStorage.isPersistenceKeyInWorkspace(schema)
                 );
-            }
-        }
+            })
+        );
     }
 
     /**
@@ -73,31 +84,6 @@ export class FavoritePersistenceUtils {
                 await tree.refreshFavorites();
             }
             tree.refreshElement(tree.mFavoriteSession);
-        }
-    }
-
-    /**
-     * Updates Dataset, USS, and Jobs persisted session lists after a profile rename is saved (tree open-session history).
-     */
-    public static async applyProfileRenameToStoredSessions(rename: ProfileRenameForFavorites): Promise<void> {
-        const renameMap = new Map([
-            [rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath }],
-        ]);
-        for (const schema of FAVORITES_SCHEMAS) {
-            const settings = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(schema);
-            if (!settings?.persistence) {
-                continue;
-            }
-            const sessions = settings.sessions ?? [];
-            const updated = sessions.map((s) => ConfigEditorPathUtils.getNewProfilePath(s, rename.configPath, renameMap));
-            if (updated.some((u, i) => u !== sessions[i])) {
-                settings.sessions = updated;
-                await ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(
-                    schema,
-                    settings,
-                    ZoweLocalStorage.isPersistenceKeyInWorkspace(schema)
-                );
-            }
         }
     }
 
