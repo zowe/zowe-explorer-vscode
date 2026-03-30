@@ -40,6 +40,7 @@ import * as dayjs from "dayjs";
 import { DatasetUtils } from "./DatasetUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private readonly EXPECTED_MEMBER_LENGTH = 2; // /DATA.SET/MEMBER
@@ -48,6 +49,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, this.onDidChangeFile);
         this.root = new DirEntry("");
+        this.root.timestampLastFetched = Date.now(); // Root is always considered loaded or will be fetched
     }
 
     public encodingMap: Record<string, ZosEncoding> = {};
@@ -272,6 +274,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         }
 
+        profileEntry.timestampLastFetched = Date.now();
         return profileEntry;
     }
 
@@ -315,6 +318,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             entry.entries.set(fullMemberName, tempEntry);
         }
+
+        entry.timestampLastFetched = Date.now();
     }
 
     private async fetchDataset(uri: vscode.Uri, uriInfo: UriFsInfo, forceFetch?: boolean): Promise<PdsEntry | DsEntry> {
@@ -432,10 +437,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         if (uriInfo.isRoot) {
             // profile entry; check if "pattern" filter is in query.
-
             const urlQuery = new URLSearchParams(uri.query);
             if (!urlQuery.has("pattern")) {
-                return this._lookupAsDirectory(profileUri, false);
+                const rootDir = this._lookupAsDirectory(profileUri, false);
+                rootDir.timestampLastFetched = Date.now();
+                return rootDir;
             }
 
             return this.fetchEntriesForProfile(uri, uriInfo, urlQuery.get("pattern"));
@@ -445,37 +451,58 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
     }
 
-    //TODO: forceRemote is required to differentiate between stat calls on PDS members and readDirectory calls on a PDS.
-    //TODO: if they are not differentiated, PDS member calls will also always fetch.
-    //TODO: this will be removed when readDirectory caching is implemented
     public async readDirectoryImplementation(uri: vscode.Uri, forceRemote: boolean = false): Promise<DirEntry> {
-        let dsEntry: DirEntry | DsEntry = null;
+        let dir: DirEntry | undefined;
+
+        if (!forceRemote) {
+            try {
+                dir = this._lookupAsDirectory(uri, false);
+            } catch (err) {
+                if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
+                    throw err;
+                }
+            }
+        }
 
         const queryParams = new URLSearchParams(uri.query);
-        const isExplicitFetch = queryParams.get("fetch") === "true";
+        const isExplicitFetch = queryParams.get("fetch") === "true" || queryParams.has("pattern");
 
-        // Fetch if the URI explicitly asks for it, OR if the caller forces it
-        const shouldFetch = forceRemote || isExplicitFetch;
+        const queryTtl = queryParams.get("ttl");
+        const debounceTtl = queryTtl !== null ? parseInt(queryTtl, 10) : SettingsConfig.getDirectValue("zowe.settings.fileSystemDebounce", 50);
 
-        try {
-            dsEntry = shouldFetch ? await this.remoteLookupForResource(uri) : this._lookupAsDirectory(uri, false);
-        } catch (err) {
-            if (!(err instanceof vscode.FileSystemError)) {
-                throw err;
+        let shouldFetch = forceRemote || isExplicitFetch || !dir || !dir.timestampLastFetched;
+
+        const parentPath = path.posix.dirname(uri.path);
+
+        if (!shouldFetch && dir && uri.path !== "/" && parentPath !== uri.path && parentPath !== "/") {
+            try {
+                const now = Date.now();
+                const lastValidated = dir.timestampLastFetched || 0;
+
+                if (now - lastValidated < debounceTtl) {
+                    shouldFetch = false;
+                } else {
+                    shouldFetch = true;
+                }
+            } catch (err) {
+                ZoweLogger.warn(`[DatasetFSProvider] Failed to validate cache TTL: ${err instanceof Error ? err.message : err}`);
             }
-            // If the local lookup fails (e.g. it wasn't cached yet), fallback to network
-            if (err.code === "FileNotFound" && !shouldFetch) {
-                dsEntry = await this.remoteLookupForResource(uri);
+        }
+
+        if (shouldFetch) {
+            dir = (await this.remoteLookupForResource(uri)) as DirEntry;
+            if (dir) {
+                dir.timestampLastFetched = Date.now(); // Reset validation timer upon a full fetch
             }
         }
 
         this.validatePath(uri);
 
-        if (dsEntry == null || FsDatasetsUtils.isDsEntry(dsEntry)) {
+        if (dir == null || FsDatasetsUtils.isDsEntry(dir)) {
             throw vscode.FileSystemError.FileNotFound(uri);
         }
 
-        return dsEntry;
+        return dir;
     }
 
     /**
@@ -486,8 +513,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         const dirEntry = await this.executeWithReuse<DirEntry>(uri, {
             keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
-            checkLocal: () => false,
-            execute: () => this.readDirectoryImplementation(uri, true),
+            checkLocal: () => {
+                const localDir = this._lookupAsDirectory(uri, true);
+                return !!localDir && !!localDir.timestampLastFetched;
+            },
+            execute: () => this.readDirectoryImplementation(uri, false),
             action: "readDirectory",
         });
 

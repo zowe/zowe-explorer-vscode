@@ -35,6 +35,7 @@ import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import dayjs = require("dayjs");
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
@@ -44,6 +45,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.USS, this.onDidChangeFile);
         this.root = new UssDirectory();
+        this.root.timestampLastFetched = Date.now(); // Root is always considered loaded or will be fetched
     }
 
     public encodingMap: Record<string, ZosEncoding> = {};
@@ -319,9 +321,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         let resp: IZosFilesResponse;
         if (!entryExists) {
-            resp = await this.listFiles(uriInfo.profile, uri);
+            // We use keepRelative=true to get "." and ".." so we can accurately update mtime
+            resp = await this.listFiles(uriInfo.profile, uri, true);
             if (!resp.success) {
                 throw vscode.FileSystemError.FileNotFound(uri);
+            }
+
+            // Since keepRelative=true prevents listFiles from auto-creating the directory,
+            // we must detect if this is a directory listing (contains ".") and create it manually.
+            const isDirectoryListing = resp.apiResponse.items?.some((item) => item.name === ".");
+            if (isDirectoryListing && !this.exists(uri)) {
+                this._createDirectoryRecursive(uri);
             }
         }
 
@@ -333,7 +343,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // TODO fix: Undefined behavior when creating FS entries with dot-segments i.e "/u/users/<user>/a/b/c/../../../TEST";
         if (entry == null && resp?.success) {
-            // if entry is null, listFiles did not create a new directory entry - this is a file
+            // If entry is still null, it means it wasn't a directory listing (no "."), so treat as file.
             let parentDir = this.lookupParentDirectory(uri, true);
             if (parentDir == null) {
                 const parentPath = path.posix.join(uri.path, "..");
@@ -402,30 +412,65 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // profile entry; check if "pattern" is in query.
             const urlQuery = new URLSearchParams(uri.query);
             if (!urlQuery.has("searchPath")) {
-                return this._lookupAsDirectory(profileUri, false) as UssDirectory;
+                const rootDir = this._lookupAsDirectory(profileUri, false) as UssDirectory;
+                rootDir.timestampLastFetched = Date.now();
+                return rootDir;
             }
         }
 
         return this.fetchEntries(uri, uriInfo);
     }
 
-    private async readDirectoryImplementation(uri: vscode.Uri): Promise<UssDirectory> {
+    private async readDirectoryImplementation(uri: vscode.Uri, forceRemote: boolean = false): Promise<UssDirectory> {
         /**
          * TODOs:
          * - Look into pre-fetching a directory level below the one given
          * - Should we support symlinks and can we use z/OSMF "report" option?
          */
-        let dir: UssDirectory;
+        let dir: UssDirectory | undefined;
         try {
-            this._lookupAsDirectory(uri, false) as UssDirectory;
+            dir = this._lookupAsDirectory(uri, false) as UssDirectory;
         } catch (err) {
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
                 throw err;
             }
         }
 
-        // check to see if contents have updated on the remote system before returning its children.
-        dir = (await this.remoteLookupForResource(uri)) as UssDirectory;
+        const queryParams = new URLSearchParams(uri.query || "");
+        const isExplicitFetch = queryParams.get("fetch") === "true";
+
+        const queryTtl = queryParams.get("ttl");
+        const debounceTtl = queryTtl !== null ? parseInt(queryTtl, 10) : SettingsConfig.getDirectValue("zowe.settings.fileSystemDebounce", 50);
+
+        let shouldFetch = forceRemote || isExplicitFetch || !dir || !dir.timestampLastFetched;
+
+        const parentPath = path.posix.dirname(uri.path);
+
+        if (!shouldFetch && dir && uri.path !== "/" && parentPath !== uri.path && parentPath !== "/") {
+            try {
+                const now = Date.now();
+                const lastValidated = dir.timestampLastFetched || 0;
+
+                if (now - lastValidated < debounceTtl) {
+                    shouldFetch = false;
+                } else {
+                    shouldFetch = true;
+                }
+            } catch (err) {
+                ZoweLogger.warn(`[UssFSProvider] Failed to validate cache TTL: ${err instanceof Error ? err.message : err}`);
+            }
+        }
+
+        if (shouldFetch) {
+            dir = (await this.remoteLookupForResource(uri)) as UssDirectory;
+            if (dir) {
+                dir.timestampLastFetched = Date.now();
+            }
+        }
+
+        if (!dir) {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
 
         return dir;
     }
@@ -438,7 +483,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         const dir = await this.executeWithReuse<UssDirectory>(uri, {
             keyGenerator: (u) => "list_" + this.getQueryKey(u) + this.pathWithoutTrailingSlash(u),
-            checkLocal: () => !!this._lookupAsDirectory(uri, true),
+            checkLocal: () => {
+                const localDir = this._lookupAsDirectory(uri, true);
+                return !!localDir && !!localDir.timestampLastFetched;
+            },
             execute: () => this.readDirectoryImplementation(uri),
             action: "readDirectory",
         });

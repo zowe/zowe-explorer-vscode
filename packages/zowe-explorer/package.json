@@ -2178,6 +2178,12 @@
           "description": "%zowe.pollInterval.info%",
           "scope": "window"
         },
+        "zowe.settings.fileSystemDebounce": {
+          "type": "integer",
+          "default": 50,
+          "description": "%zowe.fileSystemDebounce%",
+          "scope": "window"
+        },
         "zowe.jobs.paginate.enabled": {
           "type": "boolean",
           "default": false,
@@ -2310,11 +2316,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.31.0",
+    "@zowe/core-for-zowe-sdk": "^8.30.1",
     "@zowe/secrets-for-zowe-sdk": "^8.29.4",
-    "@zowe/zos-files-for-zowe-sdk": "^8.31.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.31.0",
-    "@zowe/zosmf-for-zowe-sdk": "^8.31.0",
+    "@zowe/zos-files-for-zowe-sdk": "^8.30.1",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.30.1",
+    "@zowe/zosmf-for-zowe-sdk": "^8.30.1",
     "@zowe/zowe-explorer-api": "workspace:*",
     "dayjs": "^1.11.10",
     "isbinaryfile": "4.0.4",

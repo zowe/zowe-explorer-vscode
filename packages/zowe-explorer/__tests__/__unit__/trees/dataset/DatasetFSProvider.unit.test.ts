@@ -37,51 +37,52 @@ import * as path from "path";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { DeferredPromise } from "@zowe/imperative";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 const dayjs = require("dayjs");
 
 const testProfile = createIProfile();
 const testEntries = {
-    ps: {
-        ...new DsEntry("USER.DATA.PS", false),
+    ps: Object.assign(new DsEntry("USER.DATA.PS", false), {
         metadata: new DsEntryMetadata({
             profile: testProfile,
             path: "/USER.DATA.PS",
         }),
         etag: "OLDETAG",
         isMember: false,
-    } as DsEntry,
-    pds: {
-        ...new PdsEntry("USER.DATA.PDS"),
+        timestampLastFetched: Date.now(),
+    }) as DsEntry,
+    pds: Object.assign(new PdsEntry("USER.DATA.PDS"), {
         metadata: new DsEntryMetadata({
             profile: testProfile,
             path: "/USER.DATA.PDS",
         }),
-    } as PdsEntry,
-    pdsMember: {
-        ...new DsEntry("MEMBER1", true),
+        timestampLastFetched: Date.now(),
+    }),
+    pdsMember: Object.assign(new DsEntry("MEMBER1", true), {
         metadata: new DsEntryMetadata({
             profile: testProfile,
             path: "/USER.DATA.PDS/MEMBER1",
         }),
         isMember: true,
-    } as DsEntry,
-    vsam: {
-        ...new DsEntry("USER.DATA.PS", false),
+        timestampLastFetched: Date.now(),
+    }),
+    vsam: Object.assign(new DsEntry("USER.DATA.PS", false), {
         metadata: new DsEntryMetadata({
             profile: testProfile,
             path: "/USER.DATA.PS",
         }),
         isMember: false,
         stats: { vol: "*VSAM*" } as unknown as Types.DatasetStats,
-    } as DsEntry,
-    session: {
-        ...new FilterEntry("sestest"),
+        timestampLastFetched: Date.now(),
+    }),
+    session: Object.assign(new FilterEntry("sestest"), {
         metadata: {
             profile: testProfile,
             path: "/",
         },
-    },
+        timestampLastFetched: Date.now(),
+    }),
 };
 
 type TestUris = Record<string, Readonly<Uri>>;
@@ -109,6 +110,7 @@ describe("DatasetFSProvider", () => {
             get: () => [],
             configurable: true,
         });
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(50);
     });
 
     afterAll(() => {
@@ -1367,7 +1369,7 @@ describe("DatasetFSProvider", () => {
             const res = await DatasetFSProvider.instance.stat(testUris.ps);
             expect(lookupMock).toHaveBeenCalledWith(testUris.ps, expect.anything());
             expect(dataSetMock).toHaveBeenCalledWith(path.posix.basename(testEntries.ps.metadata.extensionRemovedFromPath()), { attributes: true });
-            expect(res).toStrictEqual({ ...fakePs });
+            expect(res).toStrictEqual(fakePs);
             expect(fakePs.wasAccessed).toBe(false);
         });
         it("should throw an Unavailable error if the type is token and token value is undefined", async () => {
@@ -1818,57 +1820,76 @@ describe("DatasetFSProvider", () => {
             });
 
             describe("PDS member", () => {
-                it("non-existent member URI", async () => {
-                    const allMembersMockNoMatch = jest.fn().mockResolvedValue({
-                        success: true,
-                        apiResponse: {
-                            items: [
-                                {
-                                    member: "NOMATCH",
-                                },
-                            ],
-                        },
-                        commandResponse: "",
+                describe("PDS member", () => {
+                    it("non-existent member URI", async () => {
+                        const allMembersMockNoMatch = jest.fn().mockResolvedValue({
+                            success: true,
+                            apiResponse: {
+                                items: [
+                                    {
+                                        member: "NOMATCH",
+                                    },
+                                ],
+                            },
+                            commandResponse: "",
+                        });
+                        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                            allMembers: allMembersMockNoMatch,
+                        } as any);
+
+                        jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockImplementation(() => {
+                            throw FileSystemError.FileNotFound(testUris.pdsMember);
+                        });
+
+                        try {
+                            await (DatasetFSProvider.instance as any).fetchDataset(testUris.pdsMember, {
+                                isRoot: false,
+                                slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
+                                profileName: "sestest",
+                                profile: testProfile,
+                            });
+
+                            expect(true).toBe(false);
+                        } catch (e) {
+                            expect(e.message).toBe(testUris.pdsMember.toString(true));
+                        }
+                        expect(allMembersMockNoMatch).toHaveBeenCalledWith("USER.DATA.PDS");
                     });
-                    jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
-                        allMembers: allMembersMockNoMatch,
-                    } as any);
-                    try {
+
+                    it("existing member URI", async () => {
+                        const allMembersMock = jest.fn().mockResolvedValue({
+                            success: true,
+                            apiResponse: {
+                                items: [
+                                    {
+                                        member: "MEMBER1",
+                                    },
+                                ],
+                            },
+                            commandResponse: "",
+                        });
+                        jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                            allMembers: allMembersMock,
+                        } as any);
+
+                        jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockImplementation(() => {
+                            throw FileSystemError.FileNotFound(testUris.pdsMember);
+                        });
+
+                        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+                        jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue({
+                            entries: new Map(),
+                            metadata: testEntries.pds.metadata,
+                        });
+
                         await (DatasetFSProvider.instance as any).fetchDataset(testUris.pdsMember, {
                             isRoot: false,
-                            slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
+                            slashAfterProfilePos: testUris.pdsMember.path.indexOf("/", 1),
                             profileName: "sestest",
                             profile: testProfile,
                         });
-                        // Fail test if above expression doesn't throw anything.
-                        expect(true).toBe(false);
-                    } catch (e) {
-                        expect(e.message).toBe(testUris.pdsMember.toString(true));
-                    }
-                    expect(allMembersMockNoMatch).toHaveBeenCalledWith("USER.DATA.PDS");
-                });
-                it("existing member URI", async () => {
-                    const allMembersMock = jest.fn().mockResolvedValue({
-                        success: true,
-                        apiResponse: {
-                            items: [
-                                {
-                                    member: "MEMBER1",
-                                },
-                            ],
-                        },
-                        commandResponse: "",
+                        expect(allMembersMock).toHaveBeenCalledWith("USER.DATA.PDS");
                     });
-                    jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
-                        allMembers: allMembersMock,
-                    } as any);
-                    await (DatasetFSProvider.instance as any).fetchDataset(testUris.pdsMember, {
-                        isRoot: false,
-                        slashAfterProfilePos: testUris.pdsMember.path.indexOf("/", 1),
-                        profileName: "sestest",
-                        profile: testProfile,
-                    });
-                    expect(allMembersMock).toHaveBeenCalledWith("USER.DATA.PDS");
                 });
             });
         });
@@ -2175,33 +2196,7 @@ describe("DatasetFSProvider", () => {
                 });
             });
 
-            //TODO: Replace below test once readDirectory caching implemented
-            // it("should reuse the promise from readDirectory when a member stat is requested simultaneously", async () => {
-            //     const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" });
-            //     const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS/MEMBER1" });
-
-            //     const mockPdsEntry = {
-            //         type: FileType.Directory,
-            //         entries: new Map([["MEMBER1", { type: FileType.File, size: 123 }]]),
-            //     } as unknown as DirEntry;
-
-            //     const readDirImplSpy = jest.spyOn(DatasetFSProvider.instance as any, "readDirectoryImplementation").mockImplementation(async () => {
-            //         await new Promise((resolve) => setTimeout(resolve, 50)); // Simulate async delay
-            //         return mockPdsEntry;
-            //     });
-
-            //     const readDirPromise = DatasetFSProvider.instance.readDirectory(pdsUri);
-            //     const statPromise = DatasetFSProvider.instance.stat(memberUri);
-
-            //     const [dirResult, statResult] = await Promise.all([readDirPromise, statPromise]);
-
-            //     expect(readDirImplSpy).toHaveBeenCalledTimes(2);
-            //     expect(dirResult).toContainEqual(["MEMBER1", FileType.File]);
-            //     expect(statResult.size).toBe(123);
-            // });
-
-            //TODO: Replace with above test once readDirectory caching implemented
-            it("should not coalesce readDirectory and stat requests when a local entry exists because readDirectory bypasses the cache", async () => {
+            it("should reuse the promise from readDirectory when a member stat is requested simultaneously", async () => {
                 const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" });
                 const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS/MEMBER1" });
 
@@ -2220,7 +2215,7 @@ describe("DatasetFSProvider", () => {
 
                 const [dirResult, statResult] = await Promise.all([readDirPromise, statPromise]);
 
-                expect(readDirImplSpy).toHaveBeenCalledTimes(2);
+                expect(readDirImplSpy).toHaveBeenCalledTimes(1);
                 expect(dirResult).toContainEqual(["MEMBER1", FileType.File]);
                 expect(statResult.size).toBe(123);
             });
@@ -2244,6 +2239,88 @@ describe("DatasetFSProvider", () => {
                 await Promise.all([DatasetFSProvider.instance.readDirectory(pdsUri), DatasetFSProvider.instance.stat(memberUri)]);
                 expect(readDirImplSpy).toHaveBeenCalledTimes(2);
             });
+        });
+    });
+    describe("TTL caching behavior (fileSystemDebounce and query ttl)", () => {
+        let remoteLookupSpy: jest.SpyInstance;
+        let getDirectValueSpy: jest.SpyInstance;
+        let dateNowSpy: jest.SpyInstance;
+        let mockDirEntry: any;
+
+        const BASE_TIME = 10000;
+
+        beforeEach(() => {
+            mockDirEntry = {
+                type: FileType.Directory,
+                entries: new Map(),
+                timestampLastFetched: BASE_TIME,
+            };
+
+            jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(mockDirEntry);
+
+            remoteLookupSpy = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockResolvedValue(mockDirEntry);
+
+            getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(50);
+
+            dateNowSpy = jest.spyOn(Date, "now").mockReturnValue(BASE_TIME);
+        });
+
+        afterEach(() => {
+            dateNowSpy.mockRestore();
+            getDirectValueSpy.mockRestore();
+            remoteLookupSpy.mockRestore();
+        });
+
+        it("should bypass cache and fetch remotely when the VS Code setting TTL has expired", async () => {
+            const testUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" });
+
+            dateNowSpy.mockReturnValue(BASE_TIME + 51);
+
+            await (DatasetFSProvider.instance as any).readDirectoryImplementation(testUri, false);
+
+            expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.settings.fileSystemDebounce", 50);
+            expect(remoteLookupSpy).toHaveBeenCalledWith(testUri);
+        });
+
+        it("should use cache and skip remote fetch when within the VS Code setting TTL", async () => {
+            const testUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" });
+
+            dateNowSpy.mockReturnValue(BASE_TIME + 25);
+
+            await (DatasetFSProvider.instance as any).readDirectoryImplementation(testUri, false);
+
+            expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.settings.fileSystemDebounce", 50);
+            expect(remoteLookupSpy).not.toHaveBeenCalled();
+        });
+
+        it("should bypass cache and fetch remotely when the query 'ttl' parameter has expired", async () => {
+            const testUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS", query: "ttl=200" });
+
+            dateNowSpy.mockReturnValue(BASE_TIME + 201);
+
+            await (DatasetFSProvider.instance as any).readDirectoryImplementation(testUri, false);
+
+            expect(remoteLookupSpy).toHaveBeenCalledWith(testUri);
+        });
+
+        it("should use cache and skip remote fetch when within the query 'ttl' parameter", async () => {
+            const testUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS", query: "ttl=200" });
+
+            dateNowSpy.mockReturnValue(BASE_TIME + 150);
+
+            await (DatasetFSProvider.instance as any).readDirectoryImplementation(testUri, false);
+
+            expect(remoteLookupSpy).not.toHaveBeenCalled();
+        });
+
+        it("should fetch remotely regardless of TTL if 'fetch=true' is explicitly passed", async () => {
+            const testUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS", query: "fetch=true&ttl=0" });
+
+            dateNowSpy.mockReturnValue(BASE_TIME);
+
+            await (DatasetFSProvider.instance as any).readDirectoryImplementation(testUri, false);
+
+            expect(remoteLookupSpy).toHaveBeenCalledWith(testUri);
         });
     });
 });

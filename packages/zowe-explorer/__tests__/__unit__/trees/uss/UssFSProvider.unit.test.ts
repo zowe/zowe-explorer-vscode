@@ -2477,4 +2477,84 @@ describe("UssFSProvider", () => {
             });
         });
     });
+    describe("TTL caching behavior (fileSystemDebounce and query ttl)", () => {
+        let remoteLookupSpy: jest.SpyInstance;
+        let getDirectValueSpy: jest.SpyInstance;
+        let dateNowSpy: jest.SpyInstance;
+        let mockDirEntry: any;
+
+        const BASE_TIME = 10000;
+
+        beforeEach(() => {
+            mockDirEntry = new UssDirectory("aFolder");
+            mockDirEntry.entries = new Map();
+            mockDirEntry.timestampLastFetched = BASE_TIME;
+
+            jest.spyOn(UssFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(mockDirEntry);
+
+            remoteLookupSpy = jest.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockResolvedValue(mockDirEntry);
+
+            getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(50);
+
+            dateNowSpy = jest.spyOn(Date, "now").mockReturnValue(BASE_TIME);
+        });
+
+        afterEach(() => {
+            dateNowSpy.mockRestore();
+            getDirectValueSpy.mockRestore();
+            remoteLookupSpy.mockRestore();
+        });
+
+        it("should bypass cache and fetch remotely when the VS Code setting TTL has expired", async () => {
+            const testUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFolder" });
+
+            dateNowSpy.mockReturnValue(BASE_TIME + 51);
+
+            await (UssFSProvider.instance as any).readDirectoryImplementation(testUri, false);
+
+            expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.settings.fileSystemDebounce", 50);
+            expect(remoteLookupSpy).toHaveBeenCalledWith(testUri);
+        });
+
+        it("should use cache and skip remote fetch when within the VS Code setting TTL", async () => {
+            const testUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFolder" });
+
+            dateNowSpy.mockReturnValue(BASE_TIME + 25);
+
+            await (UssFSProvider.instance as any).readDirectoryImplementation(testUri, false);
+
+            expect(getDirectValueSpy).toHaveBeenCalledWith("zowe.settings.fileSystemDebounce", 50);
+            expect(remoteLookupSpy).not.toHaveBeenCalled();
+        });
+
+        it("should bypass cache and fetch remotely when the query 'ttl' parameter has expired", async () => {
+            const testUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFolder", query: "ttl=200" });
+
+            dateNowSpy.mockReturnValue(BASE_TIME + 201);
+
+            await (UssFSProvider.instance as any).readDirectoryImplementation(testUri, false);
+
+            expect(remoteLookupSpy).toHaveBeenCalledWith(testUri);
+        });
+
+        it("should use cache and skip remote fetch when within the query 'ttl' parameter", async () => {
+            const testUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFolder", query: "ttl=200" });
+
+            dateNowSpy.mockReturnValue(BASE_TIME + 150);
+
+            await (UssFSProvider.instance as any).readDirectoryImplementation(testUri, false);
+
+            expect(remoteLookupSpy).not.toHaveBeenCalled();
+        });
+
+        it("should fetch remotely regardless of TTL if 'fetch=true' is explicitly passed", async () => {
+            const testUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFolder", query: "fetch=true&ttl=0" });
+
+            dateNowSpy.mockReturnValue(BASE_TIME);
+
+            await (UssFSProvider.instance as any).readDirectoryImplementation(testUri, false);
+
+            expect(remoteLookupSpy).toHaveBeenCalledWith(testUri);
+        });
+    });
 });
