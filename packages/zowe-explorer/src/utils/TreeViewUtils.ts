@@ -119,7 +119,7 @@ export class TreeViewUtils {
         });
         setting.sessions = sess;
         setting.favorites = fave;
-        ZoweLocalStorage.setValue(treeType, setting);
+        ZoweLocalStorage.setValue(treeType, setting, ZoweLocalStorage.isPersistenceKeyInWorkspace(treeType));
     }
 
     public static async addDefaultSession(treeProvider: IZoweTree<IZoweTreeNode>, profileType: string): Promise<void> {

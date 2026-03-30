@@ -53,7 +53,11 @@ export class FavoritePersistenceUtils {
             const updated = lines.map((line) => FavoritePersistenceUtils.rewriteFavoriteLine(line, rename));
             if (updated.some((u, i) => u !== lines[i])) {
                 settings.favorites = updated;
-                await ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(schema, settings);
+                await ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(
+                    schema,
+                    settings,
+                    ZoweLocalStorage.isPersistenceKeyInWorkspace(schema)
+                );
             }
         }
     }
@@ -88,7 +92,11 @@ export class FavoritePersistenceUtils {
             const updated = sessions.map((s) => ConfigEditorPathUtils.getNewProfilePath(s, rename.configPath, renameMap));
             if (updated.some((u, i) => u !== sessions[i])) {
                 settings.sessions = updated;
-                await ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(schema, settings);
+                await ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(
+                    schema,
+                    settings,
+                    ZoweLocalStorage.isPersistenceKeyInWorkspace(schema)
+                );
             }
         }
     }

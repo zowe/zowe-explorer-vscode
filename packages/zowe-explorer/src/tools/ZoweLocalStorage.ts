@@ -48,6 +48,14 @@ export class ZoweLocalStorage {
             ? ZoweLocalStorage.workspaceState.update(key, value)
             : ZoweLocalStorage.globalState.update(key, value);
     }
+
+    /**
+     * Whether a persistence schema key is stored in workspace memento (getValue prefers workspace over global when set).
+     * Writes must use the same scope or changes will not round-trip with reads.
+     */
+    public static isPersistenceKeyInWorkspace(schema: PersistenceSchemaEnum): boolean {
+        return ZoweLocalStorage.workspaceState?.keys().includes(schema) ?? false;
+    }
 }
 
 /**

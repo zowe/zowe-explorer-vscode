@@ -311,7 +311,14 @@ export class SharedActions {
                 }
                 treeProvider.refreshElement(sessNode);
             } else {
-                await TreeViewUtils.removeSession(treeProvider, sessNode.label.toString().trim());
+                // Orphan node: do not use TreeViewUtils.removeSession — it strips favorites for that profile name.
+                // After a rename, a session node may still show the old name briefly while allProfiles has the new name;
+                // removeSession(oldName) would delete favorites. Favorite profile nodes: reload from persistence.
+                if (SharedContext.isFavProfile(sessNode)) {
+                    await treeProvider.refreshFavorites?.();
+                } else {
+                    treeProvider.deleteSession(sessNode);
+                }
             }
         }
 
