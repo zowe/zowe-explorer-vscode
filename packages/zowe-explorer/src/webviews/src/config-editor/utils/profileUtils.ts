@@ -264,7 +264,10 @@ export function getAvailableProfilesByType(
                 if (isTypeKey) {
                     const profilePathParts = keyParts.slice(0, -1);
                     if (profilePathParts[0] === "profiles") {
-                        const profileName = profilePathParts.slice(1).filter((p) => p !== "profiles").join(".");
+                        const profileName = profilePathParts
+                            .slice(1)
+                            .filter((p) => p !== "profiles")
+                            .join(".");
                         profilesWithPendingTypeChanges.add(profileName);
                     }
                 }
@@ -292,7 +295,10 @@ export function getAvailableProfilesByType(
                 if (isTypeKey && entry.value === profileType) {
                     const profilePathParts = keyParts.slice(0, -1);
                     if (profilePathParts[0] === "profiles") {
-                        const profileName = profilePathParts.slice(1).filter((p) => p !== "profiles").join(".");
+                        const profileName = profilePathParts
+                            .slice(1)
+                            .filter((p) => p !== "profiles")
+                            .join(".");
                         pendingProfiles.add(profileName);
                     }
                 }

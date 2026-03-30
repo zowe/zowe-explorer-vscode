@@ -150,9 +150,18 @@ describe("propertyUtils", () => {
                     },
                 },
             ] as any;
-            const result = fetchTypeOptions(["profiles", "p1", "properties"], 0, configsWithHost, schema, getProfileType, {}, {}, {
-                [configPath]: ["profiles.p1.properties.host"],
-            });
+            const result = fetchTypeOptions(
+                ["profiles", "p1", "properties"],
+                0,
+                configsWithHost,
+                schema,
+                getProfileType,
+                {},
+                {},
+                {
+                    [configPath]: ["profiles.p1.properties.host"],
+                }
+            );
             expect(result).toContain("host");
             expect(result).toContain("port");
         });

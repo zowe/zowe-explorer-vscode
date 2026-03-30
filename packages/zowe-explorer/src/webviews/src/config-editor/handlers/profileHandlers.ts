@@ -9,13 +9,7 @@
  *
  */
 
-import {
-    getCurrentEffectiveName,
-    checkIfRenameCancelsOut,
-    consolidateRenames,
-    detectClosedLoops,
-    getProfileNameForMergedProperties,
-} from "../utils/renameUtils";
+import { getCurrentEffectiveName, checkIfRenameCancelsOut, consolidateRenames, detectClosedLoops } from "../utils/renameUtils";
 import { getRenamedProfileKeyWithNested, getReplacementProfileAfterDelete } from "../utils/profileUtils";
 import { flattenProfiles } from "../utils";
 
@@ -828,7 +822,6 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
                 [configPath]: nearestProfileKey,
             }));
         }
-
     }
 };
 

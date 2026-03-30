@@ -192,8 +192,7 @@ function AppContent() {
     }
 
     const selectionChanged =
-      prevMergedFetchSelectionRef.current.profileKey !== selectedProfileKey ||
-      prevMergedFetchSelectionRef.current.tab !== selectedTab;
+      prevMergedFetchSelectionRef.current.profileKey !== selectedProfileKey || prevMergedFetchSelectionRef.current.tab !== selectedTab;
     prevMergedFetchSelectionRef.current = { profileKey: selectedProfileKey, tab: selectedTab };
 
     if (selectionChanged && !isSaving && !isNavigating) {

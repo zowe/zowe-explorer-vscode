@@ -111,12 +111,7 @@ describe("ConfigEditorMessageHandlers", () => {
             validateProfileName: jest.fn(),
         };
 
-        messageHandlers = new ConfigEditorMessageHandlers(
-            mockGetLocalConfigs,
-            mockAreSecureValuesAllowed,
-            mockPanel,
-            mockProfileOperations as any
-        );
+        messageHandlers = new ConfigEditorMessageHandlers(mockGetLocalConfigs, mockAreSecureValuesAllowed, mockPanel, mockProfileOperations as any);
 
         vscode.workspace.openTextDocument.mockResolvedValue({});
 

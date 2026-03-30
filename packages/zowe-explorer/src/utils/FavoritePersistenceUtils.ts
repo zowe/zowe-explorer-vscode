@@ -30,9 +30,7 @@ export class FavoritePersistenceUtils {
             return line;
         }
         const profileName = line.substring(1, closingSquareBracket);
-        const renameMap = new Map([
-            [rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath }],
-        ]);
+        const renameMap = new Map([[rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath }]]);
         const newProfileName = ConfigEditorPathUtils.getNewProfilePath(profileName, rename.configPath, renameMap);
         if (newProfileName === profileName) {
             return line;

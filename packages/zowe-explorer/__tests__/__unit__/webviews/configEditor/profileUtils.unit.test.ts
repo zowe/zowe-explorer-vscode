@@ -705,9 +705,7 @@ describe("profileUtils", () => {
         });
         it("returns false from mergedProps when secure is false", () => {
             const mergedProps = { host: { secure: false } };
-            expect(
-                isPropertySecure("profiles.p1.properties.host", "host", ["profiles", "p1", "properties", "host"], mergedProps)
-            ).toBe(false);
+            expect(isPropertySecure("profiles.p1.properties.host", "host", ["profiles", "p1", "properties", "host"], mergedProps)).toBe(false);
         });
         it("returns true for nested profile secure via path navigation", () => {
             const configs = [
@@ -725,9 +723,7 @@ describe("profileUtils", () => {
                 },
             ] as any;
             const path = ["profiles", "parent", "profiles", "child", "properties", "secret"];
-            expect(
-                isPropertySecure("profiles.parent.profiles.child.properties.secret", "secret", path, undefined, 0, configs)
-            ).toBe(true);
+            expect(isPropertySecure("profiles.parent.profiles.child.properties.secret", "secret", path, undefined, 0, configs)).toBe(true);
         });
         it("returns true when profile was renamed and secure in original profile", () => {
             const configs = [
@@ -738,9 +734,7 @@ describe("profileUtils", () => {
             ] as any;
             const renames = { [configPath]: { orig: "renamed" } };
             const path = ["profiles", "renamed", "properties", "pass"];
-            expect(
-                isPropertySecure("profiles.renamed.properties.pass", "pass", path, undefined, 0, configs, {}, renames)
-            ).toBe(true);
+            expect(isPropertySecure("profiles.renamed.properties.pass", "pass", path, undefined, 0, configs, {}, renames)).toBe(true);
         });
     });
 
@@ -1005,19 +999,7 @@ describe("profileUtils", () => {
             const renames = { [configPath]: { orig: "renamed" } };
             const mergedProps = { host: { jsonLoc: "profiles.renamed.properties.host", osLoc: [configPath] } };
             const path = ["profiles", "renamed", "properties", "host"];
-            const result = isPropertyFromMergedProps(
-                "host",
-                path,
-                mergedProps,
-                configPath,
-                "show",
-                0,
-                configs,
-                {},
-                renames,
-                "renamed",
-                () => false
-            );
+            const result = isPropertyFromMergedProps("host", path, mergedProps, configPath, "show", 0, configs, {}, renames, "renamed", () => false);
             expect(result).toBe(false);
         });
         it("when profile has been renamed, returns false when jsonLoc is old name of current profile", () => {
@@ -1025,37 +1007,13 @@ describe("profileUtils", () => {
             const renames = { [configPath]: { orig: "renamed" } };
             const mergedProps = { host: { jsonLoc: "profiles.orig.properties.host", osLoc: [configPath] } };
             const path = ["profiles", "renamed", "properties", "host"];
-            const result = isPropertyFromMergedProps(
-                "host",
-                path,
-                mergedProps,
-                configPath,
-                "show",
-                0,
-                configs,
-                {},
-                renames,
-                "renamed",
-                () => true
-            );
+            const result = isPropertyFromMergedProps("host", path, mergedProps, configPath, "show", 0, configs, {}, renames, "renamed", () => true);
             expect(result).toBe(false);
         });
         it("when not renamed, returns true when jsonLoc indicates different profile", () => {
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } }] as any;
             const mergedProps = { host: { jsonLoc: "profiles.base.properties.host", osLoc: [configPath] } };
-            const result = isPropertyFromMergedProps(
-                "host",
-                pathP1,
-                mergedProps,
-                configPath,
-                "show",
-                0,
-                configs,
-                {},
-                {},
-                "p1",
-                () => true
-            );
+            const result = isPropertyFromMergedProps("host", pathP1, mergedProps, configPath, "show", 0, configs, {}, {}, "p1", () => true);
             expect(result).toBe(true);
         });
     });

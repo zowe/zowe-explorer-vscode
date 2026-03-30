@@ -242,7 +242,7 @@ export const RenderConfig = ({
         // Add secure properties from the parent object if they're not already in the properties
         const currentProfileKeyForDisk = extractProfileKeyFromPath(path);
         const originalProfileKeyForDisk = getOriginalProfileKeyWithNested(currentProfileKeyForDisk, configPath, renames);
-        
+
         const originalPartsForDisk = originalProfileKeyForDisk.split(".");
         const parentConfigPath = ["profiles"];
         for (let i = 0; i < originalPartsForDisk.length; i++) {

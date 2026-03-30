@@ -132,9 +132,7 @@ export class ConfigEditor extends WebView {
      */
     private async appendJsonParseErrorsForKnownConfigFiles(parseErrors: ConfigParseError[]): Promise<void> {
         try {
-            const reportedPaths = new Set(
-                parseErrors.map((e) => (e.configPath ? path.resolve(e.configPath) : "")).filter(Boolean)
-            );
+            const reportedPaths = new Set(parseErrors.map((e) => (e.configPath ? path.resolve(e.configPath) : "")).filter(Boolean));
             const candidates = await this.getKnownTeamConfigFilePaths();
             for (const candidate of candidates) {
                 const resolved = path.resolve(candidate);
@@ -825,8 +823,7 @@ export class ConfigEditor extends WebView {
             this.simulateProfileRenames(renames, teamConfig);
         }
 
-        const effectiveChanges =
-            renames && renames.length > 0 ? await this.updateProfileChangesForRenames(changes, renames) : changes;
+        const effectiveChanges = renames && renames.length > 0 ? await this.updateProfileChangesForRenames(changes, renames) : changes;
 
         const parsedChanges = ConfigUtils.parseConfigChanges(effectiveChanges);
         for (const change of parsedChanges) {

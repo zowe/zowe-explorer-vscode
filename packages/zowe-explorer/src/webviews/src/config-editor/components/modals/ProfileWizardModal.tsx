@@ -854,10 +854,10 @@ export function ProfileWizardModal() {
               !wizardProfileName.trim()
                 ? l10n.t("Enter a profile name to create the profile.")
                 : isProfileNameTakenValue
-                  ? l10n.t("Profile name already exists under this root.")
-                  : isParentProfileInvalid
-                    ? l10n.t("Invalid parent profile selection.")
-                    : undefined
+                ? l10n.t("Profile name already exists under this root.")
+                : isParentProfileInvalid
+                ? l10n.t("Invalid parent profile selection.")
+                : undefined
             }
           >
             {l10n.t("Create Profile")}
