@@ -20,8 +20,8 @@ packages/zowe-explorer/__tests__/__unit__/trees/uss/         @traeok @JillieBean
 # ============================================================================
 # Jobs Tree
 # ============================================================================
-packages/zowe-explorer/src/trees/job/                        @JillieBeanSim @traeok
-packages/zowe-explorer/__tests__/__unit__/trees/job/         @JillieBeanSim @traeok
+packages/zowe-explorer/src/trees/job/                        @zFernand0 @JillieBeanSim
+packages/zowe-explorer/__tests__/__unit__/trees/job/         @zFernand0 @JillieBeanSim
 
 # ============================================================================
 # File system (FS providers, entries, buffers)
