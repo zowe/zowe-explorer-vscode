@@ -631,8 +631,11 @@ export class ConfigEditor extends WebView {
         // loadNamedProfile (favorites + session rebuild) reads ProfilesCache.allProfiles, updated only by refresh().
         await Profiles.getInstance().refresh();
         await FavoritePersistenceUtils.applyProfileRenameToStoredTreePersistence(rename);
-        await FavoritePersistenceUtils.rebuildFavoritesTreesFromPersistence();
-        await FavoritePersistenceUtils.rebuildSessionNodesAfterProfileRename(rename);
+        // Favorites (mFavorites) and open sessions (mSessionNodes) are independent; run in parallel after storage is written.
+        await Promise.all([
+            FavoritePersistenceUtils.rebuildFavoritesTreesFromPersistence(),
+            FavoritePersistenceUtils.rebuildSessionNodesAfterProfileRename(rename),
+        ]);
     }
 
     private getProfileFromTeamConfig(teamConfig: any, path: string): any {
