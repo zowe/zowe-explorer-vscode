@@ -74,6 +74,17 @@ export class FavoritePersistenceUtils {
     }
 
     /**
+     * Updates Explorer tree views (DS/USS/Jobs) after a rename without blocking the config editor save path.
+     * Call after {@link applyProfileRenameToStoredTreePersistence}; storage must be written before this runs.
+     */
+    public static fireAndForgetExplorerTreeRebuildAfterRename(rename: ProfileRenameForFavorites): void {
+        void Promise.all([
+            FavoritePersistenceUtils.rebuildFavoritesTreesFromPersistence(),
+            FavoritePersistenceUtils.rebuildSessionNodesAfterProfileRename(rename),
+        ]).catch((err) => ZoweLogger.warn(`Explorer tree rebuild after profile rename: ${String(err)}`));
+    }
+
+    /**
      * Rebuilds in-memory favorites from persistence so tree labels match renamed profiles.
      */
     public static async rebuildFavoritesTreesFromPersistence(): Promise<void> {
