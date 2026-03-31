@@ -12,6 +12,7 @@
 - Manage data sets and USS files on a z/OS mainframe with browse, create, modify, rename, copy, and upload functionality
 - Submit JCL and view job output
 - Apply other VS Code extensions for things like syntax highlighting, debugging, and IntelliSense to improve the developer experience
+- Issue TSO, UNIX, and MVS console commands from an integrated VS Code terminal.
 
 <br>
 
@@ -56,26 +57,23 @@ Before you use Zowe Explorer, ensure that you meet the following prerequisites:
 
 - IBM z/OSMF is configured and running.
   - See [z/OSMF REST services for Zowe clients](../user-guide/systemrequirements-zosmf.md#zosmf-rest-services-for-zowe-clients) for a list of services that need configuration.
-- Applicable plug-in services are configured and running on the mainframe.
-  - Plug-ins communicate with various mainframe services. The services must be configured and running on the mainframe before issuing plug-in commands.
-    - See [Zowe® Explorer for IBM® CICS® Transaction Server system requirements](./install-ze-extensions.md#zowe-explorer-for-ibm-cics-transaction-server-system-requirements).
-    - See [Zowe® Explorer for IBM® z/OS® FTP system requirements](./install-ze-extensions.md#zowe-explorer-for-ibm-zos-ftp-system-requirements).
 
-</details>
+- If using IBM CICS or IBM z/OS FTP: Applicable plug-in services are configured and running on the mainframe.
+  - Plug-ins communicate with various mainframe services. The services must be configured and running on the mainframe before issuing plug-in commands. - See [Zowe® Explorer for IBM® CICS® Transaction Server system requirements](./install-ze-extensions.md#zowe-explorer-for-ibm-cics-transaction-server-system-requirements). - See [Zowe® Explorer for IBM® z/OS® FTP system requirements](./install-ze-extensions.md#zowe-explorer-for-ibm-zos-ftp-system-requirements).
+  </details>
 
 <details>
 <summary><span style="font-size: 1.5em"><b>Getting started</b></span><hr></summary>
 
-### Prerequisite tasks
+Use various services to communicate with system resources and extract system data on the mainframe:
 
-- Use various services to communicate with system resources and extract system data on the mainframe:
-  - z/OSMF
-    - See [z/OSMF documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=guide-using-zosmf-rest-services) for more information.
-  - FTP
-    - This connection is available with the [Zowe Explorer FTP Extension](https://docs.zowe.org/stable/user-guide/ze-ftp-using-ze-ftp-ext).
-    - See [FTP documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=applications-transferring-files-using-ftp) for more information.
+- z/OSMF
+  - See [z/OSMF documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=guide-using-zosmf-rest-services) for more information.
+- FTP
+  - This connection is available with the [Zowe Explorer FTP Extension](https://docs.zowe.org/stable/user-guide/ze-ftp-using-ze-ftp-ext).
+  - See [FTP documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=applications-transferring-files-using-ftp) for more information.
 
-  - There are multiple extensions that offer additional protocols and functionality. See the Explorer for Visual Studio Code Zowe V3 section in the [Zowe V2 and V3 Conformant Landscape](https://omp.landscape2.io/embed/embed.html?base-path=&classify=category&key=zowe-conformant&headers=true&category-header=false&category-in-subcategory=false&title-uppercase=false&title-alignment=left&title-font-family=sans-serif&title-font-size=13&style=shadowed&bg-color=%230033a1&fg-color=%23ffffff&item-modal=false&item-name=true&size=md&items-alignment=left&item-name-font-size=11) for a complete list of conformant extensions.
+- There are multiple extensions that offer additional protocols and functionality. See the Explorer for Visual Studio Code Zowe V3 section in the [Zowe V2 and V3 Conformant Landscape](https://omp.landscape2.io/embed/embed.html?base-path=&classify=category&key=zowe-conformant&headers=true&category-header=false&category-in-subcategory=false&title-uppercase=false&title-alignment=left&title-font-family=sans-serif&title-font-size=13&style=shadowed&bg-color=%230033a1&fg-color=%23ffffff&item-modal=false&item-name=true&size=md&items-alignment=left&item-name-font-size=11) for a complete list of conformant extensions.
 
 ### Customizing extension settings
 
@@ -92,13 +90,20 @@ Team configuration stores connection information to access the mainframe. Check 
   - A pop-up message displays advising that client configurations were not found.
   - A **Search** icon does not display in the headers of the **DATA SETS**, **UNIX SYSTEM SERVICES**, or **JOBS** tree views. Select the **+** icon to create team configuration.
 
-If you are missing your team configuration files, `zowe.config.json` and `zowe.schema.json`, work with your administrator to set them up.
+If you are missing your team configuration files, `zowe.config.json` and `zowe.schema.json`, work with your administrator to confirm the connection information needed to finalize the configuration.
 
 ### Creating a team configuration file
 
-A team configuration file stores connection information to mainframe services in profiles, making team configuration easy to maintain and share with others in your organization.
+A team configuration file stores connection information to mainframe services in _profiles_, making team configuration easy to maintain and share with others in your organization.
 
-Team configuration should be created by an administrator or team lead who understands what connection information is needed and can efficiently manage it. When setting up team configuration, it is important to understand your team's requirements for use and the options available to ensure these are met.
+Team configuration should be created by an administrator or team lead who understands what connection information is needed and can efficiently manage it. A user can also set up their team configuration when they understand their team's requirements for use and the options available to ensure these are met.
+
+If you do not have a team configuration file, create a new one in Visual Studio Code:
+
+1. Open Zowe Explorer.
+2. In the pop-up message that prompts you to create a new configuration file, click **Create New**.
+3. In the **Quick Pick**, select the type of configuration file to create, a global or project file.
+4. In the **Editor** tab, fill in the required connection information.
 
 Refer to Zowe Docs for documentation on understanding and implementing team configuration:
 
@@ -134,9 +139,9 @@ Zowe Explorer for VS Code supports multiple authentication methods including bas
   - Windows: `ctrl`+`alt`+`z`
   - Mac: `⌘`+`⌥`+`z`
 
-- Open Recent Member
+<!-- - Open Recent Member
   - Windows: `ctrl`+`alt`+`t`
-  - Mac: `⌘`+`⌥`+`t`
+  - Mac: `⌘`+`⌥`+`t` -->
 
 - Search in all Loaded Items
   - Windows: `ctrl`+`alt`+`p`
@@ -144,22 +149,20 @@ Zowe Explorer for VS Code supports multiple authentication methods including bas
 
 </details>
 <details>
-<summary><span style="font-size: 1.5em"><b>Editing and uploading a data set member</b></span><hr></summary>
+<summary><span style="font-size: 1.5em"><b>Working with file trees</b></span><hr></summary>
 
-1. Expand the **DATA SETS** tree in the **Side Bar**.
+1. Expand a tree view in the **Side Bar**.
 
-2. Click on the **Search** icon next to a profile to search for a pattern that matches the data set that you want to view.
+2. Click on the **Search** icon next to a profile to search for a pattern that matches the profiles **[is "profiles" correct here?]** that you want to view.
 
    Search results display under the profile in the **Side Bar**.
 
-3. Open the data set with the member you want to edit.
+3. Open the profile with the file you want to edit. **[is this correct?]**
 4. Click on the member name to display it in an **Editor**.
-5. Edit the document in the **Editor**.
-6. Press the `Ctrl`+`S` or `Command`+`S` keys to save the changes.
+5. If the file is editable, edit the document in the **Editor**.
+6. Press the `Ctrl`+`s` or `Command`+`s` keys to save the changes.
 
-   The changes are saved and the edited data set is uploaded to the mainframe.
-
-   Note: If someone else has made changes to the data set member while you were editing, you can merge your changes before uploading to the mainframe. See [Preventing merge conflicts](#preventing-merge-conflicts) for more information.
+   The changes are saved and the edited file is uploaded to the mainframe. **[is this correct?]**
 
 </details>
 
