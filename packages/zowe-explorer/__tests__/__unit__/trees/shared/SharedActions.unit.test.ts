@@ -782,39 +782,44 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
 
     it("should refresh all tree providers and update session nodes", async () => {
         createGlobalMocks();
-        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(createTreeProviders());
-        const removedProfNames = new Set<string>();
+        const providers = createTreeProviders();
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(providers);
         const addedProfTypes = new Set<string>();
-        const removeSessionSpy = jest
-            .spyOn(TreeViewUtils, "removeSession")
-            .mockImplementation((treeProvider, profileName) => removedProfNames.add(profileName) as any);
+        const removeSessionSpy = jest.spyOn(TreeViewUtils, "removeSession").mockImplementation(jest.fn());
         const addDefaultSessionSpy = jest
             .spyOn(TreeViewUtils, "addDefaultSession")
             .mockImplementation((treeProvider, profileType) => addedProfTypes.add(profileType) as any);
         await SharedActions.refreshAll();
-        expect(removeSessionSpy).toHaveBeenCalledTimes(6);
-        expect([...removedProfNames]).toEqual(["zosmf", "zosmf2"]);
+        expect(removeSessionSpy).not.toHaveBeenCalled();
+        expect(providers.ds.deleteSession).toHaveBeenCalledTimes(2);
+        expect(providers.uss.deleteSession).toHaveBeenCalledTimes(2);
+        expect(providers.job.deleteSession).toHaveBeenCalledTimes(2);
         expect(addDefaultSessionSpy).toHaveBeenCalledTimes(3);
         expect([...addedProfTypes]).toEqual(["zosmf"]);
     });
 
     it("should avoid running the refresh logic twice if a refresh is already in progress", async () => {
         createGlobalMocks();
-        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(createTreeProviders());
-        const removedProfNames = new Set<string>();
+        const providers = createTreeProviders();
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(providers);
         const addedProfTypes = new Set<string>();
-        const removeSessionSpy = jest
-            .spyOn(TreeViewUtils, "removeSession")
-            .mockImplementation((treeProvider, profileName) => removedProfNames.add(profileName) as any);
+        const removeSessionSpy = jest.spyOn(TreeViewUtils, "removeSession").mockClear().mockImplementation(jest.fn());
         const addDefaultSessionSpy = jest
             .spyOn(TreeViewUtils, "addDefaultSession")
+            .mockClear()
             .mockImplementation((treeProvider, profileType) => addedProfTypes.add(profileType) as any);
-        void SharedActions.refreshAll();
+        const debugSpy = jest.spyOn(ZoweLogger, "debug").mockClear();
+        const firstRefresh = SharedActions.refreshAll();
         await SharedActions.refreshAll();
+        expect(debugSpy).toHaveBeenCalledWith("Profile refresh already in progress, skipping");
+        await firstRefresh;
 
-        // expect same amount of assertions even though refresh was called twice
-        expect(removeSessionSpy).toHaveBeenCalledTimes(6);
+        expect(removeSessionSpy).not.toHaveBeenCalled();
+        expect(providers.ds.deleteSession).toHaveBeenCalledTimes(2);
+        expect(providers.uss.deleteSession).toHaveBeenCalledTimes(2);
+        expect(providers.job.deleteSession).toHaveBeenCalledTimes(2);
         expect(addDefaultSessionSpy).toHaveBeenCalledTimes(3);
+        expect([...addedProfTypes]).toEqual(["zosmf"]);
     });
 });
 
@@ -955,25 +960,33 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         const updateSessionNodeTooltipsMock = jest.spyOn(SharedActions, "updateSessionNodeTooltips").mockResolvedValueOnce(undefined);
         const refresh = jest.fn().mockResolvedValueOnce(undefined);
         const refreshElement = jest.fn().mockResolvedValueOnce(undefined);
+        const deleteSession = jest.fn();
+        const sessionNode = createDatasetSessionNode(createISession(), createIProfile());
         const treeProvider: IZoweTree<IZoweTreeNode> = {
-            mSessionNodes: [createDatasetSessionNode(createISession(), createIProfile())],
+            mSessionNodes: [sessionNode],
             mFavorites: [],
             refresh,
             refreshElement,
+            deleteSession,
         } as any;
-        const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
-            allProfiles: [],
-            profilesForValidation: [],
-            checkCurrentProfile: jest.fn().mockResolvedValue(undefined),
-        } as any);
-        const syncSessionNodeMock = jest.spyOn(AuthUtils, "syncSessionNode").mockReturnValueOnce(undefined);
+        const profilesMock = jest.spyOn(Profiles, "getInstance").mockImplementation(
+            () =>
+                ({
+                    allProfiles: [],
+                    profilesForValidation: [],
+                    checkCurrentProfile: jest.fn().mockResolvedValue(undefined),
+                    refresh: jest.fn().mockResolvedValue(undefined),
+                }) as any
+        );
+        const syncSessionNodeMock = jest.spyOn(AuthUtils, "syncSessionNode").mockClear().mockReturnValue(undefined);
         const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockClear().mockResolvedValueOnce(undefined);
         await SharedActions.refreshProvider(treeProvider, true);
         expect(refreshProfilesMock).toHaveBeenCalledTimes(1);
         expect(registeredApiTypesMock).toHaveBeenCalledTimes(1);
-        expect(syncSessionNodeMock).toHaveBeenCalledTimes(1);
-        expect(removeSessionMock).toHaveBeenCalledTimes(1);
-        expect(removeSessionMock).toHaveBeenCalledWith(treeProvider, "sestest");
+        expect(syncSessionNodeMock).not.toHaveBeenCalled();
+        expect(removeSessionMock).not.toHaveBeenCalled();
+        expect(deleteSession).toHaveBeenCalledTimes(1);
+        expect(deleteSession).toHaveBeenCalledWith(sessionNode);
         expect(refreshElement).not.toHaveBeenCalled();
         expect(addDefaultSessionMock).toHaveBeenCalledTimes(2);
         expect(addDefaultSessionMock).toHaveBeenCalledWith(treeProvider, "zftp");
