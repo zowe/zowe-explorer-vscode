@@ -2215,6 +2215,22 @@
           "description": "%zowe.settings.displayReleaseNotes%",
           "scope": "window"
         },
+        "zowe.settings.zosmfMaxConcurrentRequests": {
+          "type": "integer",
+          "default": 4,
+          "description": "%zowe.settings.zosmfMaxConcurrentRequests%",
+          "scope": "window",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "zowe.settings.zosmfRequestQueueTimeout": {
+          "type": "integer",
+          "default": 300000,
+          "description": "%zowe.settings.zosmfRequestQueueTimeout%",
+          "scope": "window",
+          "minimum": 1000,
+          "maximum": 2147483647
+        },
         "zowe.table.maxPinnedRows": {
           "type": "integer",
           "default": 10,

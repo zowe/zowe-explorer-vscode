@@ -11,6 +11,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Add localization support to release notes and changelogs. [#4047](https://github.com/zowe/zowe-explorer-vscode/pull/4047)
 - Add support for filtering PDS members by name and by date created. [#4075](https://github.com/zowe/zowe-explorer-vscode/pull/4075)
 - Added a new VS Code toggle setting that allows users to show or hide hidden files in the Unix System Service (USS) tree view.[#3912](https://github.com/zowe/zowe-explorer-vscode/issues/3912)
+- Added a new VS Code setting that allows users to limit the number of concurrent REST requests sent to z/OSMF. [#4130](https://github.com/zowe/zowe-explorer-vscode/pull/4130)
 
 ### Bug fixes
 
