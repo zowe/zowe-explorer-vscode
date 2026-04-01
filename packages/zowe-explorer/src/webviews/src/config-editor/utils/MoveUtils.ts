@@ -9,7 +9,7 @@
  *
  */
 
-import { set } from "lodash";
+import { set } from "es-toolkit/compat";
 import { ConfigMoveAPI, IConfigLayer, ProfileData } from "../types";
 
 export function moveProfile(api: ConfigMoveAPI, layerActive: () => IConfigLayer, sourcePath: string, targetPath: string): void {
