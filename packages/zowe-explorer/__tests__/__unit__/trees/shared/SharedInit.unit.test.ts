@@ -32,6 +32,7 @@ import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { ReleaseNotes } from "../../../../src/utils/ReleaseNotes";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
+import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 jest.mock("../../../../src/utils/LoggerUtils");
 jest.mock("../../../../src/tools/ZoweLogger");
@@ -128,41 +129,89 @@ describe("Test src/shared/extension", () => {
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: true },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
                 ],
             },
             {
                 name: "onDidChangeConfiguration:2",
                 mock: [
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: true },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
                 ],
             },
             {
                 name: "onDidChangeConfiguration:3",
                 mock: [
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: true },
                     { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
                     { spy: jest.spyOn(SharedActions, "refreshAll"), arg: [] },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
                 ],
             },
             {
                 name: "onDidChangeConfiguration:4",
                 mock: [
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
                 ],
             },
             {
                 name: "onDidChangeConfiguration:5",
                 mock: [
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: true },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
                     { spy: jest.spyOn(executeCommand, "fun"), arg: ["zowe.updateSecureCredentials"] },
+                ],
+            },
+            {
+                name: "onDidChangeConfiguration:6",
+                mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: true },
+                    {
+                        spy: jest.spyOn(SettingsConfig, "getDirectValue"),
+                        arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS, Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS],
+                        ret: 10,
+                    },
+                    { spy: jest.spyOn(core.ZosmfRestClient, "setThrottlingOptions"), arg: [{ maxConcurrentRequests: 10 }] },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
+                ],
+            },
+            {
+                name: "onDidChangeConfiguration:7",
+                mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: true },
+                    {
+                        spy: jest.spyOn(SettingsConfig, "getDirectValue"),
+                        arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT, Constants.ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT],
+                        ret: 300000,
+                    },
+                    { spy: jest.spyOn(core.ZosmfRestClient, "setThrottlingOptions"), arg: [{ queueTimeout: 300000 }] },
                 ],
             },
             {
@@ -232,6 +281,7 @@ describe("Test src/shared/extension", () => {
                     { spy: jest.spyOn(SharedContext, "isSession"), arg: [test.value], ret: true },
                     { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
                     { spy: jest.spyOn(treeProvider, "deleteSession"), arg: [test.value, undefined] },
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
                 ],
             },
             {
@@ -259,7 +309,7 @@ describe("Test src/shared/extension", () => {
                 name: "zowe.removeFavProfile",
                 parm: [{ label: test.value }],
                 mock: [
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [{ label: test.value }], ret: treeProvider },
                     { spy: jest.spyOn(treeProvider, "removeFavProfile"), arg: [test.value, true] },
                 ],
             },
@@ -272,21 +322,21 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.issueTsoCmd:1",
-                mock: [{ spy: jest.spyOn(TsoCommandHandler, "getInstance"), arg: [], ret: cmdProviders.tso }],
+                mock: [{ spy: jest.spyOn(cmdProviders.tso, "issueTsoCommand"), arg: [undefined, undefined, test.value] }],
             },
             {
                 name: "zowe.issueTsoCmd:2",
                 parm: [],
-                mock: [{ spy: jest.spyOn(TsoCommandHandler, "getInstance"), arg: [], ret: cmdProviders.tso }],
+                mock: [{ spy: jest.spyOn(cmdProviders.tso, "issueTsoCommand"), arg: [] }],
             },
             {
                 name: "zowe.issueMvsCmd:1",
-                mock: [{ spy: jest.spyOn(MvsCommandHandler, "getInstance"), arg: [], ret: cmdProviders.mvs }],
+                mock: [{ spy: jest.spyOn(cmdProviders.mvs, "issueMvsCommand"), arg: [undefined, undefined, test.value] }],
             },
             {
                 name: "zowe.issueMvsCmd:2",
                 parm: [],
-                mock: [{ spy: jest.spyOn(MvsCommandHandler, "getInstance"), arg: [], ret: cmdProviders.mvs }],
+                mock: [{ spy: jest.spyOn(cmdProviders.mvs, "issueMvsCommand"), arg: [] }],
             },
             {
                 name: "zowe.selectForCompare",
@@ -306,16 +356,23 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.issueUnixCmd:1",
-                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: cmdProviders.uss }],
+                mock: [{ spy: jest.spyOn(cmdProviders.uss, "issueUnixCommand"), arg: [test.value, undefined] }],
             },
             {
                 name: "zowe.issueUnixCmd:2",
                 parm: [],
-                mock: [{ spy: jest.spyOn(UnixCommandHandler, "getInstance"), arg: [], ret: cmdProviders.uss }],
+                mock: [{ spy: jest.spyOn(cmdProviders.uss, "issueUnixCommand"), arg: [] }],
             },
         ];
 
+        let zosmfRestClientSetThrottleOptionsSpy: jest.SpyInstance;
         beforeAll(() => {
+            jest.spyOn(MvsCommandHandler, "getInstance").mockReturnValue(cmdProviders.mvs as any);
+            jest.spyOn(TsoCommandHandler, "getInstance").mockReturnValue(cmdProviders.tso as any);
+            jest.spyOn(UnixCommandHandler, "getInstance").mockReturnValue(cmdProviders.uss as any);
+            jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string, defaultValue?: unknown): unknown => {
+                return defaultValue;
+            });
             test.context.extension = {
                 packageJSON: {
                     version: "2.3.4",
@@ -335,12 +392,23 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(core, "getZoweDir", { value: () => test.value });
             Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand.fun });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
+            zosmfRestClientSetThrottleOptionsSpy = jest.spyOn(core.ZosmfRestClient, "setThrottlingOptions");
             SharedInit.registerCommonCommands(test.context, test.value.providers);
         });
 
         afterAll(() => {
             mockOnProfileUpdated[Symbol.dispose]();
             jest.restoreAllMocks();
+        });
+
+        it("should set up throttling for z/OSMF", () => {
+            // This test needs to be first.
+            const spyCalls = zosmfRestClientSetThrottleOptionsSpy.mock.calls;
+            zosmfRestClientSetThrottleOptionsSpy.mockReset();
+            expect(spyCalls[0][0]).toEqual({
+                maxConcurrentRequests: Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS,
+                queueTimeout: Constants.ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT,
+            });
         });
 
         processSubscriptions(commands, test);

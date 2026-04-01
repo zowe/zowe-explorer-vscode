@@ -55,6 +55,7 @@ import { ZoweUriHandler } from "../../utils/UriHandler";
 import { TroubleshootError } from "../../utils/TroubleshootError";
 import { ReleaseNotes } from "../../utils/ReleaseNotes";
 import { JobFSProvider } from "../job/JobFSProvider";
+import { ZosmfRestClient } from "@zowe/core-for-zowe-sdk";
 
 export class SharedInit {
     public static onDidActivateExtensionEmitter = new vscode.EventEmitter<void>();
@@ -272,6 +273,26 @@ export class SharedInit {
                 if (e.affectsConfiguration(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
                     await vscode.commands.executeCommand("zowe.updateSecureCredentials");
                 }
+                if (e.affectsConfiguration(Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS)) {
+                    const maxConcurrentRequests = SettingsConfig.getDirectValue(
+                        Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS,
+                        Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS
+                    );
+                    ZosmfRestClient.setThrottlingOptions({
+                        maxConcurrentRequests,
+                    });
+                    ZoweLogger.info(`z/OSMF throttling set to ${maxConcurrentRequests} concurrent requests.`);
+                }
+                if (e.affectsConfiguration(Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT)) {
+                    const queueTimeout = SettingsConfig.getDirectValue(
+                        Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT,
+                        Constants.ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT
+                    );
+                    ZosmfRestClient.setThrottlingOptions({
+                        queueTimeout,
+                    });
+                    ZoweLogger.info(`z/OSMF queue timeout set to ${queueTimeout} milliseconds.`);
+                }
             })
         );
 
@@ -445,6 +466,15 @@ export class SharedInit {
             // initialize the Constants.filesToCompare array during initialization
             LocalFileManagement.resetCompareSelection();
         }
+
+        const maxConcurrentRequests = SettingsConfig.getDirectValue(
+            Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS,
+            Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS
+        );
+        const queueTimeout = SettingsConfig.getDirectValue(Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT, Constants.ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT);
+        ZosmfRestClient.setThrottlingOptions({ maxConcurrentRequests, queueTimeout });
+        ZoweLogger.info(`z/OSMF throttling set to ${maxConcurrentRequests} concurrent requests.`);
+        ZoweLogger.info(`z/OSMF queue timeout set to ${queueTimeout} milliseconds.`);
 
         SharedInit.onDidActivateExtension((_e) => vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", "zosmf"));
 
