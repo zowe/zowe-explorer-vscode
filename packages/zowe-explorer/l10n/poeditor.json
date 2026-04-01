@@ -1236,6 +1236,7 @@
   "Fixed an issue where the SharedActions.refreshAll function runs unexpectedly while a user performs an action in the tree views (such as listing data sets, USS files, jobs, etc.). <a>#3524</a>": "",
   "Fixed an issue where the source data set was removed even though the move operation was not successful. <a>#3518</a>": "",
   "Fixed an issue where the token expiration check was performed on profiles with APIs that do not support token types. <a>#3525</a>": "",
+  "Fixed an issue where the USS tree collapsed down to the top level set from the initial filter.<a>#3932</a>": "",
   "Fixed an issue where upgrading from Zowe Explorer v1 and selecting \"Reload Extensions\" causes Zowe Explorer v3 to fail during initialization. <a>#3051</a>": "",
   "Fixed an issue where uploading a file to a data set or USS from a Windows machine caused extra carriage return characters to be included in its contents. Now, carriage returns are filtered out from carriage return/line feed (CRLF) sequences during upload. <a>#3853</a>": "",
   "Fixed an issue where user attempts to perform a search on an individual PDS from the Zowe-Explorer extension using the \"Search PDS members\" action and query a search string, it brings out additional dataset as a part of the result.<a>#3682</a>": "",
