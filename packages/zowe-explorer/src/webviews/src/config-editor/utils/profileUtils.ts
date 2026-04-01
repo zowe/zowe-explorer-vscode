@@ -10,15 +10,25 @@
  */
 
 import { flattenProfiles, extractProfileKeyFromPath } from "./configUtils";
-import { Configuration, PendingChange, schemaValidation } from "../types";
+import {
+    Configuration,
+    ConfigStateContext,
+    SchemaContext,
+    RenamesMap,
+    DeletionsMap,
+    PendingChangesMap,
+    MergedPropertiesVisibility,
+    MergedPropertiesMap,
+    ProfileMap,
+} from "../types";
 
-export function getProfileType(
-    profileKey: string,
-    selectedTab: number | null,
-    configurations: Configuration[],
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): string | null {
+interface GetProfileTypeParams extends ConfigStateContext {
+    profileKey: string;
+}
+
+export function getProfileType(params: GetProfileTypeParams): string | null {
+    const { profileKey, selectedTab, configurations, pendingChanges, renames } = params;
+
     if (selectedTab === null) return null;
     const configPath = configurations[selectedTab!]!.configPath;
 
@@ -47,13 +57,10 @@ export function getProfileType(
         profile = flatProfiles[originalProfileKey];
     }
 
-    // For nested profiles, if still not found, we need to check if any parent profile was renamed
-    // and reconstruct the original path
     if (!profile && profileKey.includes(".")) {
         const profileParts = profileKey.split(".");
         let originalPath = "";
 
-        // Try to find the original path by checking each level for renames
         for (let i = 0; i < profileParts.length; i++) {
             const currentLevelPath = profileParts.slice(0, i + 1).join(".");
             const originalLevelPath = getOriginalProfileKey(currentLevelPath, configPath, renames);
@@ -61,9 +68,7 @@ export function getProfileType(
             if (i === 0) {
                 originalPath = originalLevelPath;
             } else {
-                // If this level was renamed, we need to use the original name
                 if (originalLevelPath !== currentLevelPath) {
-                    // This level or a parent was renamed, reconstruct the path
                     const originalParentParts = originalLevelPath.split(".");
                     const remainingParts = profileParts.slice(originalParentParts.length);
                     originalPath = originalLevelPath + (remainingParts.length > 0 ? "." + remainingParts.join(".") : "");
@@ -74,33 +79,24 @@ export function getProfileType(
             }
         }
 
-        // Try with the reconstructed original path
         if (originalPath !== profileKey && originalPath !== originalProfileKey) {
             profile = flatProfiles[originalPath];
         }
     }
 
-    if (profile && profile.type) {
+    if (profile && typeof profile.type === "string") {
         return profile.type;
     }
 
     return null;
 }
 
-export function getRenamedProfileKey(
-    originalKey: string,
-    configPath: string,
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): string {
+export function getRenamedProfileKey(originalKey: string, configPath: string, renames: RenamesMap): string {
     const configRenames = renames[configPath];
     return configRenames?.[originalKey] || originalKey;
 }
 
-export function getRenamedProfileKeyWithNested(
-    profileKey: string,
-    configPath: string,
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): string {
+export function getRenamedProfileKeyWithNested(profileKey: string, configPath: string, renames: RenamesMap): string {
     if (!profileKey.includes(".")) {
         return getRenamedProfileKey(profileKey, configPath, renames);
     }
@@ -119,14 +115,12 @@ export function getRenamedProfileKeyWithNested(
         const sortedRenames = Object.entries(configRenames).sort(([a], [b]) => b.length - a.length);
 
         for (const [originalKey, newKey] of sortedRenames) {
-            // Check for exact match
             if (renamedPath === originalKey) {
                 renamedPath = newKey;
                 changed = true;
                 break;
             }
 
-            // Check for partial matches (parent renames affecting children)
             if (renamedPath.startsWith(originalKey + ".")) {
                 renamedPath = renamedPath.replace(originalKey + ".", newKey + ".");
                 changed = true;
@@ -138,11 +132,7 @@ export function getRenamedProfileKeyWithNested(
     return renamedPath;
 }
 
-export function getOriginalProfileKey(
-    renamedKey: string,
-    configPath: string,
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): string {
+export function getOriginalProfileKey(renamedKey: string, configPath: string, renames: RenamesMap): string {
     const configRenames = renames[configPath];
     if (configRenames) {
         const visited = new Set<string>();
@@ -169,11 +159,7 @@ export function getOriginalProfileKey(
     return renamedKey;
 }
 
-export function getOriginalProfileKeyWithNested(
-    renamedKey: string,
-    configPath: string,
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): string {
+export function getOriginalProfileKeyWithNested(renamedKey: string, configPath: string, renames: RenamesMap): string {
     if (!renamedKey.includes(".")) {
         return getOriginalProfileKey(renamedKey, configPath, renames);
     }
@@ -196,15 +182,11 @@ export function getOriginalProfileKeyWithNested(
         }
     }
 
-    // If no direct match found, fall back to level-by-level reverse processing
-    // Check if any parent profile has been renamed by working backwards
     for (let i = 0; i < profileParts.length; i++) {
         const currentPath = profileParts.slice(0, i + 1).join(".");
-        // Check if this current path was the result of a rename
         const original = getOriginalProfileKey(currentPath, configPath, renames);
 
         if (original !== currentPath) {
-            // This path was renamed, use the original name and continue building from there
             const remainingParts = profileParts.slice(i + 1);
             originalPath = original + (remainingParts.length > 0 ? "." + remainingParts.join(".") : "");
             break;
@@ -215,16 +197,11 @@ export function getOriginalProfileKeyWithNested(
         }
     }
 
-    // Additional check: Handle the case where a parent was renamed after a child was renamed
-    // This handles the reverse scenario: test2.lpar2 should map back to test1.lpar1
-    // when we have: test1.lpar1 -> test1.lpar2, then test1 -> test2
     const profilePartsForParentCheck = originalPath.split(".");
 
-    // Check if any parent in the current path needs to be reverted
     for (let i = 0; i < profilePartsForParentCheck.length; i++) {
         const parentPath = profilePartsForParentCheck.slice(0, i + 1).join(".");
 
-        // Check if this parent path was the result of a rename (reverse lookup)
         for (const [origKey, newKey] of Object.entries(configRenames)) {
             if (newKey === parentPath) {
                 const remainingParts = profilePartsForParentCheck.slice(i + 1);
@@ -237,29 +214,26 @@ export function getOriginalProfileKeyWithNested(
     return originalPath;
 }
 
-export function getAvailableProfilesByType(
-    profileType: string,
-    selectedTab: number | null,
-    configurations: Configuration[],
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [originalKey: string]: string } } = {}
-): string[] {
+interface GetAvailableProfilesByTypeParams extends ConfigStateContext {
+    profileType: string;
+}
+
+export function getAvailableProfilesByType(params: GetAvailableProfilesByTypeParams): string[] {
+    const { profileType, selectedTab, configurations, pendingChanges, renames = {} } = params;
+
     if (selectedTab === null) return [];
 
     const currentConfig = configurations[selectedTab];
 
-    // Helper to get profiles from a specific config
     const getProfilesFromConfig = (config: Configuration): string[] => {
         const configProps = config.properties;
         const flatProfiles = flattenProfiles(configProps.profiles);
         const profileNames = Object.keys(flatProfiles);
 
-        // Get all profiles that have pending type changes
         const profilesWithPendingTypeChanges = new Set<string>();
         Object.entries(pendingChanges[config.configPath] || {}).forEach(([key, entry]) => {
             if (entry.profile) {
                 const keyParts = key.split(".");
-                // Only match profile-level type, not properties.type
                 const isTypeKey = keyParts[keyParts.length - 1] === "type" && !keyParts.includes("properties");
                 if (isTypeKey) {
                     const profilePathParts = keyParts.slice(0, -1);
@@ -274,23 +248,26 @@ export function getAvailableProfilesByType(
             }
         });
 
-        // Filter profiles by type
         const profilesOfType = profileNames.filter((profileKey) => {
             if (profilesWithPendingTypeChanges.has(profileKey)) {
                 return false;
             }
 
             const configIndex = configurations.findIndex((c) => c.configPath === config.configPath);
-            const profileTypeValue = getProfileType(profileKey, configIndex, configurations, pendingChanges, renames);
+            const profileTypeValue = getProfileType({
+                profileKey,
+                selectedTab: configIndex,
+                configurations,
+                pendingChanges,
+                renames,
+            });
             return profileTypeValue === profileType;
         });
 
-        // Include pending profiles
         const pendingProfiles = new Set<string>();
         Object.entries(pendingChanges[config.configPath] || {}).forEach(([key, entry]) => {
             if (entry.profile) {
                 const keyParts = key.split(".");
-                // Only match profile-level type, not properties.type
                 const isTypeKey = keyParts[keyParts.length - 1] === "type" && !keyParts.includes("properties");
                 if (isTypeKey && entry.value === profileType) {
                     const profilePathParts = keyParts.slice(0, -1);
@@ -305,7 +282,6 @@ export function getAvailableProfilesByType(
             }
         });
 
-        // Apply renames
         const renamedProfilesOfType = profilesOfType.map((profileKey) => getRenamedProfileKeyWithNested(profileKey, config.configPath, renames));
         const renamedPendingProfiles = Array.from(pendingProfiles).map((profileKey) =>
             getRenamedProfileKeyWithNested(profileKey, config.configPath, renames)
@@ -314,38 +290,29 @@ export function getAvailableProfilesByType(
         return [...renamedProfilesOfType, ...renamedPendingProfiles];
     };
 
-    // Determine which configs to include based on hierarchy
     const configsToInclude: Configuration[] = [currentConfig];
 
     const isProjectUser = currentConfig.user && !currentConfig.global;
     const isProjectTeam = !currentConfig.user && !currentConfig.global;
     const isGlobalUser = currentConfig.user && currentConfig.global;
-    // const isGlobalTeam = !currentConfig.user && currentConfig.global;
 
     if (isProjectUser) {
-        // Add Project Team
         const projectTeam = configurations.find((c) => !c.user && !c.global);
         if (projectTeam) configsToInclude.push(projectTeam);
-        // Add Global User
         const globalUser = configurations.find((c) => c.user && c.global);
         if (globalUser) configsToInclude.push(globalUser);
-        // Add Global Team
         const globalTeam = configurations.find((c) => !c.user && c.global);
         if (globalTeam) configsToInclude.push(globalTeam);
     } else if (isProjectTeam) {
-        // Add Global User
         const globalUser = configurations.find((c) => c.user && c.global);
         if (globalUser) configsToInclude.push(globalUser);
-        // Add Global Team
         const globalTeam = configurations.find((c) => !c.user && c.global);
         if (globalTeam) configsToInclude.push(globalTeam);
     } else if (isGlobalUser) {
-        // Add Global Team
         const globalTeam = configurations.find((c) => !c.user && c.global);
         if (globalTeam) configsToInclude.push(globalTeam);
     }
 
-    // Collect all profiles
     const allProfiles = new Set<string>();
     configsToInclude.forEach((config) => {
         const profiles = getProfilesFromConfig(config);
@@ -355,51 +322,53 @@ export function getAvailableProfilesByType(
     return Array.from(allProfiles);
 }
 
-export function getOrderedProfileKeys(
-    profiles: any,
-    parentKey = "",
-    deletedProfiles: string[] = [],
-    isProfileOrParentDeleted?: (profileKey: string, deletedProfiles: string[]) => boolean
-): string[] {
+interface GetOrderedProfileKeysParams {
+    profiles: ProfileMap;
+    parentKey?: string;
+    deletedProfiles?: string[];
+    isProfileOrParentDeleted?: (profileKey: string, deletedProfiles: string[]) => boolean;
+}
+
+export function getOrderedProfileKeys(params: GetOrderedProfileKeysParams): string[] {
+    const { profiles, parentKey = "", deletedProfiles = [], isProfileOrParentDeleted } = params;
+
     const keys: string[] = [];
     for (const key of Object.keys(profiles)) {
         const profile = profiles[key];
         const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
 
-        // Add this profile key if it's not deleted
         if (!isProfileOrParentDeleted || !isProfileOrParentDeleted(qualifiedKey, deletedProfiles)) {
             keys.push(qualifiedKey);
         }
 
-        // Recursively add nested profiles
         if (profile.profiles) {
-            keys.push(...getOrderedProfileKeys(profile.profiles, qualifiedKey, deletedProfiles, isProfileOrParentDeleted));
+            keys.push(
+                ...getOrderedProfileKeys({
+                    profiles: profile.profiles as ProfileMap,
+                    parentKey: qualifiedKey,
+                    deletedProfiles,
+                    isProfileOrParentDeleted,
+                })
+            );
         }
     }
     return keys;
 }
 
-export function getAllProfileKeys(profiles: any, parentKey = ""): string[] {
+export function getAllProfileKeys(profiles: ProfileMap, parentKey = ""): string[] {
     const keys: string[] = [];
     for (const key of Object.keys(profiles)) {
         const profile = profiles[key];
         const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
         keys.push(qualifiedKey);
 
-        // Recursively add nested profiles
         if (profile.profiles) {
-            keys.push(...getAllProfileKeys(profile.profiles, qualifiedKey));
+            keys.push(...getAllProfileKeys(profile.profiles as ProfileMap, qualifiedKey));
         }
     }
     return keys;
 }
 
-/**
- * Returns the profile key to select after deleting a profile. Order: next sibling at same level,
- * previous sibling, parent (if nested), next in list, previous in list, first available.
- * When the deleted profile is not in orderedList (e.g. already excluded by state), sibling/parent
- * logic is still applied using the filtered list so the same level is preferred over the parent.
- */
 export function getReplacementProfileAfterDelete(orderedList: string[], deletedProfileKey: string): string | null {
     const filteredSet = new Set(orderedList.filter((p) => p !== deletedProfileKey && !p.startsWith(deletedProfileKey + ".")));
     if (filteredSet.size === 0) return null;
@@ -448,37 +417,31 @@ export function getReplacementProfileAfterDelete(orderedList: string[], deletedP
     return first ?? null;
 }
 
-export function isPropertyActuallyInherited(
-    profilePath: string,
-    currentProfileKey: string | null,
-    configPath: string,
-    propertyName: string | undefined,
-    selectedTab: number | null,
-    configurations: Configuration[],
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): boolean {
+interface IsPropertyActuallyInheritedParams extends ConfigStateContext {
+    profilePath: string;
+    currentProfileKey: string | null;
+    configPath: string;
+    propertyName: string | undefined;
+}
+
+export function isPropertyActuallyInherited(params: IsPropertyActuallyInheritedParams): boolean {
+    const { profilePath, currentProfileKey, configPath, propertyName, selectedTab, configurations, pendingChanges, renames } = params;
+
     if (!profilePath || !currentProfileKey) {
         return false;
     }
 
-    // First check if the paths are exactly the same
     if (profilePath === currentProfileKey) {
         return false;
     }
 
-    // Check if there are pending changes for this specific property in the current profile
-    // If there are pending changes, the property is not inherited (it's been overridden locally)
     if (propertyName) {
         const currentProfilePath = `profiles.${currentProfileKey}`;
         const propertyPendingKey = `${currentProfilePath}.properties.${propertyName}`;
 
-        // Also check for pending changes under the original profile path (before rename)
-        // Find the original profile key by looking for what was renamed to the current key
         const configRenames = renames[configPath] || {};
         let originalProfileKey = currentProfileKey;
 
-        // Look for the original key that was renamed to the current key
         for (const [originalKey, newKey] of Object.entries(configRenames)) {
             if (newKey === currentProfileKey) {
                 originalProfileKey = originalKey;
@@ -489,10 +452,8 @@ export function isPropertyActuallyInherited(
         const originalProfilePath = `profiles.${originalProfileKey}`;
         const originalPropertyPendingKey = `${originalProfilePath}.properties.${propertyName}`;
 
-        // Also check for nested path structure (for cases like zftp.zosmf -> zosmf)
         let nestedPropertyPendingKey = "";
         if (originalProfileKey.includes(".")) {
-            // Construct nested path with .profiles segments
             const profileParts = originalProfileKey.split(".");
             const pathParts = ["profiles"];
             for (let i = 0; i < profileParts.length; i++) {
@@ -515,30 +476,24 @@ export function isPropertyActuallyInherited(
         }
     }
 
-    // Get all profile renames in the config
     const renamesForConfig = renames[configPath] || {};
 
-    // Function to get the original profile name (reverse renames)
     const getOriginalName = (profileName: string): string => {
         let originalName = profileName;
 
-        // Apply reverse renames iteratively to get back to the original name
         let changed = true;
         while (changed) {
             changed = false;
 
-            // Sort renames by length of newKey (longest first) to handle nested renames correctly
             const sortedRenames = Object.entries(renamesForConfig).sort(([, a], [, b]) => b.length - a.length);
 
             for (const [originalKey, newKey] of sortedRenames) {
-                // Check for exact match
                 if (originalName === newKey) {
                     originalName = originalKey;
                     changed = true;
                     break;
                 }
 
-                // Check for partial matches (parent renames affecting children)
                 if (originalName.startsWith(newKey + ".")) {
                     originalName = originalName.replace(newKey + ".", originalKey + ".");
                     changed = true;
@@ -550,30 +505,22 @@ export function isPropertyActuallyInherited(
         return originalName;
     };
 
-    // Get the original names for both paths
     const originalSourcePath = getOriginalName(profilePath);
     const originalCurrentPath = getOriginalName(currentProfileKey);
 
-    // If the original paths match, this property is not inherited
     if (originalSourcePath === originalCurrentPath) {
         return false;
     }
 
-    // Check if there's an actual inheritance relationship by looking at the profile configuration
-    // This handles cases where profiles inherit from base profiles that have been renamed
     const config = configurations[selectedTab!]?.properties;
     if (config) {
-        // Check if the current profile inherits from the source profile through the inheritance chain
         const checkInheritanceChain = (currentProfile: string, sourceProfile: string): boolean => {
-            // Get the profile type for the current profile
-            const currentProfileType = getProfileType(currentProfile, selectedTab, configurations, pendingChanges, renames);
+            const currentProfileType = getProfileType({ profileKey: currentProfile, selectedTab, configurations, pendingChanges, renames });
             if (!currentProfileType) return false;
 
-            // Check if the source profile is the default for this profile type
             const defaults = config.defaults || {};
             const defaultForType = defaults[currentProfileType];
 
-            // Apply renames to the default to see if it matches the source profile
             if (defaultForType) {
                 const renamedDefault = getRenamedProfileKeyWithNested(defaultForType, configPath, renames);
                 if (renamedDefault === sourceProfile) {
@@ -581,12 +528,8 @@ export function isPropertyActuallyInherited(
                 }
             }
 
-            // Also check if the source profile is a base profile that the current profile should inherit from
-            // This handles cases where the source profile is a base profile (like global_base1)
-            const sourceProfileType = getProfileType(sourceProfile, selectedTab, configurations, pendingChanges, renames);
+            const sourceProfileType = getProfileType({ profileKey: sourceProfile, selectedTab, configurations, pendingChanges, renames });
             if (sourceProfileType && sourceProfileType === currentProfileType) {
-                // If both profiles have the same type and the source is a base profile, it's inherited
-                // Check if the source profile is a base profile by checking if it's the default for its type
                 const sourceDefaultForType = defaults[sourceProfileType];
                 if (sourceDefaultForType) {
                     const renamedSourceDefault = getRenamedProfileKeyWithNested(sourceDefaultForType, configPath, renames);
@@ -599,7 +542,6 @@ export function isPropertyActuallyInherited(
             return false;
         };
 
-        // Check if the current profile inherits from the source profile
         if (checkInheritanceChain(currentProfileKey, profilePath)) {
             return true;
         }
@@ -608,51 +550,45 @@ export function isPropertyActuallyInherited(
     return true;
 }
 
-export function mergePendingChangesForProfile(
-    baseObj: any,
-    path: string[],
-    configPath: string,
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): any {
-    const currentProfileKey = extractProfileKeyFromPath(path);
-    const pendingChangesAtLevel: { [key: string]: any } = {};
+interface MergePendingChangesParams {
+    baseObj: Record<string, unknown>;
+    path: string[];
+    configPath: string;
+    pendingChanges: PendingChangesMap;
+    renames: RenamesMap;
+}
 
-    // Check if this profile was renamed and get the original profile name (handle nested profiles)
+export function mergePendingChangesForProfile(params: MergePendingChangesParams): Record<string, unknown> {
+    const { baseObj, path, configPath, pendingChanges, renames } = params;
+
+    const currentProfileKey = extractProfileKeyFromPath(path);
+    const pendingChangesAtLevel: Record<string, unknown> = {};
+
     const originalProfileKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
 
-    // Helper function to check if a profile key matches considering renames
     const isProfileKeyMatch = (entryProfileKey: string): boolean => {
-        // Direct match with current or original profile key
         if (entryProfileKey === currentProfileKey || entryProfileKey === originalProfileKey) {
             return true;
         }
 
-        // Entry may be the renamed form of the current (original) profile key (e.g. current "test", entry "test2" after rename)
         if (getRenamedProfileKeyWithNested(originalProfileKey, configPath, renames) === entryProfileKey) {
             return true;
         }
 
-        // For nested profiles, check if this entry's profile key would match after applying renames
         if (entryProfileKey.includes(".") || currentProfileKey.includes(".")) {
-            // Get the renamed version of the entry's profile key
             const renamedEntryProfileKey = getRenamedProfileKeyWithNested(entryProfileKey, configPath, renames);
             if (renamedEntryProfileKey === currentProfileKey) {
                 return true;
             }
 
-            // Also check if the current profile key, when reversed through renames, matches the entry
             const originalOfCurrentKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
             if (entryProfileKey === originalOfCurrentKey) {
                 return true;
             }
 
-            // For deeply nested profiles, check if the entry profile key is an ancestor or descendant
-            // after applying renames at each level
             const entryParts = entryProfileKey.split(".");
             const currentParts = currentProfileKey.split(".");
 
-            // Check if entry profile is a parent of current profile after renames
             if (entryParts.length < currentParts.length) {
                 const currentParentKey = currentParts.slice(0, entryParts.length).join(".");
                 const renamedEntryKey = getRenamedProfileKeyWithNested(entryProfileKey, configPath, renames);
@@ -661,7 +597,6 @@ export function mergePendingChangesForProfile(
                 }
             }
 
-            // Check if current profile is a parent of entry profile after renames
             if (currentParts.length < entryParts.length) {
                 const entryParentKey = entryParts.slice(0, currentParts.length).join(".");
                 const renamedEntryParentKey = getRenamedProfileKeyWithNested(entryParentKey, configPath, renames);
@@ -686,75 +621,60 @@ export function mergePendingChangesForProfile(
         const isCurrentlyInsideProperties = path[path.length - 1] === "properties";
 
         if (markerIndex !== -1) {
-            // This is a change to a property within the "properties" section
             const propertyPath = key.substring(markerIndex + propertiesMarker.length);
             const propertyPathParts = propertyPath.split(".");
 
             if (isCurrentlyInsideProperties) {
-                // We are already inside the "properties" section, so the relative path is just the property path
                 relativePath = propertyPathParts;
             } else {
-                // We are at the profile root, so the relative path must include the "properties" prefix
                 relativePath = ["properties", ...propertyPathParts];
             }
         } else {
-            // This is a change to a top-level profile field (like "type", "secure", etc.)
             if (isCurrentlyInsideProperties) {
-                // Top-level fields don't belong inside the "properties" section
                 return;
             }
 
-            // Extract the field name from the end of the key
             const keyParts = key.split(".");
-            // A profile key "a.b" has path segments ["profiles", "a", "profiles", "b"]
-            // We need to skip these segments to find the field name
             let i = 2;
             while (i < keyParts.length && keyParts[i] === "profiles" && i + 1 < keyParts.length) {
                 i += 2;
             }
-            // If there's a field after the profile segments, it's our relative path
             if (i < keyParts.length) {
                 relativePath = keyParts.slice(i);
             } else {
-                // It matches the profile itself, no relative field
                 relativePath = [];
             }
         }
 
         if (relativePath.length === 0) {
-            return; // No specific field to merge
+            return;
         }
 
         if (relativePath.length === 1) {
-            // Double check: structural fields should never be merged as simple values
             if (relativePath[0] !== "properties" && relativePath[0] !== "profiles") {
                 pendingChangesAtLevel[relativePath[0]] = entry.value;
             }
         } else if (relativePath.length > 1 && relativePath[0] !== "profiles") {
-            let current = baseObj;
+            let current: Record<string, unknown> = baseObj;
             for (let i = 0; i < relativePath.length - 1; i++) {
                 if (!current[relativePath[i]]) {
                     current[relativePath[i]] = {};
                 }
-                current = current[relativePath[i]];
+                current = current[relativePath[i]] as Record<string, unknown>;
             }
             current[relativePath[relativePath.length - 1]] = entry.value;
         }
 
-        // Always handle secure property tracking at the profile's root level
         if (entry.secure && !isCurrentlyInsideProperties) {
             if (!Array.isArray(baseObj.secure)) {
                 baseObj.secure = [];
             }
 
-            // For secure properties, the key format is usually profiles.profileName.properties.propertyName
-            // We need to extract the property name
             const keyParts = key.split(".");
             const propertyName = keyParts[keyParts.length - 1];
 
-            // Add the secure property name to the secure array if not already present
-            if (!baseObj.secure.includes(propertyName)) {
-                baseObj.secure.push(propertyName);
+            if (!(baseObj.secure as string[]).includes(propertyName)) {
+                (baseObj.secure as string[]).push(propertyName);
             }
         }
     });
@@ -765,14 +685,10 @@ export function mergePendingChangesForProfile(
 export function isMergedPropertySecure(_displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean): boolean {
     if (!jsonLoc) return false;
 
-    // If we have the secure status from the merged properties data, use it
     if (secure !== undefined) {
         return secure;
     }
 
-    // Otherwise, check if the property is in the secure array of the source profile
-    // This is a fallback for cases where the secure status isn't explicitly provided
-    // We can't easily determine this without more context, so we'll return false as a safe default
     return false;
 }
 
@@ -781,7 +697,6 @@ export function getProfileTypeFromPath(path: string[]): string | null {
         return null;
     }
 
-    // Find the profile name in the path
     let profileName = "";
     for (let i = 1; i < path.length; i++) {
         if (path[i] !== "profiles" && path[i] !== "properties" && path[i] !== "secure") {
@@ -793,16 +708,14 @@ export function getProfileTypeFromPath(path: string[]): string | null {
     return profileName || null;
 }
 
-export function canPropertyBeSecure(
-    displayKey: string,
-    selectedTab: number | null,
-    configurations: Configuration[],
-    schemaValidations: { [configPath: string]: schemaValidation | undefined },
-    getProfileTypeFn: typeof getProfileType,
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [originalKey: string]: string } },
-    selectedProfileKey?: string | null
-): boolean {
+interface CanPropertyBeSecureParams extends SchemaContext {
+    displayKey: string;
+    selectedProfileKey?: string | null;
+}
+
+export function canPropertyBeSecure(params: CanPropertyBeSecureParams): boolean {
+    const { displayKey, selectedTab, configurations, schemaValidations, pendingChanges, renames, selectedProfileKey } = params;
+
     if (!displayKey || selectedTab === null) {
         return false;
     }
@@ -813,25 +726,23 @@ export function canPropertyBeSecure(
     }
 
     const configPath = config.configPath;
-    const schemaValidation = schemaValidations[configPath];
+    const validation = schemaValidations[configPath];
 
-    if (!schemaValidation) {
+    if (!validation) {
         return false;
     }
 
-    // For add profile modal, we can use the selectedProfileKey to get the profile type
     if (selectedProfileKey) {
-        const currentProfileType = getProfileTypeFn(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
+        const currentProfileType = getProfileType({ profileKey: selectedProfileKey, selectedTab, configurations, pendingChanges, renames });
         if (currentProfileType) {
-            const propertySchema = schemaValidation.propertySchema[currentProfileType] || {};
+            const propertySchema = validation.propertySchema[currentProfileType] || {};
             return propertySchema[displayKey]?.secure === true;
         }
     }
 
-    // Fallback: check all profile types for this property
-    if (schemaValidation.propertySchema) {
-        for (const profileType in schemaValidation.propertySchema) {
-            const propertySchema = schemaValidation.propertySchema[profileType];
+    if (validation.propertySchema) {
+        for (const profileType in validation.propertySchema) {
+            const propertySchema = validation.propertySchema[profileType];
             if (propertySchema[displayKey]?.secure === true) {
                 return true;
             }
@@ -841,21 +752,24 @@ export function canPropertyBeSecure(
     return false;
 }
 
-export function isPropertySecure(
-    fullKey: string,
-    displayKey: string,
-    path: string[],
-    mergedProps?: any,
-    selectedTab?: number | null,
-    configurations?: Configuration[],
-    pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } },
-    renames?: { [configPath: string]: { [originalKey: string]: string } }
-): boolean {
+interface IsPropertySecureParams {
+    fullKey: string;
+    displayKey: string;
+    path: string[];
+    mergedProps?: MergedPropertiesMap;
+    selectedTab?: number | null;
+    configurations?: Configuration[];
+    pendingChanges?: PendingChangesMap;
+    renames?: RenamesMap;
+}
+
+export function isPropertySecure(params: IsPropertySecureParams): boolean {
+    const { fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames } = params;
+
     if (!displayKey || !path || path.length === 0) {
         return false;
     }
 
-    // If this is a merged property, check if it's secure from the merged data
     if (mergedProps && mergedProps[displayKey]) {
         const mergedPropData = mergedProps[displayKey];
         if (mergedPropData.secure !== undefined) {
@@ -863,20 +777,17 @@ export function isPropertySecure(
         }
     }
 
-    // Check if this property is in pending changes with secure flag
     if (selectedTab !== null && selectedTab !== undefined && configurations && pendingChanges) {
         const config = configurations[selectedTab];
         if (config) {
             const configPath = config.configPath;
             let pendingChange = pendingChanges[configPath]?.[fullKey];
 
-            // If not found, it might have been renamed, so we need to construct the current (new) full key
             if (!pendingChange && renames && renames[configPath]) {
                 const currentProfileKey = extractProfileKeyFromPath(path);
                 const renamedProfileKey = getRenamedProfileKeyWithNested(currentProfileKey, configPath, renames);
 
                 if (renamedProfileKey !== currentProfileKey) {
-                    // Calculate the new path prefix for the renamed profile
                     const newProfileParts: string[] = ["profiles"];
                     renamedProfileKey.split(".").forEach((p, idx, arr) => {
                         newProfileParts.push(p);
@@ -884,9 +795,6 @@ export function isPropertySecure(
                     });
                     const newPrefix = newProfileParts.join(".");
 
-                    // Calculate the property part by skipping the current profile segments in original fullKey
-                    // Each profile part "a" in currentProfileKey contributes 2 segments to fullKey (profiles.a)
-                    // unless it's a nested profile which also adds "profiles" segments.
                     const currentProfilePartsCount = currentProfileKey.split(".").length;
                     const segmentsToSkip = currentProfilePartsCount * 2;
                     const originalFullKeyParts = fullKey.split(".");
@@ -904,20 +812,16 @@ export function isPropertySecure(
         }
     }
 
-    // Check if this property is in the secure array of the current configuration
     if (selectedTab !== null && selectedTab !== undefined && configurations) {
         const config = configurations[selectedTab];
         if (config) {
-            // Extract the property name from the full key (last part of the path)
             const keyParts = fullKey.split(".");
             const propertyName = keyParts[keyParts.length - 1];
 
-            // First check the global secure array
             if (config.secure && config.secure.includes(propertyName)) {
                 return true;
             }
 
-            // Direct check for profile secure array - simplified approach
             if (path.length >= 2 && path[0] === "profiles" && path[1] && path[2] === "properties") {
                 const profileName = path[1];
                 const profile = config.properties?.profiles?.[profileName];
@@ -926,18 +830,11 @@ export function isPropertySecure(
                 }
             }
 
-            // Then check the profile's secure array
-            // The path should be something like ["profiles", "profileName", "properties", "propertyName"]
-            // For nested profiles, it might be ["profiles", "parentProfile", "profiles", "nestedProfile", "properties", "propertyName"]
-            // We need to find the profile and check its secure array
             if (path.length >= 2 && path[0] === "profiles") {
-                // Extract the current profile name from the path
                 const currentProfileName = extractProfileKeyFromPath(path);
 
-                // Check if this profile has been renamed
                 let profileToCheck = currentProfileName;
                 if (renames && config && renames[config.configPath]) {
-                    // Check if the current profile name is a renamed version
                     for (const [originalKey, newKey] of Object.entries(renames[config.configPath])) {
                         if (newKey === currentProfileName) {
                             profileToCheck = originalKey;
@@ -945,16 +842,12 @@ export function isPropertySecure(
                         }
                     }
 
-                    // Also check if this is a nested profile created by drag and drop
-                    // For nested profiles like "test.zosmf", check if the last part matches an original profile
                     if (profileToCheck === currentProfileName && currentProfileName.includes(".")) {
                         const profileParts = currentProfileName.split(".");
                         const lastPart = profileParts[profileParts.length - 1];
 
-                        // Check if the last part of the nested profile matches an original profile
                         const originalLastPart = getOriginalProfileKeyWithNested(lastPart, config.configPath, renames);
 
-                        // Check if the original last part matches an original profile in the renames mapping
                         for (const [originalKey, _] of Object.entries(renames[config.configPath])) {
                             if (originalKey === originalLastPart) {
                                 profileToCheck = originalKey;
@@ -964,27 +857,19 @@ export function isPropertySecure(
                     }
                 }
 
-                // For nested profiles, we need to navigate through the profile hierarchy
                 let currentProfile = config.properties?.profiles;
                 let i = 1;
 
-                // Navigate through the actual path structure to find the profile
-                // We need to resolve renames for each path segment to find the profile on disk
                 while (i < path.length && currentProfile) {
                     let currentPathSegment = path[i];
                     const nextPathSegment = path[i + 1];
 
-                    // Check if the current segment name exists on disk
-                    // If it doesn't, it might have been renamed, so we need to find the original key
                     if (!currentProfile[currentPathSegment] && renames && renames[config.configPath]) {
-                        // Look for an original key that maps to this currentPathSegment (new name)
                         for (const [originalKey, newKey] of Object.entries(renames[config.configPath])) {
-                            // The rename might be a simple renamed profile or a part of a nested profile path
                             if (newKey === currentPathSegment) {
                                 currentPathSegment = originalKey;
                                 break;
                             }
-                            // Also check for nested profile renames like "test -> test1" when path is "test1.zosmf"
                             if (currentPathSegment.startsWith(newKey + ".")) {
                                 const originalSegment = currentPathSegment.replace(newKey + ".", originalKey + ".");
                                 if (currentProfile[originalSegment]) {
@@ -996,61 +881,41 @@ export function isPropertySecure(
                     }
 
                     if (nextPathSegment === "profiles") {
-                        // This is a nested profile, go deeper
                         currentProfile = currentProfile[currentPathSegment]?.profiles;
-                        i += 2; // Skip "profiles" and move to next profile name
+                        i += 2;
                     } else if (nextPathSegment === "properties") {
-                        // We've reached the properties level, check the secure array
                         if (
                             currentProfile[currentPathSegment] &&
                             currentProfile[currentPathSegment].secure &&
                             Array.isArray(currentProfile[currentPathSegment].secure)
                         ) {
                             const isSecure = currentProfile[currentPathSegment].secure.includes(propertyName);
-
                             return isSecure;
                         }
                         break;
                     } else {
-                        // This shouldn't happen in a valid path
                         break;
                     }
                 }
 
-                // If we didn't find the secure array in the nested structure, try to find it in the original profile
-                // This handles multiple cases:
-                // 1. Root → Nested: global_base → z.global_base
-                // 2. Nested → Nested: z.global_base → y.global_base
-                // 3. Nested → Root: z.global_base → global_base
                 if (profileToCheck && profileToCheck !== currentProfileName) {
-                    // For case 3 (Nested → Root), we need to look up the current profile name in root level,
-                    // not the old nested profile name
                     let profileToLookup = profileToCheck;
 
-                    // If we're moving from nested to root, the current profile name should exist in root level
                     if (currentProfileName && !currentProfileName.includes(".") && profileToCheck.includes(".")) {
                         profileToLookup = currentProfileName;
                     }
 
-                    // Look up the profile in the root level
                     const rootProfile = config.properties?.profiles?.[profileToLookup];
                     if (rootProfile && rootProfile.secure && Array.isArray(rootProfile.secure)) {
                         const isSecure = rootProfile.secure.includes(propertyName);
-
                         return isSecure;
-                    } else {
                     }
                 }
 
-                // if we're dealing with a nested profile that was itself created from a rename,
-                // we need to check if the original profile (before any renames) has secure properties
-                // This handles cases like: global_base → global_base1 → z.global_base1
                 if (renames && config && renames[config.configPath]) {
-                    // Find the ultimate original profile name by tracing through all renames
                     let ultimateOriginalProfile = profileToCheck;
                     let foundOriginal = false;
 
-                    // Trace back through the rename chain to find the ultimate original
                     for (const [originalKey, newKey] of Object.entries(renames[config.configPath])) {
                         if (newKey === ultimateOriginalProfile) {
                             ultimateOriginalProfile = originalKey;
@@ -1063,26 +928,15 @@ export function isPropertySecure(
                         const ultimateProfile = config.properties?.profiles?.[ultimateOriginalProfile];
                         if (ultimateProfile && ultimateProfile.secure && Array.isArray(ultimateProfile.secure)) {
                             const isSecure = ultimateProfile.secure.includes(propertyName);
-
                             return isSecure;
-                        } else {
                         }
-                    } else {
                     }
                 }
 
-                // Final fallback: if we're moving from one nested profile to another (or to root) and the original nested profile still exists,
-                // look up the secure properties from the original nested profile
-                // This handles multiple cases:
-                // 1. z.global_base → global_base (nested → root)
-                // 2. z.global_base → y.global_base (nested → nested)
-                // 3. x.y.global_base → z.global_base (multi-level nested → nested)
                 if (profileToCheck && profileToCheck.includes(".")) {
-                    // Try to find the original nested profile in the configuration
                     const nestedProfileParts = profileToCheck.split(".");
                     let nestedProfile = config.properties?.profiles;
 
-                    // Navigate to the nested profile
                     for (let i = 0; i < nestedProfileParts.length - 1; i++) {
                         nestedProfile = nestedProfile?.[nestedProfileParts[i]]?.profiles;
                     }
@@ -1092,9 +946,7 @@ export function isPropertySecure(
 
                     if (originalNestedProfile && originalNestedProfile.secure && Array.isArray(originalNestedProfile.secure)) {
                         const isSecure = originalNestedProfile.secure.includes(propertyName);
-
                         return isSecure;
-                    } else {
                     }
                 }
             }
@@ -1104,18 +956,22 @@ export function isPropertySecure(
     return false;
 }
 
-export function handleToggleSecure(
-    fullKey: string,
-    displayKey: string,
-    path: string[],
-    value: any,
-    selectedTab?: number | null,
-    configurations?: Configuration[],
-    pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } },
-    setPendingChanges?: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: PendingChange } }>>,
-    selectedProfileKey?: string | null,
-    renames?: { [configPath: string]: { [originalKey: string]: string } }
-): void {
+interface HandleToggleSecureParams {
+    fullKey: string;
+    displayKey: string;
+    path: string[];
+    value: unknown;
+    selectedTab?: number | null;
+    configurations?: Configuration[];
+    pendingChanges?: PendingChangesMap;
+    setPendingChanges?: React.Dispatch<React.SetStateAction<PendingChangesMap>>;
+    selectedProfileKey?: string | null;
+    renames?: RenamesMap;
+}
+
+export function handleToggleSecure(params: HandleToggleSecureParams): void {
+    const { fullKey, displayKey, path, value, selectedTab, configurations, pendingChanges, setPendingChanges, selectedProfileKey, renames } = params;
+
     if (selectedTab === null || selectedTab === undefined || !configurations || !pendingChanges || !setPendingChanges) {
         return;
     }
@@ -1128,26 +984,28 @@ export function handleToggleSecure(
     const configPath = config.configPath;
     const currentPendingChange = pendingChanges[configPath]?.[fullKey];
 
-    // Get the current secure status
-    const currentSecure = isPropertySecure(fullKey, displayKey, path, undefined, selectedTab, configurations, pendingChanges, renames);
+    const currentSecure = isPropertySecure({ fullKey, displayKey, path, selectedTab, configurations, pendingChanges, renames });
 
-    // Determine the profile key
     let profileKey = selectedProfileKey || extractProfileKeyFromPath(path);
     if (selectedProfileKey && renames && renames[configPath]) {
         profileKey = getRenamedProfileKeyWithNested(selectedProfileKey, configPath, renames);
     }
 
-    // Toggle the secure status
     const newSecure = !currentSecure;
 
-    // Update pending changes
+    const resolvedValue =
+        currentPendingChange?.value !== undefined
+            ? currentPendingChange.value
+            : value !== undefined
+            ? (value as string | number | boolean | Record<string, any>)
+            : "";
+
     setPendingChanges((prev) => ({
         ...prev,
         [configPath]: {
             ...prev[configPath],
             [fullKey]: {
-                ...currentPendingChange,
-                value: currentPendingChange?.value !== undefined ? currentPendingChange.value : value !== undefined ? value : "",
+                value: resolvedValue,
                 path,
                 profile: profileKey,
                 secure: newSecure,
@@ -1156,14 +1014,14 @@ export function handleToggleSecure(
     }));
 }
 
-export function hasPendingSecureChanges(configPath: string, pendingChanges: { [configPath: string]: { [key: string]: PendingChange } }): boolean {
+export function hasPendingSecureChanges(configPath: string, pendingChanges: PendingChangesMap): boolean {
     const configPendingChanges = pendingChanges[configPath];
     if (!configPendingChanges) return false;
 
     return Object.values(configPendingChanges).some((change) => change.secure === true);
 }
 
-export function extractPendingProfiles(pendingChanges: { [configPath: string]: { [key: string]: PendingChange } }, configPath: string): string[] {
+export function extractPendingProfiles(pendingChanges: PendingChangesMap, configPath: string): string[] {
     const configPendingChanges = pendingChanges[configPath];
     if (!configPendingChanges) return [];
 
@@ -1178,19 +1036,14 @@ export function extractPendingProfiles(pendingChanges: { [configPath: string]: {
     return Array.from(profiles);
 }
 
-export function isProfileOrParentDeleted(profileKey: string, deletions: { [configPath: string]: string[] }, configPath: string): boolean {
+export function isProfileOrParentDeleted(profileKey: string, deletions: DeletionsMap, configPath: string): boolean {
     const configDeletions = deletions[configPath];
     if (!configDeletions) return false;
 
-    // Extract profile names from deletion keys (deletion keys are full paths like "profiles.profile1.profiles.profile2")
     const deletedProfiles = new Set<string>();
     configDeletions.forEach((key) => {
-        // Extract profile name from deletion key
         const keyParts = key.split(".");
         if (keyParts[0] === "profiles" && keyParts.length >= 2) {
-            // Handle all profile types (simple, nested, deeply nested)
-            // The deletion key structure is: profiles.profile1.profiles.profile2.profiles.profile3...
-            // We need to extract: profile1.profile2.profile3...
             const profileParts: string[] = [];
             for (let i = 1; i < keyParts.length; i++) {
                 if (keyParts[i] !== "profiles") {
@@ -1202,12 +1055,10 @@ export function isProfileOrParentDeleted(profileKey: string, deletions: { [confi
         }
     });
 
-    // Check if the profile itself is deleted
     if (deletedProfiles.has(profileKey)) {
         return true;
     }
 
-    // Check if any parent profile is deleted
     const profileParts = profileKey.split(".");
     for (let i = 1; i < profileParts.length; i++) {
         const parentKey = profileParts.slice(0, i).join(".");
@@ -1219,46 +1070,53 @@ export function isProfileOrParentDeleted(profileKey: string, deletions: { [confi
     return false;
 }
 
-export function mergeMergedProperties(
-    combinedConfig: any,
-    path: string[],
-    mergedProps: any,
-    configPath: string,
-    selectedTab: number | null,
-    configurations: Configuration[],
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [originalKey: string]: string } },
-    schemaValidations: { [configPath: string]: schemaValidation | undefined },
-    deletions: { [configPath: string]: string[] },
-    showMergedProperties?: string
-): any {
+interface MergeMergedPropertiesParams extends SchemaContext {
+    combinedConfig: Record<string, unknown>;
+    path: string[];
+    mergedProps: MergedPropertiesMap;
+    configPath: string;
+    deletions: DeletionsMap;
+    showMergedProperties?: MergedPropertiesVisibility;
+}
+
+export function mergeMergedProperties(params: MergeMergedPropertiesParams): Record<string, unknown> {
+    const {
+        combinedConfig,
+        path,
+        mergedProps,
+        configPath,
+        selectedTab,
+        configurations,
+        pendingChanges,
+        renames,
+        schemaValidations,
+        deletions,
+        showMergedProperties,
+    } = params;
+
     if (!mergedProps || path.length === 0 || path[path.length - 1] === "type" || path[path.length - 1] === "secure") {
         return combinedConfig;
     }
 
-    // Only process at profile level, not properties level
     if (path[path.length - 1] === "properties") {
         return combinedConfig;
     }
 
-    // Ensure properties object exists
     if (!combinedConfig.hasOwnProperty("properties")) {
-        combinedConfig.properties = {};
+        (combinedConfig as Record<string, unknown>).properties = {};
     }
 
     const currentProfileName = extractProfileKeyFromPath(path);
-    const profileType = getProfileType(currentProfileName, selectedTab, configurations, pendingChanges, renames);
+    const profileType = getProfileType({ profileKey: currentProfileName, selectedTab, configurations, pendingChanges, renames });
     const propertySchema = schemaValidations[configPath]?.propertySchema[profileType || ""] || {};
     const allowedProperties = Object.keys(propertySchema);
     const fullPath = path.join(".");
 
     const currentProfileKey = extractProfileKeyFromPath(path);
 
-    // Find the original profile key by looking for what was renamed to the current key
     const configRenames = renames[configPath] || {};
     let originalProfileKey = currentProfileKey;
 
-    // Look for the original key that was renamed to the current key
     for (const [originalKey, newKey] of Object.entries(configRenames)) {
         if (newKey === currentProfileKey) {
             originalProfileKey = originalKey;
@@ -1266,24 +1124,19 @@ export function mergeMergedProperties(
         }
     }
 
-    // Note: Removed early return for renamed profiles to ensure merged properties are always displayed
-
     if (currentProfileKey !== originalProfileKey) {
+        // Profile was renamed - continue to merge merged properties
     }
 
-    Object.entries(mergedProps).forEach(([key, propData]: [string, any]) => {
+    Object.entries(mergedProps).forEach(([key, propData]) => {
         const pendingKey = `${fullPath}.properties.${key}`;
 
-        // Check for pending changes using both current path and original path (considering renames)
-        const currentProfileKey = extractProfileKeyFromPath(path);
-        const originalProfileKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
+        const currentPK = extractProfileKeyFromPath(path);
+        const originalPK = getOriginalProfileKeyWithNested(currentPK, configPath, renames);
 
-        // Construct the original path for pending changes lookup
-        // For nested profiles, we need to include "profiles" segments between profile levels
         let originalPath: string;
-        if (originalProfileKey.includes(".")) {
-            // This is a nested profile - construct the full path with "profiles" segments
-            const profileParts = originalProfileKey.split(".");
+        if (originalPK.includes(".")) {
+            const profileParts = originalPK.split(".");
             const pathParts = ["profiles"];
             for (let i = 0; i < profileParts.length; i++) {
                 pathParts.push(profileParts[i]);
@@ -1293,7 +1146,7 @@ export function mergeMergedProperties(
             }
             originalPath = pathParts.join(".");
         } else {
-            originalPath = `profiles.${originalProfileKey}`;
+            originalPath = `profiles.${originalPK}`;
         }
 
         const originalPendingKey = `${originalPath}.properties.${key}`;
@@ -1301,11 +1154,10 @@ export function mergeMergedProperties(
         const isInPendingChanges =
             pendingChanges[configPath]?.[pendingKey] !== undefined || pendingChanges[configPath]?.[originalPendingKey] !== undefined;
 
-        // Check for deletions using the same enhanced path logic as pending changes
         let isInDeletions = (deletions[configPath] ?? []).includes(pendingKey) || (deletions[configPath] ?? []).includes(originalPendingKey);
 
-        if (!isInDeletions && originalProfileKey.includes(".")) {
-            const profileParts = originalProfileKey.split(".");
+        if (!isInDeletions && originalPK.includes(".")) {
+            const profileParts = originalPK.split(".");
             const pathParts = ["profiles"];
             for (let i = 0; i < profileParts.length; i++) {
                 pathParts.push(profileParts[i]);
@@ -1318,18 +1170,14 @@ export function mergeMergedProperties(
             isInDeletions = (deletions[configPath] ?? []).includes(nestedPendingKey);
         }
 
-        // If showMergedProperties is "unfiltered", skip schema validation and show ALL merged properties
-        // Otherwise, only show properties that are valid for the current profile type
         const isAllowedBySchema = showMergedProperties === "unfiltered" || allowedProperties.includes(key);
 
-        // If the property is in deletions, we should add the merged property to replace it
-        // For secure properties that were deleted, we still want to show the merged property in properties
-        const shouldAddMerged = isAllowedBySchema && !isInPendingChanges && (isInDeletions || !combinedConfig.properties.hasOwnProperty(key));
+        const properties = combinedConfig.properties as Record<string, unknown>;
+        const shouldAddMerged = isAllowedBySchema && !isInPendingChanges && (isInDeletions || !properties.hasOwnProperty(key));
 
         if (shouldAddMerged) {
-            // Only add primitive values to avoid recursion
             if (typeof propData.value !== "object" || propData.value === null) {
-                combinedConfig.properties[key] = propData.value;
+                properties[key] = propData.value;
             }
         }
     });
@@ -1337,7 +1185,7 @@ export function mergeMergedProperties(
     return combinedConfig;
 }
 
-export function ensureProfileProperties(combinedConfig: any, path: string[]): any {
+export function ensureProfileProperties(combinedConfig: Record<string, unknown>, path: string[]): Record<string, unknown> {
     if (path.length > 0 && path[path.length - 1] !== "type" && path[path.length - 1] !== "properties" && path[path.length - 1] !== "secure") {
         if (!combinedConfig.hasOwnProperty("properties")) {
             combinedConfig.properties = {};
@@ -1352,31 +1200,30 @@ export function ensureProfileProperties(combinedConfig: any, path: string[]): an
     return combinedConfig;
 }
 
-export function filterSecureProperties(
-    value: any,
-    combinedConfig: any,
-    configPath: string | undefined,
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    deletions: { [configPath: string]: string[] },
-    mergedProps?: any
-): any {
+interface FilterSecurePropertiesParams {
+    value: Record<string, unknown>;
+    combinedConfig: Record<string, unknown>;
+    configPath: string | undefined;
+    pendingChanges: PendingChangesMap;
+    deletions: DeletionsMap;
+    mergedProps?: MergedPropertiesMap;
+}
+
+export function filterSecureProperties(params: FilterSecurePropertiesParams): Record<string, unknown> | null {
+    const { value, combinedConfig, configPath, pendingChanges, deletions, mergedProps } = params;
+
     if (combinedConfig.secure && Array.isArray(combinedConfig.secure)) {
-        const secureProperties = combinedConfig.secure;
+        const secureProperties = combinedConfig.secure as string[];
         const filteredProperties = { ...value };
 
         Object.keys(filteredProperties).forEach((propKey) => {
             const isSecure = secureProperties.includes(propKey);
 
             if (isSecure) {
-                // Check if this property is in merged properties and has secure: false
-                // If so, don't filter it out even though it's in the local secure array
                 const isInsecureInMergedProps = mergedProps && mergedProps[propKey] && mergedProps[propKey].secure === false;
 
-                // Don't filter out properties that are in the deletions list (they should be shown as merged properties)
                 const isInDeletions = configPath && (deletions[configPath] ?? []).some((deletion) => deletion.includes(`properties.${propKey}`));
 
-                // Don't filter out secure properties if there's a pending insecure property with the same key
-                // This prevents the secure property from being rendered when it will be replaced
                 const hasPendingInsecureProperty =
                     configPath &&
                     pendingChanges[configPath] &&
@@ -1397,14 +1244,17 @@ export function filterSecureProperties(
     return value;
 }
 
-export function mergePendingSecureProperties(
-    value: any[],
-    path: string[],
-    configPath: string,
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames?: { [configPath: string]: { [originalKey: string]: string } }
-): any[] {
-    // Identify all pending changes for this profile that are marked as secure
+interface MergePendingSecurePropertiesParams {
+    value: string[];
+    path: string[];
+    configPath: string;
+    pendingChanges: PendingChangesMap;
+    renames?: RenamesMap;
+}
+
+export function mergePendingSecureProperties(params: MergePendingSecurePropertiesParams): string[] {
+    const { value, path, configPath, pendingChanges, renames } = params;
+
     const profileKey = extractProfileKeyFromPath(path);
     const originalProfileKey = renames ? getOriginalProfileKeyWithNested(profileKey, configPath, renames) : profileKey;
     const renamedProfileKey = renames ? getRenamedProfileKeyWithNested(profileKey, configPath, renames) : profileKey;
@@ -1413,20 +1263,16 @@ export function mergePendingSecureProperties(
         .filter(([_, entry]) => {
             if (!entry.secure) return false;
 
-            // Check if the change belongs to the profile we are rendering (by original or current name)
             const entryProfile = entry.profile;
             return entryProfile === profileKey || entryProfile === originalProfileKey || entryProfile === renamedProfileKey;
         })
         .map(([key]) => {
-            // Extract the property name (the part after the last dot)
             const parts = key.split(".");
             return parts[parts.length - 1];
         });
 
-    // Combine with existing secure properties and remove duplicates
     const combined = [...(value || []), ...pendingSecureProps];
     const filtered = combined.filter((prop) => {
-        // Also respect pending deletions or insecure toggles
         const hasPendingInsecureProperty = Object.entries(pendingChanges[configPath] ?? {}).some(([key, entry]) => {
             const keyParts = key.split(".");
             const propertyName = keyParts[keyParts.length - 1];
@@ -1438,32 +1284,34 @@ export function mergePendingSecureProperties(
     return Array.from(new Set(filtered)).sort();
 }
 
-export function isPropertyFromMergedProps(
-    displayKey: string | undefined,
-    path: string[],
-    mergedProps: any,
-    configPath: string,
-    showMergedProperties: string | boolean,
-    selectedTab: number | null,
-    configurations: Configuration[],
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [originalKey: string]: string } },
-    selectedProfileKey: string | null,
-    isPropertyActuallyInherited: (
-        profilePath: string,
-        currentProfileKey: string | null,
-        configPath: string,
-        propertyName: string | undefined,
-        selectedTab: number | null,
-        configurations: Configuration[],
-        pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-        renames: { [configPath: string]: { [originalKey: string]: string } }
-    ) => boolean
-): boolean {
-    // consider properties as merged if showMergedProperties is not "hide" and profile is not untyped
+interface IsPropertyFromMergedPropsParams extends ConfigStateContext {
+    displayKey: string | undefined;
+    path: string[];
+    mergedProps: MergedPropertiesMap;
+    configPath: string;
+    showMergedProperties: MergedPropertiesVisibility | boolean;
+    selectedProfileKey: string | null;
+    isPropertyActuallyInheritedFn: (params: IsPropertyActuallyInheritedParams) => boolean;
+}
+
+export function isPropertyFromMergedProps(params: IsPropertyFromMergedPropsParams): boolean {
+    const {
+        displayKey,
+        path,
+        mergedProps,
+        configPath,
+        showMergedProperties,
+        selectedTab,
+        configurations,
+        pendingChanges,
+        renames,
+        selectedProfileKey,
+        isPropertyActuallyInheritedFn,
+    } = params;
+
     const originalProfileKey = extractProfileKeyFromPath(path);
     const currentProfileKey = getRenamedProfileKeyWithNested(originalProfileKey, configPath, renames);
-    const currentProfileType = getProfileType(currentProfileKey, selectedTab, configurations, pendingChanges, renames);
+    const currentProfileType = getProfileType({ profileKey: currentProfileKey, selectedTab, configurations, pendingChanges, renames });
     const isProfileUntyped = !currentProfileType || currentProfileType.trim() === "";
 
     if (showMergedProperties === "hide" || showMergedProperties === false || isProfileUntyped || !displayKey) {
@@ -1474,33 +1322,27 @@ export function isPropertyFromMergedProps(
     const jsonLoc = mergedPropData?.jsonLoc;
     const osLoc = mergedPropData?.osLoc;
 
-    // Extract profile path from jsonLoc
     const jsonLocParts = jsonLoc ? jsonLoc.split(".") : [];
     const profilePathParts = jsonLocParts.slice(1, -2);
     const profilePath = profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".");
 
-    // Check if this property is actually inherited
-    const isInherited = isPropertyActuallyInherited(
+    const isInherited = isPropertyActuallyInheritedFn({
         profilePath,
         currentProfileKey,
         configPath,
-        displayKey,
+        propertyName: displayKey,
         selectedTab,
         configurations,
         pendingChanges,
-        renames
-    );
+        renames,
+    });
 
-    // case: if isPropertyActuallyInherited returns false but this is a profile with the same name
-    // in a different config file, we should still consider it as inherited
     const isSameProfileNameInDifferentConfig = (() => {
-        if (isInherited) return false; // Already handled by isPropertyActuallyInherited
+        if (isInherited) return false;
 
-        // Check if the profile names match (indicating same profile name in different configs)
         if (profilePath === currentProfileKey) {
-            // Check if the source comes from a different config file
             const selectedConfigPath = configurations[selectedTab!]?.configPath;
-            const osLocString = osLoc.join("");
+            const osLocString = osLoc?.join("") ?? "";
             return selectedConfigPath !== osLocString;
         }
 
@@ -1512,31 +1354,29 @@ export function isPropertyFromMergedProps(
     }
 
     const selectedConfigPath = configurations[selectedTab!]?.configPath;
-    const osLocString = osLoc.join("");
+    const osLocString = osLoc?.join("") ?? "";
     const pathsEqual = selectedConfigPath === osLocString;
     const currentProfilePathForComparison = path.slice(0, -1).join(".");
 
-    // Check if this profile has been renamed
     const currentlyViewedProfileKey = selectedProfileKey;
     const hasBeenRenamed =
         currentlyViewedProfileKey && Object.values(renames[configPath] || {}).some((newName) => newName === currentlyViewedProfileKey);
 
     if (hasBeenRenamed) {
-        // Extract profile name from jsonLoc
-        const jsonLocParts = jsonLoc ? jsonLoc.split(".") : [];
+        const jsonLocPartsInner = jsonLoc ? jsonLoc.split(".") : [];
         let jsonLocProfileName = "";
 
-        if (jsonLocParts.length >= 2 && jsonLocParts[0] === "profiles") {
+        if (jsonLocPartsInner.length >= 2 && jsonLocPartsInner[0] === "profiles") {
             let profileParts = [];
             let i = 1;
 
-            while (i < jsonLocParts.length) {
-                if (jsonLocParts[i] !== "profiles" && jsonLocParts[i] !== "properties") {
-                    profileParts.push(jsonLocParts[i]);
+            while (i < jsonLocPartsInner.length) {
+                if (jsonLocPartsInner[i] !== "profiles" && jsonLocPartsInner[i] !== "properties") {
+                    profileParts.push(jsonLocPartsInner[i]);
                     i++;
-                } else if (jsonLocParts[i] === "profiles") {
+                } else if (jsonLocPartsInner[i] === "profiles") {
                     i++;
-                } else if (jsonLocParts[i] === "properties") {
+                } else if (jsonLocPartsInner[i] === "properties") {
                     break;
                 } else {
                     i++;
@@ -1545,23 +1385,17 @@ export function isPropertyFromMergedProps(
             jsonLocProfileName = profileParts.join(".");
         }
 
-        // Get the full profile path for the current profile and jsonLoc profile
         const currentProfileParts = currentlyViewedProfileKey ? currentlyViewedProfileKey.split(".") : [];
         const jsonLocProfileParts = jsonLocProfileName ? jsonLocProfileName.split(".") : [];
 
-        // Check if the jsonLoc profile name matches the current profile (considering renames)
         const jsonLocRefersToCurrentProfile = (() => {
-            // Direct match
             if (jsonLocProfileName === currentlyViewedProfileKey) return true;
 
-            // Check if this is a child profile and its path matches after considering renames
             const currentProfilePath = currentProfileParts.join(".");
             const jsonLocPath = jsonLocProfileParts.join(".");
 
-            // If the jsonLoc path matches the current path exactly (after any renames)
             if (jsonLocPath === currentProfilePath) return true;
 
-            // If we're looking at a child profile, check if its full path matches after parent rename
             if (currentProfileParts.length > 1) {
                 const parentProfilePath = currentProfileParts.slice(0, -1).join(".");
                 const originalParentKey = Object.keys(renames[configPath] || {}).find(
@@ -1569,7 +1403,6 @@ export function isPropertyFromMergedProps(
                 );
 
                 if (originalParentKey) {
-                    // Reconstruct the original path using the parent's old name
                     const childName = currentProfileParts[currentProfileParts.length - 1];
                     const originalPath = `${originalParentKey}.${childName}`;
                     return jsonLocPath === originalPath;
@@ -1579,21 +1412,17 @@ export function isPropertyFromMergedProps(
             return false;
         })();
 
-        // Check if the jsonLoc profile name is the OLD name that maps to the current profile
         const jsonLocIsOldNameOfCurrentProfile =
             jsonLocProfileName &&
             Object.keys(renames[configPath] || {}).some(
                 (oldName) => oldName === jsonLocProfileName && renames[configPath][oldName] === currentlyViewedProfileKey
             );
 
-        // Check if the jsonLoc refers to a child profile of a renamed parent
         const isFromChildOfRenamedParent =
             currentlyViewedProfileKey &&
             jsonLocProfileName &&
             Object.entries(renames[configPath] || {}).some(([oldName, newName]) => {
-                // Check if current profile is a child of the new parent name
                 const isCurrentProfileChildOfNewParent = currentlyViewedProfileKey.startsWith(newName + ".");
-                // Check if jsonLoc refers to the old parent name
                 const jsonLocRefersToOldParent = jsonLocProfileName === oldName;
                 return isCurrentProfileChildOfNewParent && jsonLocRefersToOldParent;
             });
@@ -1602,23 +1431,17 @@ export function isPropertyFromMergedProps(
 
         return result;
     } else {
-        // For non-renamed profiles, use the original logic
         const jsonLocIndicatesDifferentProfile = jsonLoc && !jsonLoc.includes(currentProfilePathForComparison + ".properties");
 
-        // Check if this property comes from a profile with the same name in a different config file
-        // This handles the case where profiles with the same name exist in different configs (e.g., "zosmf" in both user and project configs)
         const isFromSameProfileNameInDifferentConfig = (() => {
             if (!jsonLoc || !osLoc || !selectedConfigPath) return false;
 
-            // Extract the profile name from jsonLoc
             const jsonLocParts = jsonLoc.split(".");
             const profilePathParts = jsonLocParts.slice(1, -2);
             const sourceProfilePath = profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".");
 
-            // Get the current profile name being viewed
             const currentProfileName = extractProfileKeyFromPath(path);
 
-            // Check if the source profile name matches the current profile name but comes from a different config
             const osLocString = osLoc.join("");
             const isDifferentConfig = selectedConfigPath !== osLocString;
             const isSameProfileName = sourceProfilePath === currentProfileName;
@@ -1632,31 +1455,29 @@ export function isPropertyFromMergedProps(
     }
 }
 
-export function applyRenamesToProfileKeys(
-    orderedProfileKeys: string[],
-    configPath: string,
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): string[] {
-    // Apply renames to the profile keys, including nested profiles
+interface ApplyRenamesToProfileKeysParams {
+    orderedProfileKeys: string[];
+    configPath: string;
+    renames: RenamesMap;
+}
+
+export function applyRenamesToProfileKeys(params: ApplyRenamesToProfileKeysParams): string[] {
+    const { orderedProfileKeys, configPath, renames } = params;
+
     const renamedProfileKeys = orderedProfileKeys.map((profileKey) => {
         return getRenamedProfileKeyWithNested(profileKey, configPath, renames);
     });
 
-    // Filter out any renamed profile keys that are intermediate steps in a move operation
     const configRenames = renames[configPath] || {};
     const finalRenamedProfileKeys = renamedProfileKeys.filter((renamedKey) => {
-        // Check if this renamed key is an intermediate step (exists as an original key in renames)
         return !Object.keys(configRenames).includes(renamedKey);
     });
 
-    // Add any renamed profiles that are not in the original configuration
     const renamedOnlyProfiles = Object.keys(configRenames).filter((originalKey) => {
-        // Only include if the original key is not in the ordered profile keys
         if (orderedProfileKeys.includes(originalKey)) {
             return false;
         }
 
-        // Filter out intermediate renames that are part of a chain
         const newKey = configRenames[originalKey];
         const isIntermediate = Object.values(configRenames).includes(originalKey) && Object.keys(configRenames).includes(newKey);
         if (isIntermediate) {
@@ -1666,25 +1487,26 @@ export function applyRenamesToProfileKeys(
         return true;
     });
 
-    // Apply renames to these renamed-only profiles
     const renamedOnlyProfileKeys = renamedOnlyProfiles.map((profileKey) => {
         return getRenamedProfileKeyWithNested(profileKey, configPath, renames);
     });
 
-    // Combine all renamed profile keys and remove duplicates
     const allRenamedProfileKeys = [...finalRenamedProfileKeys, ...renamedOnlyProfileKeys];
     return Array.from(new Set(allRenamedProfileKeys));
 }
 
-export function mergePendingProfileKeys(
-    pendingProfiles: any,
-    configPath: string,
-    renames: { [configPath: string]: { [originalKey: string]: string } },
-    deletions: { [configPath: string]: string[] },
-    uniqueRenamedProfileKeys: string[]
-): string[] {
+interface MergePendingProfileKeysParams {
+    pendingProfiles: ProfileMap;
+    configPath: string;
+    renames: RenamesMap;
+    deletions: DeletionsMap;
+    uniqueRenamedProfileKeys: string[];
+}
+
+export function mergePendingProfileKeys(params: MergePendingProfileKeysParams): string[] {
+    const { pendingProfiles, configPath, renames, deletions, uniqueRenamedProfileKeys } = params;
+
     const pendingProfileKeys = Object.keys(pendingProfiles).filter((key) => {
-        // Check if this pending profile is deleted
         if (isProfileOrParentDeleted(key, deletions, configPath)) {
             return false;
         }
@@ -1695,7 +1517,6 @@ export function mergePendingProfileKeys(
         let renamedKey = profileKey;
         const configRenames = renames[configPath] || {};
 
-        // Apply renames iteratively to handle chained renames
         let changed = true;
         while (changed) {
             changed = false;
@@ -1714,7 +1535,6 @@ export function mergePendingProfileKeys(
             }
         }
 
-        // Special case: if renames object is empty and this pending profile should be moved back to root
         if (Object.keys(configRenames).length === 0 && renamedKey.includes(".")) {
             const rootProfileName = renamedKey.split(".").pop();
             if (rootProfileName && uniqueRenamedProfileKeys.includes(rootProfileName)) {
@@ -1726,28 +1546,29 @@ export function mergePendingProfileKeys(
     });
 }
 
-export function filterConflictingProfileKeys(
-    uniqueRenamedProfileKeys: string[],
-    renamedPendingProfileKeys: string[],
-    pendingProfiles: any,
-    deletions: { [configPath: string]: string[] },
-    configPath: string,
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): string[] {
+interface FilterConflictingProfileKeysParams {
+    uniqueRenamedProfileKeys: string[];
+    renamedPendingProfileKeys: string[];
+    pendingProfiles: ProfileMap;
+    deletions: DeletionsMap;
+    configPath: string;
+    renames: RenamesMap;
+}
+
+export function filterConflictingProfileKeys(params: FilterConflictingProfileKeysParams): string[] {
+    const { uniqueRenamedProfileKeys, renamedPendingProfileKeys, pendingProfiles, deletions, configPath, renames } = params;
+
     const pendingProfileKeys = Object.keys(pendingProfiles);
     const pendingProfileKeysSet = new Set(renamedPendingProfileKeys);
     const originalPendingProfileKeysSet = new Set(pendingProfileKeys);
 
     return uniqueRenamedProfileKeys.filter((profileKey) => {
-        // Check if this profile is deleted
         if (isProfileOrParentDeleted(profileKey, deletions, configPath)) {
             return false;
         }
 
-        // If this profile key has a pending version (either renamed or original), filter it out
         const hasExactPendingMatch = pendingProfileKeysSet.has(profileKey) || originalPendingProfileKeysSet.has(profileKey);
 
-        // Also check if this profile key is the result of a rename that has a pending version
         const isResultOfRenameWithPending = Object.keys(renames[configPath] || {}).some((originalKey) => {
             const renamedKey = getRenamedProfileKeyWithNested(originalKey, configPath, renames);
             const hasPendingOriginal = Object.keys(pendingProfiles).includes(originalKey);

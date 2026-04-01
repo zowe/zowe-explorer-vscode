@@ -44,11 +44,11 @@ export function useUtilityHelpers() {
 
     return useMemo(
         () => ({
-            mergePendingChangesForProfile: (baseObj: any, path: string[], configPath: string) =>
-                mergePendingChangesForProfile(baseObj, path, configPath, pendingChanges, renames),
+            mergePendingChangesForProfile: (baseObj: Record<string, unknown>, path: string[], configPath: string) =>
+                mergePendingChangesForProfile({ baseObj, path, configPath, pendingChanges, renames }),
 
-            mergeMergedProperties: (combinedConfig: any, path: string[], mergedProps: any, configPath: string) =>
-                mergeMergedProperties(
+            mergeMergedProperties: (combinedConfig: Record<string, unknown>, path: string[], mergedProps: Record<string, any>, configPath: string) =>
+                mergeMergedProperties({
                     combinedConfig,
                     path,
                     mergedProps,
@@ -59,17 +59,31 @@ export function useUtilityHelpers() {
                     renames,
                     schemaValidations,
                     deletions,
-                    showMergedProperties
-                ),
+                    showMergedProperties,
+                }),
 
-            filterSecureProperties: (value: any, combinedConfig: any, configPath?: string, pc?: any, del?: any, mergedProps?: any) =>
-                filterSecureProperties(value, combinedConfig, configPath, pc || pendingChanges, del || deletions, mergedProps),
+            filterSecureProperties: (
+                value: Record<string, unknown>,
+                combinedConfig: Record<string, unknown>,
+                configPath?: string,
+                pc?: any,
+                del?: any,
+                mergedProps?: any
+            ) =>
+                filterSecureProperties({
+                    value,
+                    combinedConfig,
+                    configPath,
+                    pendingChanges: pc || pendingChanges,
+                    deletions: del || deletions,
+                    mergedProps,
+                }),
 
-            mergePendingSecureProperties: (value: any[], path: string[], configPath: string) =>
-                mergePendingSecureProperties(value, path, configPath, pendingChanges, renames),
+            mergePendingSecureProperties: (value: string[], path: string[], configPath: string) =>
+                mergePendingSecureProperties({ value, path, configPath, pendingChanges, renames }),
 
             isPropertyFromMergedProps: (displayKey: string | undefined, path: string[], mergedProps: any, configPath: string) =>
-                isPropertyFromMergedProps(
+                isPropertyFromMergedProps({
                     displayKey,
                     path,
                     mergedProps,
@@ -80,23 +94,22 @@ export function useUtilityHelpers() {
                     pendingChanges,
                     renames,
                     selectedProfileKey,
-                    isPropertyActuallyInherited
-                ),
+                    isPropertyActuallyInheritedFn: isPropertyActuallyInherited,
+                }),
 
             canPropertyBeSecure: (displayKey: string, _path: string[]) =>
-                canPropertyBeSecure(
+                canPropertyBeSecure({
                     displayKey,
                     selectedTab,
                     configurations,
                     schemaValidations,
-                    getProfileType,
                     pendingChanges,
                     renames,
-                    selectedProfileKey
-                ),
+                    selectedProfileKey,
+                }),
 
-            handleToggleSecure: (fullKey: string, displayKey: string, path: string[], value: any) => {
-                return handleToggleSecure(
+            handleToggleSecure: (fullKey: string, displayKey: string, path: string[], value: unknown) => {
+                return handleToggleSecure({
                     fullKey,
                     displayKey,
                     path,
@@ -106,15 +119,15 @@ export function useUtilityHelpers() {
                     pendingChanges,
                     setPendingChanges,
                     selectedProfileKey,
-                    renames
-                );
+                    renames,
+                });
             },
 
             hasPendingSecureChanges: (configPath: string) => hasPendingSecureChanges(configPath, pendingChanges),
 
             extractPendingProfiles: (configPath: string) => {
                 const profileNames = extractPendingProfiles(pendingChanges, configPath);
-                const result: { [key: string]: any } = {};
+                const result: { [key: string]: Record<string, unknown> } = {};
                 profileNames.forEach((profileName) => {
                     result[profileName] = {};
                 });
@@ -127,12 +140,12 @@ export function useUtilityHelpers() {
                 deletedProfiles.some((deletedProfile) => profileKey === deletedProfile || profileKey.startsWith(deletedProfile + ".")),
 
             getAvailableProfilesByType: (profileType: string) =>
-                getAvailableProfilesByType(profileType, selectedTab, configurations, pendingChanges, renames),
+                getAvailableProfilesByType({ profileType, selectedTab, configurations, pendingChanges, renames }),
 
             isProfileDefault: (profileKey: string) =>
-                isProfileDefault(profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames),
+                isProfileDefault({ profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames }),
 
-            isCurrentProfileUntyped: () => isCurrentProfileUntyped(selectedProfileKey, selectedTab, configurations, pendingChanges, renames),
+            isCurrentProfileUntyped: () => isCurrentProfileUntyped({ selectedProfileKey, selectedTab, configurations, pendingChanges, renames }),
 
             sortProfilesAtLevel: (profileKeys: string[]) => sortProfilesAtLevel(profileKeys, profileSortOrder),
 
@@ -154,7 +167,7 @@ export function useUtilityHelpers() {
             ) => getRenamedProfileKeyWithNested(originalKey, configPath, renames),
 
             getProfileType: (profileKey: string, selectedTab: number | null, configurations: any[], pendingChanges: any, renames: any) =>
-                getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames),
+                getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames }),
 
             hasPendingRename: (profileKey: string, configPath: string, renames: any) => hasPendingRename(profileKey, configPath, renames),
 
@@ -181,9 +194,9 @@ export function useUtilityHelpers() {
             },
 
             isPropertySecure: (fullKey: string, displayKey: string, path: string[], mergedProps?: any) =>
-                isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames),
+                isPropertySecure({ fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames }),
 
-            getWizardTypeOptions: () => getWizardTypeOptions(selectedTab, configurations, schemaValidations, pendingChanges),
+            getWizardTypeOptions: () => getWizardTypeOptions({ selectedTab, configurations, schemaValidations, pendingChanges }),
         }),
         [
             selectedTab,

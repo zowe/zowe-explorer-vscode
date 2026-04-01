@@ -28,7 +28,7 @@ import {
   PropertySortOrder,
   schemaValidation,
 } from "../utils";
-import { isFileProperty, isPropertyPendingDeletion } from "../utils/propertyUtils";
+import { isFileProperty, isPropertyPendingDeletion as isPropertyPendingDeletionFn } from "../utils/propertyUtils";
 import type { Configuration, PendingChange, MergedPropertiesVisibility } from "../types";
 import { useConfigContext } from "../context/ConfigContext";
 
@@ -179,7 +179,7 @@ export const RenderConfig = ({
       let sortedEntries: [string, any][];
 
       const isPropertyDeletedConsideringRenames = (propertyKey: string) =>
-        isPropertyPendingDeletion(propertyKey, path, configPath, deletions, renames);
+        isPropertyPendingDeletionFn({ propertyKey, path, configPath, deletions, renames });
 
       // Special handling for properties section - use custom sorting
       if (path.length > 0 && path[path.length - 1] === "properties") {
@@ -249,18 +249,17 @@ export const RenderConfig = ({
           if (i > 0) parentConfigPath.push("profiles");
           parentConfigPath.push(originalPartsForDisk[i]);
         }
-        const parentConfig = getNestedProperty(configurations[selectedTab!]?.properties, parentConfigPath);
-        if (parentConfig?.secure && Array.isArray(parentConfig.secure)) {
-          parentConfig.secure.forEach((securePropertyName: string) => {
-            // Only add if not already in the properties
+        const parentConfig = getNestedProperty(configurations[selectedTab!]?.properties, parentConfigPath) as Record<string, unknown> | undefined;
+        const parentSecure = parentConfig?.secure;
+        if (parentSecure && Array.isArray(parentSecure)) {
+          parentSecure.forEach((securePropertyName: string) => {
             if (!combinedConfig.hasOwnProperty(securePropertyName)) {
               entriesForSorting.push([securePropertyName, { _isSecureProperty: true }]);
             }
           });
         }
 
-        // Fallback: If we couldn't find secure properties through getNestedProperty, try to find them directly
-        if (!parentConfig?.secure || parentConfig.secure.length === 0) {
+        if (!parentSecure || (Array.isArray(parentSecure) && parentSecure.length === 0)) {
           const flatProfiles = flattenProfiles(configurations[selectedTab!]?.properties?.profiles || {});
           const currentProfile = flatProfiles[originalProfileKeyForDisk];
           if (currentProfile?.secure && Array.isArray(currentProfile.secure)) {
@@ -304,7 +303,7 @@ export const RenderConfig = ({
         if (mergedProps && showMergedProperties !== "hide" && selectedProfileKey) {
           // Get the current profile type and schema validation for filtering
           const currentProfileKey = extractProfileKeyFromPath(path);
-          const profileType = getProfileType(currentProfileKey, selectedTab, configurations, pendingChanges, renames);
+          const profileType = getProfileType({ profileKey: currentProfileKey, selectedTab, configurations, pendingChanges, renames });
           const propertySchema = profileType ? schemaValidations[configPath]?.propertySchema[profileType] || {} : {};
           const allowedProperties = Object.keys(propertySchema);
 
@@ -880,16 +879,15 @@ export const RenderConfig = ({
               ) : typeof pendingValue === "string" || typeof pendingValue === "boolean" || typeof pendingValue === "number" ? (
                 (() => {
                   const propertyType = displayKey
-                    ? getPropertyTypeForConfigEditor(
-                        displayKey,
-                        path,
+                    ? getPropertyTypeForConfigEditor({
+                        propertyKey: displayKey,
+                        profilePath: path,
                         selectedTab,
                         configurations,
                         schemaValidations,
-                        getProfileType,
                         pendingChanges,
-                        renames
-                      )
+                        renames,
+                      })
                     : undefined;
 
                   if (isSecureProperty || isLocalSecureProperty || isSecureForSorting) {

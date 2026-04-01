@@ -25,7 +25,16 @@ const configs = [
 describe("profileHelpers", () => {
     describe("isProfileDefault", () => {
         it("returns false when selectedTab is null", () => {
-            expect(isProfileDefault("base", null, configs, {}, {}, {})).toBe(false);
+            expect(
+                isProfileDefault({
+                    profileKey: "base",
+                    selectedTab: null,
+                    configurations: configs,
+                    pendingChanges: {},
+                    pendingDefaults: {},
+                    renames: {},
+                })
+            ).toBe(false);
         });
         it("returns false when profile has no type", () => {
             const untypedConfigs = [
@@ -37,14 +46,34 @@ describe("profileHelpers", () => {
                     },
                 },
             ] as any;
-            expect(isProfileDefault("base", 0, untypedConfigs, {}, {}, {})).toBe(false);
+            expect(
+                isProfileDefault({
+                    profileKey: "base",
+                    selectedTab: 0,
+                    configurations: untypedConfigs,
+                    pendingChanges: {},
+                    pendingDefaults: {},
+                    renames: {},
+                })
+            ).toBe(false);
         });
         it("returns true when profile matches config default", () => {
-            expect(isProfileDefault("base", 0, configs, {}, {}, {})).toBe(true);
+            expect(
+                isProfileDefault({
+                    profileKey: "base",
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    pendingDefaults: {},
+                    renames: {},
+                })
+            ).toBe(true);
         });
         it("returns true when profile matches pending default", () => {
             const pendingDefaults = { [configPath]: { zowe: { value: "base", path: [] } } };
-            expect(isProfileDefault("base", 0, configs, {}, pendingDefaults, {})).toBe(true);
+            expect(
+                isProfileDefault({ profileKey: "base", selectedTab: 0, configurations: configs, pendingChanges: {}, pendingDefaults, renames: {} })
+            ).toBe(true);
         });
         it("returns true when default was renamed to current profile", () => {
             const renames = { [configPath]: { oldBase: "base" } };
@@ -57,7 +86,16 @@ describe("profileHelpers", () => {
                     },
                 },
             ] as any;
-            expect(isProfileDefault("base", 0, configsWithRename, {}, {}, renames)).toBe(true);
+            expect(
+                isProfileDefault({
+                    profileKey: "base",
+                    selectedTab: 0,
+                    configurations: configsWithRename,
+                    pendingChanges: {},
+                    pendingDefaults: {},
+                    renames,
+                })
+            ).toBe(true);
         });
         it("returns false when profile does not match default", () => {
             const configsOther = [
@@ -69,7 +107,16 @@ describe("profileHelpers", () => {
                     },
                 },
             ] as any;
-            expect(isProfileDefault("base", 0, configsOther, {}, {}, {})).toBe(false);
+            expect(
+                isProfileDefault({
+                    profileKey: "base",
+                    selectedTab: 0,
+                    configurations: configsOther,
+                    pendingChanges: {},
+                    pendingDefaults: {},
+                    renames: {},
+                })
+            ).toBe(false);
         });
         it("returns true when default matches via rename loop (defaultValue === originalKey && newKey === profileKey)", () => {
             const renames = { [configPath]: { old1: "base", old2: "base" } };
@@ -82,7 +129,16 @@ describe("profileHelpers", () => {
                     },
                 },
             ] as any;
-            expect(isProfileDefault("base", 0, configsMulti, {}, {}, renames)).toBe(true);
+            expect(
+                isProfileDefault({
+                    profileKey: "base",
+                    selectedTab: 0,
+                    configurations: configsMulti,
+                    pendingChanges: {},
+                    pendingDefaults: {},
+                    renames,
+                })
+            ).toBe(true);
         });
         it("returns true when default is nested and rename applies to parent (child path match)", () => {
             const renames = { [configPath]: { parent: "parentNew", parentNew: "parentX" } };
@@ -97,16 +153,29 @@ describe("profileHelpers", () => {
                     },
                 },
             ] as any;
-            expect(isProfileDefault("parentX.old", 0, configsNested, {}, {}, renames)).toBe(true);
+            expect(
+                isProfileDefault({
+                    profileKey: "parentX.old",
+                    selectedTab: 0,
+                    configurations: configsNested,
+                    pendingChanges: {},
+                    pendingDefaults: {},
+                    renames,
+                })
+            ).toBe(true);
         });
     });
 
     describe("isCurrentProfileUntyped", () => {
         it("returns false when selectedProfileKey is null", () => {
-            expect(isCurrentProfileUntyped(null, 0, configs, {}, {})).toBe(false);
+            expect(
+                isCurrentProfileUntyped({ selectedProfileKey: null, selectedTab: 0, configurations: configs, pendingChanges: {}, renames: {} })
+            ).toBe(false);
         });
         it("returns false when profile has type", () => {
-            expect(isCurrentProfileUntyped("base", 0, configs, {}, {})).toBe(false);
+            expect(
+                isCurrentProfileUntyped({ selectedProfileKey: "base", selectedTab: 0, configurations: configs, pendingChanges: {}, renames: {} })
+            ).toBe(false);
         });
         it("returns true when profile has no type", () => {
             const untypedConfigs = [
@@ -117,7 +186,15 @@ describe("profileHelpers", () => {
                     },
                 },
             ] as any;
-            expect(isCurrentProfileUntyped("untyped", 0, untypedConfigs, {}, {})).toBe(true);
+            expect(
+                isCurrentProfileUntyped({
+                    selectedProfileKey: "untyped",
+                    selectedTab: 0,
+                    configurations: untypedConfigs,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBe(true);
         });
     });
 });

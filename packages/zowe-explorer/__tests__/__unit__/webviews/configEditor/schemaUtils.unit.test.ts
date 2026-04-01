@@ -24,13 +24,12 @@ const baseConfig: any = {
 describe("schemaUtils", () => {
     describe("getWizardTypeOptions", () => {
         it("returns [] when selectedTab is null", () => {
-            expect(getWizardTypeOptions(null, [baseConfig], {}, {})).toEqual([]);
+            expect(getWizardTypeOptions({ selectedTab: null, configurations: [baseConfig], schemaValidations: {}, pendingChanges: {} })).toEqual([]);
         });
         it("returns schema validDefaults merged with profile types", () => {
-            const configs = [{ ...baseConfig, configPath: "/c" }];
+            const configs = [{ ...baseConfig, configPath: "/c", properties: { profiles: { p1: { type: "custom" } } } }];
             const schema = { "/c": { validDefaults: ["zowe"] as string[] } };
-            configs[0].properties.profiles = { p1: { type: "custom" } };
-            const result = getWizardTypeOptions(0, configs, schema, {});
+            const result = getWizardTypeOptions({ selectedTab: 0, configurations: configs, schemaValidations: schema, pendingChanges: {} });
             expect(result).toContain("zowe");
             expect(result).toContain("custom");
             expect(result).toEqual([...result].sort((a, b) => a.localeCompare(b)));
@@ -39,14 +38,22 @@ describe("schemaUtils", () => {
             const configs = [{ ...baseConfig, configPath: "/c" }];
             const schema = { "/c": { validDefaults: [] as string[] } };
             const pending = { "/c": { "profiles.x.type": { value: "pendingType", path: [], profile: "x" } } };
-            const result = getWizardTypeOptions(0, configs, schema, pending);
+            const result = getWizardTypeOptions({ selectedTab: 0, configurations: configs, schemaValidations: schema, pendingChanges: pending });
             expect(result).toContain("pendingType");
         });
     });
 
     describe("getWizardPropertyOptions", () => {
         it("returns [] when selectedTab is null", () => {
-            expect(getWizardPropertyOptions(null, [baseConfig], {}, "zowe", [])).toEqual([]);
+            expect(
+                getWizardPropertyOptions({
+                    selectedTab: null,
+                    configurations: [baseConfig],
+                    schemaValidations: {},
+                    wizardSelectedType: "zowe",
+                    wizardProperties: [],
+                })
+            ).toEqual([]);
         });
         it("returns schema property keys not yet used", () => {
             const configs = [{ ...baseConfig }];
@@ -55,8 +62,24 @@ describe("schemaUtils", () => {
                     propertySchema: { zowe: { host: {}, port: {} } },
                 },
             };
-            expect(getWizardPropertyOptions(0, configs, schema, "zowe", [])).toEqual(["host", "port"]);
-            expect(getWizardPropertyOptions(0, configs, schema, "zowe", [{ key: "host", value: "x" }])).toEqual(["port"]);
+            expect(
+                getWizardPropertyOptions({
+                    selectedTab: 0,
+                    configurations: configs,
+                    schemaValidations: schema,
+                    wizardSelectedType: "zowe",
+                    wizardProperties: [],
+                })
+            ).toEqual(["host", "port"]);
+            expect(
+                getWizardPropertyOptions({
+                    selectedTab: 0,
+                    configurations: configs,
+                    schemaValidations: schema,
+                    wizardSelectedType: "zowe",
+                    wizardProperties: [{ key: "host", value: "x" }],
+                })
+            ).toEqual(["port"]);
         });
         it("falls back to all propertySchema when type not found", () => {
             const configs = [{ ...baseConfig }];
@@ -65,13 +88,23 @@ describe("schemaUtils", () => {
                     propertySchema: { other: { foo: {} } },
                 },
             };
-            expect(getWizardPropertyOptions(0, configs, schema, "zowe", [])).toEqual(["foo"]);
+            expect(
+                getWizardPropertyOptions({
+                    selectedTab: 0,
+                    configurations: configs,
+                    schemaValidations: schema,
+                    wizardSelectedType: "zowe",
+                    wizardProperties: [],
+                })
+            ).toEqual(["foo"]);
         });
     });
 
     describe("getWizardPropertyDescriptions", () => {
         it("returns {} when selectedTab is null", () => {
-            expect(getWizardPropertyDescriptions(null, [baseConfig], {}, "zowe")).toEqual({});
+            expect(
+                getWizardPropertyDescriptions({ selectedTab: null, configurations: [baseConfig], schemaValidations: {}, wizardSelectedType: "zowe" })
+            ).toEqual({});
         });
         it("returns descriptions for type", () => {
             const configs = [{ ...baseConfig }];
@@ -80,7 +113,9 @@ describe("schemaUtils", () => {
                     propertySchema: { zowe: { host: { description: "Host name" } } },
                 },
             };
-            expect(getWizardPropertyDescriptions(0, configs, schema, "zowe")).toEqual({ host: "Host name" });
+            expect(
+                getWizardPropertyDescriptions({ selectedTab: 0, configurations: configs, schemaValidations: schema, wizardSelectedType: "zowe" })
+            ).toEqual({ host: "Host name" });
         });
         it("falls back to all types when type not in schema", () => {
             const configs = [{ ...baseConfig }];
@@ -89,16 +124,28 @@ describe("schemaUtils", () => {
                     propertySchema: { other: { foo: { description: "Foo desc" } } },
                 },
             };
-            expect(getWizardPropertyDescriptions(0, configs, schema, "zowe")).toEqual({ foo: "Foo desc" });
+            expect(
+                getWizardPropertyDescriptions({ selectedTab: 0, configurations: configs, schemaValidations: schema, wizardSelectedType: "zowe" })
+            ).toEqual({ foo: "Foo desc" });
         });
     });
 
     describe("getPropertyType", () => {
         it("returns undefined when selectedTab is null", () => {
-            expect(getPropertyType("host", null, [baseConfig], {}, "zowe")).toBeUndefined();
+            expect(
+                getPropertyType({
+                    propertyKey: "host",
+                    selectedTab: null,
+                    configurations: [baseConfig],
+                    schemaValidations: {},
+                    wizardSelectedType: "zowe",
+                })
+            ).toBeUndefined();
         });
         it("returns undefined when wizardSelectedType is empty", () => {
-            expect(getPropertyType("host", 0, [baseConfig], {}, "")).toBeUndefined();
+            expect(
+                getPropertyType({ propertyKey: "host", selectedTab: 0, configurations: [baseConfig], schemaValidations: {}, wizardSelectedType: "" })
+            ).toBeUndefined();
         });
         it("returns type from schema", () => {
             const configs = [{ ...baseConfig }];
@@ -107,7 +154,15 @@ describe("schemaUtils", () => {
                     propertySchema: { zowe: { host: { type: "string" } } },
                 },
             };
-            expect(getPropertyType("host", 0, configs, schema, "zowe")).toBe("string");
+            expect(
+                getPropertyType({
+                    propertyKey: "host",
+                    selectedTab: 0,
+                    configurations: configs,
+                    schemaValidations: schema,
+                    wizardSelectedType: "zowe",
+                })
+            ).toBe("string");
         });
     });
 });

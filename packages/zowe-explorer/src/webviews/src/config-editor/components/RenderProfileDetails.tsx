@@ -12,14 +12,8 @@
 import { useCallback } from "react";
 
 import { RenderConfig } from "./renderConfig";
-import {
-  flattenProfiles,
-  PropertySortOrder,
-  ensureProfileProperties,
-  isMergedPropertySecure,
-  getOriginalProfileKey,
-  getPropertyDescriptions,
-} from "../utils";
+import { flattenProfiles, PropertySortOrder, ensureProfileProperties, isMergedPropertySecure, getOriginalProfileKey } from "../utils";
+import { getPropertyDescriptions } from "../utils/propertyUtils";
 import { getProfileNameForMergedProperties } from "../utils/renameUtils";
 import * as l10n from "@vscode/l10n";
 import { useConfigContext } from "../context/ConfigContext";
@@ -279,7 +273,7 @@ export const RenderProfileDetails = ({
             const shouldShowMergedProperties = showMergedProperties !== "hide";
             const propertyDescriptions =
               selectedTab !== null && currentConfig
-                ? getPropertyDescriptions(effectivePath, selectedTab, configurations, schemaValidations, getProfileType, pendingChanges, renames)
+                ? getPropertyDescriptions({ path: effectivePath, selectedTab, configurations, schemaValidations, pendingChanges, renames })
                 : {};
 
             return (

@@ -47,7 +47,8 @@ export interface FlattenedConfig {
     [key: string]: { value: string; path: string[] };
 }
 
-export type { schemaValidation } from "../../../utils/ConfigSchemaHelpers";
+import type { schemaValidation as SchemaValidationType } from "../../../utils/ConfigSchemaHelpers";
+export type { SchemaValidationType as schemaValidation };
 
 export type PropertySortOrder = "alphabetical" | "merged-first" | "non-merged-first";
 export type ProfileSortOrder = "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
@@ -76,3 +77,66 @@ export interface IConfigLayer {
         defaults?: { [key: string]: string };
     };
 }
+
+export type RenamesMap = { [configPath: string]: { [originalKey: string]: string } };
+export type DeletionsMap = { [configPath: string]: string[] };
+export type PendingChangesMap = { [configPath: string]: { [key: string]: PendingChange } };
+export type PendingDefaultsMap = { [configPath: string]: { [key: string]: PendingDefault } };
+export type SchemaValidationsMap = { [configPath: string]: SchemaValidationType | undefined };
+
+export interface ProfileSchemaEntry {
+    type?: string;
+    description?: string;
+    default?: unknown;
+    secure?: boolean;
+}
+
+export type ProfileSchemaMap = Record<string, Record<string, ProfileSchemaEntry>>;
+
+export interface ConfigStateContext {
+    selectedTab: number | null;
+    configurations: Configuration[];
+    pendingChanges: PendingChangesMap;
+    renames: RenamesMap;
+}
+
+export interface SchemaContext extends ConfigStateContext {
+    schemaValidations: SchemaValidationsMap;
+}
+
+export interface FullConfigContext extends SchemaContext {
+    deletions: DeletionsMap;
+}
+
+export interface RenameChange {
+    configPath: string;
+    originalKey: string;
+    newKey: string;
+}
+
+export interface FormattedChange {
+    key: string;
+    value?: string | number | boolean | Record<string, any>;
+    path?: string[];
+    profile?: string;
+    configPath: string;
+    secure?: boolean;
+}
+
+export interface ProfileData {
+    type?: string;
+    properties?: Record<string, unknown>;
+    profiles?: Record<string, ProfileData>;
+    secure?: string[];
+}
+
+export type ProfileMap = Record<string, ProfileData>;
+
+export interface MergedPropertyData {
+    value: unknown;
+    jsonLoc?: string;
+    osLoc?: string[];
+    secure?: boolean;
+}
+
+export type MergedPropertiesMap = Record<string, MergedPropertyData>;

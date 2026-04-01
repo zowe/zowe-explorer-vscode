@@ -10,20 +10,20 @@
  */
 
 import { getProfileType, getOriginalProfileKeyWithNested } from "./profileUtils";
-import { Configuration, PendingChange, PendingDefault } from "../types";
+import { Configuration, PendingChange, PendingDefault, ConfigStateContext, PendingDefaultsMap } from "../types";
 export type { Configuration, PendingChange, PendingDefault };
 
-export function isProfileDefault(
-    profileKey: string,
-    selectedTab: number | null,
-    configurations: Configuration[],
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    pendingDefaults: { [configPath: string]: { [key: string]: PendingDefault } },
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): boolean {
+interface IsProfileDefaultParams extends ConfigStateContext {
+    profileKey: string;
+    pendingDefaults: PendingDefaultsMap;
+}
+
+export function isProfileDefault(params: IsProfileDefaultParams): boolean {
+    const { profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames } = params;
+
     if (selectedTab === null) return false;
     const configPath = configurations[selectedTab!]!.configPath;
-    const profileType = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
+    const profileType = getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames });
 
     if (!profileType) return false;
 
@@ -62,14 +62,14 @@ export function isProfileDefault(
     return false;
 }
 
-export function isCurrentProfileUntyped(
-    selectedProfileKey: string | null,
-    selectedTab: number | null,
-    configurations: Configuration[],
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): boolean {
+interface IsCurrentProfileUntypedParams extends ConfigStateContext {
+    selectedProfileKey: string | null;
+}
+
+export function isCurrentProfileUntyped(params: IsCurrentProfileUntypedParams): boolean {
+    const { selectedProfileKey, selectedTab, configurations, pendingChanges, renames } = params;
+
     if (!selectedProfileKey) return false;
-    const profileType = getProfileType(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
+    const profileType = getProfileType({ profileKey: selectedProfileKey, selectedTab, configurations, pendingChanges, renames });
     return !profileType || profileType.trim() === "" || profileType.toLowerCase() === "default";
 }

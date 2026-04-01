@@ -144,21 +144,35 @@ export const RenderProfiles = ({
       };
 
       // Get ordered profile keys using imported utility and callback
-      const orderedProfileKeys = getOrderedProfileKeys(profilesObj, "", deletedProfiles, checkIsProfileOrParentDeleted);
+      const orderedProfileKeys = getOrderedProfileKeys({
+        profiles: profilesObj,
+        parentKey: "",
+        deletedProfiles,
+        isProfileOrParentDeleted: checkIsProfileOrParentDeleted,
+      });
 
-      // Process profile keys using extracted utilities
-      const uniqueRenamedProfileKeys = applyRenamesToProfileKeys(orderedProfileKeys, configPath, renames);
+      const uniqueRenamedProfileKeys = applyRenamesToProfileKeys({
+        orderedProfileKeys,
+        configPath,
+        renames,
+      });
 
-      const renamedPendingProfileKeys = mergePendingProfileKeys(pendingProfiles, configPath, renames, deletions, uniqueRenamedProfileKeys);
+      const renamedPendingProfileKeys = mergePendingProfileKeys({
+        pendingProfiles,
+        configPath,
+        renames,
+        deletions,
+        uniqueRenamedProfileKeys,
+      });
 
-      const filteredOriginalKeys = filterConflictingProfileKeys(
+      const filteredOriginalKeys = filterConflictingProfileKeys({
         uniqueRenamedProfileKeys,
         renamedPendingProfileKeys,
         pendingProfiles,
         deletions,
         configPath,
-        renames
-      );
+        renames,
+      });
 
       let finalProfileKeys: string[];
 

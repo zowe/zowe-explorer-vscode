@@ -44,9 +44,7 @@ export class FavoritePersistenceUtils {
      * Rewrites favorites and session history for all trees in one read/modify/write per schema (fewer awaited storage round-trips than separate calls).
      */
     public static async applyProfileRenameToStoredTreePersistence(rename: ProfileRenameForFavorites): Promise<void> {
-        const renameMap = new Map([
-            [rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath }],
-        ]);
+        const renameMap = new Map([[rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath }]]);
         await Promise.all(
             FAVORITES_SCHEMAS.map(async (schema) => {
                 const settings = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(schema);
@@ -102,9 +100,7 @@ export class FavoritePersistenceUtils {
      * Drops session nodes whose profile name changed, then re-adds them so labels, profiles, and URIs match the new name.
      */
     public static async rebuildSessionNodesAfterProfileRename(rename: ProfileRenameForFavorites): Promise<void> {
-        const renameMap = new Map([
-            [rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath }],
-        ]);
+        const renameMap = new Map([[rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath }]]);
         const trees = [SharedTreeProviders.ds, SharedTreeProviders.uss, SharedTreeProviders.job].filter(Boolean);
         const profiles = Profiles.getInstance();
         for (const tree of trees) {

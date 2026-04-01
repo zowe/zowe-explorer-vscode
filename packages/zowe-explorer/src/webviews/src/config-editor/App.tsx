@@ -17,14 +17,9 @@ import {
   WizardManager,
 } from "./components";
 
-import {
-  flattenProfiles,
-  getProfileType,
-  getRenamedProfileKeyWithNested,
-  getPropertyTypeForAddProfile,
-  fetchTypeOptions,
-  getPropertyDescriptions,
-} from "./utils";
+import { flattenProfiles, getRenamedProfileKeyWithNested } from "./utils";
+import { getProfileType } from "./utils/profileUtils";
+import { getPropertyTypeForAddProfile, fetchTypeOptions, getPropertyDescriptions } from "./utils/propertyUtils";
 
 import { getProfileNameForMergedProperties } from "./utils/renameUtils";
 import { usePropertyHandlers, useConfigHandlers, useProfileUtils, useHandlerContext } from "./hooks";
@@ -170,8 +165,9 @@ function AppContent() {
   useEffect(() => {
     if (selectedTab !== null && configurations[selectedTab]) {
       const config = configurations[selectedTab].properties;
-      setFlattenedConfig(flattenProfiles(config.profiles));
-      setFlattenedDefaults(flattenProfiles(config.defaults));
+      // TODO: flattenProfiles returns profile data, not FlattenedConfig — investigate type mismatch
+      setFlattenedConfig(flattenProfiles(config.profiles) as any);
+      setFlattenedDefaults(flattenProfiles(config.defaults) as any);
       if (!isSaving && !isNavigating) {
         setMergedProperties(null);
       }
@@ -251,7 +247,7 @@ function AppContent() {
     setPendingProfileDeletion(null);
     // Cancel any pending property deletion when user sets profile as default
     setPendingPropertyDeletion(null);
-    const profileType = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
+    const profileType = getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames });
     if (!profileType) {
       return;
     }
@@ -339,7 +335,7 @@ function AppContent() {
           const availableTypes = Array.from(
             new Set(
               filteredProfileKeys
-                .map((key) => getProfileType(key, selectedTab, configurations, pendingChanges, renames))
+                .map((key) => getProfileType({ profileKey: key, selectedTab, configurations, pendingChanges, renames }))
                 .filter((type): type is string => type !== null)
             )
           );
@@ -508,27 +504,26 @@ function AppContent() {
         showDropdown={showDropdown}
         typeOptions={
           newProfileKeyPath
-            ? fetchTypeOptions(newProfileKeyPath, selectedTab, configurations, schemaValidations, getProfileType, pendingChanges, renames, deletions)
+            ? fetchTypeOptions({ path: newProfileKeyPath, selectedTab, configurations, schemaValidations, pendingChanges, renames, deletions })
             : []
         }
         propertyDescriptions={
           newProfileKeyPath
-            ? getPropertyDescriptions(newProfileKeyPath, selectedTab, configurations, schemaValidations, getProfileType, pendingChanges, renames)
+            ? getPropertyDescriptions({ path: newProfileKeyPath, selectedTab, configurations, schemaValidations, pendingChanges, renames })
             : {}
         }
         isSecure={isSecure}
         secureValuesAllowed={secureValuesAllowed}
         getPropertyType={(propertyKey: string) =>
-          getPropertyTypeForAddProfile(
+          getPropertyTypeForAddProfile({
             propertyKey,
             selectedTab,
             configurations,
             selectedProfileKey,
             schemaValidations,
-            getProfileType,
             pendingChanges,
-            renames
-          )
+            renames,
+          })
         }
         canPropertyBeSecure={utilityHelpers.canPropertyBeSecure}
         newProfileKeyPath={newProfileKeyPath || []}

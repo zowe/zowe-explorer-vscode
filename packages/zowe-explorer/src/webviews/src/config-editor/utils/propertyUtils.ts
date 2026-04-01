@@ -11,27 +11,27 @@
 
 import { extractProfileKeyFromPath, flattenProfiles } from "./configUtils";
 import { getProfileType, getOriginalProfileKeyWithNested } from "./profileUtils";
-import { PendingChange, Configuration, schemaValidation } from "../types";
+import { SchemaContext, FullConfigContext, RenamesMap, DeletionsMap, SchemaValidationsMap, ProfileSchemaEntry } from "../types";
 
-/**
- * Internal helper to get property type from schema based on profile type.
- * Centralizes the common logic used by both getPropertyTypeForAddProfile and getPropertyTypeForConfigEditor.
- */
-function getPropertyTypeFromSchema(
-    propertyKey: string,
-    profileType: string | null,
-    configPath: string,
-    schemaValidations: { [configPath: string]: schemaValidation | undefined }
-): string | undefined {
+interface PropertyTypeFromSchemaParams {
+    propertyKey: string;
+    profileType: string | null;
+    configPath: string;
+    schemaValidations: SchemaValidationsMap;
+}
+
+function getPropertyTypeFromSchema(params: PropertyTypeFromSchemaParams): string | undefined {
+    const { propertyKey, profileType, configPath, schemaValidations } = params;
+
     if (profileType) {
         const propertySchema = schemaValidations[configPath]?.propertySchema[profileType] || {};
         return propertySchema[propertyKey]?.type;
     }
 
-    const schemaValidation = schemaValidations[configPath];
-    if (schemaValidation?.propertySchema) {
-        for (const type in schemaValidation.propertySchema) {
-            const propertySchema = schemaValidation.propertySchema[type];
+    const validation = schemaValidations[configPath];
+    if (validation?.propertySchema) {
+        for (const type in validation.propertySchema) {
+            const propertySchema = validation.propertySchema[type];
             if (propertySchema[propertyKey]?.type) {
                 return propertySchema[propertyKey].type;
             }
@@ -41,55 +41,51 @@ function getPropertyTypeFromSchema(
     return undefined;
 }
 
-export function getPropertyTypeForAddProfile(
-    propertyKey: string,
-    selectedTab: number | null,
-    configurations: Configuration[],
-    selectedProfileKey: string | null,
-    schemaValidations: { [configPath: string]: schemaValidation | undefined },
-    getProfileTypeFn: typeof getProfileType,
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): string | undefined {
+interface GetPropertyTypeForAddProfileParams extends SchemaContext {
+    propertyKey: string;
+    selectedProfileKey: string | null;
+}
+
+export function getPropertyTypeForAddProfile(params: GetPropertyTypeForAddProfileParams): string | undefined {
+    const { propertyKey, selectedTab, configurations, selectedProfileKey, schemaValidations, pendingChanges, renames } = params;
+
     if (selectedTab === null) return undefined;
 
     const configPath = configurations[selectedTab].configPath;
-    const currentProfileType = selectedProfileKey ? getProfileTypeFn(selectedProfileKey, selectedTab, configurations, pendingChanges, renames) : null;
+    const currentProfileType = selectedProfileKey
+        ? getProfileType({ profileKey: selectedProfileKey, selectedTab, configurations, pendingChanges, renames })
+        : null;
 
-    return getPropertyTypeFromSchema(propertyKey, currentProfileType, configPath, schemaValidations);
+    return getPropertyTypeFromSchema({ propertyKey, profileType: currentProfileType, configPath, schemaValidations });
 }
 
-export function getPropertyTypeForConfigEditor(
-    propertyKey: string,
-    profilePath: string[],
-    selectedTab: number | null,
-    configurations: Configuration[],
-    schemaValidations: { [configPath: string]: schemaValidation | undefined },
-    getProfileTypeFn: typeof getProfileType,
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): string | undefined {
+interface GetPropertyTypeForConfigEditorParams extends SchemaContext {
+    propertyKey: string;
+    profilePath: string[];
+}
+
+export function getPropertyTypeForConfigEditor(params: GetPropertyTypeForConfigEditorParams): string | undefined {
+    const { propertyKey, profilePath, selectedTab, configurations, schemaValidations, pendingChanges, renames } = params;
+
     if (selectedTab === null) return undefined;
 
     const configPath = configurations[selectedTab].configPath;
     const profileKey = extractProfileKeyFromPath(profilePath);
-    const resolvedType = getProfileTypeFn(profileKey, selectedTab, configurations, pendingChanges, renames);
+    const resolvedType = getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames });
 
-    return getPropertyTypeFromSchema(propertyKey, resolvedType, configPath, schemaValidations);
+    return getPropertyTypeFromSchema({ propertyKey, profileType: resolvedType, configPath, schemaValidations });
 }
 
-export function getPropertyDescriptions(
-    path: string[],
-    selectedTab: number | null,
-    configurations: Configuration[],
-    schemaValidations: { [configPath: string]: schemaValidation | undefined },
-    getProfileTypeFn: typeof getProfileType,
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): { [key: string]: string } {
+interface GetPropertyDescriptionsParams extends SchemaContext {
+    path: string[];
+}
+
+export function getPropertyDescriptions(params: GetPropertyDescriptionsParams): { [key: string]: string } {
+    const { path, selectedTab, configurations, schemaValidations, pendingChanges, renames } = params;
+
     const { configPath } = configurations[selectedTab!]!;
     const profileKey = extractProfileKeyFromPath(path);
-    const resolvedType = getProfileTypeFn(profileKey, selectedTab, configurations, pendingChanges, renames);
+    const resolvedType = getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames });
 
     const propertyDescriptions: { [key: string]: string } = {};
     const propertySchema = schemaValidations[configPath]?.propertySchema || {};
@@ -97,16 +93,16 @@ export function getPropertyDescriptions(
     if (resolvedType && propertySchema[resolvedType]) {
         Object.entries(propertySchema[resolvedType]).forEach(([key, schema]) => {
             if (schema && typeof schema === "object" && "description" in schema && schema.description) {
-                propertyDescriptions[key] = schema.description as string;
+                propertyDescriptions[key] = schema.description;
             }
         });
     }
 
-    Object.values(propertySchema).forEach((typeSchema: any) => {
+    Object.values(propertySchema).forEach((typeSchema: Record<string, ProfileSchemaEntry>) => {
         if (typeSchema && typeof typeSchema === "object") {
-            Object.entries(typeSchema).forEach(([key, schema]: [string, any]) => {
+            Object.entries(typeSchema).forEach(([key, schema]) => {
                 if (schema && typeof schema === "object" && "description" in schema && schema.description && !propertyDescriptions[key]) {
-                    propertyDescriptions[key] = schema.description as string;
+                    propertyDescriptions[key] = schema.description;
                 }
             });
         }
@@ -115,17 +111,17 @@ export function getPropertyDescriptions(
     return propertyDescriptions;
 }
 
-/**
- * True when this property key is listed in pending deletions for the given properties path,
- * including when the profile was renamed and the deletion key uses the original path.
- */
-export function isPropertyPendingDeletion(
-    propertyKey: string,
-    path: string[],
-    configPath: string,
-    deletions: { [configPath: string]: string[] },
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): boolean {
+interface IsPropertyPendingDeletionParams {
+    propertyKey: string;
+    path: string[];
+    configPath: string;
+    deletions: DeletionsMap;
+    renames: RenamesMap;
+}
+
+export function isPropertyPendingDeletion(params: IsPropertyPendingDeletionParams): boolean {
+    const { propertyKey, path, configPath, deletions, renames } = params;
+
     if (path.length === 0 || path[path.length - 1] !== "properties") {
         return false;
     }
@@ -157,19 +153,17 @@ export function isPropertyPendingDeletion(
     return deletionsList.includes(originalFullKey);
 }
 
-export function fetchTypeOptions(
-    path: string[],
-    selectedTab: number | null,
-    configurations: Configuration[],
-    schemaValidations: { [configPath: string]: schemaValidation | undefined },
-    getProfileTypeFn: typeof getProfileType,
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames: { [configPath: string]: { [originalKey: string]: string } },
-    deletions: { [configPath: string]: string[] }
-): string[] {
+interface FetchTypeOptionsParams extends FullConfigContext {
+    path: string[];
+    schemaValidations: SchemaValidationsMap;
+}
+
+export function fetchTypeOptions(params: FetchTypeOptionsParams): string[] {
+    const { path, selectedTab, configurations, schemaValidations, pendingChanges, renames, deletions } = params;
+
     const { configPath } = configurations[selectedTab!]!;
     const profileKey = extractProfileKeyFromPath(path);
-    const resolvedType = getProfileTypeFn(profileKey, selectedTab, configurations, pendingChanges, renames);
+    const resolvedType = getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames });
 
     const allPropertyKeys = new Set<string>();
     const propertySchema = schemaValidations[configPath]?.propertySchema || {};
@@ -177,7 +171,7 @@ export function fetchTypeOptions(
     if (resolvedType && propertySchema[resolvedType]) {
         Object.keys(propertySchema[resolvedType]).forEach((key) => allPropertyKeys.add(key));
     } else {
-        Object.values(propertySchema).forEach((typeSchema: any) => {
+        Object.values(propertySchema).forEach((typeSchema: Record<string, ProfileSchemaEntry>) => {
             if (typeSchema && typeof typeSchema === "object") {
                 Object.keys(typeSchema).forEach((key) => allPropertyKeys.add(key));
             }
@@ -212,7 +206,7 @@ export function fetchTypeOptions(
     });
 
     Array.from(existingProperties).forEach((propName) => {
-        if (isPropertyPendingDeletion(propName, path, configPath, deletions, renames)) {
+        if (isPropertyPendingDeletion({ propertyKey: propName, path, configPath, deletions, renames })) {
             existingProperties.delete(propName);
         }
     });
@@ -220,11 +214,6 @@ export function fetchTypeOptions(
     return Array.from(allPropertyKeys).filter((key) => !existingProperties.has(key));
 }
 
-/**
- * Determines if a property key represents a file path property
- * @param key - The property key to check
- * @returns true if the key represents a file path property, false otherwise
- */
 export function isFileProperty(key: string): boolean {
     if (!key || typeof key !== "string") return false;
     const filePaths = ["privatekey", "certfile", "certkeyfile"];

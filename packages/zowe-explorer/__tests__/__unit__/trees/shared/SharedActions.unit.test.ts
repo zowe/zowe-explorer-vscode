@@ -976,7 +976,7 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
                     profilesForValidation: [],
                     checkCurrentProfile: jest.fn().mockResolvedValue(undefined),
                     refresh: jest.fn().mockResolvedValue(undefined),
-                }) as any
+                } as any)
         );
         const syncSessionNodeMock = jest.spyOn(AuthUtils, "syncSessionNode").mockClear().mockReturnValue(undefined);
         const refreshProfilesMock = jest.spyOn(SharedActions, "refreshProfiles").mockClear().mockResolvedValueOnce(undefined);

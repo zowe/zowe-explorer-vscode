@@ -10,17 +10,21 @@
  */
 
 import { flattenProfiles } from "./configUtils";
-import { Configuration, PendingChange, schemaValidation } from "../types";
+import { Configuration, PendingChangesMap, SchemaValidationsMap, ProfileSchemaEntry } from "../types";
 
-/**
- * Gets available profile type options from schema and existing profiles.
- */
-export function getWizardTypeOptions(
-    selectedTab: number | null,
-    configurations: Configuration[],
-    schemaValidations: { [configPath: string]: schemaValidation | undefined },
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } }
-): string[] {
+interface WizardSchemaContext {
+    selectedTab: number | null;
+    configurations: Configuration[];
+    schemaValidations: SchemaValidationsMap;
+}
+
+interface GetWizardTypeOptionsParams extends WizardSchemaContext {
+    pendingChanges: PendingChangesMap;
+}
+
+export function getWizardTypeOptions(params: GetWizardTypeOptionsParams): string[] {
+    const { selectedTab, configurations, schemaValidations, pendingChanges } = params;
+
     if (selectedTab === null) return [];
 
     const schemaTypes = schemaValidations[configurations[selectedTab].configPath]?.validDefaults || [];
@@ -28,9 +32,9 @@ export function getWizardTypeOptions(
     const flatProfiles = flattenProfiles(config.profiles || {});
     const profileTypes = new Set<string>();
 
-    Object.values(flatProfiles).forEach((profile: any) => {
-        if (profile?.type && typeof profile.type === "string" && profile.type.trim() !== "") {
-            profileTypes.add(profile.type);
+    Object.values(flatProfiles).forEach((profile: Record<string, unknown>) => {
+        if (profile?.type && typeof profile.type === "string" && (profile.type as string).trim() !== "") {
+            profileTypes.add(profile.type as string);
         }
     });
 
@@ -51,16 +55,14 @@ export function getWizardTypeOptions(
     return Array.from(allTypes).sort((a, b) => a.localeCompare(b));
 }
 
-/**
- * Gets available property options for the wizard based on selected type.
- */
-export function getWizardPropertyOptions(
-    selectedTab: number | null,
-    configurations: Configuration[],
-    schemaValidations: { [configPath: string]: schemaValidation | undefined },
-    wizardSelectedType: string,
-    wizardProperties: { key: string; value: string | boolean | number | Object; secure?: boolean }[]
-): string[] {
+interface GetWizardPropertyOptionsParams extends WizardSchemaContext {
+    wizardSelectedType: string;
+    wizardProperties: { key: string; value: string | boolean | number | Object; secure?: boolean }[];
+}
+
+export function getWizardPropertyOptions(params: GetWizardPropertyOptionsParams): string[] {
+    const { selectedTab, configurations, schemaValidations, wizardSelectedType, wizardProperties } = params;
+
     if (selectedTab === null) return [];
 
     const allPropertyOptions = new Set<string>();
@@ -69,7 +71,7 @@ export function getWizardPropertyOptions(
     if (wizardSelectedType && propertySchema[wizardSelectedType]) {
         Object.keys(propertySchema[wizardSelectedType]).forEach((key) => allPropertyOptions.add(key));
     } else {
-        Object.values(propertySchema).forEach((typeSchema: any) => {
+        Object.values(propertySchema).forEach((typeSchema: Record<string, ProfileSchemaEntry>) => {
             if (typeSchema && typeof typeSchema === "object") {
                 Object.keys(typeSchema).forEach((key) => allPropertyOptions.add(key));
             }
@@ -82,15 +84,13 @@ export function getWizardPropertyOptions(
         .sort((a, b) => a.localeCompare(b));
 }
 
-/**
- * Gets property descriptions from schema for the wizard.
- */
-export function getWizardPropertyDescriptions(
-    selectedTab: number | null,
-    configurations: Configuration[],
-    schemaValidations: { [configPath: string]: schemaValidation | undefined },
-    wizardSelectedType: string
-): { [key: string]: string } {
+interface GetWizardPropertyDescriptionsParams extends WizardSchemaContext {
+    wizardSelectedType: string;
+}
+
+export function getWizardPropertyDescriptions(params: GetWizardPropertyDescriptionsParams): { [key: string]: string } {
+    const { selectedTab, configurations, schemaValidations, wizardSelectedType } = params;
+
     if (selectedTab === null) return {};
 
     const propertyDescriptions: { [key: string]: string } = {};
@@ -99,15 +99,15 @@ export function getWizardPropertyDescriptions(
     if (wizardSelectedType && propertySchema[wizardSelectedType]) {
         Object.entries(propertySchema[wizardSelectedType]).forEach(([key, schema]) => {
             if (schema && typeof schema === "object" && "description" in schema && schema.description) {
-                propertyDescriptions[key] = schema.description as string;
+                propertyDescriptions[key] = schema.description;
             }
         });
     } else {
-        Object.values(propertySchema).forEach((typeSchema: any) => {
+        Object.values(propertySchema).forEach((typeSchema: Record<string, ProfileSchemaEntry>) => {
             if (typeSchema && typeof typeSchema === "object") {
-                Object.entries(typeSchema).forEach(([key, schema]: [string, any]) => {
+                Object.entries(typeSchema).forEach(([key, schema]) => {
                     if (schema && typeof schema === "object" && "description" in schema && schema.description && !propertyDescriptions[key]) {
-                        propertyDescriptions[key] = schema.description as string;
+                        propertyDescriptions[key] = schema.description;
                     }
                 });
             }
@@ -117,16 +117,14 @@ export function getWizardPropertyDescriptions(
     return propertyDescriptions;
 }
 
-/**
- * Gets the property type from schema for a given property key.
- */
-export function getPropertyType(
-    propertyKey: string,
-    selectedTab: number | null,
-    configurations: Configuration[],
-    schemaValidations: { [configPath: string]: schemaValidation | undefined },
-    wizardSelectedType: string
-): string | undefined {
+interface GetPropertyTypeParams extends WizardSchemaContext {
+    propertyKey: string;
+    wizardSelectedType: string;
+}
+
+export function getPropertyType(params: GetPropertyTypeParams): string | undefined {
+    const { propertyKey, selectedTab, configurations, schemaValidations, wizardSelectedType } = params;
+
     if (selectedTab === null) return undefined;
     if (!wizardSelectedType) return undefined;
     const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema[wizardSelectedType] || {};

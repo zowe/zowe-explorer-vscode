@@ -9,9 +9,8 @@
  *
  */
 
-// @ts-ignore
-import { get, set } from "lodash";
-import { ConfigMoveAPI, IConfigLayer } from "../types";
+import { set } from "lodash";
+import { ConfigMoveAPI, IConfigLayer, ProfileData } from "../types";
 
 export function moveProfile(api: ConfigMoveAPI, layerActive: () => IConfigLayer, sourcePath: string, targetPath: string): void {
     const sourceProfile = api.get(sourcePath);
@@ -63,52 +62,40 @@ function moveProfileInPlaceOrdered(api: ConfigMoveAPI, layerActive: () => IConfi
         const currentLayer = layerActive();
         const profiles = currentLayer.properties.profiles;
 
-        const newProfiles: { [key: string]: any } = {};
+        const newProfiles: Record<string, ProfileData> = {};
         for (const [key, value] of Object.entries(profiles)) {
-            if (key === sourceName) {
-                newProfiles[targetName] = value;
-            } else {
-                newProfiles[key] = value;
-            }
+            newProfiles[key === sourceName ? targetName : key] = value as ProfileData;
         }
 
         currentLayer.properties.profiles = newProfiles;
     } else {
         const parentPath = sourceParts.slice(0, -1).join(".");
-        const parentProfile = api.get(parentPath);
+        const parentProfile: ProfileData | null = api.get(parentPath);
 
         if (parentProfile) {
             if (parentProfile.profiles) {
-                const newProfiles: { [key: string]: any } = {};
+                const newProfiles: Record<string, ProfileData> = {};
                 for (const [key, value] of Object.entries(parentProfile.profiles)) {
-                    if (key === sourceName) {
-                        newProfiles[targetName] = value;
-                    } else {
-                        newProfiles[key] = value;
-                    }
+                    newProfiles[key === sourceName ? targetName : key] = value;
                 }
 
                 parentProfile.profiles = newProfiles;
                 api.set(parentPath, parentProfile);
             } else {
-                const newParentProfile: { [key: string]: any } = {};
+                const newParentProfile: Record<string, unknown> = {};
                 for (const [key, value] of Object.entries(parentProfile)) {
-                    if (key === sourceName) {
-                        newParentProfile[targetName] = value;
-                    } else {
-                        newParentProfile[key] = value;
-                    }
+                    newParentProfile[key === sourceName ? targetName : key] = value;
                 }
 
                 api.set(parentPath, newParentProfile);
 
                 if (parentPath !== "profiles") {
                     const grandParentPath = parentPath.split(".").slice(0, -1).join(".");
-                    const grandParent = api.get(grandParentPath);
+                    const grandParent: ProfileData | null = api.get(grandParentPath);
                     if (grandParent) {
                         const parentName = parentPath.split(".").pop();
-                        if (parentName && grandParent[parentName]) {
-                            grandParent[parentName] = newParentProfile;
+                        if (parentName && (grandParent as Record<string, unknown>)[parentName]) {
+                            (grandParent as Record<string, unknown>)[parentName] = newParentProfile;
                             api.set(grandParentPath, grandParent);
                         }
                     }
@@ -246,12 +233,18 @@ export function updateSecureArrays(
     }
 }
 
-export function findSecureArrays(layerActive: () => IConfigLayer): Array<{ profile: any; profilePath: string; secure: string[] }> {
-    const secureArrays: Array<{ profile: any; profilePath: string; secure: string[] }> = [];
+interface SecureArrayEntry {
+    profile: ProfileData;
+    profilePath: string;
+    secure: string[];
+}
+
+export function findSecureArrays(layerActive: () => IConfigLayer): SecureArrayEntry[] {
+    const secureArrays: SecureArrayEntry[] = [];
     const currentLayer = layerActive();
     const profiles = currentLayer.properties.profiles;
 
-    const findSecureArraysRecursive = (profileObj: any, profilePath: string) => {
+    const findSecureArraysRecursive = (profileObj: ProfileData, profilePath: string) => {
         if (profileObj.secure && Array.isArray(profileObj.secure)) {
             secureArrays.push({
                 profile: profileObj,
@@ -262,14 +255,13 @@ export function findSecureArrays(layerActive: () => IConfigLayer): Array<{ profi
 
         if (profileObj.profiles) {
             for (const [nestedProfileName, nestedProfile] of Object.entries(profileObj.profiles)) {
-                const nestedPath = `${profilePath}.profiles.${nestedProfileName}`;
-                findSecureArraysRecursive(nestedProfile as any, nestedPath);
+                findSecureArraysRecursive(nestedProfile, `${profilePath}.profiles.${nestedProfileName}`);
             }
         }
     };
 
     for (const [profileName, profile] of Object.entries(profiles)) {
-        findSecureArraysRecursive(profile as any, `profiles.${profileName}`);
+        findSecureArraysRecursive(profile as ProfileData, `profiles.${profileName}`);
     }
 
     return secureArrays;
@@ -292,10 +284,10 @@ export function updateSecurePropertyPath(securePropertyPath: string, oldProfileP
     return securePropertyPath.replace(oldProfilePath, newProfilePath);
 }
 
-export function findProfileInLayer(layer: IConfigLayer, profileName: string): any {
+export function findProfileInLayer(layer: IConfigLayer, profileName: string): ProfileData | null {
     const profiles = layer.properties.profiles;
 
-    const findProfileRecursive = (profileObj: any, currentPath: string[]): any => {
+    const findProfileRecursive = (profileObj: Record<string, ProfileData>, currentPath: string[]): ProfileData | null => {
         for (const [name, profile] of Object.entries(profileObj)) {
             const newPath = [...currentPath, name];
             const profileKey = newPath.join(".");
@@ -304,8 +296,8 @@ export function findProfileInLayer(layer: IConfigLayer, profileName: string): an
                 return profile;
             }
 
-            if ((profile as any).profiles) {
-                const found = findProfileRecursive((profile as any).profiles, newPath);
+            if (profile.profiles) {
+                const found = findProfileRecursive(profile.profiles, newPath);
                 if (found) {
                     return found;
                 }
@@ -314,7 +306,7 @@ export function findProfileInLayer(layer: IConfigLayer, profileName: string): an
         return null;
     };
 
-    return findProfileRecursive(profiles, []);
+    return findProfileRecursive(profiles as Record<string, ProfileData>, []);
 }
 
 export function renameProfile(api: ConfigMoveAPI, layerActive: () => IConfigLayer, originalPath: string, newName: string): string {
@@ -382,7 +374,7 @@ export function updateDefaultsAfterRename(
     layerActive: () => IConfigLayer,
     originalKey: string,
     newKey: string,
-    updateTeamConfig?: (defaults: any) => void
+    updateTeamConfig?: (defaults: Record<string, string>) => void
 ): void {
     try {
         const currentLayer = layerActive();

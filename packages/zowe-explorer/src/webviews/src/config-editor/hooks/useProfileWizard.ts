@@ -93,14 +93,14 @@ export function useProfileWizard({
         setWizardProfileNameValidation,
     } = useWizardState();
 
-    const validationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const validationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Helper functions - now using extracted utilities
-    const getWizardTypeOptions = () => getTypeOptions(selectedTab, configurations, schemaValidations, pendingChanges);
-    const getWizardPropertyOptions = () => getPropertyOptions(selectedTab, configurations, schemaValidations, wizardSelectedType, wizardProperties);
-    const getWizardPropertyDescriptions = () => getPropertyDescriptions(selectedTab, configurations, schemaValidations, wizardSelectedType);
+    const getWizardTypeOptions = () => getTypeOptions({ selectedTab, configurations, schemaValidations, pendingChanges });
+    const getWizardPropertyOptions = () =>
+        getPropertyOptions({ selectedTab, configurations, schemaValidations, wizardSelectedType, wizardProperties });
+    const getWizardPropertyDescriptions = () => getPropertyDescriptions({ selectedTab, configurations, schemaValidations, wizardSelectedType });
     const getPropertyType = (propertyKey: string) =>
-        getSchemaPropertyType(propertyKey, selectedTab, configurations, schemaValidations, wizardSelectedType);
+        getSchemaPropertyType({ propertyKey, selectedTab, configurations, schemaValidations, wizardSelectedType });
 
     const validateProfileNameWithServer = useCallback(() => {
         if (!wizardProfileName.trim() || selectedTab === null) {

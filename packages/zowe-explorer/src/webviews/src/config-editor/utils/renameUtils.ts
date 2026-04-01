@@ -9,7 +9,9 @@
  *
  */
 
-export const updateChangesForRenames = (changes: any[], renames: any[]) => {
+import { FormattedChange, RenameChange, RenamesMap } from "../types";
+
+export const updateChangesForRenames = (changes: FormattedChange[], renames: RenameChange[]) => {
     if (!renames || renames.length === 0) {
         return changes;
     }
@@ -85,7 +87,7 @@ export const updateChangesForRenames = (changes: any[], renames: any[]) => {
                             const newPattern = "profiles." + newKeyParts.join(".profiles.");
 
                             if (updatedKey.includes(originalPattern)) {
-                                updatedKey = updatedKey.replaceAll(originalPattern, newPattern);
+                                updatedKey = updatedKey.split(originalPattern).join(newPattern);
                                 appliedKeyRenames.add(renameKey);
                                 keyChanged = true;
                                 break;
@@ -212,11 +214,7 @@ const extractProfileFromKey = (key: string): string => {
     return profileParts.join(".");
 };
 
-export const getProfileNameForMergedProperties = (
-    profileKey: string,
-    configPath: string,
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): string => {
+export const getProfileNameForMergedProperties = (profileKey: string, configPath: string, renames: RenamesMap): string => {
     let effectiveProfileKey = profileKey;
 
     // Apply reverse renames step by step
@@ -581,11 +579,7 @@ export const consolidateConflictingRenames = (renames: { [originalKey: string]: 
     return finalConsolidated;
 };
 
-export const getCurrentEffectiveName = (
-    profileKey: string,
-    configPath: string,
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): string => {
+export const getCurrentEffectiveName = (profileKey: string, configPath: string, renames: RenamesMap): string => {
     const currentRenames = renames[configPath] || {};
     let effectiveName = profileKey;
 
@@ -689,11 +683,7 @@ export const checkIfRenameCancelsOut = (currentRenames: { [originalKey: string]:
     return false;
 };
 
-export const hasPendingRename = (
-    profileKey: string,
-    configPath: string,
-    renames: { [configPath: string]: { [originalKey: string]: string } }
-): boolean => {
+export const hasPendingRename = (profileKey: string, configPath: string, renames: RenamesMap): boolean => {
     if (!configPath) {
         return false;
     }

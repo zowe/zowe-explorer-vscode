@@ -12,7 +12,9 @@
 import { useCallback } from "react";
 import { useConfigContext } from "../context/ConfigContext";
 import { useUtilityHelpers } from "./useUtilityHelpers";
-import { extractProfileKeyFromPath, getRenamedProfileKeyWithNested, getPropertyTypeForAddProfile, parseValueByType, getProfileType } from "../utils";
+import { extractProfileKeyFromPath, getRenamedProfileKeyWithNested, parseValueByType } from "../utils";
+import { getPropertyTypeForAddProfile } from "../utils/propertyUtils";
+import { getProfileType } from "../utils/profileUtils";
 import { isProfileDefault } from "../utils/profileHelpers";
 
 interface PropertyHandlersParams {
@@ -81,12 +83,12 @@ export function usePropertyHandlers(params: PropertyHandlersParams) {
 
             const isProfileLevelType = path[path.length - 1] === "type" && !path.includes("properties");
             if (isProfileLevelType) {
-                const oldType = getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames);
+                const oldType = getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames });
                 const newTypeStr = (value ?? "").trim();
                 const wasDefaultForOldType =
                     oldType &&
                     oldType !== newTypeStr &&
-                    isProfileDefault(profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames);
+                    isProfileDefault({ profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames });
 
                 if (wasDefaultForOldType) {
                     const config = configurations[selectedTab!].properties;
@@ -226,16 +228,15 @@ export function usePropertyHandlers(params: PropertyHandlersParams) {
         const fullKey = isSecure ? path.join(".").replace("secure", "properties") : path.join(".");
         const profileKey = extractProfileKeyFromPath(path);
 
-        const propertyType = getPropertyTypeForAddProfile(
-            newProfileKey.trim(),
-            selectedTab!,
+        const propertyType = getPropertyTypeForAddProfile({
+            propertyKey: newProfileKey.trim(),
+            selectedTab: selectedTab!,
             configurations,
             selectedProfileKey,
             schemaValidations,
-            getProfileType,
             pendingChanges,
-            renames
-        );
+            renames,
+        });
         const convertedValue = parseValueByType(newProfileValue, propertyType);
 
         setPendingChanges((prev) => ({

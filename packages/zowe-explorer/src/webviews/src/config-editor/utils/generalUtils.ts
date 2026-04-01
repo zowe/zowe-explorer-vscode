@@ -43,11 +43,11 @@ export function getProfileSortOrderDisplayName(sortOrder: ProfileSortOrder): str
     }
 }
 
-export function getNestedProperty(obj: any, path: string[]): any {
-    let current = obj;
+export function getNestedProperty(obj: Record<string, unknown>, path: string[]): unknown {
+    let current: unknown = obj;
     for (const segment of path) {
-        if (current && typeof current === "object" && current.hasOwnProperty(segment)) {
-            current = current[segment];
+        if (current && typeof current === "object" && (current as Record<string, unknown>).hasOwnProperty(segment)) {
+            current = (current as Record<string, unknown>)[segment];
         } else {
             return undefined;
         }

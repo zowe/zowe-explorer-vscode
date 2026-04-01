@@ -104,11 +104,11 @@ describe("profileUtils", () => {
     describe("getProfileType", () => {
         it("returns null when selectedTab is null", () => {
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } } as any];
-            expect(getProfileType("p1", null, configs, {}, {})).toBeNull();
+            expect(getProfileType({ profileKey: "p1", selectedTab: null, configurations: configs, pendingChanges: {}, renames: {} })).toBeNull();
         });
         it("returns type from config when profile exists", () => {
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } } as any];
-            expect(getProfileType("p1", 0, configs, {}, {})).toBe("zowe");
+            expect(getProfileType({ profileKey: "p1", selectedTab: 0, configurations: configs, pendingChanges: {}, renames: {} })).toBe("zowe");
         });
         it("returns type from pending change when present", () => {
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } } as any];
@@ -117,7 +117,7 @@ describe("profileUtils", () => {
                     "profiles.p1.type": { value: "other", path: [], profile: "p1" },
                 },
             };
-            expect(getProfileType("p1", 0, configs, pendingChanges, {})).toBe("other");
+            expect(getProfileType({ profileKey: "p1", selectedTab: 0, configurations: configs, pendingChanges, renames: {} })).toBe("other");
         });
         it("returns null when pending type is cleared (Select a type)", () => {
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } } as any];
@@ -126,7 +126,7 @@ describe("profileUtils", () => {
                     "profiles.p1.type": { value: "", path: [], profile: "p1" },
                 },
             };
-            expect(getProfileType("p1", 0, configs, pendingChanges, {})).toBeNull();
+            expect(getProfileType({ profileKey: "p1", selectedTab: 0, configurations: configs, pendingChanges, renames: {} })).toBeNull();
         });
         it("returns type for nested profile using original path when profile was renamed", () => {
             const configs = [
@@ -144,7 +144,9 @@ describe("profileUtils", () => {
                 } as any,
             ];
             const renames = { [configPath]: { orig: "renamed" } };
-            expect(getProfileType("renamed.child", 0, configs, {}, renames)).toBe("zowe");
+            expect(getProfileType({ profileKey: "renamed.child", selectedTab: 0, configurations: configs, pendingChanges: {}, renames })).toBe(
+                "zowe"
+            );
         });
         it("returns type from originalProfileKey when profileKey not in flatProfiles", () => {
             const configs = [
@@ -156,13 +158,15 @@ describe("profileUtils", () => {
                 } as any,
             ];
             const renames = { [configPath]: { origName: "displayName" } };
-            expect(getProfileType("displayName", 0, configs, {}, renames)).toBe("zowe");
+            expect(getProfileType({ profileKey: "displayName", selectedTab: 0, configurations: configs, pendingChanges: {}, renames })).toBe("zowe");
         });
     });
 
     describe("getAvailableProfilesByType", () => {
         it("returns empty when selectedTab is null", () => {
-            expect(getAvailableProfilesByType("zowe", null, [], {}, {})).toEqual([]);
+            expect(
+                getAvailableProfilesByType({ profileType: "zowe", selectedTab: null, configurations: [], pendingChanges: {}, renames: {} })
+            ).toEqual([]);
         });
         it("returns profiles of given type from current config", () => {
             const configs = [
@@ -177,7 +181,13 @@ describe("profileUtils", () => {
                     },
                 } as any,
             ];
-            const result = getAvailableProfilesByType("zowe", 0, configs, {}, {});
+            const result = getAvailableProfilesByType({
+                profileType: "zowe",
+                selectedTab: 0,
+                configurations: configs,
+                pendingChanges: {},
+                renames: {},
+            });
             expect(result).toContain("p1");
             expect(result).toContain("p2");
             expect(result).not.toContain("p3");
@@ -188,7 +198,13 @@ describe("profileUtils", () => {
                 { configPath: "/team", user: false, global: false, properties: { profiles: { pt: { type: "zowe", properties: {} } } } } as any,
                 { configPath: "/global", user: true, global: true, properties: { profiles: { gu: { type: "zowe", properties: {} } } } } as any,
             ];
-            const result = getAvailableProfilesByType("zowe", 0, configs, {}, {});
+            const result = getAvailableProfilesByType({
+                profileType: "zowe",
+                selectedTab: 0,
+                configurations: configs,
+                pendingChanges: {},
+                renames: {},
+            });
             expect(result).toContain("pu");
             expect(result).toContain("pt");
             expect(result).toContain("gu");
@@ -198,7 +214,7 @@ describe("profileUtils", () => {
             const pendingChanges = {
                 [configPath]: { "profiles.p1.type": { value: "other", path: [], profile: "p1" } },
             };
-            const result = getAvailableProfilesByType("zowe", 0, configs, pendingChanges, {});
+            const result = getAvailableProfilesByType({ profileType: "zowe", selectedTab: 0, configurations: configs, pendingChanges, renames: {} });
             expect(result).not.toContain("p1");
         });
         it("includes pending profiles of given type", () => {
@@ -206,7 +222,7 @@ describe("profileUtils", () => {
             const pendingChanges = {
                 [configPath]: { "profiles.newP.type": { value: "zowe", path: [], profile: "newP" } },
             };
-            const result = getAvailableProfilesByType("zowe", 0, configs, pendingChanges, {});
+            const result = getAvailableProfilesByType({ profileType: "zowe", selectedTab: 0, configurations: configs, pendingChanges, renames: {} });
             expect(result).toContain("newP");
         });
         it("includes only global team when currentConfig is global user", () => {
@@ -215,7 +231,13 @@ describe("profileUtils", () => {
                 { configPath: "/globalUser", user: true, global: true, properties: { profiles: { gu: { type: "zowe", properties: {} } } } } as any,
                 { configPath: "/globalTeam", user: false, global: true, properties: { profiles: { gt: { type: "zowe", properties: {} } } } } as any,
             ];
-            const result = getAvailableProfilesByType("zowe", 1, configs, {}, {});
+            const result = getAvailableProfilesByType({
+                profileType: "zowe",
+                selectedTab: 1,
+                configurations: configs,
+                pendingChanges: {},
+                renames: {},
+            });
             expect(result).toContain("gu");
             expect(result).toContain("gt");
         });
@@ -237,21 +259,21 @@ describe("profileUtils", () => {
 
     describe("getOrderedProfileKeys", () => {
         it("returns empty for empty profiles", () => {
-            expect(getOrderedProfileKeys({})).toEqual([]);
+            expect(getOrderedProfileKeys({ profiles: {} })).toEqual([]);
         });
         it("returns keys in object order", () => {
             const profiles = { p1: { type: "zowe" }, p2: { type: "zowe" } };
-            expect(getOrderedProfileKeys(profiles)).toEqual(["p1", "p2"]);
+            expect(getOrderedProfileKeys({ profiles })).toEqual(["p1", "p2"]);
         });
         it("excludes deleted profiles when isProfileOrParentDeleted returns true", () => {
             const profiles = { p1: { type: "zowe" }, p2: { type: "zowe" } };
             const deleted = ["p2"];
             const isDeleted = (key: string, list: string[]) => list.includes(key);
-            expect(getOrderedProfileKeys(profiles, "", deleted, isDeleted)).toEqual(["p1"]);
+            expect(getOrderedProfileKeys({ profiles, parentKey: "", deletedProfiles: deleted, isProfileOrParentDeleted: isDeleted })).toEqual(["p1"]);
         });
         it("includes nested keys", () => {
             const profiles = { parent: { type: "zowe", profiles: { child: { type: "zowe" } } } };
-            expect(getOrderedProfileKeys(profiles)).toEqual(["parent", "parent.child"]);
+            expect(getOrderedProfileKeys({ profiles })).toEqual(["parent", "parent.child"]);
         });
     });
 
@@ -324,24 +346,79 @@ describe("profileUtils", () => {
     describe("isPropertyActuallyInherited", () => {
         it("returns false when profilePath or currentProfileKey is empty", () => {
             const configs = [{ configPath, properties: { profiles: {} } } as any];
-            expect(isPropertyActuallyInherited("", "p1", configPath, "host", 0, configs, {}, {})).toBe(false);
-            expect(isPropertyActuallyInherited("base", "", configPath, "host", 0, configs, {}, {})).toBe(false);
+            expect(
+                isPropertyActuallyInherited({
+                    profilePath: "",
+                    currentProfileKey: "p1",
+                    configPath,
+                    propertyName: "host",
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBe(false);
+            expect(
+                isPropertyActuallyInherited({
+                    profilePath: "base",
+                    currentProfileKey: "",
+                    configPath,
+                    propertyName: "host",
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBe(false);
         });
         it("returns false when profilePath equals currentProfileKey", () => {
             const configs = [{ configPath, properties: { profiles: {} } } as any];
-            expect(isPropertyActuallyInherited("p1", "p1", configPath, "host", 0, configs, {}, {})).toBe(false);
+            expect(
+                isPropertyActuallyInherited({
+                    profilePath: "p1",
+                    currentProfileKey: "p1",
+                    configPath,
+                    propertyName: "host",
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBe(false);
         });
         it("returns false when property has pending change in current profile", () => {
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } } as any];
             const pendingChanges = {
                 [configPath]: { "profiles.p1.properties.host": { value: "h", path: [], profile: "p1" } },
             };
-            expect(isPropertyActuallyInherited("base", "p1", configPath, "host", 0, configs, pendingChanges, {})).toBe(false);
+            expect(
+                isPropertyActuallyInherited({
+                    profilePath: "base",
+                    currentProfileKey: "p1",
+                    configPath,
+                    propertyName: "host",
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges,
+                    renames: {},
+                })
+            ).toBe(false);
         });
         it("returns false when original paths match after reverse renames", () => {
             const configs = [{ configPath, properties: { profiles: {} } } as any];
             const renames = { [configPath]: { base: "p1" } };
-            expect(isPropertyActuallyInherited("p1", "base", configPath, undefined, 0, configs, {}, renames)).toBe(false);
+            expect(
+                isPropertyActuallyInherited({
+                    profilePath: "p1",
+                    currentProfileKey: "base",
+                    configPath,
+                    propertyName: undefined,
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    renames,
+                })
+            ).toBe(false);
         });
         it("returns true when current profile inherits from source via defaults", () => {
             const configs = [
@@ -353,16 +430,49 @@ describe("profileUtils", () => {
                     },
                 } as any,
             ];
-            expect(isPropertyActuallyInherited("base", "child", configPath, undefined, 0, configs, {}, {})).toBe(true);
+            expect(
+                isPropertyActuallyInherited({
+                    profilePath: "base",
+                    currentProfileKey: "child",
+                    configPath,
+                    propertyName: undefined,
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBe(true);
         });
         it("returns true when original paths differ after partial rename reverse (parent rename affects child)", () => {
             const configs = [{ configPath, properties: { profiles: {} } }] as any;
             const renames = { [configPath]: { base: "renamedBase" } };
-            expect(isPropertyActuallyInherited("renamedBase.child", "other", configPath, undefined, 0, configs, {}, renames)).toBe(true);
+            expect(
+                isPropertyActuallyInherited({
+                    profilePath: "renamedBase.child",
+                    currentProfileKey: "other",
+                    configPath,
+                    propertyName: undefined,
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    renames,
+                })
+            ).toBe(true);
         });
         it("returns true when no config and paths differ", () => {
             const configs = [{ configPath }] as any;
-            expect(isPropertyActuallyInherited("base", "child", configPath, undefined, 0, configs, {}, {})).toBe(true);
+            expect(
+                isPropertyActuallyInherited({
+                    profilePath: "base",
+                    currentProfileKey: "child",
+                    configPath,
+                    propertyName: undefined,
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBe(true);
         });
         it("returns true when source is default for type (renamed default)", () => {
             const configs = [
@@ -375,7 +485,18 @@ describe("profileUtils", () => {
                 } as any,
             ];
             const renames = { [configPath]: { origBase: "base" } };
-            expect(isPropertyActuallyInherited("base", "child", configPath, undefined, 0, configs, {}, renames)).toBe(true);
+            expect(
+                isPropertyActuallyInherited({
+                    profilePath: "base",
+                    currentProfileKey: "child",
+                    configPath,
+                    propertyName: undefined,
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    renames,
+                })
+            ).toBe(true);
         });
         it("returns true when source profile is default for current profile type", () => {
             const configs = [
@@ -387,7 +508,18 @@ describe("profileUtils", () => {
                     },
                 } as any,
             ];
-            expect(isPropertyActuallyInherited("base1", "base2", configPath, undefined, 0, configs, {}, {})).toBe(true);
+            expect(
+                isPropertyActuallyInherited({
+                    profilePath: "base1",
+                    currentProfileKey: "base2",
+                    configPath,
+                    propertyName: undefined,
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBe(true);
         });
     });
 
@@ -495,17 +627,17 @@ describe("profileUtils", () => {
     describe("applyRenamesToProfileKeys", () => {
         it("returns keys with renames applied", () => {
             const renames = { [configPath]: { a: "x" } };
-            expect(applyRenamesToProfileKeys(["a", "b"], configPath, renames)).toEqual(["x", "b"]);
+            expect(applyRenamesToProfileKeys({ orderedProfileKeys: ["a", "b"], configPath, renames })).toEqual(["x", "b"]);
         });
         it("filters out intermediate renamed keys", () => {
             const renames = { [configPath]: { a: "b", b: "c" } };
-            const result = applyRenamesToProfileKeys(["a"], configPath, renames);
+            const result = applyRenamesToProfileKeys({ orderedProfileKeys: ["a"], configPath, renames });
             expect(result).toContain("c");
             expect(result).not.toContain("b");
         });
         it("includes renamed-only profiles not in ordered keys", () => {
             const renames = { [configPath]: { newProfile: "renamedNew" } };
-            const result = applyRenamesToProfileKeys(["p1"], configPath, renames);
+            const result = applyRenamesToProfileKeys({ orderedProfileKeys: ["p1"], configPath, renames });
             expect(result).toContain("renamedNew");
             expect(result).toContain("p1");
         });
@@ -515,21 +647,25 @@ describe("profileUtils", () => {
         it("returns renamed pending profile keys", () => {
             const renames = { [configPath]: { orig: "renamed" } };
             const pendingProfiles = { orig: { type: "zowe" } };
-            expect(mergePendingProfileKeys(pendingProfiles, configPath, renames, {}, ["renamed"])).toContain("renamed");
+            expect(mergePendingProfileKeys({ pendingProfiles, configPath, renames, deletions: {}, uniqueRenamedProfileKeys: ["renamed"] })).toContain(
+                "renamed"
+            );
         });
         it("excludes deleted pending profiles", () => {
             const deletions = { [configPath]: ["profiles.p1"] };
             const pendingProfiles = { p1: { type: "zowe" } };
-            expect(mergePendingProfileKeys(pendingProfiles, configPath, {}, deletions, [])).toEqual([]);
+            expect(mergePendingProfileKeys({ pendingProfiles, configPath, renames: {}, deletions, uniqueRenamedProfileKeys: [] })).toEqual([]);
         });
         it("applies nested rename when pending key starts with originalKey + dot", () => {
             const renames = { [configPath]: { parent: "renamedParent" } };
             const pendingProfiles = { "parent.child": { type: "zowe" } };
-            expect(mergePendingProfileKeys(pendingProfiles, configPath, renames, {}, [])).toContain("renamedParent.child");
+            expect(mergePendingProfileKeys({ pendingProfiles, configPath, renames, deletions: {}, uniqueRenamedProfileKeys: [] })).toContain(
+                "renamedParent.child"
+            );
         });
         it("moves pending nested back to root when renames empty and root name in uniqueRenamedProfileKeys", () => {
             const pendingProfiles = { "parent.child": { type: "zowe" } };
-            const result = mergePendingProfileKeys(pendingProfiles, configPath, {}, {}, ["child"]);
+            const result = mergePendingProfileKeys({ pendingProfiles, configPath, renames: {}, deletions: {}, uniqueRenamedProfileKeys: ["child"] });
             expect(result).toContain("child");
         });
     });
@@ -539,35 +675,89 @@ describe("profileUtils", () => {
             const uniqueRenamed = ["p1", "p2"];
             const renamedPending = ["p1"];
             const pendingProfiles = { p1: {} };
-            expect(filterConflictingProfileKeys(uniqueRenamed, renamedPending, pendingProfiles, {}, configPath, {})).toEqual(["p2"]);
+            expect(
+                filterConflictingProfileKeys({
+                    uniqueRenamedProfileKeys: uniqueRenamed,
+                    renamedPendingProfileKeys: renamedPending,
+                    pendingProfiles,
+                    deletions: {},
+                    configPath,
+                    renames: {},
+                })
+            ).toEqual(["p2"]);
         });
         it("filters out keys that are deleted", () => {
             const deletions = { [configPath]: ["profiles.p1"] };
             const uniqueRenamed = ["p1", "p2"];
-            expect(filterConflictingProfileKeys(uniqueRenamed, [], {}, deletions, configPath, {})).toEqual(["p2"]);
+            expect(
+                filterConflictingProfileKeys({
+                    uniqueRenamedProfileKeys: uniqueRenamed,
+                    renamedPendingProfileKeys: [],
+                    pendingProfiles: {},
+                    deletions,
+                    configPath,
+                    renames: {},
+                })
+            ).toEqual(["p2"]);
         });
         it("filters out key that is result of rename with pending original", () => {
             const renames = { [configPath]: { orig: "renamed" } };
             const pendingProfiles = { orig: {} };
             const uniqueRenamed = ["renamed", "p2"];
-            expect(filterConflictingProfileKeys(uniqueRenamed, ["renamed"], pendingProfiles, {}, configPath, renames)).toEqual(["p2"]);
+            expect(
+                filterConflictingProfileKeys({
+                    uniqueRenamedProfileKeys: uniqueRenamed,
+                    renamedPendingProfileKeys: ["renamed"],
+                    pendingProfiles,
+                    deletions: {},
+                    configPath,
+                    renames,
+                })
+            ).toEqual(["p2"]);
         });
         it("filters out key when shouldRenamePendingToThisKey (pending key ends with profileKey)", () => {
             const uniqueRenamed = ["p1"];
             const pendingProfiles = { "parent.p1": {} };
-            expect(filterConflictingProfileKeys(uniqueRenamed, [], pendingProfiles, {}, configPath, {})).toEqual([]);
+            expect(
+                filterConflictingProfileKeys({
+                    uniqueRenamedProfileKeys: uniqueRenamed,
+                    renamedPendingProfileKeys: [],
+                    pendingProfiles,
+                    deletions: {},
+                    configPath,
+                    renames: {},
+                })
+            ).toEqual([]);
         });
         it("filters out key when it appears in original pending profile keys (no renames)", () => {
             const uniqueRenamed = ["p1", "p2"];
             const pendingProfiles = { p1: {} };
-            expect(filterConflictingProfileKeys(uniqueRenamed, [], pendingProfiles, {}, configPath, {})).toEqual(["p2"]);
+            expect(
+                filterConflictingProfileKeys({
+                    uniqueRenamedProfileKeys: uniqueRenamed,
+                    renamedPendingProfileKeys: [],
+                    pendingProfiles,
+                    deletions: {},
+                    configPath,
+                    renames: {},
+                })
+            ).toEqual(["p2"]);
         });
         it("filters out key when it is target of pending rename", () => {
             const uniqueRenamed = ["target", "p2"];
             const renamedPending = ["target"];
             const pendingProfiles = { orig: {} };
             const renames = { [configPath]: { orig: "target" } };
-            expect(filterConflictingProfileKeys(uniqueRenamed, renamedPending, pendingProfiles, {}, configPath, renames)).toEqual(["p2"]);
+            expect(
+                filterConflictingProfileKeys({
+                    uniqueRenamedProfileKeys: uniqueRenamed,
+                    renamedPendingProfileKeys: renamedPending,
+                    pendingProfiles,
+                    deletions: {},
+                    configPath,
+                    renames,
+                })
+            ).toEqual(["p2"]);
         });
     });
 
@@ -580,7 +770,7 @@ describe("profileUtils", () => {
                     "profiles.p1.properties.host": { value: "localhost", path: [], profile: "p1" },
                 },
             };
-            const result = mergePendingChangesForProfile(baseObj, path, configPath, pendingChanges, {});
+            const result = mergePendingChangesForProfile({ baseObj, path, configPath, pendingChanges, renames: {} });
             expect(result.properties).toEqual({ host: "localhost" });
         });
         it("merges under original path when profile was renamed", () => {
@@ -592,7 +782,7 @@ describe("profileUtils", () => {
                     "profiles.orig.properties.host": { value: "h", path: [], profile: "orig" },
                 },
             };
-            const result = mergePendingChangesForProfile(baseObj, path, configPath, pendingChanges, renames);
+            const result = mergePendingChangesForProfile({ baseObj, path, configPath, pendingChanges, renames });
             expect(result.properties).toEqual({ host: "h" });
         });
         it("adds secure property to baseObj.secure when entry.secure", () => {
@@ -603,7 +793,7 @@ describe("profileUtils", () => {
                     "profiles.p1.secure.password": { value: "p", path: ["profiles", "p1", "secure", "password"], profile: "p1", secure: true },
                 },
             };
-            const result = mergePendingChangesForProfile(baseObj, path, configPath, pendingChanges, {});
+            const result = mergePendingChangesForProfile({ baseObj, path, configPath, pendingChanges, renames: {} });
             expect(result.secure).toContain("password");
         });
         it("matches entry by renamed form of original profile key", () => {
@@ -615,7 +805,7 @@ describe("profileUtils", () => {
                     "profiles.renamed.properties.host": { value: "h", path: [], profile: "renamed" },
                 },
             };
-            const result = mergePendingChangesForProfile(baseObj, path, configPath, pendingChanges, renames);
+            const result = mergePendingChangesForProfile({ baseObj, path, configPath, pendingChanges, renames });
             expect(result.properties?.host).toBe("h");
         });
         it("merges nested property under relativePath length > 1", () => {
@@ -626,7 +816,7 @@ describe("profileUtils", () => {
                     "profiles.p1.nested.level.key": { value: "v", path: [], profile: "p1" },
                 },
             };
-            const result = mergePendingChangesForProfile(baseObj, path, configPath, pendingChanges, {});
+            const result = mergePendingChangesForProfile({ baseObj, path, configPath, pendingChanges, renames: {} });
             expect(result.nested?.level?.key).toBe("v");
         });
     });
@@ -636,38 +826,94 @@ describe("profileUtils", () => {
         it("returns false when displayKey empty or selectedTab null", () => {
             const configs = [{ configPath }] as any;
             const schemaValidations = { [configPath]: schemaWithValidDefaults({ zowe: { host: { secure: true } } }) };
-            expect(canPropertyBeSecure("", 0, configs, schemaValidations, getProfileType, {}, {})).toBe(false);
-            expect(canPropertyBeSecure("host", null, configs, schemaValidations, getProfileType, {}, {})).toBe(false);
+            expect(
+                canPropertyBeSecure({ displayKey: "", selectedTab: 0, configurations: configs, schemaValidations, pendingChanges: {}, renames: {} })
+            ).toBe(false);
+            expect(
+                canPropertyBeSecure({
+                    displayKey: "host",
+                    selectedTab: null,
+                    configurations: configs,
+                    schemaValidations,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBe(false);
         });
         it("returns true when selectedProfileKey has type and schema marks property secure", () => {
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } }] as any;
             const schemaValidations = { [configPath]: schemaWithValidDefaults({ zowe: { password: { secure: true } } }) };
-            expect(canPropertyBeSecure("password", 0, configs, schemaValidations, getProfileType, {}, {}, "p1")).toBe(true);
+            expect(
+                canPropertyBeSecure({
+                    displayKey: "password",
+                    selectedTab: 0,
+                    configurations: configs,
+                    schemaValidations,
+                    pendingChanges: {},
+                    renames: {},
+                    selectedProfileKey: "p1",
+                })
+            ).toBe(true);
         });
         it("returns true from fallback when any profile type has property secure", () => {
             const configs = [{ configPath }] as any;
             const schemaValidations = { [configPath]: schemaWithValidDefaults({ zowe: { token: { secure: true } } }) };
-            expect(canPropertyBeSecure("token", 0, configs, schemaValidations, getProfileType, {}, {})).toBe(true);
+            expect(
+                canPropertyBeSecure({
+                    displayKey: "token",
+                    selectedTab: 0,
+                    configurations: configs,
+                    schemaValidations,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBe(true);
         });
         it("returns false when config at selectedTab is missing", () => {
             const configs: any[] = [];
             const schemaValidations = { [configPath]: schemaWithValidDefaults({ zowe: {} }) };
-            expect(canPropertyBeSecure("host", 0, configs, schemaValidations, getProfileType, {}, {})).toBe(false);
+            expect(
+                canPropertyBeSecure({
+                    displayKey: "host",
+                    selectedTab: 0,
+                    configurations: configs,
+                    schemaValidations,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBe(false);
         });
         it("returns false when schemaValidation is missing for configPath", () => {
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } }] as any;
-            expect(canPropertyBeSecure("host", 0, configs, {}, getProfileType, {}, {}, "p1")).toBe(false);
+            expect(
+                canPropertyBeSecure({
+                    displayKey: "host",
+                    selectedTab: 0,
+                    configurations: configs,
+                    schemaValidations: {},
+                    pendingChanges: {},
+                    renames: {},
+                    selectedProfileKey: "p1",
+                })
+            ).toBe(false);
         });
     });
 
     describe("isPropertySecure", () => {
         it("returns false when displayKey or path empty", () => {
-            expect(isPropertySecure("k", "", [], undefined)).toBe(false);
-            expect(isPropertySecure("k", "host", [], undefined)).toBe(false);
+            expect(isPropertySecure({ fullKey: "k", displayKey: "", path: [], mergedProps: undefined })).toBe(false);
+            expect(isPropertySecure({ fullKey: "k", displayKey: "host", path: [], mergedProps: undefined })).toBe(false);
         });
         it("returns secure from mergedProps when present", () => {
             const mergedProps = { host: { secure: true } };
-            expect(isPropertySecure("profiles.p1.properties.host", "host", ["profiles", "p1", "properties", "host"], mergedProps)).toBe(true);
+            expect(
+                isPropertySecure({
+                    fullKey: "profiles.p1.properties.host",
+                    displayKey: "host",
+                    path: ["profiles", "p1", "properties", "host"],
+                    mergedProps,
+                })
+            ).toBe(true);
         });
         it("returns secure from pending change when present", () => {
             const configs = [{ configPath, properties: { profiles: {} } }] as any;
@@ -675,21 +921,28 @@ describe("profileUtils", () => {
                 [configPath]: { "profiles.p1.properties.host": { value: "h", path: [], profile: "p1", secure: true } },
             };
             expect(
-                isPropertySecure(
-                    "profiles.p1.properties.host",
-                    "host",
-                    ["profiles", "p1", "properties", "host"],
-                    undefined,
-                    0,
-                    configs,
-                    pendingChanges
-                )
+                isPropertySecure({
+                    fullKey: "profiles.p1.properties.host",
+                    displayKey: "host",
+                    path: ["profiles", "p1", "properties", "host"],
+                    mergedProps: undefined,
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges,
+                })
             ).toBe(true);
         });
         it("returns true when config.secure includes property name", () => {
             const configs = [{ configPath, secure: ["password"], properties: { profiles: {} } }] as any;
             expect(
-                isPropertySecure("profiles.p1.properties.password", "password", ["profiles", "p1", "properties", "password"], undefined, 0, configs)
+                isPropertySecure({
+                    fullKey: "profiles.p1.properties.password",
+                    displayKey: "password",
+                    path: ["profiles", "p1", "properties", "password"],
+                    mergedProps: undefined,
+                    selectedTab: 0,
+                    configurations: configs,
+                })
             ).toBe(true);
         });
         it("returns true when profile secure array includes property", () => {
@@ -699,13 +952,27 @@ describe("profileUtils", () => {
                     properties: { profiles: { p1: { type: "zowe", properties: {}, secure: ["token"] } } },
                 },
             ] as any;
-            expect(isPropertySecure("profiles.p1.properties.token", "token", ["profiles", "p1", "properties", "token"], undefined, 0, configs)).toBe(
-                true
-            );
+            expect(
+                isPropertySecure({
+                    fullKey: "profiles.p1.properties.token",
+                    displayKey: "token",
+                    path: ["profiles", "p1", "properties", "token"],
+                    mergedProps: undefined,
+                    selectedTab: 0,
+                    configurations: configs,
+                })
+            ).toBe(true);
         });
         it("returns false from mergedProps when secure is false", () => {
             const mergedProps = { host: { secure: false } };
-            expect(isPropertySecure("profiles.p1.properties.host", "host", ["profiles", "p1", "properties", "host"], mergedProps)).toBe(false);
+            expect(
+                isPropertySecure({
+                    fullKey: "profiles.p1.properties.host",
+                    displayKey: "host",
+                    path: ["profiles", "p1", "properties", "host"],
+                    mergedProps,
+                })
+            ).toBe(false);
         });
         it("returns true for nested profile secure via path navigation", () => {
             const configs = [
@@ -723,7 +990,16 @@ describe("profileUtils", () => {
                 },
             ] as any;
             const path = ["profiles", "parent", "profiles", "child", "properties", "secret"];
-            expect(isPropertySecure("profiles.parent.profiles.child.properties.secret", "secret", path, undefined, 0, configs)).toBe(true);
+            expect(
+                isPropertySecure({
+                    fullKey: "profiles.parent.profiles.child.properties.secret",
+                    displayKey: "secret",
+                    path,
+                    mergedProps: undefined,
+                    selectedTab: 0,
+                    configurations: configs,
+                })
+            ).toBe(true);
         });
         it("returns true when profile was renamed and secure in original profile", () => {
             const configs = [
@@ -734,36 +1010,66 @@ describe("profileUtils", () => {
             ] as any;
             const renames = { [configPath]: { orig: "renamed" } };
             const path = ["profiles", "renamed", "properties", "pass"];
-            expect(isPropertySecure("profiles.renamed.properties.pass", "pass", path, undefined, 0, configs, {}, renames)).toBe(true);
+            expect(
+                isPropertySecure({
+                    fullKey: "profiles.renamed.properties.pass",
+                    displayKey: "pass",
+                    path,
+                    mergedProps: undefined,
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    renames,
+                })
+            ).toBe(true);
         });
     });
 
     describe("filterSecureProperties", () => {
         it("returns value when combinedConfig has no secure array", () => {
             const value = { host: "h", password: "p" };
-            expect(filterSecureProperties(value, {}, undefined, {}, {}, undefined)).toBe(value);
+            expect(
+                filterSecureProperties({
+                    value,
+                    combinedConfig: {},
+                    configPath: undefined,
+                    pendingChanges: {},
+                    deletions: {},
+                    mergedProps: undefined,
+                })
+            ).toBe(value);
         });
         it("removes keys in combinedConfig.secure when not in deletions or mergedProps insecure", () => {
             const value = { host: "h", password: "p" };
             const combinedConfig = { secure: ["password"] };
-            expect(filterSecureProperties(value, combinedConfig, configPath, {}, {}, undefined)).toEqual({ host: "h" });
+            expect(filterSecureProperties({ value, combinedConfig, configPath, pendingChanges: {}, deletions: {}, mergedProps: undefined })).toEqual({
+                host: "h",
+            });
         });
         it("returns null when all properties filtered", () => {
             const value = { password: "p" };
             const combinedConfig = { secure: ["password"] };
-            expect(filterSecureProperties(value, combinedConfig, configPath, {}, {}, undefined)).toBeNull();
+            expect(
+                filterSecureProperties({ value, combinedConfig, configPath, pendingChanges: {}, deletions: {}, mergedProps: undefined })
+            ).toBeNull();
         });
         it("keeps secure property when in deletions", () => {
             const value = { host: "h", password: "p" };
             const combinedConfig = { secure: ["password"] };
             const deletions = { [configPath]: ["profiles.p1.properties.password"] };
-            expect(filterSecureProperties(value, combinedConfig, configPath, {}, deletions, undefined)).toEqual({ host: "h", password: "p" });
+            expect(filterSecureProperties({ value, combinedConfig, configPath, pendingChanges: {}, deletions, mergedProps: undefined })).toEqual({
+                host: "h",
+                password: "p",
+            });
         });
         it("keeps secure property when mergedProps has secure false", () => {
             const value = { host: "h", password: "p" };
             const combinedConfig = { secure: ["password"] };
             const mergedProps = { password: { secure: false } };
-            expect(filterSecureProperties(value, combinedConfig, configPath, {}, {}, mergedProps)).toEqual({ host: "h", password: "p" });
+            expect(filterSecureProperties({ value, combinedConfig, configPath, pendingChanges: {}, deletions: {}, mergedProps })).toEqual({
+                host: "h",
+                password: "p",
+            });
         });
         it("keeps secure property when has pending insecure property with same key", () => {
             const value = { host: "h", password: "p" };
@@ -771,14 +1077,19 @@ describe("profileUtils", () => {
             const pendingChanges = {
                 [configPath]: { "profiles.p1.properties.password": { value: "x", path: [], profile: "p1", secure: false } },
             };
-            expect(filterSecureProperties(value, combinedConfig, configPath, pendingChanges, {}, undefined)).toEqual({ host: "h", password: "p" });
+            expect(filterSecureProperties({ value, combinedConfig, configPath, pendingChanges, deletions: {}, mergedProps: undefined })).toEqual({
+                host: "h",
+                password: "p",
+            });
         });
     });
 
     describe("mergePendingSecureProperties", () => {
         it("returns sorted base array when no pending secure", () => {
             const value = ["token"];
-            expect(mergePendingSecureProperties(value, ["profiles", "p1"], configPath, {}, undefined)).toEqual(["token"]);
+            expect(mergePendingSecureProperties({ value, path: ["profiles", "p1"], configPath, pendingChanges: {}, renames: undefined })).toEqual([
+                "token",
+            ]);
         });
         it("adds pending secure props and sorts", () => {
             const value: string[] = [];
@@ -787,7 +1098,7 @@ describe("profileUtils", () => {
                     "profiles.p1.secure.password": { value: "p", path: ["profiles", "p1", "secure", "password"], profile: "p1", secure: true },
                 },
             };
-            const result = mergePendingSecureProperties(value, ["profiles", "p1"], configPath, pendingChanges, undefined);
+            const result = mergePendingSecureProperties({ value, path: ["profiles", "p1"], configPath, pendingChanges, renames: undefined });
             expect(result).toContain("password");
         });
         it("matches entry by renamed profile when key is under current path and entry.profile is original name", () => {
@@ -798,7 +1109,7 @@ describe("profileUtils", () => {
                     "profiles.renamed.secure.token": { value: "t", path: ["profiles", "renamed", "secure", "token"], profile: "orig", secure: true },
                 },
             };
-            const result = mergePendingSecureProperties(value, ["profiles", "renamed"], configPath, pendingChanges, renames);
+            const result = mergePendingSecureProperties({ value, path: ["profiles", "renamed"], configPath, pendingChanges, renames });
             expect(result).toContain("token");
         });
         it("filters base array when pending insecure property exists for same prop", () => {
@@ -806,7 +1117,7 @@ describe("profileUtils", () => {
             const pendingChanges = {
                 [configPath]: { "profiles.p1.properties.password": { value: "x", path: [], profile: "p1", secure: false } },
             };
-            const result = mergePendingSecureProperties(value, ["profiles", "p1"], configPath, pendingChanges, undefined);
+            const result = mergePendingSecureProperties({ value, path: ["profiles", "p1"], configPath, pendingChanges, renames: undefined });
             expect(result).not.toContain("password");
         });
     });
@@ -814,35 +1125,103 @@ describe("profileUtils", () => {
     describe("mergeMergedProperties", () => {
         it("returns combinedConfig when mergedProps falsy or path empty or path ends with type or secure", () => {
             const combined: any = {};
-            expect(mergeMergedProperties(combined, ["profiles", "p1"], undefined, configPath, 0, [], {}, {}, {}, {}, undefined)).toBe(combined);
-            expect(mergeMergedProperties(combined, [], { host: {} }, configPath, 0, [], {}, {}, {}, {}, undefined)).toBe(combined);
-            expect(mergeMergedProperties(combined, ["profiles", "p1", "type"], {}, configPath, 0, [], {}, {}, {}, {}, undefined)).toBe(combined);
-            expect(mergeMergedProperties(combined, ["profiles", "p1", "secure"], {}, configPath, 0, [], {}, {}, {}, {}, undefined)).toBe(combined);
+            expect(
+                mergeMergedProperties({
+                    combinedConfig: combined,
+                    path: ["profiles", "p1"],
+                    mergedProps: undefined as any,
+                    configPath,
+                    selectedTab: 0,
+                    configurations: [],
+                    pendingChanges: {},
+                    renames: {},
+                    schemaValidations: {},
+                    deletions: {},
+                    showMergedProperties: undefined,
+                })
+            ).toBe(combined);
+            expect(
+                mergeMergedProperties({
+                    combinedConfig: combined,
+                    path: [],
+                    mergedProps: { host: {} } as any,
+                    configPath,
+                    selectedTab: 0,
+                    configurations: [],
+                    pendingChanges: {},
+                    renames: {},
+                    schemaValidations: {},
+                    deletions: {},
+                    showMergedProperties: undefined,
+                })
+            ).toBe(combined);
+            expect(
+                mergeMergedProperties({
+                    combinedConfig: combined,
+                    path: ["profiles", "p1", "type"],
+                    mergedProps: {} as any,
+                    configPath,
+                    selectedTab: 0,
+                    configurations: [],
+                    pendingChanges: {},
+                    renames: {},
+                    schemaValidations: {},
+                    deletions: {},
+                    showMergedProperties: undefined,
+                })
+            ).toBe(combined);
+            expect(
+                mergeMergedProperties({
+                    combinedConfig: combined,
+                    path: ["profiles", "p1", "secure"],
+                    mergedProps: {} as any,
+                    configPath,
+                    selectedTab: 0,
+                    configurations: [],
+                    pendingChanges: {},
+                    renames: {},
+                    schemaValidations: {},
+                    deletions: {},
+                    showMergedProperties: undefined,
+                })
+            ).toBe(combined);
         });
         it("returns combinedConfig when path ends with properties", () => {
             const combined: any = {};
-            expect(mergeMergedProperties(combined, ["profiles", "p1", "properties"], {}, configPath, 0, [], {}, {}, {}, {}, undefined)).toBe(
-                combined
-            );
+            expect(
+                mergeMergedProperties({
+                    combinedConfig: combined,
+                    path: ["profiles", "p1", "properties"],
+                    mergedProps: {} as any,
+                    configPath,
+                    selectedTab: 0,
+                    configurations: [],
+                    pendingChanges: {},
+                    renames: {},
+                    schemaValidations: {},
+                    deletions: {},
+                    showMergedProperties: undefined,
+                })
+            ).toBe(combined);
         });
         it("adds merged property when allowed by schema and not in pending", () => {
             const combined: any = { properties: {} };
             const mergedProps = { host: { value: "h", jsonLoc: "", osLoc: [] } };
             const schemaValidations = { [configPath]: { propertySchema: { zowe: { host: {} } }, validDefaults: [] as string[] } };
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } }] as any;
-            const result = mergeMergedProperties(
-                combined,
-                ["profiles", "p1"],
+            const result = mergeMergedProperties({
+                combinedConfig: combined,
+                path: ["profiles", "p1"],
                 mergedProps,
                 configPath,
-                0,
-                configs,
-                {},
-                {},
+                selectedTab: 0,
+                configurations: configs,
+                pendingChanges: {},
+                renames: {},
                 schemaValidations,
-                {},
-                undefined
-            );
+                deletions: {},
+                showMergedProperties: undefined,
+            });
             expect(result.properties.host).toBe("h");
         });
         it("ensures combinedConfig.properties when missing", () => {
@@ -850,7 +1229,19 @@ describe("profileUtils", () => {
             const mergedProps = { host: { value: "h", jsonLoc: "profiles.p1.properties.host", osLoc: [] } };
             const schemaValidations = { [configPath]: { propertySchema: { zowe: { host: {} } }, validDefaults: [] as string[] } };
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } }] as any;
-            mergeMergedProperties(combined, ["profiles", "p1"], mergedProps, configPath, 0, configs, {}, {}, schemaValidations, {}, undefined);
+            mergeMergedProperties({
+                combinedConfig: combined,
+                path: ["profiles", "p1"],
+                mergedProps,
+                configPath,
+                selectedTab: 0,
+                configurations: configs,
+                pendingChanges: {},
+                renames: {},
+                schemaValidations,
+                deletions: {},
+                showMergedProperties: undefined,
+            });
             expect(combined.properties).toBeDefined();
             expect(combined.properties.host).toBe("h");
         });
@@ -860,19 +1251,19 @@ describe("profileUtils", () => {
             const schemaValidations = { [configPath]: { propertySchema: { zowe: { host: {} } }, validDefaults: [] as string[] } };
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } }] as any;
             const deletions = { [configPath]: ["profiles.p1.properties.host"] };
-            const result = mergeMergedProperties(
-                combined,
-                ["profiles", "p1"],
+            const result = mergeMergedProperties({
+                combinedConfig: combined,
+                path: ["profiles", "p1"],
                 mergedProps,
                 configPath,
-                0,
-                configs,
-                {},
-                {},
+                selectedTab: 0,
+                configurations: configs,
+                pendingChanges: {},
+                renames: {},
                 schemaValidations,
                 deletions,
-                undefined
-            );
+                showMergedProperties: undefined,
+            });
             expect(result.properties.host).toBe("inherited");
         });
         it("shows all merged properties when showMergedProperties is unfiltered", () => {
@@ -880,19 +1271,19 @@ describe("profileUtils", () => {
             const mergedProps = { customProp: { value: "v", jsonLoc: "", osLoc: [] } };
             const schemaValidations = { [configPath]: { propertySchema: { zowe: {} }, validDefaults: [] as string[] } };
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } }] as any;
-            const result = mergeMergedProperties(
-                combined,
-                ["profiles", "p1"],
+            const result = mergeMergedProperties({
+                combinedConfig: combined,
+                path: ["profiles", "p1"],
                 mergedProps,
                 configPath,
-                0,
-                configs,
-                {},
-                {},
+                selectedTab: 0,
+                configurations: configs,
+                pendingChanges: {},
+                renames: {},
                 schemaValidations,
-                {},
-                "unfiltered"
-            );
+                deletions: {},
+                showMergedProperties: "unfiltered",
+            });
             expect(result.properties.customProp).toBe("v");
         });
         it("does not add non-primitive merged value", () => {
@@ -900,7 +1291,19 @@ describe("profileUtils", () => {
             const mergedProps = { nested: { value: { a: 1 }, jsonLoc: "", osLoc: [] } };
             const schemaValidations = { [configPath]: { propertySchema: { zowe: { nested: {} } }, validDefaults: [] as string[] } };
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } }] as any;
-            mergeMergedProperties(combined, ["profiles", "p1"], mergedProps, configPath, 0, configs, {}, {}, schemaValidations, {}, undefined);
+            mergeMergedProperties({
+                combinedConfig: combined,
+                path: ["profiles", "p1"],
+                mergedProps,
+                configPath,
+                selectedTab: 0,
+                configurations: configs,
+                pendingChanges: {},
+                renames: {},
+                schemaValidations,
+                deletions: {},
+                showMergedProperties: undefined,
+            });
             expect(combined.properties.nested).toBeUndefined();
         });
     });
@@ -908,35 +1311,35 @@ describe("profileUtils", () => {
     describe("isPropertyFromMergedProps", () => {
         const pathP1 = ["profiles", "p1", "properties", "host"];
         const callIsFromMerged = (show: string | boolean, configs: any[], isInherited: () => boolean) =>
-            isPropertyFromMergedProps(
-                "host",
-                pathP1,
-                { host: { jsonLoc: "profiles.base.properties.host", osLoc: [configPath] } },
+            isPropertyFromMergedProps({
+                displayKey: "host",
+                path: pathP1,
+                mergedProps: { host: { jsonLoc: "profiles.base.properties.host", osLoc: [configPath] } },
                 configPath,
-                show,
-                0,
-                configs,
-                {} as { [k: string]: { [key: string]: any } },
-                {} as { [k: string]: { [originalKey: string]: string } },
-                "p1",
-                isInherited
-            );
+                showMergedProperties: show,
+                selectedTab: 0,
+                configurations: configs,
+                pendingChanges: {},
+                renames: {},
+                selectedProfileKey: "p1",
+                isPropertyActuallyInheritedFn: isInherited as any,
+            });
         it("returns false when displayKey is undefined", () => {
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } }] as any;
             expect(
-                isPropertyFromMergedProps(
-                    undefined,
-                    pathP1,
-                    { host: { jsonLoc: "profiles.base.properties.host", osLoc: [configPath] } },
+                isPropertyFromMergedProps({
+                    displayKey: undefined,
+                    path: pathP1,
+                    mergedProps: { host: { jsonLoc: "profiles.base.properties.host", osLoc: [configPath] } },
                     configPath,
-                    "show",
-                    0,
-                    configs,
-                    {},
-                    {},
-                    "p1",
-                    () => true
-                )
+                    showMergedProperties: "show",
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    renames: {},
+                    selectedProfileKey: "p1",
+                    isPropertyActuallyInheritedFn: () => true,
+                })
             ).toBe(false);
         });
         it("returns false when showMergedProperties is hide or false", () => {
@@ -956,19 +1359,19 @@ describe("profileUtils", () => {
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } }] as any;
             const mergedProps = { host: { jsonLoc: "profiles.other.properties.host", osLoc: [configPath] } };
             expect(
-                isPropertyFromMergedProps(
-                    "host",
-                    pathP1,
+                isPropertyFromMergedProps({
+                    displayKey: "host",
+                    path: pathP1,
                     mergedProps,
                     configPath,
-                    "show",
-                    0,
-                    configs,
-                    {} as { [k: string]: { [key: string]: any } },
-                    {} as { [k: string]: { [originalKey: string]: string } },
-                    "p1",
-                    () => false
-                )
+                    showMergedProperties: "show",
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    renames: {},
+                    selectedProfileKey: "p1",
+                    isPropertyActuallyInheritedFn: () => false,
+                })
             ).toBe(false);
         });
         it("returns true when same profile name in different config (osLoc differs from selected)", () => {
@@ -979,19 +1382,19 @@ describe("profileUtils", () => {
             ];
             const mergedProps = { host: { jsonLoc: "profiles.p1.properties.host", osLoc: [otherPath] } };
             expect(
-                isPropertyFromMergedProps(
-                    "host",
-                    pathP1,
+                isPropertyFromMergedProps({
+                    displayKey: "host",
+                    path: pathP1,
                     mergedProps,
                     configPath,
-                    "show",
-                    0,
-                    configs,
-                    {} as { [k: string]: { [key: string]: any } },
-                    {} as { [k: string]: { [originalKey: string]: string } },
-                    "p1",
-                    () => false
-                )
+                    showMergedProperties: "show",
+                    selectedTab: 0,
+                    configurations: configs,
+                    pendingChanges: {},
+                    renames: {},
+                    selectedProfileKey: "p1",
+                    isPropertyActuallyInheritedFn: () => false,
+                })
             ).toBe(true);
         });
         it("when profile has been renamed, returns false when jsonLoc refers to current profile", () => {
@@ -999,7 +1402,19 @@ describe("profileUtils", () => {
             const renames = { [configPath]: { orig: "renamed" } };
             const mergedProps = { host: { jsonLoc: "profiles.renamed.properties.host", osLoc: [configPath] } };
             const path = ["profiles", "renamed", "properties", "host"];
-            const result = isPropertyFromMergedProps("host", path, mergedProps, configPath, "show", 0, configs, {}, renames, "renamed", () => false);
+            const result = isPropertyFromMergedProps({
+                displayKey: "host",
+                path,
+                mergedProps,
+                configPath,
+                showMergedProperties: "show",
+                selectedTab: 0,
+                configurations: configs,
+                pendingChanges: {},
+                renames,
+                selectedProfileKey: "renamed",
+                isPropertyActuallyInheritedFn: () => false,
+            });
             expect(result).toBe(false);
         });
         it("when profile has been renamed, returns false when jsonLoc is old name of current profile", () => {
@@ -1007,13 +1422,37 @@ describe("profileUtils", () => {
             const renames = { [configPath]: { orig: "renamed" } };
             const mergedProps = { host: { jsonLoc: "profiles.orig.properties.host", osLoc: [configPath] } };
             const path = ["profiles", "renamed", "properties", "host"];
-            const result = isPropertyFromMergedProps("host", path, mergedProps, configPath, "show", 0, configs, {}, renames, "renamed", () => true);
+            const result = isPropertyFromMergedProps({
+                displayKey: "host",
+                path,
+                mergedProps,
+                configPath,
+                showMergedProperties: "show",
+                selectedTab: 0,
+                configurations: configs,
+                pendingChanges: {},
+                renames,
+                selectedProfileKey: "renamed",
+                isPropertyActuallyInheritedFn: () => true,
+            });
             expect(result).toBe(false);
         });
         it("when not renamed, returns true when jsonLoc indicates different profile", () => {
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } }] as any;
             const mergedProps = { host: { jsonLoc: "profiles.base.properties.host", osLoc: [configPath] } };
-            const result = isPropertyFromMergedProps("host", pathP1, mergedProps, configPath, "show", 0, configs, {}, {}, "p1", () => true);
+            const result = isPropertyFromMergedProps({
+                displayKey: "host",
+                path: pathP1,
+                mergedProps,
+                configPath,
+                showMergedProperties: "show",
+                selectedTab: 0,
+                configurations: configs,
+                pendingChanges: {},
+                renames: {},
+                selectedProfileKey: "p1",
+                isPropertyActuallyInheritedFn: () => true,
+            });
             expect(result).toBe(true);
         });
     });

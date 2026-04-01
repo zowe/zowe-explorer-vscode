@@ -30,7 +30,11 @@ export function flattenKeys(obj: { [key: string]: any }, parentKey: string = "")
     return result;
 }
 
-export function flattenProfiles(profiles: any, parentKey = "", result: Record<string, any> = {}): Record<string, any> {
+export function flattenProfiles(
+    profiles: Record<string, Record<string, unknown>>,
+    parentKey = "",
+    result: Record<string, Record<string, unknown>> = {}
+): Record<string, Record<string, unknown>> {
     if (!profiles || typeof profiles !== "object") return result;
 
     for (const key of Object.keys(profiles)) {
@@ -43,7 +47,7 @@ export function flattenProfiles(profiles: any, parentKey = "", result: Record<st
         result[qualifiedKey] = profileCopy;
 
         if (profile.profiles) {
-            flattenProfiles(profile.profiles, qualifiedKey, result);
+            flattenProfiles(profile.profiles as Record<string, Record<string, unknown>>, qualifiedKey, result);
         }
     }
 
@@ -89,7 +93,7 @@ export function extractProfileKeyFromPath(path: string[]): string {
     }
 }
 
-export function sortConfigEntries(entries: [string, any][]): [string, any][] {
+export function sortConfigEntries(entries: [string, unknown][]): [string, unknown][] {
     return entries.sort(([keyA], [keyB]) => {
         const getOrder = (key: string) => {
             if (key === "type") return 0;

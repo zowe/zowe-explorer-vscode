@@ -16,7 +16,6 @@ import {
     fetchTypeOptions,
     isFileProperty,
 } from "../../../../src/webviews/src/config-editor/utils/propertyUtils";
-import { getProfileType } from "../../../../src/webviews/src/config-editor/utils/profileUtils";
 
 const configPath = "/c";
 const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } } as any];
@@ -31,10 +30,30 @@ const schema = {
 describe("propertyUtils", () => {
     describe("getPropertyTypeForAddProfile", () => {
         it("returns undefined when selectedTab is null", () => {
-            expect(getPropertyTypeForAddProfile("host", null, configs, "p1", schema, getProfileType, {}, {})).toBeUndefined();
+            expect(
+                getPropertyTypeForAddProfile({
+                    propertyKey: "host",
+                    selectedTab: null,
+                    configurations: configs,
+                    selectedProfileKey: "p1",
+                    schemaValidations: schema,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBeUndefined();
         });
         it("returns type from schema for selected profile", () => {
-            expect(getPropertyTypeForAddProfile("host", 0, configs, "p1", schema, getProfileType, {}, {})).toBe("string");
+            expect(
+                getPropertyTypeForAddProfile({
+                    propertyKey: "host",
+                    selectedTab: 0,
+                    configurations: configs,
+                    selectedProfileKey: "p1",
+                    schemaValidations: schema,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBe("string");
         });
         it("returns type from schema when no profile selected (fallback to all types)", () => {
             const schemaMulti = {
@@ -45,26 +64,59 @@ describe("propertyUtils", () => {
                     },
                 },
             };
-            expect(getPropertyTypeForAddProfile("host", 0, configs, null, schemaMulti, getProfileType, {}, {})).toBe("string");
+            expect(
+                getPropertyTypeForAddProfile({
+                    propertyKey: "host",
+                    selectedTab: 0,
+                    configurations: configs,
+                    selectedProfileKey: null,
+                    schemaValidations: schemaMulti,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBe("string");
         });
     });
 
     describe("getPropertyTypeForConfigEditor", () => {
         it("returns undefined when selectedTab is null", () => {
             expect(
-                getPropertyTypeForConfigEditor("host", ["profiles", "p1", "properties"], null, configs, schema, getProfileType, {}, {})
+                getPropertyTypeForConfigEditor({
+                    propertyKey: "host",
+                    profilePath: ["profiles", "p1", "properties"],
+                    selectedTab: null,
+                    configurations: configs,
+                    schemaValidations: schema,
+                    pendingChanges: {},
+                    renames: {},
+                })
             ).toBeUndefined();
         });
         it("returns type from schema for profile path", () => {
-            expect(getPropertyTypeForConfigEditor("host", ["profiles", "p1", "properties"], 0, configs, schema, getProfileType, {}, {})).toBe(
-                "string"
-            );
+            expect(
+                getPropertyTypeForConfigEditor({
+                    propertyKey: "host",
+                    profilePath: ["profiles", "p1", "properties"],
+                    selectedTab: 0,
+                    configurations: configs,
+                    schemaValidations: schema,
+                    pendingChanges: {},
+                    renames: {},
+                })
+            ).toBe("string");
         });
     });
 
     describe("getPropertyDescriptions", () => {
         it("returns descriptions for profile type", () => {
-            const result = getPropertyDescriptions(["profiles", "p1", "properties"], 0, configs, schema, getProfileType, {}, {});
+            const result = getPropertyDescriptions({
+                path: ["profiles", "p1", "properties"],
+                selectedTab: 0,
+                configurations: configs,
+                schemaValidations: schema,
+                pendingChanges: {},
+                renames: {},
+            });
             expect(result.host).toBe("Host");
         });
         it("falls back to all types when type not in schema", () => {
@@ -77,7 +129,14 @@ describe("propertyUtils", () => {
                     },
                 },
             };
-            const result = getPropertyDescriptions(["profiles", "p2", "properties"], 0, configs2, schema2, getProfileType, {}, {});
+            const result = getPropertyDescriptions({
+                path: ["profiles", "p2", "properties"],
+                selectedTab: 0,
+                configurations: configs2,
+                schemaValidations: schema2,
+                pendingChanges: {},
+                renames: {},
+            });
             expect(result.foo).toBe("Foo desc");
             expect(result.bar).toBe("Bar desc");
         });
@@ -93,7 +152,15 @@ describe("propertyUtils", () => {
                     },
                 },
             ] as any;
-            const result = fetchTypeOptions(["profiles", "p1", "properties"], 0, configsWithHost, schema, getProfileType, {}, {}, {});
+            const result = fetchTypeOptions({
+                path: ["profiles", "p1", "properties"],
+                selectedTab: 0,
+                configurations: configsWithHost,
+                schemaValidations: schema,
+                pendingChanges: {},
+                renames: {},
+                deletions: {},
+            });
             expect(result).toContain("port");
             expect(result).not.toContain("host");
         });
@@ -106,7 +173,15 @@ describe("propertyUtils", () => {
                     },
                 },
             ] as any;
-            const result = fetchTypeOptions(["profiles", "p1", "properties"], 0, configsSecure, schema, getProfileType, {}, {}, {});
+            const result = fetchTypeOptions({
+                path: ["profiles", "p1", "properties"],
+                selectedTab: 0,
+                configurations: configsSecure,
+                schemaValidations: schema,
+                pendingChanges: {},
+                renames: {},
+                deletions: {},
+            });
             expect(result).not.toContain("token");
         });
         it("excludes properties from pending changes for same profile", () => {
@@ -115,16 +190,15 @@ describe("propertyUtils", () => {
                     "profiles.p1.properties.reject": { value: "x", path: [], profile: "p1" },
                 },
             };
-            const result = fetchTypeOptions(
-                ["profiles", "p1", "properties"],
-                0,
-                configs,
-                { [configPath]: { propertySchema: { zowe: { host: {}, port: {}, reject: {} } } } },
-                getProfileType,
-                pending,
-                {},
-                {}
-            );
+            const result = fetchTypeOptions({
+                path: ["profiles", "p1", "properties"],
+                selectedTab: 0,
+                configurations: configs,
+                schemaValidations: { [configPath]: { propertySchema: { zowe: { host: {}, port: {}, reject: {} } } } },
+                pendingChanges: pending,
+                renames: {},
+                deletions: {},
+            });
             expect(result).not.toContain("reject");
         });
         it("uses all schema types when resolvedType is null (profile untyped)", () => {
@@ -137,7 +211,15 @@ describe("propertyUtils", () => {
                     },
                 },
             };
-            const result = fetchTypeOptions(["profiles", "p1", "properties"], 0, configsUntyped, schemaMulti, getProfileType, {}, {}, {});
+            const result = fetchTypeOptions({
+                path: ["profiles", "p1", "properties"],
+                selectedTab: 0,
+                configurations: configsUntyped,
+                schemaValidations: schemaMulti,
+                pendingChanges: {},
+                renames: {},
+                deletions: {},
+            });
             expect(result).toContain("host");
             expect(result).toContain("port");
         });
@@ -150,18 +232,15 @@ describe("propertyUtils", () => {
                     },
                 },
             ] as any;
-            const result = fetchTypeOptions(
-                ["profiles", "p1", "properties"],
-                0,
-                configsWithHost,
-                schema,
-                getProfileType,
-                {},
-                {},
-                {
-                    [configPath]: ["profiles.p1.properties.host"],
-                }
-            );
+            const result = fetchTypeOptions({
+                path: ["profiles", "p1", "properties"],
+                selectedTab: 0,
+                configurations: configsWithHost,
+                schemaValidations: schema,
+                pendingChanges: {},
+                renames: {},
+                deletions: { [configPath]: ["profiles.p1.properties.host"] },
+            });
             expect(result).toContain("host");
             expect(result).toContain("port");
         });
