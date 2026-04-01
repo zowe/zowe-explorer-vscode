@@ -5,6 +5,7 @@
 
 # ============================================================================
 # Data Sets Tree
+# Alt: @t1m0thyj, @traeok
 # ============================================================================
 packages/zowe-explorer/src/trees/dataset/                    @JillieBeanSim @zFernand0
 packages/zowe-explorer/__tests__/__unit__/trees/dataset/     @JillieBeanSim @zFernand0
@@ -13,12 +14,14 @@ packages/zowe-explorer-api/src/dataset/                      @JillieBeanSim @zFe
 
 # ============================================================================
 # USS Tree
+# Alt: @t1m0thyj, @zFernand0
 # ============================================================================
 packages/zowe-explorer/src/trees/uss/                        @traeok @JillieBeanSim
 packages/zowe-explorer/__tests__/__unit__/trees/uss/         @traeok @JillieBeanSim
 
 # ============================================================================
 # Jobs Tree
+# Alt: @traeok
 # ============================================================================
 packages/zowe-explorer/src/trees/job/                        @zFernand0 @JillieBeanSim
 packages/zowe-explorer/__tests__/__unit__/trees/job/         @zFernand0 @JillieBeanSim
@@ -47,6 +50,7 @@ packages/zowe-explorer/src/utils/CertificateWizard.ts        @JillieBeanSim @tra
 
 # ============================================================================
 # Web views
+# Alt: @jace-roell
 # ============================================================================
 packages/zowe-explorer/src/webviews/                         @traeok @JWaters02
 packages/zowe-explorer-api/src/vscode/ui/WebView.ts          @traeok @JWaters02
@@ -64,6 +68,7 @@ packages/zowe-explorer/__tests__/__unit__/commands/          @zFernand0 @JillieB
 
 # ============================================================================
 # Bundling & packaging
+# Alt: @JillieBeanSim
 # ============================================================================
 packages/*/webpack.config.js                                 @t1m0thyj @zFernand0
 packages/zowe-explorer/src/webviews/vite.config.ts           @t1m0thyj @zFernand0
@@ -87,6 +92,7 @@ packages/zowe-explorer/__tests__/__integration__/ci/         @t1m0thyj @zFernand
 
 # ============================================================================
 # Profiles
+# Alt: @traeok
 # ============================================================================
 packages/zowe-explorer-api/src/profiles/                     @t1m0thyj @JillieBeanSim
 packages/zowe-explorer/src/configuration/Profiles.ts         @t1m0thyj @JillieBeanSim
