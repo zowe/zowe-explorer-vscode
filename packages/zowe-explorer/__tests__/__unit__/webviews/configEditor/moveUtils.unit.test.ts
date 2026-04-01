@@ -24,33 +24,19 @@ import {
     renameProfileInPlace,
     updateDefaultsAfterRename,
     simulateDefaultsUpdateAfterRename,
-    ConfigMoveAPI,
-    IConfigLayer,
 } from "../../../../src/webviews/src/config-editor/utils/MoveUtils";
+import { ConfigMoveAPI, IConfigLayer } from "../../../../src/webviews/src/config-editor/types";
 
-// Mock lodash
-jest.mock("lodash", () => ({
-    get: jest.fn((obj, path) => {
+jest.mock("es-toolkit/compat", () => ({
+    set: jest.fn((obj: Record<string, unknown>, path: string, value: unknown) => {
         const keys = path.split(".");
-        let result = obj;
-        for (const key of keys) {
-            if (result && typeof result === "object" && key in result) {
-                result = result[key];
-            } else {
-                return undefined;
-            }
-        }
-        return result;
-    }),
-    set: jest.fn((obj, path, value) => {
-        const keys = path.split(".");
-        let current = obj;
+        let current: Record<string, unknown> = obj;
         for (let i = 0; i < keys.length - 1; i++) {
             const key = keys[i];
             if (!(key in current) || typeof current[key] !== "object") {
                 current[key] = {};
             }
-            current = current[key];
+            current = current[key] as Record<string, unknown>;
         }
         current[keys[keys.length - 1]] = value;
     }),
@@ -304,7 +290,7 @@ describe("MoveUtils", () => {
             updateSecureArrays(() => layerWithSecure, "profiles.test", "profiles.test", ["password"], ["token"]);
 
             // Verify that set was called (mocked lodash.set)
-            const { set } = require("lodash");
+            const { set } = require("es-toolkit/compat");
             expect(set).toHaveBeenCalled();
         });
     });
