@@ -583,6 +583,7 @@
   "e.g., +1M (larger than 1MB), -500K (smaller than 500KB), 100G": "e.g., +1M (larger than 1MB), -500K (smaller than 500KB), 100G",
   "e.g., +7 (older than 7 days), -1 (newer than 1 day), 30 (exactly 30 days)": "e.g., +7 (older than 7 days), -1 (newer than 1 day), 30 (exactly 30 days)",
   "e.g., 2 (search 2 levels deep)": "e.g., 2 (search 2 levels deep)",
+  "e.g., 5000 for checking every 5 seconds": "e.g., 5000 for checking every 5 seconds",
   "e.g., 755, -644 (not 644)": "e.g., 755, -644 (not 644)",
   "e.g., admin or 100": "e.g., admin or 100",
   "e.g., IBMUSER or 1001": "e.g., IBMUSER or 1001",
@@ -967,6 +968,7 @@
   "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>": "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>",
   "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>": "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>",
   "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Replaced the inaccessible markdown link with keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>": "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Replaced the inaccessible markdown link with keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>",
+  "Fixed an accessibility issue where screen readers did not provide instructions for configuring job polling. Added descriptive prompts and placeholder text explaining how polling works, the expected input format, and what happens when polling is active. <a>#4029</a>": "Fixed an accessibility issue where screen readers did not provide instructions for configuring job polling. Added descriptive prompts and placeholder text explaining how polling works, the expected input format, and what happens when polling is active. <a>#4029</a>",
   "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>": "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>",
   "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>": "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>",
   "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>": "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>",
@@ -1344,17 +1346,10 @@
   "Item invalid.": "Item invalid.",
   "items": "items",
   "JES API": "JES API",
-  "Job {0} completed - {1}/Job ID with clickable linkJob status": {
+  "Job {0} completed - {1}/Job name and IDJob status": {
     "message": "Job {0} completed - {1}",
     "comment": [
-      "Job ID with clickable link",
-      "Job status"
-    ]
-  },
-  "Job {0} completed - {1}/Job name and ID with clickable linkJob status": {
-    "message": "Job {0} completed - {1}",
-    "comment": [
-      "Job name and ID with clickable link",
+      "Job name and ID",
       "Job status"
     ]
   },
@@ -1368,6 +1363,7 @@
   "Job enhancements": "Job enhancements",
   "Job ID": "Job ID",
   "Job Name": "Job Name",
+  "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again.": "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again.",
   "Job search cancelled.": "Job search cancelled.",
   "Job spool pagination": "Job spool pagination",
   "Job submission failed.": "Job submission failed.",
@@ -1666,6 +1662,7 @@
       "Number of active jobs"
     ]
   },
+  "Polling automatically checks for job status updates at regular intervals. Enter the time in milliseconds between each check (minimum 1000ms).": "Polling automatically checks for job status updates at regular intervals. Enter the time in milliseconds between each check (minimum 1000ms).",
   "Polling job: {0}.../Job display name": {
     "message": "Polling job: {0}...",
     "comment": [
@@ -2212,7 +2209,7 @@
   "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>": "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>",
   "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>": "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>",
   "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>": "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>",
-  "Updated Zowe SDKs to 8.31.0 for technical currency. <a>#4130</a>": "Updated Zowe SDKs to 8.31.0 for technical currency. <a>#4130</a>",
+  "Updated Zowe SDKs to 8.31.0 for technical currency. <a>#4117</a>": "Updated Zowe SDKs to 8.31.0 for technical currency. <a>#4117</a>",
   "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>": "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>",
   "Updating data set templates.": "Updating data set templates.",
   "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
