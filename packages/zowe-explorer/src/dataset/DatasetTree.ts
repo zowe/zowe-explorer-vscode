@@ -989,22 +989,30 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
             syncSessionNode(Profiles.getInstance())((profileValue) => ZoweExplorerApiRegister.getMvsApi(profileValue).getSession())(nonFaveNode);
             let dataSet: IDataSet;
             const dsSets: (IDataSet & { memberPattern?: string })[] = [];
+
             const dsNames = pattern.split(",");
+            let currentDs = "";
+            let parenDepth = 0;
 
             for (const ds of dsNames) {
-                const match = /(.*)\((.*)\)/.exec(ds);
-                if (match) {
-                    const [, dataSetName, memberName] = match;
-                    dataSet = {
-                        dsn: dataSetName,
-                        member: memberName,
-                    };
-                } else {
-                    dataSet = {
-                        dsn: ds.replace(/\s/g, ""),
-                    };
+                currentDs += (currentDs ? "," : "") + ds;
+                parenDepth += (ds.match(/\(/g) || []).length - (ds.match(/\)/g) || []).length;
+                if (parenDepth === 0) {
+                    const match = /(.*)\((.*)\)/.exec(currentDs);
+                    if (match) {
+                        const [, dataSetName, memberName] = match;
+                        dataSet = {
+                            dsn: dataSetName,
+                            member: memberName,
+                        };
+                    } else {
+                        dataSet = {
+                            dsn: currentDs.replace(/\s/g, ""),
+                        };
+                    }
+                    dsSets.push(dataSet);
+                    currentDs = "";
                 }
-                dsSets.push(dataSet);
             }
 
             let datasets: string;
@@ -1086,8 +1094,14 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             options.responseTimeout = childProfile.profile?.responseTimeout;
                             const memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
                             let existing = false;
+                            const memberPatterns = item.member.split(",");
                             for (const mem of memResponse.apiResponse.items) {
-                                existing = this.checkFilterPattern(mem.member, item.member);
+                                for (const pattern of memberPatterns) {
+                                    if (this.checkFilterPattern(mem.member, pattern)) {
+                                        existing = true;
+                                        break;
+                                    }
+                                }
                                 if (existing) {
                                     child.memberPattern = item.member;
                                     if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
@@ -1104,6 +1118,7 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                                         child.iconPath = setIcon.path;
                                     }
                                     this.refreshElement(child);
+                                    break;
                                 }
                             }
                         }

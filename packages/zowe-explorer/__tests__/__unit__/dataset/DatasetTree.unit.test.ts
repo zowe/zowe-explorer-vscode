@@ -1704,6 +1704,34 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD1");
     });
+    it("Checking adding of new filter with multiple member patterns", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD(AAA*,BBB*)");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        testTree.mSessionNodes[1].collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+        const node = new ZoweDatasetNode({
+            label: "STUFF",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            contextOverride: globals.DS_DS_CONTEXT,
+        });
+        node.pattern = undefined as any;
+        node.contextValue += "pds";
+
+        jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValueOnce([node] as any);
+        jest.spyOn(testTree, "checkFilterPattern").mockReturnValue(true);
+
+        await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+        expect(testTree.mSessionNodes[1].contextValue).toEqual(globals.DS_SESSION_CONTEXT + globals.ACTIVE_CONTEXT);
+        expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD");
+    });
     it("Checking adding of new filter with Unverified profile", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
