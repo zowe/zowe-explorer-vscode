@@ -128,6 +128,7 @@ async function createGlobalMocks() {
                 fetchAllProfiles: jest.fn(() => {
                     return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
                 }),
+                recentlyUpdatedProfile: null,
             };
         }),
         configurable: true,
@@ -356,6 +357,31 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
         globalMocks.mockCheckCurrentProfile.mockReturnValueOnce({
             name: globalMocks.testProfile.name,
             status: "inactive",
+        });
+        const checkSession = jest.spyOn(blockMocks.testJobsProvider, "checkCurrentProfile");
+        await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
+        expect(globalMocks.mockCheckCurrentProfile).toHaveBeenCalled();
+    });
+
+    it("Tests that checkCurrentProfile skips error message for recently updated profile", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        blockMocks.jobNode.contextValue = "session";
+        globalMocks.mockCheckCurrentProfile.mockReturnValueOnce({
+            name: globalMocks.testProfile.name,
+            status: "inactive",
+        });
+        // Access through the mocked Profiles.getInstance()
+        Object.defineProperty(Profiles, "getInstance", {
+            value: jest.fn(() => {
+                return {
+                    ...globalMocks.mockProfilesCache,
+                    recentlyUpdatedProfile: globalMocks.testProfile.name,
+                    validProfile: ValidProfileEnum.VALID,
+                    checkCurrentProfile: globalMocks.mockCheckCurrentProfile,
+                };
+            }),
+            configurable: true,
         });
         const checkSession = jest.spyOn(blockMocks.testJobsProvider, "checkCurrentProfile");
         await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
