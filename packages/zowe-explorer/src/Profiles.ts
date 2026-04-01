@@ -65,6 +65,7 @@ export class Profiles extends ProfilesCache {
 
     public loadedProfile: zowe.imperative.IProfileLoaded;
     public validProfile: ValidProfileEnum = ValidProfileEnum.INVALID;
+    public recentlyUpdatedProfile: string | null = null;
     private dsSchema: string = globals.SETTINGS_DS_HISTORY;
     private ussSchema: string = globals.SETTINGS_USS_HISTORY;
     private jobsSchema: string = globals.SETTINGS_JOBS_HISTORY;
@@ -933,6 +934,12 @@ export class Profiles extends ProfilesCache {
 
         const returnValue: string[] = [promptInfo.profile.user, promptInfo.profile.password, promptInfo.profile.base64EncodedAuth];
         this.updateProfilesArrays(promptInfo);
+        // Clear validation cache so profile will be re-validated with new credentials
+        this.profilesForValidation = this.profilesForValidation.filter((profile) => profile.name !== promptInfo.name);
+        // Set to unverified to prevent showing "inactive" error until re-validated
+        this.validProfile = ValidProfileEnum.UNVERIFIED;
+        // Mark profile as recently updated to skip "inactive" error message
+        this.recentlyUpdatedProfile = promptInfo.name;
         return returnValue;
     }
 

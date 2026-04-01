@@ -238,6 +238,7 @@ export class ZoweTreeProvider {
         ZoweLogger.trace("ZoweTreeProvider.checkCurrentProfile called.");
         const profile = node.getProfile();
         const profileStatus = await Profiles.getInstance().checkCurrentProfile(profile);
+        const recentlyUpdatedProfile = Profiles.getInstance().recentlyUpdatedProfile;
         if (profileStatus.status === "inactive") {
             if (
                 contextually.isSessionNotFav(node) &&
@@ -252,14 +253,17 @@ export class ZoweTreeProvider {
                 Profiles.getInstance().validProfile = ValidProfileEnum.INVALID;
             }
 
-            await errorHandling(
-                localize("validateProfiles.invalid1", "Profile Name ") +
-                    profile.name +
-                    localize(
-                        "validateProfiles.invalid2",
-                        " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
-                    )
-            );
+            // Skip error message if profile was recently updated via "Update Credentials"
+            if (recentlyUpdatedProfile !== profile.name) {
+                await errorHandling(
+                    localize("validateProfiles.invalid1", "Profile Name ") +
+                        profile.name +
+                        localize(
+                            "validateProfiles.invalid2",
+                            " is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
+                        )
+                );
+            }
         } else if (profileStatus.status === "active") {
             if (
                 contextually.isSessionNotFav(node) &&
