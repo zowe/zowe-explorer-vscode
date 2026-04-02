@@ -539,7 +539,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             node.iconPath = targetIcon.path;
         }
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile).toEqual(node);
     });
@@ -601,7 +601,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             node.iconPath = targetIcon.path;
         }
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile.label).toEqual("testJob(JOB123)");
     });
@@ -780,6 +780,34 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         const resultFavJobNode = testTree.mFavorites[0].children[0];
 
         expect(resultFavJobNode).toEqual(expectedFavJobNode);
+    });
+    it("Checks that filesystem entry is created for favorited job that doesn't exist in filesystem", async () => {
+        await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const favProfileNode = new ZoweJobNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.jobFavoritesNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+        });
+        favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        const favJobNode = new ZoweJobNode({
+            label: "JOBTEST(JOB1234)",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.JOBS_JOB_CONTEXT + Constants.FAV_SUFFIX,
+        });
+        const testTree = new JobTree();
+        favProfileNode.children.push(favJobNode);
+        testTree.mFavorites.push(favProfileNode);
+
+        jest.spyOn(JobFSProvider.instance, "exists").mockReturnValueOnce(false);
+        const createDirectorySpy = jest.spyOn(JobFSProvider.instance, "createDirectory");
+        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        expect(createDirectorySpy).toHaveBeenCalledWith(favJobNode.resourceUri);
     });
 });
 
