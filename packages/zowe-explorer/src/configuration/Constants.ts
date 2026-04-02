@@ -26,6 +26,8 @@ export class Constants {
     public static readonly ACTIVE_JOBS_POLLING_TIMEOUT_MS = 1000;
     public static readonly MIN_WARN_ACTIVE_JOBS_TO_POLL = 10;
     public static readonly MIN_WARN_DOWNLOAD_FILES = 100;
+    public static readonly ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS = 4;
+    public static readonly ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT = 300000;
     public static readonly CONTEXT_PREFIX = "_";
     public static readonly FAV_SUFFIX = Constants.CONTEXT_PREFIX + "fav";
     public static readonly HOME_SUFFIX = Constants.CONTEXT_PREFIX + "home";
@@ -84,6 +86,8 @@ export class Constants {
     public static readonly SETTINGS_CHECK_FOR_CUSTOM_CREDENTIAL_MANAGERS = "zowe.security.checkForCustomCredentialManagers";
     public static readonly SETTINGS_DATASETS_PER_PAGE = "zowe.ds.paginate.dataSetsPerPage";
     public static readonly SETTINGS_DISPLAY_RELEASE_NOTES = "zowe.settings.displayReleaseNotes";
+    public static readonly SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS = "zowe.settings.zosmfMaxConcurrentRequests";
+    public static readonly SETTINGS_ZOSMF_QUEUE_TIMEOUT = "zowe.settings.zosmfRequestQueueTimeout";
     public static readonly LOGGER_SETTINGS = "zowe.logger";
     public static readonly SETTINGS_OVERRIDE_WITH_ENV_VAR = "zowe.settings.overrideWithEnvironmentVariables";
     public static EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];

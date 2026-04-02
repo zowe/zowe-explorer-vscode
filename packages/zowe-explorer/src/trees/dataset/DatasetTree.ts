@@ -516,7 +516,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
 
             // Initialize and attach favorited item nodes under their respective profile node in Favorites
-            const favChildNode = await this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
+            const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
             favProfileNode.children.push(favChildNode);
         }
     }
@@ -529,7 +529,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      * @param parentNode The profile node in this.mFavorites that the favorite belongs to
      * @returns IZoweDatasetTreeNode
      */
-    public async initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweDatasetTreeNode): Promise<ZoweDatasetNode> {
+    public initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweDatasetTreeNode): ZoweDatasetNode {
         ZoweLogger.trace("DatasetTree.initializeFavChildNodeForProfile called.");
         const profile = parentNode.getProfile();
 
@@ -542,12 +542,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     parentNode,
                     profile,
                 });
-                if (
-                    !DatasetFSProvider.instance.exists(node.resourceUri) &&
-                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type)
-                ) {
-                    await vscode.workspace.fs.createDirectory(node.resourceUri);
-                }
             } else {
                 node = new ZoweDatasetNode({
                     label,
@@ -556,12 +550,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     profile,
                     contextOverride: contextValue,
                 });
-                if (
-                    !DatasetFSProvider.instance.exists(node.resourceUri) &&
-                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type)
-                ) {
-                    vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
-                }
             }
             node.contextValue = SharedContext.asFavorite(node);
             const icon = IconGenerator.getIconByNode(node);
@@ -659,6 +647,13 @@ Would you like to do this now?`,
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
         const favsForProfile = profileInFavs.children;
         for (const favorite of favsForProfile) {
+            if (!DatasetFSProvider.instance.exists(favorite.resourceUri)) {
+                if (SharedContext.isPds(favorite)) {
+                    await vscode.workspace.fs.createDirectory(favorite.resourceUri);
+                } else if (SharedContext.isDs(favorite)) {
+                    await vscode.workspace.fs.writeFile(favorite.resourceUri, new Uint8Array());
+                }
+            }
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
             if (favorite.getProfile() && favorite.getSession()) {
                 updatedFavsForProfile.push(favorite);
