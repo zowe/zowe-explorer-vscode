@@ -235,11 +235,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         // Create entry in the filesystem to represent the recalled data set
         if (isPds) {
-            await vscode.workspace.fs.createDirectory(this.resourceUri);
+            DatasetFSProvider.instance.createDirectory(this.resourceUri);
         } else {
             this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             if (!DatasetFSProvider.instance.exists(this.resourceUri)) {
-                await vscode.workspace.fs.writeFile(this.resourceUri, new Uint8Array());
+                DatasetFSProvider.instance.makeEmptyDsWithEncoding(this.resourceUri, undefined);
             }
         }
     }

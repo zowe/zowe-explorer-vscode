@@ -279,12 +279,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             if (isDir) {
                 // Create an entry for the USS folder if it doesn't exist.
                 if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
-                    await vscode.workspace.fs.createDirectory(ussNode.resourceUri);
+                    UssFSProvider.instance.createDirectory(ussNode.resourceUri);
                 }
             } else {
                 // Create an entry for the USS file if it doesn't exist.
                 if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
-                    await vscode.workspace.fs.writeFile(ussNode.resourceUri, new Uint8Array());
+                    UssFSProvider.instance.makeEmptyFileWithEncoding(ussNode.resourceUri, undefined);
                 }
             }
             ussNode.setAttributes({

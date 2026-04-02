@@ -649,9 +649,9 @@ Would you like to do this now?`,
         for (const favorite of favsForProfile) {
             if (!DatasetFSProvider.instance.exists(favorite.resourceUri)) {
                 if (SharedContext.isPds(favorite)) {
-                    await vscode.workspace.fs.createDirectory(favorite.resourceUri);
+                    DatasetFSProvider.instance.createDirectory(favorite.resourceUri);
                 } else if (SharedContext.isDs(favorite)) {
-                    await vscode.workspace.fs.writeFile(favorite.resourceUri, new Uint8Array());
+                    DatasetFSProvider.instance.makeEmptyDsWithEncoding(favorite.resourceUri, undefined);
                 }
             }
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item

@@ -31,6 +31,7 @@ import { ProfileManagement } from "../../management/ProfileManagement";
 import { Definitions } from "../../configuration/Definitions";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
 import { USSUtils } from "./USSUtils";
+import { UssFSProvider } from "./UssFSProvider";
 
 export class USSActions {
     /**
@@ -94,9 +95,9 @@ export class USSActions {
                 });
                 await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
                 if (nodeType === "file") {
-                    await vscode.workspace.fs.writeFile(uri, new Uint8Array());
+                    UssFSProvider.instance.makeEmptyFileWithEncoding(uri, undefined);
                 } else {
-                    await vscode.workspace.fs.createDirectory(uri);
+                    UssFSProvider.instance.createDirectory(uri);
                 }
                 if (isTopLevel) {
                     await SharedActions.refreshProvider(ussFileProvider);

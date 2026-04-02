@@ -1249,7 +1249,7 @@ export class DatasetActions {
 
             if (newNode != null) {
                 if (replace === "notFound") {
-                    await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
+                    DatasetFSProvider.instance.makeEmptyDsWithEncoding(newNode.resourceUri, undefined, true);
                 }
 
                 await vscode.commands.executeCommand("vscode.open", newNode.resourceUri);

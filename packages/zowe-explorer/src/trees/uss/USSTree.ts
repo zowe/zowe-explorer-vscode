@@ -1197,13 +1197,13 @@ Would you like to do this now?`,
         for (const favorite of favsForProfile) {
             if (!UssFSProvider.instance.exists(favorite.resourceUri)) {
                 if (SharedContext.isUssDirectory(favorite)) {
-                    await vscode.workspace.fs.createDirectory(favorite.resourceUri);
+                    UssFSProvider.instance.createDirectory(favorite.resourceUri);
                 } else if (SharedContext.isText(favorite) || SharedContext.isBinary(favorite)) {
                     const parentUri = favorite.resourceUri.with({ path: path.posix.join(favorite.resourceUri.path, "..") });
                     if (!UssFSProvider.instance.exists(parentUri)) {
-                        await vscode.workspace.fs.createDirectory(parentUri);
+                        UssFSProvider.instance.createDirectory(parentUri);
                     }
-                    await vscode.workspace.fs.writeFile(favorite.resourceUri, new Uint8Array());
+                    UssFSProvider.instance.makeEmptyFileWithEncoding(favorite.resourceUri, undefined);
                 }
             }
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
