@@ -32,6 +32,7 @@ import {
     NavigationTreeItem,
     PersistenceSchemaEnum,
     IDataSetCount,
+    DsType,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -47,7 +48,6 @@ import type { DatasetTree } from "./DatasetTree";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
-import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
 /**
  * A type of TreeItem used to represent sessions and data sets
  *
@@ -419,16 +419,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
 
                 if (dsNode?.resourceUri != null) {
-                    if (dsNode.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
-                        // Create an entry for the PDS if it doesn't exist.
-                        if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
-                            DatasetFSProvider.instance.createDirectory(dsNode.resourceUri);
-                        }
-                    } else {
-                        // Create an entry for the data set if it doesn't exist.
-                        if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
-                            await DatasetFSProvider.instance.writeFile(dsNode.resourceUri, new Uint8Array(), { create: true, overwrite: false });
-                        }
+                    const isCollapsible = dsNode.collapsibleState != vscode.TreeItemCollapsibleState.None;
+                    let dsType = isCollapsible ? DsType.Pds : DsType.PdsMember;
+                    const isSequential = SharedContext.isSession(this);
+                    if (isSequential && !isCollapsible) {
+                        dsType = DsType.Ps;
+                    }
+                    // Create an empty entry for the PDS if it doesn't exist.
+                    if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
+                        DatasetFSProvider.instance.createEntry(dsNode.resourceUri, dsType);
                     }
                     dsNode.updateStats(item);
                 }

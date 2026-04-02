@@ -733,10 +733,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     // user is trying to edit a file that was just deleted: make the API call
                     const resp = await this.uploadEntry(entry as UssFile, content, { forceUpload });
                     entry.etag = resp.apiResponse.etag;
+                    this._fireSoon({ type: vscode.FileChangeType.Created, uri });
                 }
                 entry.data = content;
                 parentDir.entries.set(fileName, entry);
-                this._fireSoon({ type: vscode.FileChangeType.Created, uri });
             } else {
                 if (entry.inDiffView || urlQuery.has("inDiff")) {
                     // Allow users to edit the local copy of a file in the diff view, but don't make any API calls.
@@ -1073,10 +1073,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;
-        this._fireSoon(
-            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.join(uri.path, "..") }) },
-            { type: vscode.FileChangeType.Created, uri }
-        );
+        // this._fireSoon(
+        //     { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.join(uri.path, "..") }) },
+        //     { type: vscode.FileChangeType.Created, uri }
+        // );
     }
 
     public watch(_resource: vscode.Uri, _options?: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {

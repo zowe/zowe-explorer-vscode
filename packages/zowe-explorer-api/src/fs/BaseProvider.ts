@@ -360,7 +360,7 @@ export class BaseProvider {
     /**
      * Internal VSCode function for the FileSystemProvider to fire events from the event queue
      */
-    protected _fireSoon(...events: vscode.FileChangeEvent[]): void {
+    public _fireSoon(...events: vscode.FileChangeEvent[]): void {
         this._bufferedEvents.push(...events);
 
         if (this._fireSoonHandle) {
