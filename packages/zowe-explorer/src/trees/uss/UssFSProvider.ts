@@ -276,14 +276,16 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     private _createDirectoryRecursive(uri: vscode.Uri): void {
+        if (this.exists(uri)) {
+            return;
+        }
+
         const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
-        if (parentUri.path !== uri.path && parentUri.path !== "/" && !this.exists(parentUri)) {
+        if (parentUri.path !== uri.path && parentUri.path !== "/") {
             this._createDirectoryRecursive(parentUri);
         }
 
-        if (!this.exists(uri)) {
-            this.createDirectory(uri);
-        }
+        this.createDirectory(uri);
     }
 
     private async fetchEntries(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<UssDirectory | UssFile> {
