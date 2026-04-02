@@ -1084,6 +1084,10 @@ Would you like to do this now?`,
                 args: [path.posix.basename(uri.path)],
                 comment: ["URI path"],
             }),
+            prompt: vscode.l10n.t(
+                "Polling automatically checks for job status updates at regular intervals. Enter the time in milliseconds between each check (minimum 1000ms)."
+            ),
+            placeHolder: vscode.l10n.t("e.g., 5000 for checking every 5 seconds"),
             value: pollValue.toString(),
             validateInput: (value: string) => this.validatePollInterval(value),
         });
@@ -1197,6 +1201,20 @@ Would you like to do this now?`,
             return;
         }
 
+        // Show informational message about polling before prompting for interval
+        const infoMessage = vscode.l10n.t(
+            "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again."
+        );
+        const continueButton = vscode.l10n.t("Continue");
+        const userResponse = await Gui.infoMessage(infoMessage, { items: [continueButton], vsCodeOpts: { modal: false } });
+
+        // Accessibility: Check if user clicked Continue button or dismissed the dialog.
+        // By capturing and validating the response, screen readers properly announce this as an
+        // actionable button rather than just informational text, improving accessibility.
+        if (!userResponse) {
+            return;
+        }
+
         // Always prompt the user for a poll interval
         const pollInterval = await this.showPollOptions(session.resourceUri);
         if (pollInterval === 0) {
@@ -1272,15 +1290,18 @@ Would you like to do this now?`,
                         if (status && status !== "ACTIVE") {
                             const sessProfileName = session.getProfileName();
                             const args = [sessProfileName, job.job.jobid];
-                            const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                             const jobDisplayName = `${job.job.jobname}(${job.job.jobid})`;
-                            Gui.showMessage(
-                                vscode.l10n.t({
-                                    message: "Job {0} completed - {1}",
-                                    args: [`[${jobDisplayName}](${setJobCmd})`, job.job.retcode],
-                                    comment: ["Job name and ID with clickable link", "Job status"],
-                                })
-                            );
+                            const openJobButton = vscode.l10n.t("Open Job");
+                            const message = vscode.l10n.t({
+                                message: "Job {0} completed - {1}",
+                                args: [jobDisplayName, job.job.retcode],
+                                comment: ["Job name and ID", "Job status"],
+                            });
+                            Gui.showMessage(message, { items: [openJobButton] }).then((selection) => {
+                                if (selection === openJobButton) {
+                                    vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                                }
+                            });
 
                             // Remove polling context from completed jobs
                             this.updatePollContext(job);

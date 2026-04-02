@@ -28,3 +28,9 @@ export class ProfileConstants {
         type: "base",
     };
 }
+
+export namespace ZosmfRestClient {
+    export function setThrottlingOptions(options: imperative.IQueueThrottleOptions) {
+        return;
+    }
+}
