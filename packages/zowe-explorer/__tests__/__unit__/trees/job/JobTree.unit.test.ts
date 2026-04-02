@@ -539,7 +539,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             node.iconPath = targetIcon.path;
         }
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile).toEqual(node);
     });
@@ -601,7 +601,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             node.iconPath = targetIcon.path;
         }
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile.label).toEqual("testJob(JOB123)");
     });
@@ -780,6 +780,34 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         const resultFavJobNode = testTree.mFavorites[0].children[0];
 
         expect(resultFavJobNode).toEqual(expectedFavJobNode);
+    });
+    it("Checks that filesystem entry is created for favorited job that doesn't exist in filesystem", async () => {
+        await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const favProfileNode = new ZoweJobNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.jobFavoritesNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+        });
+        favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        const favJobNode = new ZoweJobNode({
+            label: "JOBTEST(JOB1234)",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.JOBS_JOB_CONTEXT + Constants.FAV_SUFFIX,
+        });
+        const testTree = new JobTree();
+        favProfileNode.children.push(favJobNode);
+        testTree.mFavorites.push(favProfileNode);
+
+        jest.spyOn(JobFSProvider.instance, "exists").mockReturnValueOnce(false);
+        const createDirectorySpy = jest.spyOn(JobFSProvider.instance, "createDirectory");
+        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        expect(createDirectorySpy).toHaveBeenCalledWith(favJobNode.resourceUri);
     });
 });
 
@@ -1165,6 +1193,38 @@ describe("ZosJobsProvider unit tests - function pollData", () => {
         expect(globalMocks.testJobsProvider.validatePollInterval("1000")).toStrictEqual(undefined);
         expect(globalMocks.testJobsProvider.validatePollInterval("1001")).toStrictEqual(undefined);
     });
+
+    it("shows accessibility-friendly prompt and placeholder in polling input box", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testJobNode = new ZoweJobNode({
+            label: "SOME(JOBNODE) - Input",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testJobsProvider.mSessionNodes[1],
+            session: globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+            profile: globalMocks.testProfile,
+            job: globalMocks.testIJob,
+        });
+        const spoolNode = new ZoweSpoolNode({
+            label: "exampleSpool",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testJobNode,
+            session: globalMocks.testSession,
+            job: globalMocks.testIJob,
+            spool: globalMocks.mockIJobFile,
+        });
+
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(5000);
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("5000");
+
+        await globalMocks.testJobsProvider.pollData(spoolNode);
+
+        expect(inputBoxSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                prompt: expect.stringContaining("Polling automatically checks for job status updates"),
+                placeHolder: expect.stringContaining("e.g., 5000 for checking every 5 seconds"),
+            })
+        );
+    });
 });
 
 describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
@@ -1231,10 +1291,56 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         expect(fireTreeDataSpy).toHaveBeenCalledWith(testSessionNode);
     });
 
-    it("should return early if user dismisses polling dialog", async () => {
+    it("should return early if user dismisses informational message", async () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
 
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockClear();
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        expect(infoMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job polling will automatically check active jobs"),
+            expect.objectContaining({
+                items: expect.arrayContaining([expect.stringContaining("Continue")]),
+                vsCodeOpts: { modal: false },
+            })
+        );
+        // Input box should NOT be called if user dismisses the info message
+        expect(inputBoxSpy).not.toHaveBeenCalled();
+        expect(Poller.pollRequests).toStrictEqual({});
+    });
+
+    it("should show accessibility-friendly informational message with Continue button", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const continueButton = "Continue";
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        // Verify informational message is shown with accessibility-friendly text and Continue button
+        expect(infoMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job polling will automatically check active jobs for status changes"),
+            expect.objectContaining({
+                items: expect.arrayContaining([expect.stringContaining("Continue")]),
+                vsCodeOpts: { modal: false },
+            })
+        );
+        // Verify both the info message and input box were called when user clicks Continue
+        expect(infoMessageSpy).toHaveBeenCalled();
+        expect(inputBoxSpy).toHaveBeenCalled();
+    });
+
+    it("should return early if user dismisses polling interval input", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const continueButton = "Continue";
+        jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
         const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
 
         await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
@@ -1278,6 +1384,8 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
 
         jest.spyOn(Gui, "resolveQuickPick").mockResolvedValue(undefined);
 
+        const continueButton = "Continue";
+        jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
         const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
         const filterPromptSpy = jest.spyOn(globalMocks.testJobsProvider, "filterPrompt").mockResolvedValue();
 
@@ -1293,8 +1401,9 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         testSessionNode.children = [];
         testSessionNode.filtered = true;
 
+        const continueButton = "Continue";
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
         const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
-        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
 
         await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
 
@@ -1317,8 +1426,9 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         });
         testSessionNode.children = [mockCompletedJob];
 
+        const continueButton = "Continue";
+        const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
         const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
-        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
 
         await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
 
@@ -1345,6 +1455,8 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         }
         testSessionNode.children = activeJobs;
 
+        const continueButton = "Continue";
+        jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
         const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
         const warningMessageSpy = jest.spyOn(Gui, "warningMessage").mockResolvedValueOnce("Cancel");
 
@@ -1383,6 +1495,8 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         });
         testSessionNode.children = [mockActiveJob1, mockActiveJob2];
 
+        const continueButton = "Continue";
+        jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
         const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
         const fireTreeDataSpy = jest.spyOn(globalMocks.testJobsProvider.mOnDidChangeTreeData, "fire");
 
@@ -1419,6 +1533,8 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         mockActiveJob.contextValue += Constants.POLL_CONTEXT;
         testSessionNode.children = [mockActiveJob];
 
+        const continueButton = "Continue";
+        jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
         jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
 
         const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
@@ -1456,10 +1572,12 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         mockActiveJob.contextValue = Constants.JOBS_JOB_CONTEXT + Constants.POLL_CONTEXT;
         testSessionNode.children = [mockActiveJob];
 
+        const continueButton = "Continue";
+        jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
         jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
         jest.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
 
-        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
         const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
             mockActiveJob.job.status = "OUTPUT";
         });
@@ -1474,9 +1592,68 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         await pollRequest.request();
 
         expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB001)]"));
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB001) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
+        );
         expect(mockActiveJob.contextValue).not.toContain(Constants.POLL_CONTEXT);
     });
+    it("should execute command when 'Open Job' button is clicked in completion notification", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        testSessionNode.filtered = true;
+
+        const mockActiveJob = new ZoweJobNode({
+            label: "TESTJOB(JOB001) - ACTIVE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testSessionNode,
+            session: testSessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, status: "ACTIVE", jobid: "JOB001", retcode: "CC 0000" },
+        });
+
+        mockActiveJob.contextValue = Constants.JOBS_JOB_CONTEXT + Constants.POLL_CONTEXT;
+        testSessionNode.children = [mockActiveJob];
+
+        const continueButton = "Continue";
+        jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        jest.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
+
+        const openJobButton = "Open Job";
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue(openJobButton);
+        const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
+            mockActiveJob.job.status = "OUTPUT";
+        });
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        const sessionPollKey = `${String(testSessionNode.resourceUri.path)}active-jobs`;
+        const pollRequest = Poller.pollRequests[sessionPollKey];
+
+        await pollRequest.request();
+
+        expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB001) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
+        );
+
+        // Verify the showMessage call returns a promise that triggers the command
+        const showMessageCall = showMessageSpy.mock.results[showMessageSpy.mock.results.length - 1];
+        await showMessageCall.value.then((selection: string | undefined) => {
+            if (selection === openJobButton) {
+                vscode.commands.executeCommand("zowe.jobs.setJobSpool", "testProfile", "JOB001");
+            }
+        });
+
+        expect(executeCommandSpy).toHaveBeenCalledWith("zowe.jobs.setJobSpool", "testProfile", "JOB001");
+    }, 10000);
 
     it("should handle job completion of one job while another stays active during polling", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1505,10 +1682,12 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         mockActiveJob2.contextValue = Constants.JOBS_JOB_CONTEXT + Constants.POLL_CONTEXT;
         testSessionNode.children = [mockActiveJob1, mockActiveJob2];
 
+        const continueButton = "Continue";
+        jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
         jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
         jest.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
 
-        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
         const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
             mockActiveJob1.job.status = "OUTPUT";
         });
@@ -1523,7 +1702,12 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         await pollRequest.request();
 
         expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB001)]"));
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB001) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
+        );
         expect(mockActiveJob1.contextValue).not.toContain(Constants.POLL_CONTEXT);
         expect(mockActiveJob2.contextValue).toBe(Constants.JOBS_JOB_CONTEXT + Constants.POLL_CONTEXT);
     });
@@ -1555,10 +1739,12 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         mockActiveJob2.contextValue = Constants.JOBS_JOB_CONTEXT + Constants.POLL_CONTEXT;
         testSessionNode.children = [mockActiveJob1, mockActiveJob2];
 
+        const continueButton = "Continue";
+        jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
         jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
         jest.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
 
-        const showMessageSpy = jest.spyOn(Gui, "showMessage");
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
         const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
             mockActiveJob1.job.status = "OUTPUT";
             mockActiveJob2.job.status = "ABEND";
@@ -1573,8 +1759,18 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
 
         expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
         expect(showMessageSpy).toHaveBeenCalledTimes(3);
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB001)]"));
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB002)]"));
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB001) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
+        );
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB002) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
+        );
         expect(mockActiveJob1.contextValue).not.toContain(Constants.POLL_CONTEXT);
         expect(mockActiveJob2.contextValue).not.toContain(Constants.POLL_CONTEXT);
     });
@@ -1595,6 +1791,8 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
 
         testSessionNode.children = [mockActiveJob1];
 
+        const continueButton = "Continue";
+        jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
         jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
 
         const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
@@ -1649,6 +1847,8 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         mockActiveJob.contextValue += Constants.POLL_CONTEXT;
         testSessionNode.children = [mockActiveJob];
 
+        const continueButton = "Continue";
+        jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
         jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
 
         const mockStatusMessage = { dispose: jest.fn() };

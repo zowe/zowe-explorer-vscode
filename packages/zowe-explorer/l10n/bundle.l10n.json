@@ -163,6 +163,7 @@
   "Added a new Poll For Job Completion button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting Zowe > Jobs: Poll Interval. <a>#3967</a>": "Added a new Poll For Job Completion button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting Zowe > Jobs: Poll Interval. <a>#3967</a>",
   "Added a new setting Secure Credentials Enabled, default value is selected for security and will have to be unselected to allow creation of team configuration files without default secure arrays to support environments that don't have access to Zowe CLI's Secure Credential Management.": "Added a new setting Secure Credentials Enabled, default value is selected for security and will have to be unselected to allow creation of team configuration files without default secure arrays to support environments that don't have access to Zowe CLI's Secure Credential Management.",
   "Added a new setting zowe.files.logsFolder.path that can be used to override Zowe Explorer logs folder if default location is read-only. <a>#2186</a>": "Added a new setting zowe.files.logsFolder.path that can be used to override Zowe Explorer logs folder if default location is read-only. <a>#2186</a>",
+  "Added a new VS Code setting that allows users to limit the number of concurrent REST requests sent to z/OSMF. <a>#4130</a>": "Added a new VS Code setting that allows users to limit the number of concurrent REST requests sent to z/OSMF. <a>#4130</a>",
   "Added a new VS Code toggle setting that allows users to show or hide hidden files in the Unix System Service (USS) tree view.<a>#3912</a>": "Added a new VS Code toggle setting that allows users to show or hide hidden files in the Unix System Service (USS) tree view.<a>#3912</a>",
   "Added a new Zowe Explorer setting, zowe.logger, with a default setting of INFO.": "Added a new Zowe Explorer setting, zowe.logger, with a default setting of INFO.",
   "Added a prompt to create a new Zowe client configuration for an environment that does not have any Zowe client configurations. <a>#3148</a>": "Added a prompt to create a new Zowe client configuration for an environment that does not have any Zowe client configurations. <a>#3148</a>",
@@ -582,6 +583,7 @@
   "e.g., +1M (larger than 1MB), -500K (smaller than 500KB), 100G": "e.g., +1M (larger than 1MB), -500K (smaller than 500KB), 100G",
   "e.g., +7 (older than 7 days), -1 (newer than 1 day), 30 (exactly 30 days)": "e.g., +7 (older than 7 days), -1 (newer than 1 day), 30 (exactly 30 days)",
   "e.g., 2 (search 2 levels deep)": "e.g., 2 (search 2 levels deep)",
+  "e.g., 5000 for checking every 5 seconds": "e.g., 5000 for checking every 5 seconds",
   "e.g., 755, -644 (not 644)": "e.g., 755, -644 (not 644)",
   "e.g., admin or 100": "e.g., admin or 100",
   "e.g., IBMUSER or 1001": "e.g., IBMUSER or 1001",
@@ -966,6 +968,7 @@
   "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>": "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>",
   "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>": "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>",
   "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Replaced the inaccessible markdown link with keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>": "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Replaced the inaccessible markdown link with keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>",
+  "Fixed an accessibility issue where screen readers did not provide instructions for configuring job polling. Added descriptive prompts and placeholder text explaining how polling works, the expected input format, and what happens when polling is active. <a>#4029</a>": "Fixed an accessibility issue where screen readers did not provide instructions for configuring job polling. Added descriptive prompts and placeholder text explaining how polling works, the expected input format, and what happens when polling is active. <a>#4029</a>",
   "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>": "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>",
   "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>": "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>",
   "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>": "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>",
@@ -1059,6 +1062,7 @@
   "Fixed an issue where the SharedActions.refreshAll function runs unexpectedly while a user performs an action in the tree views (such as listing data sets, USS files, jobs, etc.). <a>#3524</a>": "Fixed an issue where the SharedActions.refreshAll function runs unexpectedly while a user performs an action in the tree views (such as listing data sets, USS files, jobs, etc.). <a>#3524</a>",
   "Fixed an issue where the source data set was removed even though the move operation was not successful. <a>#3518</a>": "Fixed an issue where the source data set was removed even though the move operation was not successful. <a>#3518</a>",
   "Fixed an issue where the token expiration check was performed on profiles with APIs that do not support token types. <a>#3525</a>": "Fixed an issue where the token expiration check was performed on profiles with APIs that do not support token types. <a>#3525</a>",
+  "Fixed an issue where the USS tree collapsed down to the top level set from the initial filter.<a>#3932</a>": "Fixed an issue where the USS tree collapsed down to the top level set from the initial filter.<a>#3932</a>",
   "Fixed an issue where upgrading from Zowe Explorer v1 and selecting \"Reload Extensions\" causes Zowe Explorer v3 to fail during initialization. <a>#3051</a>": "Fixed an issue where upgrading from Zowe Explorer v1 and selecting \"Reload Extensions\" causes Zowe Explorer v3 to fail during initialization. <a>#3051</a>",
   "Fixed an issue where uploading a file to a data set or USS from a Windows machine caused extra carriage return characters to be included in its contents. Now, carriage returns are filtered out from carriage return/line feed (CRLF) sequences during upload. <a>#3853</a>": "Fixed an issue where uploading a file to a data set or USS from a Windows machine caused extra carriage return characters to be included in its contents. Now, carriage returns are filtered out from carriage return/line feed (CRLF) sequences during upload. <a>#3853</a>",
   "Fixed an issue where user attempts to perform a search on an individual PDS from the Zowe-Explorer extension using the \"Search PDS members\" action and query a search string, it brings out additional dataset as a part of the result.<a>#3682</a>": "Fixed an issue where user attempts to perform a search on an individual PDS from the Zowe-Explorer extension using the \"Search PDS members\" action and query a search string, it brings out additional dataset as a part of the result.<a>#3682</a>",
@@ -1344,17 +1348,10 @@
   "Item invalid.": "Item invalid.",
   "items": "items",
   "JES API": "JES API",
-  "Job {0} completed - {1}/Job ID with clickable linkJob status": {
+  "Job {0} completed - {1}/Job name and IDJob status": {
     "message": "Job {0} completed - {1}",
     "comment": [
-      "Job ID with clickable link",
-      "Job status"
-    ]
-  },
-  "Job {0} completed - {1}/Job name and ID with clickable linkJob status": {
-    "message": "Job {0} completed - {1}",
-    "comment": [
-      "Job name and ID with clickable link",
+      "Job name and ID",
       "Job status"
     ]
   },
@@ -1368,6 +1365,7 @@
   "Job enhancements": "Job enhancements",
   "Job ID": "Job ID",
   "Job Name": "Job Name",
+  "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again.": "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again.",
   "Job search cancelled.": "Job search cancelled.",
   "Job spool pagination": "Job spool pagination",
   "Job submission failed.": "Job submission failed.",
@@ -1666,6 +1664,7 @@
       "Number of active jobs"
     ]
   },
+  "Polling automatically checks for job status updates at regular intervals. Enter the time in milliseconds between each check (minimum 1000ms).": "Polling automatically checks for job status updates at regular intervals. Enter the time in milliseconds between each check (minimum 1000ms).",
   "Polling job: {0}.../Job display name": {
     "message": "Polling job: {0}...",
     "comment": [
