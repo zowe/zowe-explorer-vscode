@@ -11,14 +11,15 @@
 
 import { ConfigMoveAPI, IConfigLayer } from "../webviews/src/config-editor/types";
 import { ConfigUtils } from "./ConfigUtils";
+import type { NestedProfilesMap, PendingChangesByConfig, RenameMapByConfig } from "./ConfigTypes";
 
 export type ValidateProfileNameOptions = {
     profileName: string;
     rootProfile: string;
     configPath: string;
-    profiles: any;
-    pendingChanges: { [configPath: string]: { [key: string]: any } };
-    renames: { [configPath: string]: { [originalKey: string]: string } };
+    profiles: NestedProfilesMap;
+    pendingChanges: PendingChangesByConfig;
+    renames: RenameMapByConfig;
 };
 
 export class ConfigEditorProfileOperations {
@@ -383,7 +384,7 @@ export class ConfigEditorProfileOperations {
         return `${simulationPrefix}${operation} from '${originalKey}' to '${newKey}': ${errorMessage}`;
     }
 
-    isCriticalMoveError(error: any): boolean {
+    isCriticalMoveError(error: unknown): boolean {
         const errorMessage = error instanceof Error ? error.message : String(error);
 
         const criticalErrorPatterns = [
@@ -400,7 +401,7 @@ export class ConfigEditorProfileOperations {
     /**
      * Redacts secure values from profile data
      */
-    redactSecureValues(knownArgs: any): any {
+    redactSecureValues(knownArgs: unknown): unknown {
         if (!knownArgs || typeof knownArgs !== "object") {
             return knownArgs;
         }

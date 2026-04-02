@@ -89,7 +89,7 @@ export class ProfilesUtils {
      * Get the credential manager options from imperative.json
      * @returns Record<string, any> | undefined the credential manager options, or undefined if not specified
      */
-    public static getCredentialManagerOptions(): Record<string, any> | undefined {
+    public static getCredentialManagerOptions(): Record<string, unknown> | undefined {
         return ProfilesCache.getCredentialManagerOptions();
     }
 
@@ -130,7 +130,7 @@ export class ProfilesUtils {
      * @returns Promise<imperative.ICredentialManagerConstructor> the constructor of the activated credential manager
      */
     public static async activateCredentialManagerOverride(
-        credentialManagerExtension: vscode.Extension<any>
+        credentialManagerExtension: vscode.Extension<unknown>
     ): Promise<imperative.ICredentialManagerConstructor | undefined> {
         try {
             ZoweLogger.trace("ProfilesUtils.activateCredentialManagerOverride called.");
@@ -543,7 +543,7 @@ export class ProfilesUtils {
         } catch (error) {
             ZoweLogger.debug(vscode.l10n.t("Reading imperative.json failed. Will try to create file."));
         }
-        let settings: any;
+        let settings: Record<string, unknown> | undefined;
         if (fileContent) {
             try {
                 settings = JSON.parse(fileContent);
@@ -570,10 +570,11 @@ export class ProfilesUtils {
                     });
                 }
             }
-            if (settings?.overrides?.CredentialManager === ProfilesUtils.PROFILE_SECURITY) {
+            const overrides = settings?.overrides as { CredentialManager?: unknown } | undefined;
+            if (overrides?.CredentialManager === ProfilesUtils.PROFILE_SECURITY) {
                 return;
             }
-            if (!settings?.overrides?.CredentialManager) {
+            if (!overrides?.CredentialManager) {
                 settings = { ...defaultImperativeJson, ...settings };
             }
         } else {

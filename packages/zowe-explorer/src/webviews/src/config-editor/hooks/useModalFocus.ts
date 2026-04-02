@@ -39,7 +39,7 @@ export function useModalFocus(isOpen: boolean, focusSelector?: string) {
                 if (focusableElements && focusableElements.length > 0) {
                     for (let i = 0; i < focusableElements.length; i++) {
                         const element = focusableElements[i];
-                        if (element.offsetParent !== null && !(element as any).disabled) {
+                        if (element.offsetParent !== null && !("disabled" in element && (element as HTMLButtonElement | HTMLInputElement).disabled)) {
                             element.focus();
                             break;
                         }

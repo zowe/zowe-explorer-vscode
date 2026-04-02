@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from "react";
-import { ConfigEditorSettings } from "../types";
+import type { Configuration, ConfigEditorSettings } from "../types";
 
 export const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
 const DEFAULT_PROFILES_WIDTH_PERCENT = 35;
@@ -7,9 +7,9 @@ const DEFAULT_PROFILES_WIDTH_PERCENT = 35;
 interface UsePanelResizerProps {
     profilesWidthPercent: number;
     setConfigEditorSettings: React.Dispatch<React.SetStateAction<ConfigEditorSettings>>;
-    setLocalStorageValue: (key: string, value: any) => void;
+    setLocalStorageValue: (key: string, value: unknown) => void;
     configEditorSettings: ConfigEditorSettings;
-    configurations: any[];
+    configurations: Configuration[];
 }
 
 export function usePanelResizer({

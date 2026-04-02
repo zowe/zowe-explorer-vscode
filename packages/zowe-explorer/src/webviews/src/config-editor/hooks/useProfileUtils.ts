@@ -14,6 +14,7 @@ import { useConfigContext } from "../context/ConfigContext";
 import { useUtilityHelpers } from "./useUtilityHelpers";
 import { updateChangesForRenames } from "../utils/renameUtils";
 import { flattenProfiles, getRenamedProfileKeyWithNested, sortProfilesAtLevel } from "../utils";
+import type { FormattedPendingChanges, ProfileData } from "../types";
 
 export function useProfileUtils() {
     const {
@@ -33,7 +34,7 @@ export function useProfileUtils() {
 
     const utilityHelpers = useUtilityHelpers();
 
-    const formatPendingChanges = useCallback(() => {
+    const formatPendingChanges = useCallback((): FormattedPendingChanges => {
         const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
             Object.keys(changesForPath).map((key) => {
                 const { value, path, profile, secure } = changesForPath[key];
@@ -143,7 +144,7 @@ export function useProfileUtils() {
 
             const pendingProfiles = utilityHelpers.extractPendingProfiles(configPath);
 
-            const getAvailableProfiles = (profiles: any, parentKey = ""): string[] => {
+            const getAvailableProfiles = (profiles: Record<string, ProfileData>, parentKey = ""): string[] => {
                 const available: string[] = [];
                 for (const key of Object.keys(profiles)) {
                     const profile = profiles[key];

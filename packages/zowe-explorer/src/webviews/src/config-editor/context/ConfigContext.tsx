@@ -1,5 +1,6 @@
 import { createContext, useContext, ReactNode } from "react";
 import { useConfigState } from "../hooks/useConfigState";
+import type { ConfigEditorWebviewApi } from "../handlers/messageHandlers";
 
 type ConfigState = ReturnType<typeof useConfigState>;
 
@@ -7,7 +8,7 @@ const ConfigContext = createContext<ConfigState | undefined>(undefined);
 
 interface ConfigProviderProps {
   children: ReactNode;
-  vscodeApi: any;
+  vscodeApi: ConfigEditorWebviewApi;
 }
 
 export function ConfigProvider({ children, vscodeApi }: ConfigProviderProps) {

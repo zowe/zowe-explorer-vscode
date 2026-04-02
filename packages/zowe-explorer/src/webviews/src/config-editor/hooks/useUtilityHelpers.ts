@@ -22,6 +22,7 @@ import {
 } from "../utils";
 import { hasPendingRename } from "../utils/renameUtils";
 import { getWizardTypeOptions } from "../utils/schemaUtils";
+import type { Configuration, DeletionsMap, MergedPropertiesMap, PendingChangesMap, RenamesMap } from "../types";
 
 export function useUtilityHelpers() {
     const {
@@ -47,7 +48,7 @@ export function useUtilityHelpers() {
             mergePendingChangesForProfile: (baseObj: Record<string, unknown>, path: string[], configPath: string) =>
                 mergePendingChangesForProfile({ baseObj, path, configPath, pendingChanges, renames }),
 
-            mergeMergedProperties: (combinedConfig: Record<string, unknown>, path: string[], mergedProps: Record<string, any>, configPath: string) =>
+            mergeMergedProperties: (combinedConfig: Record<string, unknown>, path: string[], mergedProps: MergedPropertiesMap, configPath: string) =>
                 mergeMergedProperties({
                     combinedConfig,
                     path,
@@ -66,9 +67,9 @@ export function useUtilityHelpers() {
                 value: Record<string, unknown>,
                 combinedConfig: Record<string, unknown>,
                 configPath?: string,
-                pc?: any,
-                del?: any,
-                mergedProps?: any
+                pc?: PendingChangesMap,
+                del?: DeletionsMap,
+                mergedProps?: MergedPropertiesMap
             ) =>
                 filterSecureProperties({
                     value,
@@ -82,11 +83,16 @@ export function useUtilityHelpers() {
             mergePendingSecureProperties: (value: string[], path: string[], configPath: string) =>
                 mergePendingSecureProperties({ value, path, configPath, pendingChanges, renames }),
 
-            isPropertyFromMergedProps: (displayKey: string | undefined, path: string[], mergedProps: any, configPath: string) =>
+            isPropertyFromMergedProps: (
+                displayKey: string | undefined,
+                path: string[],
+                mergedProps: MergedPropertiesMap | undefined,
+                configPath: string
+            ) =>
                 isPropertyFromMergedProps({
                     displayKey,
                     path,
-                    mergedProps,
+                    mergedProps: mergedProps ?? {},
                     configPath,
                     showMergedProperties,
                     selectedTab,
@@ -166,10 +172,15 @@ export function useUtilityHelpers() {
                 renames: { [configPath: string]: { [originalKey: string]: string } }
             ) => getRenamedProfileKeyWithNested(originalKey, configPath, renames),
 
-            getProfileType: (profileKey: string, selectedTab: number | null, configurations: any[], pendingChanges: any, renames: any) =>
-                getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames }),
+            getProfileType: (
+                profileKey: string,
+                selectedTab: number | null,
+                configurations: Configuration[],
+                pendingChanges: PendingChangesMap,
+                renames: RenamesMap
+            ) => getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames }),
 
-            hasPendingRename: (profileKey: string, configPath: string, renames: any) => hasPendingRename(profileKey, configPath, renames),
+            hasPendingRename: (profileKey: string, configPath: string, renames: RenamesMap) => hasPendingRename(profileKey, configPath, renames),
 
             isProfileAffectedByDragDrop: (profileKey: string): boolean => {
                 if (selectedTab === null) return false;
@@ -193,8 +204,17 @@ export function useUtilityHelpers() {
                 return false;
             },
 
-            isPropertySecure: (fullKey: string, displayKey: string, path: string[], mergedProps?: any) =>
-                isPropertySecure({ fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames }),
+            isPropertySecure: (fullKey: string, displayKey: string, path: string[], mergedProps?: MergedPropertiesMap | null) =>
+                isPropertySecure({
+                    fullKey,
+                    displayKey,
+                    path,
+                    mergedProps: mergedProps === null ? undefined : mergedProps,
+                    selectedTab,
+                    configurations,
+                    pendingChanges,
+                    renames,
+                }),
 
             getWizardTypeOptions: () => getWizardTypeOptions({ selectedTab, configurations, schemaValidations, pendingChanges }),
         }),

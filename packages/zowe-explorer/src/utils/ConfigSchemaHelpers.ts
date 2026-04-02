@@ -10,9 +10,10 @@
  */
 
 import * as fs from "fs";
+import type { JsonSchemaFragment, SchemaProfilePropertyMeta } from "./ConfigTypes";
 
 export type schemaValidation = {
-    propertySchema: Record<string, Record<string, { type?: string; description?: string; default?: any; secure?: boolean }>>;
+    propertySchema: Record<string, Record<string, SchemaProfilePropertyMeta>>;
     validDefaults: string[];
 };
 
@@ -23,7 +24,7 @@ export class ConfigSchemaHelpers {
      * @returns Schema validation object with property schemas and valid defaults
      */
     public static generateSchemaValidation(schema: any): schemaValidation {
-        const propertySchema: Record<string, Record<string, { type?: string; description?: string; default?: any; secure?: boolean }>> = {};
+        const propertySchema: Record<string, Record<string, SchemaProfilePropertyMeta>> = {};
         const allOf = schema.properties.profiles.patternProperties["^\\S*$"].allOf;
 
         for (const rule of allOf) {
@@ -43,12 +44,12 @@ export class ConfigSchemaHelpers {
                         secure: secureProperties.includes(key),
                     };
                     return acc;
-                }, {} as Record<string, { type?: string; description?: string; default?: any; secure?: boolean }>);
+                }, {} as Record<string, SchemaProfilePropertyMeta>);
             }
         }
 
         return {
-            validDefaults: Object.keys(schema.properties.defaults.properties) ?? undefined,
+            validDefaults: Object.keys(schema.properties.defaults.properties) ?? [],
             propertySchema,
         };
     }
@@ -84,7 +85,7 @@ export class ConfigSchemaHelpers {
     }
 
     private static processSchemaRecursive(
-        schema: any,
+        schema: JsonSchemaFragment,
         currentPath: string,
         result: Map<string, { type: string | string[]; path: string; description?: string }>,
         options: { profileContext: boolean; processItems: boolean }
@@ -92,46 +93,46 @@ export class ConfigSchemaHelpers {
         if (schema.properties) {
             for (const [propName, propSchema] of Object.entries(schema.properties)) {
                 const propPath = currentPath ? `${currentPath}.${propName}` : propName;
-                this.processProperty(propName, propSchema as any, propPath, result, options);
+                this.processProperty(propName, propSchema as JsonSchemaFragment, propPath, result, options);
             }
         }
 
         if (schema.patternProperties) {
             for (const [pattern, propSchema] of Object.entries(schema.patternProperties)) {
                 const propPath = currentPath ? `${currentPath}[${pattern}]` : `[${pattern}]`;
-                this.processProperty(pattern, propSchema as any, propPath, result, options);
+                this.processProperty(pattern, propSchema as JsonSchemaFragment, propPath, result, options);
             }
         }
 
         if (schema.allOf) {
-            for (const condition of schema.allOf) {
+            for (const condition of schema.allOf as JsonSchemaFragment[]) {
                 if (condition.then) {
-                    this.processSchemaRecursive(condition.then, currentPath, result, options);
+                    this.processSchemaRecursive(condition.then as JsonSchemaFragment, currentPath, result, options);
                 }
             }
         }
 
         if (options.processItems && schema.items) {
-            this.processSchemaRecursive(schema.items, `${currentPath}[]`, result, options);
+            this.processSchemaRecursive(schema.items as JsonSchemaFragment, `${currentPath}[]`, result, options);
         }
     }
 
     private static processProperty(
         propName: string,
-        propSchema: any,
+        propSchema: JsonSchemaFragment,
         propPath: string,
         result: Map<string, { type: string | string[]; path: string; description?: string }>,
         options: { profileContext: boolean; processItems: boolean }
     ): void {
-        if (propSchema.type) {
-            const type = propSchema.type;
+        if (propSchema.type !== undefined) {
+            const type = propSchema.type as string | string[];
             const { include, resolvedType } = this.shouldIncludeType(type, options.profileContext);
 
             if (include) {
                 result.set(propName, {
                     type: resolvedType,
                     path: propPath,
-                    description: propSchema.description,
+                    description: propSchema.description as string | undefined,
                 });
             }
         }
@@ -153,7 +154,7 @@ export class ConfigSchemaHelpers {
     }
 
     public static processSchemaProperties(
-        schema: any,
+        schema: JsonSchemaFragment,
         currentPath: string,
         result: Map<string, { type: string | string[]; path: string; description?: string }>
     ): void {

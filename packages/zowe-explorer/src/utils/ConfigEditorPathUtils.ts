@@ -9,6 +9,8 @@
  *
  */
 
+import type { PathAwareChange } from "./ConfigTypes";
+
 export class ConfigEditorPathUtils {
     /**
      * Constructs a nested profile path from a profile key
@@ -81,7 +83,11 @@ export class ConfigEditorPathUtils {
     /**
      * Updates a change object's key field to reflect profile renames
      */
-    static updateChangeKey(change: any, configPath: string, renameMap: Map<string, { oldKey: string; newKey: string; configPath: string }>): any {
+    static updateChangeKey(
+        change: PathAwareChange,
+        configPath: string,
+        renameMap: Map<string, { oldKey: string; newKey: string; configPath: string }>
+    ): PathAwareChange {
         const updatedChange = { ...change };
 
         if (updatedChange.key) {
@@ -133,7 +139,11 @@ export class ConfigEditorPathUtils {
     /**
      * Updates a change object's path array to reflect profile renames
      */
-    static updateChangePath(change: any, configPath: string, renameMap: Map<string, { oldKey: string; newKey: string; configPath: string }>): any {
+    static updateChangePath(
+        change: PathAwareChange,
+        configPath: string,
+        renameMap: Map<string, { oldKey: string; newKey: string; configPath: string }>
+    ): PathAwareChange {
         const updatedChange = { ...change };
 
         if (updatedChange.path && Array.isArray(updatedChange.path)) {

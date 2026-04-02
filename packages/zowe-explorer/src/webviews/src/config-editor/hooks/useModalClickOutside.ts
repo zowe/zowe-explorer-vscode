@@ -10,17 +10,18 @@
  */
 
 import { useRef, useCallback } from "react";
+import type { JSX } from "preact";
 
 export function useModalClickOutside(onClose: () => void) {
     const modalRef = useRef<HTMLDivElement>(null);
     const mouseDownTargetRef = useRef<EventTarget | null>(null);
 
-    const handleBackdropMouseDown = useCallback((e: any) => {
+    const handleBackdropMouseDown = useCallback((e: JSX.TargetedMouseEvent<HTMLDivElement>) => {
         mouseDownTargetRef.current = e.target;
     }, []);
 
     const handleBackdropClick = useCallback(
-        (e: any) => {
+        (e: JSX.TargetedMouseEvent<HTMLDivElement>) => {
             if (mouseDownTargetRef.current === e.currentTarget) {
                 onClose();
             }

@@ -1,7 +1,8 @@
 import { useConfigContext } from "../context/ConfigContext";
 import { useProfileUtils } from "./useProfileUtils";
 import { useUtilityHelpers } from "./useUtilityHelpers";
-import { Configuration, PendingChange, PendingDefault } from "../types";
+import type { Configuration, PendingChange, PendingDefault, FormattedPendingChanges } from "../types";
+import type { ConfigEditorWebviewApi } from "../handlers/messageHandlers";
 
 export interface HandlerContext {
     // State setters
@@ -28,13 +29,13 @@ export interface HandlerContext {
     pendingMergedPropertiesRequest: string | null;
 
     // Functions
-    formatPendingChanges: () => any;
-    extractPendingProfiles: (configPath: string) => { [key: string]: any };
+    formatPendingChanges: () => FormattedPendingChanges;
+    extractPendingProfiles: (configPath: string) => { [key: string]: Record<string, unknown> };
     getAvailableProfilesForConfig: (configPath: string) => string[];
-    vscodeApi: any;
+    vscodeApi: ConfigEditorWebviewApi;
 }
 
-export function useHandlerContext(vscodeApi: any): HandlerContext {
+export function useHandlerContext(vscodeApi: ConfigEditorWebviewApi): HandlerContext {
     const {
         setRenames,
         setSelectedProfileKey,

@@ -18,39 +18,21 @@ import {
     getPropertyType as getSchemaPropertyType,
 } from "../utils/schemaUtils";
 import { useWizardState } from "./useWizardState";
+import type { Configuration, FormattedPendingChanges, PendingChangesMap, ProfileSchemaEntry, RenamesMap, SchemaValidationsMap } from "../types";
+import type { ConfigEditorWebviewApi } from "../handlers/messageHandlers";
 
 interface UseProfileWizardProps {
     selectedTab: number | null;
-    configurations: { configPath: string; properties: any; secure: string[]; global?: boolean; user?: boolean }[];
-    schemaValidations: { [configPath: string]: any };
-    pendingChanges: {
-        [configPath: string]: {
-            [key: string]: {
-                value: string | number | boolean | Record<string, any>;
-                path: string[];
-                profile: string;
-                secure?: boolean;
-            };
-        };
-    };
-    setPendingChanges: React.Dispatch<
-        React.SetStateAction<{
-            [configPath: string]: {
-                [key: string]: {
-                    value: string | number | boolean | Record<string, any>;
-                    path: string[];
-                    profile: string;
-                    secure?: boolean;
-                };
-            };
-        }>
-    >;
+    configurations: Configuration[];
+    schemaValidations: SchemaValidationsMap;
+    pendingChanges: PendingChangesMap;
+    setPendingChanges: React.Dispatch<React.SetStateAction<PendingChangesMap>>;
     setSelectedProfileKey: (key: string | null) => void;
-    vscodeApi: any;
-    formatPendingChanges: () => any;
+    vscodeApi: ConfigEditorWebviewApi;
+    formatPendingChanges: () => FormattedPendingChanges;
     getAvailableProfiles: () => string[];
     secureValuesAllowed: boolean;
-    renames: { [configPath: string]: { [originalKey: string]: string } };
+    renames: RenamesMap;
 }
 
 export function useProfileWizard({
@@ -344,7 +326,7 @@ export function useProfileWizard({
         const newProperties: { key: string; value: string | boolean | number | Object; secure?: boolean }[] = [];
         const populatedKeys = new Set<string>();
 
-        Object.entries(propertySchema).forEach(([key, schema]: [string, any]) => {
+        Object.entries(propertySchema).forEach(([key, schema]: [string, ProfileSchemaEntry]) => {
             if (existingKeys.has(key)) {
                 return;
             }
@@ -358,7 +340,7 @@ export function useProfileWizard({
                 if (mergedValue !== schema.default) {
                     newProperties.push({
                         key,
-                        value: schema.default,
+                        value: schema.default as string | boolean | number | Record<string, unknown>,
                         secure: false,
                     });
                     populatedKeys.add(key);

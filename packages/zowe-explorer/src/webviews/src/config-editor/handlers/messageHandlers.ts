@@ -10,8 +10,25 @@
  */
 
 import { flattenKeys } from "../utils";
-import type { Configuration, PendingChange, PendingDefault, schemaValidation, ConfigParseError } from "../types";
+import type {
+    Configuration,
+    ConfigurationWithSchema,
+    PendingChange,
+    PendingDefault,
+    schemaValidation,
+    ConfigParseError,
+    ConfigEditorSettings,
+    MergedPropertiesMap,
+    MergedArgItem,
+    MergedPropertiesMessagePayload,
+} from "../types";
 const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
+
+/** Minimal VS Code webview API used by message handlers (postMessage to extension host). */
+export interface ConfigEditorWebviewApi {
+    postMessage: (message: object) => void;
+}
+
 export interface MessageHandlerProps {
     // State setters
     setConfigurations: React.Dispatch<React.SetStateAction<Configuration[]>>;
@@ -19,7 +36,7 @@ export interface MessageHandlerProps {
     setSelectedProfileKey: React.Dispatch<React.SetStateAction<string | null>>;
     setFlattenedConfig: React.Dispatch<React.SetStateAction<{ [key: string]: { value: string; path: string[] } }>>;
     setFlattenedDefaults: React.Dispatch<React.SetStateAction<{ [key: string]: { value: string; path: string[] } }>>;
-    setMergedProperties: React.Dispatch<React.SetStateAction<any>>;
+    setMergedProperties: React.Dispatch<React.SetStateAction<MergedPropertiesMap | null>>;
     setPendingChanges: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: PendingChange } }>>;
     setDeletions: React.Dispatch<React.SetStateAction<{ [configPath: string]: string[] }>>;
     setPendingDefaults: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: PendingDefault } }>>;
@@ -32,7 +49,7 @@ export interface MessageHandlerProps {
     setNewProfileValue: React.Dispatch<React.SetStateAction<string>>;
     setHasWorkspace: React.Dispatch<React.SetStateAction<boolean>>;
     setSelectedProfilesByConfig: React.Dispatch<React.SetStateAction<{ [configPath: string]: string | null }>>;
-    setConfigEditorSettings: React.Dispatch<React.SetStateAction<any>>;
+    setConfigEditorSettings: React.Dispatch<React.SetStateAction<ConfigEditorSettings>>;
     setSortOrderVersion: React.Dispatch<React.SetStateAction<number>>;
     setSecureValuesAllowed: React.Dispatch<React.SetStateAction<boolean>>;
     setSchemaValidations: React.Dispatch<React.SetStateAction<{ [configPath: string]: schemaValidation | undefined }>>;
@@ -57,11 +74,17 @@ export interface MessageHandlerProps {
     handleRefresh: () => void;
     handleSave: () => void;
     handleChange: (key: string, value: string) => void;
-    vscodeApi: any;
+    vscodeApi: ConfigEditorWebviewApi;
+}
+
+interface ConfigurationsMessagePayload {
+    contents: ConfigurationWithSchema[];
+    parseErrors?: ConfigParseError[];
+    secureValuesAllowed?: boolean;
 }
 
 // Handle CONFIGURATIONS message
-export const handleConfigurationsMessage = (data: any, props: MessageHandlerProps) => {
+export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, props: MessageHandlerProps) => {
     const {
         setConfigurations,
         setSecureValuesAllowed,
@@ -95,13 +118,13 @@ export const handleConfigurationsMessage = (data: any, props: MessageHandlerProp
 
     configurationsRef.current = contents;
     const newSchemaValidations: { [configPath: string]: schemaValidation | undefined } = {};
-    contents.forEach((config: any) => {
+    contents.forEach((config) => {
         newSchemaValidations[config.configPath] = config.schemaValidation;
     });
     setSchemaValidations(newSchemaValidations);
 
     const newValidDefaults: { [configPath: string]: string[] } = {};
-    contents.forEach((config: any) => {
+    contents.forEach((config) => {
         newValidDefaults[config.configPath] = config.schemaValidation?.validDefaults || [];
     });
 
@@ -122,10 +145,10 @@ export const handleConfigurationsMessage = (data: any, props: MessageHandlerProp
             // If a new configuration was added, find and select it
             if (newLength > previousLength && newLength > 0) {
                 // Get the set of previous config paths
-                const previousPaths = new Set(previousConfigurations.map((c: any) => c.configPath));
+                const previousPaths = new Set(previousConfigurations.map((c) => c.configPath));
 
                 // Find the new configuration that wasn't in the previous set
-                const newConfigIndex = contents.findIndex((config: any) => !previousPaths.has(config.configPath));
+                const newConfigIndex = contents.findIndex((config) => !previousPaths.has(config.configPath));
 
                 // If we found the new configuration, select it
                 if (newConfigIndex !== -1) {
@@ -141,7 +164,7 @@ export const handleConfigurationsMessage = (data: any, props: MessageHandlerProp
     }
 
     // Initialize selected profiles for each configuration if not already set
-    contents.forEach((config: any) => {
+    contents.forEach((config) => {
         if (!selectedProfilesByConfig[config.configPath]) {
             setSelectedProfilesByConfig((prev) => ({
                 ...prev,
@@ -176,8 +199,12 @@ export const handleDisableOverlayMessage = (props: MessageHandlerProps) => {
     setSaveModalOpen(false);
 };
 
+interface SaveErrorMessagePayload {
+    error?: string;
+}
+
 // Handle SAVE_ERROR message
-export const handleSaveErrorMessage = (data: any, props: MessageHandlerProps) => {
+export const handleSaveErrorMessage = (data: SaveErrorMessagePayload, props: MessageHandlerProps) => {
     const { setRenames, setIsSaving, setSaveModalOpen } = props;
     console.log("[SAVE_ERROR] Rolling back renames due to save error", JSON.stringify({ error: data.error }, null, 2));
     setRenames({});
@@ -188,7 +215,7 @@ export const handleSaveErrorMessage = (data: any, props: MessageHandlerProps) =>
 /**
  * Convert string values back to their proper types based on dataType
  */
-function convertValueToProperType(value: any, dataType?: string): any {
+function convertValueToProperType(value: unknown, dataType?: string): unknown {
     if (dataType === "boolean") {
         if (typeof value === "string") {
             return value.toLowerCase() === "true";
@@ -206,7 +233,7 @@ function convertValueToProperType(value: any, dataType?: string): any {
 }
 
 // Handle MERGED_PROPERTIES message
-export const handleMergedPropertiesMessage = (data: any, props: MessageHandlerProps) => {
+export const handleMergedPropertiesMessage = (data: MergedPropertiesMessagePayload, props: MessageHandlerProps) => {
     const { setMergedProperties, setPendingMergedPropertiesRequest, mergedPropertiesLatestRequestSeqRef } = props;
 
     const responseSeq = data.mergedPropertiesRequestSeq;
@@ -215,9 +242,9 @@ export const handleMergedPropertiesMessage = (data: any, props: MessageHandlerPr
     }
 
     // Store the full merged properties data including jsonLoc and osLoc information
-    const mergedPropsData: { [key: string]: any } = {};
+    const mergedPropsData: MergedPropertiesMap = {};
     if (Array.isArray(data.mergedArgs)) {
-        data.mergedArgs.forEach((item: any) => {
+        data.mergedArgs.forEach((item: MergedArgItem) => {
             if (item.argName && item.argValue !== undefined) {
                 // Convert the value to its proper type based on dataType
                 const correctValue = convertValueToProperType(item.argValue, item.dataType);
@@ -238,8 +265,15 @@ export const handleMergedPropertiesMessage = (data: any, props: MessageHandlerPr
     setPendingMergedPropertiesRequest(null);
 };
 
+interface FileSelectedMessagePayload {
+    filePath?: string;
+    isNewProperty?: boolean;
+    source?: string;
+    fullKey?: string;
+}
+
 // Handle FILE_SELECTED message
-export const handleFileSelectedMessage = (data: any, props: MessageHandlerProps) => {
+export const handleFileSelectedMessage = (data: FileSelectedMessagePayload, props: MessageHandlerProps) => {
     const { setNewProfileValue, handleChange } = props;
 
     // Handle file selection response from VS Code
@@ -254,14 +288,23 @@ export const handleFileSelectedMessage = (data: any, props: MessageHandlerProps)
     }
 };
 
+interface EnvInformationMessagePayload {
+    hasWorkspace?: boolean;
+}
+
 // Handle ENV_INFORMATION message
-export const handleEnvInformationMessage = (data: any, props: MessageHandlerProps) => {
+export const handleEnvInformationMessage = (data: EnvInformationMessagePayload, props: MessageHandlerProps) => {
     const { setHasWorkspace } = props;
-    setHasWorkspace(data.hasWorkspace);
+    setHasWorkspace(data.hasWorkspace ?? false);
 };
 
+interface InitialSelectionMessagePayload {
+    profileName: string;
+    configPath: string;
+}
+
 // Handle INITIAL_SELECTION message
-export const handleInitialSelectionMessage = (data: any, props: MessageHandlerProps) => {
+export const handleInitialSelectionMessage = (data: InitialSelectionMessagePayload, props: MessageHandlerProps) => {
     const { setSelectedTab, setSelectedProfileKey, setSelectedProfilesByConfig, configurationsRef } = props;
 
     // Handle initial profile selection when opening the config editor
@@ -273,7 +316,7 @@ export const handleInitialSelectionMessage = (data: any, props: MessageHandlerPr
     // Find the config tab that contains this profile
     // Normalize paths for comparison to handle different path formats
     const normalizedTargetPath = configPath.replace(/\\/g, "/").toLowerCase();
-    const configIndex = currentConfigs.findIndex((config: any) => {
+    const configIndex = currentConfigs.findIndex((config) => {
         const normalizedConfigPath = config.configPath.replace(/\\/g, "/").toLowerCase();
         return normalizedConfigPath === normalizedTargetPath;
     });
@@ -292,25 +335,28 @@ export const handleInitialSelectionMessage = (data: any, props: MessageHandlerPr
     }
 };
 
+interface LocalStorageValueMessagePayload {
+    key?: string;
+    value?: unknown;
+}
+
 // Handle LOCAL_STORAGE_VALUE message
-export const handleLocalStorageValueMessage = (data: any, props: MessageHandlerProps) => {
+export const handleLocalStorageValueMessage = (data: LocalStorageValueMessagePayload, props: MessageHandlerProps) => {
     const { setConfigEditorSettings, setSortOrderVersion } = props;
 
     // Handle localStorage value retrieval
     const { key, value } = data;
     if (key === CONFIG_EDITOR_SETTINGS_KEY) {
-        const settings =
-            value !== undefined
-                ? value
-                : {
-                      showMergedProperties: "show",
-                      viewMode: "tree",
-                      propertySortOrder: "alphabetical",
-                      profileSortOrder: "natural",
-                      profilesWidthPercent: 35,
-                      defaultsCollapsed: true,
-                      profilesCollapsed: false,
-                  };
+        const defaultSettings: ConfigEditorSettings = {
+            showMergedProperties: "show",
+            viewMode: "tree",
+            propertySortOrder: "alphabetical",
+            profileSortOrder: "natural",
+            profilesWidthPercent: 35,
+            defaultsCollapsed: true,
+            profilesCollapsed: false,
+        };
+        const settings: ConfigEditorSettings = value !== undefined ? (value as ConfigEditorSettings) : defaultSettings;
         setConfigEditorSettings(settings);
 
         // Trigger sort order version update if needed
@@ -375,7 +421,12 @@ export const handleSaveMessage = (props: MessageHandlerProps) => {
     setSaveModalOpen(true);
 };
 
-const handleProfileNameValidationResultMessage = (data: any, props: MessageHandlerProps) => {
+interface ProfileNameValidationResultPayload {
+    isValid: boolean;
+    message?: string;
+}
+
+const handleProfileNameValidationResultMessage = (data: ProfileNameValidationResultPayload, props: MessageHandlerProps) => {
     const { setWizardProfileNameValidation } = props;
     setWizardProfileNameValidation({
         isValid: data.isValid,

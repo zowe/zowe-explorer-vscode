@@ -1,7 +1,16 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { Configuration, PendingChange, PendingDefault, ConfigEditorSettings, schemaValidation, ConfigParseError } from "../types";
+import {
+    Configuration,
+    PendingChange,
+    PendingDefault,
+    ConfigEditorSettings,
+    schemaValidation,
+    ConfigParseError,
+    MergedPropertiesMap,
+} from "../types";
+import type { ConfigEditorWebviewApi } from "../handlers/messageHandlers";
 
-export function useConfigState(vscodeApi: any) {
+export function useConfigState(vscodeApi: ConfigEditorWebviewApi) {
     const [configurations, setConfigurations] = useState<Configuration[]>([]);
     const [selectedTab, setSelectedTab] = useState<number | null>(null);
     const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
@@ -17,7 +26,7 @@ export function useConfigState(vscodeApi: any) {
     const [schemaValidations, setSchemaValidations] = useState<{ [configPath: string]: schemaValidation | undefined }>({});
     const [selectedProfileKey, setSelectedProfileKey] = useState<string | null>(null);
     const [selectedProfilesByConfig, setSelectedProfilesByConfig] = useState<{ [configPath: string]: string | null }>({});
-    const [mergedProperties, setMergedProperties] = useState<any>(null);
+    const [mergedProperties, setMergedProperties] = useState<MergedPropertiesMap | null>(null);
     const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
 
     const [configEditorSettings, setConfigEditorSettings] = useState<ConfigEditorSettings>({
@@ -85,7 +94,7 @@ export function useConfigState(vscodeApi: any) {
     }, [selectedProfileKey]);
 
     const getLocalStorageValue = useCallback(
-        (key: string, defaultValue: any) => {
+        <T>(key: string, defaultValue: T): T => {
             vscodeApi.postMessage({
                 command: "GET_LOCAL_STORAGE_VALUE",
                 key,
@@ -96,7 +105,7 @@ export function useConfigState(vscodeApi: any) {
     );
 
     const setLocalStorageValue = useCallback(
-        (key: string, value: any) => {
+        (key: string, value: unknown) => {
             vscodeApi.postMessage({
                 command: "SET_LOCAL_STORAGE_VALUE",
                 key,

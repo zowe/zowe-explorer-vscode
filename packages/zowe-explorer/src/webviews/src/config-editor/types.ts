@@ -8,6 +8,9 @@
  * Copyright Contributors to the Zowe Project.
  */
 
+import type { schemaValidation as SchemaValidationType } from "../../../utils/ConfigSchemaHelpers";
+export type { SchemaValidationType as schemaValidation };
+
 export type Configuration = {
     configPath: string;
     properties: any;
@@ -15,6 +18,12 @@ export type Configuration = {
     global?: boolean;
     user?: boolean;
     schemaPath?: string;
+};
+
+/** Configuration entry from CONFIGURATIONS message (optional schema validation from extension). */
+export type ConfigurationWithSchema = Configuration & {
+    schemaValidation?: SchemaValidationType;
+    schema?: unknown;
 };
 
 /** A team config layer file that failed to load (JSON parse, schema read, etc.). */
@@ -46,9 +55,6 @@ export type PendingDefault = {
 export interface FlattenedConfig {
     [key: string]: { value: string; path: string[] };
 }
-
-import type { schemaValidation as SchemaValidationType } from "../../../utils/ConfigSchemaHelpers";
-export type { SchemaValidationType as schemaValidation };
 
 export type PropertySortOrder = "alphabetical" | "merged-first" | "non-merged-first";
 export type ProfileSortOrder = "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
@@ -123,6 +129,15 @@ export interface FormattedChange {
     secure?: boolean;
 }
 
+/** Payload returned by `formatPendingChanges()` for save / merged-properties requests. */
+export interface FormattedPendingChanges {
+    changes: FormattedChange[];
+    deletions: Array<{ key: string; configPath: string; secure: boolean }>;
+    defaultsChanges: Array<{ key: string; value: string; path: string[]; configPath: string; secure: boolean }>;
+    defaultsDeleteKeys: Array<{ key: string; configPath: string; secure: boolean }>;
+    renames: RenameChange[];
+}
+
 export interface ProfileData {
     type?: string;
     properties?: Record<string, unknown>;
@@ -137,6 +152,23 @@ export interface MergedPropertyData {
     jsonLoc?: string;
     osLoc?: string[];
     secure?: boolean;
+    /** Wizard handler may set imperative-style location (same info as jsonLoc/osLoc). */
+    argLoc?: { jsonLoc?: string; osLoc?: string[] };
+    dataType?: string;
 }
 
 export type MergedPropertiesMap = Record<string, MergedPropertyData>;
+
+/** Single merged-arg entry from MERGED_PROPERTIES (matches extension redacted knownArgs items). */
+export interface MergedArgItem {
+    argName: string;
+    argValue: unknown;
+    dataType?: string;
+    argLoc?: { jsonLoc?: string; osLoc?: string[] };
+    secure?: boolean;
+}
+
+export interface MergedPropertiesMessagePayload {
+    mergedPropertiesRequestSeq?: number;
+    mergedArgs?: MergedArgItem[];
+}

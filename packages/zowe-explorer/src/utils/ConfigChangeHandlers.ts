@@ -10,6 +10,7 @@
  */
 
 import * as path from "path";
+import type { Config } from "@zowe/imperative";
 import { ConfigSchemaHelpers } from "./ConfigSchemaHelpers";
 import { ConfigUtils } from "./ConfigUtils";
 import type { ChangeEntry } from "./ConfigTypes";
@@ -26,16 +27,16 @@ export class ConfigChangeHandlers {
         return keyOrPath;
     }
 
-    private static activateLayerIfNeeded(configToUse: any, layerPath: string): void {
+    private static activateLayerIfNeeded(configToUse: Config, layerPath: string): void {
         if (layerPath !== configToUse.api.layers.get().path) {
-            const layer = configToUse.layers.find((prof: any) => prof.path === layerPath);
+            const layer = configToUse.layers.find((prof) => prof.path === layerPath);
             if (layer) {
                 configToUse.api.layers.activate(layer.user, layer.global);
             }
         }
     }
 
-    private static async getConfigToUse(teamConfig?: any): Promise<{ config: any; isSimulation: boolean }> {
+    private static async getConfigToUse(teamConfig?: Config): Promise<{ config: Config; isSimulation: boolean }> {
         if (teamConfig) {
             return { config: teamConfig, isSimulation: true };
         }
@@ -51,7 +52,12 @@ export class ConfigChangeHandlers {
      * @param teamConfig - Optional team configuration object. If provided, operates in simulation mode (no save).
      *                    If not provided, creates ProfileInfo and saves changes.
      */
-    public static async handleDefaultChanges(changes: ChangeEntry[], deletions: ChangeEntry[], activeLayer: string, teamConfig?: any): Promise<void> {
+    public static async handleDefaultChanges(
+        changes: ChangeEntry[],
+        deletions: ChangeEntry[],
+        activeLayer: string,
+        teamConfig?: Config
+    ): Promise<void> {
         const { config: configToUse, isSimulation } = await this.getConfigToUse(teamConfig);
         this.activateLayerIfNeeded(configToUse, activeLayer);
 
@@ -82,7 +88,7 @@ export class ConfigChangeHandlers {
         deletions: ChangeEntry[],
         configPath: string,
         areSecureValuesAllowed?: () => Promise<boolean>,
-        teamConfig?: any
+        teamConfig?: Config
     ): Promise<void> {
         const { config: configToUse, isSimulation } = await this.getConfigToUse(teamConfig);
 
@@ -121,7 +127,7 @@ export class ConfigChangeHandlers {
                         profileProps = ConfigSchemaHelpers.getProfileProperties(schemaPath);
                     }
                     const parseString = profileProps?.has(change.key.split(".")[change.key.split(".").length - 1]) ?? false;
-                    configToUse.set(change.key, change.value, { parseString, secure: change.secure });
+                    configToUse.set(change.key, change.value as string, { parseString, secure: change.secure });
                 }
             } catch {}
         }

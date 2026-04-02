@@ -15,13 +15,24 @@ import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
 import { Definitions } from "../configuration/Definitions";
 import { ConfigEditorProfileOperations } from "./ConfigEditorProfileOperations";
 import { ConfigUtils } from "./ConfigUtils";
-import type { ConfigParseError } from "../webviews/src/config-editor/types";
+import type {
+    EnvVarsQueryMessage,
+    InitialSelectionPayload,
+    LocalConfigsResult,
+    LocalStorageKeyMessage,
+    LocalStorageSetMessage,
+    OpenFilePathMessage,
+    OpenVscodeSettingsMessage,
+    SelectFileMessage,
+    ValidateProfileNameMessage,
+    WebviewPostMessageTarget,
+} from "./ConfigTypes";
 
 export class ConfigEditorMessageHandlers {
     constructor(
-        private getLocalConfigs: () => Promise<{ configs: any[]; parseErrors: ConfigParseError[] }>,
+        private getLocalConfigs: () => Promise<LocalConfigsResult>,
         private areSecureValuesAllowed: () => Promise<boolean>,
-        private panel: { webview: { postMessage: (message: any) => Thenable<boolean> } },
+        private panel: { webview: WebviewPostMessageTarget },
         private profileOperations: ConfigEditorProfileOperations
     ) {}
 
@@ -40,7 +51,7 @@ export class ConfigEditorMessageHandlers {
         });
     }
 
-    async handleOpenConfigFile(message: any): Promise<void> {
+    async handleOpenConfigFile(message: OpenFilePathMessage): Promise<void> {
         try {
             const uri = vscode.Uri.file(message.filePath);
             const document = await vscode.workspace.openTextDocument(uri);
@@ -55,7 +66,7 @@ export class ConfigEditorMessageHandlers {
         }
     }
 
-    async handleRevealInFinder(message: any): Promise<void> {
+    async handleRevealInFinder(message: OpenFilePathMessage): Promise<void> {
         try {
             const fileUri = vscode.Uri.file(message.filePath);
             await vscode.commands.executeCommand("revealFileInOS", fileUri);
@@ -64,7 +75,7 @@ export class ConfigEditorMessageHandlers {
         }
     }
 
-    async handleOpenSchemaFile(message: any): Promise<void> {
+    async handleOpenSchemaFile(message: OpenFilePathMessage): Promise<void> {
         try {
             vscode.window.showTextDocument(vscode.Uri.file(message.filePath));
         } catch {
@@ -80,7 +91,7 @@ export class ConfigEditorMessageHandlers {
         });
     }
 
-    handleInitialSelection(message: any, setInitialSelection: (selection: any) => void): void {
+    handleInitialSelection(message: InitialSelectionPayload, setInitialSelection: (selection: InitialSelectionPayload | undefined) => void): void {
         setInitialSelection({
             profileName: message.profileName,
             configPath: message.configPath,
@@ -88,7 +99,10 @@ export class ConfigEditorMessageHandlers {
         });
     }
 
-    async handleConfigurationsReady(initialSelection: any, setInitialSelection: (selection: any) => void): Promise<void> {
+    async handleConfigurationsReady(
+        initialSelection: InitialSelectionPayload | undefined,
+        setInitialSelection: (selection: InitialSelectionPayload | undefined) => void
+    ): Promise<void> {
         if (initialSelection) {
             await this.panel.webview.postMessage({
                 command: "INITIAL_SELECTION",
@@ -100,7 +114,7 @@ export class ConfigEditorMessageHandlers {
         }
     }
 
-    async handleSelectFile(message: any): Promise<void> {
+    async handleSelectFile(message: SelectFileMessage): Promise<void> {
         const options: vscode.OpenDialogOptions = {
             canSelectMany: false,
             openLabel: "Select File",
@@ -124,7 +138,7 @@ export class ConfigEditorMessageHandlers {
         }
     }
 
-    async handleGetLocalStorageValue(message: any): Promise<void> {
+    async handleGetLocalStorageValue(message: LocalStorageKeyMessage): Promise<void> {
         try {
             const { key } = message;
             const enumKey = key as Definitions.LocalStorageKey;
@@ -144,7 +158,7 @@ export class ConfigEditorMessageHandlers {
         }
     }
 
-    async handleOpenVscodeSettings(message: any): Promise<void> {
+    async handleOpenVscodeSettings(message: OpenVscodeSettingsMessage): Promise<void> {
         try {
             const searchText = message.searchText || "";
             await vscode.commands.executeCommand("workbench.action.openSettings", searchText);
@@ -154,7 +168,7 @@ export class ConfigEditorMessageHandlers {
         }
     }
 
-    async handleSetLocalStorageValue(message: any): Promise<void> {
+    async handleSetLocalStorageValue(message: LocalStorageSetMessage): Promise<void> {
         try {
             const { key, value } = message;
             // Map string keys to enum keys for LocalStorageAccess
@@ -175,7 +189,7 @@ export class ConfigEditorMessageHandlers {
         }
     }
 
-    async handleGetEnvVars(message: any): Promise<void> {
+    async handleGetEnvVars(message: EnvVarsQueryMessage): Promise<void> {
         try {
             const query = message.query || "";
             const envVarNames: string[] = [];
@@ -201,7 +215,7 @@ export class ConfigEditorMessageHandlers {
         }
     }
 
-    async handleValidateProfileName(message: any): Promise<void> {
+    async handleValidateProfileName(message: ValidateProfileNameMessage): Promise<void> {
         try {
             const { profileName, rootProfile, configPath, profiles, pendingChanges, renames } = message;
 

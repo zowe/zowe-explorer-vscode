@@ -12,16 +12,10 @@
 import { ProfileCredentials, ProfileInfo } from "@zowe/imperative";
 import { ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../configuration/Profiles";
-import type { ChangeEntry } from "./ConfigTypes";
+import type { ChangeEntry, FlattenedProfilesMap, LayerModifications, NestedProfilesMap } from "./ConfigTypes";
 import { schemaValidation } from "./ConfigSchemaHelpers";
 
-export type LayerModifications = {
-    configPath: string;
-    changes: ChangeEntry[];
-    deletions: ChangeEntry[];
-    defaultsChanges: ChangeEntry[];
-    defaultsDeleteKeys: ChangeEntry[];
-};
+export type { ChangeEntry, LayerModifications } from "./ConfigTypes";
 
 type ArrayField = "changes" | "deletions" | "defaultsChanges" | "defaultsDeleteKeys";
 
@@ -32,7 +26,7 @@ export class ConfigUtils {
      */
     public static async createProfileInfoAndLoad(): Promise<ProfileInfo> {
         const profInfo = new ProfileInfo("zowe", {
-            overrideWithEnv: (Profiles.getInstance() as any).overrideWithEnv,
+            overrideWithEnv: (Profiles.getInstance() as InstanceType<typeof Profiles> & { overrideWithEnv?: boolean }).overrideWithEnv,
             credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
         });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
@@ -47,7 +41,7 @@ export class ConfigUtils {
     public static parseConfigChanges(data: LayerModifications): LayerModifications[] {
         const groups: Record<string, LayerModifications> = {};
 
-        const addToGroup = (items: ChangeEntry[], field: ArrayField): any => {
+        const addToGroup = (items: ChangeEntry[], field: ArrayField): void => {
             for (const item of items) {
                 const configPath = item.configPath;
                 if (!groups[configPath]) {
@@ -76,24 +70,26 @@ export class ConfigUtils {
      * @param profiles - The profiles object to process
      * @param schemaValidation - Optional schema validation to filter out invalid profile types
      */
-    public static processProfilesRecursively(profiles: any, schemaValidation?: schemaValidation): void {
+    public static processProfilesRecursively(profiles: NestedProfilesMap | undefined | null, schemaValidation?: schemaValidation): void {
         if (!profiles || typeof profiles !== "object") {
             return;
         }
         // Process profiles and filter out invalid ones
         const profileNames = Object.keys(profiles);
         for (const profileName of profileNames) {
-            const profile = profiles[profileName];
+            const profile = profiles[profileName] as Record<string, unknown>;
 
             // Handle secure properties for current profile
             if (profile.secure && profile.properties) {
-                const secureKeys = profile.secure;
-                profile.properties = Object.fromEntries(Object.entries(profile.properties).filter(([key]) => !secureKeys.includes(key)));
+                const secureKeys = profile.secure as string[];
+                profile.properties = Object.fromEntries(
+                    Object.entries(profile.properties as Record<string, unknown>).filter(([key]) => !secureKeys.includes(key))
+                );
             }
 
             // Recursively process nested profiles
             if (profile.profiles) {
-                this.processProfilesRecursively(profile.profiles, schemaValidation);
+                this.processProfilesRecursively(profile.profiles as NestedProfilesMap, schemaValidation);
             }
         }
     }
@@ -105,11 +101,15 @@ export class ConfigUtils {
      * @param result - The accumulator object (internal use)
      * @returns Flattened profiles object
      */
-    public static flattenProfiles(profiles: any, parentKey = "", result: Record<string, any> = {}): Record<string, any> {
+    public static flattenProfiles(
+        profiles: NestedProfilesMap | undefined | null,
+        parentKey = "",
+        result: FlattenedProfilesMap = {}
+    ): FlattenedProfilesMap {
         if (!profiles || typeof profiles !== "object") return result;
 
         for (const key of Object.keys(profiles)) {
-            const profile = profiles[key];
+            const profile = profiles[key] as Record<string, unknown>;
             const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
 
             const profileCopy = { ...profile };
@@ -118,7 +118,7 @@ export class ConfigUtils {
             result[qualifiedKey] = profileCopy;
 
             if (profile.profiles) {
-                this.flattenProfiles(profile.profiles, qualifiedKey, result);
+                this.flattenProfiles(profile.profiles as NestedProfilesMap, qualifiedKey, result);
             }
         }
 

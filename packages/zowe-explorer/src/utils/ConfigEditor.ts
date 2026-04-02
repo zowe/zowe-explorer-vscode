@@ -11,7 +11,7 @@
 
 import { DeferredPromise, FileManagement, WebView, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import type { ProfileInfo } from "@zowe/imperative";
+import type { Config, IConfigLayer, ProfileInfo } from "@zowe/imperative";
 import * as path from "path";
 import * as fs from "fs";
 import { ConfigSchemaHelpers, schemaValidation } from "./ConfigSchemaHelpers";
@@ -25,6 +25,29 @@ import { ConfigEditorPathUtils } from "./ConfigEditorPathUtils";
 import { FavoritePersistenceUtils } from "./FavoritePersistenceUtils";
 import { Profiles } from "../configuration/Profiles";
 import { ConfigMoveAPI, type ConfigParseError } from "../webviews/src/config-editor/types";
+import type {
+    AutostoreToggleChange,
+    ChangeEntry,
+    ConfigLayerDescriptor,
+    InitialSelectionPayload,
+    LayerChangesPayload,
+    LayerModifications,
+    LocalConfigsResult,
+    MergedKnownArg,
+    NestedProfilesMap,
+    ProfileRenameEntry,
+    ProfileTreeNode,
+    WebviewCommandMessage,
+    SaveChangesMessage,
+    CreateNewConfigMessage,
+    EnvVarsQueryMessage,
+    LocalStorageKeyMessage,
+    LocalStorageSetMessage,
+    OpenFilePathMessage,
+    OpenVscodeSettingsMessage,
+    SelectFileMessage,
+    ValidateProfileNameMessage,
+} from "./ConfigTypes";
 
 function parseLineColumnFromErrorMessage(errorMessage: string): { line?: number; column?: number } {
     const lineMatch = errorMessage.match(/Line (\d+)/);
@@ -51,11 +74,7 @@ export class ConfigEditor extends WebView {
         certKey: string;
     }> = new DeferredPromise();
 
-    public initialSelection?: {
-        profileName: string;
-        configPath: string;
-        profileType: string;
-    };
+    public initialSelection?: InitialSelectionPayload;
 
     private messageHandlers: ConfigEditorMessageHandlers;
     private profileOperations: ConfigEditorProfileOperations;
@@ -64,7 +83,7 @@ export class ConfigEditor extends WebView {
 
     public constructor(context: vscode.ExtensionContext) {
         super(vscode.l10n.t("Config Editor"), "config-editor", context, {
-            onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
+            onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message as WebviewCommandMessage),
             retainContext: true,
             viewColumn: vscode.ViewColumn.One,
         });
@@ -166,7 +185,7 @@ export class ConfigEditor extends WebView {
         }
     }
 
-    private sortRenamesByDepth(renames: any[]): any[] {
+    private sortRenamesByDepth(renames: ProfileRenameEntry[]): ProfileRenameEntry[] {
         return [...renames].sort((a, b) => {
             const aIsParentOfB = b.originalKey.startsWith(a.originalKey + ".");
             const bIsParentOfA = a.originalKey.startsWith(b.originalKey + ".");
@@ -226,7 +245,8 @@ export class ConfigEditor extends WebView {
     }
 
     public async areSecureValuesAllowed(): Promise<boolean> {
-        const profilesCache = (ZoweVsCodeExtension as any).profilesCache;
+        const profilesCache = (ZoweVsCodeExtension as typeof ZoweVsCodeExtension & { profilesCache?: { getProfileInfo: () => Promise<unknown> } })
+            .profilesCache;
         if (!profilesCache) {
             return false;
         }
@@ -237,7 +257,7 @@ export class ConfigEditor extends WebView {
         }
     }
 
-    public async getLocalConfigs(): Promise<{ configs: any[]; parseErrors: ConfigParseError[] }> {
+    public async getLocalConfigs(): Promise<LocalConfigsResult> {
         const parseErrors: ConfigParseError[] = [];
         let profInfo: ProfileInfo;
         try {
@@ -256,15 +276,7 @@ export class ConfigEditor extends WebView {
         }
         const layers = profInfo.getTeamConfig().layers;
 
-        const allConfigs: {
-            configPath: string;
-            properties: any;
-            schema?: any;
-            schemaValidation?: schemaValidation;
-            schemaPath?: string;
-            global: boolean;
-            user: boolean;
-        }[] = [];
+        const allConfigs: ConfigLayerDescriptor[] = [];
 
         for (const layer of layers) {
             if (layer.exists) {
@@ -343,7 +355,7 @@ export class ConfigEditor extends WebView {
         });
     }
 
-    private applySecureFieldPrecedence(teamConfig: any, knownArgs: any[]): void {
+    private applySecureFieldPrecedence(teamConfig: Config, knownArgs: MergedKnownArg[]): void {
         if (!knownArgs || !Array.isArray(knownArgs)) {
             return;
         }
@@ -381,7 +393,7 @@ export class ConfigEditor extends WebView {
         });
     }
 
-    protected async onDidReceiveMessage(message: any): Promise<void> {
+    protected async onDidReceiveMessage(message: WebviewCommandMessage): Promise<void> {
         switch (message.command.toLocaleUpperCase()) {
             case "GET_PROFILES": {
                 await this.messageHandlers.handleGetProfiles();
@@ -389,16 +401,24 @@ export class ConfigEditor extends WebView {
             }
             case "SAVE_CHANGES": {
                 try {
-                    if (message.renames && Array.isArray(message.renames)) {
-                        await this.handleProfileRenames(message.renames);
+                    const saveMsg = message as SaveChangesMessage;
+                    if (saveMsg.renames && Array.isArray(saveMsg.renames)) {
+                        await this.handleProfileRenames(saveMsg.renames);
                     }
 
-                    let updatedMessage = message;
-                    if (message.renames && Array.isArray(message.renames)) {
-                        updatedMessage = await this.updateProfileChangesForRenames(message, message.renames);
+                    let updatedMessage: LayerChangesPayload = saveMsg;
+                    if (saveMsg.renames && Array.isArray(saveMsg.renames)) {
+                        updatedMessage = await this.updateProfileChangesForRenames(saveMsg, saveMsg.renames);
                     }
 
-                    const parsedChanges = ConfigUtils.parseConfigChanges(updatedMessage);
+                    const normalizedSave: LayerModifications = {
+                        configPath: updatedMessage.configPath,
+                        changes: updatedMessage.changes ?? [],
+                        deletions: updatedMessage.deletions ?? [],
+                        defaultsChanges: updatedMessage.defaultsChanges ?? [],
+                        defaultsDeleteKeys: updatedMessage.defaultsDeleteKeys ?? [],
+                    };
+                    const parsedChanges = ConfigUtils.parseConfigChanges(normalizedSave);
                     for (const change of parsedChanges) {
                         if (change.defaultsChanges || change.defaultsDeleteKeys) {
                             await ConfigChangeHandlers.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath);
@@ -411,8 +431,8 @@ export class ConfigEditor extends WebView {
                         }
                     }
 
-                    if (message.otherChanges) {
-                        await this.handleAutostoreToggle(message.otherChanges);
+                    if (saveMsg.otherChanges) {
+                        await this.handleAutostoreToggle(saveMsg.otherChanges);
                     }
 
                     await this.refreshConfigurationsAndNotifyWebview();
@@ -424,15 +444,15 @@ export class ConfigEditor extends WebView {
                 break;
             }
             case "OPEN_CONFIG_FILE": {
-                await this.messageHandlers.handleOpenConfigFile(message);
+                await this.messageHandlers.handleOpenConfigFile(message as unknown as OpenFilePathMessage);
                 break;
             }
             case "REVEAL_IN_FINDER": {
-                await this.messageHandlers.handleRevealInFinder(message);
+                await this.messageHandlers.handleRevealInFinder(message as unknown as OpenFilePathMessage);
                 break;
             }
             case "OPEN_SCHEMA_FILE": {
-                await this.messageHandlers.handleOpenSchemaFile(message);
+                await this.messageHandlers.handleOpenSchemaFile(message as unknown as OpenFilePathMessage);
                 break;
             }
             case "GET_ENV_INFORMATION": {
@@ -440,15 +460,15 @@ export class ConfigEditor extends WebView {
                 break;
             }
             case "GET_ENV_VARS": {
-                await this.messageHandlers.handleGetEnvVars(message);
+                await this.messageHandlers.handleGetEnvVars(message as EnvVarsQueryMessage);
                 break;
             }
             case "VALIDATE_PROFILE_NAME": {
-                await this.messageHandlers.handleValidateProfileName(message);
+                await this.messageHandlers.handleValidateProfileName(message as unknown as ValidateProfileNameMessage);
                 break;
             }
             case "INITIAL_SELECTION": {
-                this.messageHandlers.handleInitialSelection(message, (selection) => {
+                this.messageHandlers.handleInitialSelection(message as unknown as InitialSelectionPayload, (selection) => {
                     this.initialSelection = selection;
                 });
                 break;
@@ -460,17 +480,18 @@ export class ConfigEditor extends WebView {
                 break;
             }
             case "OPEN_CONFIG_FILE_WITH_PROFILE": {
-                await ZoweVsCodeExtension.openConfigFileWithProfile(message.filePath, message.profileKey);
+                const openMsg = message as unknown as { filePath: string; profileKey: string };
+                await ZoweVsCodeExtension.openConfigFileWithProfile(openMsg.filePath, openMsg.profileKey);
                 break;
             }
 
             case "GET_MERGED_PROPERTIES": {
                 try {
                     const mergedArgs = await this.getPendingMergedArgsForProfile(
-                        message.profilePath,
-                        message.configPath,
-                        message.changes,
-                        message.renames
+                        message.profilePath as string,
+                        message.configPath as string,
+                        message.changes as LayerModifications,
+                        message.renames as ProfileRenameEntry[] | undefined
                     );
                     await this.panel.webview.postMessage({
                         command: "MERGED_PROPERTIES",
@@ -487,12 +508,12 @@ export class ConfigEditor extends WebView {
             case "GET_WIZARD_MERGED_PROPERTIES": {
                 try {
                     const mergedArgs = await this.getWizardMergedProperties(
-                        message.rootProfile,
-                        message.profileType,
-                        message.configPath,
-                        message.profileName,
-                        message.changes,
-                        message.renames
+                        message.rootProfile as string,
+                        message.profileType as string,
+                        message.configPath as string,
+                        message.profileName as string | undefined,
+                        message.changes as LayerModifications | undefined,
+                        message.renames as ProfileRenameEntry[] | undefined
                     );
                     await this.panel.webview.postMessage({
                         command: "WIZARD_MERGED_PROPERTIES",
@@ -507,11 +528,11 @@ export class ConfigEditor extends WebView {
             }
 
             case "SELECT_FILE": {
-                await this.messageHandlers.handleSelectFile(message);
+                await this.messageHandlers.handleSelectFile(message as SelectFileMessage);
                 break;
             }
             case "CREATE_NEW_CONFIG": {
-                const result = await this.fileOperations.createNewConfig(message);
+                const result = await this.fileOperations.createNewConfig(message as unknown as CreateNewConfigMessage);
                 if (result && result.configs.length > 0) {
                     const secureValuesAllowed = await this.areSecureValuesAllowed();
                     await this.panel.webview.postMessage({
@@ -524,19 +545,19 @@ export class ConfigEditor extends WebView {
                 break;
             }
             case "GET_LOCAL_STORAGE_VALUE": {
-                await this.messageHandlers.handleGetLocalStorageValue(message);
+                await this.messageHandlers.handleGetLocalStorageValue(message as unknown as LocalStorageKeyMessage);
                 break;
             }
             case "OPEN_VSCODE_SETTINGS": {
-                await this.messageHandlers.handleOpenVscodeSettings(message);
+                await this.messageHandlers.handleOpenVscodeSettings(message as OpenVscodeSettingsMessage);
                 break;
             }
             case "SET_LOCAL_STORAGE_VALUE": {
-                await this.messageHandlers.handleSetLocalStorageValue(message);
+                await this.messageHandlers.handleSetLocalStorageValue(message as unknown as LocalStorageSetMessage);
                 break;
             }
             case "SHOW_ERROR_MESSAGE": {
-                vscode.window.showErrorMessage(message.message);
+                vscode.window.showErrorMessage(String((message as { message?: unknown }).message ?? ""));
                 break;
             }
 
@@ -545,14 +566,14 @@ export class ConfigEditor extends WebView {
         }
     }
 
-    private async handleAutostoreToggle(otherChanges: any[]): Promise<void> {
+    private async handleAutostoreToggle(otherChanges: AutostoreToggleChange[]): Promise<void> {
         for (const change of otherChanges) {
             if (change.type === "autostore") {
                 try {
                     const profInfo = await ConfigUtils.createProfileInfoAndLoad();
                     const teamConfig = profInfo.getTeamConfig();
 
-                    const targetLayer = teamConfig.layers.find((layer: any) => layer.path === change.configPath);
+                    const targetLayer = teamConfig.layers.find((layer: IConfigLayer) => layer.path === change.configPath);
 
                     if (targetLayer) {
                         teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
@@ -598,7 +619,7 @@ export class ConfigEditor extends WebView {
         }
 
         const teamConfig = profInfo.getTeamConfig();
-        const targetLayer = teamConfig.layers.find((layer: any) => layer.path === rename.configPath);
+        const targetLayer = teamConfig.layers.find((layer: IConfigLayer) => layer.path === rename.configPath);
 
         if (!targetLayer) {
             throw new Error(`Configuration layer not found for path: ${rename.configPath}`);
@@ -606,9 +627,9 @@ export class ConfigEditor extends WebView {
 
         teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
 
-        const layerActive = () => ({
+        const layerActive = (): { properties: { profiles: NestedProfilesMap } } => ({
             properties: {
-                profiles: teamConfig.api.layers.get().properties.profiles,
+                profiles: teamConfig.api.layers.get().properties.profiles as NestedProfilesMap,
             },
         });
 
@@ -635,14 +656,19 @@ export class ConfigEditor extends WebView {
         FavoritePersistenceUtils.fireAndForgetExplorerTreeRebuildAfterRename(rename);
     }
 
-    private getProfileFromTeamConfig(teamConfig: any, path: string): any {
+    private getProfileFromTeamConfig(teamConfig: Config, path: string): ProfileTreeNode | null {
         const currentLayer = teamConfig.api.layers.get();
-        const profiles = currentLayer.properties.profiles;
+        const profiles = currentLayer.properties.profiles as NestedProfilesMap | undefined;
         const profileKey = path.replace("profiles.", "");
         return this.findNestedProfile(profileKey, profiles);
     }
 
-    private moveProfileDirectly(teamConfig: any, layerActive: () => any, sourcePath: string, targetPath: string): void {
+    private moveProfileDirectly(
+        teamConfig: Config,
+        layerActive: () => { properties: { profiles: NestedProfilesMap } },
+        sourcePath: string,
+        targetPath: string
+    ): void {
         const sourceProfile = this.getProfileFromTeamConfig(teamConfig, sourcePath);
         if (!sourceProfile) {
             throw new Error(`Source profile not found at path: ${sourcePath}`);
@@ -653,31 +679,37 @@ export class ConfigEditor extends WebView {
             throw new Error(`Target profile already exists at path: ${targetPath}`);
         }
 
-        (teamConfig as any).set(targetPath, sourceProfile, { parseString: true });
-        (teamConfig as any).delete(sourcePath);
+        teamConfig.set(targetPath, sourceProfile as unknown, { parseString: true });
+        teamConfig.delete(sourcePath);
     }
 
-    private createTeamConfigAdapter(teamConfig: any): ConfigMoveAPI {
+    private createTeamConfigAdapter(teamConfig: Config): ConfigMoveAPI {
         return {
             get: (path: string) => this.getProfileFromTeamConfig(teamConfig, path),
-            set: (path: string, value: any) => teamConfig.set(path, value, { parseString: true }),
+            set: (path: string, value: unknown) => teamConfig.set(path, value, { parseString: true }),
             delete: (path: string) => teamConfig.delete(path),
         };
     }
 
-    private createNestedProfileStructureDirectly(teamConfig: any, originalPath: string, newPath: string, originalKey: string, newKey: string): void {
+    private createNestedProfileStructureDirectly(
+        teamConfig: Config,
+        originalPath: string,
+        newPath: string,
+        originalKey: string,
+        newKey: string
+    ): void {
         const configAdapter = this.createTeamConfigAdapter(teamConfig);
-        const layerActive = () => ({
+        const layerActive = (): { properties: { profiles: NestedProfilesMap } } => ({
             properties: {
-                profiles: teamConfig.api.layers.get().properties.profiles,
+                profiles: teamConfig.api.layers.get().properties.profiles as NestedProfilesMap,
             },
         });
         this.profileOperations.createNestedProfileStructure(configAdapter, layerActive, originalPath, newPath, originalKey, newKey);
     }
 
-    private findNestedProfile(key: string, profilesObj: any): any {
+    private findNestedProfile(key: string, profilesObj: NestedProfilesMap | ProfileTreeNode | null | undefined): ProfileTreeNode | null {
         const parts = key.split(".");
-        let current: any = profilesObj;
+        let current: unknown = profilesObj;
 
         for (let i = 0; i < parts.length; i++) {
             const part = parts[i];
@@ -686,26 +718,27 @@ export class ConfigEditor extends WebView {
                 continue;
             }
 
-            if (!current || !current[part]) {
+            const cur = current as Record<string, unknown>;
+            if (!cur || cur[part] === undefined) {
                 return null;
             }
-            current = current[part];
+            current = cur[part];
 
             if (i === parts.length - 1) {
-                return current;
+                return current as ProfileTreeNode;
             }
 
-            if (current && typeof current === "object" && current.profiles) {
-                current = current.profiles;
+            if (current && typeof current === "object" && current !== null && "profiles" in current) {
+                current = (current as ProfileTreeNode).profiles;
             } else if (i < parts.length - 1) {
                 return null;
             }
         }
-        return current;
+        return current as ProfileTreeNode | null;
     }
 
     private validateProfileRename(
-        teamConfig: any,
+        teamConfig: Config,
         originalPath: string,
         newPath: string,
         rename: { originalKey: string; newKey: string }
@@ -726,7 +759,7 @@ export class ConfigEditor extends WebView {
         return { skip: false };
     }
 
-    private updateDefaultsAfterRename(teamConfig: any, rename: { originalKey: string; newKey: string }): void {
+    private updateDefaultsAfterRename(teamConfig: Config, rename: { originalKey: string; newKey: string }): void {
         try {
             updateDefaultsAfterRename(
                 () => teamConfig.api.layers.get(),
@@ -740,7 +773,7 @@ export class ConfigEditor extends WebView {
         }
     }
 
-    private handleRenameError(error: any, rename: { originalKey: string; newKey: string }): void {
+    private handleRenameError(error: unknown, rename: { originalKey: string; newKey: string }): void {
         const errorMessage = error instanceof Error ? error.message : String(error);
 
         if (this.profileOperations.isCriticalMoveError(error)) {
@@ -756,10 +789,7 @@ export class ConfigEditor extends WebView {
      * This prevents duplicate profiles by ensuring changes target the correct names
      * Uses TeamConfig API for more reliable profile path resolution
      */
-    private async updateProfileChangesForRenames(
-        message: any,
-        renames: Array<{ originalKey: string; newKey: string; configPath: string }>
-    ): Promise<any> {
+    private async updateProfileChangesForRenames(message: LayerChangesPayload, renames: ProfileRenameEntry[]): Promise<LayerChangesPayload> {
         if (!renames || renames.length === 0) {
             return message;
         }
@@ -775,7 +805,7 @@ export class ConfigEditor extends WebView {
 
         // Update changes
         if (updatedMessage.changes) {
-            updatedMessage.changes = updatedMessage.changes.map((change: any) => {
+            updatedMessage.changes = updatedMessage.changes.map((change) => {
                 if (change.configPath) {
                     let updatedChange = { ...change };
 
@@ -783,8 +813,8 @@ export class ConfigEditor extends WebView {
                         updatedChange.profile = ConfigEditorPathUtils.getNewProfilePath(updatedChange.profile, change.configPath, renameMap);
                     }
 
-                    updatedChange = ConfigEditorPathUtils.updateChangeKey(updatedChange, change.configPath, renameMap);
-                    updatedChange = ConfigEditorPathUtils.updateChangePath(updatedChange, change.configPath, renameMap);
+                    updatedChange = ConfigEditorPathUtils.updateChangeKey(updatedChange, change.configPath, renameMap) as ChangeEntry;
+                    updatedChange = ConfigEditorPathUtils.updateChangePath(updatedChange, change.configPath, renameMap) as ChangeEntry;
 
                     return updatedChange;
                 }
@@ -794,7 +824,7 @@ export class ConfigEditor extends WebView {
 
         // Update profile deletions to use new names
         if (updatedMessage.deletions) {
-            updatedMessage.deletions = updatedMessage.deletions.map((deletion: any) => {
+            updatedMessage.deletions = updatedMessage.deletions.map((deletion) => {
                 if (deletion.configPath) {
                     let updatedDeletion = { ...deletion };
 
@@ -802,8 +832,8 @@ export class ConfigEditor extends WebView {
                         updatedDeletion.profile = ConfigEditorPathUtils.getNewProfilePath(updatedDeletion.profile, deletion.configPath, renameMap);
                     }
 
-                    updatedDeletion = ConfigEditorPathUtils.updateChangeKey(updatedDeletion, deletion.configPath, renameMap);
-                    updatedDeletion = ConfigEditorPathUtils.updateChangePath(updatedDeletion, deletion.configPath, renameMap);
+                    updatedDeletion = ConfigEditorPathUtils.updateChangeKey(updatedDeletion, deletion.configPath, renameMap) as ChangeEntry;
+                    updatedDeletion = ConfigEditorPathUtils.updateChangePath(updatedDeletion, deletion.configPath, renameMap) as ChangeEntry;
 
                     return updatedDeletion;
                 }
@@ -816,9 +846,9 @@ export class ConfigEditor extends WebView {
     private async getPendingMergedArgsForProfile(
         profPath: string,
         configPath: string,
-        changes: any,
-        renames?: Array<{ originalKey: string; newKey: string; configPath: string }>
-    ): Promise<any> {
+        changes: LayerModifications,
+        renames?: ProfileRenameEntry[]
+    ): Promise<unknown> {
         const profInfo = await ConfigUtils.createProfileInfoAndLoad();
         const teamConfig = profInfo.getTeamConfig();
 
@@ -826,9 +856,21 @@ export class ConfigEditor extends WebView {
             this.simulateProfileRenames(renames, teamConfig);
         }
 
-        const effectiveChanges = renames && renames.length > 0 ? await this.updateProfileChangesForRenames(changes, renames) : changes;
+        const effectiveChanges: LayerChangesPayload =
+            renames && renames.length > 0 ? await this.updateProfileChangesForRenames(changes, renames) : changes;
 
-        const parsedChanges = ConfigUtils.parseConfigChanges(effectiveChanges);
+        const parsedInput: LayerModifications =
+            renames && renames.length > 0
+                ? {
+                      configPath: effectiveChanges.configPath,
+                      changes: effectiveChanges.changes ?? [],
+                      deletions: effectiveChanges.deletions ?? [],
+                      defaultsChanges: effectiveChanges.defaultsChanges ?? [],
+                      defaultsDeleteKeys: effectiveChanges.defaultsDeleteKeys ?? [],
+                  }
+                : (effectiveChanges as LayerModifications);
+
+        const parsedChanges = ConfigUtils.parseConfigChanges(parsedInput);
         for (const change of parsedChanges) {
             if (change.defaultsChanges || change.defaultsDeleteKeys) {
                 await ConfigChangeHandlers.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
@@ -899,7 +941,7 @@ export class ConfigEditor extends WebView {
         }
 
         if (mergedArgs.knownArgs) {
-            this.applySecureFieldPrecedence(teamConfig, mergedArgs.knownArgs);
+            this.applySecureFieldPrecedence(teamConfig, mergedArgs.knownArgs as unknown as MergedKnownArg[]);
         }
         const redacted = this.profileOperations.redactSecureValues(mergedArgs.knownArgs);
         return redacted;
@@ -911,7 +953,7 @@ export class ConfigEditor extends WebView {
      * @param jsonLoc - The JSON location path of the field
      * @returns true if the layer has this field defined
      */
-    private layerHasField(layer: any, jsonLoc: string): boolean {
+    private layerHasField(layer: IConfigLayer, jsonLoc: string): boolean {
         if (!layer.properties || !layer.properties.profiles) {
             return false;
         }
@@ -925,7 +967,7 @@ export class ConfigEditor extends WebView {
         }
 
         const profileName = pathParts[1];
-        const profile = layer.properties.profiles[profileName];
+        const profile = (layer.properties.profiles as NestedProfilesMap | undefined)?.[profileName] as ProfileTreeNode | undefined;
 
         if (!profile || !profile.properties) {
             return false;
@@ -933,10 +975,10 @@ export class ConfigEditor extends WebView {
 
         // Check if the field exists in the profile's properties
         const fieldName = pathParts[pathParts.length - 1];
-        return fieldName in profile.properties;
+        return fieldName in (profile.properties as Record<string, unknown>);
     }
 
-    private simulateProfileRenames(renames: Array<{ originalKey: string; newKey: string; configPath: string }>, teamConfig: any): void {
+    private simulateProfileRenames(renames: ProfileRenameEntry[], teamConfig: Config): void {
         if (!renames || renames.length === 0) {
             return;
         }
@@ -950,7 +992,7 @@ export class ConfigEditor extends WebView {
 
         for (const rename of preparedRenames) {
             try {
-                const targetLayer = teamConfig.layers.find((layer: any) => layer.path === rename.configPath);
+                const targetLayer = teamConfig.layers.find((layer: IConfigLayer) => layer.path === rename.configPath);
 
                 if (!targetLayer) {
                     continue; // Skip if layer not found
@@ -958,9 +1000,9 @@ export class ConfigEditor extends WebView {
 
                 teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
 
-                const layerActive = () => ({
+                const layerActive = (): { properties: { profiles: NestedProfilesMap } } => ({
                     properties: {
-                        profiles: teamConfig.api.layers.get().properties.profiles,
+                        profiles: teamConfig.api.layers.get().properties.profiles as NestedProfilesMap,
                     },
                 });
 
@@ -1016,9 +1058,9 @@ export class ConfigEditor extends WebView {
         profileType: string,
         configPath: string,
         profileName?: string,
-        changes?: any,
-        renames?: Array<{ originalKey: string; newKey: string; configPath: string }>
-    ): Promise<any> {
+        changes?: LayerModifications,
+        renames?: ProfileRenameEntry[]
+    ): Promise<unknown> {
         if (!profileType) {
             return [];
         }
@@ -1038,7 +1080,14 @@ export class ConfigEditor extends WebView {
         }
 
         if (changes) {
-            const parsedChanges = ConfigUtils.parseConfigChanges(changes);
+            const normalized: LayerModifications = {
+                configPath: changes.configPath,
+                changes: changes.changes ?? [],
+                deletions: changes.deletions ?? [],
+                defaultsChanges: changes.defaultsChanges ?? [],
+                defaultsDeleteKeys: changes.defaultsDeleteKeys ?? [],
+            };
+            const parsedChanges = ConfigUtils.parseConfigChanges(normalized);
             for (const change of parsedChanges) {
                 if (change.defaultsChanges || change.defaultsDeleteKeys) {
                     await ConfigChangeHandlers.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
@@ -1050,7 +1099,7 @@ export class ConfigEditor extends WebView {
         }
 
         if (configPath !== teamConfig.api.layers.get().path) {
-            const findProfile = teamConfig.layers.find((prof: any) => prof.path === configPath);
+            const findProfile = teamConfig.layers.find((prof: IConfigLayer) => prof.path === configPath);
             if (findProfile) {
                 teamConfig.api.layers.activate(findProfile.user, findProfile.global);
             }
@@ -1105,7 +1154,7 @@ export class ConfigEditor extends WebView {
             const mergedArgs = profInfo.mergeArgsForProfile(tempProfile, { getSecureVals: true });
 
             if (mergedArgs.knownArgs) {
-                this.applySecureFieldPrecedence(teamConfig, mergedArgs.knownArgs);
+                this.applySecureFieldPrecedence(teamConfig, mergedArgs.knownArgs as unknown as MergedKnownArg[]);
             }
 
             const redacted = this.profileOperations.redactSecureValues(mergedArgs.knownArgs);

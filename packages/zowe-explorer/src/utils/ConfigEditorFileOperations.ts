@@ -15,15 +15,15 @@ import * as fs from "fs";
 import { Config, ConfigBuilder, ConfigSchema } from "@zowe/imperative";
 import { ZoweVsCodeExtension, FileManagement } from "@zowe/zowe-explorer-api";
 import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
-import type { ConfigParseError } from "../webviews/src/config-editor/types";
+import type { CreateNewConfigMessage, LocalConfigsResult } from "./ConfigTypes";
 
 export class ConfigEditorFileOperations {
-    constructor(private getLocalConfigs: () => Promise<{ configs: any[]; parseErrors: ConfigParseError[] }>) {}
+    constructor(private getLocalConfigs: () => Promise<LocalConfigsResult>) {}
 
     /**
      * Creates a new configuration file
      */
-    async createNewConfig(message: any): Promise<{ configs: any[]; parseErrors: ConfigParseError[] } | undefined> {
+    async createNewConfig(message: CreateNewConfigMessage): Promise<LocalConfigsResult | undefined> {
         try {
             const configType = message.configType;
             let global = false;
@@ -84,23 +84,26 @@ export class ConfigEditorFileOperations {
                 config.api.layers.activate(user, global, rootPath);
             }
 
-            const knownCliConfig: any[] = (ZoweVsCodeExtension as any).profilesCache.getCoreProfileTypes();
-            knownCliConfig.push(...(ZoweVsCodeExtension as any).profilesCache.getConfigArray());
+            const zoweWithCache = ZoweVsCodeExtension as typeof ZoweVsCodeExtension & {
+                profilesCache: { getCoreProfileTypes: () => unknown[]; getConfigArray: () => unknown[] };
+            };
+            const knownCliConfig: unknown[] = [...zoweWithCache.profilesCache.getCoreProfileTypes()];
+            knownCliConfig.push(...zoweWithCache.profilesCache.getConfigArray());
             knownCliConfig.push(ProfileConstants.BaseProfile);
-            config.setSchema(ConfigSchema.buildSchema(knownCliConfig));
+            config.setSchema(ConfigSchema.buildSchema(knownCliConfig as never));
 
-            const opts: any = {
+            const opts: { populateProperties: boolean } = {
                 populateProperties: true,
             };
 
-            const impConfig: any = {
+            const impConfig = {
                 profiles: [...knownCliConfig],
                 baseProfile: ProfileConstants.BaseProfile,
             };
 
-            const newConfig: any = await ConfigBuilder.build(impConfig, global, opts);
+            const newConfig = await ConfigBuilder.build(impConfig as never, global, opts as never);
 
-            config.api.layers.merge(newConfig);
+            config.api.layers.merge(newConfig as never);
             await config.save(false);
 
             let configName;
