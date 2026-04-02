@@ -1,3 +1,5 @@
+/// <reference types="jest" />
+
 /**
  * This program and the accompanying materials are made available under the terms of the
  * Eclipse Public License v2.0 which accompanies this distribution, and is available at
@@ -644,6 +646,62 @@ describe("UssFSProvider", () => {
                     items: [{ name: "test.txt", mode: "-rwxrwxrwx" }],
                 },
             });
+            existsSpy.mockRestore();
+        });
+        it("creates a directory entry for child-only directory listings from legacy extenders", async () => {
+            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+                fileList: jest.fn().mockResolvedValueOnce({
+                    success: true,
+                    commandResponse: "",
+                    apiResponse: {
+                        items: [
+                            { name: "test.txt", mode: "-rwxrwxrwx" },
+                            { name: "innerFolder", mode: "drwxrwxrwx" },
+                        ],
+                    },
+                }),
+            } as any);
+            const existsSpy = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createRecursiveSpy = jest.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation();
+
+            expect(await UssFSProvider.instance.listFiles(testProfile, testUris.folder)).toStrictEqual({
+                success: true,
+                commandResponse: "",
+                apiResponse: {
+                    items: [
+                        { name: "test.txt", mode: "-rwxrwxrwx" },
+                        { name: "innerFolder", mode: "drwxrwxrwx" },
+                    ],
+                },
+            });
+            expect(createRecursiveSpy).toHaveBeenCalledWith(testUris.folder);
+
+            createRecursiveSpy.mockRestore();
+            existsSpy.mockRestore();
+        });
+        it("does not create a directory entry when the response describes a plain file", async () => {
+            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+                fileList: jest.fn().mockResolvedValueOnce({
+                    success: true,
+                    commandResponse: "",
+                    apiResponse: {
+                        items: [{ name: "aFile.txt", mode: "-rwxrwxrwx" }],
+                    },
+                }),
+            } as any);
+            const existsSpy = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createRecursiveSpy = jest.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation();
+
+            expect(await UssFSProvider.instance.listFiles(testProfile, testUris.file)).toStrictEqual({
+                success: true,
+                commandResponse: "",
+                apiResponse: {
+                    items: [{ name: "aFile.txt", mode: "-rwxrwxrwx" }],
+                },
+            });
+            expect(createRecursiveSpy).not.toHaveBeenCalled();
+
+            createRecursiveSpy.mockRestore();
             existsSpy.mockRestore();
         });
         it("properly returns an unsuccessful response", async () => {
