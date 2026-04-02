@@ -1096,8 +1096,8 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                             let existing = false;
                             const memberPatterns = item.member.split(",");
                             for (const mem of memResponse.apiResponse.items) {
-                                for (const pattern of memberPatterns) {
-                                    if (this.checkFilterPattern(mem.member, pattern)) {
+                                for (const memPattern of memberPatterns) {
+                                    if (this.checkFilterPattern(mem.member, memPattern)) {
                                         existing = true;
                                         break;
                                     }
@@ -1138,6 +1138,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {
         ZoweLogger.trace("DatasetTree.checkFilterPattern called.");
+        const maxLength = 256;
+        if (dsName.length > maxLength || itemName.length > maxLength) {
+            return false;
+        }
         let existing: boolean;
         if (!/(\*?)(\w+)(\*)(\w+)(\*?)/.test(itemName)) {
             if (/^[^*](\w+)[^*]$/.test(itemName)) {
