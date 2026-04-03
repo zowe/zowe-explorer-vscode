@@ -350,7 +350,7 @@ flowchart TD
    api.registerMvsApi(new CustomMvsApi());
    api.registerUssApi(new CustomUssApi());
    api.registerJesApi(new CustomJesApi());
-   api.registerCommandApi(new CustomJesApi());
+   api.registerCommandApi(new CustomCommandApi());
    ```
 
 3. **Initialize Profile Type**:
