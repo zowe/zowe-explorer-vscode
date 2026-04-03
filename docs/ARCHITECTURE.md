@@ -120,6 +120,23 @@ graph TB
 - **[`UssFSProvider`](packages/zowe-explorer/src/trees/uss/UssFSProvider.ts)**: Virtual file system for USS files
 - **[`JobFSProvider`](packages/zowe-explorer/src/trees/job/JobFSProvider.ts)**: Virtual file system for job outputs
 
+#### Command Providers
+
+- **[`ZoweCommandProvider`](packages/zowe-explorer/src/commands/ZoweCommandProvider.ts)**: Abstract base class for mainframe command execution
+- **[`MvsCommandHandler`](packages/zowe-explorer/src/commands/MvsCommandHandler.ts)**: Handles MVS console commands
+- **[`TsoCommandHandler`](packages/zowe-explorer/src/commands/TsoCommandHandler.ts)**: Handles TSO commands
+- **[`UnixCommandHandler`](packages/zowe-explorer/src/commands/UnixCommandHandler.ts)**: Handles Unix System Services commands
+
+#### Webviews
+
+- **[`SharedHistoryView`](packages/zowe-explorer/src/trees/shared/SharedHistoryView.ts)**: Manages persistent history for datasets, USS files, and jobs
+- **[`USSAttributeView`](packages/zowe-explorer/src/trees/uss/USSAttributeView.ts)**: Provides UI for editing USS file attributes
+- **[`CertificateWizard`](packages/zowe-explorer/src/utils/CertificateWizard.ts)**: Interactive wizard for certificate configuration
+- **[`TroubleshootError`](packages/zowe-explorer/src/utils/TroubleshootError.ts)**: Error troubleshooting interface
+- **[`ReleaseNotes`](packages/zowe-explorer/src/utils/ReleaseNotes.ts)**: Displays release notes in webview
+- **[`ZosConsoleViewProvider`](packages/zowe-explorer/src/zosconsole/ZosConsolePanel.ts)**: z/OS console interface for issuing commands
+- **[`TableViewProvider`](packages/zowe-explorer-api/src/vscode/ui/TableViewProvider.ts)**: Provides table-based views for resources (from API package)
+
 ---
 
 ### 2. Zowe Explorer API (`packages/zowe-explorer-api`)
@@ -139,11 +156,12 @@ graph TB
 
 #### Extensibility Interfaces
 
-- **[`IApiRegisterClient`](packages/zowe-explorer-api/src/extend/IRegisterClient.ts)**:
+- **[`IApiRegisterClient`](packages/zowe-explorer-api/src/Types.ts)**:
 
-  - Interface for registering API implementations
+  - Type alias that extends [`IRegisterClient`](packages/zowe-explorer-api/src/extend/IRegisterClient.ts) interface
+  - Used for registering API implementations
   - Methods: `registerMvsApi()`, `registerUssApi()`, `registerJesApi()`, `registerCommandApi()`
-  - Provides access to `IApiExplorerExtender`
+  - Provides access to `IApiExplorerExtender` via `getExplorerExtenderApi()`
 
 - **[`IApiExplorerExtender`](packages/zowe-explorer-api/src/extend/IApiExplorerExtender.ts)**:
   - Interface for extension initialization
@@ -236,10 +254,10 @@ flowchart TD
 
     Return --> FTPActivate["zFTP extension.activate()"]
     FTPActivate --> GetAPI["Call ZoweVsCodeExtension.getZoweExplorerApi('1.15.0')"]
-    FTPActivate --> RegMvs["Register FtpMvsApi via registerMvsApi()"]
-    FTPActivate --> RegUss["Register FtpUssApi via registerUssApi()"]
-    FTPActivate --> RegJes["Register FtpJesApi via registerJesApi()"]
-    FTPActivate --> InitProfile["Initialize 'zftp' profile type via initForZowe()"]
+    GetAPI --> RegMvs["Register FtpMvsApi via registerMvsApi()"]
+    RegMvs --> RegUss["Register FtpUssApi via registerUssApi()"]
+    RegUss --> RegJes["Register FtpJesApi via registerJesApi()"]
+    RegJes --> InitProfile["Initialize 'zftp' profile type via initForZowe()"]
 
     style Start fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
     style Activate fill:#e1f5ff,stroke:#01579b,stroke-width:2px
@@ -300,6 +318,31 @@ flowchart TD
     style Returns fill:#fff3e0,stroke:#e65100,stroke-width:2px
     style GetExtender fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
 ```
+
+**Note on API Access:**
+Extenders have two ways to access the Zowe Explorer API:
+
+1. **Using the helper method** (shown above): Import `ZoweVsCodeExtension` from `@zowe/zowe-explorer-api` and call `getZoweExplorerApi(minVersion)`. This provides version validation and type safety.
+
+2. **Direct VS Code API access**: Call `vscode.extensions.getExtension("Zowe.vscode-extension-for-zowe")` directly without importing the API package. The extension's `exports` property returns the same `IApiRegisterClient` instance. This approach doesn't require the API package dependency but lacks built-in version checking.
+
+Both approaches return the same `IApiRegisterClient` instance that provides access to:
+
+- **API registration methods**: `registerMvsApi()`, `registerUssApi()`, `registerJesApi()`, `registerCommandApi()`
+- **API lookup methods**: `getMvsApi()`, `getUssApi()`, `getJesApi()`, `getCommandApi()`, `getCommonApi()`
+- **Explorer extender API** via `getExplorerExtenderApi()`:
+  - [`ProfilesCache`](packages/zowe-explorer-api/src/profiles/ProfilesCache.ts): Access to loaded profiles and profile management
+  - Profile operations: `reloadProfiles()`, `initForZowe()` for profile type registration
+  - [`ErrorCorrelator`](packages/zowe-explorer-api/src/utils/ErrorCorrelator.ts): Contribute user-friendly error messages and tips
+  - [`ILocalStorageAccess`](packages/zowe-explorer-api/src/extend/ILocalStorageAccess.ts): Access to Zowe Explorer's local storage
+  - [`TableProviderRegistry`](packages/zowe-explorer-api/src/vscode/ui/utils/TableProviderRegistry.ts): Register custom table views
+- **Event emitters**: `onProfilesUpdate`, `onProfileUpdated`, `onVaultUpdate`, `onCredMgrUpdate`
+- **Dataset attributes provider**: `getDataSetAttrProvider()` for dataset attribute management
+
+Additionally, extenders can access Zowe Explorer's command handlers and utilities through the VS Code command palette:
+
+- MVS, TSO, and Unix command execution via [`MvsCommandHandler`](packages/zowe-explorer/src/commands/MvsCommandHandler.ts), [`TsoCommandHandler`](packages/zowe-explorer/src/commands/TsoCommandHandler.ts), [`UnixCommandHandler`](packages/zowe-explorer/src/commands/UnixCommandHandler.ts)
+- Certificate wizard, troubleshooting tools, and other UI components via registered VS Code commands
 
 ---
 
@@ -396,7 +439,7 @@ flowchart TD
 
 ## Communication Patterns
 
-### 1. **Synchronous API Calls**
+### 1. **Request-Response API Calls**
 
 - Tree providers call API methods directly
 - APIs return promises that resolve with results
