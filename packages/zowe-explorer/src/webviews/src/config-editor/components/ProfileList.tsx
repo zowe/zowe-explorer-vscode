@@ -78,7 +78,11 @@ export function ProfileList({
 
   // Get unique profile types for filter dropdown
   const availableTypes = Array.from(
-    new Set(sortedProfileKeys.map((key) => getProfileType(key)).filter((type): type is string => type !== null))
+    new Set(
+      sortedProfileKeys
+        .map((key) => getProfileType(key))
+        .filter((type): type is string => type !== null && type.trim() !== "")
+    )
   ).sort();
 
   // Filter and sort profiles based on search term, type filter, and sort order
@@ -286,10 +290,15 @@ export function ProfileList({
             filterType={filterType}
           />
         ) : (
-          filteredProfileKeys.map((profileKey) => (
+          filteredProfileKeys.map((profileKey) => {
+            const rowHasPendingEdits =
+              Boolean(pendingProfiles[profileKey]) || hasPendingSecureChanges(profileKey) || hasPendingRename(profileKey);
+            return (
             <div
               key={profileKey}
-              className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""}`}
+              className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""} ${
+                rowHasPendingEdits ? "profile-list-item--pending" : ""
+              }`}
               style={{
                 cursor: "pointer",
                 margin: "2px 0",
@@ -324,7 +333,7 @@ export function ProfileList({
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
-                  opacity: pendingProfiles[profileKey] || hasPendingSecureChanges(profileKey) || hasPendingRename(profileKey) ? 0.7 : 1,
+                  opacity: rowHasPendingEdits ? 0.7 : 1,
                 }}
                 data-testid="profile-name"
                 data-profile-name={profileKey}
@@ -506,7 +515,8 @@ export function ProfileList({
                 )}
               </div>
             </div>
-          ))
+          );
+          })
         )}
       </div>
     </div>

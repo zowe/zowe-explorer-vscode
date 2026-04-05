@@ -85,7 +85,8 @@ export function getProfileType(params: GetProfileTypeParams): string | null {
     }
 
     if (profile && typeof profile.type === "string") {
-        return profile.type;
+        const t = profile.type.trim();
+        return t === "" ? null : t;
     }
 
     return null;
@@ -1589,4 +1590,36 @@ export function filterConflictingProfileKeys(params: FilterConflictingProfileKey
 
         return !hasExactPendingMatch && !isResultOfRenameWithPending && !isTargetOfPendingRename && !shouldRenamePendingToThisKey;
     });
+}
+
+/** All dotted profile keys in the nested `profiles` tree (pre-rename). */
+export function getAllQualifiedProfileKeys(profiles: ProfileMap | undefined, parentKey = ""): string[] {
+    if (!profiles) {
+        return [];
+    }
+    const keys: string[] = [];
+    for (const key of Object.keys(profiles)) {
+        const profile = profiles[key];
+        const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
+        keys.push(qualifiedKey);
+        if (profile.profiles) {
+            keys.push(...getAllQualifiedProfileKeys(profile.profiles, qualifiedKey));
+        }
+    }
+    return keys;
+}
+
+/** Resolves the stored profile key when `selectedProfileKey` may reflect a pending rename. */
+export function resolveOriginalProfileKeyFromRenames(
+    selectedProfileKey: string,
+    configPath: string,
+    profilesRoot: ProfileMap | undefined,
+    renames: RenamesMap
+): string {
+    for (const origKey of getAllQualifiedProfileKeys(profilesRoot)) {
+        if (getRenamedProfileKeyWithNested(origKey, configPath, renames) === selectedProfileKey) {
+            return origKey;
+        }
+    }
+    return selectedProfileKey;
 }

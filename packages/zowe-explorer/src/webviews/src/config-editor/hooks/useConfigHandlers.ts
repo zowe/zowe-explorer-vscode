@@ -126,7 +126,7 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
         setRenames({});
         setDragDroppedProfiles({});
 
-        vscodeApi.postMessage({ command: "GET_PROFILES" });
+        // CONFIGURATIONS is pushed by the extension after SAVE_CHANGES; no GET_PROFILES here.
     }, [
         selectedTab,
         selectedProfileKey,

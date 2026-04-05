@@ -56,6 +56,9 @@ export interface FlattenedConfig {
     [key: string]: { value: string; path: string[] };
 }
 
+/** Result of `flattenProfiles()` — each key is a dotted profile path; value is that profile's property bag (no nested `profiles`). */
+export type FlattenedProfilesMap = Record<string, Record<string, unknown>>;
+
 export type PropertySortOrder = "alphabetical" | "merged-first" | "non-merged-first";
 export type ProfileSortOrder = "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
 
@@ -64,7 +67,7 @@ export type MergedPropertiesVisibility = "show" | "hide" | "unfiltered";
 export interface ConfigEditorSettings {
     showMergedProperties: MergedPropertiesVisibility;
     viewMode: "flat" | "tree";
-    propertySortOrder: "alphabetical" | "merged-first" | "non-merged-first";
+    propertySortOrder: PropertySortOrder;
     profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
     profilesWidthPercent: number;
     defaultsCollapsed: boolean;

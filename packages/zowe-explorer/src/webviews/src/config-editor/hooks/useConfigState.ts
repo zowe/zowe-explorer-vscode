@@ -7,14 +7,15 @@ import {
     schemaValidation,
     ConfigParseError,
     MergedPropertiesMap,
+    FlattenedConfig,
 } from "../types";
 import type { ConfigEditorWebviewApi } from "../handlers/messageHandlers";
 
 export function useConfigState(vscodeApi: ConfigEditorWebviewApi) {
     const [configurations, setConfigurations] = useState<Configuration[]>([]);
     const [selectedTab, setSelectedTab] = useState<number | null>(null);
-    const [flattenedConfig, setFlattenedConfig] = useState<{ [key: string]: { value: string; path: string[] } }>({});
-    const [flattenedDefaults, setFlattenedDefaults] = useState<{ [key: string]: { value: string; path: string[] } }>({});
+    const [flattenedConfig, setFlattenedConfig] = useState<FlattenedConfig>({});
+    const [flattenedDefaults, setFlattenedDefaults] = useState<FlattenedConfig>({});
     const [pendingChanges, setPendingChanges] = useState<{ [configPath: string]: { [key: string]: PendingChange } }>({});
     const [pendingDefaults, setPendingDefaults] = useState<{ [configPath: string]: { [key: string]: PendingDefault } }>({});
     const [deletions, setDeletions] = useState<{ [configPath: string]: string[] }>({});
@@ -67,31 +68,21 @@ export function useConfigState(vscodeApi: ConfigEditorWebviewApi) {
 
     useEffect(() => {
         pendingChangesRef.current = pendingChanges;
-    }, [pendingChanges]);
-
-    useEffect(() => {
         deletionsRef.current = deletions;
-    }, [deletions]);
-
-    useEffect(() => {
         pendingDefaultsRef.current = pendingDefaults;
-    }, [pendingDefaults]);
-
-    useEffect(() => {
         defaultsDeletionsRef.current = defaultsDeletions;
-    }, [defaultsDeletions]);
-
-    useEffect(() => {
         autostoreChangesRef.current = autostoreChanges;
-    }, [autostoreChanges]);
-
-    useEffect(() => {
         renamesRef.current = renames;
-    }, [renames]);
-
-    useEffect(() => {
         selectedProfileKeyRef.current = selectedProfileKey;
-    }, [selectedProfileKey]);
+    }, [
+        pendingChanges,
+        deletions,
+        pendingDefaults,
+        defaultsDeletions,
+        autostoreChanges,
+        renames,
+        selectedProfileKey,
+    ]);
 
     const getLocalStorageValue = useCallback(
         <T>(key: string, defaultValue: T): T => {

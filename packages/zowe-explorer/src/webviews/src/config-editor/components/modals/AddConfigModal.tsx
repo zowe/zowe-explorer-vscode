@@ -88,38 +88,14 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
 
   return (
     <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-      }}
+      className="config-editor-modal-overlay"
       onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
       tabIndex={-1}
     >
-      <div
-        ref={modalRef}
-        style={{
-          backgroundColor: "var(--vscode-editor-background)",
-          border: "1px solid var(--vscode-panel-border)",
-          borderRadius: "6px",
-          padding: "20px",
-          minWidth: "400px",
-          maxWidth: "500px",
-          maxHeight: "80vh",
-          overflow: "auto",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 style={{ margin: "0 0 16px 0", fontSize: "16px", fontWeight: "600" }}>{l10n.t("Add New Configuration File")}</h2>
+      <div ref={modalRef} className="config-editor-modal-panel config-editor-modal-panel--add-config" onClick={(e) => e.stopPropagation()}>
+        <h2 className="config-editor-modal-title">{l10n.t("Add New Configuration File")}</h2>
 
         {configurations.length >= 4 ? (
           <div style={{ color: "var(--vscode-errorForeground)", marginBottom: "16px" }}>
@@ -145,13 +121,10 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
               </div>
             )}
 
-            {/* <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "var(--vscode-descriptionForeground)" }}>
-              {l10n.t("Select the type of configuration file to create:")}
-            </p> */}
             <p
               style={{
                 margin: "0 0 16px 0",
-                fontSize: "140x",
+                fontSize: "14px",
                 color: "var(--vscode-descriptionForeground)",
                 fontStyle: "italic",
               }}
@@ -232,7 +205,7 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
           </>
         )}
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+        <div className="modal-actions">
           <button
             onClick={onCancel}
             onKeyDown={(e) => {

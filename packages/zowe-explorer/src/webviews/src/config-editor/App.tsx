@@ -17,7 +17,7 @@ import {
   WizardManager,
 } from "./components";
 
-import { flattenProfiles, getRenamedProfileKeyWithNested } from "./utils";
+import { flattenKeys, flattenProfiles, getAllQualifiedProfileKeys, resolveOriginalProfileKeyFromRenames } from "./utils";
 import { getProfileType } from "./utils/profileUtils";
 import { getPropertyTypeForAddProfile, fetchTypeOptions, getPropertyDescriptions } from "./utils/propertyUtils";
 
@@ -135,7 +135,6 @@ function AppContent() {
     tab: null,
   });
 
-  // renameProfileModalOpen moved to context
   const [pendingPropertyDeletion, setPendingPropertyDeletion] = useState<string | null>(null);
   const [pendingProfileDeletion, setPendingProfileDeletion] = useState<string | null>(null);
 
@@ -165,9 +164,8 @@ function AppContent() {
   useEffect(() => {
     if (selectedTab !== null && configurations[selectedTab]) {
       const config = configurations[selectedTab].properties;
-      // TODO: flattenProfiles returns profile data, not FlattenedConfig — investigate type mismatch
-      setFlattenedConfig(flattenProfiles(config.profiles) as any);
-      setFlattenedDefaults(flattenProfiles(config.defaults) as any);
+      setFlattenedConfig(flattenKeys(config.profiles ?? {}));
+      setFlattenedDefaults(flattenKeys(config.defaults ?? {}));
       if (!isSaving && !isNavigating) {
         setMergedProperties(null);
       }
@@ -336,7 +334,7 @@ function AppContent() {
             new Set(
               filteredProfileKeys
                 .map((key) => getProfileType({ profileKey: key, selectedTab, configurations, pendingChanges, renames }))
-                .filter((type): type is string => type !== null)
+                .filter((type): type is string => type !== null && type.trim() !== "")
             )
           );
 
@@ -572,27 +570,11 @@ function AppContent() {
         isOpen={renameProfileModalOpen}
         currentProfileName={selectedProfileKey ? selectedProfileKey.split(".").pop() || selectedProfileKey : ""}
         currentProfileKey={selectedProfileKey || ""}
-        existingProfiles={(() => {
-          if (selectedTab === null || !selectedProfileKey) return [];
-          const config = configurations[selectedTab];
-          if (!config?.properties?.profiles) return [];
-
-          const getAllProfileKeys = (profiles: any, parentKey = ""): string[] => {
-            const keys: string[] = [];
-            for (const key of Object.keys(profiles)) {
-              const profile = profiles[key];
-              const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
-              keys.push(qualifiedKey);
-
-              if (profile.profiles) {
-                keys.push(...getAllProfileKeys(profile.profiles, qualifiedKey));
-              }
-            }
-            return keys;
-          };
-
-          return getAllProfileKeys(config.properties.profiles);
-        })()}
+        existingProfiles={
+          selectedTab === null || !selectedProfileKey
+            ? []
+            : getAllQualifiedProfileKeys(configurations[selectedTab]?.properties?.profiles)
+        }
         pendingProfiles={(() => {
           if (selectedTab === null) return [];
           const config = configurations[selectedTab];
@@ -610,31 +592,14 @@ function AppContent() {
         })()}
         onRename={(newName) => {
           const configPath = configurations[selectedTab!]?.configPath;
-          if (configPath) {
-            const config = configurations[selectedTab!];
-            const getAllOriginalKeys = (profiles: any, parentKey = ""): string[] => {
-              const keys: string[] = [];
-              for (const key of Object.keys(profiles)) {
-                const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
-                keys.push(qualifiedKey);
-                if (profiles[key].profiles) {
-                  keys.push(...getAllOriginalKeys(profiles[key].profiles, qualifiedKey));
-                }
-              }
-              return keys;
-            };
-
-            const originalKeys = getAllOriginalKeys(config.properties?.profiles || {});
-
-            let trueOriginalKey = selectedProfileKey!;
-            for (const origKey of originalKeys) {
-              const renamedKey = getRenamedProfileKeyWithNested(origKey, configPath, renames);
-              if (renamedKey === selectedProfileKey) {
-                trueOriginalKey = origKey;
-                break;
-              }
-            }
-
+          const config = configurations[selectedTab!];
+          if (configPath && config && selectedProfileKey) {
+            const trueOriginalKey = resolveOriginalProfileKeyFromRenames(
+              selectedProfileKey,
+              configPath,
+              config.properties?.profiles,
+              renames
+            );
             handleRenameProfile(trueOriginalKey, newName);
           }
         }}

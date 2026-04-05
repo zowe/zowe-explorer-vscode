@@ -12,14 +12,11 @@
 import { useCallback } from "react";
 
 import { RenderConfig } from "./renderConfig";
-import { flattenProfiles, PropertySortOrder, ensureProfileProperties, isMergedPropertySecure, getOriginalProfileKey } from "../utils";
+import { flattenProfiles, ensureProfileProperties, isMergedPropertySecure, getOriginalProfileKey } from "../utils";
 import { getPropertyDescriptions } from "../utils/propertyUtils";
-import { getProfileNameForMergedProperties } from "../utils/renameUtils";
 import * as l10n from "@vscode/l10n";
 import { useConfigContext } from "../context/ConfigContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
-
-const SORT_ORDER_OPTIONS: PropertySortOrder[] = ["alphabetical", "merged-first", "non-merged-first"];
 
 interface RenderProfileDetailsProps {
   handleSetAsDefault: (profileKey: string) => void;
@@ -65,8 +62,6 @@ export const RenderProfileDetails = ({
     deletions,
     renames,
     schemaValidations,
-    hiddenItems,
-    secureValuesAllowed,
     mergedProperties,
     setPendingDefaults,
     setShowMergedPropertiesWithStorage,
@@ -183,7 +178,7 @@ export const RenderProfileDetails = ({
                 <span className="codicon codicon-edit"></span>
               </button>
               {pendingProfileDeletion === selectedProfileKey ? (
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <div className="config-editor-flex-gap">
                   <button
                     className="profile-action-button"
                     onClick={() => confirmDeleteProfile(selectedProfileKey)}
@@ -282,19 +277,6 @@ export const RenderProfileDetails = ({
                   obj={effectiveProfile}
                   path={effectivePath}
                   mergedProps={shouldShowMergedProperties ? mergedProperties : null}
-                  configurations={configurations}
-                  selectedTab={selectedTab}
-                  pendingChanges={pendingChanges}
-                  deletions={deletions}
-                  showMergedProperties={showMergedProperties}
-                  propertySortOrder={propertySortOrder}
-                  sortOrderVersion={sortOrderVersion}
-                  selectedProfileKey={selectedProfileKey}
-                  schemaValidations={schemaValidations}
-                  renames={renames}
-                  hiddenItems={hiddenItems}
-                  secureValuesAllowed={secureValuesAllowed}
-                  SORT_ORDER_OPTIONS={SORT_ORDER_OPTIONS}
                   propertyDescriptions={propertyDescriptions}
                   handleChange={handleChange}
                   handleDeleteProperty={handleDeleteProperty}
@@ -316,7 +298,6 @@ export const RenderProfileDetails = ({
                   isPropertySecure={isPropertySecure}
                   canPropertyBeSecure={canPropertyBeSecure}
                   isMergedPropertySecure={isMergedPropertySecure}
-                  vscodeApi={vscodeApi}
                 />
               </div>
             );
@@ -342,7 +323,6 @@ export const RenderProfileDetails = ({
     schemaValidations,
     extractPendingProfiles,
     getOriginalProfileKey,
-    getProfileNameForMergedProperties,
     propertySortOrder,
     sortOrderVersion,
     mergedProperties,

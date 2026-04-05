@@ -478,6 +478,13 @@ select:focus {
     opacity: 0.7;
 }
 
+/* Inherited (merged) values: border matches editable input background so rows align with non-inherited fields */
+.config-input.config-input-inherited,
+select.config-input.config-input-inherited:disabled,
+.env-var-input.config-input-inherited {
+    border: 1px solid var(--vscode-input-background);
+}
+
 .config-item-container {
     display: grid;
     grid-template-columns: 150px 1fr auto;
@@ -720,6 +727,235 @@ ul {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+}
+
+.config-complex-value-line {
+    margin-left: 16px;
+    margin-bottom: 4px;
+    font-size: 0.9em;
+}
+
+.config-complex-value-line__label {
+    color: var(--vscode-descriptionForeground);
+}
+
+.config-complex-value-line__value {
+    margin-left: 8px;
+    font-family: monospace;
+}
+
+.config-editor-flex-gap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.config-editor-flex-gap-sm {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.tabs-row-flex {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.tab-label-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.codicon-size-14 {
+    font-size: 14px;
+}
+
+.tab-unsaved-indicator {
+    font-size: 12px;
+    color: var(--vscode-foreground);
+    margin-left: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    transform: translateY(-1px);
+}
+
+.tabs-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-right: 12px;
+}
+
+.codicon-size-16 {
+    font-size: 16px;
+}
+
+.tab-context-menu {
+    position: fixed;
+    background-color: var(--vscode-menu-background);
+    border: 1px solid var(--vscode-menu-border);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 150px;
+}
+
+.tab-context-menu-item {
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--vscode-menu-foreground);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tab-context-menu-item:hover {
+    background-color: var(--vscode-menu-selectionBackground);
+    color: var(--vscode-menu-selectionForeground);
+}
+
+.codicon-tab-menu-icon {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.config-editor-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.config-editor-modal-overlay--elevated {
+    z-index: 1100;
+}
+
+.config-editor-modal-panel {
+    background-color: var(--vscode-editor-background);
+    border: 1px solid var(--vscode-panel-border);
+    border-radius: 6px;
+    padding: 20px;
+    max-height: 80vh;
+    overflow: auto;
+}
+
+.config-editor-modal-panel--add-config {
+    min-width: 400px;
+    max-width: 500px;
+}
+
+.config-editor-modal-panel--add-config .config-editor-modal-title {
+    margin-bottom: 16px;
+}
+
+.config-editor-modal-panel--parse-errors {
+    min-width: 420px;
+    max-width: min(560px, 92vw);
+}
+
+.config-editor-modal-title {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.config-editor-modal-description {
+    margin: 0 0 16px 0;
+    font-size: 13px;
+    color: var(--vscode-descriptionForeground);
+}
+
+.config-parse-errors-list {
+    margin: 0 0 16px 0;
+    padding-left: 20px;
+    list-style: disc;
+}
+
+.config-parse-errors-list > li {
+    margin-bottom: 12px;
+}
+
+.config-parse-error-path {
+    font-weight: 600;
+    font-size: 13px;
+    word-break: break-all;
+}
+
+.config-parse-error-message {
+    font-size: 12px;
+    color: var(--vscode-errorForeground);
+    margin-top: 4px;
+    white-space: pre-wrap;
+}
+
+.config-parse-error-open-btn {
+    margin-top: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    border: none;
+    border-radius: 4px;
+}
+
+.config-editor-btn-secondary-outline {
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border: 1px solid var(--vscode-button-border);
+    border-radius: 4px;
+}
+
+.profile-tree-scroll {
+    width: 100%;
+}
+
+.profile-tree-chevron {
+    font-size: 12px;
+    color: var(--vscode-foreground);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.profile-tree-indent-spacer {
+    width: 12px;
+    flex-shrink: 0;
+}
+
+.profile-tree-icon-button {
+    background: transparent;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.profile-tree-default-star {
+    font-size: 16px;
+    pointer-events: none;
+}
+
+.profile-tree-default-star--active {
+    color: var(--vscode-textPreformat-foreground);
+}
+
+.profile-tree-default-star--inactive {
+    color: var(--vscode-disabledForeground);
 }
 
 .modal-content {
@@ -2310,13 +2546,31 @@ ul {
     color: var(--vscode-list-activeSelectionForeground);
 }
 
-/* Light theme specific fixes */
-body.vscode-light .profile-list-item {
-    border: 1px solid var(--vscode-input-border) !important;
+/* Profile rows with unsaved edits: left accent (title also uses reduced opacity) */
+.profile-list-item--pending:not(.selected),
+.profile-tree-item--pending:not(.selected):not(.drag-over) {
+    box-shadow: inset 3px 0 0 0 color-mix(in srgb, var(--vscode-textLink-foreground) 65%, transparent);
 }
 
-body.vscode-light .profile-list-item.selected {
+.profile-list-item--pending.selected,
+.profile-tree-item--pending.selected:not(.drag-over) {
+    box-shadow: inset 3px 0 0 0 color-mix(in srgb, var(--vscode-textLink-foreground) 80%, transparent);
+}
+
+/* Profile rows: separation from editor background (tree had no rules; input-border is weak on some light themes) */
+body.vscode-light .profile-list-item:not(.selected),
+body.vscode-light .profile-tree-item:not(.selected):not(.drag-over) {
+    border: 2px solid color-mix(in srgb, var(--vscode-foreground) 14%, transparent) !important;
+}
+
+body.vscode-light .profile-list-item.selected,
+body.vscode-light .profile-tree-item.selected:not(.drag-over) {
     border: 2px solid var(--vscode-button-background) !important;
+}
+
+.profile-list-item:hover:not(.selected),
+.profile-tree-item:hover:not(.selected):not(.dragging):not(.drag-over) {
+    background-color: var(--vscode-list-hoverBackground) !important;
 }
 
 /* Fix context menu background in light theme */

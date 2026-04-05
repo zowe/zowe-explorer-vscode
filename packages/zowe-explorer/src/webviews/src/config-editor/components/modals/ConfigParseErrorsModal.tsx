@@ -45,93 +45,36 @@ export function ConfigParseErrorsModal({ errors, vscodeApi }: ConfigParseErrorsM
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1100,
-      }}
-      onMouseDown={(e) => e.stopPropagation()}
-    >
+    <div className="config-editor-modal-overlay config-editor-modal-overlay--elevated" onMouseDown={(e) => e.stopPropagation()}>
       <div
         ref={modalRef}
-        style={{
-          backgroundColor: "var(--vscode-editor-background)",
-          border: "1px solid var(--vscode-panel-border)",
-          borderRadius: "6px",
-          padding: "20px",
-          minWidth: "420px",
-          maxWidth: "min(560px, 92vw)",
-          maxHeight: "80vh",
-          overflow: "auto",
-        }}
+        className="config-editor-modal-panel config-editor-modal-panel--parse-errors"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="config-parse-errors-title"
       >
-        <h2 id="config-parse-errors-title" style={{ margin: "0 0 12px 0", fontSize: "16px", fontWeight: "600" }}>
+        <h2 id="config-parse-errors-title" className="config-editor-modal-title">
           {l10n.t("Configuration file errors")}
         </h2>
-        <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "var(--vscode-descriptionForeground)" }}>
+        <p className="config-editor-modal-description">
           {l10n.t("Fix the issues below, save the files, or click Refresh. This dialog closes when all files load successfully.")}
         </p>
-        <ul style={{ margin: "0 0 16px 0", paddingLeft: "20px", listStyle: "disc" }}>
+        <ul className="config-parse-errors-list">
           {errors.map((err, i) => (
-            <li key={`${err.configPath}-${i}`} style={{ marginBottom: "12px" }}>
-              {err.configPath ? <div style={{ fontWeight: 600, fontSize: "13px", wordBreak: "break-all" }}>{err.configPath}</div> : null}
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "var(--vscode-errorForeground)",
-                  marginTop: "4px",
-                  whiteSpace: "pre-wrap",
-                }}
-              >
-                {err.message}
-              </div>
+            <li key={`${err.configPath}-${i}`}>
+              {err.configPath ? <div className="config-parse-error-path">{err.configPath}</div> : null}
+              <div className="config-parse-error-message">{err.message}</div>
               {err.configPath ? (
-                <button
-                  type="button"
-                  onClick={() => handleOpenFile(err)}
-                  style={{
-                    marginTop: "8px",
-                    padding: "6px 12px",
-                    fontSize: "13px",
-                    cursor: "pointer",
-                    backgroundColor: "var(--vscode-button-background)",
-                    color: "var(--vscode-button-foreground)",
-                    border: "none",
-                    borderRadius: "4px",
-                  }}
-                >
+                <button type="button" onClick={() => handleOpenFile(err)} className="config-parse-error-open-btn">
                   {l10n.t("Open in editor")}
                 </button>
               ) : null}
             </li>
           ))}
         </ul>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-          <button
-            type="button"
-            onClick={handleRefresh}
-            style={{
-              padding: "8px 14px",
-              fontSize: "13px",
-              cursor: "pointer",
-              backgroundColor: "var(--vscode-button-secondaryBackground)",
-              color: "var(--vscode-button-secondaryForeground)",
-              border: "1px solid var(--vscode-button-border)",
-              borderRadius: "4px",
-            }}
-          >
+        <div className="modal-actions">
+          <button type="button" onClick={handleRefresh} className="config-editor-btn-secondary-outline">
             {l10n.t("Refresh")}
           </button>
         </div>

@@ -10,6 +10,7 @@
  */
 
 export * from "./configUtils";
+export { postProfilesAndEnv } from "./extensionRequests";
 export * from "./MoveUtils";
 export * from "./propertyUtils";
 export * from "./generalUtils";
@@ -21,6 +22,7 @@ export type {
     PendingDefault,
     PendingChanges,
     FlattenedConfig,
+    FlattenedProfilesMap,
     PropertySortOrder,
     ProfileSortOrder,
     MergedPropertiesVisibility,
@@ -72,6 +74,8 @@ export {
     applyRenamesToProfileKeys,
     mergePendingProfileKeys,
     filterConflictingProfileKeys,
+    getAllQualifiedProfileKeys,
+    resolveOriginalProfileKeyFromRenames,
 } from "./profileUtils";
 
 export { isProfileDefault, isCurrentProfileUntyped } from "./profileHelpers";

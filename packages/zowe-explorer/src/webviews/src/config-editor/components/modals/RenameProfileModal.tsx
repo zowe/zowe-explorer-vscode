@@ -211,20 +211,6 @@ export function RenameProfileModal({
     }
   };
 
-  // const handleModeToggle = () => {
-  //   const newMode = !isFullPathMode;
-  //   setIsFullPathMode(newMode);
-
-  //   // Get the appropriate initial value for the new mode
-  //   const initialValue = newMode ? currentProfileKey : currentProfileName;
-
-  //   // Apply filtering to the initial value based on the new mode
-  //   const filteredValue = filterInputValue(initialValue);
-
-  //   setNewName(filteredValue);
-  //   setError("");
-  // };
-
   if (!isOpen) return null;
 
   return (
@@ -232,46 +218,6 @@ export function RenameProfileModal({
       <div ref={modalRef} className="modal-content">
         <h2>Rename Profile</h2>
         <div className="modal-body">
-          {/* <div style={{ marginBottom: "16px" }}>
-            <h3 style={{ margin: "0 0 8px 0", fontSize: "14px", fontWeight: "600" }}>Rename Options</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                <input
-                  type="radio"
-                  name="renameMode"
-                  checked={!isFullPathMode}
-                  onChange={() => {
-                    if (isFullPathMode) {
-                      handleModeToggle();
-                    }
-                  }}
-                />
-                <div>
-                  <div style={{ fontWeight: "500" }}>Rename profile name only</div>
-                  <div style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}>Only change the profile name (e.g., "tso" → "tso-new")</div>
-                </div>
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                <input
-                  type="radio"
-                  name="renameMode"
-                  checked={isFullPathMode}
-                  onChange={() => {
-                    if (!isFullPathMode) {
-                      handleModeToggle();
-                    }
-                  }}
-                />
-                <div>
-                  <div style={{ fontWeight: "500" }}>Rename full profile path</div>
-                  <div style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}>
-                    Change the entire profile path (e.g., "tso" -> "newparent.tso")
-                  </div>
-                </div>
-              </label>
-            </div>
-          </div> */}
-
           <div style={{ marginBottom: "16px" }}>
             <label htmlFor="profile-name" style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>
               New Profile Name

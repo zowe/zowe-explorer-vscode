@@ -9,8 +9,8 @@
  *
  */
 
-import { FlattenedConfig, PendingChange, PendingChanges } from "../types";
-export type { FlattenedConfig, PendingChange, PendingChanges };
+import { FlattenedConfig, FlattenedProfilesMap, PendingChange, PendingChanges } from "../types";
+export type { FlattenedConfig, FlattenedProfilesMap, PendingChange, PendingChanges };
 
 export function flattenKeys(obj: { [key: string]: any }, parentKey: string = ""): FlattenedConfig {
     let result: FlattenedConfig = {};
@@ -33,8 +33,8 @@ export function flattenKeys(obj: { [key: string]: any }, parentKey: string = "")
 export function flattenProfiles(
     profiles: Record<string, Record<string, unknown>>,
     parentKey = "",
-    result: Record<string, Record<string, unknown>> = {}
-): Record<string, Record<string, unknown>> {
+    result: FlattenedProfilesMap = {}
+): FlattenedProfilesMap {
     if (!profiles || typeof profiles !== "object") return result;
 
     for (const key of Object.keys(profiles)) {

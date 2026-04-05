@@ -104,8 +104,8 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
 
   return (
     <div className="tabs">
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+      <div className="tabs-row-flex">
+        <div className="tabs-row-flex">
           {configurations.map((config, index) => {
             const configPendingChanges = pendingChanges[config.configPath] || {};
             const configPendingDefaults = pendingDefaults[config.configPath] || {};
@@ -130,23 +130,11 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
                 onClick={() => onTabChange(index)}
                 onContextMenu={(e) => handleTabRightClick(e, index)}
               >
-                <span className="tab-label" title={config.configPath} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span className={`codicon ${getConfigIcon(config)}`} style={{ fontSize: "14px" }}></span>
+                <span className="tab-label tab-label-row" title={config.configPath}>
+                  <span className={`codicon codicon-size-14 ${getConfigIcon(config)}`}></span>
                   {getTabLabel(config)}
                   {hasPendingChanges && (
-                    <span
-                      className="codicon codicon-circle-filled"
-                      style={{
-                        fontSize: "12px",
-                        color: "var(--vscode-foreground)",
-                        marginLeft: "4px",
-                        flexShrink: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        transform: "translateY(-1px)",
-                      }}
-                      title={l10n.t("Unsaved changes")}
-                    />
+                    <span className="codicon codicon-circle-filled tab-unsaved-indicator" title={l10n.t("Unsaved changes")} />
                   )}
                 </span>
               </div>
@@ -155,12 +143,12 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
           {/* Add new configuration button positioned like a browser tab - only show if there are existing configurations */}
           {configurations.length > 0 && (
             <div className="tab add-tab" id="add-config-layer-button" onClick={onAddNewConfig} role="button" title={l10n.t("Add new configuration")}>
-              <span className="codicon codicon-add" style={{ fontSize: "14px" }}></span>
+              <span className="codicon codicon-add codicon-size-14"></span>
             </div>
           )}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "4px", paddingRight: "12px" }}>
+        <div className="tabs-toolbar">
           <a
             className="ce-icon-button"
             href="https://docs.zowe.org/stable/user-guide/cli-using-using-team-profiles"
@@ -168,7 +156,7 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
             rel="noopener noreferrer"
             title={l10n.t("Team Configuration Documentation")}
           >
-            <span className="codicon codicon-question" style={{ fontSize: "16px" }}></span>
+            <span className="codicon codicon-question codicon-size-16"></span>
           </a>
           <a
             className="ce-icon-button"
@@ -177,7 +165,7 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
             rel="noopener noreferrer"
             title={l10n.t("Report Issues")}
           >
-            <span className="codicon codicon-bug" style={{ fontSize: "16px" }}></span>
+            <span className="codicon codicon-bug codicon-size-16"></span>
           </a>
         </div>
       </div>
@@ -185,130 +173,26 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
       {/* Context Menu */}
       {contextMenu && (
         <div
-          style={{
-            position: "fixed",
-            top: contextMenu.y,
-            left: contextMenu.x,
-            backgroundColor: "var(--vscode-menu-background)",
-            border: "1px solid var(--vscode-menu-border)",
-            borderRadius: "4px",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-            zIndex: 1000,
-            minWidth: "150px",
-          }}
+          className="tab-context-menu"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div
-            style={{
-              padding: "4px 0",
-              cursor: "pointer",
-              paddingLeft: "12px",
-              paddingRight: "12px",
-              paddingTop: "6px",
-              paddingBottom: "6px",
-              fontSize: "13px",
-              color: "var(--vscode-menu-foreground)",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-            onClick={() => handleContextMenuAction("open")}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--vscode-menu-selectionBackground)";
-              e.currentTarget.style.color = "var(--vscode-menu-selectionForeground)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.color = "var(--vscode-menu-foreground)";
-            }}
-            id="tab-open-file"
-          >
-            <span id="open-file" className="codicon codicon-go-to-file" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
+          <div className="tab-context-menu-item" onClick={() => handleContextMenuAction("open")} id="tab-open-file">
+            <span id="open-file" className="codicon codicon-go-to-file codicon-tab-menu-icon"></span>
             {l10n.t("Open File")}
           </div>
-          <div
-            style={{
-              padding: "4px 0",
-              cursor: "pointer",
-              paddingLeft: "12px",
-              paddingRight: "12px",
-              paddingTop: "6px",
-              paddingBottom: "6px",
-              fontSize: "13px",
-              color: "var(--vscode-menu-foreground)",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-            onClick={() => handleContextMenuAction("reveal")}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--vscode-menu-selectionBackground)";
-              e.currentTarget.style.color = "var(--vscode-menu-selectionForeground)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.color = "var(--vscode-menu-foreground)";
-            }}
-          >
-            <span className="codicon codicon-folder-opened" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
+          <div className="tab-context-menu-item" onClick={() => handleContextMenuAction("reveal")}>
+            <span className="codicon codicon-folder-opened codicon-tab-menu-icon"></span>
             {getRevealText()}
           </div>
           {configurations[contextMenu.tabIndex]?.schemaPath && (
-            <div
-              style={{
-                padding: "4px 0",
-                cursor: "pointer",
-                paddingLeft: "12px",
-                paddingRight: "12px",
-                paddingTop: "6px",
-                paddingBottom: "6px",
-                fontSize: "13px",
-                color: "var(--vscode-menu-foreground)",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-              onClick={() => handleContextMenuAction("schema")}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "var(--vscode-menu-selectionBackground)";
-                e.currentTarget.style.color = "var(--vscode-menu-selectionForeground)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = "var(--vscode-menu-foreground)";
-              }}
-              id="tab-open-schema"
-            >
-              <span id="open-schema" className="codicon codicon-file-code" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
+            <div className="tab-context-menu-item" onClick={() => handleContextMenuAction("schema")} id="tab-open-schema">
+              <span id="open-schema" className="codicon codicon-file-code codicon-tab-menu-icon"></span>
               {l10n.t("Open Schema")}
             </div>
           )}
-          <div
-            style={{
-              padding: "4px 0",
-              cursor: "pointer",
-              paddingLeft: "12px",
-              paddingRight: "12px",
-              paddingTop: "6px",
-              paddingBottom: "6px",
-              fontSize: "13px",
-              color: "var(--vscode-menu-foreground)",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-            onClick={() => handleContextMenuAction("autostore")}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--vscode-menu-selectionBackground)";
-              e.currentTarget.style.color = "var(--vscode-menu-selectionForeground)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.color = "var(--vscode-menu-foreground)";
-            }}
-            id="tab-toggle-autostore"
-          >
-            <span className="codicon codicon-settings-gear" style={{ fontSize: "12px", display: "flex", alignItems: "center" }}></span>
+          <div className="tab-context-menu-item" onClick={() => handleContextMenuAction("autostore")} id="tab-toggle-autostore">
+            <span className="codicon codicon-settings-gear codicon-tab-menu-icon"></span>
             {(() => {
               const config = configurations[contextMenu.tabIndex];
               if (config) {

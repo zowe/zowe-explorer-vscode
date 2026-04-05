@@ -26,33 +26,20 @@ import {
   getSortOrderDisplayName,
   getNestedProperty,
   PropertySortOrder,
-  schemaValidation,
 } from "../utils";
 import { isFileProperty, isPropertyPendingDeletion as isPropertyPendingDeletionFn } from "../utils/propertyUtils";
 import type { Configuration, PendingChange, MergedPropertiesVisibility } from "../types";
 import { useConfigContext } from "../context/ConfigContext";
+import { configComplexValueLines } from "./ConfigComplexValueLines";
 
-// Props interface for the renderConfig component
+const SORT_ORDER_OPTIONS: PropertySortOrder[] = ["alphabetical", "merged-first", "non-merged-first"];
+
 interface RenderConfigProps {
   obj: any;
   path?: string[];
   mergedProps?: any;
-  configurations: Configuration[];
-  selectedTab: number | null;
-  pendingChanges: { [configPath: string]: { [key: string]: PendingChange } };
-  deletions: { [configPath: string]: string[] };
-  showMergedProperties: MergedPropertiesVisibility;
-  propertySortOrder: PropertySortOrder;
-  sortOrderVersion: number;
-  selectedProfileKey: string | null;
-  schemaValidations: { [configPath: string]: schemaValidation | undefined };
-  renames: { [configPath: string]: { [oldName: string]: string } };
-  hiddenItems: { [configPath: string]: { [key: string]: { path: string } } };
-  secureValuesAllowed: boolean;
-  SORT_ORDER_OPTIONS: PropertySortOrder[];
   propertyDescriptions: { [key: string]: string };
 
-  // Handler functions
   handleChange: (key: string, value: string) => void;
   handleDeleteProperty: (fullKey: string, secure?: boolean) => void;
   confirmDeleteProperty: (fullKey: string, secure?: boolean) => void;
@@ -64,7 +51,6 @@ interface RenderConfigProps {
   openAddProfileModalAtPath: (path: string[], key?: string, value?: string) => void;
   getWizardTypeOptions: () => string[];
 
-  // Utility functions
   mergePendingChangesForProfile: (baseObj: any, path: string[], configPath: string) => any;
   mergeMergedProperties: (combinedConfig: any, path: string[], mergedProps: any, configPath: string) => any;
   ensureProfileProperties: (combinedConfig: any, path: string[]) => any;
@@ -90,28 +76,12 @@ interface RenderConfigProps {
   ) => boolean;
   canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
   isMergedPropertySecure: (displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean) => boolean;
-
-  // VS Code API
-  vscodeApi: any;
 }
 
 export const RenderConfig = ({
   obj,
   path = [],
   mergedProps,
-  configurations,
-  selectedTab,
-  pendingChanges,
-  deletions,
-  showMergedProperties,
-  propertySortOrder,
-  sortOrderVersion,
-  selectedProfileKey,
-  schemaValidations,
-  renames,
-  hiddenItems,
-  secureValuesAllowed,
-  SORT_ORDER_OPTIONS,
   propertyDescriptions,
   handleChange,
   handleDeleteProperty,
@@ -133,9 +103,25 @@ export const RenderConfig = ({
   isPropertySecure,
   canPropertyBeSecure,
   isMergedPropertySecure,
-  vscodeApi,
 }: RenderConfigProps) => {
-  const { setPropertySortOrderWithStorage, setShowMergedPropertiesWithStorage } = useConfigContext();
+  const {
+    configurations,
+    selectedTab,
+    pendingChanges,
+    deletions,
+    renames,
+    schemaValidations,
+    hiddenItems,
+    secureValuesAllowed,
+    sortOrderVersion,
+    selectedProfileKey,
+    vscodeApi,
+    configEditorSettings,
+    setPropertySortOrderWithStorage,
+    setShowMergedPropertiesWithStorage,
+  } = useConfigContext();
+
+  const { showMergedProperties, propertySortOrder } = configEditorSettings;
 
   const MERGED_PROPERTIES_OPTIONS: MergedPropertiesVisibility[] = ["hide", "show", "unfiltered"];
   const isUntypedProfile = isCurrentProfileUntyped();
@@ -161,73 +147,55 @@ export const RenderConfig = ({
         return null;
       }
 
-      // Merge pending changes
       let combinedConfig = mergePendingChangesForProfile(baseObj, path, configPath);
 
-      // Track original properties for merged property detection
       const originalProperties = baseObj.properties || {};
 
-      // Only merge merged properties if showMergedProperties is NOT "hide" and profile is not untyped
       if (showMergedProperties !== "hide" && mergedProps && !isCurrentProfileUntyped()) {
         combinedConfig = mergeMergedProperties(combinedConfig, path, mergedProps, configPath);
       }
 
-      // Ensure required profile properties exist
       combinedConfig = ensureProfileProperties(combinedConfig, path);
 
-      // Sort properties according to the specified order
       let sortedEntries: [string, any][];
 
       const isPropertyDeletedConsideringRenames = (propertyKey: string) =>
         isPropertyPendingDeletionFn({ propertyKey, path, configPath, deletions, renames });
 
-      // Special handling for properties section - use custom sorting
       if (path.length > 0 && path[path.length - 1] === "properties") {
-        // Lock the sort order at this level to prevent any external interference
         const lockedSortOrder = propertySortOrder;
 
-        // Create a local sorting function that doesn't depend on external state
         const localSortProperties = (entries: [string, any][]): [string, any][] => {
           if (lockedSortOrder === "alphabetical") {
             return [...entries].sort(([a], [b]) => a.localeCompare(b));
           } else if (lockedSortOrder === "merged-first") {
             return [...entries].sort(([a], [b]) => {
-              // Check if properties are merged using the current mergedProps
               const aIsMerged = a && isPropertyFromMergedProps(a, path, mergedProps, configPath);
               const bIsMerged = b && isPropertyFromMergedProps(b, path, mergedProps, configPath);
 
-              // Merged properties come first
               if (aIsMerged && !bIsMerged) return -1;
               if (!aIsMerged && bIsMerged) return 1;
 
-              // Within each group, sort alphabetically
               return a.localeCompare(b);
             });
           } else if (lockedSortOrder === "non-merged-first") {
             return [...entries].sort(([a], [b]) => {
-              // Check if properties are merged using the current mergedProps
               const aIsMerged = a && isPropertyFromMergedProps(a, path, mergedProps, configPath);
               const bIsMerged = b && isPropertyFromMergedProps(b, path, mergedProps, configPath);
 
-              // Non-merged properties come first
               if (!aIsMerged && bIsMerged) return -1;
               if (aIsMerged && !bIsMerged) return 1;
 
-              // Within each group, sort alphabetically
               return a.localeCompare(b);
             });
           } else {
-            // Fallback to alphabetical
             return [...entries].sort(([a], [b]) => a.localeCompare(b));
           }
         };
 
-        // Filter out deleted properties from combinedConfig before adding to entriesForSorting
         const filteredCombinedConfig = { ...combinedConfig };
         const configPath = configurations[selectedTab!]?.configPath;
 
-        // Remove deleted properties from the combined config.
-        // Deleted properties should remain hidden in pending state.
         Object.keys(filteredCombinedConfig).forEach((key) => {
           const isDeleted = isPropertyDeletedConsideringRenames(key);
 
@@ -236,10 +204,8 @@ export const RenderConfig = ({
           }
         });
 
-        // Add secure properties to the entries for sorting, but mark them as secure
         const entriesForSorting = Object.entries(filteredCombinedConfig);
 
-        // Add secure properties from the parent object if they're not already in the properties
         const currentProfileKeyForDisk = extractProfileKeyFromPath(path);
         const originalProfileKeyForDisk = getOriginalProfileKeyWithNested(currentProfileKeyForDisk, configPath, renames);
 
@@ -274,7 +240,6 @@ export const RenderConfig = ({
           }
         }
 
-        // Also add pending secure properties that might not be in the parent's secure array yet
         const currentProfileKeyForSecure = extractProfileKeyFromPath(path);
         const originalProfileKeyForSecure = getOriginalProfileKeyWithNested(currentProfileKeyForSecure, configPath, renames);
         const renamedProfileKeyForSecure = getRenamedProfileKeyWithNested(originalProfileKeyForSecure, configPath, renames);
@@ -290,7 +255,6 @@ export const RenderConfig = ({
             if (matches && entry.secure) {
               const keyParts = key.split(".");
               const propertyName = keyParts[keyParts.length - 1];
-              // Only add if not already in the properties and not already added as a secure property
               if (!combinedConfig.hasOwnProperty(propertyName) && !entriesForSorting.some(([existingKey]) => existingKey === propertyName)) {
                 entriesForSorting.push([propertyName, { _isSecureProperty: true }]);
               }
@@ -298,10 +262,7 @@ export const RenderConfig = ({
           });
         }
 
-        // Add merged properties that aren't already in the entriesForSorting
-        // Mark them with a special flag so they're properly identified as merged in sorting
         if (mergedProps && showMergedProperties !== "hide" && selectedProfileKey) {
-          // Get the current profile type and schema validation for filtering
           const currentProfileKey = extractProfileKeyFromPath(path);
           const profileType = getProfileType({ profileKey: currentProfileKey, selectedTab, configurations, pendingChanges, renames });
           const propertySchema = profileType ? schemaValidations[configPath]?.propertySchema[profileType] || {} : {};
@@ -330,7 +291,6 @@ export const RenderConfig = ({
 
         sortedEntries = localSortProperties(entriesForSorting);
       } else {
-        // Use default sorting for non-properties sections
         sortedEntries = sortConfigEntries(Object.entries(combinedConfig));
       }
 
@@ -339,7 +299,6 @@ export const RenderConfig = ({
         const fullKey = currentPath.join(".");
         const displayKey = key.split(".").pop();
 
-        // Check if this property is in deletions, considering profile renames
         const isInDeletions = (() => {
           return isPropertyDeletedConsideringRenames(key);
         })();
@@ -412,9 +371,7 @@ export const RenderConfig = ({
         // Handle sub-objects and arrays within properties early to prevent recursive rendering
         if (shouldRenderAsSimpleProperty) {
           const renderComplexValue = (value: any, isMerged: boolean = false) => {
-            // Extract the actual value if this is a merged property object
             const actualValue = typeof value === "object" && value !== null && value._mergedValue !== undefined ? value._mergedValue : value;
-
             const disabledStyle = isMerged
               ? {
                   backgroundColor: "var(--vscode-input-disabledBackground)",
@@ -422,29 +379,7 @@ export const RenderConfig = ({
                   opacity: 0.7,
                 }
               : {};
-
-            if (Array.isArray(actualValue)) {
-              return actualValue.map((item, index) => (
-                <div key={index} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em", ...disabledStyle }}>
-                  <span style={{ color: "var(--vscode-descriptionForeground)" }}>{index}:</span>
-                  <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(item)}</span>
-                </div>
-              ));
-            } else if (typeof actualValue === "object" && actualValue !== null) {
-              return Object.entries(actualValue).map(([key, val]) => (
-                <div key={key} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em", ...disabledStyle }}>
-                  <span style={{ color: "var(--vscode-descriptionForeground)" }}>{key}:</span>
-                  <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(val)}</span>
-                </div>
-              ));
-            } else {
-              // For primitive values, display them directly
-              return (
-                <div style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em", ...disabledStyle }}>
-                  <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(actualValue)}</span>
-                </div>
-              );
-            }
+            return configComplexValueLines(actualValue, disabledStyle);
           };
 
           return (
@@ -490,7 +425,9 @@ export const RenderConfig = ({
                   }
                   style={{
                     backgroundColor: isFromMergedProps ? "var(--vscode-input-disabledBackground)" : "var(--vscode-input-background)",
-                    border: "1px solid var(--vscode-input-border)",
+                    border: isFromMergedProps
+                      ? "1px solid var(--vscode-input-background)"
+                      : "1px solid var(--vscode-input-border)",
                     borderRadius: "3px",
                     padding: "8px",
                     fontSize: "0.9em",
@@ -570,9 +507,7 @@ export const RenderConfig = ({
           // Check if this is an array within properties that should be rendered as a simple property
           if (shouldRenderAsSimpleProperty) {
             const renderComplexValue = (value: any, isMerged: boolean = false) => {
-              // Extract the actual value if this is a merged property object
               const actualValue = typeof value === "object" && value !== null && value._mergedValue !== undefined ? value._mergedValue : value;
-
               const disabledStyle = isMerged
                 ? {
                     backgroundColor: "var(--vscode-input-disabledBackground)",
@@ -580,29 +515,7 @@ export const RenderConfig = ({
                     opacity: 0.7,
                   }
                 : {};
-
-              if (Array.isArray(actualValue)) {
-                return actualValue.map((item, index) => (
-                  <div key={index} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em", ...disabledStyle }}>
-                    <span style={{ color: "var(--vscode-descriptionForeground)" }}>{index}:</span>
-                    <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(item)}</span>
-                  </div>
-                ));
-              } else if (typeof actualValue === "object" && actualValue !== null) {
-                return Object.entries(actualValue).map(([key, val]) => (
-                  <div key={key} style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em", ...disabledStyle }}>
-                    <span style={{ color: "var(--vscode-descriptionForeground)" }}>{key}:</span>
-                    <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(val)}</span>
-                  </div>
-                ));
-              } else {
-                // For primitive values, display them directly
-                return (
-                  <div style={{ marginLeft: "16px", marginBottom: "4px", fontSize: "0.9em", ...disabledStyle }}>
-                    <span style={{ marginLeft: "8px", fontFamily: "monospace" }}>{String(actualValue)}</span>
-                  </div>
-                );
-              }
+              return configComplexValueLines(actualValue, disabledStyle);
             };
 
             return (
@@ -652,7 +565,10 @@ export const RenderConfig = ({
                       width: "100%",
                       backgroundColor:
                         isFromMergedProps && !isDeletedMergedProperty ? "var(--vscode-input-disabledBackground)" : "var(--vscode-input-background)",
-                      border: "1px solid var(--vscode-input-border)",
+                      border:
+                        isFromMergedProps && !isDeletedMergedProperty
+                          ? "1px solid var(--vscode-input-background)"
+                          : "1px solid var(--vscode-input-border)",
                       borderRadius: "3px",
                       padding: "8px",
                       fontSize: "0.9em",
@@ -785,16 +701,17 @@ export const RenderConfig = ({
                     {displayKey}
                   </span>
                   <input
-                    className="config-input"
+                    className="config-input config-input-inherited"
                     type={isSecureProperty ? "password" : "text"}
                     placeholder={isSecureProperty ? "••••••••" : ""}
                     value={isSecureProperty ? "••••••••" : stringifyValueByType(mergedPropData?.value ?? "")}
                     disabled={true}
                     style={{
                       backgroundColor: "var(--vscode-input-disabledBackground)",
-                      color: "var(--vscode-disabledForeground)",
+                      color: "var(--vscode-descriptionForeground)",
                       cursor: "pointer",
                       pointerEvents: "none",
+                      fontFamily: isSecureProperty ? "monospace" : undefined,
                     }}
                   />
                   <button
@@ -826,6 +743,8 @@ export const RenderConfig = ({
 
           // Check if this is a secure property that was added for sorting
           const isSecureForSorting = isSecurePropertyForSorting;
+
+          const inheritedInputClass = isFromMergedProps && !isDeletedMergedProperty ? " config-input-inherited" : "";
 
           const readOnlyContainer = (
             <div
@@ -860,12 +779,13 @@ export const RenderConfig = ({
                       padding: "2px",
                       marginBottom: "0",
                       textTransform: "lowercase",
-                      border:
-                        showMergedProperties && isCurrentProfileUntyped()
-                          ? "2px solid var(--vscode-warningForeground)"
-                          : "1px solid var(--vscode-input-border)",
-                      outline: showMergedProperties && isCurrentProfileUntyped() ? "2px solid var(--vscode-warningForeground)" : "none",
-                      boxShadow: showMergedProperties && isCurrentProfileUntyped() ? "0 0 0 2px var(--vscode-warningForeground)" : "none",
+                      ...(showMergedProperties && isCurrentProfileUntyped()
+                        ? {
+                              border: "2px solid var(--vscode-warningForeground)",
+                              outline: "2px solid var(--vscode-warningForeground)",
+                              boxShadow: "0 0 0 2px var(--vscode-warningForeground)",
+                          }
+                        : {}),
                     }}
                   >
                     <option value="">{l10n.t("Select a type")}</option>
@@ -895,9 +815,8 @@ export const RenderConfig = ({
                     const secureDisplayValue = isFromMergedProps && !isDeletedMergedProperty ? "••••••••" : stringifyValueByType(pendingValue);
                     return (
                       <input
-                        className="config-input"
+                        className={`config-input${inheritedInputClass}`}
                         type="password"
-                        //TODO: FIX // Typeless profiles can have secure keys without computed values on-screen; show placeholder instead of treating it as "no value".
                         placeholder={storedInKeyring || secureDisplayValue || isUntypedProfile ? "••••••••" : ""}
                         value={secureDisplayValue}
                         onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
@@ -906,19 +825,23 @@ export const RenderConfig = ({
                           isFromMergedProps && !isDeletedMergedProperty
                             ? {
                                 backgroundColor: "var(--vscode-input-disabledBackground)",
-                                color: "var(--vscode-disabledForeground)",
+                                color: "var(--vscode-descriptionForeground)",
                                 cursor: "pointer",
                                 fontFamily: "monospace",
                                 pointerEvents: "none",
                               }
-                            : { fontFamily: "monospace" }
+                            : {
+                                fontFamily: "monospace",
+                                backgroundColor: "var(--vscode-input-background)",
+                                color: "var(--vscode-input-foreground)",
+                              }
                         }
                       />
                     );
                   } else if (propertyType === "boolean") {
                     return (
                       <select
-                        className="config-input"
+                        className={`config-input${inheritedInputClass}`}
                         value={stringifyValueByType(pendingValue)}
                         onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
                         disabled={isFromMergedProps && !isDeletedMergedProperty}
@@ -941,7 +864,7 @@ export const RenderConfig = ({
                   } else if (propertyType === "number") {
                     return (
                       <input
-                        className="config-input"
+                        className={`config-input${inheritedInputClass}`}
                         type="number"
                         value={(() => {
                           if (isFromMergedProps && !isDeletedMergedProperty) {
@@ -981,7 +904,7 @@ export const RenderConfig = ({
                       <EnvVarAutocomplete
                         value={currentValue}
                         onChange={(value) => handleChange(fullKey, value)}
-                        className="config-input"
+                        className={`config-input${inheritedInputClass}`}
                         placeholder=""
                         disabled={isFromMergedProps && !isDeletedMergedProperty}
                         style={
@@ -1201,7 +1124,6 @@ export const RenderConfig = ({
       vscodeApi,
       stringifyValueByType,
       l10n,
-      SORT_ORDER_OPTIONS,
       getSortOrderDisplayName,
       setPropertySortOrderWithStorage,
       propertyDescriptions,

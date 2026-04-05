@@ -1,6 +1,7 @@
 import { useEffect, MutableRefObject, useRef } from "react";
 import { isSecureOrigin } from "../../utils";
 import { handleMessage, MessageHandlerProps } from "../handlers/messageHandlers";
+import { postProfilesAndEnv } from "../utils/extensionRequests";
 
 interface UseMessageHandlerProps extends MessageHandlerProps {
     selectedProfileKeyRef: MutableRefObject<string | null>;
@@ -58,53 +59,28 @@ export function useMessageHandler(props: UseMessageHandlerProps) {
 
         window.addEventListener("message", messageListener);
 
-        vscodeApi.postMessage({ command: "GET_PROFILES" });
-        vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+        postProfilesAndEnv(vscodeApi);
 
         const handleWindowFocus = () => {
             if (!selectedProfileKeyRef.current) {
-                vscodeApi.postMessage({ command: "GET_PROFILES" });
-                vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+                postProfilesAndEnv(vscodeApi);
                 vscodeApi.postMessage({ command: "GET_KEYBINDS" });
             }
         };
 
         const handleVisibilityChange = () => {
-            if (!document.hidden) {
-                if (!selectedProfileKeyRef.current) {
-                    vscodeApi.postMessage({ command: "GET_PROFILES" });
-                    vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
-                }
+            if (!document.hidden && !selectedProfileKeyRef.current) {
+                postProfilesAndEnv(vscodeApi);
             }
-        };
-
-        const handleBeforeUnload = () => {};
-
-        const handleLoad = () => {
-            setTimeout(() => {
-                vscodeApi.postMessage({ command: "GET_PROFILES" });
-                vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
-            }, 100);
-        };
-
-        const handleDOMContentLoaded = () => {
-            vscodeApi.postMessage({ command: "GET_PROFILES" });
-            vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
         };
 
         window.addEventListener("focus", handleWindowFocus);
         document.addEventListener("visibilitychange", handleVisibilityChange);
-        window.addEventListener("beforeunload", handleBeforeUnload);
-        window.addEventListener("load", handleLoad);
-        document.addEventListener("DOMContentLoaded", handleDOMContentLoaded);
 
         return () => {
             window.removeEventListener("message", messageListener);
             window.removeEventListener("focus", handleWindowFocus);
             document.removeEventListener("visibilitychange", handleVisibilityChange);
-            window.removeEventListener("beforeunload", handleBeforeUnload);
-            window.removeEventListener("load", handleLoad);
-            document.removeEventListener("DOMContentLoaded", handleDOMContentLoaded);
         };
     }, []);
 }

@@ -511,7 +511,9 @@ export function ProfileTree({
         data-is-expanded={node.isExpanded}
       >
         <div
-          className={`profile-tree-item ${isSelected ? "selected" : ""} ${isDragging ? "dragging" : ""} ${isDragOver ? "drag-over" : ""}`}
+          className={`profile-tree-item ${isSelected ? "selected" : ""} ${isDragging ? "dragging" : ""} ${isDragOver ? "drag-over" : ""} ${
+            hasPendingChanges || hasSecureChanges || hasRename ? "profile-tree-item--pending" : ""
+          }`}
           style={{
             cursor: "pointer",
             margin: "2px 0",
@@ -553,13 +555,7 @@ export function ProfileTree({
           {/* Expand/collapse arrow */}
           {node.hasChildren && (
             <span
-              className={`codicon ${node.isExpanded ? "codicon-chevron-down" : "codicon-chevron-right"}`}
-              style={{
-                fontSize: "12px",
-                color: "var(--vscode-foreground)",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
+              className={`codicon profile-tree-chevron ${node.isExpanded ? "codicon-chevron-down" : "codicon-chevron-right"}`}
               onClick={(e) => {
                 e.stopPropagation();
                 toggleNode(node.key);
@@ -569,7 +565,7 @@ export function ProfileTree({
           )}
 
           {/* Placeholder for consistent alignment when no arrow */}
-          {!node.hasChildren && <span style={{ width: "12px", flexShrink: 0 }} draggable={false} />}
+          {!node.hasChildren && <span className="profile-tree-indent-spacer" draggable={false} />}
 
           {/* Profile name */}
           <span
@@ -589,7 +585,7 @@ export function ProfileTree({
           </span>
 
           {/* Default profile indicator */}
-          <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+          <div className="config-editor-flex-gap-sm">
             {getProfileType(node.key) && (
               <span
                 onClick={(e) => {
@@ -716,7 +712,7 @@ export function ProfileTree({
             )}
             {getProfileType(node.key) && (
               <button
-                className="profile-star-button"
+                className="profile-star-button profile-tree-icon-button"
                 onClick={(e) => {
                   e.stopPropagation();
                   const profileType = getProfileType(node.key);
@@ -739,26 +735,13 @@ export function ProfileTree({
                     onSetAsDefault(node.key);
                   }
                 }}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  padding: "2px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
                 draggable={false}
                 title={isDefault ? "Click to remove default" : "Set as default"}
               >
                 <span
-                  className={`codicon codicon-${isDefault ? "star-full" : "star-empty"}`}
-                  style={{
-                    fontSize: "16px",
-                    color: isDefault ? "var(--vscode-textPreformat-foreground)" : "var(--vscode-disabledForeground)",
-                    pointerEvents: "none",
-                  }}
+                  className={`codicon codicon-${isDefault ? "star-full" : "star-empty"} profile-tree-default-star ${
+                    isDefault ? "profile-tree-default-star--active" : "profile-tree-default-star--inactive"
+                  }`}
                 />
               </button>
             )}
@@ -907,8 +890,7 @@ export function ProfileTree({
   return (
     <div
       ref={scrollContainerRef}
-      style={{ width: "100%" }}
-      className="profile-tree"
+      className="profile-tree profile-tree-scroll"
       data-testid="profile-tree"
       data-profile-count={profileKeys.length}
     >
