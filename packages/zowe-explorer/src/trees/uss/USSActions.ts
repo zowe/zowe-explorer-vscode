@@ -23,6 +23,7 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { LocalFileManagement } from "../../management/LocalFileManagement";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { FilterItem } from "../../management/FilterManagement";
+import { UssFSProvider } from "./UssFSProvider";
 import { SharedActions } from "../shared/SharedActions";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -88,15 +89,45 @@ export class USSActions {
         const name = await Gui.showInputBox(nameOptions);
         if (name && filePath) {
             try {
+                const parentPath = filePath;
                 filePath = path.posix.join(filePath, name);
                 const uri = node.resourceUri.with({
                     path: isTopLevel ? path.posix.join(node.resourceUri.path, filePath) : path.posix.join(node.resourceUri.path, name),
                 });
-                await ZoweExplorerApiRegister.getUssApi(node.getProfile()).create(filePath, nodeType);
+
+                let replace = false;
+                const ussApi = ZoweExplorerApiRegister.getUssApi(node.getProfile());
+                const res = await ussApi.fileList(parentPath);
+                if (res?.success && res.apiResponse?.items?.some((item: any) => item.name === name)) {
+                    if (!UssFSProvider.instance.exists(uri)) {
+                        UssFSProvider.instance.createEntry(uri, nodeType as "file" | "directory");
+                        UssFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                    }
+                    const stringReplace = vscode.l10n.t("Replace");
+                    const stringCancel = vscode.l10n.t("Cancel");
+                    const q = vscode.l10n.t({
+                        message: "The {0} already exists.\nDo you want to replace it?",
+                        args: [nodeType === "file" ? "file" : "directory"],
+                        comment: ["Node type"],
+                    });
+                    replace = stringReplace === (await Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
+                    if (!replace) {
+                        return;
+                    }
+                }
+
+                if (!replace) {
+                    await ussApi.create(filePath, nodeType);
+                }
+
                 if (nodeType === "file") {
-                    await vscode.workspace.fs.writeFile(uri, new Uint8Array());
+                    const writeUri = replace ? uri.with({ query: "forceUpload=true" }) : uri;
+                    await vscode.workspace.fs.writeFile(writeUri, new Uint8Array());
                 } else {
-                    await vscode.workspace.fs.createDirectory(uri);
+                    if (!replace) {
+                        await vscode.workspace.fs.createDirectory(uri);
+                        UssFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                    }
                 }
                 if (isTopLevel) {
                     await SharedActions.refreshProvider(ussFileProvider);
