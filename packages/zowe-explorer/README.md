@@ -153,48 +153,31 @@ Zowe Explorer for VS Code supports multiple authentication methods including bas
 
 1. Expand a tree view in the **Side Bar**.
 
-2. Click on the **Search** icon next to a profile to search for a pattern that matches the profiles **[is "profiles" correct here?]** that you want to view.
+2. Click on the **Search** icon next to a profile to search for the resources that you want to view.
 
    Search results display under the profile in the **Side Bar**.
 
-3. Open the profile with the file you want to edit. **[is this correct?]**
-4. Click on the member name to display it in an **Editor**.
-5. If the file is editable, edit the document in the **Editor**.
-6. Press the `Ctrl`+`s` or `Command`+`s` keys to save the changes.
+3. Click on the resource to display it in an **Editor**.
+4. If the file is able to be edited, edit the document in the **Editor**.
+5. Press the `Ctrl`+`s` or `Command`+`s` keys to save the changes.
 
-   The changes are saved and the edited file is uploaded to the mainframe. **[is this correct?]**
+   The changes are saved and the edited resource is uploaded to the mainframe.
 
 </details>
 
 <details>
-<summary><span style="font-size: 1.5em"><b>Downloading spool content</b></span><hr></summary>
+<summary><span style="font-size: 1.5em"><b>Downloading file content</b></span><hr></summary>
 
-### Downloading spool files from a job
+### Downloading file content
 
-1. Expand the **JOBS** tree in the **Side Bar**.
+1. Expand a tree view in the **Side Bar**.
 2. Click on the **Search** icon next to a profile and enter search criteria.
 
    Search results display under the profile in the **Side Bar**.
 
-3. Right-click on the desired job and select either:
-   - **Download All** to download all the spool files to a folder on your local disk.
-   - **Download All (Binary)** to download all the spool files in binary format on your local disk.
+3. Right-click on the desired file and select a download option.
 
-   The selected files are saved in a folder that is the job name in the specified location.
-
-### Downloading a single spool file
-
-1. Expand the **JOBS** tree in the **Side Bar**.
-2. Click on the **Search** icon next to a profile and enter search criteria.
-
-   Search results display under the profile in the **Side Bar**.
-
-3. Expand the job containing the desired spool file.
-4. Right-click on the spool file and select either:
-   - **Download All** to download all the spool file contents to a folder on your local disk.
-   - **Download All (Binary)** to download all the spool file contents in binary format on your local disk.
-
-   The selected file is saved in the specified location.
+   The selected files are saved.
 
 </details>
 
