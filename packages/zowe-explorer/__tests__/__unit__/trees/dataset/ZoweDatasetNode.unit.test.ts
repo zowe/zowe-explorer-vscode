@@ -1529,6 +1529,8 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
 
     beforeEach(() => {
         jest.resetAllMocks();
+        const datasetTree = createDatasetTree(createDatasetSessionNode(session, profileOne), createTreeView());
+        jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(datasetTree);
     });
 
     it("filters children to only favorited members when favoritedMemberNames is set", async () => {
