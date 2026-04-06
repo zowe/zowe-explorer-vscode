@@ -3007,16 +3007,19 @@ export class DatasetActions {
                     Poller.pollRequests[pollKey].dispose = true;
 
                     const args = [sessProfileName, jobId];
-                    const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                     const retcode = job?.retcode || vscode.l10n.t("unknown retcode");
+                    const openJobButton = vscode.l10n.t("Open Job");
+                    const message = vscode.l10n.t({
+                        message: "Job {0} completed - {1}",
+                        args: [displayName, retcode],
+                        comment: ["Job name and ID", "Job status"],
+                    });
 
-                    Gui.showMessage(
-                        vscode.l10n.t({
-                            message: "Job {0} completed - {1}",
-                            args: [`[${displayName}](${setJobCmd})`, retcode],
-                            comment: ["Job ID with clickable link", "Job status"],
-                        })
-                    );
+                    Gui.showMessage(message, { items: [openJobButton] }).then((selection) => {
+                        if (selection === openJobButton) {
+                            vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                        }
+                    });
                 } catch (error) {
                     // If cant get job status, stop polling
                     Poller.pollRequests[pollKey].dispose = true;
