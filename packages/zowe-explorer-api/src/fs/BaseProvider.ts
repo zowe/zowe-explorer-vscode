@@ -48,7 +48,7 @@ export class BaseProvider {
      * Action for overwriting the remote contents with local data from the provider.
      * @param remoteUri The "remote conflict" URI shown in the diff view
      */
-    public async diffOverwrite(uri: vscode.Uri): Promise<void> {
+    public async diffOverwrite(uri: vscode.Uri, closeEditor: boolean = true): Promise<void> {
         const fsEntry = this._lookupAsFile(uri);
         if (fsEntry == null) {
             return;
@@ -63,7 +63,17 @@ export class BaseProvider {
             this.FS_PROVIDER_UI_TIMEOUT
         );
         fsEntry.conflictData = null;
-        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+        if (closeEditor) {
+            vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+
+            // Find the main document and revert it to clear the dirty flag
+            const mainUri = uri.with({ query: "" });
+            const doc = vscode.workspace.textDocuments.find((d) => d.uri.toString() === mainUri.toString());
+            if (doc && doc.isDirty) {
+                await vscode.window.showTextDocument(doc);
+                await vscode.commands.executeCommand("workbench.action.files.revert");
+            }
+        }
     }
 
     /**
@@ -92,6 +102,13 @@ export class BaseProvider {
         );
         fsEntry.conflictData = null;
         vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+
+        const mainUri = uri.with({ query: "" });
+        const doc = vscode.workspace.textDocuments.find((d) => d.uri.toString() === mainUri.toString());
+        if (doc && doc.isDirty) {
+            await vscode.window.showTextDocument(doc);
+            await vscode.commands.executeCommand("workbench.action.files.revert");
+        }
     }
 
     public exists(uri: vscode.Uri): boolean {
@@ -115,7 +132,7 @@ export class BaseProvider {
         }
 
         parentEntry.entries.delete(entryName);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri });
+        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri.with({ query: "" }) });
         return true;
     }
 
@@ -273,7 +290,7 @@ export class BaseProvider {
         }
         // delete entry from old parent
         oldParent.entries.delete(entry.name);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri });
+        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri.with({ query: "" }) });
         if (isFile) {
             return this._reopenEditorForRelocatedUri(oldUri, newUri);
         }
@@ -353,7 +370,10 @@ export class BaseProvider {
         }
 
         // User selected "Overwrite"
-        await this.diffOverwrite(uri);
+        // For backwards compatibility with extensions that expect _handleConflict to perform the overwrite,
+        // we still call diffOverwrite here. However, this means internal providers (like DatasetFSProvider)
+        // must NOT perform the overwrite themselves if they call this method, otherwise it will double-save.
+        await this.diffOverwrite(uri, false);
         return ConflictViewSelection.Overwrite;
     }
 
@@ -468,7 +488,7 @@ export class BaseProvider {
         const profInfo = { ...parent.metadata, path: filePath };
         entry.metadata = profInfo;
         parent.entries.set(basename, entry);
-        this._fireSoon({ type: vscode.FileChangeType.Created, uri });
+        this._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
         return entry;
     }
 

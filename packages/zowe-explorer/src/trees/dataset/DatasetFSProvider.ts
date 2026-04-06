@@ -32,6 +32,7 @@ import {
     imperative,
     IFileSystemEntry,
     DsType,
+    ConflictViewSelection,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -605,7 +606,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     if (dsEntry.etag !== resp.apiResponse.etag) {
                         dsEntry.mtime = Date.now();
                         if (dsEntry.etag) {
-                            this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
+                            this._fireSoon({ type: vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
                         }
                     }
                     dsEntry.etag = resp.apiResponse.etag;
@@ -818,7 +819,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
         const basename = path.posix.basename(uri.path);
         const parent = this.lookupParentDirectory(uri);
-        // const isPdsMember = FsDatasetsUtils.isPdsEntry(parent);
         let entry: FileEntry = parent.entries.get(basename);
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
@@ -830,12 +830,29 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileExists(uri);
         }
 
-        // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
+        // Track whether this entry is new (not previously in the local member list).
+        // This determines whether to fire a Created or Changed notification.
+        const isNew = !entry;
+
+        if (isNew) {
+            const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+            const uriPath = uri.path
+                .substring(uriInfo.slashAfterProfilePos + 1)
+                .split("/")
+                .filter(Boolean);
+            const ds = new DsEntry(basename, uriPath.length === this.EXPECTED_MEMBER_LENGTH);
+            ds.metadata = new DsEntryMetadata({
+                path: path.posix.join(parent.metadata.path, basename),
+                profile: parent.metadata.profile,
+            });
+            ds.data = new Uint8Array();
+            parent.entries.set(basename, ds);
+            entry = ds;
+        }
+
         const urlQuery = new URLSearchParams(uri.query);
         const forceUpload = urlQuery.has("forceUpload");
         const encodingParam = urlQuery.get("encoding") || undefined;
-
-        // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
 
         try {
             if (urlQuery.has("inDiff")) {
@@ -849,20 +866,23 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 return;
             }
 
-            if (entry.wasAccessed) {
+            if (!isNew || content.length > 0) {
                 const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload, encodingParam);
                 entry.etag = resp.apiResponse.etag;
             }
             entry.data = content;
-
             entry.mtime = Date.now();
             entry.size = content.byteLength;
-            this._fireSoon({ type: vscode.FileChangeType.Changed, uri }); // BASED ON DO WE STAT OR NOT???
+
+            this._fireSoon({ type: isNew ? vscode.FileChangeType.Created : vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
         } catch (err) {
             if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 entry.data = content;
                 // Prompt the user with the conflict dialog
-                await this._handleConflict(uri, entry);
+                const selection = await this._handleConflict(uri, entry);
+                if (selection !== ConflictViewSelection.Overwrite) {
+                    throw vscode.FileSystemError.Unavailable(vscode.l10n.t("Conflict: Remote contents have changed."));
+                }
                 return;
             }
             if (err instanceof imperative.ImperativeError && err.message.includes("Zowe Explorer: Unsafe upload")) {
@@ -913,10 +933,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             });
             throw err;
         }
-
-        // entry.mtime = Date.now();
-        // entry.size = content.byteLength;
-        // this._fireSoon({ type: vscode.FileChangeType.Changed, uri }); // BASED ON DO WE STAT OR NOT???
     }
 
     /**
