@@ -542,9 +542,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(submitJclSpy).toHaveBeenCalled();
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted: [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted: TESTJOB(JOB1234)");
         showTextDocumentSpy.mockClear();
     });
 
@@ -577,9 +575,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(submitJclSpy).toHaveBeenCalled();
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted: [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted: TESTJOB(JOB1234)");
         showTextDocumentSpy.mockClear();
     });
     it("Checking submit of JCL file from VSC explorer tree", async () => {
@@ -601,9 +597,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(submitJclSpy).toHaveBeenCalled();
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted: [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted: TESTJOB(JOB1234)");
     });
 
     it("Checking submit of active text editor content as JCL with Unverified Profile", async () => {
@@ -629,9 +623,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         expect(submitJclSpy).toHaveBeenCalled();
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls.length).toBe(1);
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted: [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted: TESTJOB(JOB1234)");
     });
     it("Checking failure of submitting JCL via command palette if not active text editor", async () => {
         createGlobalMocks();
@@ -646,6 +638,77 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
         const errorMsg = "No editor with a document that could be submitted as JCL is currently open.";
         expect(blockMocks.errorLogSpy).toHaveBeenCalledWith(errorMsg);
         expect(blockMocks.errorGuiMsgSpy).toHaveBeenCalledWith(errorMsg);
+    });
+    it("Checking 'Open Job' button executes command to open job in tree", async () => {
+        createGlobalMocks();
+        const blockMocks: any = createBlockMocks();
+        mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.showQuickPick).mockReturnValueOnce(
+            new Promise((resolve) => {
+                resolve(blockMocks.datasetSessionNode.label);
+            })
+        );
+        const mockFile = {
+            path: "/fake/path/file.txt",
+        } as vscode.Uri;
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
+            blockMocks.datasetSessionNode,
+        ]);
+        activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
+        const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
+        submitJclSpy.mockClear();
+        submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
+
+        // Mock Gui.showMessage to return the "Open Job" button selection
+        mocked(Gui.showMessage).mockResolvedValueOnce("Open Job");
+
+        await DatasetActions.submitJcl(blockMocks.testDatasetTree, mockFile);
+
+        expect(submitJclSpy).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted: TESTJOB(JOB1234)");
+        expect(mocked(Gui.showMessage).mock.calls[0][1].items).toContain("Open Job");
+        expect(executeCommandSpy).toHaveBeenCalledWith("zowe.jobs.setJobSpool", "sestest", "JOB1234");
+
+        executeCommandSpy.mockRestore();
+    });
+
+    it("Checking 'Poll For Job Completion' button calls pollSubmittedJob", async () => {
+        createGlobalMocks();
+        const blockMocks: any = createBlockMocks();
+        mocked(zosmf.ZosmfSession.createSessCfgFromArgs).mockReturnValue(blockMocks.session);
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(vscode.window.showQuickPick).mockReturnValueOnce(
+            new Promise((resolve) => {
+                resolve(blockMocks.datasetSessionNode.label);
+            })
+        );
+        const mockFile = {
+            path: "/fake/path/file.txt",
+        } as vscode.Uri;
+        blockMocks.testDatasetTree.getChildren.mockResolvedValueOnce([
+            new ZoweDatasetNode({ label: "node", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: blockMocks.datasetSessionNode }),
+            blockMocks.datasetSessionNode,
+        ]);
+        activeTextEditorDocument.mockReturnValue(blockMocks.textDocument);
+        const submitJclSpy = jest.spyOn(blockMocks.jesApi, "submitJcl");
+        submitJclSpy.mockClear();
+        submitJclSpy.mockResolvedValueOnce(blockMocks.iJob);
+        const pollSubmittedJobSpy = jest.spyOn(DatasetActions, "pollSubmittedJob").mockImplementation();
+
+        // Mock Gui.showMessage to return the "Poll For Job Completion" button selection
+        mocked(Gui.showMessage).mockResolvedValueOnce("Poll For Job Completion");
+
+        await DatasetActions.submitJcl(blockMocks.testDatasetTree, mockFile);
+
+        expect(submitJclSpy).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+        expect(pollSubmittedJobSpy).toHaveBeenCalled();
+
+        pollSubmittedJobSpy.mockRestore();
     });
 
     it("Checking cancel option scenario of local JCL submission confirmation dialog", async () => {
@@ -800,9 +863,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy).toHaveBeenCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted: [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted: TESTJOB(JOB1234)");
     });
     it("Checking Submit Job for PDS Member content with Unverified Profile", async () => {
         createGlobalMocks();
@@ -834,9 +895,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy).toHaveBeenCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset(member)");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted: [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted: TESTJOB(JOB1234)");
     });
     it("Checking Submit Job for PS Dataset content", async () => {
         createGlobalMocks();
@@ -856,9 +915,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy).toHaveBeenCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("dataset");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted: [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted: TESTJOB(JOB1234)");
     });
     it("Checking Submit Job for Favourite PDS Member content", async () => {
         createGlobalMocks();
@@ -890,9 +947,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy).toHaveBeenCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL(pds)");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted: [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted: TESTJOB(JOB1234)");
     });
     it("Checking Submit Job for Favourite PS Dataset content", async () => {
         createGlobalMocks();
@@ -918,9 +973,63 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(submitJobSpy).toHaveBeenCalled();
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
-            "Job submitted: [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
-        );
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted: TESTJOB(JOB1234)");
+    });
+
+    it("Checking 'Open Job' button for submitMember executes command to open job in tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode({
+            label: "dataset(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_MEMBER_CONTEXT;
+        const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
+        submitJobSpy.mockClear();
+        submitJobSpy.mockResolvedValueOnce(blockMocks.iJob);
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
+
+        // Mock Gui.showMessage to return the "Open Job" button selection
+        mocked(Gui.showMessage).mockResolvedValueOnce("Open Job");
+
+        await DatasetActions.submitMember(node);
+
+        expect(submitJobSpy).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual("Job submitted: TESTJOB(JOB1234)");
+        expect(mocked(Gui.showMessage).mock.calls[0][1].items).toContain("Open Job");
+        expect(executeCommandSpy).toHaveBeenCalledWith("zowe.jobs.setJobSpool", "sestest", "JOB1234");
+
+        executeCommandSpy.mockRestore();
+    });
+
+    it("Checking 'Poll For Job Completion' button for submitMember calls pollSubmittedJob", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode({
+            label: "dataset(member)",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_MEMBER_CONTEXT;
+        const submitJobSpy = jest.spyOn(blockMocks.jesApi, "submitJob");
+        submitJobSpy.mockClear();
+        submitJobSpy.mockResolvedValueOnce(blockMocks.iJob);
+        const pollSubmittedJobSpy = jest.spyOn(DatasetActions, "pollSubmittedJob").mockImplementation();
+
+        // Mock Gui.showMessage to return the "Poll For Job Completion" button selection
+        mocked(Gui.showMessage).mockResolvedValueOnce("Poll For Job Completion");
+
+        await DatasetActions.submitMember(node);
+
+        expect(submitJobSpy).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+        expect(pollSubmittedJobSpy).toHaveBeenCalled();
+
+        pollSubmittedJobSpy.mockRestore();
     });
     it("Checking Submit Job for unsupported Dataset content", async () => {
         createGlobalMocks();
@@ -1690,7 +1799,10 @@ describe("Job Actions - Function pollSubmittedJob", () => {
         expect(statusMsgDisposeSpy).toHaveBeenCalledTimes(1);
         expect(Poller.pollRequests["submitted-job-testProfile-JOB12345"].dispose).toBe(true);
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
-            expect.stringContaining("Job [TESTJOB(JOB12345)](command:zowe.jobs.setJobSpool") && expect.stringContaining("completed - CC 0000")
+            expect.stringContaining("Job TESTJOB(JOB12345) completed - CC 0000"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
         );
     });
 
@@ -1701,7 +1813,48 @@ describe("Job Actions - Function pollSubmittedJob", () => {
 
         await pollRequest();
 
-        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(expect.stringContaining("unknown retcode"));
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
+            expect.stringContaining("unknown retcode"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
+        );
+    });
+    it("should execute command when 'Open Job' button is clicked in completion notification", async () => {
+        mockCollection.push(new MockedProperty(Poller, "pollRequests", undefined, { "submitted-job-testProfile-JOB12345": { dispose: false } }));
+        mockJob.status = "OUTPUT";
+        mockJob.retcode = "CC 0000";
+
+        const openJobButton = "Open Job";
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+
+        // Mock showMessage to return the button selection and trigger the command
+        mocked(Gui.showMessage).mockImplementation((message, options) => {
+            const promise = Promise.resolve(openJobButton);
+            promise.then((selection) => {
+                if (selection === openJobButton) {
+                    vscode.commands.executeCommand("zowe.jobs.setJobSpool", "testProfile", "JOB12345");
+                }
+            });
+            return promise;
+        });
+
+        await pollRequest();
+
+        expect(mocked(Gui.setStatusBarMessage)).toHaveBeenCalled();
+        expect(statusMsgDisposeSpy).toHaveBeenCalledTimes(1);
+        expect(Poller.pollRequests["submitted-job-testProfile-JOB12345"].dispose).toBe(true);
+        expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB12345) completed - CC 0000"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
+        );
+
+        // Wait for all promises to resolve
+        await new Promise((resolve) => setImmediate(resolve));
+
+        expect(executeCommandSpy).toHaveBeenCalledWith("zowe.jobs.setJobSpool", "testProfile", "JOB12345");
     });
 
     it("should handle polling errors gracefully", async () => {

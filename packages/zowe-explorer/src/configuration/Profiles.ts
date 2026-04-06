@@ -105,6 +105,18 @@ export class Profiles extends ProfilesCache {
      * @returns True if the profile, a parent on the profile, or the default base profile has a secure token, false otherwise.
      */
     public async profileHasSecureToken(theProfile: imperative.IProfileLoaded): Promise<boolean> {
+        const sessTypeFromProf = AuthHandler.sessTypeFromProfile(theProfile);
+        if (
+            sessTypeFromProf !== imperative.SessConstants.AUTH_TYPE_TOKEN &&
+            sessTypeFromProf !== imperative.SessConstants.AUTH_TYPE_BEARER &&
+            sessTypeFromProf !== imperative.SessConstants.AUTH_TYPE_NONE
+        ) {
+            // The authOrder property has already been processed and determined
+            // that basic or cert auth should be used, so we shouldn't check
+            // for a token value.
+            return false;
+        }
+
         const teamConfig = (await this.getProfileInfo()).getTeamConfig();
         const profName = teamConfig.api.profiles.getProfilePathFromName(theProfile.name);
 

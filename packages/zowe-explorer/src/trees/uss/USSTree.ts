@@ -1072,7 +1072,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
 
             // Initialize and attach favorited item nodes under their respective profile node in Favorites
-            const favChildNode = await this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
+            const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
             favProfileNode.children.push(favChildNode);
         }
     }
@@ -1085,7 +1085,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      * @param parentNode The profile node in this.mFavorites that the favorite belongs to
      * @returns IZoweUssTreeNode
      */
-    public async initializeFavChildNodeForProfile(label: string, context: string, parentNode: IZoweUSSTreeNode): Promise<ZoweUSSNode> {
+    public initializeFavChildNodeForProfile(label: string, context: string, parentNode: IZoweUSSTreeNode): ZoweUSSNode {
         ZoweLogger.trace("USSTree.initializeFavChildNodeForProfile called.");
         const profile = parentNode.getProfile();
         let node: ZoweUSSNode;
@@ -1098,12 +1098,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     profile,
                 });
                 node.description = path.dirname(label);
-                if (
-                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type) &&
-                    !UssFSProvider.instance.exists(node.resourceUri)
-                ) {
-                    await vscode.workspace.fs.createDirectory(node.resourceUri);
-                }
                 break;
             case Constants.USS_SESSION_CONTEXT:
                 node = new ZoweUSSNode({
@@ -1125,16 +1119,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     profile,
                 });
                 node.description = path.dirname(label);
-                if (
-                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type) &&
-                    !UssFSProvider.instance.exists(node.resourceUri)
-                ) {
-                    const parentUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, "..") });
-                    if (!UssFSProvider.instance.exists(parentUri)) {
-                        await vscode.workspace.fs.createDirectory(parentUri);
-                    }
-                    await vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
-                }
                 break;
         }
         node.contextValue = SharedContext.asFavorite(node);
@@ -1211,6 +1195,17 @@ Would you like to do this now?`,
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
         const favsForProfile = profileInFavs.children;
         for (const favorite of favsForProfile) {
+            if (!UssFSProvider.instance.exists(favorite.resourceUri)) {
+                if (SharedContext.isUssDirectory(favorite)) {
+                    await vscode.workspace.fs.createDirectory(favorite.resourceUri);
+                } else if (SharedContext.isText(favorite) || SharedContext.isBinary(favorite)) {
+                    const parentUri = favorite.resourceUri.with({ path: path.posix.join(favorite.resourceUri.path, "..") });
+                    if (!UssFSProvider.instance.exists(parentUri)) {
+                        await vscode.workspace.fs.createDirectory(parentUri);
+                    }
+                    await vscode.workspace.fs.writeFile(favorite.resourceUri, new Uint8Array());
+                }
+            }
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
             if (favorite.getProfile() && favorite.getSession()) {
                 updatedFavsForProfile.push(favorite);
