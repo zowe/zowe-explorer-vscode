@@ -1898,35 +1898,19 @@ export class DatasetActions {
             return selection != null && selection?.title === "Submit";
         };
 
-        const confirmationOption: string | boolean = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
+        const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
 
-        let dialogOption: Definitions.JobSubmitDialogOpts;
-
-        if (confirmationOption === false) {
-            dialogOption = Definitions.JobSubmitDialogOpts.Disabled;
-        } else if (typeof confirmationOption === "string") {
-            switch (confirmationOption) {
-                case "%zowe.jobs.confirmSubmission.yourJobs%":
-                    dialogOption = Definitions.JobSubmitDialogOpts.YourJobs;
-                    break;
-                case "%zowe.jobs.confirmSubmission.otherUserJobs%":
-                    dialogOption = Definitions.JobSubmitDialogOpts.OtherUserJobs;
-                    break;
-                case "%zowe.jobs.confirmSubmission.allJobs%":
-                    dialogOption = Definitions.JobSubmitDialogOpts.AllJobs;
-                    break;
-                case "%zowe.jobs.confirmSubmission.disabled%":
-                    dialogOption = Definitions.JobSubmitDialogOpts.Disabled;
-                    break;
-                default: {
-                    const optionIndex = Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption);
-                    dialogOption = optionIndex !== -1 ? optionIndex : Definitions.JobSubmitDialogOpts.Disabled;
-                    break;
-                }
-            }
-        } else {
-            dialogOption = Definitions.JobSubmitDialogOpts.Disabled;
+        // Handle undefined, null, or non-string values (e.g., legacy boolean values)
+        if (!confirmationOption || typeof confirmationOption !== "string") {
+            return true; // Default behavior: allow submission without confirmation
         }
+
+        const camelCase = confirmationOption
+            .toLowerCase()
+            .split(" ")
+            .map((word, index) => (index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)))
+            .join("");
+        const dialogOption = Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(`%zowe.jobs.confirmSubmission.${camelCase}%`);
 
         switch (dialogOption) {
             case Definitions.JobSubmitDialogOpts.YourJobs:

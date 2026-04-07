@@ -2062,7 +2062,7 @@
         },
         "zowe.jobs.confirmSubmission": {
           "type": "string",
-          "default": "%zowe.jobs.confirmSubmission.allJobs%",
+          "default": "%zowe.jobs.confirmSubmission.otherUserJobs%",
           "enum": [
             "%zowe.jobs.confirmSubmission.disabled%",
             "%zowe.jobs.confirmSubmission.yourJobs%",

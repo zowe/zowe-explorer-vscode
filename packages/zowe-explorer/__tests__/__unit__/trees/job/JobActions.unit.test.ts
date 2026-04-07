@@ -1074,17 +1074,18 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         });
         dataset.contextValue = Constants.DS_DS_CONTEXT;
 
-        for (let o = 0; o < Constants.JOB_SUBMIT_DIALOG_OPTS.length; o++) {
-            const option = Constants.JOB_SUBMIT_DIALOG_OPTS[o];
+        const optionKeys = ["Disabled", "Your jobs", "Other user jobs", "All jobs"];
+        for (let o = 0; o < optionKeys.length; o++) {
+            const option = optionKeys[o];
             Object.defineProperty(vscode.workspace, "getConfiguration", {
                 value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", option]])),
                 configurable: true,
             });
 
-            if (option === Constants.JOB_SUBMIT_DIALOG_OPTS[Definitions.JobSubmitDialogOpts.Disabled]) {
+            if (option === "Disabled") {
                 await DatasetActions.submitMember(dataset);
                 expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
-            } else if (option === Constants.JOB_SUBMIT_DIALOG_OPTS[Definitions.JobSubmitDialogOpts.OtherUserJobs]) {
+            } else if (option === "Other user jobs") {
                 dataset.label = "OTHERUSER.DATASET";
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await DatasetActions.submitMember(dataset);
@@ -1095,10 +1096,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                         vsCodeOpts: { modal: true },
                     }
                 );
-            } else if (
-                option === Constants.JOB_SUBMIT_DIALOG_OPTS[Definitions.JobSubmitDialogOpts.AllJobs] ||
-                option === Constants.JOB_SUBMIT_DIALOG_OPTS[Definitions.JobSubmitDialogOpts.YourJobs]
-            ) {
+            } else if (option === "All jobs" || option === "Your jobs") {
                 dataset.label = "TESTUSER.DATASET";
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await DatasetActions.submitMember(dataset);
@@ -1138,18 +1136,18 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         });
         dataset.contextValue = Constants.DS_DS_CONTEXT;
 
-        // Test with localization key for "Disabled"
+        // Test with "Disabled" option
         Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "%zowe.jobs.confirmSubmission.disabled%"]])),
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "Disabled"]])),
             configurable: true,
         });
         await DatasetActions.submitMember(dataset);
         expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
 
-        // Test with localization key for "Your jobs"
+        // Test with "Your jobs" option
         mocked(Gui.warningMessage).mockClear();
         Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "%zowe.jobs.confirmSubmission.yourJobs%"]])),
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "Your jobs"]])),
             configurable: true,
         });
         mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
@@ -1162,11 +1160,11 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             }
         );
 
-        // Test with localization key for "Other user jobs"
+        // Test with "Other user jobs" option
         mocked(Gui.warningMessage).mockClear();
         dataset.label = "OTHERUSER.DATASET";
         Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "%zowe.jobs.confirmSubmission.otherUserJobs%"]])),
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "Other user jobs"]])),
             configurable: true,
         });
         mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
@@ -1179,11 +1177,11 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             }
         );
 
-        // Test with localization key for "All jobs"
+        // Test with "All jobs" option
         mocked(Gui.warningMessage).mockClear();
         dataset.label = "TESTUSER.DATASET";
         Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "%zowe.jobs.confirmSubmission.allJobs%"]])),
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "All jobs"]])),
             configurable: true,
         });
         mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
@@ -1275,7 +1273,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         yourDataset.contextValue = Constants.DS_DS_CONTEXT;
 
         Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "%zowe.jobs.confirmSubmission.yourJobs%"]])),
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "Your jobs"]])),
             configurable: true,
         });
         mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
@@ -1311,7 +1309,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         yourDataset.contextValue = Constants.DS_DS_CONTEXT;
 
         Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "%zowe.jobs.confirmSubmission.otherUserJobs%"]])),
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "Other user jobs"]])),
             configurable: true,
         });
         await DatasetActions.submitMember(yourDataset);
