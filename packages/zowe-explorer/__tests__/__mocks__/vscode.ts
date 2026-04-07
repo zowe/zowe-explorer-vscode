@@ -284,6 +284,10 @@ export interface CancellationToken {
     onCancellationRequested: Event<any>;
 }
 
+export class TabInputText {
+    constructor(public uri: Uri) {}
+}
+
 export class CancellationTokenSource {
     token: CancellationToken = { isCancellationRequested: false } as any;
     cancel(): void {
@@ -856,6 +860,10 @@ export namespace window {
     export function createOutputChannel(name: string, languageId?: string): any {
         return {};
     }
+
+    export const tabGroups = {
+        onDidChangeTabs: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+    };
 }
 
 export namespace languages {

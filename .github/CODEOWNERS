@@ -1,0 +1,115 @@
+# Zowe Explorer CODEOWNERS
+# Each line is a file pattern followed by one or more owners.
+# Order matters; later rules take precedence.
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ============================================================================
+# Data Sets Tree
+# Alt: @t1m0thyj, @traeok
+# ============================================================================
+packages/zowe-explorer/src/trees/dataset/                    @JillieBeanSim @zFernand0
+packages/zowe-explorer/__tests__/__unit__/trees/dataset/     @JillieBeanSim @zFernand0
+packages/zowe-explorer/__tests__/__mocks__/DatasetTree.ts    @JillieBeanSim @zFernand0
+packages/zowe-explorer-api/src/dataset/                      @JillieBeanSim @zFernand0
+
+# ============================================================================
+# USS Tree
+# Alt: @t1m0thyj, @zFernand0
+# ============================================================================
+packages/zowe-explorer/src/trees/uss/                        @traeok @JillieBeanSim
+packages/zowe-explorer/__tests__/__unit__/trees/uss/         @traeok @JillieBeanSim
+
+# ============================================================================
+# Jobs Tree
+# Alt: @traeok
+# ============================================================================
+packages/zowe-explorer/src/trees/job/                        @zFernand0 @JillieBeanSim
+packages/zowe-explorer/__tests__/__unit__/trees/job/         @zFernand0 @JillieBeanSim
+
+# ============================================================================
+# File system (FS providers, entries, buffers)
+# ============================================================================
+packages/zowe-explorer-api/src/fs/                           @traeok @jace-roell
+packages/zowe-explorer/src/trees/*/**FSProvider.ts           @traeok @jace-roell
+packages/zowe-explorer-api/__tests__/__unit__/fs/            @traeok @jace-roell
+
+# ============================================================================
+# Secure credentials & credential managers
+# ============================================================================
+packages/zowe-explorer-api/src/security/                     @t1m0thyj @traeok
+packages/zowe-explorer-api/__tests__/__unit__/security/      @t1m0thyj @traeok
+
+# ============================================================================
+# Authentication & related prompts
+# ============================================================================
+packages/zowe-explorer/src/utils/AuthUtils.ts                @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/profiles/AuthHandler.ts       @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/vscode/doc/BaseProfileAuth.ts @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/vscode/doc/PromptCredentials.ts @JillieBeanSim @traeok
+packages/zowe-explorer/src/utils/CertificateWizard.ts        @JillieBeanSim @traeok
+
+# ============================================================================
+# Web views
+# Alt: @jace-roell
+# ============================================================================
+packages/zowe-explorer/src/webviews/                         @traeok @JWaters02
+packages/zowe-explorer-api/src/vscode/ui/WebView.ts          @traeok @JWaters02
+packages/zowe-explorer-api/src/vscode/ui/TableView*.ts       @traeok @JWaters02
+packages/zowe-explorer-api/src/vscode/ui/utils/              @traeok @JWaters02
+packages/zowe-explorer/src/zosconsole/                       @traeok @JWaters02
+webviews/                                                    @traeok @JWaters02
+
+# ============================================================================
+# Commands & terminals
+# ============================================================================
+packages/zowe-explorer/src/commands/                         @zFernand0 @JillieBeanSim
+packages/zowe-explorer/src/tools/ZoweTerminal.ts             @zFernand0 @JillieBeanSim
+packages/zowe-explorer/__tests__/__unit__/commands/          @zFernand0 @JillieBeanSim
+
+# ============================================================================
+# Bundling & packaging
+# Alt: @JillieBeanSim
+# ============================================================================
+packages/*/webpack.config.js                                 @t1m0thyj @zFernand0
+packages/zowe-explorer/src/webviews/vite.config.ts           @t1m0thyj @zFernand0
+package.json                                                 @t1m0thyj @zFernand0
+packages/*/package.json                                      @t1m0thyj @zFernand0
+lerna.json                                                   @t1m0thyj @zFernand0
+pnpm-workspace.yaml                                         @t1m0thyj @zFernand0
+scripts/                                                     @t1m0thyj @zFernand0
+
+# ============================================================================
+# End-to-end testing
+# ============================================================================
+packages/zowe-explorer/__tests__/__e2e__/                    @traeok @t1m0thyj
+
+# ============================================================================
+# CI/CD
+# ============================================================================
+.github/workflows/                                           @t1m0thyj @zFernand0
+.codecov.yml                                                 @t1m0thyj @zFernand0
+packages/zowe-explorer/__tests__/__integration__/ci/         @t1m0thyj @zFernand0
+
+# ============================================================================
+# Profiles
+# Alt: @traeok
+# ============================================================================
+packages/zowe-explorer-api/src/profiles/                     @t1m0thyj @JillieBeanSim
+packages/zowe-explorer/src/configuration/Profiles.ts         @t1m0thyj @JillieBeanSim
+packages/zowe-explorer/src/management/ProfileManagement.ts   @t1m0thyj @JillieBeanSim
+packages/zowe-explorer/src/utils/ProfilesUtils.ts            @t1m0thyj @JillieBeanSim
+packages/zowe-explorer-api/__tests__/__unit__/profiles/      @t1m0thyj @JillieBeanSim
+
+# ============================================================================
+# ZE API registration
+# ============================================================================
+packages/zowe-explorer/src/extending/                        @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/extend/                       @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/vscode/ZoweVsCodeExtension.ts @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/profiles/ZoweExplorerZosmfApi.ts @JillieBeanSim @traeok
+packages/zowe-explorer-api/src/index.ts                      @JillieBeanSim @traeok
+
+# ============================================================================
+# z/FTP extension
+# ============================================================================
+packages/zowe-explorer-ftp-extension/                        @zFernand0 @t1m0thyj

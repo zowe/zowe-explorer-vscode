@@ -45,7 +45,7 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
                 user: loadedProfile.user,
                 password: loadedProfile.password,
                 rejectUnauthorized: loadedProfile.rejectUnauthorized,
-                type: "basic",
+                type: loadedProfile.user && loadedProfile.password ? "basic" : "none",
             });
             globals.SESSION_MAP.set(ftpProfile, this.session);
         }
