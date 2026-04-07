@@ -480,11 +480,11 @@ flowchart TD
 ### External Dependencies
 
 - **[@zowe/imperative](https://docs.zowe.org/stable/typedoc/modules/_zowe_imperative)**: Zowe CLI framework
-- **@zowe/zos-files-for-zowe-sdk**: z/OSMF dataset/USS operations
-- **@zowe/zos-jobs-for-zowe-sdk**: z/OSMF job operations
-- **@zowe/core-for-zowe-sdk**: REST Client operations
+- **[@zowe/zos-files-for-zowe-sdk](https://docs.zowe.org/stable/typedoc/modules/_zowe_zos_files_for_zowe_sdk)**: z/OSMF dataset/USS operations
+- **[@zowe/zos-jobs-for-zowe-sdk](https://docs.zowe.org/stable/typedoc/modules/_zowe_zos_jobs_for_zowe_sdk)**: z/OSMF job operations
+- **[@zowe/core-for-zowe-sdk](https://docs.zowe.org/stable/typedoc/modules/_zowe_core_for_zowe_sdk)**: REST Client operations
+- **[@zowe/zosmf-for-zowe-sdk](https://docs.zowe.org/stable/typedoc/modules/_zowe_zosmf_for_zowe_sdk)**: z/OSMF operations
 - **@zowe/secrets-for-zowe-sdk**: Secure Credential operations
-- **@zowe/zosmf-for-zowe-sdk**: z/OSMF operations
 - **@zowe/zos-ftp-for-zowe-cli**: FTP protocol operations
 
 ---
