@@ -730,6 +730,122 @@ describe("ZoweUSSNode Unit Tests - node.setEncoding() and encoding behaviors", (
         node.contextValue = Constants.USS_SESSION_CONTEXT;
         expect(node.setEncoding.bind(node)).toThrow("Cannot set encoding for node with context ussSession");
     });
+
+    it("does not mark node as dirty when setting encoding", () => {
+        const globalMocks = createGlobalMocks();
+        const binaryEncoding = { kind: "binary" };
+        getEncodingMock.mockReturnValue(binaryEncoding);
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
+        node.dirty = false;
+        node.setEncoding(binaryEncoding);
+        // Verify that dirty flag is not set to true, preventing parent refresh
+        expect(node.dirty).toBe(false);
+    });
+
+    it("calls nodeDataChanged instead of refreshElement when setting encoding", () => {
+        const globalMocks = createGlobalMocks();
+        const binaryEncoding = { kind: "binary" };
+        getEncodingMock.mockReturnValue(binaryEncoding);
+
+        // Mock the USS tree provider
+        const mockNodeDataChanged = jest.fn();
+        const mockUssProvider = {
+            nodeDataChanged: mockNodeDataChanged,
+        };
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
+            uss: mockUssProvider,
+        } as any);
+
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
+
+        node.setEncoding(binaryEncoding);
+
+        // Verify nodeDataChanged was called (which only repaints, doesn't refresh)
+        expect(mockNodeDataChanged).toHaveBeenCalledWith(node);
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function node.setIcon()", () => {
+    it("calls nodeDataChanged instead of refreshElement to prevent tree collapse", () => {
+        const globalMocks = createGlobalMocks();
+        const mockNodeDataChanged = jest.fn();
+        const mockUssProvider = {
+            nodeDataChanged: mockNodeDataChanged,
+        };
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
+            uss: mockUssProvider,
+        } as any);
+
+        const node = new ZoweUSSNode({
+            label: "iconTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
+
+        const iconPath = {
+            light: "/path/to/light/icon.svg",
+            dark: "/path/to/dark/icon.svg",
+        };
+
+        node.setIcon(iconPath);
+
+        // Verify nodeDataChanged was called instead of refreshElement
+        expect(mockNodeDataChanged).toHaveBeenCalledWith(node);
+        expect(node.iconPath).toEqual(iconPath);
+    });
+
+    it("handles missing USS provider gracefully", () => {
+        const globalMocks = createGlobalMocks();
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
+            uss: undefined,
+        } as any);
+
+        const node = new ZoweUSSNode({
+            label: "iconTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
+
+        const iconPath = {
+            light: "/path/to/light/icon.svg",
+            dark: "/path/to/dark/icon.svg",
+        };
+
+        // Should not throw error when provider is undefined
+        expect(() => node.setIcon(iconPath)).not.toThrow();
+        expect(node.iconPath).toEqual(iconPath);
+    });
+
+    it("handles missing nodeDataChanged method gracefully", () => {
+        const globalMocks = createGlobalMocks();
+        const mockUssProvider = {} as any; // Provider without nodeDataChanged
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
+            uss: mockUssProvider,
+        } as any);
+
+        const node = new ZoweUSSNode({
+            label: "iconTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
+
+        const iconPath = {
+            light: "/path/to/light/icon.svg",
+            dark: "/path/to/dark/icon.svg",
+        };
+
+        // Should not throw error when nodeDataChanged is undefined
+        expect(() => node.setIcon(iconPath)).not.toThrow();
+        expect(node.iconPath).toEqual(iconPath);
+    });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
