@@ -213,10 +213,6 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;
-        // this._fireSoon(
-        //     { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.join(uri.path, "..") }) },
-        //     { type: vscode.FileChangeType.Created, uri }
-        // );
     }
 
     /**
@@ -348,7 +344,6 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 path: path.posix.join(parent.metadata.path, basename),
             };
             parent.entries.set(spoolName, entry);
-            // this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         } else {
             entry.data = content;
             entry.mtime = Date.now();
