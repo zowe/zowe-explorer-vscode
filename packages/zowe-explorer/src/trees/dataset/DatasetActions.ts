@@ -2303,6 +2303,10 @@ export class DatasetActions {
             return;
         }
         clipboardContent = clipboardContent.flat();
+        if (clipboardContent[0] == null || typeof clipboardContent[0] !== "object" || !("dataSetName" in clipboardContent[0])) {
+            Gui.errorMessage(vscode.l10n.t("Cross-view paste is not supported. Copy data set(s) first before pasting into the Data Sets view."));
+            return;
+        }
         if (SharedContext.isPds(clipboardContent[0].contextValue)) {
             await DatasetActions.copyPartitionedDatasets(clipboardContent, node);
         } else if (SharedContext.isDsMember(clipboardContent[0].contextValue)) {
