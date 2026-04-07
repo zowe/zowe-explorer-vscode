@@ -377,6 +377,7 @@ export class BaseProvider {
         return ConflictViewSelection.Overwrite;
     }
 
+    //TODO (v4): rename _fireSoon -> fireSoon since it is no longer private
     /**
      * Internal VSCode function for the FileSystemProvider to fire events from the event queue
      */
