@@ -9,7 +9,7 @@
  *
  */
 
-import { FileChangeType, Uri, FileType } from "vscode";
+import { FileChangeType, Uri } from "vscode";
 import * as vscode from "vscode";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import { UssFile, UssDirectory, FilterEntry, ZoweScheme, FsAbstractUtils } from "@zowe/zowe-explorer-api";

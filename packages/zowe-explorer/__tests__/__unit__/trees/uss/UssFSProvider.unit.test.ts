@@ -2177,6 +2177,29 @@ describe("UssFSProvider", () => {
         });
     });
 
+    describe("createEntry", () => {
+        it("creates a file entry", () => {
+            const fakeFolderEntry = new UssDirectory("aFolder");
+            fakeFolderEntry.metadata = testEntries.folder.metadata;
+            jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
+            const entry = UssFSProvider.instance.createEntry(testUris.file, "file");
+            expect(entry).toBeInstanceOf(UssFile);
+            expect(entry.name).toBe("aFile.txt");
+            expect(fakeFolderEntry.entries.has("aFile.txt")).toBe(true);
+        });
+
+        it("creates a directory entry", () => {
+            const fakeFolderEntry = new UssDirectory("aFolder");
+            fakeFolderEntry.metadata = testEntries.folder.metadata;
+            jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
+            const testFolderUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/u/myuser/folderName/newFolder" });
+            const entry = UssFSProvider.instance.createEntry(testFolderUri, "directory");
+            expect(entry).toBeInstanceOf(UssDirectory);
+            expect(entry.name).toBe("newFolder");
+            expect(fakeFolderEntry.entries.has("newFolder")).toBe(true);
+        });
+    });
+
     describe("watch", () => {
         it("returns a new, empty Disposable object", () => {
             expect(UssFSProvider.instance.watch(testUris.file)).toBeInstanceOf(Disposable);

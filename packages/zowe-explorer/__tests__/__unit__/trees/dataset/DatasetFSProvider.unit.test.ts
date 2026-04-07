@@ -17,6 +17,7 @@ import {
     DirEntry,
     DsEntry,
     DsEntryMetadata,
+    DsType,
     FileEntry,
     FilterEntry,
     FsAbstractUtils,
@@ -132,6 +133,40 @@ describe("DatasetFSProvider", () => {
             jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
             DatasetFSProvider.instance.createDirectory(testUris.pds);
             expect(fakeSessionEntry.entries.has("USER.DATA.PDS")).toBe(true);
+        });
+    });
+
+    describe("createEntry", () => {
+        it("creates a PDS entry", () => {
+            const fakeSessionEntry = new FilterEntry("sestest");
+            fakeSessionEntry.metadata = testEntries.session.metadata;
+            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            const entry = DatasetFSProvider.instance.createEntry(testUris.pds, DsType.Pds);
+            expect(entry).toBeInstanceOf(PdsEntry);
+            expect(entry.name).toBe("USER.DATA.PDS");
+            expect(fakeSessionEntry.entries.has("USER.DATA.PDS")).toBe(true);
+        });
+
+        it("creates a PS entry", () => {
+            const fakeSessionEntry = new FilterEntry("sestest");
+            fakeSessionEntry.metadata = testEntries.session.metadata;
+            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            const entry = DatasetFSProvider.instance.createEntry(testUris.ps, DsType.Ps);
+            expect(entry).toBeInstanceOf(DsEntry);
+            expect((entry as DsEntry).isMember).toBe(false);
+            expect(entry.name).toBe("USER.DATA.PS");
+            expect(fakeSessionEntry.entries.has("USER.DATA.PS")).toBe(true);
+        });
+
+        it("creates a PDS member entry", () => {
+            const fakePdsEntry = new PdsEntry("USER.DATA.PDS");
+            fakePdsEntry.metadata = testEntries.pds.metadata;
+            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakePdsEntry);
+            const entry = DatasetFSProvider.instance.createEntry(testUris.pdsMember, DsType.PdsMember);
+            expect(entry).toBeInstanceOf(DsEntry);
+            expect((entry as DsEntry).isMember).toBe(true);
+            expect(entry.name).toBe("MEMBER1");
+            expect(fakePdsEntry.entries.has("MEMBER1")).toBe(true);
         });
     });
 
