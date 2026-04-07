@@ -133,11 +133,7 @@ To update securely stored user names and passwords in Zowe Explorer:
 
 Zowe Explorer for VS Code supports multiple authentication methods including basic authentication, multi-factor authentication, tokens, and certificates. See [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-authentication-methods) for more information about these other authentication methods.
 
-### Keyboard shortcuts
-
-- Restart Zowe Explorer
-  - Windows: `ctrl`+`alt`+`z`
-  - Mac: `⌘`+`⌥`+`z`
+### Example keyboard shortcuts
 
 <!-- - Open Recent Member
   - Windows: `ctrl`+`alt`+`t`
