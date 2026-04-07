@@ -614,7 +614,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
             });
             ZoweLogger.trace(`[DatasetFSProvider] fetchDatasetAtUri fired a change event for ${uri.toString()}`);
-            // this._fireSoon({ type: vscode.FileChangeType.Changed, uri }); //
 
             if (options?.editor) {
                 await this._updateResourceInEditor(uri);
