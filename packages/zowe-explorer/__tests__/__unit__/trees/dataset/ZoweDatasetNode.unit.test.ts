@@ -381,8 +381,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
             },
         });
         jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
-        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
-        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         Object.defineProperty(zosfiles.List, "allMembers", { value: allMembers });
         const pdsChildren = await pds.getChildren();
         expect(pdsChildren[0].label).toEqual("MEMBER1");
@@ -424,8 +423,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
             },
         });
         jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
-        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
-        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         Object.defineProperty(zosfiles.List, "allMembers", { value: allMembers });
         const pdsChildren = await pds.getChildren();
         expect(pdsChildren[0].label).toEqual("MEMBER1");

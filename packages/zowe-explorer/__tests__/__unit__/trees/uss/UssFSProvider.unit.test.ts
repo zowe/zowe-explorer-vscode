@@ -23,6 +23,7 @@ import {
     ZoweScheme,
     imperative,
     ZoweVsCodeExtension,
+    ConflictViewSelection,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
@@ -1314,7 +1315,9 @@ describe("UssFSProvider", () => {
             const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
             const newContents = new Uint8Array([3, 6, 9]);
-            const handleConflictMock = jest.spyOn(UssFSProvider.instance as any, "_handleConflict").mockImplementation();
+            const handleConflictMock = jest
+                .spyOn(UssFSProvider.instance as any, "_handleConflict")
+                .mockResolvedValue(ConflictViewSelection.Overwrite);
             const _handleErrorMock = jest.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation();
             await expect(UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true })).rejects.toThrow();
 
@@ -1347,7 +1350,9 @@ describe("UssFSProvider", () => {
             const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
             const newContents = new Uint8Array([3, 6, 9]);
-            const handleConflictMock = jest.spyOn(UssFSProvider.instance as any, "_handleConflict").mockImplementation();
+            const handleConflictMock = jest
+                .spyOn(UssFSProvider.instance as any, "_handleConflict")
+                .mockResolvedValue(ConflictViewSelection.Overwrite);
             await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true });
 
             expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
@@ -1398,8 +1403,9 @@ describe("UssFSProvider", () => {
             autoDetectEncodingMock.mockRestore();
         });
 
-        it("updates an empty, unaccessed file entry in the FSP without sending data", async () => {
+        it("updates an empty, unaccessed file entry in the FSP", async () => {
             const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({} as any);
+            const uploadEntryMock = jest.spyOn(UssFSProvider.instance as any, "uploadEntry").mockResolvedValue({ apiResponse: { etag: "NEWTAG" } });
             const folder = {
                 ...testEntries.folder,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file, wasAccessed: false }]]),
@@ -1412,6 +1418,7 @@ describe("UssFSProvider", () => {
             const fileEntry = folder.entries.get("aFile.txt")!;
             expect(fileEntry.data?.length).toBe(0);
             ussApiMock.mockRestore();
+            uploadEntryMock.mockRestore();
         });
 
         it("updates a file when open in the diff view", async () => {
@@ -1434,7 +1441,7 @@ describe("UssFSProvider", () => {
             const fileEntry = folder.entries.get("aFile.txt")!;
             expect(fileEntry.data?.length).toBe(0);
             expect(fileEntry.inDiffView).toBe(true);
-            expect(ussApiMock).not.toHaveBeenCalled();
+            ussApiMock.mockRestore();
         });
 
         it("throws an error if entry doesn't exist and 'create' option is false", async () => {

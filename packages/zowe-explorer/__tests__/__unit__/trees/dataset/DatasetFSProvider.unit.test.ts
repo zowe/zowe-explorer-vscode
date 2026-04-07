@@ -27,6 +27,7 @@ import {
     Types,
     ZoweExplorerApiType,
     ZoweScheme,
+    ConflictViewSelection,
 } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
@@ -972,7 +973,9 @@ describe("DatasetFSProvider", () => {
             sessionEntry.entries.set("USER.DATA.PS", psEntry);
             const lookupParentDirMock = jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
             jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(psEntry);
-            const handleConflictMock = jest.spyOn(DatasetFSProvider.instance as any, "_handleConflict").mockImplementation();
+            const handleConflictMock = jest
+                .spyOn(DatasetFSProvider.instance as any, "_handleConflict")
+                .mockResolvedValue(ConflictViewSelection.Overwrite);
             const newContents = new Uint8Array([3, 6, 9]);
             await DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: false, overwrite: true });
 
@@ -1221,6 +1224,7 @@ describe("DatasetFSProvider", () => {
         it("updates an empty, unaccessed PS entry in the FSP without sending data", async () => {
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                 dataSet: jest.fn().mockResolvedValue(dsResponseMock),
+                uploadFromBuffer: jest.fn().mockResolvedValue(dsResponseMock),
             } as any);
             const session = {
                 ...testEntries.session,

@@ -95,6 +95,7 @@ function createGlobalMocks() {
     const profilesForValidation = { status: "active", name: "fake" };
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
+    jest.spyOn(UssFSProvider.instance, "createEntry").mockImplementation();
     Object.defineProperty(Gui, "setStatusBarMessage", { value: globalMocks.setStatusBarMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.showInformationMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.mockShowInputBox, configurable: true });

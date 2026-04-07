@@ -90,6 +90,7 @@ function createGlobalMocks() {
     globalMocks["readTextMock"] = new MockedProperty(vscode.env.clipboard, "readText", undefined, globalMocks.readText);
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
+    jest.spyOn(UssFSProvider.instance, "createEntry").mockImplementation();
 
     globalMocks.textDocumentsArray.push(globalMocks.mockTextDocument);
     globalMocks.profileOps = createInstanceOfProfile(globalMocks.profileOne);

@@ -540,7 +540,7 @@ describe("_handleConflict", () => {
         const prov = new (BaseProvider as any)();
         const diffOverwriteMock = jest.spyOn(prov, "diffOverwrite").mockImplementation();
         expect(await prov._handleConflict(globalMocks.testFileUri, globalMocks.fileFsEntry)).toBe(ConflictViewSelection.Overwrite);
-        expect(diffOverwriteMock).toHaveBeenCalledWith(globalMocks.testFileUri);
+        expect(diffOverwriteMock).toHaveBeenCalledWith(globalMocks.testFileUri, false);
     });
 });
 describe("_handleError", () => {

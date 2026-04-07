@@ -28,7 +28,16 @@ import {
     createMockNode,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
-import { ProfilesCache, imperative, Gui, Validation, NavigationTreeItem, FsAbstractUtils, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import {
+    ProfilesCache,
+    imperative,
+    Gui,
+    Validation,
+    NavigationTreeItem,
+    FsAbstractUtils,
+    ZoweVsCodeExtension,
+    DsType,
+} from "@zowe/zowe-explorer-api";
 import { Constants, JwtCheckResult } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { Profiles } from "../../../../src/configuration/Profiles";
@@ -360,8 +369,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const writeFileMock = jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
-        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        const writeFileMock = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.pattern = "test";
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -403,7 +411,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(testTree);
 
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
-        expect(writeFileMock).toHaveBeenCalledWith(sampleChildren[0].resourceUri, new Uint8Array(), { create: true, overwrite: false });
+        expect(writeFileMock).toHaveBeenCalledWith(sampleChildren[0].resourceUri, DsType.Ps);
         expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
         expect(children).toEqual(sampleChildren);
     });
@@ -2032,8 +2040,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
     it("updates stats with modified date and user ID if provided in API", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
-        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         const newNode = new ZoweDatasetNode({
