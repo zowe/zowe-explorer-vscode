@@ -267,13 +267,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 const uriBasename = path.posix.basename(uri.path);
                 // Classic z/OSMF responses include a "." entry (mode "d") as the first item.
                 // Some extenders omit that entry and return only child entries. In that case,
-                // detect a directory listing by verifying that no raw item is a non-directory
-                // file whose name matches the URI basename. Such an item would indicate that
-                // fileList was called on a plain file and we must not create a directory.
-                const hasSelfAsFile = rawItems.some((item) => item.name === uriBasename && !(item.mode as string | undefined)?.startsWith("d"));
+                // detect a directory listing by verifying that the response represents the
+                // directory itself (not a child file with a matching name).
+                //
+                // Edge case: A directory may contain a file whose name matches the URI basename.
+                // For example, listing /u/users/ibmuser/temp (directory) might return a child
+                // file named "temp". We distinguish by checking: if there's no "." entry and
+                // only a single item that is a non-directory file matching the basename, then
+                // fileList was called on that file. Otherwise, it's a directory listing.
+                const hasSelfEntry = rawItems.some((item) => item.name === ".");
+                const isSingleFileMatch =
+                    rawItems.length === 1 && rawItems[0].name === uriBasename && !(rawItems[0].mode as string | undefined)?.startsWith("d");
                 const isDirectoryResponse =
-                    rawItems.some((item) => item.name === "." && (item.mode as string | undefined)?.startsWith("d")) ||
-                    (rawItems.length > 0 && !hasSelfAsFile);
+                    (hasSelfEntry && (rawItems.find((item) => item.name === ".")?.mode as string | undefined)?.startsWith("d")) ||
+                    (rawItems.length > 0 && !hasSelfEntry && !isSingleFileMatch);
                 if (isDirectoryResponse) {
                     this._createDirectoryRecursive(uri);
                 }

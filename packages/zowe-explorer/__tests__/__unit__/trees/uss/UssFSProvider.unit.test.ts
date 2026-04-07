@@ -760,6 +760,33 @@ describe("UssFSProvider", () => {
             createRecursiveSpy.mockRestore();
             existsSpy.mockRestore();
         });
+        it("creates a directory entry when listing a directory that contains a file with matching basename", async () => {
+            // Edge case: listing /u/users/ibmuser/temp (directory) that contains a file named "temp"
+            const tempDirUri = testUris.folder.with({ path: "/sestest/u/users/ibmuser/temp" });
+            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+                fileList: jest.fn().mockResolvedValueOnce({
+                    success: true,
+                    commandResponse: "",
+                    apiResponse: {
+                        items: [
+                            { name: "temp", mode: "-rwxrwxrwx" }, // File with same name as directory
+                            { name: "other.txt", mode: "-rwxrwxrwx" },
+                        ],
+                    },
+                }),
+            } as any);
+            const existsSpy = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createRecursiveSpy = jest.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation();
+
+            await UssFSProvider.instance.listFiles(testProfile, tempDirUri);
+
+            // Should create directory because response contains only children (no "." entry)
+            // and the file named "temp" is a child, not the directory itself
+            expect(createRecursiveSpy).toHaveBeenCalledWith(tempDirUri);
+
+            createRecursiveSpy.mockRestore();
+            existsSpy.mockRestore();
+        });
         it("properly returns an unsuccessful response", async () => {
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
                 fileList: jest.fn().mockResolvedValueOnce({
