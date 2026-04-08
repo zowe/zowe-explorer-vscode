@@ -1075,6 +1075,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
     }
 
+    /**
+     * Creates a new dataset entry in the provider at the given URI.
+     * @param uri The URI that represents the new dataset path
+     * @param dsType The type of dataset to create (PDS, PS, or PDS member)
+     * @returns The newly created dataset entry (either PdsEntry or DsEntry)
+     */
     public createEntry(uri: vscode.Uri, dsType: DsType): PdsEntry | DsEntry {
         const basename = path.posix.basename(uri.path);
         const parent = this.lookupParentDirectory(uri);

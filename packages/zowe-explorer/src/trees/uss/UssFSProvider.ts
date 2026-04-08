@@ -924,7 +924,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.mtime = Date.now();
         parent.size -= 1;
 
-        this._fireSoon({ uri, type: vscode.FileChangeType.Deleted });
+        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
     }
 
     public async copy(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
@@ -1056,6 +1056,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
     }
 
+    /**
+     * Creates a new USS file or directory entry in the provider at the given URI.
+     * @param uri The URI that represents the new file or directory path
+     * @param ussType The type of entry to create ("file" or "directory")
+     * @returns The newly created USS entry (either UssFile or UssDirectory)
+     */
     public createEntry(uri: vscode.Uri, ussType: "file" | "directory"): UssFile | UssDirectory {
         const basename = path.posix.basename(uri.path);
         const parent = this.lookupParentDirectory(uri);
