@@ -6250,6 +6250,55 @@ describe("DatasetActions - downloading functions", () => {
                 })
             );
         });
+
+        it("should report progress correctly", async () => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "M1" }, { member: "M2" }, { member: "M3" }] },
+            });
+
+            const mockProgress = { report: jest.fn() };
+            const reportProgressSpy = jest.spyOn(Gui, "reportProgress").mockImplementation();
+
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockExecuteDownloadWithProgress = new MockedProperty(
+                DatasetActions,
+                "executeDownloadWithProgress" as any,
+                undefined,
+                jest.fn().mockImplementation(async (_title, downloadFn, _downloadType, _node) => {
+                    return await downloadFn(mockProgress);
+                })
+            );
+
+            let capturedTask: any;
+            jest.spyOn(testMocks.mvsApi, "downloadAllMembers").mockImplementation(async (_dsName, opts: any) => {
+                capturedTask = opts.task;
+                capturedTask.percentComplete = 33;
+                capturedTask.percentComplete = 66;
+                capturedTask.percentComplete = 100;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(capturedTask.percentComplete).toBe(100);
+            expect(reportProgressSpy).toHaveBeenCalledTimes(3);
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(1, mockProgress, 3, 1, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(2, mockProgress, 3, 2, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(3, mockProgress, 3, 3, "");
+
+            reportProgressSpy.mockRestore();
+        });
     });
 
     describe("downloadMember", () => {
