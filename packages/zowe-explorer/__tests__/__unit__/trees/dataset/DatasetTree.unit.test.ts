@@ -1781,6 +1781,7 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         await testTree.removeFavorite(favMember1);
 
         expect(favPds.favoritedMemberNames).toEqual(["MEMBER2"]);
+        expect(favPds.description).toBeUndefined();
         expect(profileNodeInFavs.children.length).toBe(1);
     });
 
@@ -1853,6 +1854,7 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         await testTree.removeFavorite(mem2);
 
         expect(favPds.favoritedMemberNames).toEqual(["MEM1", "MEM3"]);
+        expect(favPds.description).toBeUndefined();
         expect(profileNodeInFavs.children.length).toBe(1);
     });
 
@@ -1986,6 +1988,7 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         expect(favPds).toBeDefined();
         expect(favPds.pdsFavoriteState).toBe(Definitions.PdsFavoriteState.SpecificMembers);
         expect(favPds.favoritedMemberNames).toEqual(["MEM2"]);
+        expect(favPds.description).toBeUndefined();
         expect(SharedContext.isFavorite(sessionMem1)).toBe(false);
     });
 
@@ -2124,6 +2127,7 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         expect(showMessageSpy).not.toHaveBeenCalledWith(expect.stringContaining("already"));
         expect((favPds as ZoweDatasetNode).favoritedMemberNames).toContain("MEM1");
         expect((favPds as ZoweDatasetNode).favoritedMemberNames).toContain("MEM2");
+        expect(favPds.description).toBeUndefined();
     });
 });
 describe("Dataset Tree Unit Tests - Function updateSessionFilterFavContext", () => {
@@ -4778,6 +4782,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
         // Check that the PDS node has the correct member favorites
         const pdsNode = profileNode.children[0] as ZoweDatasetNode;
         expect(pdsNode.favoritedMemberNames).toEqual(["MEM1", "MEM2"]);
+        expect(pdsNode.description).toBeUndefined();
         expect(SharedContext.isFavoritePds(pdsNode)).toBe(true);
     });
 
@@ -4798,6 +4803,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
         await blockMocks.testTree.refreshFavorites();
         const pdsNodeAfterRefresh = blockMocks.testTree.mFavorites[0].children[0] as ZoweDatasetNode;
         expect(pdsNodeAfterRefresh.favoritedMemberNames).toEqual(["MEM1", "MEM2"]);
+        expect(pdsNodeAfterRefresh.description).toBeUndefined();
     });
 });
 

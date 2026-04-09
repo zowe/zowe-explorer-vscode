@@ -486,7 +486,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
             // For favorited PDS with specific member favorites, filter to only show those members
             if (SharedContext.isFavoritePds(this) && this.favoritedMemberNames != null) {
+                const totalMembers = this.children.length;
                 this.children = this.children.filter((child) => this.favoritedMemberNames.includes(child.label as string));
+                // Don't set description of filter is set, prefer filter description
+                if (!this.filter) {
+                    this.description = ZoweDatasetNode.memberCountDescription(this.children.length, totalMembers);
+                }
             }
 
             if (SharedContext.isFavoritePds(this)) {
@@ -1123,6 +1128,27 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         this.dirty = true;
+    }
+
+    public static memberCountDescription(count: number, total?: number): string {
+        if (total != null) {
+            if (total === 1) {
+                return vscode.l10n.t("1/1 member");
+            }
+            return vscode.l10n.t({
+                message: "{0}/{1} members",
+                args: [count, total],
+                comment: ["Number of favorited members out of total members in a PDS"],
+            });
+        }
+        if (count === 1) {
+            return vscode.l10n.t("1 member");
+        }
+        return vscode.l10n.t({
+            message: "{0} members",
+            args: [count],
+            comment: ["Number of favorited members in a PDS"],
+        });
     }
 
     /**

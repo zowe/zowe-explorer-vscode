@@ -393,9 +393,16 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             if (element.contextValue && element.contextValue === Constants.FAV_PROFILE_CONTEXT) {
                 return this.loadProfilesForFavorites(this.log, element);
             }
+            const prevDescription = element.description;
             const response = await element.getChildren(
                 SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE) > 0
             );
+
+            // If getChildren updated the parent node's description,
+            // notify the tree view to re-render the parent node with the new description
+            if (element.description !== prevDescription) {
+                this.nodeDataChanged(element);
+            }
 
             // For PDS nodes in the session tree, update member context to reflect their favorite status
             if (
