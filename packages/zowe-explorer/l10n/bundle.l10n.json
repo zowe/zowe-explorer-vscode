@@ -434,6 +434,7 @@
   "Configure and apply file filtering options (currently configured)": "Configure and apply file filtering options (currently configured)",
   "Configure Filter Options": "Configure Filter Options",
   "Confirm": "Confirm",
+  "Conflict: Remote contents have changed.": "Conflict: Remote contents have changed.",
   "Connection Name": "Connection Name",
   "Contents": "Contents",
   "Continue": "Continue",
@@ -2028,6 +2029,12 @@
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
   "The \"Open Recent Member\" command can now be triggered from the command palette. <a>#3477</a>": "The \"Open Recent Member\" command can now be triggered from the command palette. <a>#3477</a>",
   "The \"Zowe Resources\" panel is now hidden by default until Zowe Explorer reveals it to display a table or other data. <a>#3113</a>": "The \"Zowe Resources\" panel is now hidden by default until Zowe Explorer reveals it to display a table or other data. <a>#3113</a>",
+  "The {0} already exists.\nDo you want to replace it?/Node type": {
+    "message": "The {0} already exists.\nDo you want to replace it?",
+    "comment": [
+      "Node type"
+    ]
+  },
   "The **USS** tree can now be filtered by any selected directory. Right-click a directory and select Search by directory to filter. Use the Go Up One Directory button to quickly adjust the filter to the parent directory.": "The **USS** tree can now be filtered by any selected directory. Right-click a directory and select Search by directory to filter. Use the Go Up One Directory button to quickly adjust the filter to the parent directory.",
   "The API does not support updating attributes for this": "The API does not support updating attributes for this",
   "The cancel function is not implemented in this API.": "The cancel function is not implemented in this API.",
@@ -2212,6 +2219,7 @@
   "Updated the SDK dependencies to 8.0.0-next.202403041352 for technical currency <a>#2754</a>.": "Updated the SDK dependencies to 8.0.0-next.202403041352 for technical currency <a>#2754</a>.",
   "Updated the test for the default credential manager for better compatibility with Cloud-based platforms such as Eclipse Che and Red Hat OpenShift Dev Spaces. <a>#3297</a>": "Updated the test for the default credential manager for better compatibility with Cloud-based platforms such as Eclipse Che and Red Hat OpenShift Dev Spaces. <a>#3297</a>",
   "Updated UI/UX method calls to use standalone Gui module for better usability and maintainability. <a>#1967</a>": "Updated UI/UX method calls to use standalone Gui module for better usability and maintainability. <a>#1967</a>",
+  "Updated USS and data set file system providers to generate notifications based on remote system changes rather than local file system cache updates. <a>#4162</a>": "Updated USS and data set file system providers to generate notifications based on remote system changes rather than local file system cache updates. <a>#4162</a>",
   "Updated Zowe Explorer API dependency to 3.0.0 for Zowe V3 support. Check the <a>list</a> of APIs that were removed.": "Updated Zowe Explorer API dependency to 3.0.0 for Zowe V3 support. Check the <a>list</a> of APIs that were removed.",
   "Updated Zowe SDKs to 8.10.4 for technical currency. <a>#3306</a>": "Updated Zowe SDKs to 8.10.4 for technical currency. <a>#3306</a>",
   "Updated Zowe SDKs to 8.16.0 to include the latest enhancements from Imperative and the z/OS Files SDK. <a>#3526</a>": "Updated Zowe SDKs to 8.16.0 to include the latest enhancements from Imperative and the z/OS Files SDK. <a>#3526</a>",
