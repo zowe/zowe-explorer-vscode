@@ -248,7 +248,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             datasetSessionNode,
         };
     }
-    it("Checking function for PDS favorite", async () => {
+    it("Checking function for PDS favorite", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new DatasetTree();
@@ -268,11 +268,11 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             path: `/${blockMocks.datasetSessionNode.label as string}/${node.label as string}`,
         });
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("BRTVS99.PUBLIC", Constants.DS_PDS_CONTEXT, favProfileNode);
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("BRTVS99.PUBLIC", Constants.DS_PDS_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile).toEqual(node);
     });
-    it("Checking function for sequential DS favorite", async () => {
+    it("Checking function for sequential DS favorite", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new DatasetTree();
@@ -290,7 +290,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         });
         node.command = { command: "vscode.open", title: "", arguments: [node.resourceUri] };
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile(
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile(
             "BRTVS99.PS",
             Constants.DS_DS_CONTEXT,
             blockMocks.datasetSessionNode
@@ -298,7 +298,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
 
         expect(favChildNodeForProfile).toEqual(node);
     });
-    it("Checking function for invalid context value", async () => {
+    it("Checking function for invalid context value", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const testTree = new DatasetTree();
@@ -309,7 +309,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
-        await testTree.initializeFavChildNodeForProfile("BRTVS99.BAD", "badContextValue", favProfileNode);
+        testTree.initializeFavChildNodeForProfile("BRTVS99.BAD", "badContextValue", favProfileNode);
 
         expect(showErrorMessageSpy).toHaveBeenCalledTimes(1);
         showErrorMessageSpy.mockClear();
@@ -360,6 +360,8 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const writeFileMock = jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.pattern = "test";
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -401,6 +403,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(testTree);
 
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
+        expect(writeFileMock).toHaveBeenCalledWith(sampleChildren[0].resourceUri, new Uint8Array(), { create: true, overwrite: false });
         expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
         expect(children).toEqual(sampleChildren);
     });
@@ -802,6 +805,63 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         const resultFavPdsNode = testTree.mFavorites[0].children[0];
 
         expect(resultFavPdsNode).toEqual(expectedFavPdsNode);
+    });
+    it("Checking that filesystem entry is created for favorited PDS that doesn't exist in filesystem", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const favProfileNode = new ZoweDatasetNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetFavoriteNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.FAV_PROFILE_CONTEXT,
+        });
+        const favPdsNode = new ZoweDatasetNode({
+            label: "favoritePds",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.PDS_FAV_CONTEXT,
+        });
+        const testTree = new DatasetTree();
+        favProfileNode.children.push(favPdsNode);
+        testTree.mFavorites.push(favProfileNode);
+
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false);
+        const createDirectorySpy = jest.spyOn(vscode.workspace.fs, "createDirectory");
+        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        expect(createDirectorySpy).toHaveBeenCalledWith(favPdsNode.resourceUri);
+    });
+
+    it("Checking that filesystem entry is created for favorited DS that doesn't exist in filesystem", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const favProfileNode = new ZoweDatasetNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetFavoriteNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.FAV_PROFILE_CONTEXT,
+        });
+        const favDsNode = new ZoweDatasetNode({
+            label: "favoriteDs",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: favProfileNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.DS_FAV_CONTEXT,
+        });
+        const testTree = new DatasetTree();
+        favProfileNode.children.push(favDsNode);
+        testTree.mFavorites.push(favProfileNode);
+
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false);
+        const writeFileSpy = jest.spyOn(vscode.workspace.fs, "writeFile");
+        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        expect(writeFileSpy).toHaveBeenCalledWith(favDsNode.resourceUri, new Uint8Array());
     });
 });
 describe("Dataset Tree Unit Tests - Function getParent", () => {
@@ -1972,7 +2032,8 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
     it("updates stats with modified date and user ID if provided in API", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         const newNode = new ZoweDatasetNode({
@@ -4679,6 +4740,101 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B"]);
         });
 
+        it("filters single PDS by date created", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Created" as any);
+            mocks.showInputBox.mockResolvedValueOnce("2022-02-01");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["C"]);
+        });
+
+        it("filters single PDS by name", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(case-sensitive) Name" as any);
+            mocks.showInputBox.mockResolvedValueOnce("A");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A"]);
+        });
+
+        it("filters single PDS by name with wildcard", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(case-sensitive) Name" as any);
+            mocks.showInputBox.mockResolvedValueOnce("*");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
+        });
+
+        it("filters PDS by name prefix wildcard returning only matching members", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+
+            const mem1 = new ZoweDatasetNode({
+                label: "MEM1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: nodes.pds,
+            });
+            const mem2 = new ZoweDatasetNode({
+                label: "MEM2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: nodes.pds,
+            });
+            const other = new ZoweDatasetNode({
+                label: "OTHER",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: nodes.pds,
+            });
+            nodes.pds.children = [mem1, mem2, other];
+
+            mocks.showQuickPick.mockResolvedValueOnce("$(case-sensitive) Name" as any);
+            mocks.showInputBox.mockResolvedValueOnce("MEM*");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["MEM1", "MEM2"]);
+        });
+
+        it("filters PDS by comma-separated names returning matching members", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(case-sensitive) Name" as any);
+            mocks.showInputBox.mockResolvedValueOnce("A,C");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "C"]);
+        });
+
+        it("filters PDS by comma-separated user IDs returning matching members", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(account) User ID" as any);
+            mocks.showInputBox.mockResolvedValueOnce("someUser,anotherUser");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["A", "B", "C"]);
+        });
+
+        it("filters PDS by comma-separated modified dates returning matching members", async () => {
+            const mocks = getBlockMocks();
+            const nodes = nodesForSuite();
+            mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Modified" as any);
+            mocks.showInputBox.mockResolvedValueOnce("2022-01-01,2022-03-15");
+            await tree.filterPdsMembersDialog(nodes.pds);
+            expect(mocks.nodeDataChanged).toHaveBeenCalled();
+            expect(mocks.refreshElement).not.toHaveBeenCalled();
+            expect(nodes.pds.children?.map((c: IZoweDatasetTreeNode) => c.label)).toStrictEqual(["B", "C"]);
+        });
+
         it("filters PDS members using the session node filter", async () => {
             const mocks = getBlockMocks();
             const nodes = nodesForSuite();
@@ -4710,6 +4866,74 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             await tree.filterPdsMembersDialog(nodes.pds);
             expect(mocks.refreshElement).not.toHaveBeenCalled();
             expect(updateFilterForNode).toHaveBeenCalledWith(nodes.pds, null, false);
+        });
+
+        it("filterBy returns true for LastModified when value is not a valid date", () => {
+            const nodes = nodesForSuite();
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.LastModified, value: "not-a-date" });
+            for (const child of nodes.pds.children) {
+                expect(filterFn(child)).toBe(true);
+            }
+        });
+
+        it("filterBy returns true for DateCreated when value is not a valid date", () => {
+            const nodes = nodesForSuite();
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.DateCreated, value: "not-a-date" });
+            for (const child of nodes.pds.children) {
+                expect(filterFn(child)).toBe(true);
+            }
+        });
+
+        it("filterBy excludes members with no modified date when filtering by Date Modified", () => {
+            const nodes = nodesForSuite();
+            (nodes.pds.children[0].getStats as jest.Mock).mockReturnValue({ user: "someUser" });
+
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.LastModified, value: "2022-03-15" });
+            expect(filterFn(nodes.pds.children[0])).toBe(false);
+            expect(filterFn(nodes.pds.children[1])).toBe(false);
+            expect(filterFn(nodes.pds.children[2])).toBe(true);
+        });
+
+        it("filterBy excludes members with no creation date when filtering by Date Created", () => {
+            const nodes = nodesForSuite();
+            (nodes.pds.children[0].getStats as jest.Mock).mockReturnValue({ user: "someUser" });
+
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.DateCreated, value: "2022-02-01" });
+            expect(filterFn(nodes.pds.children[0])).toBe(false);
+            expect(filterFn(nodes.pds.children[1])).toBe(false);
+            expect(filterFn(nodes.pds.children[2])).toBe(true);
+        });
+
+        it("filterBy returns true for an unrecognised filter method", () => {
+            const nodes = nodesForSuite();
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+            const filterFn = ZoweDatasetNode.filterBy({ method: 99 as Sorting.DatasetFilterOpts, value: "anything" });
+            for (const child of nodes.pds.children) {
+                expect(filterFn(child)).toBe(true);
+            }
+        });
+
+        it("filterBy returns true for nodes whose parent is not a PDS", () => {
+            const nodes = nodesForSuite();
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.Name, value: "testPds" });
+            expect(filterFn(nodes.pds)).toBe(true);
+            expect(filterFn(nodes.session)).toBe(true);
+        });
+
+        it("validates date filter input correctly via validateInput callback", async () => {
+            const mocks = getBlockMocks();
+            let capturedValidateInput: ((v: string) => string) | undefined;
+            mocks.showQuickPick.mockResolvedValueOnce("$(calendar) Date Modified" as any);
+            mocks.showInputBox.mockImplementation((opts: vscode.InputBoxOptions) => {
+                capturedValidateInput = opts.validateInput as (v: string) => string;
+                return Promise.resolve("2022-03-15") as any;
+            });
+            await tree.filterPdsMembersDialog(nodesForSuite().pds);
+            expect(capturedValidateInput).toBeDefined();
+            expect(capturedValidateInput("2022-03-15")).toBeNull();
+            expect(capturedValidateInput("2022-03-15,2022-01-01")).toBeNull();
+            expect(capturedValidateInput("not-a-date")).toBeTruthy();
+            expect(capturedValidateInput("2022-03-15,not-a-date")).toBeTruthy();
         });
     });
 

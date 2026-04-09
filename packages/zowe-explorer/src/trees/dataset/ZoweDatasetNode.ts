@@ -422,12 +422,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     if (dsNode.collapsibleState !== vscode.TreeItemCollapsibleState.None) {
                         // Create an entry for the PDS if it doesn't exist.
                         if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
-                            await vscode.workspace.fs.createDirectory(dsNode.resourceUri);
+                            DatasetFSProvider.instance.createDirectory(dsNode.resourceUri);
                         }
                     } else {
                         // Create an entry for the data set if it doesn't exist.
                         if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
-                            await vscode.workspace.fs.writeFile(dsNode.resourceUri, new Uint8Array());
+                            await DatasetFSProvider.instance.writeFile(dsNode.resourceUri, new Uint8Array(), { create: true, overwrite: false });
                         }
                     }
                     dsNode.updateStats(item);
@@ -635,8 +635,42 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @returns A function that sorts 2 nodes based on the given sorting method
      */
     public static filterBy(filter: Sorting.DatasetFilter): (node: IZoweDatasetTreeNode) => boolean {
-        const isDateFilter = (f: string): boolean => {
-            return dayjs(f).isValid();
+        const isDateFilter = (f: string): boolean => dayjs(f).isValid();
+        const matchesDateStat = (node: IZoweDatasetTreeNode, value: string, statName: "createdDate" | "modifiedDate"): boolean => {
+            if (!isDateFilter(value)) {
+                return true;
+            }
+
+            const statDate = node.getStats()?.[statName];
+            if (statDate == null) {
+                return false;
+            }
+
+            const parsedDate = dayjs(statDate);
+            return parsedDate.isValid() && parsedDate.isSame(value, "day");
+        };
+
+        const values = filter.value
+            .split(",")
+            .map((v) => v.trim())
+            .filter((v) => v.length > 0);
+
+        const matchesValue = (node: IZoweDatasetTreeNode, value: string): boolean => {
+            switch (filter.method) {
+                case Sorting.DatasetFilterOpts.LastModified:
+                    return matchesDateStat(node, value, "modifiedDate");
+                case Sorting.DatasetFilterOpts.UserId:
+                    return node.getStats()?.user === value;
+                case Sorting.DatasetFilterOpts.Name: {
+                    const label = (node.label as string).toUpperCase();
+                    const pattern = value.toUpperCase().replace(/\*/g, ".*");
+                    return new RegExp(`^${pattern}$`).test(label);
+                }
+                case Sorting.DatasetFilterOpts.DateCreated:
+                    return matchesDateStat(node, value, "createdDate");
+                default:
+                    return true;
+            }
         };
 
         return (node): boolean => {
@@ -644,17 +678,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             if (aParent == null || !SharedContext.isPds(aParent)) {
                 return true;
             }
-
-            switch (filter.method) {
-                case Sorting.DatasetFilterOpts.LastModified:
-                    if (!isDateFilter(filter.value)) {
-                        return true;
-                    }
-
-                    return dayjs(node.getStats()?.modifiedDate).isSame(filter.value, "day");
-                case Sorting.DatasetFilterOpts.UserId:
-                    return node.getStats()?.user === filter.value;
-            }
+            return values.some((v) => matchesValue(node, v));
         };
     }
 

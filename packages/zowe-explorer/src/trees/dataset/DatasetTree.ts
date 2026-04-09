@@ -516,7 +516,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
 
             // Initialize and attach favorited item nodes under their respective profile node in Favorites
-            const favChildNode = await this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
+            const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
             favProfileNode.children.push(favChildNode);
         }
     }
@@ -529,7 +529,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
      * @param parentNode The profile node in this.mFavorites that the favorite belongs to
      * @returns IZoweDatasetTreeNode
      */
-    public async initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweDatasetTreeNode): Promise<ZoweDatasetNode> {
+    public initializeFavChildNodeForProfile(label: string, contextValue: string, parentNode: IZoweDatasetTreeNode): ZoweDatasetNode {
         ZoweLogger.trace("DatasetTree.initializeFavChildNodeForProfile called.");
         const profile = parentNode.getProfile();
 
@@ -542,12 +542,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     parentNode,
                     profile,
                 });
-                if (
-                    !DatasetFSProvider.instance.exists(node.resourceUri) &&
-                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type)
-                ) {
-                    await vscode.workspace.fs.createDirectory(node.resourceUri);
-                }
             } else {
                 node = new ZoweDatasetNode({
                     label,
@@ -556,12 +550,6 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     profile,
                     contextOverride: contextValue,
                 });
-                if (
-                    !DatasetFSProvider.instance.exists(node.resourceUri) &&
-                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type)
-                ) {
-                    vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
-                }
             }
             node.contextValue = SharedContext.asFavorite(node);
             const icon = IconGenerator.getIconByNode(node);
@@ -659,6 +647,13 @@ Would you like to do this now?`,
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
         const favsForProfile = profileInFavs.children;
         for (const favorite of favsForProfile) {
+            if (!DatasetFSProvider.instance.exists(favorite.resourceUri)) {
+                if (SharedContext.isPds(favorite)) {
+                    await vscode.workspace.fs.createDirectory(favorite.resourceUri);
+                } else if (SharedContext.isDs(favorite)) {
+                    await vscode.workspace.fs.writeFile(favorite.resourceUri, new Uint8Array());
+                }
+            }
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
             if (favorite.getProfile() && favorite.getSession()) {
                 updatedFavsForProfile.push(favorite);
@@ -1978,7 +1973,10 @@ Would you like to do this now?`,
             : `$(clear-all) ${vscode.l10n.t("Clear filter for PDS")}`;
         const selection = (
             await Gui.showQuickPick(
-                [...DatasetUtils.DATASET_FILTER_OPTS.map((sortOpt, i) => (node.filter?.method === i ? `${sortOpt} $(check)` : sortOpt)), clearFilter],
+                [
+                    ...DatasetUtils.DATASET_FILTER_OPTS.map(({ label, method }) => (node.filter?.method === method ? `${label} $(check)` : label)),
+                    clearFilter,
+                ],
                 {
                     placeHolder: vscode.l10n.t({
                         message: "Set a filter for {0}",
@@ -1989,7 +1987,7 @@ Would you like to do this now?`,
             )
         )?.replace(" $(check)", "");
 
-        const filterMethod = DatasetUtils.DATASET_FILTER_OPTS.indexOf(selection);
+        const filterMethod = DatasetUtils.DATASET_FILTER_OPTS.find(({ label }) => label === selection)?.method ?? -1;
 
         const userDismissed = filterMethod < 0;
         if (userDismissed || selection === clearFilter) {
@@ -2007,17 +2005,26 @@ Would you like to do this now?`,
             return;
         }
 
-        const dateValidation = (value): string => {
-            return dayjs(value).isValid() ? null : vscode.l10n.t("Invalid date format specified");
+        const dateValidation = (value: string): string => {
+            const parts = value.split(",").map((v) => v.trim());
+            return parts.every((p) => p.length > 0 && dayjs(p).isValid()) ? null : vscode.l10n.t("Invalid date format specified");
+        };
+
+        const getValidation = (): ((value: string) => string) => {
+            if (filterMethod === Sorting.DatasetFilterOpts.LastModified || filterMethod === Sorting.DatasetFilterOpts.DateCreated) {
+                return dateValidation;
+            }
+            return (val: string): string => (val.split(",").every((v) => v.trim().length > 0) ? null : vscode.l10n.t("Invalid filter specified"));
+        };
+
+        const placeholders: Partial<Record<Sorting.DatasetFilterOpts, string>> = {
+            [Sorting.DatasetFilterOpts.Name]: vscode.l10n.t("e.g. MEM* or MEM1,MEM2"),
         };
 
         const filter = await Gui.showInputBox({
             title: vscode.l10n.t("Enter a value to filter by"),
-            placeHolder: "",
-            validateInput:
-                filterMethod === Sorting.DatasetFilterOpts.LastModified
-                    ? dateValidation
-                    : (val): string => (val.length > 0 ? null : vscode.l10n.t("Invalid filter specified")),
+            placeHolder: placeholders[filterMethod] ?? "",
+            validateInput: getValidation(),
         });
 
         // User dismissed filter entry, go back to filter selection
@@ -2030,7 +2037,7 @@ Would you like to do this now?`,
         this.updateFilterForNode(
             node,
             {
-                method: filterMethod,
+                method: filterMethod as Sorting.DatasetFilterOpts,
                 value: filter,
             },
             isSession

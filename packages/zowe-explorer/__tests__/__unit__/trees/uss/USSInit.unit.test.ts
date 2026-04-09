@@ -16,6 +16,7 @@ import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { USSInit } from "../../../../src/trees/uss/USSInit";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
+import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { Gui } from "@zowe/zowe-explorer-api";
 
 describe("Test src/uss/extension", () => {
@@ -60,6 +61,7 @@ describe("Test src/uss/extension", () => {
                     { spy: jest.spyOn(SharedContext, "isUssDirectory"), arg: [test.value], ret: false },
                     { spy: jest.spyOn(Gui, "setStatusBarMessage"), arg: ["$(sync~spin) Pulling from Mainframe..."], ret: test.statusMsg },
                     { spy: jest.spyOn(test.statusMsg, "dispose"), arg: [] },
+                    { spy: jest.spyOn(UssFSProvider.instance, "fetchFileAtUri"), arg: [undefined, { editor: undefined }] },
                 ],
             },
             {

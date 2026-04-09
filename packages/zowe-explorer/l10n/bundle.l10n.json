@@ -38,6 +38,7 @@
   "[{0}]: *": "[{0}]: *",
   "{0}\n\nSome files may have been skipped.": "{0}\n\nSome files may have been skipped.",
   "{0}\n\nSome files may not have been downloaded.": "{0}\n\nSome files may not have been downloaded.",
+  "{0} {1}": "{0} {1}",
   "{0} download completed with errors.": "{0} download completed with errors.",
   "{0} download completed.": "{0} download completed.",
   "{0} downloaded successfully.": "{0} downloaded successfully.",
@@ -141,6 +142,7 @@
   "Add localization support to release notes and changelogs. <a>#4047</a>": "Add localization support to release notes and changelogs. <a>#4047</a>",
   "Add New History Item": "Add New History Item",
   "Add Profile to Tree": "Add Profile to Tree",
+  "Add support for filtering PDS members by name and by date created. <a>#4075</a>": "Add support for filtering PDS members by name and by date created. <a>#4075</a>",
   "Add to workspace": "Add to workspace",
   "Add username and password for basic authentication": "Add username and password for basic authentication",
   "Added \"Cancel Job\" feature for job nodes in Jobs tree view. <a>#2251</a>": "Added \"Cancel Job\" feature for job nodes in Jobs tree view. <a>#2251</a>",
@@ -162,6 +164,7 @@
   "Added a new Poll For Job Completion button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting Zowe > Jobs: Poll Interval. <a>#3967</a>": "Added a new Poll For Job Completion button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting Zowe > Jobs: Poll Interval. <a>#3967</a>",
   "Added a new setting Secure Credentials Enabled, default value is selected for security and will have to be unselected to allow creation of team configuration files without default secure arrays to support environments that don't have access to Zowe CLI's Secure Credential Management.": "Added a new setting Secure Credentials Enabled, default value is selected for security and will have to be unselected to allow creation of team configuration files without default secure arrays to support environments that don't have access to Zowe CLI's Secure Credential Management.",
   "Added a new setting zowe.files.logsFolder.path that can be used to override Zowe Explorer logs folder if default location is read-only. <a>#2186</a>": "Added a new setting zowe.files.logsFolder.path that can be used to override Zowe Explorer logs folder if default location is read-only. <a>#2186</a>",
+  "Added a new VS Code setting that allows users to limit the number of concurrent REST requests sent to z/OSMF. <a>#4130</a>": "Added a new VS Code setting that allows users to limit the number of concurrent REST requests sent to z/OSMF. <a>#4130</a>",
   "Added a new VS Code toggle setting that allows users to show or hide hidden files in the Unix System Service (USS) tree view.<a>#3912</a>": "Added a new VS Code toggle setting that allows users to show or hide hidden files in the Unix System Service (USS) tree view.<a>#3912</a>",
   "Added a new Zowe Explorer setting, zowe.logger, with a default setting of INFO.": "Added a new Zowe Explorer setting, zowe.logger, with a default setting of INFO.",
   "Added a prompt to create a new Zowe client configuration for an environment that does not have any Zowe client configurations. <a>#3148</a>": "Added a prompt to create a new Zowe client configuration for an environment that does not have any Zowe client configurations. <a>#3148</a>",
@@ -233,14 +236,14 @@
   "Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, refer to the <a>\"Troubleshooting Zowe CLI credentials\"</a> page on Zowe Docs. <a>#3935</a>": "Added support for custom persistence levels for Windows (persist option) to support the credential manager in less permissive environments. For more information on how to configure this option, refer to the <a>\"Troubleshooting Zowe CLI credentials\"</a> page on Zowe Docs. <a>#3935</a>",
   "Added support for downloading data sets, data set members, USS files, and USS directories. <a>#3843</a>": "Added support for downloading data sets, data set members, USS files, and USS directories. <a>#3843</a>",
   "Added support for enabling/disabling validation for a Zowe profile across all trees <a>#2570</a>": "Added support for enabling/disabling validation for a Zowe profile across all trees <a>#2570</a>",
-  "Added support for encoding profile property when retrieving JCL with z/OSMF, i.e. \"encoding\": \"IBM-1147\" included in the z/OSMF profile to view JCL with \"IBM-1147\" encoding via the right-click Get JCL job option.": "Added support for encoding profile property when retrieving JCL with z/OSMF, i.e. \"encoding\": \"IBM-1147\" included in the z/OSMF profile to view JCL with \"IBM-1147\" encoding via the right-click Get JCL job option.",
   "Added support for encoding profile property when retrieving JCL with z/OSMF. <a>#3877</a>": "Added support for encoding profile property when retrieving JCL with z/OSMF. <a>#3877</a>",
+  "Added support for encoding profile property when retrieving JCL with z/OSMF. For example, include \"encoding\": \"IBM-1147\" in the z/OSMF profile to view JCL with \"IBM-1147\" encoding via the right-click Get JCL job option.": "Added support for encoding profile property when retrieving JCL with z/OSMF. For example, include \"encoding\": \"IBM-1147\" in the z/OSMF profile to view JCL with \"IBM-1147\" encoding via the right-click Get JCL job option.",
   "Added support for fetching virtual workspaces in parallel after Zowe Explorer activation. <a>#3880</a>": "Added support for fetching virtual workspaces in parallel after Zowe Explorer activation. <a>#3880</a>",
   "Added support for hiding a Zowe profile across all trees <a>#2567</a>": "Added support for hiding a Zowe profile across all trees <a>#2567</a>",
-  "Added support for jobEncoding profile property when submitting jobs to z/OSMF, i.e. \"jobEncoding\": \"IBM-1147\" included in the z/OSMF profile to submit jobs with \"IBM-1147\" encoding.": "Added support for jobEncoding profile property when submitting jobs to z/OSMF, i.e. \"jobEncoding\": \"IBM-1147\" included in the z/OSMF profile to submit jobs with \"IBM-1147\" encoding.",
   "Added support for jobEncoding profile property when submitting jobs to z/OSMF. <a>#3826</a>": "Added support for jobEncoding profile property when submitting jobs to z/OSMF. <a>#3826</a>",
-  "Added support for loading credential manager options from the imperative.json file. Add a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager.": "Added support for loading credential manager options from the imperative.json file. Add a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager.",
+  "Added support for jobEncoding profile property when submitting jobs to z/OSMF. For example, include \"jobEncoding\": \"IBM-1147\" in the z/OSMF profile to submit jobs with \"IBM-1147\" encoding.": "Added support for jobEncoding profile property when submitting jobs to z/OSMF. For example, include \"jobEncoding\": \"IBM-1147\" in the z/OSMF profile to submit jobs with \"IBM-1147\" encoding.",
   "Added support for loading credential manager options from the imperative.json file. Add a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager. <a>#3935</a>": "Added support for loading credential manager options from the imperative.json file. Add a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager. <a>#3935</a>",
+  "Added support for loading credential manager options from the imperative.json file. Added a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager.": "Added support for loading credential manager options from the imperative.json file. Added a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager.",
   "Added support for Local Storage settings for persistent settings in Zowe Explorer <a>#2208</a>": "Added support for Local Storage settings for persistent settings in Zowe Explorer <a>#2208</a>",
   "Added support for logging in to multiple API ML instances per team config file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team config file. <a>#2264</a>",
   "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>",
@@ -303,6 +306,8 @@
   "An SSH profile will be used for issuing UNIX commands with the profile {0}.": "An SSH profile will be used for issuing UNIX commands with the profile {0}.",
   "Applied credential manager options from imperative.json to default credential manager": "Applied credential manager options from imperative.json to default credential manager",
   "Apply changes": "Apply changes",
+  "Apply changes button - click to save your modifications": "Apply changes button - click to save your modifications",
+  "Apply changes button - disabled. Make changes to file properties to activate this button": "Apply changes button - disabled. Make changes to file properties to activate this button",
   "Apply Filter Options": "Apply Filter Options",
   "Apply to all trees": "Apply to all trees",
   "Apply to current tree selected": "Apply to current tree selected",
@@ -577,9 +582,11 @@
   "Downloading USS file...": "Downloading USS file...",
   "Downloads files and directories using uppercase names. When disabled, names are converted to lowercase": "Downloads files and directories using uppercase names. When disabled, names are converted to lowercase",
   "Duplicated profile schema writing on repeated Team Config file initialization:": "Duplicated profile schema writing on repeated Team Config file initialization:",
+  "e.g. MEM* or MEM1,MEM2": "e.g. MEM* or MEM1,MEM2",
   "e.g., +1M (larger than 1MB), -500K (smaller than 500KB), 100G": "e.g., +1M (larger than 1MB), -500K (smaller than 500KB), 100G",
   "e.g., +7 (older than 7 days), -1 (newer than 1 day), 30 (exactly 30 days)": "e.g., +7 (older than 7 days), -1 (newer than 1 day), 30 (exactly 30 days)",
   "e.g., 2 (search 2 levels deep)": "e.g., 2 (search 2 levels deep)",
+  "e.g., 5000 for checking every 5 seconds": "e.g., 5000 for checking every 5 seconds",
   "e.g., 755, -644 (not 644)": "e.g., 755, -644 (not 644)",
   "e.g., admin or 100": "e.g., admin or 100",
   "e.g., IBMUSER or 1001": "e.g., IBMUSER or 1001",
@@ -894,6 +901,8 @@
   "File extension can only contain letters, numbers, hyphens, and underscores": "File extension can only contain letters, numbers, hyphens, and underscores",
   "File extension cannot be empty": "File extension cannot be empty",
   "File History": "File History",
+  "File path": "File path",
+  "File permissions with checkboxes to toggle them": "File permissions with checkboxes to toggle them",
   "File Properties": "File Properties",
   "File Type": "File Type",
   "Filter by file size": "Filter by file size",
@@ -963,6 +972,8 @@
   "Fixed an accessibility issue in the \"Add Profile\" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference \"Create a New Team Configuration File\" and \"Edit Team Configuration File\" to guide keyboard and screen reader users. <a>#4028</a>": "Fixed an accessibility issue in the \"Add Profile\" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference \"Create a New Team Configuration File\" and \"Edit Team Configuration File\" to guide keyboard and screen reader users. <a>#4028</a>",
   "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>": "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>",
   "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>": "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>",
+  "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Replaced the inaccessible markdown link with keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>": "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Replaced the inaccessible markdown link with keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>",
+  "Fixed an accessibility issue where screen readers did not provide instructions for configuring job polling. Added descriptive prompts and placeholder text explaining how polling works, the expected input format, and what happens when polling is active. <a>#4029</a>": "Fixed an accessibility issue where screen readers did not provide instructions for configuring job polling. Added descriptive prompts and placeholder text explaining how polling works, the expected input format, and what happens when polling is active. <a>#4029</a>",
   "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>": "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>",
   "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>": "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>",
   "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>": "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>",
@@ -970,6 +981,7 @@
   "Fixed an issue in the Switch Authentication action, where changing from token-based authentication to username and password authentication did not properly invalidate the token. <a>#3654</a>": "Fixed an issue in the Switch Authentication action, where changing from token-based authentication to username and password authentication did not properly invalidate the token. <a>#3654</a>",
   "Fixed an issue seen where extender favorites not showing in the tree views. <a>#3470</a>": "Fixed an issue seen where extender favorites not showing in the tree views. <a>#3470</a>",
   "Fixed an issue seen with outdated profile information in the z/OS tree view data during upload and download of data set and USS files. <a>#3457</a>": "Fixed an issue seen with outdated profile information in the z/OS tree view data during upload and download of data set and USS files. <a>#3457</a>",
+  "Fixed an issue that prevented screen readers from reading Unix file attributes in the Unix file attributes webview, and added clear tags to help users understand how to edit those attributes.<a>#4024</a>": "Fixed an issue that prevented screen readers from reading Unix file attributes in the Unix file attributes webview, and added clear tags to help users understand how to edit those attributes.<a>#4024</a>",
   "Fixed an issue to review inconsistent capitalization across translation strings. <a>#2935</a>": "Fixed an issue to review inconsistent capitalization across translation strings. <a>#2935</a>",
   "Fixed an issue where a 401 error could occur when opening PDS members after updating credentials within the same user session. <a>#3150</a>": "Fixed an issue where a 401 error could occur when opening PDS members after updating credentials within the same user session. <a>#3150</a>",
   "Fixed an issue where a 401 Unauthorized error is thrown by the FileSystemProvider implementations when the user cancels or closes an authentication prompt. Now, the filesystem throws a more explicit AuthCancelledError in this scenario. <a>#3662</a>": "Fixed an issue where a 401 Unauthorized error is thrown by the FileSystemProvider implementations when the user cancels or closes an authentication prompt. Now, the filesystem throws a more explicit AuthCancelledError in this scenario. <a>#3662</a>",
@@ -1002,9 +1014,14 @@
   "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>": "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>",
   "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>": "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>",
   "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>": "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>",
+  "Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. <a>#3554</a>": "Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. <a>#3554</a>",
+  "Fixed an issue where file system URIs with trailing slashes failed to resolve. <a>#3904</a>": "Fixed an issue where file system URIs with trailing slashes failed to resolve. <a>#3904</a>",
   "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>": "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>",
+  "Fixed an issue where filtering a data set by Date Modified showed members without date attributes. <a>#4075</a>": "Fixed an issue where filtering a data set by Date Modified showed members without date attributes. <a>#4075</a>",
+  "Fixed an issue where focus was lost on a previously selected tree item after opening a Zowe resource (Data set, USS file, or Job) in the editor and closing it using Ctrl+W. Screen readers will now announce when focus is restored. <a>#4025</a>": "Fixed an issue where focus was lost on a previously selected tree item after opening a Zowe resource (Data set, USS file, or Job) in the editor and closing it using Ctrl+W. Screen readers will now announce when focus is restored. <a>#4025</a>",
   "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>": "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>",
   "Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. <a>#3923</a>": "Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. <a>#3923</a>",
+  "Fixed an issue where loading profiles could wrongly assume token authentication if parent profile defines multiple auth types. <a>#4105</a>": "Fixed an issue where loading profiles could wrongly assume token authentication if parent profile defines multiple auth types. <a>#4105</a>",
   "Fixed an issue where logical record length truncation detection failed for extenders. <a>#4002</a>": "Fixed an issue where logical record length truncation detection failed for extenders. <a>#4002</a>",
   "Fixed an issue where moving a PDS member into the \"No members found\" placeholder of an empty PDS deleted the member without transferring its data. <a>#3950</a>": "Fixed an issue where moving a PDS member into the \"No members found\" placeholder of an empty PDS deleted the member without transferring its data. <a>#3950</a>",
   "Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. <a>#3590</a>": "Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. <a>#3590</a>",
@@ -1023,6 +1040,7 @@
   "Fixed an issue where renaming or deleting the team configuration file caused an unhandled exception in Zowe Explorer, causing old, non-existent profiles to remain in the tree views. <a>#3772</a>": "Fixed an issue where renaming or deleting the team configuration file caused an unhandled exception in Zowe Explorer, causing old, non-existent profiles to remain in the tree views. <a>#3772</a>",
   "Fixed an issue where right-click menu for data set shows wrong options after deleting multiple PDS members. <a>#3516</a>": "Fixed an issue where right-click menu for data set shows wrong options after deleting multiple PDS members. <a>#3516</a>",
   "Fixed an issue where screen readers could not read data set attributes from the data set attribute webview.<a>#4023</a>": "Fixed an issue where screen readers could not read data set attributes from the data set attribute webview.<a>#4023</a>",
+  "Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.<a>#4023</a>": "Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.<a>#4023</a>",
   "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>": "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>",
   "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>": "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>",
   "Fixed an issue where ssh type profiles were throwing errors when making file system calls. <a>#3891</a>": "Fixed an issue where ssh type profiles were throwing errors when making file system calls. <a>#3891</a>",
@@ -1050,6 +1068,7 @@
   "Fixed an issue where the SharedActions.refreshAll function runs unexpectedly while a user performs an action in the tree views (such as listing data sets, USS files, jobs, etc.). <a>#3524</a>": "Fixed an issue where the SharedActions.refreshAll function runs unexpectedly while a user performs an action in the tree views (such as listing data sets, USS files, jobs, etc.). <a>#3524</a>",
   "Fixed an issue where the source data set was removed even though the move operation was not successful. <a>#3518</a>": "Fixed an issue where the source data set was removed even though the move operation was not successful. <a>#3518</a>",
   "Fixed an issue where the token expiration check was performed on profiles with APIs that do not support token types. <a>#3525</a>": "Fixed an issue where the token expiration check was performed on profiles with APIs that do not support token types. <a>#3525</a>",
+  "Fixed an issue where the USS tree collapsed down to the top level set from the initial filter.<a>#3932</a>": "Fixed an issue where the USS tree collapsed down to the top level set from the initial filter.<a>#3932</a>",
   "Fixed an issue where upgrading from Zowe Explorer v1 and selecting \"Reload Extensions\" causes Zowe Explorer v3 to fail during initialization. <a>#3051</a>": "Fixed an issue where upgrading from Zowe Explorer v1 and selecting \"Reload Extensions\" causes Zowe Explorer v3 to fail during initialization. <a>#3051</a>",
   "Fixed an issue where uploading a file to a data set or USS from a Windows machine caused extra carriage return characters to be included in its contents. Now, carriage returns are filtered out from carriage return/line feed (CRLF) sequences during upload. <a>#3853</a>": "Fixed an issue where uploading a file to a data set or USS from a Windows machine caused extra carriage return characters to be included in its contents. Now, carriage returns are filtered out from carriage return/line feed (CRLF) sequences during upload. <a>#3853</a>",
   "Fixed an issue where user attempts to perform a search on an individual PDS from the Zowe-Explorer extension using the \"Search PDS members\" action and query a search string, it brings out additional dataset as a part of the result.<a>#3682</a>": "Fixed an issue where user attempts to perform a search on an individual PDS from the Zowe-Explorer extension using the \"Search PDS members\" action and query a search string, it brings out additional dataset as a part of the result.<a>#3682</a>",
@@ -1225,6 +1244,7 @@
   "Go to Local Filtering": "Go to Local Filtering",
   "Group": "Group",
   "Grouped Common methods into Singleton classes. <a>#2109</a>": "Grouped Common methods into Singleton classes. <a>#2109</a>",
+  "Header actions": "Header actions",
   "Hide Profile": "Hide Profile",
   "Hide profile name from tree view": "Hide profile name from tree view",
   "HLQ.**.DATASET or HLQ.DATASET.NAME": "HLQ.**.DATASET or HLQ.DATASET.NAME",
@@ -1334,17 +1354,10 @@
   "Item invalid.": "Item invalid.",
   "items": "items",
   "JES API": "JES API",
-  "Job {0} completed - {1}/Job ID with clickable linkJob status": {
+  "Job {0} completed - {1}/Job name and IDJob status": {
     "message": "Job {0} completed - {1}",
     "comment": [
-      "Job ID with clickable link",
-      "Job status"
-    ]
-  },
-  "Job {0} completed - {1}/Job name and ID with clickable linkJob status": {
-    "message": "Job {0} completed - {1}",
-    "comment": [
-      "Job name and ID with clickable link",
+      "Job name and ID",
       "Job status"
     ]
   },
@@ -1358,6 +1371,7 @@
   "Job enhancements": "Job enhancements",
   "Job ID": "Job ID",
   "Job Name": "Job Name",
+  "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again.": "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again.",
   "Job search cancelled.": "Job search cancelled.",
   "Job spool pagination": "Job spool pagination",
   "Job submission failed.": "Job submission failed.",
@@ -1375,10 +1389,10 @@
       "Session name"
     ]
   },
-  "Job submitted: {0}/Job name and ID with set job command": {
+  "Job submitted: {0}/Job name and ID": {
     "message": "Job submitted: {0}",
     "comment": [
-      "Job name and ID with set job command"
+      "Job name and ID"
     ]
   },
   "jobActions.modifyCommand.apiNonExisting": "jobActions.modifyCommand.apiNonExisting",
@@ -1577,6 +1591,7 @@
   "Open": "Open",
   "Open File": "Open File",
   "Open Folder": "Open Folder",
+  "Open Job": "Open Job",
   "Open selected data set": "Open selected data set",
   "Open the **Command Palette** and search for Zowe Explorer: List Data Sets, select a profile, and enter a search filter.": "Open the **Command Palette** and search for Zowe Explorer: List Data Sets, select a profile, and enter a search filter.",
   "Open the data set": "Open the data set",
@@ -1598,6 +1613,7 @@
   "Overwrite existing files": "Overwrite existing files",
   "Overwrite existing files when downloading directories": "Overwrite existing files when downloading directories",
   "Owner": "Owner",
+  "Owner and group information with text fields to edit them": "Owner and group information with text fields to edit them",
   "Owner: ": "Owner: ",
   "Page": "Page",
   "Page Size:": "Page Size:",
@@ -1655,6 +1671,7 @@
       "Number of active jobs"
     ]
   },
+  "Polling automatically checks for job status updates at regular intervals. Enter the time in milliseconds between each check (minimum 1000ms).": "Polling automatically checks for job status updates at regular intervals. Enter the time in milliseconds between each check (minimum 1000ms).",
   "Polling job: {0}.../Job display name": {
     "message": "Polling job: {0}...",
     "comment": [
@@ -1770,6 +1787,7 @@
   "Refactored behavior and management of Favorites in Zowe Explorer. <a>#2026</a>": "Refactored behavior and management of Favorites in Zowe Explorer. <a>#2026</a>",
   "Refactored data set pagination to use the new getCount API (if available) to optimize access to the total item count.<a>#3844</a>": "Refactored data set pagination to use the new getCount API (if available) to optimize access to the total item count.<a>#3844</a>",
   "Refresh": "Refresh",
+  "Refresh File Properties": "Refresh File Properties",
   "refreshUSS() called from invalid node.": "refreshUSS() called from invalid node.",
   "Regex": "Regex",
   "Release notes": "Release notes",
@@ -2200,9 +2218,11 @@
   "Updated Zowe SDKs to 8.21.0 for technical currency. <a>#3668</a>": "Updated Zowe SDKs to 8.21.0 for technical currency. <a>#3668</a>",
   "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>": "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>",
   "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>": "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>",
-  "Updated Zowe SDKs to 8.30.4 for technical currency. <a>#4117</a>": "Updated Zowe SDKs to 8.30.4 for technical currency. <a>#4117</a>",
+  "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>": "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>",
+  "Updated Zowe SDKs to 8.31.0 for technical currency. <a>#4117</a>": "Updated Zowe SDKs to 8.31.0 for technical currency. <a>#4117</a>",
   "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>": "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>",
   "Updating data set templates.": "Updating data set templates.",
+  "Updating file properties": "Updating file properties",
   "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
     "message": "Updating imperative.json credential manager to {0}.\n{1}",
     "comment": [
@@ -2219,6 +2239,7 @@
   "Uploading USS file": "Uploading USS file",
   "Uploading USS file with encoding": "Uploading USS file with encoding",
   "Uploading USS files...": "Uploading USS files...",
+  "Use checkboxes to toggle read, write, and execute permissions for user, group, and all users": "Use checkboxes to toggle read, write, and execute permissions for user, group, and all users",
   "Use Default": "Use Default",
   "Use the \"Troubleshoot\" option for certain errors to obtain additional context, tips, and resources for how to resolve the errors. <a>#3243</a>": "Use the \"Troubleshoot\" option for certain errors to obtain additional context, tips, and resources for how to resolve the errors. <a>#3243</a>",
   "Use the search button to display data sets": "Use the search button to display data sets",
