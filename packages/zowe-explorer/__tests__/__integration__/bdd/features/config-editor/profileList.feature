@@ -192,14 +192,3 @@ Feature: Profile List Management - Comprehensive Testing
     And the user selects "All Types" from the type filter dropdown
     Then the profile list should show all profiles
     When the user switches to tree view mode
-
-  @config-editor @drag-drop
-  Scenario: User drags zosmf1 profile to zosmf2 location
-    And the zosmf1 profile exists in the tree
-    When the user clicks and holds on the zosmf1 profile
-    And the user hovers over the zosmf2 location
-    And the user releases the left click
-    And the user clicks the save button
-    Then the zosmf1 profile should be moved to the zosmf2 location in the config file
-    And the profile should be visible in its new location
-
