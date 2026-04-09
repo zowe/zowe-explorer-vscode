@@ -2600,7 +2600,6 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         const spyAction = jest.fn();
 
         // SEQUENTIAL
-        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
         node.contextValue = Constants.DS_DS_CONTEXT;
         clipboard.writeText(
             JSON.stringify([
@@ -2616,12 +2615,12 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         });
         spyAction.mockClear();
         mocked(Gui.showMessage).mockClear();
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
         expect(spyAction).toHaveBeenCalled();
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
 
         //PARTITIONED
-        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
         node.contextValue = Constants.DS_PDS_CONTEXT;
         clipboard.writeText(
             JSON.stringify([
@@ -2637,6 +2636,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         });
         spyAction.mockClear();
         mocked(Gui.showMessage).mockClear();
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
         expect(spyAction).toHaveBeenCalled();
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
@@ -2782,6 +2782,25 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             ])
         );
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
+    });
+
+    it("Should show error when pasting non-dataset content into the Data Sets view (cross-view paste)", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_DS_CONTEXT;
+
+        // Simulate USS content on clipboard (no dataSetName property)
+        clipboard.writeText(JSON.stringify({ ussPath: "/u/user/file.txt" }));
+
+        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith(
+            expect.stringContaining("Cross-view paste is not supported")
+        );
     });
 });
 
