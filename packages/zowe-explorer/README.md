@@ -11,8 +11,8 @@
 
 - Manage data sets and USS files on a z/OS mainframe with browse, create, modify, rename, copy, and upload functionality
 - Submit JCL and view job output
+- Issue TSO, UNIX, and MVS console commands from an integrated VS Code terminal
 - Apply other VS Code extensions for things like syntax highlighting, debugging, and IntelliSense to improve the developer experience
-- Issue TSO, UNIX, and MVS console commands from an integrated VS Code terminal.
 
 <br>
 
@@ -33,15 +33,13 @@ Before you use Zowe Explorer, ensure that you meet the following prerequisites:
 
 #### Operating systems
 
-- macOS
-
-  Note: Only Mac operating system versions supported by Apple.
+- macOS: Only Mac operating system versions supported by Apple
 
 - Unix-like:
   - [CentOS](https://www.centos.org/) 8+
   - [RHEL](https://www.redhat.com/en/technologies/linux-platforms/enterprise-linux) 8+
   - [Ubuntu](https://ubuntu.com/) 20.04+
-- Windows 10+
+- Windows: : Only Windows operating system versions supported by Microsoft
 
 #### Integrated development environments
 
@@ -56,10 +54,10 @@ Before you use Zowe Explorer, ensure that you meet the following prerequisites:
 ### Server side requirements
 
 - IBM z/OSMF is configured and running.
-  - See [z/OSMF REST services for Zowe clients](../user-guide/systemrequirements-zosmf.md#zosmf-rest-services-for-zowe-clients) for a list of services that need configuration.
+  - See [z/OSMF REST services for Zowe clients](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.md#zosmf-rest-services-for-zowe-clients) for a list of services that need configuration.
 
 - If using IBM CICS or IBM z/OS FTP: Applicable plug-in services are configured and running on the mainframe.
-  - Plug-ins communicate with various mainframe services. The services must be configured and running on the mainframe before issuing plug-in commands. - See [Zowe® Explorer for IBM® CICS® Transaction Server system requirements](./install-ze-extensions.md#zowe-explorer-for-ibm-cics-transaction-server-system-requirements). - See [Zowe® Explorer for IBM® z/OS® FTP system requirements](./install-ze-extensions.md#zowe-explorer-for-ibm-zos-ftp-system-requirements).
+  - Plug-ins communicate with various mainframe services. The services must be configured and running on the mainframe before issuing plug-in commands. - See [Zowe® Explorer for IBM® CICS® Transaction Server system requirements](https://docs.zowe.org/stable/getting-started/install-ze-extensions.md#zowe-explorer-for-ibm-cics-transaction-server-system-requirements). - See [Zowe® Explorer for IBM® z/OS® FTP system requirements](https://docs.zowe.org/stable/getting-started/install-ze-extensions.md#zowe-explorer-for-ibm-zos-ftp-system-requirements).
   </details>
 
 <details>
@@ -132,16 +130,6 @@ To update securely stored user names and passwords in Zowe Explorer:
 ### Other authentication methods
 
 Zowe Explorer for VS Code supports multiple authentication methods including basic authentication, multi-factor authentication, tokens, and certificates. See [Zowe Docs](https://docs.zowe.org/stable/user-guide/ze-authentication-methods) for more information about these other authentication methods.
-
-### Example keyboard shortcuts
-
-<!-- - Open Recent Member
-  - Windows: `ctrl`+`alt`+`t`
-  - Mac: `⌘`+`⌥`+`t` -->
-
-- Search in all Loaded Items
-  - Windows: `ctrl`+`alt`+`p`
-  - Mac: `⌘`+`⌥`+`p`
 
 </details>
 <details>
