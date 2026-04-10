@@ -499,17 +499,17 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             ussFileProvider.refreshElement(parentEquivNode);
         }
 
-        const profName = this.profile?.name;
-        if (profName && this.fullPath) {
-            for (const doc of vscode.workspace.textDocuments) {
-                const docPath = doc.uri.fsPath;
-                if (
-                    docPath &&
-                    docPath.toLowerCase().includes(profName.toLowerCase()) &&
-                    docPath.toLowerCase().includes(this.fullPath.toLowerCase())
-                ) {
-                    await Workspace.closeOpenedTextFile(docPath);
-                }
+        if (this.resourceUri) {
+            const nodePath = this.resourceUri.path;
+            const tabsToClose = vscode.window.tabGroups.all
+                .flatMap((group) => group.tabs)
+                .filter((tab) => {
+                    const uri = (tab.input as any)?.uri;
+                    if (!uri) return false;
+                    return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
+                });
+            if (tabsToClose.length > 0) {
+                await vscode.window.tabGroups.close(tabsToClose);
             }
         }
     }

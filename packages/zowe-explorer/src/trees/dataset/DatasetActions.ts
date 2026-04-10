@@ -2090,16 +2090,16 @@ export class DatasetActions {
 
         // Close the editor if the deleted dataset is open
         if (node.resourceUri) {
-            await Workspace.closeOpenedTextFile(node.resourceUri.path);
-        }
-
-        if (!label.includes("(")) {
-            const profName = node.getProfileName();
-            for (const doc of vscode.workspace.textDocuments) {
-                const docPath = doc.uri.fsPath;
-                if (docPath.toLowerCase().includes(profName.toLowerCase()) && docPath.toLowerCase().includes(label.toLowerCase())) {
-                    await Workspace.closeOpenedTextFile(docPath);
-                }
+            const nodePath = node.resourceUri.path;
+            const tabsToClose = vscode.window.tabGroups.all
+                .flatMap((group) => group.tabs)
+                .filter((tab) => {
+                    const uri = (tab.input as any)?.uri;
+                    if (!uri) return false;
+                    return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
+                });
+            if (tabsToClose.length > 0) {
+                await vscode.window.tabGroups.close(tabsToClose);
             }
         }
     }

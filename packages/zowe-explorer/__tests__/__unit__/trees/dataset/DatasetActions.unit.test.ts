@@ -24,7 +24,6 @@ import {
     MainframeInteraction,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
-import { Workspace } from "../../../../src/configuration/Workspace";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import {
     createSessCfgFromArgs,
@@ -812,7 +811,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const closeTextFileSpy = jest.spyOn(Workspace, "closeOpenedTextFile").mockResolvedValue(true);
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -820,25 +818,18 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             profile: blockMocks.imperativeProfile,
         });
 
+        const matchingTab = { input: { uri: node.resourceUri } };
+        (vscode.window.tabGroups as any).all = [{ tabs: [matchingTab] }];
+        (vscode.window.tabGroups.close as jest.Mock).mockResolvedValue(undefined);
+
         await DatasetActions.deleteDataset(node, blockMocks.testDatasetTree);
         expect(globalMocks.fspDelete).toHaveBeenCalledWith(node.resourceUri, { recursive: false });
-        expect(closeTextFileSpy).toHaveBeenCalledWith(node.resourceUri.path);
+        expect(vscode.window.tabGroups.close).toHaveBeenCalledWith([matchingTab]);
     });
     it("Checking PDS deletion closes all open member editors", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
-        const closeTextFileSpy = jest.spyOn(Workspace, "closeOpenedTextFile").mockResolvedValue(true);
-
-        // Create mock textDocuments with PDS member paths
-        const mockTextDocument1 = { uri: { fsPath: "/sestest/PDS.DATASET(MEMBER1)" } };
-        const mockTextDocument2 = { uri: { fsPath: "/sestest/PDS.DATASET(MEMBER2)" } };
-
-        // Set up mock property on vscode.workspace.textDocuments
-        Object.defineProperty(vscode.workspace, "textDocuments", {
-            value: [mockTextDocument1, mockTextDocument2],
-            configurable: true,
-        });
 
         const pdsNode = new ZoweDatasetNode({
             label: "PDS.DATASET",
@@ -848,10 +839,31 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         });
         pdsNode.contextValue = "pds";
 
+        const memberTab1 = { input: { uri: { path: pdsNode.resourceUri.path + "/MEMBER1" } } };
+        const memberTab2 = { input: { uri: { path: pdsNode.resourceUri.path + "/MEMBER2" } } };
+        const unrelatedTab = { input: { uri: { path: "/other/UNRELATED.DS" } } };
+        (vscode.window.tabGroups as any).all = [{ tabs: [memberTab1, memberTab2, unrelatedTab] }];
+        (vscode.window.tabGroups.close as jest.Mock).mockResolvedValue(undefined);
+
         await DatasetActions.deleteDataset(pdsNode, blockMocks.testDatasetTree);
         expect(globalMocks.fspDelete).toHaveBeenCalledWith(pdsNode.resourceUri, { recursive: false });
-        // Should close the deleted node + any matching member editors (expecting 4 due to existing mock in globalMocks)
-        expect(closeTextFileSpy).toHaveBeenCalledTimes(4); // 1 for node.resourceUri.path + 2 for member editors + 1 existing mock
+        expect(vscode.window.tabGroups.close).toHaveBeenCalledWith([memberTab1, memberTab2]);
+    });
+    it("Checking deletion does not close tabs when no resourceUri", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            profile: blockMocks.imperativeProfile,
+        });
+        node.resourceUri = undefined;
+        (vscode.window.tabGroups.close as jest.Mock).mockClear();
+
+        await DatasetActions.deleteDataset(node, blockMocks.testDatasetTree);
+        expect(vscode.window.tabGroups.close).not.toHaveBeenCalled();
     });
     it("Checking common PS dataset deletion with Unverified profile", async () => {
         createGlobalMocks();

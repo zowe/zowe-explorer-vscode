@@ -36,7 +36,6 @@ import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProv
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
-import { Workspace } from "../../../../src/configuration/Workspace";
 
 jest.mock("fs");
 
@@ -937,19 +936,14 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         ussFileNode.fullPath = "/u/myuser/testfile.txt";
         ussFileNode.parentPath = "/u/myuser";
 
-        // Mock closeOpenedTextFile at Workspace level to track calls
-        const closeSpy = jest.spyOn(Workspace, "closeOpenedTextFile").mockImplementation(() => Promise.resolve(true));
-
-        // Add mock docs with matching paths - profile name from createIProfile() is "sestest"
-        const mockDoc1 = { uri: { fsPath: "/sestest/u/myuser/testfile.txt" } };
-        globalMocks.textDocumentsArray.length = 0;
-        globalMocks.textDocumentsArray.push(mockDoc1);
+        const fileTab = { input: { uri: ussFileNode.resourceUri } };
+        (vscode.window.tabGroups as any).all = [{ tabs: [fileTab] }];
+        (vscode.window.tabGroups.close as jest.Mock).mockResolvedValue(undefined);
 
         await ussFileNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
 
-        // Check closeOpenedTextFile was called with the matching document
-        expect(closeSpy).toHaveBeenCalledWith("/sestest/u/myuser/testfile.txt");
-        closeSpy.mockRestore();
+        expect(vscode.window.tabGroups.close).toHaveBeenCalledWith([fileTab]);
+        (vscode.window.tabGroups as any).all = [];
     });
 
     it("Tests that open USS folder editors are closed when folder is deleted", async () => {
@@ -968,15 +962,39 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         ussFolderNode.parentPath = "/u/myuser";
         ussFolderNode.contextValue = Constants.USS_DIR_CONTEXT;
 
-        const closeSpy = jest.spyOn(Workspace, "closeOpenedTextFile").mockImplementation(() => Promise.resolve(true));
-
-        const mockDoc1 = { uri: { fsPath: "/sestest/u/myuser/testfolder/file1.txt" } };
-        globalMocks.textDocumentsArray.length = 0;
-        globalMocks.textDocumentsArray.push(mockDoc1);
+        const childTab = { input: { uri: { path: ussFolderNode.resourceUri.path + "/file1.txt" } } };
+        const unrelatedTab = { input: { uri: { path: "/other/unrelated.txt" } } };
+        (vscode.window.tabGroups as any).all = [{ tabs: [childTab, unrelatedTab] }];
+        (vscode.window.tabGroups.close as jest.Mock).mockResolvedValue(undefined);
 
         await ussFolderNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
-        expect(closeSpy).toHaveBeenCalledWith("/sestest/u/myuser/testfolder/file1.txt");
-        closeSpy.mockRestore();
+
+        expect(vscode.window.tabGroups.close).toHaveBeenCalledWith([childTab]);
+        (vscode.window.tabGroups as any).all = [];
+    });
+
+    it("Tests that deletion does not close tabs when no resourceUri", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        const ussFileNode = new ZoweUSSNode({
+            label: "testfile.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.mParent,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        ussFileNode.fullPath = "/u/myuser/testfile.txt";
+        ussFileNode.parentPath = "/u/myuser";
+        ussFileNode.resourceUri = undefined;
+
+        (vscode.window.tabGroups.close as jest.Mock).mockClear();
+        (vscode.window.tabGroups as any).all = [];
+
+        await ussFileNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
+
+        expect(vscode.window.tabGroups.close).not.toHaveBeenCalled();
     });
 });
 
