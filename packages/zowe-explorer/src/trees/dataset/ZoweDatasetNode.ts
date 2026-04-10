@@ -294,7 +294,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             return [];
         }
 
-        if ((!this.dirty && !paginate) || this.label === "Favorites") {
+        if (!this.dirty || this.label === "Favorites") {
             return this.children;
         }
 
@@ -530,6 +530,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             location: { viewId: "zowe.ds.explorer" },
                         },
                         async () => {
+                            this.dirty = true;
                             await this.paginator.fetchPreviousPage();
                             SharedTreeProviders.ds.nodeDataChanged?.(this);
                         }
@@ -551,6 +552,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             location: { viewId: "zowe.ds.explorer" },
                         },
                         async () => {
+                            this.dirty = true;
                             await this.paginator.fetchNextPage();
                             SharedTreeProviders.ds.nodeDataChanged?.(this);
                         }

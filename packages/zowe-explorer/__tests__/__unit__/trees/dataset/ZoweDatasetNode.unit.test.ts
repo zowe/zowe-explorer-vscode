@@ -552,6 +552,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
 
         // --- Test case for being on page 2 ---
         await mockPaginator.fetchNextPage();
+        pdsNode.dirty = true; // Mark dirty to trigger refresh after navigation
         children = await pdsNode.getChildren(true);
 
         expect(children.length).toBe(itemsPerPage + 2); // 5 members + 2 navigation items
@@ -2275,5 +2276,111 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
 
         const result = await (pdsNode as any).listMembersInRange(undefined, 2);
         expect(result).toStrictEqual({ items: [] });
+    });
+
+    describe("getChildren pagination refresh behavior", () => {
+        const session = createISession();
+        const profileOne: imperative.IProfileLoaded = createIProfile();
+
+        beforeEach(() => {
+            jest.resetAllMocks();
+        });
+
+        it("should not make duplicate API calls when pagination enabled and node not dirty", async () => {
+            const sessionNode = new ZoweDatasetNode({
+                label: "sestest",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session,
+                profile: profileOne,
+                contextOverride: Constants.DS_SESSION_CONTEXT,
+            });
+            sessionNode.pattern = "TEST.*";
+            sessionNode.children = [];
+
+            // Simulate a node that should not refresh
+            sessionNode.dirty = false;
+            
+            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+                applyPatternsToChildren: jest.fn(),
+                resetFilterForChildren: jest.fn(),
+            } as any);
+            jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+            } as any);
+            
+            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(10);
+            
+            const getDatasetsSpy = jest.spyOn(sessionNode as any, "getDatasets");
+            
+            const result = await sessionNode.getChildren(true);
+            
+            expect(getDatasetsSpy).toHaveBeenCalledTimes(0);
+            expect(result).toStrictEqual(sessionNode.children);
+        });
+
+
+        describe("dirty flag management with pagination", () => {
+            it("should respect dirty flag for various scenarios", async () => {
+                const sessionNode = new ZoweDatasetNode({
+                    label: "sestest",
+                    collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                    session,
+                    profile: profileOne,
+                    contextOverride: Constants.DS_SESSION_CONTEXT,
+                });
+                sessionNode.pattern = "TEST.*";
+                
+                jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+                    applyPatternsToChildren: jest.fn(),
+                    resetFilterForChildren: jest.fn(),
+                } as any);
+                jest.spyOn(Profiles, "getInstance").mockReturnValue({
+                    loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+                } as any);
+                
+                const getDatasetsSpy = jest.spyOn(sessionNode as any, "getDatasets").mockResolvedValue([{
+                    success: true,
+                    apiResponse: { items: [] }
+                }]);
+                
+                // Case: Dirty node should make API call
+                sessionNode.dirty = true;
+                await sessionNode.getChildren(true);
+                expect(getDatasetsSpy).toHaveBeenCalledTimes(1);
+                expect(sessionNode.dirty).toBe(false); // Should be reset after successful fetch
+                
+                // Case: Clean node should use cache
+                await sessionNode.getChildren(true);
+                expect(getDatasetsSpy).toHaveBeenCalledTimes(1); // No additional call
+                
+                // Case: Marking dirty should trigger refresh
+                sessionNode.dirty = true;
+                await sessionNode.getChildren(true);
+                expect(getDatasetsSpy).toHaveBeenCalledTimes(2);
+            });
+
+            it("should always return children for Favorites node regardless of dirty flag", async () => {
+                const favoritesNode = new ZoweDatasetNode({
+                    label: "Favorites",
+                    collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+                    parentNode: null,
+                    profile: profileOne,
+                });
+                
+                // Pre-populate children
+                const childNode = new ZoweDatasetNode({
+                    label: "TEST.FAVORITE",
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: favoritesNode,
+                    profile: profileOne,
+                });
+                favoritesNode.children = [childNode];
+                favoritesNode.dirty = true; // Even when dirty
+                
+                const result = await favoritesNode.getChildren(true);
+                expect(result).toEqual([childNode]);
+                expect(favoritesNode.dirty).toBe(true); // Should remain dirty
+            });
+        });
     });
 });
