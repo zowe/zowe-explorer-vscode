@@ -2589,6 +2589,13 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             parentNode: blockMocks.datasetSessionNode,
         });
 
+        const spyListDs = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ dsname: "HLQ.TEST.DATASET" }],
+            },
+        });
         mocked(vscode.window.showInputBox).mockResolvedValue("HLQ.TEST.DATASET");
         const spyAction = jest.fn();
 
@@ -2606,10 +2613,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         jest.spyOn(DatasetActions, "copySequentialDatasets").mockImplementationOnce(async (clipboardContent) => {
             await DatasetActions.copyProcessor(clipboardContent, "ps", spyAction);
         });
-        const determineReplacementSpySeq = jest.spyOn(DatasetActions, "determineReplacement").mockImplementationOnce(async () => {
-            await Gui.showMessage("The sequential data set already exists.\nDo you want to replace it?", { items: ["Replace", "Cancel"] });
-            return "replace";
-        });
+        const determineReplacementSpySeq = jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("replace");
         spyAction.mockClear();
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
         expect(spyAction).toHaveBeenCalled();
@@ -2629,14 +2633,13 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         jest.spyOn(DatasetActions, "copyPartitionedDatasets").mockImplementationOnce(async (clipboardContent) => {
             await DatasetActions.copyProcessor(clipboardContent, "po", spyAction);
         });
-        const determineReplacementSpyPo = jest.spyOn(DatasetActions, "determineReplacement").mockImplementationOnce(async () => {
-            await Gui.showMessage("The partitioned data set already exists.\nDo you want to merge them?", { items: ["Replace", "Cancel"] });
-            return "replace";
-        });
+        const determineReplacementSpyPo = jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("replace");
         spyAction.mockClear();
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
         expect(spyAction).toHaveBeenCalled();
         expect(determineReplacementSpyPo).toHaveBeenCalled();
+
+        spyListDs.mockReset().mockClear();
     });
 
     it("Testing copyProcessor() handles error from allocateLikeDataSet without crashing (test for extenders that don't support allocateLikeDataSet)", async () => {
