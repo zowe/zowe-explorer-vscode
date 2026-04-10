@@ -41,7 +41,6 @@ import { UssFSProvider } from "./UssFSProvider";
 import { AuthUtils } from "../../utils/AuthUtils";
 import type { Definitions } from "../../configuration/Definitions";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
-import { Workspace } from "../../configuration/Workspace";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files

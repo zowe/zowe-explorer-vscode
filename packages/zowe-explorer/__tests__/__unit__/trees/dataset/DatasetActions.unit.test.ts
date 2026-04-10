@@ -850,7 +850,6 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         expect(vscode.window.tabGroups.close).toHaveBeenCalledWith([memberTab1, memberTab2]);
     });
     it("Checking deletion does not close tabs when no resourceUri", async () => {
-        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const node = new ZoweDatasetNode({
