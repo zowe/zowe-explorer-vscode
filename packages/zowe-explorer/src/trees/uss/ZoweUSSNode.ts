@@ -200,7 +200,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public getSessionNode(): IZoweUSSTreeNode {
         ZoweLogger.trace("ZoweUSSNode.getSessionNode called.");
-        return this.session ? this : ((this.getParent()?.getSessionNode() as IZoweUSSTreeNode) ?? this);
+        return this.session ? this : (this.getParent()?.getSessionNode() as IZoweUSSTreeNode) ?? this;
     }
 
     /**
@@ -469,7 +469,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         message: "Unable to delete node: {0}",
                         args: [err.message],
                         comment: ["Error message"],
-                    }),
+                    })
                 );
             }
             throw err;
@@ -480,7 +480,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 message: "The item {0} has been deleted.",
                 args: [this.label.toString()],
                 comment: ["Label"],
-            }),
+            })
         );
 
         // Remove node from the USS Favorites tree
@@ -636,7 +636,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         message: "Unable to find file: {0}",
                         args: [err.message],
                         comment: ["Error message"],
-                    }),
+                    })
                 );
             } else {
                 await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Uss, profile: this.getProfile() });
@@ -653,7 +653,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async paste(
         destUri: vscode.Uri,
-        uss: { tree: USSFileStructure.UssFileTree; api?: MainframeInteraction.IUss; options?: zosfiles.IUploadOptions },
+        uss: { tree: USSFileStructure.UssFileTree; api?: MainframeInteraction.IUss; options?: zosfiles.IUploadOptions }
     ): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         if (!uss.api) {
@@ -708,7 +708,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         scheme: ZoweScheme.USS,
                         path: `/${this.profile.name}${this.fullPath}`,
                     }),
-                    { api, tree: subnode, options },
+                    { api, tree: subnode, options }
                 );
             }
         } catch (error) {
@@ -735,7 +735,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                         ? this.resourceUri
                         : this.resourceUri.with({
                               path: path.posix.join(this.resourceUri.path, this.fullPath),
-                          }),
+                          })
                 );
             } else {
                 response_list = await UssFSProvider.instance.listFiles(profile, this.resourceUri);
