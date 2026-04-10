@@ -2298,11 +2298,15 @@ export class DatasetActions {
         let clipboardContent;
         try {
             clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
+            if (!Array.isArray(clipboardContent)) {
+                clipboardContent = [clipboardContent];
+            } else {
+                clipboardContent = clipboardContent.flat();
+            }
         } catch (err) {
             Gui.errorMessage(vscode.l10n.t("Invalid paste. Copy data set(s) first."));
             return;
         }
-        clipboardContent = clipboardContent.flat();
         if (clipboardContent[0] == null || typeof clipboardContent[0] !== "object" || !("dataSetName" in clipboardContent[0])) {
             Gui.errorMessage(vscode.l10n.t("Cross-view paste is not supported. Copy data set(s) first before pasting into the Data Sets view."));
             return;

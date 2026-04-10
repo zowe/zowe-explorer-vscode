@@ -2613,12 +2613,11 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         jest.spyOn(DatasetActions, "copySequentialDatasets").mockImplementationOnce(async (clipboardContent) => {
             await DatasetActions.copyProcessor(clipboardContent, "ps", spyAction);
         });
+        const determineReplacementSpySeq = jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("replace");
         spyAction.mockClear();
-        mocked(Gui.showMessage).mockClear();
-        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
         expect(spyAction).toHaveBeenCalled();
-        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+        expect(determineReplacementSpySeq).toHaveBeenCalled();
 
         //PARTITIONED
         node.contextValue = Constants.DS_PDS_CONTEXT;
@@ -2634,12 +2633,11 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         jest.spyOn(DatasetActions, "copyPartitionedDatasets").mockImplementationOnce(async (clipboardContent) => {
             await DatasetActions.copyProcessor(clipboardContent, "po", spyAction);
         });
+        const determineReplacementSpyPo = jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("replace");
         spyAction.mockClear();
-        mocked(Gui.showMessage).mockClear();
-        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
         expect(spyAction).toHaveBeenCalled();
-        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+        expect(determineReplacementSpyPo).toHaveBeenCalled();
 
         spyListDs.mockReset().mockClear();
     });
