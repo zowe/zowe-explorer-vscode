@@ -2606,7 +2606,10 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         jest.spyOn(DatasetActions, "copySequentialDatasets").mockImplementationOnce(async (clipboardContent) => {
             await DatasetActions.copyProcessor(clipboardContent, "ps", spyAction);
         });
-        const determineReplacementSpySeq = jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("replace");
+        const determineReplacementSpySeq = jest.spyOn(DatasetActions, "determineReplacement").mockImplementationOnce(async () => {
+            await Gui.showMessage("The sequential data set already exists.\nDo you want to replace it?", { items: ["Replace", "Cancel"] });
+            return "replace";
+        });
         spyAction.mockClear();
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
         expect(spyAction).toHaveBeenCalled();
@@ -2626,7 +2629,10 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         jest.spyOn(DatasetActions, "copyPartitionedDatasets").mockImplementationOnce(async (clipboardContent) => {
             await DatasetActions.copyProcessor(clipboardContent, "po", spyAction);
         });
-        const determineReplacementSpyPo = jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("replace");
+        const determineReplacementSpyPo = jest.spyOn(DatasetActions, "determineReplacement").mockImplementationOnce(async () => {
+            await Gui.showMessage("The partitioned data set already exists.\nDo you want to merge them?", { items: ["Replace", "Cancel"] });
+            return "replace";
+        });
         spyAction.mockClear();
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
         expect(spyAction).toHaveBeenCalled();
