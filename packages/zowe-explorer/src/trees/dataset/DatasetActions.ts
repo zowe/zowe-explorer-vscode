@@ -2092,6 +2092,16 @@ export class DatasetActions {
         if (node.resourceUri) {
             await Workspace.closeOpenedTextFile(node.resourceUri.path);
         }
+
+        if (!label.includes("(")) {
+            const profName = node.getProfileName();
+            for (const doc of vscode.workspace.textDocuments) {
+                const docPath = doc.uri.fsPath;
+                if (docPath.toLowerCase().includes(profName.toLowerCase()) && docPath.toLowerCase().includes(label.toLowerCase())) {
+                    await Workspace.closeOpenedTextFile(docPath);
+                }
+            }
+        }
     }
 
     /**

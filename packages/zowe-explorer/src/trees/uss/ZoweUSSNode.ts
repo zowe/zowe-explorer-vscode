@@ -41,6 +41,7 @@ import { UssFSProvider } from "./UssFSProvider";
 import { AuthUtils } from "../../utils/AuthUtils";
 import type { Definitions } from "../../configuration/Definitions";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
+import { Workspace } from "../../configuration/Workspace";
 
 /**
  * A type of TreeItem used to represent sessions and USS directories and files
@@ -496,6 +497,20 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (parentEquivNode != null) {
             // Refresh the correct node (parent of node to delete) to reflect changes
             ussFileProvider.refreshElement(parentEquivNode);
+        }
+
+        const profName = this.profile?.name;
+        if (profName && this.fullPath) {
+            for (const doc of vscode.workspace.textDocuments) {
+                const docPath = doc.uri.fsPath;
+                if (
+                    docPath &&
+                    docPath.toLowerCase().includes(profName.toLowerCase()) &&
+                    docPath.toLowerCase().includes(this.fullPath.toLowerCase())
+                ) {
+                    await Workspace.closeOpenedTextFile(docPath);
+                }
+            }
         }
     }
 

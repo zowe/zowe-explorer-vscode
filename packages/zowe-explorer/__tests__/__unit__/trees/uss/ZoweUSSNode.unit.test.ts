@@ -36,6 +36,7 @@ import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProv
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
+import { Workspace } from "../../../../src/configuration/Workspace";
 
 jest.mock("fs");
 
@@ -919,6 +920,63 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
 
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
+    });
+
+    it("Tests that open USS file editors are closed when file is deleted", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        const ussFileNode = new ZoweUSSNode({
+            label: "testfile.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.mParent,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        ussFileNode.fullPath = "/u/myuser/testfile.txt";
+        ussFileNode.parentPath = "/u/myuser";
+
+        // Mock closeOpenedTextFile at Workspace level to track calls
+        const closeSpy = jest.spyOn(Workspace, "closeOpenedTextFile").mockImplementation(() => Promise.resolve(true));
+
+        // Add mock docs with matching paths - profile name from createIProfile() is "sestest"
+        const mockDoc1 = { uri: { fsPath: "/sestest/u/myuser/testfile.txt" } };
+        globalMocks.textDocumentsArray.length = 0;
+        globalMocks.textDocumentsArray.push(mockDoc1);
+
+        await ussFileNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
+
+        // Check closeOpenedTextFile was called with the matching document
+        expect(closeSpy).toHaveBeenCalledWith("/sestest/u/myuser/testfile.txt");
+        closeSpy.mockRestore();
+    });
+
+    it("Tests that open USS folder editors are closed when folder is deleted", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        const ussFolderNode = new ZoweUSSNode({
+            label: "testfolder",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode: blockMocks.mParent,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        ussFolderNode.fullPath = "/u/myuser/testfolder";
+        ussFolderNode.parentPath = "/u/myuser";
+        ussFolderNode.contextValue = Constants.USS_DIR_CONTEXT;
+
+        const closeSpy = jest.spyOn(Workspace, "closeOpenedTextFile").mockImplementation(() => Promise.resolve(true));
+
+        const mockDoc1 = { uri: { fsPath: "/sestest/u/myuser/testfolder/file1.txt" } };
+        globalMocks.textDocumentsArray.length = 0;
+        globalMocks.textDocumentsArray.push(mockDoc1);
+
+        await ussFolderNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
+        expect(closeSpy).toHaveBeenCalledWith("/sestest/u/myuser/testfolder/file1.txt");
+        closeSpy.mockRestore();
     });
 });
 

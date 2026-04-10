@@ -824,6 +824,35 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         expect(globalMocks.fspDelete).toHaveBeenCalledWith(node.resourceUri, { recursive: false });
         expect(closeTextFileSpy).toHaveBeenCalledWith(node.resourceUri.path);
     });
+    it("Checking PDS deletion closes all open member editors", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const closeTextFileSpy = jest.spyOn(Workspace, "closeOpenedTextFile").mockResolvedValue(true);
+
+        // Create mock textDocuments with PDS member paths
+        const mockTextDocument1 = { uri: { fsPath: "/sestest/PDS.DATASET(MEMBER1)" } };
+        const mockTextDocument2 = { uri: { fsPath: "/sestest/PDS.DATASET(MEMBER2)" } };
+
+        // Set up mock property on vscode.workspace.textDocuments
+        Object.defineProperty(vscode.workspace, "textDocuments", {
+            value: [mockTextDocument1, mockTextDocument2],
+            configurable: true,
+        });
+
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            profile: blockMocks.imperativeProfile,
+        });
+        pdsNode.contextValue = "pds";
+
+        await DatasetActions.deleteDataset(pdsNode, blockMocks.testDatasetTree);
+        expect(globalMocks.fspDelete).toHaveBeenCalledWith(pdsNode.resourceUri, { recursive: false });
+        // Should close the deleted node + any matching member editors (expecting 4 due to existing mock in globalMocks)
+        expect(closeTextFileSpy).toHaveBeenCalledTimes(4); // 1 for node.resourceUri.path + 2 for member editors + 1 existing mock
+    });
     it("Checking common PS dataset deletion with Unverified profile", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
