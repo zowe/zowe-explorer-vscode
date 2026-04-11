@@ -784,11 +784,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         await AuthUtils.ensureAuthNotCancelled(profile);
 
-        await AuthHandler.waitForUnlock(entry.metadata.profile);
+        await AuthHandler.waitForUnlock(profile);
 
         try {
-            const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
             const profileEncoding = entry.encoding ? null : profile.profile?.encoding;
 
             const binary = encoding === "binary" || entry.encoding?.kind === "binary";
