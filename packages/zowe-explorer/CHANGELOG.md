@@ -34,6 +34,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the USS tree collapsed down to the top level set from the initial filter.[#3932](https://github.com/zowe/zowe-explorer-vscode/issues/3932)
 - Fixed an issue where the profile status did not refresh after updating credentials [#4141](https://github.com/zowe/zowe-explorer-vscode/issues/4141)
 - Fixed an issue where the editor tab remained open after deleting a sequential data set. The editor now automatically closes when the data set is deleted. [#4050](https://github.com/zowe/zowe-explorer-vscode/issues/4050)
+- Fixed extended to include PDS members and USS files. [#4050](https://github.com/zowe/zowe-explorer-vscode/issues/4050)
 
 ## `3.4.2`
 
