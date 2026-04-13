@@ -1067,8 +1067,7 @@ describe("Test src/shared/extension", () => {
 
     describe("isDocumentASpool", () => {
         let onProfileUpdated: jest.Mock;
-        let mockOnProfileUpdated: MockedProperty<ZoweExplorerApiRegister, "onProfileUpdated">;
-
+        
         beforeAll(() => {
             onProfileUpdated = jest.fn().mockReturnValue(new vscode.Disposable(jest.fn()));
             Object.defineProperty(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated", {
