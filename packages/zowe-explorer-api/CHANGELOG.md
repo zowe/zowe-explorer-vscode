@@ -15,7 +15,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Fixed an issue where `Gui.openFileDialog` method could fail if default URL with `vscode-remote` scheme is provided. [#4127](https://github.com/zowe/zowe-explorer-vscode/pull/4127)
 - Updated Zowe SDKs to `8.31.0` for technical currency. [#4117](https://github.com/zowe/zowe-explorer-vscode/pull/4117)
-- Fixed an issue where cached file system entries would not reflect profile updates (reactivations, credential changes, etc.) in the Data Sets, Jobs, and USS trees. [#4141](https://github.com/zowe/zowe-explorer-vscode/issues/4141)
+- Updated BaseProvider to fix an issue where cached file system entries would not reflect profile updates (reactivations, credential changes, etc.) in the Data Sets, Jobs, and USS trees. [#4141](https://github.com/zowe/zowe-explorer-vscode/issues/4141)
 
 ## `3.4.2`
 
@@ -426,11 +426,13 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added the `onVaultUpdate` VSCode event to notify extenders when credentials are updated on the OS vault by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - Added the `onCredMgrsUpdate` VSCode event to notify extenders when the local PC's credential manager has been updated by other applications. [#2994](https://github.com/zowe/zowe-explorer-vscode/pull/2994)
 - **LTS Breaking:** Updated most function signatures for exported programmatic interfaces. Changes make developing with the Zowe Explorer API more efficient for extenders by showing which properties they can expect when calling our APIs. [#2952](https://github.com/zowe/zowe-explorer-vscode/issues/2952)
+
   - Updated `IApiExplorerExtender.ts`, see changes below:
     - Allowed `reloadProfiles` and `initForZowe` to be synchronous methods (non-breaking)
   - Updated `MainframeInteraction.ts`, see changes below:
     - Modified `getStatus` to add `string` type to the optional parameter `profileType`
   - Updated `IZoweTree.ts`, see changes below:
+  
     - Modified `checkCurrentProfile(node: IZoweTreeNode);` to return `Validation.IValidationProfile | Promise<Validation.IValidationProfile>`
     - Modified `getSearchHistory()` to return `string[]`
     - Modified `getAllLoadedItems()` to return `IZoweTreeNode[] | Promise<IZoweTreeNode[]>`

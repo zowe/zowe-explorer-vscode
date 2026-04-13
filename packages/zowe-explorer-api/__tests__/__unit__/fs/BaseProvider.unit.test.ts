@@ -781,7 +781,6 @@ describe("updateProfile", () => {
 
     it("should not update entries with different profile names", () => {
         prov.root = new DirEntry("");
-        const oldProfile = { name: "testProfile", type: "zowe" };
         const otherProfile = { name: "otherProfile", type: "zowe" };
         const newProfile = { name: "testProfile", type: "zowe", updated: true };
 
