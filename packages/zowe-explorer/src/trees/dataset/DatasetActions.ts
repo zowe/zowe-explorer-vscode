@@ -48,6 +48,7 @@ import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetTree } from "./DatasetTree";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
+import { Workspace } from "../../configuration/Workspace";
 
 type ClipboardItem = {
     profileName: string;

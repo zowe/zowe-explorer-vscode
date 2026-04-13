@@ -24,6 +24,7 @@ import {
     MainframeInteraction,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
+import { Workspace } from "../../../../src/configuration/Workspace";
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import {
     createSessCfgFromArgs,
@@ -811,6 +812,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const closeTextFileSpy = jest.spyOn(Workspace, "closeOpenedTextFile").mockResolvedValue(true);
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
