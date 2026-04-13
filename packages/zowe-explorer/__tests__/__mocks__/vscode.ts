@@ -863,6 +863,8 @@ export namespace window {
 
     export const tabGroups = {
         onDidChangeTabs: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+        all: [] as any[],
+        close: jest.fn(),
     };
 }
 

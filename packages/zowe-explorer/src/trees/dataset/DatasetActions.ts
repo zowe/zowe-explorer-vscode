@@ -2090,7 +2090,17 @@ export class DatasetActions {
 
         // Close the editor if the deleted dataset is open
         if (node.resourceUri) {
-            await Workspace.closeOpenedTextFile(node.resourceUri.path);
+            const nodePath = node.resourceUri.path;
+            const tabsToClose = vscode.window.tabGroups.all
+                .flatMap((group) => group.tabs)
+                .filter((tab) => {
+                    const uri = (tab.input as any)?.uri;
+                    if (!uri) return false;
+                    return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
+                });
+            if (tabsToClose.length > 0) {
+                await vscode.window.tabGroups.close(tabsToClose);
+            }
         }
     }
 
