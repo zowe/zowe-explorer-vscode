@@ -47,6 +47,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     private constructor() {
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, this.onDidChangeFile);
+        ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => this.updateProfile(profile));
         this.root = new DirEntry("");
     }
 
