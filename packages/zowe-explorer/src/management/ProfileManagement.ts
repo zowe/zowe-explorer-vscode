@@ -81,7 +81,7 @@ export class ProfileManagement {
     public static readonly changePasswordQpItems: Record<string, vscode.QuickPickItem> = {
         [ProfileManagement.AuthQpLabels.changePassword]: {
             label: `$(lock) ${vscode.l10n.t("Change Password")}`,
-            description: vscode.l10n.t("Change your password on the mainframe and update stored credentials"),
+            description: vscode.l10n.t("Change your password on the server and update stored password"),
         },
     };
     public static readonly disableProfileValildationQpItem: Record<string, vscode.QuickPickItem> = {

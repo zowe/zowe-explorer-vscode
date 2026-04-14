@@ -535,6 +535,28 @@ export class ProfilesUtils {
             return;
         }
 
+        const session = commonApi.getSession(profile);
+        if (!session) {
+            Gui.errorMessage(vscode.l10n.t("Unable to create a session for the selected profile."));
+            return;
+        }
+
+        const oldPassword = await Gui.showInputBox({
+            prompt: vscode.l10n.t("Enter current password"),
+            password: true,
+            ignoreFocusOut: true,
+            placeHolder: vscode.l10n.t("Current Password"),
+        });
+        if (!oldPassword) {
+            Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+            return;
+        }
+
+        if (oldPassword.toLowerCase() !== session.ISession.password.toLowerCase()) {
+            Gui.errorMessage(vscode.l10n.t("Current password does not match the stored credentials. Password was not changed."));
+            return;
+        }
+
         const newPassword = await Gui.showInputBox({
             prompt: vscode.l10n.t("Enter new password"),
             password: true,
@@ -562,12 +584,6 @@ export class ProfilesUtils {
             return;
         }
 
-        const session = commonApi.getSession(profile);
-        if (!session) {
-            Gui.errorMessage(vscode.l10n.t("Unable to create a session for the selected profile."));
-            return;
-        }
-
         try {
             await commonApi.changePassword(session, newPassword);
         } catch (err) {
@@ -592,7 +608,7 @@ export class ProfilesUtils {
                 value: newPassword,
                 setSecure: profInfo.isSecured(),
             });
-            await Constants.PROFILES_CACHE.updateCachedProfile(profile, node);
+            Constants.PROFILES_CACHE.updateCachedProfile(profile, node);
             if (node != null) {
                 SharedTreeProviders.getProviderForNode(node).refreshElement(node);
             }
@@ -600,7 +616,8 @@ export class ProfilesUtils {
             const errMsg = err instanceof Error ? err.message : String(err);
             Gui.warningMessage(
                 vscode.l10n.t({
-                    message: "Password changed on the server but failed to update locally stored credentials: {0}",
+                    message:
+                        "Password changed on the server but failed to update locally stored credentials. Consider right clicking profile -> Manage Profile -> Update Credentials with new password immediately. {0}",
                     args: [errMsg],
                     comment: ["Error message"],
                 })
