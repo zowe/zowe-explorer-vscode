@@ -1729,8 +1729,8 @@ export class DatasetActions {
                 const jobDisplay = `${job.jobname}(${job.jobid})`;
                 const message = vscode.l10n.t({
                     message: "Job submitted: {0}",
-                    args: [jobDisplay],
-                    comment: ["Job name and ID"],
+                    args: [`[${jobDisplay}](${setJobCmd})`],
+                    comment: ["Job name and ID with set job command"],
                 });
                 ZoweLogger.info(
                     vscode.l10n.t({
@@ -1976,8 +1976,8 @@ export class DatasetActions {
                 const jobDisplay = `${job.jobname}(${job.jobid})`;
                 const message = vscode.l10n.t({
                     message: "Job submitted: {0}",
-                    args: [jobDisplay],
-                    comment: ["Job name and ID"],
+                    args: [`[${jobDisplay}](${setJobCmd})`],
+                    comment: ["Job name and ID with set job command"],
                 });
                 ZoweLogger.info(
                     vscode.l10n.t({
