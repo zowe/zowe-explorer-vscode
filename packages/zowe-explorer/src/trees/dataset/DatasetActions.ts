@@ -48,6 +48,7 @@ import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetTree } from "./DatasetTree";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
+import { Workspace } from "../../configuration/Workspace";
 
 type ClipboardItem = {
     profileName: string;
@@ -841,8 +842,21 @@ export class DatasetActions {
             return;
         }
 
-        const children = await node.getChildren();
-        if (!children || children.length === 0) {
+        const datasetName = node.label?.toString();
+
+        const allMembersRes = await mvsApi.allMembers(datasetName);
+        if (!allMembersRes?.success) {
+            await AuthUtils.errorHandling(allMembersRes?.commandResponse, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile,
+                dsName: datasetName,
+                scenario: vscode.l10n.t("Unable to retrieve members of data set."),
+            });
+            return;
+        }
+
+        const children = allMembersRes.apiResponse?.items;
+        if (children.length === 0) {
             Gui.showMessage(vscode.l10n.t("The selected data set has no members to download."));
             return;
         }
@@ -871,11 +885,11 @@ export class DatasetActions {
             async (progress) => {
                 let realPercentComplete = 0;
                 const realTotalEntries = children.length;
+                let numDownloaded = 0;
                 const task: imperative.ITaskWithStatus = {
                     set percentComplete(value: number) {
                         realPercentComplete = value;
-                        // eslint-disable-next-line no-magic-numbers
-                        Gui.reportProgress(progress, realTotalEntries, Math.floor((value * realTotalEntries) / 100), "");
+                        Gui.reportProgress(progress, realTotalEntries, ++numDownloaded, "");
                     },
                     get percentComplete(): number {
                         return realPercentComplete;
@@ -884,7 +898,6 @@ export class DatasetActions {
                     stageName: 0, // TaskStage.IN_PROGRESS
                 };
 
-                const datasetName = node.label as string;
                 const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
 
                 const extensionMap = await DatasetUtils.getExtensionMap(
@@ -1723,12 +1736,13 @@ export class DatasetActions {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
                 const args = [sessProfileName, job.jobid];
                 const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
+                const openJobButton = vscode.l10n.t("Open Job");
                 const notifyButton = vscode.l10n.t("Poll For Job Completion");
                 const jobDisplay = `${job.jobname}(${job.jobid})`;
                 const message = vscode.l10n.t({
                     message: "Job submitted: {0}",
-                    args: [`[${jobDisplay}](${setJobCmd})`],
-                    comment: ["Job name and ID with set job command"],
+                    args: [jobDisplay],
+                    comment: ["Job name and ID"],
                 });
                 ZoweLogger.info(
                     vscode.l10n.t({
@@ -1737,11 +1751,14 @@ export class DatasetActions {
                         comment: ["Job ID", "Profile name"],
                     })
                 );
-                Gui.showMessage(message, { items: [notifyButton] }).then((selection) => {
-                    if (selection === notifyButton) {
-                        DatasetActions.pollSubmittedJob(sessProfile, sessProfileName, job.jobid, job.jobname);
-                    }
-                });
+                // Accessibility: Capture the button response to ensure screen readers properly announce
+                // the buttons as actionable elements rather than just informational text.
+                const selection = await Gui.showMessage(message, { items: [openJobButton, notifyButton] });
+                if (selection === openJobButton) {
+                    vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                } else if (selection === notifyButton) {
+                    DatasetActions.pollSubmittedJob(sessProfile, sessProfileName, job.jobid, job.jobname);
+                }
             } catch (error) {
                 if (error instanceof Error) {
                     await AuthUtils.errorHandling(error, {
@@ -1966,12 +1983,13 @@ export class DatasetActions {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
                 const args = [sesName, job.jobid];
                 const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
+                const openJobButton = vscode.l10n.t("Open Job");
                 const notifyButton = vscode.l10n.t("Poll For Job Completion");
                 const jobDisplay = `${job.jobname}(${job.jobid})`;
                 const message = vscode.l10n.t({
                     message: "Job submitted: {0}",
-                    args: [`[${jobDisplay}](${setJobCmd})`],
-                    comment: ["Job name and ID with set job command"],
+                    args: [jobDisplay],
+                    comment: ["Job name and ID"],
                 });
                 ZoweLogger.info(
                     vscode.l10n.t({
@@ -1980,11 +1998,14 @@ export class DatasetActions {
                         comment: ["Job ID", "Session name"],
                     })
                 );
-                Gui.showMessage(message, { items: [notifyButton] }).then((selection) => {
-                    if (selection === notifyButton) {
-                        DatasetActions.pollSubmittedJob(sessProfile, sesName, job.jobid, job.jobname);
-                    }
-                });
+                // Accessibility: Capture the button response to ensure screen readers properly announce
+                // the buttons as actionable elements rather than just informational text.
+                const selection = await Gui.showMessage(message, { items: [openJobButton, notifyButton] });
+                if (selection === openJobButton) {
+                    vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                } else if (selection === notifyButton) {
+                    DatasetActions.pollSubmittedJob(sessProfile, sesName, job.jobid, job.jobname);
+                }
             } catch (error) {
                 if (error instanceof Error) {
                     await AuthUtils.errorHandling(error, {
@@ -2078,6 +2099,21 @@ export class DatasetActions {
         }
 
         datasetProvider.refreshElement(node.getSessionNode());
+
+        // Close the editor if the deleted dataset is open
+        if (node.resourceUri) {
+            const nodePath = node.resourceUri.path;
+            const tabsToClose = vscode.window.tabGroups.all
+                .flatMap((group) => group.tabs)
+                .filter((tab) => {
+                    const uri = (tab.input as any)?.uri;
+                    if (!uri) return false;
+                    return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
+                });
+            if (tabsToClose.length > 0) {
+                await vscode.window.tabGroups.close(tabsToClose);
+            }
+        }
     }
 
     /**
@@ -2974,16 +3010,19 @@ export class DatasetActions {
                     Poller.pollRequests[pollKey].dispose = true;
 
                     const args = [sessProfileName, jobId];
-                    const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                     const retcode = job?.retcode || vscode.l10n.t("unknown retcode");
+                    const openJobButton = vscode.l10n.t("Open Job");
+                    const message = vscode.l10n.t({
+                        message: "Job {0} completed - {1}",
+                        args: [displayName, retcode],
+                        comment: ["Job name and ID", "Job status"],
+                    });
 
-                    Gui.showMessage(
-                        vscode.l10n.t({
-                            message: "Job {0} completed - {1}",
-                            args: [`[${displayName}](${setJobCmd})`, retcode],
-                            comment: ["Job ID with clickable link", "Job status"],
-                        })
-                    );
+                    Gui.showMessage(message, { items: [openJobButton] }).then((selection) => {
+                        if (selection === openJobButton) {
+                            vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                        }
+                    });
                 } catch (error) {
                     // If cant get job status, stop polling
                     Poller.pollRequests[pollKey].dispose = true;
