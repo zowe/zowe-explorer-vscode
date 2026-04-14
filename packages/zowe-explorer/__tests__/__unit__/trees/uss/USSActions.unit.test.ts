@@ -2827,6 +2827,54 @@ describe("USS Action Unit Tests - downloading functions", () => {
             });
         });
 
+        it("should report progress correctly", async () => {
+            const mockNode = createMockNode();
+            mockNode.fullPath = "/u/test/directory";
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                overwrite: true,
+                dirOptions: { followSymlinks: true, chooseFilterOptions: false },
+                dirFilterOptions: { includeHidden: false, filesys: false },
+                encoding: undefined,
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            globalMocks.ussApi.fileList.mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{}, {}, {}, {}] },
+            });
+
+            const mockProgress = { report: jest.fn() };
+            const reportProgressSpy = jest.spyOn(Gui, "reportProgress").mockImplementation();
+
+            let capturedTask: any;
+            globalMocks.ussApi.downloadDirectory.mockImplementation(async (_path: any, opts: any) => {
+                capturedTask = opts.task;
+                capturedTask.percentComplete = 25;
+                capturedTask.percentComplete = 50;
+                capturedTask.percentComplete = 75;
+                capturedTask.percentComplete = 100;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback(mockProgress, { isCancellationRequested: false });
+            });
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(capturedTask.percentComplete).toBe(100);
+            expect(reportProgressSpy).toHaveBeenCalledTimes(4);
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(1, mockProgress, 4, 1, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(2, mockProgress, 4, 2, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(3, mockProgress, 4, 3, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(4, mockProgress, 4, 4, "");
+
+            reportProgressSpy.mockRestore();
+        });
+
         it("should use profile settings for maxConcurrentRequests and responseTimeout", async () => {
             const mockNode = createMockNode();
             mockNode.getProfile = jest.fn().mockReturnValue({
