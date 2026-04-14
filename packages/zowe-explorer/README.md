@@ -39,7 +39,7 @@ Before you use Zowe Explorer, ensure that you meet the following prerequisites:
   - [CentOS](https://www.centos.org/) 8+
   - [RHEL](https://www.redhat.com/en/technologies/linux-platforms/enterprise-linux) 8+
   - [Ubuntu](https://ubuntu.com/) 20.04+
-- Windows: : Only Windows operating system versions supported by Microsoft
+- Windows: Only Windows operating system versions supported by Microsoft
 
 #### Integrated development environments
 
