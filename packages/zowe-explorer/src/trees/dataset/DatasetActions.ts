@@ -48,6 +48,7 @@ import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetTree } from "./DatasetTree";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
+import { Workspace } from "../../configuration/Workspace";
 
 type ClipboardItem = {
     profileName: string;
@@ -2095,6 +2096,21 @@ export class DatasetActions {
         }
 
         datasetProvider.refreshElement(node.getSessionNode());
+
+        // Close the editor if the deleted dataset is open
+        if (node.resourceUri) {
+            const nodePath = node.resourceUri.path;
+            const tabsToClose = vscode.window.tabGroups.all
+                .flatMap((group) => group.tabs)
+                .filter((tab) => {
+                    const uri = (tab.input as any)?.uri;
+                    if (!uri) return false;
+                    return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
+                });
+            if (tabsToClose.length > 0) {
+                await vscode.window.tabGroups.close(tabsToClose);
+            }
+        }
     }
 
     /**
