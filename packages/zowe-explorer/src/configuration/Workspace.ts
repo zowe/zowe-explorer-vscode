@@ -84,7 +84,7 @@ export class Workspace {
             selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
         }
 
-        return openedWindows.some((window) => window.document.fileName === path);
+        return openedWindows.some((window) => window.document.fileName === path || window.document.uri?.path === path);
     }
 
     /**
@@ -114,7 +114,7 @@ export class Workspace {
             await Workspace.openNextTab(Constants.WORKSPACE_UTIL_TAB_SWITCH_DELAY);
             selectedEditor = vscode.window.activeTextEditor as IExtTextEditor;
 
-            if (selectedEditor && selectedEditor.document.fileName === path) {
+            if (selectedEditor && (selectedEditor.document.fileName === path || selectedEditor.document.uri?.path === path)) {
                 const isDirty = selectedEditor.document.isDirty;
                 await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
                 if (isDirty) {
