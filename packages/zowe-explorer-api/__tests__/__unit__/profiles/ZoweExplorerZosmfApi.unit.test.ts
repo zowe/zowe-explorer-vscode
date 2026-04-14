@@ -108,6 +108,33 @@ describe("CommonApi", () => {
             expect(session).not.toBeUndefined();
         });
     });
+
+    describe("changePassword", () => {
+        it("should call ZosmfChangePassword.changePassword and resolve on success", async () => {
+            const commonApi = new ZoweExplorerZosmf.CommonApi(loadedProfile);
+            const changePasswordSpy = jest.spyOn(zosmf.ZosmfChangePassword, "changePassword").mockResolvedValue({
+                success: true,
+                returnCode: 0,
+                reasonCode: 0,
+                message: "Password changed successfully",
+            });
+            await expect(commonApi.changePassword(fakeSession, "newPass123")).resolves.toBeUndefined();
+            expect(changePasswordSpy).toHaveBeenCalledWith(fakeSession, "newPass123");
+            changePasswordSpy.mockRestore();
+        });
+
+        it("should throw when the response indicates failure", async () => {
+            const commonApi = new ZoweExplorerZosmf.CommonApi(loadedProfile);
+            const changePasswordSpy = jest.spyOn(zosmf.ZosmfChangePassword, "changePassword").mockResolvedValue({
+                success: false,
+                returnCode: 8,
+                reasonCode: 2,
+                message: "Change password failed.",
+            });
+            await expect(commonApi.changePassword(fakeSession, "bad")).rejects.toThrow("The new password is not valid");
+            changePasswordSpy.mockRestore();
+        });
+    });
 });
 
 describe("ZosmfUssApi", () => {

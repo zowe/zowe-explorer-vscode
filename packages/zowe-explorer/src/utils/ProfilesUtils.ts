@@ -552,6 +552,7 @@ export class ProfilesUtils {
             return;
         }
 
+        // Passwords are not case sensitive
         if (oldPassword.toLowerCase() !== session.ISession.password.toLowerCase()) {
             Gui.errorMessage(vscode.l10n.t("Current password does not match the stored credentials. Password was not changed."));
             return;
