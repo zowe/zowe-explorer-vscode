@@ -497,6 +497,20 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             // Refresh the correct node (parent of node to delete) to reflect changes
             ussFileProvider.refreshElement(parentEquivNode);
         }
+
+        if (this.resourceUri) {
+            const nodePath = this.resourceUri.path;
+            const tabsToClose = vscode.window.tabGroups.all
+                .flatMap((group) => group.tabs)
+                .filter((tab) => {
+                    const uri = (tab.input as any)?.uri;
+                    if (!uri) return false;
+                    return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
+                });
+            if (tabsToClose.length > 0) {
+                await vscode.window.tabGroups.close(tabsToClose);
+            }
+        }
     }
 
     /**
