@@ -920,6 +920,82 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
     });
+
+    it("Tests that open USS file editors are closed when file is deleted", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        const ussFileNode = new ZoweUSSNode({
+            label: "testfile.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.mParent,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        ussFileNode.fullPath = "/u/myuser/testfile.txt";
+        ussFileNode.parentPath = "/u/myuser";
+
+        const fileTab = { input: { uri: ussFileNode.resourceUri } };
+        (vscode.window.tabGroups as any).all = [{ tabs: [fileTab] }];
+        (vscode.window.tabGroups.close as jest.Mock).mockResolvedValue(undefined);
+
+        await ussFileNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
+
+        expect(vscode.window.tabGroups.close).toHaveBeenCalledWith([fileTab]);
+        (vscode.window.tabGroups as any).all = [];
+    });
+
+    it("Tests that open USS folder editors are closed when folder is deleted", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        const ussFolderNode = new ZoweUSSNode({
+            label: "testfolder",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode: blockMocks.mParent,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        ussFolderNode.fullPath = "/u/myuser/testfolder";
+        ussFolderNode.parentPath = "/u/myuser";
+        ussFolderNode.contextValue = Constants.USS_DIR_CONTEXT;
+
+        const childTab = { input: { uri: { path: ussFolderNode.resourceUri.path + "/file1.txt" } } };
+        const unrelatedTab = { input: { uri: { path: "/other/unrelated.txt" } } };
+        (vscode.window.tabGroups as any).all = [{ tabs: [childTab, unrelatedTab] }];
+        (vscode.window.tabGroups.close as jest.Mock).mockResolvedValue(undefined);
+
+        await ussFolderNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
+
+        expect(vscode.window.tabGroups.close).toHaveBeenCalledWith([childTab]);
+        (vscode.window.tabGroups as any).all = [];
+    });
+
+    it("Tests that deletion does not close tabs when no resourceUri", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        const ussFileNode = new ZoweUSSNode({
+            label: "testfile.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.mParent,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        ussFileNode.fullPath = "/u/myuser/testfile.txt";
+        ussFileNode.parentPath = "/u/myuser";
+        ussFileNode.resourceUri = undefined;
+
+        (vscode.window.tabGroups.close as jest.Mock).mockClear();
+        (vscode.window.tabGroups as any).all = [];
+
+        await ussFileNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
+
+        expect(vscode.window.tabGroups.close).not.toHaveBeenCalled();
+    });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
