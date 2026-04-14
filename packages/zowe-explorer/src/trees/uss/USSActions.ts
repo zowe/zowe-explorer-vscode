@@ -784,11 +784,11 @@ export class USSActions {
             async (progress) => {
                 let realPercentComplete = 0;
                 const realTotalEntries = totalFileCount;
+                let numDownloaded = 0;
                 const task: imperative.ITaskWithStatus = {
                     set percentComplete(value: number) {
                         realPercentComplete = value;
-                        // eslint-disable-next-line no-magic-numbers
-                        Gui.reportProgress(progress, realTotalEntries, Math.floor((value * realTotalEntries) / 100), "");
+                        Gui.reportProgress(progress, realTotalEntries, ++numDownloaded, "");
                     },
                     get percentComplete(): number {
                         return realPercentComplete;
