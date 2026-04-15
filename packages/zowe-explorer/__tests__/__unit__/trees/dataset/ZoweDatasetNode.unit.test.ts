@@ -35,6 +35,7 @@ import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/
 import { bindMvsApi, createMvsApi } from "../../../__mocks__/mockCreators/api";
 import * as fs from "fs";
 import { Constants } from "../../../../src/configuration/Constants";
+import { Definitions } from "../../../../src/configuration/Definitions";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
@@ -1764,6 +1765,53 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
         for (const child of children) {
             expect(child.contextValue).toContain(Constants.FAV_SUFFIX);
         }
+        getSessionNodeSpy.mockRestore();
+    });
+
+    it("disables pagination for favorited PDS in SpecificMembers state", async () => {
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const getSessionNodeSpy = jest.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
+
+        const pds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX,
+        });
+        pds.dirty = true;
+        pds.favoritedMemberNames = ["MEM1", "MEM3"];
+        pds.pdsFavoriteState = Definitions.PdsFavoriteState.SpecificMembers;
+
+        const getDatasetsSpy = jest.spyOn(pds as any, "getDatasets").mockResolvedValueOnce([
+            {
+                success: true,
+                apiResponse: {
+                    items: [{ member: "MEM1" }, { member: "MEM2" }, { member: "MEM3" }],
+                    returnedRows: 3,
+                },
+            },
+        ]);
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+
+        // Call getChildren with pagination enabled
+        const children = await pds.getChildren(true);
+
+        // Verify getDatasets was called with shouldPaginate = false (second parameter)
+        expect(getDatasetsSpy).toHaveBeenCalledWith(profileOne, false);
+        
+        // Only favorited members should be returned
+        expect(children.map((c) => c.label)).toEqual(["MEM1", "MEM3"]);
+        
+        // Verify no pagination controls are added (NavigationTreeItem instances)
+        expect(children.every((child) => !(child instanceof NavigationTreeItem))).toBe(true);
+        
         getSessionNodeSpy.mockRestore();
     });
 });
