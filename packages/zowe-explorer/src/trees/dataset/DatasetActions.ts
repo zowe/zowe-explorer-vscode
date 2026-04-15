@@ -800,19 +800,23 @@ export class DatasetActions {
 
     private static async executeDownloadWithProgress(
         title: string,
-        downloadFn: (progress?: vscode.Progress<{ message?: string; increment?: number }>) => Promise<{ response?: any; downloadedPath?: string }>,
+        downloadFn: (
+            progress?: vscode.Progress<{ message?: string; increment?: number }>,
+            token?: vscode.CancellationToken
+        ) => Promise<{ response?: any; downloadedPath?: string }>,
         downloadType: string,
-        node: IZoweDatasetTreeNode
+        node: IZoweDatasetTreeNode,
+        cancellable: boolean = false
     ): Promise<void> {
         await Gui.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
                 title,
-                cancellable: false, // TODO: Add cancellation support at SDK level and then enable cancellation here as well
+                cancellable,
             },
-            async (progress) => {
+            async (progress, token) => {
                 try {
-                    const { response, downloadedPath } = await downloadFn(progress);
+                    const { response, downloadedPath } = await downloadFn(progress, token);
                     void SharedUtils.handleDownloadResponse(response, downloadType, downloadedPath);
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
@@ -882,7 +886,7 @@ export class DatasetActions {
 
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading all members"),
-            async (progress) => {
+            async (progress, token) => {
                 let realPercentComplete = 0;
                 const realTotalEntries = children.length;
                 let numDownloaded = 0;
@@ -920,13 +924,15 @@ export class DatasetActions {
                     overwrite,
                     task,
                     responseTimeout: profile?.profile?.responseTimeout,
+                    abortDownload: () => token?.isCancellationRequested ?? false,
                 };
 
                 const response = await mvsApi.downloadAllMembers(datasetName, downloadOptions);
                 return { response, downloadedPath: generatedFileDirectory };
             },
             vscode.l10n.t("Data set members"),
-            node
+            node,
+            true
         );
     }
 

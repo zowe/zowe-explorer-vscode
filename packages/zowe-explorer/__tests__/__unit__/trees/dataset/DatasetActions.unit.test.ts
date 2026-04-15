@@ -6071,7 +6071,8 @@ describe("DatasetActions - downloading functions", () => {
                 "Downloading all members",
                 expect.any(Function),
                 "Data set members",
-                pdsNode
+                pdsNode,
+                true
             );
         });
 
@@ -6343,6 +6344,88 @@ describe("DatasetActions - downloading functions", () => {
             expect(reportProgressSpy).toHaveBeenNthCalledWith(3, mockProgress, 3, 3, "");
 
             reportProgressSpy.mockRestore();
+        });
+
+        it("should pass abortDownload callback wired to CancellationToken", async () => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            });
+
+            const mockToken = { isCancellationRequested: false, onCancellationRequested: jest.fn() };
+            let capturedOptions: any;
+
+            jest.spyOn(testMocks.mvsApi, "downloadAllMembers").mockImplementation(async (_dsName, opts: any) => {
+                capturedOptions = opts;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockExecuteDownloadWithProgress = new MockedProperty(
+                DatasetActions,
+                "executeDownloadWithProgress" as any,
+                undefined,
+                jest.fn().mockImplementation(async (_title, downloadFn, _downloadType, _node, _cancellable) => {
+                    return await downloadFn(undefined, mockToken);
+                })
+            );
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(capturedOptions.abortDownload).toBeDefined();
+            expect(typeof capturedOptions.abortDownload).toBe("function");
+            expect(capturedOptions.abortDownload()).toBe(false);
+
+            mockToken.isCancellationRequested = true;
+            expect(capturedOptions.abortDownload()).toBe(true);
+        });
+
+        it("should pass abortDownload that returns false when token is undefined", async () => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            });
+
+            let capturedOptions: any;
+
+            jest.spyOn(testMocks.mvsApi, "downloadAllMembers").mockImplementation(async (_dsName, opts: any) => {
+                capturedOptions = opts;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockExecuteDownloadWithProgress = new MockedProperty(
+                DatasetActions,
+                "executeDownloadWithProgress" as any,
+                undefined,
+                jest.fn().mockImplementation(async (_title, downloadFn, _downloadType, _node, _cancellable) => {
+                    return await downloadFn(undefined, undefined);
+                })
+            );
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(capturedOptions.abortDownload()).toBe(false);
         });
     });
 
