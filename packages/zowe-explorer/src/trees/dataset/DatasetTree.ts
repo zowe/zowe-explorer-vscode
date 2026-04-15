@@ -1000,6 +1000,18 @@ Would you like to do this now?`,
             }
             // Add member to the existing favorites list
             existingPdsInFav.favoritedMemberNames.push(memberName);
+
+            // Check if all members are now re-favorited; if so, upgrade back to EntirePds
+            const sessionPds = parentPds as ZoweDatasetNode;
+            const totalMembers =
+                (sessionPds as any).paginatorData?.totalItems ?? sessionPds.children?.filter((c) => SharedContext.isDsMember(c)).length;
+            if (totalMembers > 0 && existingPdsInFav.favoritedMemberNames.length >= totalMembers) {
+                existingPdsInFav.pdsFavoriteState = Definitions.PdsFavoriteState.EntirePds;
+                existingPdsInFav.favoritedMemberNames = undefined;
+                existingPdsInFav.description = undefined;
+                this.updateNodeFavContext(node.getProfileName(), pdsLabel, "pds");
+            }
+
             existingPdsInFav.dirty = true;
             this.updateFavorites();
             this.refreshElement(this.mFavoriteSession);
@@ -1351,10 +1363,25 @@ Would you like to do this now?`,
                     // When called from the session tree, the favorites PDS may not have children loaded,
                     // so use the session-tree PDS (original parent) to enumerate members
                     const sourceForMembers = (node.getParent() as ZoweDatasetNode).children?.length > 0 ? node.getParent() : parentPds;
-                    const allMembers = (sourceForMembers as ZoweDatasetNode).children
-                        .filter((c) => SharedContext.isDsMember(c))
-                        .map((c) => c.label as string)
-                        .filter((m) => m !== memberName);
+
+                    let allMembers: string[];
+                    // If pagination is active on the source PDS, children only contain the current page.
+                    // Fetch all members from the server to build the complete favorited member list.
+                    if ((sourceForMembers as any).paginator != null) {
+                        const responses: zosfiles.IZosFilesResponse[] = [];
+                        await (sourceForMembers as ZoweDatasetNode).listMembers(responses);
+                        allMembers = responses
+                            .filter((r) => r.success)
+                            .flatMap((r) => (r.apiResponse?.items ?? r.apiResponse) as any[])
+                            .filter((item) => item?.member)
+                            .map((item) => item.member as string)
+                            .filter((m) => m !== memberName);
+                    } else {
+                        allMembers = (sourceForMembers as ZoweDatasetNode).children
+                            .filter((c) => SharedContext.isDsMember(c))
+                            .map((c) => c.label as string)
+                            .filter((m) => m !== memberName);
+                    }
 
                     if (allMembers.length === 0) {
                         // remove the now empty PDS favorite
@@ -1521,6 +1548,12 @@ Would you like to do this now?`,
                 this.refreshElement(sessionNode);
 
                 for (const child of sessionNode.children?.filter((c) => c.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) ?? []) {
+                    this.refreshElement(child);
+                }
+            }
+
+            for (const favProfile of this.mFavorites) {
+                for (const child of favProfile.children?.filter((c) => c.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) ?? []) {
                     this.refreshElement(child);
                 }
             }

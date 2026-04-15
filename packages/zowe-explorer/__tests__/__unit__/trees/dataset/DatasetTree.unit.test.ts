@@ -28,7 +28,16 @@ import {
     createMockNode,
 } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode, createDatasetTree, createDatasetFavoritesNode } from "../../../__mocks__/mockCreators/datasets";
-import { ProfilesCache, imperative, Gui, Validation, NavigationTreeItem, FsAbstractUtils, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import {
+    ProfilesCache,
+    imperative,
+    Gui,
+    Validation,
+    NavigationTreeItem,
+    FsAbstractUtils,
+    ZoweVsCodeExtension,
+    Paginator,
+} from "@zowe/zowe-explorer-api";
 import { Constants, JwtCheckResult } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { Profiles } from "../../../../src/configuration/Profiles";
@@ -2125,8 +2134,140 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
 
         // Should not say "PDS already in favorites" (as edge case bug was doing before fix)
         expect(showMessageSpy).not.toHaveBeenCalledWith(expect.stringContaining("already"));
-        expect((favPds as ZoweDatasetNode).favoritedMemberNames).toContain("MEM1");
-        expect((favPds as ZoweDatasetNode).favoritedMemberNames).toContain("MEM2");
+        // Both members are now favorited, so PDS should upgrade back to EntirePds
+        expect((favPds as ZoweDatasetNode).pdsFavoriteState).toBe(Definitions.PdsFavoriteState.EntirePds);
+        expect((favPds as ZoweDatasetNode).favoritedMemberNames).toBeUndefined();
+        expect(favPds.description).toBeUndefined();
+    });
+
+    it("removeFavorite includes all members (not just current page) when pagination is active on session PDS", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        // Create a session-tree PDS with only page 1 members loaded (simulating pagination)
+        const sessionPds = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        sessionPds.contextValue = Constants.DS_PDS_CONTEXT;
+
+        // Only page 1 members are in .children (simulating paginated view)
+        const sessionMem1 = new ZoweDatasetNode({
+            label: "MEM1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: sessionPds,
+        });
+        sessionMem1.contextValue = Constants.DS_MEMBER_CONTEXT;
+        const sessionMem2 = new ZoweDatasetNode({
+            label: "MEM2",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: sessionPds,
+        });
+        sessionMem2.contextValue = Constants.DS_MEMBER_CONTEXT;
+        // Page 1 only has MEM1 and MEM2; MEM3-MEM5 are on page 2
+        sessionPds.children = [sessionMem1, sessionMem2];
+
+        // Simulate an active paginator on the session PDS
+        const mockPaginator = new Paginator(
+            2,
+            jest.fn().mockResolvedValue({
+                items: [],
+                totalItems: 5,
+            })
+        );
+        await mockPaginator.initialize();
+        (sessionPds as any).paginator = mockPaginator;
+        (sessionPds as any).paginatorData = { totalItems: 5 };
+
+        // Mock listMembers to return ALL members (as if fetched from server)
+        jest.spyOn(sessionPds, "listMembers").mockImplementation(async (responses) => {
+            responses.push({
+                success: true,
+                commandResponse: "",
+                apiResponse: {
+                    items: [{ member: "MEM1" }, { member: "MEM2" }, { member: "MEM3" }, { member: "MEM4" }, { member: "MEM5" }],
+                    returnedRows: 5,
+                },
+            });
+        });
+
+        testTree.mSessionNodes[1].children = [sessionPds];
+
+        // Add the entire PDS to favorites
+        await testTree.addFavorite(sessionPds);
+
+        const profileNodeInFavs = testTree.mFavorites[0];
+        const favPds = profileNodeInFavs.children[0] as ZoweDatasetNode;
+        expect(favPds.pdsFavoriteState).toBeUndefined();
+
+        // Unfavorite MEM2 from session tree - should transition to SpecificMembers
+        // with ALL remaining members (MEM1, MEM3, MEM4, MEM5), not just page-visible ones
+        await testTree.removeFavorite(sessionMem2);
+
+        expect(favPds.pdsFavoriteState).toBe(Definitions.PdsFavoriteState.SpecificMembers);
+        // Should include ALL members except MEM2, not just page 1 members
+        expect(favPds.favoritedMemberNames).toEqual(expect.arrayContaining(["MEM1", "MEM3", "MEM4", "MEM5"]));
+        expect(favPds.favoritedMemberNames).not.toContain("MEM2");
+        expect(favPds.favoritedMemberNames.length).toBe(4);
+    });
+
+    it("re-favoriting last unfavorited member transitions PDS back to EntirePds", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        // Session-tree PDS with 3 members
+        const sessionPds = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        sessionPds.contextValue = Constants.DS_PDS_CONTEXT;
+        const sessionMem1 = new ZoweDatasetNode({
+            label: "MEM1",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: sessionPds,
+        });
+        sessionMem1.contextValue = Constants.DS_MEMBER_CONTEXT;
+        const sessionMem2 = new ZoweDatasetNode({
+            label: "MEM2",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: sessionPds,
+        });
+        sessionMem2.contextValue = Constants.DS_MEMBER_CONTEXT;
+        const sessionMem3 = new ZoweDatasetNode({
+            label: "MEM3",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: sessionPds,
+        });
+        sessionMem3.contextValue = Constants.DS_MEMBER_CONTEXT;
+        sessionPds.children = [sessionMem1, sessionMem2, sessionMem3];
+        testTree.mSessionNodes[1].children = [sessionPds];
+
+        // Step 1: Favorite the whole PDS
+        await testTree.addFavorite(sessionPds);
+        const profileNodeInFavs = testTree.mFavorites[0];
+        const favPds = profileNodeInFavs.children[0] as ZoweDatasetNode;
+        expect(favPds.pdsFavoriteState).toBeUndefined();
+        expect(favPds.favoritedMemberNames).toBeUndefined();
+
+        // Step 2: Unfavorite MEM2 → transitions to SpecificMembers
+        await testTree.removeFavorite(sessionMem2);
+        expect(favPds.pdsFavoriteState).toBe(Definitions.PdsFavoriteState.SpecificMembers);
+        expect(favPds.favoritedMemberNames).toEqual(["MEM1", "MEM3"]);
+
+        // Step 3: Re-favorite MEM2 → should transition back to EntirePds
+        await testTree.addFavorite(sessionMem2);
+        expect(favPds.pdsFavoriteState).toBe(Definitions.PdsFavoriteState.EntirePds);
+        expect(favPds.favoritedMemberNames).toBeUndefined();
         expect(favPds.description).toBeUndefined();
     });
 });
@@ -3686,6 +3827,43 @@ describe("Dataset Tree Unit Tests - Function onDidConfiguration", () => {
         expect(refreshElement).toHaveBeenCalledTimes(2);
         expect(refreshElement).toHaveBeenCalledWith(blockMocks.datasetSessionNode);
         expect(refreshElement).toHaveBeenCalledWith(pdsNode);
+    });
+
+    it("Refreshes expanded favorited PDS nodes when pagination page size setting has changed", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.workspace.getConfiguration).mockReturnValue(blockMocks.workspaceConfiguration);
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes = [blockMocks.datasetSessionNode];
+
+        // Set up a favorite profile node with an expanded PDS child
+        const favProfileNode = new ZoweDatasetNode({
+            label: globalMocks.testProfileLoaded.name,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            contextOverride: Constants.FAV_PROFILE_CONTEXT,
+        });
+        const favPdsNode = new ZoweDatasetNode({
+            label: "TEST.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode: favProfileNode,
+            profile: globalMocks.testProfileLoaded,
+            contextOverride: Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX,
+        });
+        favProfileNode.children = [favPdsNode];
+        testTree.mFavorites.push(favProfileNode);
+
+        const refreshElement = jest.spyOn(testTree, "refreshElement").mockImplementation();
+        const event = {
+            affectsConfiguration: jest.fn().mockImplementation((key) => key === Constants.SETTINGS_DATASETS_PER_PAGE),
+        };
+        event.affectsConfiguration.mockReturnValue(true);
+
+        await testTree.onDidChangeConfiguration(event);
+
+        // verify that the expanded favorited PDS was also refreshed
+        expect(refreshElement).toHaveBeenCalledWith(favPdsNode);
     });
 });
 

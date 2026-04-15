@@ -1805,13 +1805,263 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
 
         // Verify getDatasets was called with shouldPaginate = false (second parameter)
         expect(getDatasetsSpy).toHaveBeenCalledWith(profileOne, false);
-        
+
         // Only favorited members should be returned
         expect(children.map((c) => c.label)).toEqual(["MEM1", "MEM3"]);
-        
+
         // Verify no pagination controls are added (NavigationTreeItem instances)
         expect(children.every((child) => !(child instanceof NavigationTreeItem))).toBe(true);
-        
+
+        getSessionNodeSpy.mockRestore();
+    });
+
+    it("no pagination arrows when members are favorited one-by-one past pagination length", async () => {
+        // Scenario: Start with unfavorited PDS, favorite members one by one.
+        // Even if total members exceeds items-per-page, pagination should be disabled in SpecificMembers mode.
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const getSessionNodeSpy = jest.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
+
+        const pds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX,
+        });
+        pds.dirty = true;
+        // 6 specific members favorited - more than a typical items-per-page of 5
+        pds.favoritedMemberNames = ["MEM1", "MEM2", "MEM3", "MEM4", "MEM5", "MEM6"];
+        pds.pdsFavoriteState = Definitions.PdsFavoriteState.SpecificMembers;
+
+        const members = Array.from({ length: 10 }, (_, i) => ({ member: `MEM${i + 1}` }));
+        const getDatasetsSpy = jest.spyOn(pds as any, "getDatasets").mockResolvedValueOnce([
+            {
+                success: true,
+                apiResponse: {
+                    items: members,
+                    returnedRows: 10,
+                },
+            },
+        ]);
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+
+        const children = await pds.getChildren(true);
+
+        // Verify getDatasets was called with shouldPaginate = false
+        expect(getDatasetsSpy).toHaveBeenCalledWith(profileOne, false);
+
+        // Only the 6 favorited members should be returned
+        expect(children.map((c) => c.label)).toEqual(["MEM1", "MEM2", "MEM3", "MEM4", "MEM5", "MEM6"]);
+
+        // No NavigationTreeItem should be present
+        expect(children.some((child) => child instanceof NavigationTreeItem)).toBe(false);
+
+        getSessionNodeSpy.mockRestore();
+    });
+
+    it("removes pagination arrows when transitioning from EntirePds to SpecificMembers", async () => {
+        // Scenario: PDS starts as EntirePds favorite with a paginator already initialized,
+        // then user unfavorites a member -> transitions to SpecificMembers.
+        // The stale paginator should NOT cause navigation arrows to appear.
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const getSessionNodeSpy = jest.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
+
+        const pds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX,
+        });
+
+        // Simulate existing paginator from when PDS was EntirePds with pagination active
+        const totalItems = 10;
+        const itemsPerPage = 5;
+        const mockPaginator = new Paginator(
+            itemsPerPage,
+            jest.fn().mockResolvedValue({
+                items: Array.from({ length: itemsPerPage }, (_, i) => ({ member: `MEM${i + 1}` })),
+                totalItems,
+                nextPageCursor: "MEM5",
+            })
+        );
+        await mockPaginator.initialize();
+        (pds as any).paginator = mockPaginator;
+        (pds as any).paginatorData = { totalItems };
+
+        // Now transition to SpecificMembers (user unfavorited a member)
+        pds.dirty = true;
+        pds.pdsFavoriteState = Definitions.PdsFavoriteState.SpecificMembers;
+        pds.favoritedMemberNames = ["MEM1", "MEM3"];
+
+        const allMembers = Array.from({ length: 10 }, (_, i) => ({ member: `MEM${i + 1}` }));
+        const getDatasetsSpy = jest.spyOn(pds as any, "getDatasets").mockResolvedValueOnce([
+            {
+                success: true,
+                apiResponse: {
+                    items: allMembers,
+                    returnedRows: 10,
+                },
+            },
+        ]);
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+
+        const children = await pds.getChildren(true);
+
+        // getDatasets should be called with shouldPaginate = false
+        expect(getDatasetsSpy).toHaveBeenCalledWith(profileOne, false);
+
+        // Only favorited members should appear
+        expect(children.map((c) => c.label)).toEqual(["MEM1", "MEM3"]);
+
+        // No NavigationTreeItem should be present despite the stale paginator
+        expect(children.some((child) => child instanceof NavigationTreeItem)).toBe(false);
+
+        getSessionNodeSpy.mockRestore();
+    });
+
+    it("removes pagination arrows when transitioning from EntirePds page 2+ to SpecificMembers", async () => {
+        // Edge case: paginator was on page 2+ when transitioning to SpecificMembers
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const getSessionNodeSpy = jest.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
+
+        const pds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX,
+        });
+
+        // Simulate a paginator that's on page 2 (has previous page)
+        const totalItems = 15;
+        const itemsPerPage = 5;
+        let callCount = 0;
+        const fetchFn = jest.fn().mockImplementation(async () => {
+            callCount++;
+            if (callCount === 1) {
+                return {
+                    items: Array.from({ length: itemsPerPage }, (_, i) => ({ member: `MEM${i + 1}` })),
+                    totalItems,
+                    nextPageCursor: "MEM5",
+                };
+            }
+            return {
+                items: Array.from({ length: itemsPerPage }, (_, i) => ({ member: `MEM${i + 6}` })),
+                totalItems,
+                nextPageCursor: "MEM10",
+            };
+        });
+        const mockPaginator = new Paginator(itemsPerPage, fetchFn);
+        await mockPaginator.initialize();
+        await mockPaginator.fetchNextPage(); // Now on page 2, canGoPrevious = true
+        expect(mockPaginator.canGoPrevious()).toBe(true);
+        expect(mockPaginator.canGoNext()).toBe(true);
+
+        (pds as any).paginator = mockPaginator;
+        (pds as any).paginatorData = { totalItems };
+
+        // Transition to SpecificMembers
+        pds.dirty = true;
+        pds.pdsFavoriteState = Definitions.PdsFavoriteState.SpecificMembers;
+        pds.favoritedMemberNames = ["MEM2", "MEM7"];
+
+        const allMembers = Array.from({ length: 15 }, (_, i) => ({ member: `MEM${i + 1}` }));
+        const getDatasetsSpy = jest.spyOn(pds as any, "getDatasets").mockResolvedValueOnce([
+            {
+                success: true,
+                apiResponse: {
+                    items: allMembers,
+                    returnedRows: 15,
+                },
+            },
+        ]);
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+
+        const children = await pds.getChildren(true);
+
+        expect(getDatasetsSpy).toHaveBeenCalledWith(profileOne, false);
+        expect(children.map((c) => c.label)).toEqual(["MEM2", "MEM7"]);
+        // No navigation arrows despite paginator being on page 2
+        expect(children.some((child) => child instanceof NavigationTreeItem)).toBe(false);
+
+        getSessionNodeSpy.mockRestore();
+    });
+
+    it("clears stale paginator when PDS changes from EntirePds to SpecificMembers and back", async () => {
+        // Edge case: PDS goes EntirePds (paginated) -> SpecificMembers -> back to EntirePds
+        // Ensures the paginator state doesn't leak across transitions
+        jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: jest.fn().mockReturnValue(profileOne),
+        } as any);
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const getSessionNodeSpy = jest.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
+
+        const pds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX,
+        });
+
+        // Set up stale paginator from EntirePds state
+        const mockPaginator = new Paginator(
+            5,
+            jest.fn().mockResolvedValue({
+                items: Array.from({ length: 5 }, (_, i) => ({ member: `MEM${i + 1}` })),
+                totalItems: 10,
+                nextPageCursor: "MEM5",
+            })
+        );
+        await mockPaginator.initialize();
+        (pds as any).paginator = mockPaginator;
+        (pds as any).paginatorData = { totalItems: 10 };
+
+        // Transition to SpecificMembers
+        pds.dirty = true;
+        pds.pdsFavoriteState = Definitions.PdsFavoriteState.SpecificMembers;
+        pds.favoritedMemberNames = ["MEM1"];
+
+        const allMembers = Array.from({ length: 10 }, (_, i) => ({ member: `MEM${i + 1}` }));
+        jest.spyOn(pds as any, "getDatasets").mockResolvedValueOnce([
+            {
+                success: true,
+                apiResponse: {
+                    items: allMembers,
+                    returnedRows: 10,
+                },
+            },
+        ]);
+        jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+
+        const children = await pds.getChildren(true);
+
+        // Should only show favorited member, no pagination
+        expect(children.map((c) => c.label)).toEqual(["MEM1"]);
+        expect(children.some((child) => child instanceof NavigationTreeItem)).toBe(false);
+
         getSessionNodeSpy.mockRestore();
     });
 });
