@@ -309,7 +309,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-        const responses = await this.getDatasets(cachedProfile, paginate);
+        
+        // Disable pagination for favorited PDS with specific members:
+        // Pagination is currently designed/implemented in DS nodes to minimize requests. We can revisit in the future to support local pagination in this case if requested.
+        const shouldPaginate = paginate && !(SharedContext.isFavoritePds(this) && this.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers);
+        
+        const responses = await this.getDatasets(cachedProfile, shouldPaginate);
         if (responses == null) {
             return [];
         }
