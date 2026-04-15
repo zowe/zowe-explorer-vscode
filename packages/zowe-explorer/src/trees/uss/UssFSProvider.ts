@@ -132,11 +132,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (fileResp.success) {
                 // Regardless of the resource type, it will be the first item in a successful response.
                 // When listing a folder, the folder's stats will be represented as the "." entry.
-                const newTime = dayjs((fileResp.apiResponse?.items ?? [])?.[0]?.mtime ?? entry.mtime).valueOf();
-                if (entry.mtime != newTime) {
-                    entry.mtime = newTime;
-                    // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
+                const apiMtime = (fileResp.apiResponse?.items ?? [])?.[0]?.mtime;
+
+                if (apiMtime === undefined) {
                     entry.wasAccessed = false;
+                    entry.mtime = Date.now();
+                } else {
+                    const newTime = dayjs(apiMtime).valueOf();
+                    if (entry.mtime != newTime) {
+                        entry.mtime = newTime;
+                        // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
+                        entry.wasAccessed = false;
+                    }
                 }
             }
         } catch (err) {
