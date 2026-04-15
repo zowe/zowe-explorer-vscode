@@ -710,13 +710,11 @@ export class SharedUtils {
 
         if (wasCancelled) {
             const downloadResult = response.apiResponse?.downloadResult;
-            if (downloadResult != null) {
-                message = vscode.l10n.t(
-                    "{0} download was cancelled. {1} of {2} item(s) were downloaded.",
-                    downloadType,
-                    downloadResult.downloaded,
-                    downloadResult.total
-                );
+            // downloadResult may come from IDownloadAmResult (downloaded: number, total) or IDownloadUssDirResult (downloaded: string[], totalCount)
+            const downloadedCount = Array.isArray(downloadResult?.downloaded) ? downloadResult.downloaded.length : downloadResult?.downloaded;
+            const totalCount = downloadResult?.total ?? downloadResult?.totalCount;
+            if (downloadedCount != null && totalCount != null) {
+                message = vscode.l10n.t("{0} download was cancelled. {1} of {2} item(s) were downloaded.", downloadType, downloadedCount, totalCount);
             } else {
                 message = vscode.l10n.t("{0} download was cancelled.", downloadType);
             }
