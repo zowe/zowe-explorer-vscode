@@ -22,7 +22,7 @@ jobs:
           pnpm install
 
       - name: Check Vulnerabilities
-        run: pnpm audit --prod
+        run: pnpm dlx --config.minimumReleaseAge=0 pnpm@11.0.0-rc.1 --config.manage-package-manager-versions=false audit --prod
   audit-all:
     runs-on: ubuntu-22.04
     continue-on-error: true
@@ -37,4 +37,4 @@ jobs:
           npm install -g pnpm
           pnpm install
       - name: Check All Vulnerabilities (including dev)
-        run: pnpm audit --audit-level high
+        run: pnpm dlx --config.minimumReleaseAge=0 pnpm@11.0.0-rc.1 --config.manage-package-manager-versions=false audit --audit-level high
