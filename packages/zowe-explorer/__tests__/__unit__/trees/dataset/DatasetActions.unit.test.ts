@@ -5464,6 +5464,11 @@ describe("DatasetActions - downloading functions", () => {
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
 
         const mvsApi = {
+            allMembers: jest.fn().mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            }),
             downloadAllMembers: jest.fn().mockResolvedValue({
                 success: true,
                 commandResponse: "",
@@ -5993,12 +5998,12 @@ describe("DatasetActions - downloading functions", () => {
         let testMocks: ReturnType<typeof createDownloadTestMocks>;
         let mockGetDataSetDownloadOptions: MockedProperty;
         let mockExecuteDownloadWithProgress: MockedProperty;
-        let mockGetChildren: jest.Mock;
         let mockShowMessage: MockedProperty;
         let mockErrorMessage: MockedProperty;
         let mockTrace: MockedProperty;
         let mockGetValue: MockedProperty;
         let mockHandleDownloadResponse: MockedProperty;
+        let mockAuthErrorHandling: MockedProperty;
 
         beforeEach(() => {
             testMocks = createDownloadTestMocks();
@@ -6018,13 +6023,12 @@ describe("DatasetActions - downloading functions", () => {
                 })
             );
 
-            mockGetChildren = jest.fn();
-
             mockShowMessage = new MockedProperty(Gui, "showMessage", undefined, jest.fn());
             mockErrorMessage = new MockedProperty(Gui, "errorMessage", undefined, jest.fn());
             mockTrace = new MockedProperty(ZoweLogger, "trace", undefined, jest.fn());
             mockGetValue = new MockedProperty(ZoweLocalStorage, "getValue", undefined, jest.fn());
             mockHandleDownloadResponse = new MockedProperty(SharedUtils, "handleDownloadResponse", undefined, jest.fn().mockResolvedValue(undefined));
+            mockAuthErrorHandling = new MockedProperty(AuthUtils, "errorHandling", undefined, jest.fn().mockResolvedValue(undefined));
         });
 
         afterEach(() => {
@@ -6035,6 +6039,7 @@ describe("DatasetActions - downloading functions", () => {
             mockTrace[Symbol.dispose]();
             mockGetValue[Symbol.dispose]();
             mockHandleDownloadResponse[Symbol.dispose]();
+            mockAuthErrorHandling[Symbol.dispose]();
         });
 
         it("should successfully download all members of a PDS", async () => {
@@ -6045,13 +6050,13 @@ describe("DatasetActions - downloading functions", () => {
                 profile: defaultTestProfile,
             });
 
-            const memberNodes = [
-                new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pdsNode }),
-                new ZoweDatasetNode({ label: "MEMBER2", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pdsNode }),
-            ];
-
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue(memberNodes);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }, { member: "MEMBER2" }] },
+            });
 
             jest.spyOn(testMocks.mvsApi, "downloadAllMembers").mockResolvedValue({
                 success: true,
@@ -6068,6 +6073,36 @@ describe("DatasetActions - downloading functions", () => {
                 "Data set members",
                 pdsNode
             );
+        });
+
+        it("should handle non-success response from allMembers API", async () => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.FAIL.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: false,
+                commandResponse: "allMembers failed",
+                apiResponse: undefined,
+            });
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(AuthUtils.errorHandling).toHaveBeenCalledWith(
+                "allMembers failed",
+                expect.objectContaining({
+                    apiType: ZoweExplorerApiType.Mvs,
+                    profile: defaultTestProfile,
+                    dsName: "TEST.FAIL.PDS",
+                })
+            );
+            expect(mockGetDataSetDownloadOptions.mock).not.toHaveBeenCalled();
+            expect(mockExecuteDownloadWithProgress.mock).not.toHaveBeenCalled();
         });
 
         it("should handle invalid profile", async () => {
@@ -6095,8 +6130,13 @@ describe("DatasetActions - downloading functions", () => {
                 profile: defaultTestProfile,
             });
 
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue([]);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [] },
+            });
 
             await DatasetActions.downloadAllMembers(pdsNode);
 
@@ -6112,12 +6152,17 @@ describe("DatasetActions - downloading functions", () => {
                 profile: defaultTestProfile,
             });
 
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue(null);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
 
-            await DatasetActions.downloadAllMembers(pdsNode);
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: null },
+            });
 
-            expect(Gui.showMessage).toHaveBeenCalledWith("The selected data set has no members to download.");
+            await expect(DatasetActions.downloadAllMembers(pdsNode)).rejects.toThrow();
+
+            expect(mockGetDataSetDownloadOptions.mock).not.toHaveBeenCalled();
         });
 
         it("should warn user when downloading many members", async () => {
@@ -6129,13 +6174,15 @@ describe("DatasetActions - downloading functions", () => {
             });
 
             // Create more than MIN_WARN_DOWNLOAD_FILES members
-            const memberNodes = Array.from(
-                { length: Constants.MIN_WARN_DOWNLOAD_FILES + 10 },
-                (_, i) => new ZoweDatasetNode({ label: `MEMBER${i}`, collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pdsNode })
-            );
+            const memberNodes = Array.from({ length: Constants.MIN_WARN_DOWNLOAD_FILES + 10 }, (_, i) => ({ member: `MEMBER${i}` }));
 
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue(memberNodes);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: memberNodes },
+            });
 
             const localMockShowMessage = new MockedProperty(Gui, "showMessage", undefined, jest.fn().mockResolvedValue("No"));
 
@@ -6161,13 +6208,15 @@ describe("DatasetActions - downloading functions", () => {
                 profile: defaultTestProfile,
             });
 
-            const memberNodes = Array.from(
-                { length: Constants.MIN_WARN_DOWNLOAD_FILES + 1 },
-                (_, i) => new ZoweDatasetNode({ label: `MEMBER${i}`, collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pdsNode })
-            );
+            const memberItems = Array.from({ length: Constants.MIN_WARN_DOWNLOAD_FILES + 1 }, (_, i) => ({ member: `MEMBER${i}` }));
 
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue(memberNodes);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: memberItems },
+            });
 
             const localMockShowMessage = new MockedProperty(Gui, "showMessage", undefined, jest.fn().mockResolvedValue("Yes"));
 
@@ -6187,12 +6236,13 @@ describe("DatasetActions - downloading functions", () => {
                 profile: defaultTestProfile,
             });
 
-            const memberNodes = [
-                new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pdsNode }),
-            ];
-
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue(memberNodes);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            });
 
             mockGetDataSetDownloadOptions.mock.mockResolvedValue(undefined);
 
@@ -6215,13 +6265,14 @@ describe("DatasetActions - downloading functions", () => {
                 profile: defaultTestProfile,
             });
 
-            const memberNodes = [
-                new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pdsNode }),
-            ];
-
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue(memberNodes);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
             pdsNode.getLabel = jest.fn().mockReturnValue("TEST.PDS");
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            });
 
             const downloadAllMembersSpy = jest.spyOn(testMocks.mvsApi, "downloadAllMembers").mockResolvedValue({
                 success: true,
@@ -6243,6 +6294,55 @@ describe("DatasetActions - downloading functions", () => {
                     binary: false,
                 })
             );
+        });
+
+        it("should report progress correctly", async () => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "M1" }, { member: "M2" }, { member: "M3" }] },
+            });
+
+            const mockProgress = { report: jest.fn() };
+            const reportProgressSpy = jest.spyOn(Gui, "reportProgress").mockImplementation();
+
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockExecuteDownloadWithProgress = new MockedProperty(
+                DatasetActions,
+                "executeDownloadWithProgress" as any,
+                undefined,
+                jest.fn().mockImplementation(async (_title, downloadFn, _downloadType, _node) => {
+                    return await downloadFn(mockProgress);
+                })
+            );
+
+            let capturedTask: any;
+            jest.spyOn(testMocks.mvsApi, "downloadAllMembers").mockImplementation(async (_dsName, opts: any) => {
+                capturedTask = opts.task;
+                capturedTask.percentComplete = 33;
+                capturedTask.percentComplete = 66;
+                capturedTask.percentComplete = 100;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(capturedTask.percentComplete).toBe(100);
+            expect(reportProgressSpy).toHaveBeenCalledTimes(3);
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(1, mockProgress, 3, 1, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(2, mockProgress, 3, 2, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(3, mockProgress, 3, 3, "");
+
+            reportProgressSpy.mockRestore();
         });
     });
 

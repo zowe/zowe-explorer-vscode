@@ -842,8 +842,21 @@ export class DatasetActions {
             return;
         }
 
-        const children = await node.getChildren();
-        if (!children || children.length === 0) {
+        const datasetName = node.label?.toString();
+
+        const allMembersRes = await mvsApi.allMembers(datasetName);
+        if (!allMembersRes?.success) {
+            await AuthUtils.errorHandling(allMembersRes?.commandResponse, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile,
+                dsName: datasetName,
+                scenario: vscode.l10n.t("Unable to retrieve members of data set."),
+            });
+            return;
+        }
+
+        const children = allMembersRes.apiResponse?.items;
+        if (children.length === 0) {
             Gui.showMessage(vscode.l10n.t("The selected data set has no members to download."));
             return;
         }
@@ -872,11 +885,11 @@ export class DatasetActions {
             async (progress) => {
                 let realPercentComplete = 0;
                 const realTotalEntries = children.length;
+                let numDownloaded = 0;
                 const task: imperative.ITaskWithStatus = {
                     set percentComplete(value: number) {
                         realPercentComplete = value;
-                        // eslint-disable-next-line no-magic-numbers
-                        Gui.reportProgress(progress, realTotalEntries, Math.floor((value * realTotalEntries) / 100), "");
+                        Gui.reportProgress(progress, realTotalEntries, ++numDownloaded, "");
                     },
                     get percentComplete(): number {
                         return realPercentComplete;
@@ -885,7 +898,6 @@ export class DatasetActions {
                     stageName: 0, // TaskStage.IN_PROGRESS
                 };
 
-                const datasetName = node.label as string;
                 const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
 
                 const extensionMap = await DatasetUtils.getExtensionMap(
