@@ -21,6 +21,7 @@ jobs:
           npm install -g pnpm
           pnpm install
 
+      # https://github.com/pnpm/pnpm/issues/11265#issuecomment-4258309621 Can change back to pnpm audit once pnpm 11.0.0 is released
       - name: Check Vulnerabilities
         run: pnpm dlx --config.minimumReleaseAge=0 pnpm@11.0.0-rc.1 --config.manage-package-manager-versions=false audit --prod
   audit-all:
@@ -36,5 +37,6 @@ jobs:
       - run: |
           npm install -g pnpm
           pnpm install
+      # https://github.com/pnpm/pnpm/issues/11265#issuecomment-4258309621 Can change back to pnpm audit once pnpm 11.0.0 is released
       - name: Check All Vulnerabilities (including dev)
         run: pnpm dlx --config.minimumReleaseAge=0 pnpm@11.0.0-rc.1 --config.manage-package-manager-versions=false audit --audit-level high
