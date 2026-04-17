@@ -49,6 +49,12 @@
     ]
   },
   "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
+  "{0} members/Number of favorited members in a PDS": {
+    "message": "{0} members",
+    "comment": [
+      "Number of favorited members in a PDS"
+    ]
+  },
   "{0} renamed from {1} to {2}/Node typeOld nameNew name": {
     "message": "{0} renamed from {1} to {2}",
     "comment": [
@@ -80,6 +86,12 @@
     "message": "{0}. Or select a profile to add to the USS tree.",
     "comment": [
       "Instruction for add profile quick pick"
+    ]
+  },
+  "{0}/{1} members/Number of favorited members out of total members in a PDS": {
+    "message": "{0}/{1} members",
+    "comment": [
+      "Number of favorited members out of total members in a PDS"
     ]
   },
   "**Behavior:** Each command opens a dedicated terminal panel (for example, only MVS commands in the MVS terminal).": "**Behavior:** Each command opens a dedicated terminal panel (for example, only MVS commands in the MVS terminal).",
@@ -114,6 +126,8 @@
   "#### Windows custom persistence levels": "#### Windows custom persistence levels",
   "<a>#2828</a>": "<a>#2828</a>",
   "$(plus) Create a new Unix command": "$(plus) Create a new Unix command",
+  "1 member": "1 member",
+  "1/1 member": "1/1 member",
   "A {0} already exists with this name. Please choose a different name./Node type": {
     "message": "A {0} already exists with this name. Please choose a different name.",
     "comment": [
