@@ -8,7 +8,7 @@ overrides:
   '@tootallnate/once': ^3.0.1
   ajv@6: ^6.14.0
   ajv@8: ^8.18.0
-  basic-ftp@5: ^5.2.2
+  basic-ftp@5: ^5.3.0
   diff@5: ^5.2.2
   diff@>5: ^8.0.3
   fast-xml-parser: ^5.5.7
@@ -2573,8 +2573,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  basic-ftp@5.2.2:
-    resolution: {integrity: sha512-1tDrzKsdCg70WGvbFss/ulVAxupNauGnOlgpyjKzeQxzyllBLS0CGLV7tjIXTK3ZQA9/FBEm9qyFFN1bciA6pw==}
+  basic-ftp@5.3.0:
+    resolution: {integrity: sha512-5K9eNNn7ywHPsYnFwjKgYH8Hf8B5emh7JKcPaVjjrMJFQQwGpwowEnZNEtHs7DfR7hCZsmaK3VA4HUK0YarT+w==}
     engines: {node: '>=10.0.0'}
 
   bcrypt-pbkdf@1.0.2:
@@ -10119,7 +10119,7 @@ snapshots:
 
   baseline-browser-mapping@2.10.0: {}
 
-  basic-ftp@5.2.2: {}
+  basic-ftp@5.3.0: {}
 
   bcrypt-pbkdf@1.0.2:
     dependencies:
@@ -11799,7 +11799,7 @@ snapshots:
 
   get-uri@6.0.3:
     dependencies:
-      basic-ftp: 5.2.2
+      basic-ftp: 5.3.0
       data-uri-to-buffer: 6.0.2
       debug: 4.4.3(supports-color@8.1.1)
       fs-extra: 11.3.4
