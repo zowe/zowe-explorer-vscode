@@ -281,7 +281,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     rawItems.length === 1 && rawItems[0].name === uriBasename && !(rawItems[0].mode as string | undefined)?.startsWith("d");
                 const isDirectoryResponse =
                     (hasSelfEntry && (rawItems.find((item) => item.name === ".")?.mode as string | undefined)?.startsWith("d")) ||
-                    (rawItems.length > 0 && !hasSelfEntry && !isSingleFileMatch);
+                    (rawItems.length > 0 && !hasSelfEntry && !isSingleFileMatch) ||
+                    (rawItems.length === 0 && !hasSelfEntry); // Handle empty directories;
                 if (isDirectoryResponse) {
                     this._createDirectoryRecursive(uri);
                 }
