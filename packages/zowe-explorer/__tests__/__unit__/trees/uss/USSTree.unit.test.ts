@@ -2290,6 +2290,7 @@ describe("USSTree Unit Tests - Function handleDrag", () => {
                 {
                     label: ussnode.label,
                     uri: ussnode.resourceUri,
+                    contextValue: ussnode.contextValue,
                 },
             ])
         );
@@ -2299,6 +2300,7 @@ describe("USSTree Unit Tests - Function handleDrag", () => {
                 {
                     label: ussnode.label,
                     uri: ussnode.resourceUri,
+                    contextValue: ussnode.contextValue,
                 },
             ])
         );

@@ -101,6 +101,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             items.push({
                 label: srcItem.label,
                 uri: srcItem.resourceUri,
+                contextValue: srcItem.contextValue,
             });
         }
         dataTransfer.set("application/vnd.code.tree.zowe.ds.explorer", new vscode.DataTransferItem(items));

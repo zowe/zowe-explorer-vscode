@@ -5249,6 +5249,7 @@ describe("DataSetTree Unit Tests - Function handleDrag", () => {
                 {
                     label: datasetNode.label,
                     uri: datasetNode.resourceUri,
+                    contextValue: datasetNode.contextValue,
                 },
             ])
         );
@@ -5258,6 +5259,7 @@ describe("DataSetTree Unit Tests - Function handleDrag", () => {
                 {
                     label: datasetNode.label,
                     uri: datasetNode.resourceUri,
+                    contextValue: datasetNode.contextValue,
                 },
             ])
         );

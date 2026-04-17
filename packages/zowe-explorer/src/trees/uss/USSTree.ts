@@ -90,6 +90,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             items.push({
                 label: srcItem.label,
                 uri: srcItem.resourceUri,
+                contextValue: srcItem.contextValue,
             });
         }
         dataTransfer.set("application/vnd.code.tree.zowe.uss.explorer", new vscode.DataTransferItem(items));
