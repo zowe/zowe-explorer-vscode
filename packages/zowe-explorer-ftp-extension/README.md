@@ -1,7 +1,7 @@
 # Zowe® Explorer for IBM® z/OS® FTP
 
 [![version](https://img.shields.io/open-vsx/v/Zowe/zowe-explorer-ftp-extension?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=Zowe.zowe-explorer-ftp-extension)
-[![downloads](https://img.shields.io/badge/downloads-28k-brightgreen)](https://marketplace.visualstudio.com/items?itemName=Zowe.zowe-explorer-ftp-extension)
+[![downloads](https://img.shields.io/badge/downloads-14k-brightgreen)](https://marketplace.visualstudio.com/items?itemName=Zowe.zowe-explorer-ftp-extension)
 
 Zowe® Explorer for IBM® z/OS® FTP adds the FTP protocol to the [Zowe Explorer](https://github.com/zowe/zowe-explorer-vscode) VS Code extension, allowing you to use [z/OS FTP Plug-in for Zowe CLI](https://github.com/zowe/zowe-cli-ftp-plugin) profiles to connect and interact with z/OS USS.
 
