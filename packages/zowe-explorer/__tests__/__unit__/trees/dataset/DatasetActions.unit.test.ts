@@ -45,6 +45,7 @@ import {
     createDSMemberAttributes,
 } from "../../../__mocks__/mockCreators/datasets";
 import { Constants } from "../../../../src/configuration/Constants";
+import { Definitions } from "../../../../src/configuration/Definitions";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { FilterDescriptor } from "../../../../src/management/FilterManagement";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
@@ -702,6 +703,41 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         );
     });
 
+    it("Should not refresh removed favorite PDS when deleting its last member", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testFavMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        const refreshElementSpy = jest.spyOn(blockMocks.testDatasetTree, "refreshElement");
+
+        await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(refreshElementSpy).not.toHaveBeenCalledWith(blockMocks.testFavoritedNode);
+    });
+
+    it("Should use stable node for fixVsCodeMultiSelect when deleting last member from favorite PDS", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testFavMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        const lastCall = blockMocks.fixMultiSelectMock.mock.calls[blockMocks.fixMultiSelectMock.mock.calls.length - 1];
+        const refreshedNode = lastCall?.[1] as any;
+
+        expect(refreshedNode?.label).toBe(globalMocks.datasetSessionNode.label);
+        expect((refreshedNode?.contextValue as string) ?? "").toContain(Constants.DS_SESSION_CONTEXT);
+        expect(refreshedNode?.label).not.toBe(blockMocks.testFavoritedNode.label);
+    });
+
     it("Should not consider a session for deletion", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
@@ -866,6 +902,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         await DatasetActions.deleteDataset(node, blockMocks.testDatasetTree);
         expect(vscode.window.tabGroups.close).not.toHaveBeenCalled();
     });
+
     it("Checking common PS dataset deletion with Unverified profile", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -893,6 +930,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         await DatasetActions.deleteDataset(node, blockMocks.testDatasetTree);
         expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri, { recursive: false });
     });
+
     it("Checking common PS dataset deletion with not existing local file", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -909,6 +947,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         await DatasetActions.deleteDataset(node, blockMocks.testDatasetTree);
         expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri, { recursive: false });
     });
+
     it("Checking common PS dataset failed deletion attempt due to absence on remote", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -925,6 +964,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         await expect(DatasetActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toThrow("not found");
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Unable to find file " + node.label?.toString());
     });
+
     it("Checking common PS dataset failed deletion attempt", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -941,6 +981,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         await expect(DatasetActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toThrow("");
         expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Deletion error", { items: ["Show log", "Troubleshoot"] });
     });
+
     it("Checking Favorite PDS dataset deletion", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -967,6 +1008,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri, { recursive: false });
         expect(blockMocks.testDatasetTree.removeFavorite).toHaveBeenCalledWith(node);
     });
+
     it("Checking Favorite PDS Member deletion", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -986,6 +1028,94 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         expect(deleteSpy).toHaveBeenCalledWith(child.resourceUri, { recursive: false });
         expect(blockMocks.testDatasetTree.removeFavorite).toHaveBeenCalledWith(child);
     });
+
+    it("Checking Favorite PDS Member deletion does not call removeFavorite when whole PDS favorite has other members", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+
+        const parent = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        parent.contextValue = Constants.DS_PDS_CONTEXT;
+        const child = new ZoweDatasetNode({ label: "MEM1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        child.contextValue = Constants.DS_MEMBER_CONTEXT;
+        const sibling = new ZoweDatasetNode({ label: "MEM2", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        sibling.contextValue = Constants.DS_MEMBER_CONTEXT;
+        parent.children = [child, sibling];
+
+        const favProfile = new ZoweDatasetNode({
+            label: blockMocks.datasetSessionNode.label as string,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        favProfile.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        const favPds = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfile,
+        });
+        favPds.contextValue = Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX;
+        favPds.pdsFavoriteState = Definitions.PdsFavoriteState.EntirePds;
+        favProfile.children = [favPds];
+        blockMocks.testDatasetTree.mFavorites.push(favProfile);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
+        const deleteSpy = jest.spyOn(vscode.workspace.fs, "delete").mockImplementation();
+        const removeFavoriteSpy = jest.spyOn(blockMocks.testDatasetTree, "removeFavorite");
+
+        await DatasetActions.deleteDataset(child, blockMocks.testDatasetTree);
+
+        expect(deleteSpy).toHaveBeenCalledWith(child.resourceUri, { recursive: false });
+        expect(removeFavoriteSpy).not.toHaveBeenCalled();
+    });
+
+    it("Checking Favorite PDS Member deletion calls removeFavorite when favorite is not EntirePds", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+
+        const parent = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        parent.contextValue = Constants.DS_PDS_CONTEXT;
+        const child = new ZoweDatasetNode({ label: "MEM1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        child.contextValue = Constants.DS_MEMBER_CONTEXT;
+        const sibling = new ZoweDatasetNode({ label: "MEM2", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        sibling.contextValue = Constants.DS_MEMBER_CONTEXT;
+        parent.children = [child, sibling];
+
+        const favProfile = new ZoweDatasetNode({
+            label: blockMocks.datasetSessionNode.label as string,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        favProfile.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        const favPds = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfile,
+        });
+        favPds.contextValue = Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX;
+        favPds.pdsFavoriteState = Definitions.PdsFavoriteState.SpecificMembers;
+        favPds.favoritedMemberNames = ["MEM1", "MEM2"];
+        favProfile.children = [favPds];
+        blockMocks.testDatasetTree.mFavorites.push(favProfile);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
+        const deleteSpy = jest.spyOn(vscode.workspace.fs, "delete").mockImplementation();
+        const removeFavoriteSpy = jest.spyOn(blockMocks.testDatasetTree, "removeFavorite");
+
+        await DatasetActions.deleteDataset(child, blockMocks.testDatasetTree);
+
+        expect(deleteSpy).toHaveBeenCalledWith(child.resourceUri, { recursive: false });
+        expect(removeFavoriteSpy).toHaveBeenCalledWith(child);
+    });
+
     it("Checking Favorite PS dataset deletion", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -1014,6 +1144,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         expect(deleteSpy).toHaveBeenCalledWith(child.resourceUri, { recursive: false });
         expect(blockMocks.testDatasetTree.removeFavorite).toHaveBeenCalledWith(child);
     });
+
     it("Checking incorrect dataset failed deletion attempt", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();

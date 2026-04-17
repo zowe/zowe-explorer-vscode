@@ -49,6 +49,12 @@
     ]
   },
   "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
+  "{0} members/Number of favorited members in a PDS": {
+    "message": "{0} members",
+    "comment": [
+      "Number of favorited members in a PDS"
+    ]
+  },
   "{0} renamed from {1} to {2}/Node typeOld nameNew name": {
     "message": "{0} renamed from {1} to {2}",
     "comment": [
@@ -80,6 +86,12 @@
     "message": "{0}. Or select a profile to add to the USS tree.",
     "comment": [
       "Instruction for add profile quick pick"
+    ]
+  },
+  "{0}/{1} members/Number of favorited members out of total members in a PDS": {
+    "message": "{0}/{1} members",
+    "comment": [
+      "Number of favorited members out of total members in a PDS"
     ]
   },
   "**Behavior:** Each command opens a dedicated terminal panel (for example, only MVS commands in the MVS terminal).": "**Behavior:** Each command opens a dedicated terminal panel (for example, only MVS commands in the MVS terminal).",
@@ -114,6 +126,8 @@
   "#### Windows custom persistence levels": "#### Windows custom persistence levels",
   "<a>#2828</a>": "<a>#2828</a>",
   "$(plus) Create a new Unix command": "$(plus) Create a new Unix command",
+  "1 member": "1 member",
+  "1/1 member": "1/1 member",
   "A {0} already exists with this name. Please choose a different name./Node type": {
     "message": "A {0} already exists with this name. Please choose a different name.",
     "comment": [
@@ -989,6 +1003,7 @@
   "Fixed an issue where a newly-created data set member might be opened without an extension. <a>#3555</a>": "Fixed an issue where a newly-created data set member might be opened without an extension. <a>#3555</a>",
   "Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. <a>#3294</a>": "Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. <a>#3294</a>",
   "Fixed an issue where a TypeError occurred when applying VS Code proxy settings to an invalid session. <a>#3425</a>": "Fixed an issue where a TypeError occurred when applying VS Code proxy settings to an invalid session. <a>#3425</a>",
+  "Fixed an issue where adding an item to favorites was still incorrectly showing the \"Add to Favorites\" icon on it. <a>#3712</a>": "Fixed an issue where adding an item to favorites was still incorrectly showing the \"Add to Favorites\" icon on it. <a>#3712</a>",
   "Fixed an issue where an error appeared when moving an empty PDS across LPARs. <a>#4001</a>": "Fixed an issue where an error appeared when moving an empty PDS across LPARs. <a>#4001</a>",
   "Fixed an issue where an incorrect profile name is shown in the output for the \"Issue Unix Command\" function when an SSH profile is required to issue commands. <a>#3646</a>": "Fixed an issue where an incorrect profile name is shown in the output for the \"Issue Unix Command\" function when an SSH profile is required to issue commands. <a>#3646</a>",
   "Fixed an issue where an invalid session on a profile caused an unexpected Profile auth error login dialog to appear. <a>#3524</a>": "Fixed an issue where an invalid session on a profile caused an unexpected Profile auth error login dialog to appear. <a>#3524</a>",
@@ -1013,6 +1028,7 @@
   "Fixed an issue where edit history does not show the correct information. <a>#3432</a>": "Fixed an issue where edit history does not show the correct information. <a>#3432</a>",
   "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>": "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>",
   "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>": "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>",
+  "Fixed an issue where favoriting a single member in a PDS was adding the entire PDS with all members to the favorites tree. <a>#1356</a>": "Fixed an issue where favoriting a single member in a PDS was adding the entire PDS with all members to the favorites tree. <a>#1356</a>",
   "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>": "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>",
   "Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. <a>#3554</a>": "Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. <a>#3554</a>",
   "Fixed an issue where file system URIs with trailing slashes failed to resolve. <a>#3904</a>": "Fixed an issue where file system URIs with trailing slashes failed to resolve. <a>#3904</a>",
@@ -1463,6 +1479,12 @@
     "comment": [
       "Member name",
       "PDS name"
+    ]
+  },
+  "Member {0} is already in favorites/Member name": {
+    "message": "Member {0} is already in favorites",
+    "comment": [
+      "Member name"
     ]
   },
   "Member Name": "Member Name",
