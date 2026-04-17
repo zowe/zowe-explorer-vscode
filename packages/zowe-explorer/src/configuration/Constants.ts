@@ -30,6 +30,7 @@ export class Constants {
     public static readonly ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT = 300000;
     public static readonly CONTEXT_PREFIX = "_";
     public static readonly FAV_SUFFIX = Constants.CONTEXT_PREFIX + "fav";
+    public static readonly FILTER_SAVED = Constants.CONTEXT_PREFIX + "filterFav";
     public static readonly HOME_SUFFIX = Constants.CONTEXT_PREFIX + "home";
     public static readonly FAV_PROFILE_CONTEXT = "profile_fav";
     public static readonly RC_SUFFIX = Constants.CONTEXT_PREFIX + "rc=";
