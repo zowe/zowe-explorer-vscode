@@ -13,6 +13,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added a new VS Code toggle setting that allows users to show or hide hidden files in the Unix System Service (USS) tree view.[#3912](https://github.com/zowe/zowe-explorer-vscode/issues/3912)
 - Added a new VS Code setting that allows users to limit the number of concurrent REST requests sent to z/OSMF. [#4130](https://github.com/zowe/zowe-explorer-vscode/pull/4130)
 - Added support for downloading data sets, data set members, USS files, and USS directories. [#3843](https://github.com/zowe/zowe-explorer-vscode/pull/3843)
+- Enabled drag-and-drop support for external VS Code extensions to receive data set and USS file nodes from the Zowe Explorer Data Sets and USS trees. External extensions can now accept drops by listening for `application/vnd.zowe.ds` (datasets) and `application/vnd.zowe.uss` (USS files) MIME types. [#4186](https://github.com/zowe/zowe-explorer-vscode/issues/4186)
 
 ### Bug fixes
 

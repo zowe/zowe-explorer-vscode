@@ -56,9 +56,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     private treeView: vscode.TreeView<IZoweUSSTreeNode>;
     public copying: Promise<unknown>;
 
-    // only support drag and drop ops within the USS tree at this point
-    public dragMimeTypes: string[] = [];
-    public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.uss.explorer"];
+    // support drag and drop ops within the USS tree and for external extenders
+    public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.uss.explorer", "application/vnd.zowe.uss"];
+    public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.uss.explorer", "application/vnd.zowe.uss"];
 
     private draggedNodes: Record<string, IZoweUSSTreeNode> = {};
 
@@ -93,6 +93,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             });
         }
         dataTransfer.set("application/vnd.code.tree.zowe.uss.explorer", new vscode.DataTransferItem(items));
+        dataTransfer.set("application/vnd.zowe.uss", new vscode.DataTransferItem(items));
     }
 
     private async crossLparMove(sourceNode: IZoweUSSTreeNode, sourceUri: vscode.Uri, destUri: vscode.Uri, recursiveCall?: boolean): Promise<void> {

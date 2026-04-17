@@ -68,8 +68,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     // public memberPattern: IZoweDatasetTreeNode[] = [];
     private treeView: vscode.TreeView<IZoweDatasetTreeNode>;
 
-    public dragMimeTypes: string[] = [];
-    public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer"];
+    public dragMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer", "application/vnd.zowe.ds"];
+    public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.ds.explorer", "application/vnd.zowe.ds"];
 
     private draggedNodes: Record<string, IZoweDatasetTreeNode> = {};
 
@@ -104,6 +104,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             });
         }
         dataTransfer.set("application/vnd.code.tree.zowe.ds.explorer", new vscode.DataTransferItem(items));
+        dataTransfer.set("application/vnd.zowe.ds", new vscode.DataTransferItem(items));
     }
 
     private async crossLparMove(

@@ -1005,6 +1005,7 @@
   "Enable Profile Validation": "",
   "Enable validation of server check for profile": "",
   "Enabled": "",
+  "Enabled drag-and-drop support for external VS Code extensions to receive data set and USS file nodes from the Zowe Explorer Data Sets and USS trees. External extensions can now accept drops by listening for application/vnd.zowe.ds (datasets) and application/vnd.zowe.uss (USS files) MIME types. <a>#4186</a>": "",
   "Encoding History": "",
   "Encoding: {0}": "",
   "Enhanced \"Show Attributes\" feature with improved visual presentation: aligned all attribute table columns consistently across core and extender sections, added thousands separators for numeric values, and automatically appends the % symbol to \"Used Space\" values for better readability. <a>#3927</a>": "",

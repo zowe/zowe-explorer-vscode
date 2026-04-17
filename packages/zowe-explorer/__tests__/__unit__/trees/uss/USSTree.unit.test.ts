@@ -2264,6 +2264,20 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
     });
 });
 
+describe("USSTree Unit Tests - drag and drop MIME types", () => {
+    it("should expose the correct drag MIME type for external extenders", async () => {
+        const globalMocks = createGlobalMocks();
+        expect(globalMocks.testTree.dragMimeTypes).toContain("application/vnd.code.tree.zowe.uss.explorer");
+        expect(globalMocks.testTree.dragMimeTypes).toContain("application/vnd.zowe.uss");
+    });
+
+    it("should expose the correct drop MIME type", async () => {
+        const globalMocks = createGlobalMocks();
+        expect(globalMocks.testTree.dropMimeTypes).toContain("application/vnd.code.tree.zowe.uss.explorer");
+        expect(globalMocks.testTree.dropMimeTypes).toContain("application/vnd.zowe.uss");
+    });
+});
+
 describe("USSTree Unit Tests - Function handleDrag", () => {
     it("adds a DataTransferItem containing info about the dragged USS node", async () => {
         const globalMocks = createGlobalMocks();
@@ -2272,6 +2286,15 @@ describe("USSTree Unit Tests - Function handleDrag", () => {
         globalMocks.testTree.handleDrag([ussnode], { set: dataTransferSetMock }, undefined);
         expect(dataTransferSetMock).toHaveBeenCalledWith(
             "application/vnd.code.tree.zowe.uss.explorer",
+            new vscode.DataTransferItem([
+                {
+                    label: ussnode.label,
+                    uri: ussnode.resourceUri,
+                },
+            ])
+        );
+        expect(dataTransferSetMock).toHaveBeenCalledWith(
+            "application/vnd.zowe.uss",
             new vscode.DataTransferItem([
                 {
                     label: ussnode.label,

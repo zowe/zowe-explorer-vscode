@@ -5204,6 +5204,22 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
     });
 });
 
+describe("DataSetTree Unit Tests - drag and drop MIME types", () => {
+    it("should expose the correct drag MIME type for external extenders", () => {
+        createGlobalMocks();
+        const testTree = new DatasetTree();
+        expect(testTree.dragMimeTypes).toContain("application/vnd.code.tree.zowe.ds.explorer");
+        expect(testTree.dragMimeTypes).toContain("application/vnd.zowe.ds");
+    });
+
+    it("should expose the correct drop MIME type", () => {
+        createGlobalMocks();
+        const testTree = new DatasetTree();
+        expect(testTree.dropMimeTypes).toContain("application/vnd.code.tree.zowe.ds.explorer");
+        expect(testTree.dropMimeTypes).toContain("application/vnd.zowe.ds");
+    });
+});
+
 describe("DataSetTree Unit Tests - Function handleDrag", () => {
     function createBlockMocks() {
         const session = createISession();
@@ -5229,6 +5245,15 @@ describe("DataSetTree Unit Tests - Function handleDrag", () => {
         testTree.handleDrag([datasetNode], { set: dataTransferSetMock } as any, undefined);
         expect(dataTransferSetMock).toHaveBeenCalledWith(
             "application/vnd.code.tree.zowe.ds.explorer",
+            new vscode.DataTransferItem([
+                {
+                    label: datasetNode.label,
+                    uri: datasetNode.resourceUri,
+                },
+            ])
+        );
+        expect(dataTransferSetMock).toHaveBeenCalledWith(
+            "application/vnd.zowe.ds",
             new vscode.DataTransferItem([
                 {
                     label: datasetNode.label,
