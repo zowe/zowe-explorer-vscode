@@ -618,7 +618,7 @@ describe("_relocateEntry", () => {
         prov.root = new DirEntry("");
         prov.root.entries.set("file.txt", { ...globalMocks.fileFsEntry });
         const deleteEntrySpy = jest.spyOn(prov.root.entries, "delete");
-        const fireSoonSpy = jest.spyOn(prov, "_fireSoon");
+        const fireSoonSpy = jest.spyOn(prov, "fireSoon");
         const writeFileMock = jest.spyOn(vscode.workspace.fs, "writeFile");
         const createDirMock = jest.spyOn(vscode.workspace.fs, "createDirectory");
         const reopenEditorMock = jest.spyOn(prov, "_reopenEditorForRelocatedUri").mockResolvedValueOnce(undefined);

@@ -303,7 +303,7 @@ export class DatasetActions {
             throw new Error(err);
         }
 
-        DatasetFSProvider.instance._fireSoon({
+        DatasetFSProvider.instance.fireSoon({
             type: vscode.FileChangeType.Created,
             uri: node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, dsName), query: "" }),
         });
@@ -2833,11 +2833,9 @@ export class DatasetActions {
             const member = name.split("(")[1].slice(0, -1);
             const res = await mvsApi.allMembers(dsname, options);
             if (res?.success && res.apiResponse?.items.some((m) => m.member == member.toUpperCase())) {
-                if (uri) {
-                    if (!DatasetFSProvider.instance.exists(uri)) {
-                        DatasetFSProvider.instance.createEntry(uri, DsType.PdsMember);
-                        DatasetFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
-                    }
+                if (uri && !DatasetFSProvider.instance.exists(uri)) {
+                    DatasetFSProvider.instance.createEntry(uri, DsType.PdsMember);
+                    DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
                 }
                 q = vscode.l10n.t("The data set member already exists.\nDo you want to replace it?");
                 replace = stringReplace === (await Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
@@ -2850,7 +2848,7 @@ export class DatasetActions {
                 if (uri) {
                     if (!DatasetFSProvider.instance.exists(uri)) {
                         DatasetFSProvider.instance.createEntry(uri, type === "po" ? DsType.Pds : DsType.Ps);
-                        DatasetFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                        DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
                     }
                 }
                 if (type === "ps") {

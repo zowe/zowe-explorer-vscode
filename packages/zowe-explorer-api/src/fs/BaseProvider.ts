@@ -69,7 +69,7 @@ export class BaseProvider {
             // Find the main document and revert it to clear the dirty flag
             const mainUri = uri.with({ query: "" });
             const doc = vscode.workspace.textDocuments.find((d) => d.uri.toString() === mainUri.toString());
-            if (doc && doc.isDirty) {
+            if (doc?.isDirty) {
                 await vscode.window.showTextDocument(doc);
                 await vscode.commands.executeCommand("workbench.action.files.revert");
             }
@@ -103,12 +103,7 @@ export class BaseProvider {
         fsEntry.conflictData = null;
         vscode.commands.executeCommand("workbench.action.closeActiveEditor");
 
-        const mainUri = uri.with({ query: "" });
-        const doc = vscode.workspace.textDocuments.find((d) => d.uri.toString() === mainUri.toString());
-        if (doc && doc.isDirty) {
-            await vscode.window.showTextDocument(doc);
-            await vscode.commands.executeCommand("workbench.action.files.revert");
-        }
+        await this._revertDirtyDocument(uri);
     }
 
     public exists(uri: vscode.Uri): boolean {
@@ -132,7 +127,7 @@ export class BaseProvider {
         }
 
         parentEntry.entries.delete(entryName);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri.with({ query: "" }) });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri.with({ query: "" }) });
         return true;
     }
 
@@ -290,7 +285,7 @@ export class BaseProvider {
         }
         // delete entry from old parent
         oldParent.entries.delete(entry.name);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri.with({ query: "" }) });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri.with({ query: "" }) });
         if (isFile) {
             return this._reopenEditorForRelocatedUri(oldUri, newUri);
         }
@@ -377,9 +372,8 @@ export class BaseProvider {
         return ConflictViewSelection.Overwrite;
     }
 
-    //TODO (v4): rename _fireSoon -> fireSoon since it is no longer private
     /**
-     * Internal VSCode function for the FileSystemProvider to fire events from the event queue
+     * VSCode function for the FileSystemProvider to fire events from the event queue
      */
     public _fireSoon(...events: vscode.FileChangeEvent[]): void {
         this._bufferedEvents.push(...events);
@@ -392,6 +386,14 @@ export class BaseProvider {
             this._onDidChangeFileEmitter.fire(this._bufferedEvents);
             this._bufferedEvents.length = 0;
         }, FS_PROVIDER_DELAY);
+    }
+
+    /**
+     * @deprecated Use `fireSoon` instead. This method will be removed in v4.
+     * Internal VSCode function for the FileSystemProvider to fire events from the event queue
+     */
+    public fireSoon(...events: vscode.FileChangeEvent[]): void {
+        this._fireSoon(...events);
     }
 
     /**
@@ -489,7 +491,7 @@ export class BaseProvider {
         const profInfo = { ...parent.metadata, path: filePath };
         entry.metadata = profInfo;
         parent.entries.set(basename, entry);
-        this._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+        this.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
         return entry;
     }
 
@@ -615,5 +617,18 @@ export class BaseProvider {
         this.requestCache.set(keyToUse, requestPromise);
 
         return requestPromise;
+    }
+
+    /**
+     * Reverts a dirty document if it exists and is open in the workspace.
+     * @param uri The URI to check for a dirty document
+     */
+    private async _revertDirtyDocument(uri: vscode.Uri): Promise<void> {
+        const mainUri = uri.with({ query: "" });
+        const doc = vscode.workspace.textDocuments.find((d) => d.uri.toString() === mainUri.toString());
+        if (doc && doc.isDirty) {
+            await vscode.window.showTextDocument(doc);
+            await vscode.commands.executeCommand("workbench.action.files.revert");
+        }
     }
 }

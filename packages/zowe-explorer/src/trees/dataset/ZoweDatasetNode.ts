@@ -428,8 +428,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
 
                 if (dsNode?.resourceUri != null) {
+                    // Determine if the node is collapsible (PDS or sequential data set)
+                    // If the node is collapsible, it is a PDS
+                    // If the node is not collapsible, it is a PDS member
                     const isCollapsible = dsNode.collapsibleState != vscode.TreeItemCollapsibleState.None;
                     let dsType = isCollapsible ? DsType.Pds : DsType.PdsMember;
+                    // If the node is sequential (by checking if the parent node is a session) and not collapsible, it is a sequential data set
                     const isSequential = SharedContext.isSession(this);
                     if (isSequential && !isCollapsible) {
                         dsType = DsType.Ps;

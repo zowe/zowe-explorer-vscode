@@ -101,7 +101,7 @@ export class USSActions {
                 if (res?.success && res.apiResponse?.items?.some((item: any) => item.name === name)) {
                     if (!UssFSProvider.instance.exists(uri)) {
                         UssFSProvider.instance.createEntry(uri, nodeType as "file" | "directory");
-                        UssFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                        UssFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
                     }
                     const stringReplace = vscode.l10n.t("Replace");
                     const stringCancel = vscode.l10n.t("Cancel");
@@ -126,7 +126,7 @@ export class USSActions {
                 } else {
                     if (!replace) {
                         await vscode.workspace.fs.createDirectory(uri);
-                        UssFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                        UssFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
                     }
                 }
                 if (isTopLevel) {

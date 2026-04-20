@@ -548,7 +548,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (file.etag !== resp.apiResponse.etag) {
                 file.mtime = Date.now();
                 if (file.etag) {
-                    this._fireSoon({ type: vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
+                    this.fireSoon({ type: vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
                 }
             }
             file.etag = resp.apiResponse.etag;
@@ -788,7 +788,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             entry.mtime = Date.now();
             entry.size = content.byteLength;
 
-            this._fireSoon({ type: isNew ? vscode.FileChangeType.Created : vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
+            this.fireSoon({ type: isNew ? vscode.FileChangeType.Created : vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
         } catch (err) {
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 // Some unknown error happened, don't update the entry
@@ -903,7 +903,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             this._updateChildPaths(entry);
         }
         parentDir.entries.set(newName, entry);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
     }
 
     /**
@@ -951,7 +951,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.mtime = Date.now();
         parent.size -= 1;
 
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
+        this.fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
     }
 
     public async copy(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {

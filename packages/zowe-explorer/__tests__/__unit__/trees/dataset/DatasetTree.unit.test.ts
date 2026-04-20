@@ -2853,6 +2853,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const blockMocks = createBlockMocks(globalMocks);
         jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
         jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         const newNode = new ZoweDatasetNode({
