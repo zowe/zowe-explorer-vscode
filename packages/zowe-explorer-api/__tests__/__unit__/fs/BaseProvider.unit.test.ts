@@ -473,14 +473,14 @@ describe("_createFile", () => {
     });
 });
 
-describe("_fireSoon", () => {
+describe("fireSoon", () => {
     jest.useFakeTimers();
 
     it("adds to bufferedEvents and calls setTimeout", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         jest.spyOn(global, "setTimeout");
-        prov._fireSoon({
+        prov.fireSoon({
             type: vscode.FileChangeType.Deleted,
             uri: globalMocks.testFileUri,
         });
@@ -493,14 +493,14 @@ describe("_fireSoon", () => {
         prov.root = new DirEntry("");
         jest.spyOn(global, "setTimeout");
         jest.spyOn(global, "clearTimeout");
-        prov._fireSoon({
+        prov.fireSoon({
             type: vscode.FileChangeType.Deleted,
             uri: globalMocks.testFileUri,
         });
         expect(prov._bufferedEvents.length).toBe(1);
         expect(setTimeout).toHaveBeenCalled();
 
-        prov._fireSoon({
+        prov.fireSoon({
             type: vscode.FileChangeType.Created,
             uri: globalMocks.testFileUri,
         });

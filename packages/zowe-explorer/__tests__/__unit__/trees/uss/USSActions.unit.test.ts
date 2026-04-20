@@ -364,7 +364,7 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
 
         const createEntrySpy = jest.spyOn(UssFSProvider.instance, "createEntry");
-        const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "_fireSoon");
+        const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "fireSoon");
         const writeFileSpy = jest.spyOn(vscode.workspace.fs, "writeFile").mockResolvedValueOnce();
 
         await USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
@@ -404,7 +404,7 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Cancel");
 
         const createEntrySpy = jest.spyOn(UssFSProvider.instance, "createEntry");
-        const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "_fireSoon");
+        const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "fireSoon");
         const writeFileSpy = jest.spyOn(vscode.workspace.fs, "writeFile").mockResolvedValueOnce();
         writeFileSpy.mockClear();
 

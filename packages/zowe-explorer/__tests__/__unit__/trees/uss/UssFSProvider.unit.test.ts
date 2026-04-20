@@ -1018,7 +1018,7 @@ describe("UssFSProvider", () => {
         });
         it("returns early if it failed to fetch contents", async () => {
             const fileEntry = { ...testEntries.file };
-            const _fireSoonSpy = jest.spyOn((UssFSProvider as any).prototype, "_fireSoon");
+            const fireSoonSpy = jest.spyOn((UssFSProvider as any).prototype, "fireSoon");
             const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValueOnce(undefined);
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
@@ -1028,7 +1028,7 @@ describe("UssFSProvider", () => {
             await UssFSProvider.instance.fetchFileAtUri(testUris.file);
             expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
             expect(autoDetectEncodingMock).toHaveBeenCalledWith(fileEntry);
-            expect(_fireSoonSpy).not.toHaveBeenCalled();
+            expect(fireSoonSpy).not.toHaveBeenCalled();
             autoDetectEncodingMock.mockRestore();
         });
         it("calls getContents to get the data for a file entry with encoding", async () => {

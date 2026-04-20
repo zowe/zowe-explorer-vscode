@@ -373,9 +373,17 @@ export class BaseProvider {
     }
 
     /**
-     * VSCode function for the FileSystemProvider to fire events from the event queue
+     * @deprecated Use `fireSoon` instead. This method will be removed in v4.
+     * Internal VSCode function for the FileSystemProvider to fire events from the event queue
      */
     public _fireSoon(...events: vscode.FileChangeEvent[]): void {
+        this.fireSoon(...events);
+    }
+
+    /**
+     * VSCode function for the FileSystemProvider to fire events from the event queue
+     */
+    public fireSoon(...events: vscode.FileChangeEvent[]): void {
         this._bufferedEvents.push(...events);
 
         if (this._fireSoonHandle) {
@@ -386,14 +394,6 @@ export class BaseProvider {
             this._onDidChangeFileEmitter.fire(this._bufferedEvents);
             this._bufferedEvents.length = 0;
         }, FS_PROVIDER_DELAY);
-    }
-
-    /**
-     * @deprecated Use `fireSoon` instead. This method will be removed in v4.
-     * Internal VSCode function for the FileSystemProvider to fire events from the event queue
-     */
-    public fireSoon(...events: vscode.FileChangeEvent[]): void {
-        this._fireSoon(...events);
     }
 
     /**
