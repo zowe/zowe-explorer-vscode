@@ -406,14 +406,16 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         const createEntrySpy = jest.spyOn(UssFSProvider.instance, "createEntry");
         const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "fireSoon");
         const writeFileSpy = jest.spyOn(vscode.workspace.fs, "writeFile").mockResolvedValueOnce();
+        createEntrySpy.mockClear();
+        fireSoonSpy.mockClear();
         writeFileSpy.mockClear();
 
         await USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
 
         expect(fileListSpy).toHaveBeenCalledWith("/test/path");
         expect(showMessageSpy).toHaveBeenCalled();
-        expect(createEntrySpy).toHaveBeenCalled();
-        expect(fireSoonSpy).toHaveBeenCalled();
+        expect(createEntrySpy).not.toHaveBeenCalled(); // Cancelled - no optimistic entry creation
+        expect(fireSoonSpy).not.toHaveBeenCalled(); // Cancelled - no notification
         expect(createSpy).not.toHaveBeenCalled(); // Cancelled
         expect(writeFileSpy).not.toHaveBeenCalled(); // Cancelled
     });

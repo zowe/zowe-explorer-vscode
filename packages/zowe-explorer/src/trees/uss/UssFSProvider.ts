@@ -791,7 +791,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             this.fireSoon({ type: isNew ? vscode.FileChangeType.Created : vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
         } catch (err) {
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
-                // Some unknown error happened, don't update the entry
+                // Some unknown error happened, rollback optimistic entry creation
+                if (isNew && parentDir.entries.has(fileName)) {
+                    parentDir.entries.delete(fileName);
+                    parentDir.size -= 1;
+                }
                 this._handleError(err, {
                     apiType: ZoweExplorerApiType.Uss,
                     retry: {
@@ -808,6 +812,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // Prompt the user with the conflict dialog
             const selection = await this._handleConflict(uri, entry);
             if (selection !== ConflictViewSelection.Overwrite) {
+                // Rollback optimistic entry creation if user chooses not to overwrite
+                if (isNew && parentDir.entries.has(fileName)) {
+                    parentDir.entries.delete(fileName);
+                    parentDir.size -= 1;
+                }
                 throw vscode.FileSystemError.Unavailable(vscode.l10n.t("Conflict: Remote contents have changed."));
             }
             return;

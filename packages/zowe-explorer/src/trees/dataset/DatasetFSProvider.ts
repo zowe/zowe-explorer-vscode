@@ -914,8 +914,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     newErr.stack += `\n${lineLabel}\n${group.text}\n`;
                 }
 
+                // Rollback optimistic entry creation on error
+                if (isNew && parent.entries.has(basename)) {
+                    parent.entries.delete(basename);
+                }
                 this._handleError(newErr);
                 throw newErr;
+            }
+            // Rollback optimistic entry creation on error
+            if (isNew && parent.entries.has(basename)) {
+                parent.entries.delete(basename);
             }
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({
