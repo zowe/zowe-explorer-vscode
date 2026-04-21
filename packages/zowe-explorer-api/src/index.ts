@@ -15,6 +15,7 @@ export * from "./globals/Gui";
 export * from "./globals/GuiOptions";
 export * from "./logger";
 export * from "./profiles";
+export { AuthCancelledError } from "./vscode/session/AuthCancelledError";
 export * from "./security";
 export * from "./tree";
 export * from "./utils";

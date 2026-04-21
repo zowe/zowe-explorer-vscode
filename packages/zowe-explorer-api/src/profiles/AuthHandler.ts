@@ -14,8 +14,6 @@ import { CorrelatedError, FileManagement } from "../utils";
 import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "../tree";
 import { E_CANCELED, Mutex } from "async-mutex";
-import * as vscode from "vscode";
-import { ZoweVsCodeExtension } from "../vscode/ZoweVsCodeExtension";
 
 /**
  * @brief individual authentication methods (also supports a `ProfilesCache` class)
@@ -41,21 +39,6 @@ export type AuthPromptParams = {
 };
 
 export type ProfileLike = string | imperative.IProfileLoaded;
-
-/**
- * Error thrown when the user cancels an authentication prompt.
- * This allows extenders to distinguish between authentication failures and user cancellation.
- * Extends FileSystemError to be compliant with VS Code's filesystem API expectations.
- */
-export class AuthCancelledError extends vscode.FileSystemError {
-    public readonly profileName: string;
-
-    public constructor(profileName: string, message?: string) {
-        super(message ?? `Authentication cancelled for profile: ${profileName}`);
-        this.name = "AuthCancelledError";
-        this.profileName = profileName;
-    }
-}
 
 export class AuthHandler {
     public static authPromptLocks = new Map<string, Mutex>();
@@ -108,15 +91,29 @@ export class AuthHandler {
     /**
      * Function that returns the session associated with the specified profile.
      *
+     * @deprecated Use `getSessionFromProfile` from `@zowe/zowe-explorer-api/vscode/session` instead.
+     * This method requires VS Code runtime to be available and is primarily maintained for backward compatibility.
+     * The vscode dependency is lazily loaded only when this method is invoked to avoid blocking CLI plugin initialization.
+     *
+     * @note If called in a CLI context (plugin without vscode module), it will fail at runtime.
+     *
      * @param {imperative.IProfileLoaded} profile The profile to be inspected.
      *
      * @returns {imperative.Session}
      *      The session associated with the specified profile
      *
      * @throws {Error} If the profile type is not supported by the common APIs in the Zowe Explorer API register
+     * @throws {Error} If vscode module is not available (e.g., CLI plugin context)
+     *
+     * @see {@link getSessionFromProfile} from vscode/session/GetSessionHelper for the recommended approach
      */
     public static getSessFromProfile(profile: imperative.IProfileLoaded): imperative.Session {
-        return ZoweVsCodeExtension.getZoweExplorerApi().getCommonApi(profile).getSession(profile);
+        // Lazy load the helper to avoid requiring vscode at module parse time
+        // This allows CLI plugins without vscode runtime to skip this module unless explicitly called
+        const { getSessionFromProfile } = require("../vscode/session/GetSessionHelper") as {
+            getSessionFromProfile: (prof: imperative.IProfileLoaded) => imperative.Session;
+        };
+        return getSessionFromProfile(profile);
     }
 
     /**
@@ -219,6 +216,8 @@ export class AuthHandler {
                     // User cancelled the SSO login prompt
                     AuthHandler.setAuthCancelled(profileName, true);
                     if (params.throwErrorOnCancel) {
+                        const { AuthCancelledError } =
+                            require("../vscode/session/AuthCancelledError") as typeof import("../vscode/session/AuthCancelledError");
                         throw new AuthCancelledError(profileName, "User cancelled SSO authentication");
                     }
                 }
@@ -237,6 +236,8 @@ export class AuthHandler {
             // User cancelled the credential prompt
             AuthHandler.setAuthCancelled(profileName, true);
             if (params.throwErrorOnCancel) {
+                const { AuthCancelledError } =
+                    require("../vscode/session/AuthCancelledError") as typeof import("../vscode/session/AuthCancelledError");
                 throw new AuthCancelledError(profileName, "User cancelled credential authentication");
             }
             return false;
@@ -252,6 +253,7 @@ export class AuthHandler {
         // User cancelled during credential input
         AuthHandler.setAuthCancelled(profileName, true);
         if (params.throwErrorOnCancel) {
+            const { AuthCancelledError } = require("../vscode/session/AuthCancelledError") as typeof import("../vscode/session/AuthCancelledError");
             throw new AuthCancelledError(profileName, "User cancelled during credential input");
         }
         return false;

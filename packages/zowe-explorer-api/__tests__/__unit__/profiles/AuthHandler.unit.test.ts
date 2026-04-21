@@ -10,7 +10,8 @@
  */
 
 import { Mutex } from "async-mutex";
-import { AuthHandler, AuthCancelledError, Gui, ZoweVsCodeExtension } from "../../../src";
+import { AuthHandler, Gui, ZoweVsCodeExtension } from "../../../src";
+import { AuthCancelledError } from "../../../src/vscode/session/AuthCancelledError";
 import { FileManagement } from "../../../src/utils/FileManagement";
 import { ImperativeError, IProfileLoaded, Session, SessConstants, RestConstants } from "@zowe/imperative";
 import { AuthPromptParams } from "../../../src/profiles/AuthHandler";
@@ -178,7 +179,7 @@ describe("AuthHandler", () => {
             const showMessageMock = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Log in to Authentication Service");
             const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
             await expect(
-                AuthHandler.promptForAuthentication("lpar.zosmf", { authMethods: { promptCredentials, ssoLogin }, imperativeError })
+                AuthHandler.promptForAuthentication("lpar.zosmf", { authMethods: { promptCredentials, ssoLogin }, imperativeError }),
             ).resolves.toBe(true);
             expect(promptCredentials).not.toHaveBeenCalled();
             expect(ssoLogin).toHaveBeenCalledTimes(1);
@@ -196,7 +197,7 @@ describe("AuthHandler", () => {
             const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Update Credentials");
             const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile").mockClear();
             await expect(
-                AuthHandler.promptForAuthentication("lpar.zosmf", { authMethods: { promptCredentials, ssoLogin }, imperativeError })
+                AuthHandler.promptForAuthentication("lpar.zosmf", { authMethods: { promptCredentials, ssoLogin }, imperativeError }),
             ).resolves.toBe(true);
             expect(unlockProfileSpy).toHaveBeenCalledTimes(1);
             expect(unlockProfileSpy).toHaveBeenCalledWith("lpar.zosmf", true);
@@ -218,7 +219,7 @@ describe("AuthHandler", () => {
                     authMethods: { promptCredentials, ssoLogin },
                     imperativeError,
                     throwErrorOnCancel: true,
-                })
+                }),
             ).rejects.toThrow(AuthCancelledError);
 
             expect(promptCredentials).not.toHaveBeenCalled();
@@ -238,7 +239,7 @@ describe("AuthHandler", () => {
                     authMethods: { promptCredentials, ssoLogin },
                     imperativeError,
                     throwErrorOnCancel: true,
-                })
+                }),
             ).rejects.toThrow(AuthCancelledError);
 
             expect(ssoLogin).not.toHaveBeenCalled();
@@ -258,7 +259,7 @@ describe("AuthHandler", () => {
                     authMethods: { promptCredentials, ssoLogin },
                     imperativeError,
                     throwErrorOnCancel: true,
-                })
+                }),
             ).rejects.toThrow(AuthCancelledError);
 
             expect(ssoLogin).not.toHaveBeenCalled();
@@ -420,7 +421,7 @@ describe("AuthHandler", () => {
                 () =>
                     new Promise<boolean>((resolve) => {
                         resolveFlow = resolve;
-                    })
+                    }),
             );
 
             const flowOne = AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts);
