@@ -468,6 +468,90 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
         createMock.mockRestore();
     });
+
+    it("Tests that createUSSNode cache cleanup functionality exists and works correctly", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testProfile = createIProfile();
+        const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
+        const getUssApiMock = jest.fn().mockReturnValue(ussApi);
+        ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
+
+        const fileListSpy = jest.spyOn(ussApi, "fileList").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ name: "testFile", mode: "-rw-r--r--" }],
+            },
+        } as any);
+
+        blockMocks.ussNode.contextValue = Constants.USS_BINARY_FILE_CONTEXT;
+        blockMocks.ussNode.fullPath = "/test/path";
+        globalMocks.mockShowInputBox.mockReturnValueOnce("testFile");
+
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Replace");
+        const createEntrySpy = jest.spyOn(UssFSProvider.instance, "createEntry");
+        const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "fireSoon");
+        const existsSpy = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+
+        await USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
+
+        expect(fileListSpy).toHaveBeenCalledWith("/test/path");
+        expect(showMessageSpy).toHaveBeenCalled();
+        expect(createEntrySpy).toHaveBeenCalled();
+        expect(fireSoonSpy).toHaveBeenCalled();
+    });
+
+    it("Tests that createUSSNode does not clean up cache entry when operations outside try-catch fail", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testProfile = createIProfile();
+        const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
+        const getUssApiMock = jest.fn().mockReturnValue(ussApi);
+        ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
+
+        const fileListSpy = jest.spyOn(ussApi, "fileList").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ name: "testDir", mode: "drwxr-xr-x" }],
+            },
+        } as any);
+
+        blockMocks.ussNode.contextValue = Constants.USS_DIR_CONTEXT;
+        blockMocks.ussNode.fullPath = "/test/path";
+        globalMocks.mockShowInputBox.mockReturnValueOnce("testDir");
+
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Replace");
+        const createEntrySpy = jest.spyOn(UssFSProvider.instance, "createEntry");
+        const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "fireSoon");
+        const existsSpy = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+
+        const mockParent = {
+            entries: new Map([["testDir", { name: "testDir" }]]),
+            size: 1,
+        };
+        const lookupParentDirectorySpy = jest.spyOn(UssFSProvider.instance, "lookupParentDirectory").mockReturnValue(mockParent as any);
+
+        jest.spyOn(blockMocks.ussNode, "getChildren").mockRejectedValueOnce(new Error("getChildren failed"));
+
+        let testError;
+        try {
+            await USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "directory");
+        } catch (err) {
+            testError = err;
+        }
+
+        expect(fileListSpy).toHaveBeenCalledWith("/test/path");
+        expect(showMessageSpy).toHaveBeenCalled();
+        expect(createEntrySpy).toHaveBeenCalled();
+        expect(fireSoonSpy).toHaveBeenCalled();
+        expect(testError?.message).toEqual("getChildren failed");
+
+        expect(lookupParentDirectorySpy).not.toHaveBeenCalled();
+        expect(mockParent.entries.has("testDir")).toBe(true);
+        expect(mockParent.size).toBe(1);
+    });
 });
 
 describe("USS Action Unit Tests - Function refreshUSSInTree", () => {

@@ -96,6 +96,7 @@ export class USSActions {
                 });
 
                 let replace = false;
+                let cacheEntryCreated = false;
                 const ussApi = ZoweExplorerApiRegister.getUssApi(node.getProfile());
                 const res = await ussApi.fileList(parentPath);
                 if (res?.success && res.apiResponse?.items?.some((item: any) => item.name === name)) {
@@ -113,21 +114,38 @@ export class USSActions {
                     if (!UssFSProvider.instance.exists(uri)) {
                         UssFSProvider.instance.createEntry(uri, nodeType as "file" | "directory");
                         UssFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                        cacheEntryCreated = true;
                     }
                 }
 
-                if (!replace) {
-                    await ussApi.create(filePath, nodeType);
-                }
-
-                if (nodeType === "file") {
-                    const writeUri = replace ? uri.with({ query: "forceUpload=true" }) : uri;
-                    await vscode.workspace.fs.writeFile(writeUri, new Uint8Array());
-                } else {
+                try {
                     if (!replace) {
-                        await vscode.workspace.fs.createDirectory(uri);
-                        UssFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                        await ussApi.create(filePath, nodeType);
                     }
+
+                    if (nodeType === "file") {
+                        const writeUri = replace ? uri.with({ query: "forceUpload=true" }) : uri;
+                        await vscode.workspace.fs.writeFile(writeUri, new Uint8Array());
+                    } else {
+                        if (!replace) {
+                            await vscode.workspace.fs.createDirectory(uri);
+                            UssFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                        }
+                    }
+                } catch (error) {
+                    // If we created a cache entry optimistically but subsequent operations failed,
+                    // clean up the cache entry to avoid leaving stale data
+                    if (cacheEntryCreated) {
+                        try {
+                            const parent = UssFSProvider.instance.lookupParentDirectory(uri, true);
+                            const fileName = path.posix.basename(uri.path);
+                            if (parent?.entries.has(fileName)) {
+                                parent.entries.delete(fileName);
+                                parent.size -= 1;
+                            }
+                        } catch {}
+                    }
+                    throw error;
                 }
                 if (isTopLevel) {
                     await SharedActions.refreshProvider(ussFileProvider);
