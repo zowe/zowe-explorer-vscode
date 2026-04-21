@@ -6934,6 +6934,32 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
             withProfileMock.mockRestore();
         });
 
+        it("ignores whitespace after commas in the user filter input", () => {
+            const testTree = new DatasetTree();
+            const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+            const fakeChildren = [{ label: "Z02589.JCL", contextValue: Constants.DS_PDS_CONTEXT }];
+            // Spaces after commas previously leaked into the captured dsn and broke strict matching.
+            const patterns = testTree.extractPatterns("Z02589.JCL(BLAH*), Z02589.JCL(TEST*)");
+            testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+            expect(fakeChildren).toHaveLength(1);
+            expect((fakeChildren[0] as any).memberPattern).toBe("BLAH*,TEST*");
+            withProfileMock.mockRestore();
+        });
+
+        it("matches PDSs containing single-character qualifiers", () => {
+            const testTree = new DatasetTree();
+            const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+            // `checkFilterPattern` only matches non-wildcard qualifiers >= 3 chars; the fix must compare these directly.
+            const fakeChildren = [{ label: "HLQ.A.SOURCE", contextValue: Constants.DS_PDS_CONTEXT }];
+            const patterns = testTree.extractPatterns("HLQ.A.SOURCE(MEM*)");
+            testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+            expect(fakeChildren).toHaveLength(1);
+            expect((fakeChildren[0] as any).memberPattern).toBe("MEM*");
+            withProfileMock.mockRestore();
+        });
+
         it("skips NavigationTreeItem and 'No data sets found' placeholder children", () => {
             const testTree = new DatasetTree();
             const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));

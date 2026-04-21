@@ -1769,19 +1769,22 @@ Would you like to do this now?`,
     public extractPatterns(userInput: string): DatasetMatch[] {
         // Split the user input by comma to handle each pattern.
         return userInput.split(",").map((p) => {
+            // Trim per-segment whitespace first so that user input like `HLQ.A(MEM*), HLQ.B(MEM*)`
+            // does not leak a leading space into the captured dsn
+            const trimmed = p.trim();
             // Check if the pattern contains parentheses with text inside (member wildcard)
-            const match = /((?:.{1,8}){1,4})\((.{0,8})\)/.exec(p);
+            const match = /((?:.{1,8}){1,4})\((.{0,8})\)/.exec(trimmed);
             if (match) {
                 const [, dataSetName, memberName] = match;
                 return {
-                    dsn: dataSetName,
+                    dsn: dataSetName.replace(/\s/g, ""),
                     member: memberName,
                 };
             }
 
             // No member wildcard; remove spaces from dataset name pattern
             return {
-                dsn: p.replace(/\s/g, ""),
+                dsn: trimmed.replace(/\s/g, ""),
             };
         });
     }
@@ -1826,7 +1829,17 @@ Would you like to do this now?`,
         }
 
         for (let index = 0; index < patternQualifiers.length; index++) {
-            if (!this.checkFilterPattern(childQualifiers[index], patternQualifiers[index])) {
+            const patternQualifier = patternQualifiers[index];
+            const childQualifier = childQualifiers[index];
+            // `checkFilterPattern` only handles qualifiers >= 3 chars or those containing wildcards; short, exact-match
+            // qualifiers (e.g. `A`, `JCL`) need a direct comparison fallback to avoid false negatives.
+            if (!patternQualifier.includes("*")) {
+                if (childQualifier !== patternQualifier) {
+                    return false;
+                }
+                continue;
+            }
+            if (!this.checkFilterPattern(childQualifier, patternQualifier)) {
                 return false;
             }
         }
