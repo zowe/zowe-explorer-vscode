@@ -9,8 +9,4 @@
  *
  */
 
-/**
- * @deprecated Import `AuthHandler` and related types from `../vscode/session/AuthHandler`.
- * This file is a compatibility shim that re-exports the moved implementation.
- */
-export * from "../vscode/session/AuthHandler";
+export * from "./AuthHandler";
