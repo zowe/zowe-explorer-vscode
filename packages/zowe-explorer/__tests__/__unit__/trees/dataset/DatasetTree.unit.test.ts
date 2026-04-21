@@ -6851,6 +6851,147 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
         expect(fakeChildren[0].contextValue).not.toContain(Constants.FAV_SUFFIX);
         withProfileMock.mockRestore();
     });
+
+    // Regression coverage for https://github.com/zowe/zowe-explorer-vscode/issues/3424
+    describe("issue #3424 - complex member filter scenarios", () => {
+        it("applies the correct member pattern to each PDS when multiple comma-separated filters are provided", () => {
+            const testTree = new DatasetTree();
+            const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+            const fakeChildren = [
+                { label: "HLQ.USERID2.SOURCE", contextValue: Constants.DS_PDS_CONTEXT },
+                { label: "HLQ.USERID1.SOURCE", contextValue: Constants.DS_PDS_CONTEXT },
+            ];
+            const patterns = testTree.extractPatterns("HLQ.USERID2.SOURCE(R80297*),HLQ.USERID1.SOURCE(R80297O1)");
+            testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+            expect(fakeChildren[0].label).toBe("HLQ.USERID2.SOURCE");
+            expect((fakeChildren[0] as any).memberPattern).toBe("R80297*");
+            expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
+
+            expect(fakeChildren[1].label).toBe("HLQ.USERID1.SOURCE");
+            expect((fakeChildren[1] as any).memberPattern).toBe("R80297O1");
+            expect(SharedContext.isFilterFolder(fakeChildren[1])).toBe(true);
+            withProfileMock.mockRestore();
+        });
+
+        it("removes PDS children that match no user pattern when explicit member filters are provided", () => {
+            const testTree = new DatasetTree();
+            const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+            const fakeChildren = [{ label: "HLQ.USERID1.SOURCE.FINAL", contextValue: Constants.DS_PDS_CONTEXT }];
+            const patterns = testTree.extractPatterns("HLQ.USERID2.SOURCE(R80297*),HLQ.USERID1.SOURCE(R80297O1)");
+            testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+            expect(fakeChildren).toHaveLength(0);
+            withProfileMock.mockRestore();
+        });
+
+        it("merges member patterns when multiple filters target the same PDS", () => {
+            const testTree = new DatasetTree();
+            const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+            const fakeChildren = [
+                { label: "HLQ.USERID2.SOURCE", contextValue: Constants.DS_PDS_CONTEXT },
+                { label: "HLQ.USERID1.SOURCE", contextValue: Constants.DS_PDS_CONTEXT },
+            ];
+            const patterns = testTree.extractPatterns("HLQ.USERID2.SOURCE(R80297B2),HLQ.USERID2.SOURCE(EX1),HLQ.USERID1.SOURCE(R80297O1)");
+            testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+            expect((fakeChildren[0] as any).memberPattern).toBe("R80297B2,EX1");
+            expect((fakeChildren[1] as any).memberPattern).toBe("R80297O1");
+            expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
+            expect(SharedContext.isFilterFolder(fakeChildren[1])).toBe(true);
+            withProfileMock.mockRestore();
+        });
+
+        it("does not mutate child.pattern as a side effect of pattern matching", () => {
+            const testTree = new DatasetTree();
+            const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+            const fakeChildren = [
+                { label: "HLQ.USERID1.SOURCE", contextValue: Constants.DS_PDS_CONTEXT, pattern: "" },
+                { label: "HLQ.USERID2.SOURCE", contextValue: Constants.DS_PDS_CONTEXT, pattern: "" },
+            ];
+            const patterns = testTree.extractPatterns("HLQ.USERID2.SOURCE(R80297*),HLQ.USERID1.SOURCE(R80297O1)");
+            testTree.applyPatternsToChildren(fakeChildren as any[], patterns);
+
+            expect((fakeChildren[0] as any).pattern).toBe("");
+            expect((fakeChildren[1] as any).pattern).toBe("");
+            expect((fakeChildren[0] as any).memberPattern).toBe("R80297O1");
+            expect((fakeChildren[1] as any).memberPattern).toBe("R80297*");
+            withProfileMock.mockRestore();
+        });
+
+        it("keeps unrelated PDSs when no parenthesized member filters are provided", () => {
+            const testTree = new DatasetTree();
+            const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+            const fakeChildren = [
+                { label: "HLQ.USERID1.SOURCE.FINAL", contextValue: Constants.DS_PDS_CONTEXT },
+                { label: "HLQ.USERID1.OTHER", contextValue: Constants.DS_PDS_CONTEXT },
+            ];
+            testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.USERID1.*" }]);
+
+            expect(fakeChildren).toHaveLength(2);
+            expect((fakeChildren[0] as any).memberPattern).toBeUndefined();
+            expect((fakeChildren[1] as any).memberPattern).toBeUndefined();
+            withProfileMock.mockRestore();
+        });
+
+        it("skips NavigationTreeItem and 'No data sets found' placeholder children", () => {
+            const testTree = new DatasetTree();
+            const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+            const navItem = new NavigationTreeItem("Next page", "arrow-right", false, "zowe.dummyCommand", jest.fn());
+            const noDataPlaceholder = { label: vscode.l10n.t("No data sets found"), contextValue: Constants.INFORMATION_CONTEXT };
+            const matchingPds = { label: "HLQ.USERID2.SOURCE", contextValue: Constants.DS_PDS_CONTEXT };
+            const fakeChildren = [navItem, noDataPlaceholder, matchingPds] as any[];
+            const patterns = testTree.extractPatterns("HLQ.USERID2.SOURCE(R80297*)");
+            testTree.applyPatternsToChildren(fakeChildren, patterns);
+
+            // Placeholders are skipped (not removed, no memberPattern set, no contextValue rewrite via withProfile).
+            expect(fakeChildren).toHaveLength(3);
+            expect(fakeChildren[0]).toBe(navItem);
+            expect((noDataPlaceholder as any).memberPattern).toBeUndefined();
+            expect(noDataPlaceholder.contextValue).toBe(Constants.INFORMATION_CONTEXT);
+            // The real PDS still gets its member filter.
+            expect((matchingPds as any).memberPattern).toBe("R80297*");
+            withProfileMock.mockRestore();
+        });
+    });
+});
+
+// `patternAppliesToChild` is private; exercise it through `applyPatternsToChildren` (its only call site).
+describe("Dataset Tree Unit Tests - Function patternAppliesToChild (private)", () => {
+    function applyAndGetMemberPattern(label: string, patternInput: string): string | undefined {
+        const testTree = new DatasetTree();
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+        const fakeChildren = [{ label, contextValue: Constants.DS_PDS_CONTEXT }] as any[];
+        testTree.applyPatternsToChildren(fakeChildren, testTree.extractPatterns(patternInput));
+        withProfileMock.mockRestore();
+        return fakeChildren[0]?.memberPattern;
+    }
+
+    it("matches a PDS with the same number of qualifiers", () => {
+        expect(applyAndGetMemberPattern("HLQ.PROD.SOURCE", "HLQ.PROD.SOURCE(MEM*)")).toBe("MEM*");
+    });
+
+    it("does not match a PDS with extra qualifiers", () => {
+        const testTree = new DatasetTree();
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+        const fakeChildren = [{ label: "HLQ.PROD.SOURCE.FINAL", contextValue: Constants.DS_PDS_CONTEXT }] as any[];
+        testTree.applyPatternsToChildren(fakeChildren, testTree.extractPatterns("HLQ.PROD.SOURCE(MEM*)"));
+        expect(fakeChildren).toHaveLength(0);
+        withProfileMock.mockRestore();
+    });
+
+    it("matches a PDS using qualifier-level wildcards", () => {
+        expect(applyAndGetMemberPattern("HLQ.PROD.SOURCE", "HLQ.*.SOURCE(MEM*)")).toBe("MEM*");
+    });
+
+    it("does not match across mismatched middle qualifiers", () => {
+        const testTree = new DatasetTree();
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+        const fakeChildren = [{ label: "HLQ.USERID1.SOURCE", contextValue: Constants.DS_PDS_CONTEXT }] as any[];
+        testTree.applyPatternsToChildren(fakeChildren, [{ dsn: "HLQ.USERID2.SOURCE", member: "MEM*" }]);
+        expect(fakeChildren).toHaveLength(0);
+        withProfileMock.mockRestore();
+    });
 });
 
 describe("DataSetTree Unit Tests - Function handleDrag", () => {

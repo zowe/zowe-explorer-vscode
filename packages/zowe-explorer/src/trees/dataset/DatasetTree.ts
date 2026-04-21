@@ -1817,43 +1817,67 @@ Would you like to do this now?`,
     }
 
     private patternAppliesToChild(child: IZoweDatasetTreeNode, item: DatasetMatch): boolean {
-        const name = (child.label as string).split(".");
-        let includes = false;
-        if (!child.pattern) {
-            let index = 0;
-            for (const each of item.dsn.split(".")) {
-                includes = this.checkFilterPattern(name[index], each);
-                child.pattern = includes ? item.dsn : "";
-                index++;
-            }
+        // Require the same number of qualifiers so that e.g. `HLQ.PROD.SOURCE` does not match `HLQ.PROD.SOURCE.FINAL`.
+        const childQualifiers = (child.label as string).toUpperCase().split(".");
+        const patternQualifiers = item.dsn.toUpperCase().split(".");
+
+        if (childQualifiers.length !== patternQualifiers.length) {
+            return false;
         }
 
-        return includes;
+        for (let index = 0; index < patternQualifiers.length; index++) {
+            if (!this.checkFilterPattern(childQualifiers[index], patternQualifiers[index])) {
+                return false;
+            }
+        }
+        return true;
     }
 
-    public applyPatternsToChildren(children: IZoweDatasetTreeNode[], patterns: DatasetMatch[]): void {
-        for (const child of children.filter((c) => !(c instanceof NavigationTreeItem) && c.label !== vscode.l10n.t("No data sets found"))) {
-            for (const item of patterns.filter((p) => p.member && this.patternAppliesToChild(child, p))) {
-                // Only apply to PDS that match the given patterns
-                if (SharedContext.isPds(child)) {
-                    child.memberPattern = item.member;
-                    if (!SharedContext.isFilterFolder(child)) {
-                        // Reset to clean context: stripped of _fav and profile suffix
-                        // Filtered PDS must not be favoritable; withProfile re-adds the profile at the end
-                        child.contextValue = Constants.DS_PDS_CONTEXT + Constants.FILTER_SEARCH;
-                    }
-                    let setIcon: IconUtils.IIconItem;
-                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-                        setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolder);
-                    } else if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
-                        setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen);
-                    }
-                    if (setIcon) {
-                        child.iconPath = setIcon.path;
-                    }
+    public applyPatternsToChildren(children: IZoweDatasetTreeNode[], patterns: DatasetMatch[], _sessionNode?: IZoweDatasetTreeNode): void {
+        // When the user provides any parenthesized member filter (e.g. `HLQ.PDS(MEM*)`), drop PDS children
+        // that match none of the user-provided patterns. Avoids prefix-matched data sets leaking into the
+        // tree (see https://github.com/zowe/zowe-explorer-vscode/issues/3424).
+        const hasMemberSpecificPattern = patterns.some((p) => Boolean(p.member));
+        const indicesToRemove: number[] = [];
+
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (child instanceof NavigationTreeItem || child.label === vscode.l10n.t("No data sets found")) {
+                continue;
+            }
+
+            const matchingPatterns = patterns.filter((p) => this.patternAppliesToChild(child, p));
+            const matchingMembers = matchingPatterns.filter((p) => Boolean(p.member)).map((p) => p.member);
+
+            if (hasMemberSpecificPattern && matchingPatterns.length === 0 && SharedContext.isPds(child)) {
+                indicesToRemove.push(i);
+                continue;
+            }
+
+            if (matchingMembers.length > 0 && SharedContext.isPds(child)) {
+                const dedupedMembers = [...new Set(matchingMembers)];
+                child.memberPattern = dedupedMembers.join(",");
+                if (!SharedContext.isFilterFolder(child)) {
+                    // Reset to clean context: stripped of _fav and profile suffix
+                    // Filtered PDS must not be favoritable; withProfile re-adds the profile at the end
+                    child.contextValue = Constants.DS_PDS_CONTEXT + Constants.FILTER_SEARCH;
+                }
+                let setIcon: IconUtils.IIconItem;
+                if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                    setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolder);
+                } else if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                    setIcon = IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen);
+                }
+                if (setIcon) {
+                    child.iconPath = setIcon.path;
                 }
             }
             child.contextValue = SharedContext.withProfile(child);
+        }
+
+        // Splice in reverse so earlier indices remain valid as later items are removed.
+        for (let i = indicesToRemove.length - 1; i >= 0; i--) {
+            children.splice(indicesToRemove[i], 1);
         }
     }
 

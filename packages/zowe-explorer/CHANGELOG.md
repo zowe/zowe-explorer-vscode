@@ -37,6 +37,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the USS tree collapsed down to the top level set from the initial filter.[#3932](https://github.com/zowe/zowe-explorer-vscode/issues/3932)
 - Fixed an issue where the editor tab remained open after deleting a sequential data set. The editor now automatically closes when the data set is deleted. [#4050](https://github.com/zowe/zowe-explorer-vscode/issues/4050)
 - Fixed extended to include PDS members and USS files. [#4050](https://github.com/zowe/zowe-explorer-vscode/issues/4050)
+- Fixed an issue where complex data set filters with member patterns (such as `HLQ.A(MEM*),HLQ.B(MEM2)`) produced incorrect results: member filters could be applied to the wrong PDS, multiple filters targeting the same PDS were not combined, and unrelated prefix-matched data sets returned by the MVS API leaked into the tree. [#3424](https://github.com/zowe/zowe-explorer-vscode/issues/3424)
 
 ## `3.4.2`
 
