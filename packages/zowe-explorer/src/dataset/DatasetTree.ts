@@ -1057,71 +1057,93 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
                 }
                 child.contextValue = contextually.withProfile(child);
             }
-            // set new search patterns for each child of getChildren
+            // Apply member filters to each child returned by getChildren.
+            // When the user provided any parenthesized member pattern (e.g. `HLQ.PDS(MEM*)`),
+            // PDS children that match no user pattern are removed so prefix-matched data sets
+            // returned by the MVS list API don't leak into the tree (see issue #3424).
+            const hasMemberSpecificPattern = dsSets.some((p) => Boolean(p.member));
+            const labelsToRemove: string[] = [];
             for (const child of response) {
-                for (const item of dsSets) {
-                    const label = child.label as string;
-                    if (item.member && label !== "No data sets found") {
-                        const dsn = item.dsn.split(".");
-                        const name = label.split(".");
-                        let index = 0;
-                        let includes = false;
-                        if (!child.pattern) {
-                            for (const each of dsn) {
-                                let inc = false;
-                                inc = this.checkFilterPattern(name[index], each);
-                                if (inc) {
-                                    child.pattern = item.dsn;
-                                    includes = true;
-                                } else {
-                                    child.pattern = "";
-                                    includes = false;
-                                }
-                                index++;
-                            }
+                const label = child.label as string;
+                if (label === "No data sets found") {
+                    continue;
+                }
+
+                // Collect every dsSet whose DSN matches this child's full label. Require an
+                // identical qualifier count so that `HLQ.PROD.SOURCE` does not match
+                // `HLQ.PROD.SOURCE.FINAL` returned by the MVS list API.
+                const matchingPatterns = dsSets.filter((item) => {
+                    const dsnQualifiers = item.dsn.toUpperCase().split(".");
+                    const childQualifiers = label.toUpperCase().split(".");
+                    if (dsnQualifiers.length !== childQualifiers.length) {
+                        return false;
+                    }
+                    return dsnQualifiers.every((q, i) => this.checkFilterPattern(childQualifiers[i], q));
+                });
+
+                const isPds = child.contextValue.includes("pds");
+                if (hasMemberSpecificPattern && matchingPatterns.length === 0 && isPds) {
+                    labelsToRemove.push(label);
+                    continue;
+                }
+
+                // Verify each matching member pattern returns at least one member on this PDS,
+                // and accumulate the verified patterns. ZoweDatasetNode.getDatasets already
+                // issues one allMembers call per comma-separated pattern when expanding the PDS.
+                const verifiedMembers: string[] = [];
+                if (isPds) {
+                    for (const item of matchingPatterns) {
+                        if (!item.member) {
+                            continue;
                         }
-                        if (includes && child.contextValue.includes("pds")) {
-                            const childProfile = child.getProfile();
-                            const options: IListOptions = {};
-                            options.pattern = item.member;
-                            options.attributes = true;
-                            options.responseTimeout = childProfile.profile?.responseTimeout;
-                            let memResponse;
-                            try {
-                                memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
-                            } catch (err) {
-                                ZoweLogger.error(`Failed to get members for data set ${label}`);
-                                continue;
-                            }
-                            let existing = false;
-                            for (const mem of memResponse.apiResponse.items) {
-                                existing = this.checkFilterPattern(mem.member, item.member);
-                                if (existing) {
-                                    child.memberPattern = item.member;
-                                    if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
-                                        child.contextValue = String(child.contextValue) + globals.FILTER_SEARCH;
-                                    }
-                                    let setIcon: IIconItem;
-                                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-                                        setIcon = getIconById(IconId.filterFolder);
-                                    } else if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
-                                        setIcon = getIconById(IconId.filterFolderOpen);
-                                    }
-                                    if (setIcon) {
-                                        child.iconPath = setIcon.path;
-                                    }
-                                    this.refreshElement(child);
-                                }
-                            }
+                        const childProfile = child.getProfile();
+                        const options: IListOptions = {
+                            pattern: item.member,
+                            attributes: true,
+                            responseTimeout: childProfile.profile?.responseTimeout,
+                        };
+                        let memResponse;
+                        try {
+                            memResponse = await ZoweExplorerApiRegister.getMvsApi(childProfile).allMembers(label, options);
+                        } catch (err) {
+                            ZoweLogger.error(`Failed to get members for data set ${label}`);
+                            continue;
+                        }
+                        const matched = (memResponse.apiResponse.items ?? []).some((mem) => this.checkFilterPattern(mem.member, item.member));
+                        if (matched && !verifiedMembers.includes(item.member)) {
+                            verifiedMembers.push(item.member);
                         }
                     }
                 }
+
+                if (verifiedMembers.length > 0) {
+                    child.memberPattern = verifiedMembers.join(",");
+                    if (!child.contextValue.includes(globals.FILTER_SEARCH)) {
+                        child.contextValue = String(child.contextValue) + globals.FILTER_SEARCH;
+                    }
+                    let setIcon: IIconItem;
+                    if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
+                        setIcon = getIconById(IconId.filterFolder);
+                    } else if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
+                        setIcon = getIconById(IconId.filterFolderOpen);
+                    }
+                    if (setIcon) {
+                        child.iconPath = setIcon.path;
+                    }
+                    this.refreshElement(child);
+                }
+
                 nonFaveNode.dirty = true;
                 const icon = getIconByNode(nonFaveNode);
                 if (icon) {
                     nonFaveNode.iconPath = icon.path;
                 }
                 child.contextValue = contextually.withProfile(child);
+            }
+
+            // Splice unrelated PDSes out of the session node's children so they aren't rendered.
+            if (labelsToRemove.length > 0 && Array.isArray(nonFaveNode.children)) {
+                nonFaveNode.children = nonFaveNode.children.filter((c) => !labelsToRemove.includes(c.label as string));
             }
             this.addSearchHistory(pattern);
         }
@@ -1133,7 +1155,10 @@ export class DatasetTree extends ZoweTreeProvider implements IZoweTree<IZoweData
         ZoweLogger.trace("DatasetTree.checkFilterPattern called.");
         let existing: boolean;
         if (!/(\*?)(\w+)(\*)(\w+)(\*?)/.test(itemName)) {
-            if (/^[^*](\w+)[^*]$/.test(itemName)) {
+            // Pattern with no wildcards: do an exact case-insensitive match. The previous regex
+            // required at least 3 word characters, which excluded valid 1-2 character qualifiers
+            // and qualifiers containing the legal special characters `@`, `#`, `$`, or `-`.
+            if (/^[^*]+$/.test(itemName)) {
                 if (dsName) {
                     const compare = dsName.localeCompare(itemName.toUpperCase());
                     if (compare === 0) {

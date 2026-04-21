@@ -1722,6 +1722,224 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         expect(testTree.mSessionNodes[1].pattern).toEqual("HLQ.PROD, HLQ.PROD1*");
     });
 
+    // Regression coverage for https://github.com/zowe/zowe-explorer-vscode/issues/3424
+    describe("issue #3424 - complex member filter scenarios", () => {
+        function buildPdsChild(label: string, parent: IZoweDatasetTreeNode, session, profile): ZoweDatasetNode {
+            const pds = new ZoweDatasetNode({
+                label,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: parent,
+                session,
+                profile,
+                contextOverride: globals.DS_PDS_CONTEXT,
+            });
+            pds.pattern = undefined as any;
+            pds.memberPattern = undefined as any;
+            return pds;
+        }
+
+        it("applies the correct member pattern to each PDS when multiple comma-separated filters are provided", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+            mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.A.SOURCE(EX1),HLQ.B.SOURCE(MEM2)");
+            mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+            testTree.mSessionNodes[1].collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+            const pdsA = buildPdsChild("HLQ.A.SOURCE", testTree.mSessionNodes[1], blockMocks.session, blockMocks.imperativeProfile);
+            const pdsB = buildPdsChild("HLQ.B.SOURCE", testTree.mSessionNodes[1], blockMocks.session, blockMocks.imperativeProfile);
+            testTree.mSessionNodes[1].children = [pdsA, pdsB];
+
+            const allMembersMock = jest.fn().mockImplementation((label: string, options: any) => {
+                if (label === "HLQ.A.SOURCE" && options.pattern === "EX1") {
+                    return Promise.resolve({ apiResponse: { items: [{ member: "EX1" }] } });
+                }
+                if (label === "HLQ.B.SOURCE" && options.pattern === "MEM2") {
+                    return Promise.resolve({ apiResponse: { items: [{ member: "MEM2" }] } });
+                }
+                return Promise.resolve({ apiResponse: { items: [] } });
+            });
+            const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                getSession: () => blockMocks.session,
+                allMembers: allMembersMock,
+            } as any);
+            jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValueOnce([pdsA, pdsB] as any);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            expect(pdsA.memberPattern).toEqual("EX1");
+            expect(pdsB.memberPattern).toEqual("MEM2");
+            expect(pdsA.contextValue).toContain(globals.FILTER_SEARCH);
+            expect(pdsB.contextValue).toContain(globals.FILTER_SEARCH);
+            mvsApiMock.mockRestore();
+        });
+
+        it("removes prefix-matched PDS children when explicit member filters are provided", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+            mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.A.SOURCE(EX1)");
+            mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+            testTree.mSessionNodes[1].collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+            // The MVS list API is a prefix match, so a search for `HLQ.A.SOURCE` can return
+            // both `HLQ.A.SOURCE` and `HLQ.A.SOURCE.FINAL`. Only the former should remain.
+            const pds = buildPdsChild("HLQ.A.SOURCE", testTree.mSessionNodes[1], blockMocks.session, blockMocks.imperativeProfile);
+            const pdsExtra = buildPdsChild("HLQ.A.SOURCE.FINAL", testTree.mSessionNodes[1], blockMocks.session, blockMocks.imperativeProfile);
+            testTree.mSessionNodes[1].children = [pds, pdsExtra];
+
+            const allMembersMock = jest.fn().mockResolvedValue({ apiResponse: { items: [{ member: "EX1" }] } });
+            const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                getSession: () => blockMocks.session,
+                allMembers: allMembersMock,
+            } as any);
+            jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValueOnce([pds, pdsExtra] as any);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            const remainingLabels = testTree.mSessionNodes[1].children.map((c) => c.label as string);
+            expect(remainingLabels).toEqual(["HLQ.A.SOURCE"]);
+            expect(pds.memberPattern).toEqual("EX1");
+            // allMembers should only be called for the PDS that actually matches the user pattern.
+            expect(allMembersMock).toHaveBeenCalledTimes(1);
+            expect(allMembersMock).toHaveBeenCalledWith("HLQ.A.SOURCE", expect.objectContaining({ pattern: "EX1" }));
+            mvsApiMock.mockRestore();
+        });
+
+        it("merges member patterns when multiple filters target the same PDS", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+            mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PDS(EX1),HLQ.PDS(EX2)");
+            mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+            testTree.mSessionNodes[1].collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+            const pds = buildPdsChild("HLQ.PDS", testTree.mSessionNodes[1], blockMocks.session, blockMocks.imperativeProfile);
+            testTree.mSessionNodes[1].children = [pds];
+
+            const allMembersMock = jest.fn().mockImplementation((_label: string, options: any) => {
+                return Promise.resolve({ apiResponse: { items: [{ member: options.pattern }] } });
+            });
+            const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                getSession: () => blockMocks.session,
+                allMembers: allMembersMock,
+            } as any);
+            jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValueOnce([pds] as any);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            expect(pds.memberPattern).toEqual("EX1,EX2");
+            expect(allMembersMock).toHaveBeenCalledTimes(2);
+            mvsApiMock.mockRestore();
+        });
+
+        it("does not match a child DSN with extra qualifiers", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+            mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PROD.SOURCE(EX1)");
+            mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+            testTree.mSessionNodes[1].collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+            const pdsExtra = buildPdsChild("HLQ.PROD.SOURCE.FINAL", testTree.mSessionNodes[1], blockMocks.session, blockMocks.imperativeProfile);
+            testTree.mSessionNodes[1].children = [pdsExtra];
+
+            const allMembersMock = jest.fn().mockResolvedValue({ apiResponse: { items: [{ member: "EX1" }] } });
+            const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                getSession: () => blockMocks.session,
+                allMembers: allMembersMock,
+            } as any);
+            jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValueOnce([pdsExtra] as any);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            // The 4-qualifier PDS should not match the 3-qualifier user pattern, and since the
+            // user provided an explicit member filter, it must be removed from the tree entirely.
+            expect(testTree.mSessionNodes[1].children).toEqual([]);
+            expect(pdsExtra.memberPattern).toBeUndefined();
+            expect(allMembersMock).not.toHaveBeenCalled();
+            mvsApiMock.mockRestore();
+        });
+
+        it("keeps unrelated PDS children when no parenthesized member filters are provided", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+            mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.*");
+            mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+            testTree.mSessionNodes[1].collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+            const pdsA = buildPdsChild("HLQ.A", testTree.mSessionNodes[1], blockMocks.session, blockMocks.imperativeProfile);
+            const pdsBExtra = buildPdsChild("HLQ.B.NESTED", testTree.mSessionNodes[1], blockMocks.session, blockMocks.imperativeProfile);
+            testTree.mSessionNodes[1].children = [pdsA, pdsBExtra];
+
+            const allMembersMock = jest.fn();
+            const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                getSession: () => blockMocks.session,
+                allMembers: allMembersMock,
+            } as any);
+            jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValueOnce([pdsA, pdsBExtra] as any);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            // Without any explicit member filters, no PDS is removed and no allMembers call is made.
+            expect(testTree.mSessionNodes[1].children).toHaveLength(2);
+            expect(allMembersMock).not.toHaveBeenCalled();
+            expect(pdsA.memberPattern).toBeUndefined();
+            expect(pdsBExtra.memberPattern).toBeUndefined();
+            mvsApiMock.mockRestore();
+        });
+
+        it("does not set memberPattern when verification finds no matching members", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+
+            mocked(vscode.window.showQuickPick).mockResolvedValueOnce(new utils.FilterDescriptor("\uFF0B " + "Create a new filter"));
+            mocked(vscode.window.showInputBox).mockResolvedValueOnce("HLQ.PDS(NONE)");
+            mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+
+            const testTree = new DatasetTree();
+            testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+            testTree.mSessionNodes[1].collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+
+            const pds = buildPdsChild("HLQ.PDS", testTree.mSessionNodes[1], blockMocks.session, blockMocks.imperativeProfile);
+            testTree.mSessionNodes[1].children = [pds];
+
+            const allMembersMock = jest.fn().mockResolvedValue({ apiResponse: { items: [] } });
+            const mvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                getSession: () => blockMocks.session,
+                allMembers: allMembersMock,
+            } as any);
+            jest.spyOn(testTree.mSessionNodes[1], "getChildren").mockReturnValueOnce([pds] as any);
+
+            await testTree.datasetFilterPrompt(testTree.mSessionNodes[1]);
+
+            expect(pds.memberPattern).toBeFalsy();
+            expect(pds.contextValue).not.toContain(globals.FILTER_SEARCH);
+            mvsApiMock.mockRestore();
+        });
+    });
+
     it("Checking adding of new filter with data set member", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
@@ -2965,6 +3183,43 @@ describe("Dataset Tree Unit Tests - Function checkFilterPattern", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         expect(blockMocks.testTree.checkFilterPattern("*SAMPLE*TEST*", "*SAMPLE*TEST*")).toEqual(true);
+    });
+
+    // The literal-equality branch of `checkFilterPattern` previously used a regex that
+    // required at least 3 word characters, so single-character qualifiers like `A` and
+    // qualifiers containing legal special characters (`@`, `#`, `$`, `-`) silently failed
+    // to match. See https://github.com/zowe/zowe-explorer-vscode/issues/3424.
+    it("should return true for single-character literal qualifier match", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        expect(blockMocks.testTree.checkFilterPattern("A", "A")).toEqual(true);
+    });
+
+    it("should return true for two-character literal qualifier match", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        expect(blockMocks.testTree.checkFilterPattern("IB", "IB")).toEqual(true);
+    });
+
+    it("should return true for literal qualifier containing valid z/OS special characters", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        expect(blockMocks.testTree.checkFilterPattern("USER#1", "USER#1")).toEqual(true);
+        expect(blockMocks.testTree.checkFilterPattern("A-B", "A-B")).toEqual(true);
+        expect(blockMocks.testTree.checkFilterPattern("$SYS", "$SYS")).toEqual(true);
+    });
+
+    it("should be case-insensitive for literal qualifier match", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        expect(blockMocks.testTree.checkFilterPattern("HLQ", "hlq")).toEqual(true);
+    });
+
+    it("should not match when literal qualifiers differ", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        expect(blockMocks.testTree.checkFilterPattern("A", "B")).toBeFalsy();
+        expect(blockMocks.testTree.checkFilterPattern("HLQ", "HLP")).toBeFalsy();
     });
 });
 

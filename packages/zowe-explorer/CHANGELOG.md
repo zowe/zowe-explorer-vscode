@@ -6,6 +6,9 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where complex data set filters with parenthesized member patterns (e.g. `HLQ.A(MEM*),HLQ.B(MEM2)`) produced incorrect results: member filters could be applied to the wrong PDS, multiple filters targeting the same PDS were not combined, and unrelated prefix-matched data sets returned by the MVS API leaked into the tree. [#3424](https://github.com/zowe/zowe-explorer-vscode/issues/3424)
+- Fixed an issue where data set filters silently failed to apply member patterns to PDSes whose qualifiers were 1-2 characters long or contained the legal z/OS special characters `@`, `#`, `$`, or `-`. [#3424](https://github.com/zowe/zowe-explorer-vscode/issues/3424)
+
 ## `2.18.4`
 
 ### Bug fixes
