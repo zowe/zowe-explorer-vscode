@@ -66,13 +66,7 @@ export class BaseProvider {
         if (closeEditor) {
             vscode.commands.executeCommand("workbench.action.closeActiveEditor");
 
-            // Find the main document and revert it to clear the dirty flag
-            const mainUri = uri.with({ query: "" });
-            const doc = vscode.workspace.textDocuments.find((d) => d.uri.toString() === mainUri.toString());
-            if (doc?.isDirty) {
-                await vscode.window.showTextDocument(doc);
-                await vscode.commands.executeCommand("workbench.action.files.revert");
-            }
+            await this._revertDirtyDocument(uri);
         }
     }
 
