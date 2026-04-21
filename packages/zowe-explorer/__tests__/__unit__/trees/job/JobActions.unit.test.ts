@@ -1096,7 +1096,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         });
         dataset.contextValue = Constants.DS_DS_CONTEXT;
 
-        const optionKeys = ["Disabled", "Your jobs", "Other user jobs", "All jobs"];
+        const optionKeys = ["Disabled", "Your Jobs", "Other user Jobs", "All Jobs"];
         for (let o = 0; o < optionKeys.length; o++) {
             const option = optionKeys[o];
             Object.defineProperty(vscode.workspace, "getConfiguration", {
@@ -1107,7 +1107,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             if (option === "Disabled") {
                 await DatasetActions.submitMember(dataset);
                 expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
-            } else if (option === "Other user jobs") {
+            } else if (option === "Other user Jobs") {
                 dataset.label = "OTHERUSER.DATASET";
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await DatasetActions.submitMember(dataset);
@@ -1118,7 +1118,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
                         vsCodeOpts: { modal: true },
                     }
                 );
-            } else if (option === "All jobs" || option === "Your jobs") {
+            } else if (option === "All Jobs" || option === "Your Jobs") {
                 dataset.label = "TESTUSER.DATASET";
                 mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
                 await DatasetActions.submitMember(dataset);
@@ -1166,10 +1166,10 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         await DatasetActions.submitMember(dataset);
         expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
 
-        // Test with "Your jobs" option
+        // Test with "Your Jobs" option
         mocked(Gui.warningMessage).mockClear();
         Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "Your jobs"]])),
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "Your Jobs"]])),
             configurable: true,
         });
         mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
@@ -1182,11 +1182,11 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             }
         );
 
-        // Test with "Other user jobs" option
+        // Test with "Other user Jobs" option
         mocked(Gui.warningMessage).mockClear();
         dataset.label = "OTHERUSER.DATASET";
         Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "Other user jobs"]])),
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "Other user Jobs"]])),
             configurable: true,
         });
         mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
@@ -1199,11 +1199,11 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             }
         );
 
-        // Test with "All jobs" option
+        // Test with "All Jobs" option
         mocked(Gui.warningMessage).mockClear();
         dataset.label = "TESTUSER.DATASET";
         Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "All jobs"]])),
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "All Jobs"]])),
             configurable: true,
         });
         mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
@@ -1279,14 +1279,14 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
     });
 
-    it("respects job ownership when using 'Your jobs' option", async () => {
+    it("respects job ownership when using 'Your Jobs' option", async () => {
         createGlobalMocks();
 
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockClear();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
 
-        // Test with "Your jobs" option - should show dialog for TESTUSER's job
+        // Test with "Your Jobs" option - should show dialog for TESTUSER's job
         const yourDataset = new ZoweDatasetNode({
             label: "TESTUSER.DATASET",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -1295,14 +1295,14 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         yourDataset.contextValue = Constants.DS_DS_CONTEXT;
 
         Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "Your jobs"]])),
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "Your Jobs"]])),
             configurable: true,
         });
         mocked(Gui.warningMessage).mockResolvedValueOnce({ title: "Submit" });
         await DatasetActions.submitMember(yourDataset);
         expect(mocked(Gui.warningMessage)).toHaveBeenCalled();
 
-        // Test with "Your jobs" option - should NOT show dialog for other user's job
+        // Test with "Your Jobs" option - should NOT show dialog for other user's job
         mocked(Gui.warningMessage).mockClear();
         const otherDataset = new ZoweDatasetNode({
             label: "OTHERUSER.DATASET",
@@ -1315,14 +1315,14 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
     });
 
-    it("respects job ownership when using 'Other user jobs' option", async () => {
+    it("respects job ownership when using 'Other user Jobs' option", async () => {
         createGlobalMocks();
 
         const blockMocks = createBlockMocks();
         mocked(Profiles.getInstance).mockClear();
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
 
-        // Test with "Other user jobs" option - should NOT show dialog for TESTUSER's job
+        // Test with "Other user Jobs" option - should NOT show dialog for TESTUSER's job
         const yourDataset = new ZoweDatasetNode({
             label: "TESTUSER.DATASET",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -1331,13 +1331,13 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
         yourDataset.contextValue = Constants.DS_DS_CONTEXT;
 
         Object.defineProperty(vscode.workspace, "getConfiguration", {
-            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "Other user jobs"]])),
+            value: jest.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", "Other user Jobs"]])),
             configurable: true,
         });
         await DatasetActions.submitMember(yourDataset);
         expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
 
-        // Test with "Other user jobs" option - should show dialog for other user's job
+        // Test with "Other user Jobs" option - should show dialog for other user's job
         mocked(Gui.warningMessage).mockClear();
         const otherDataset = new ZoweDatasetNode({
             label: "OTHERUSER.DATASET",

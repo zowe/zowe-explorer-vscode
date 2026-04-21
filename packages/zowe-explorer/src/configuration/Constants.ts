@@ -276,10 +276,10 @@ export class Constants {
         OPTIONS: { kind: vscode.QuickPickItemKind.Separator, label: vscode.l10n.t(`Options`) },
     };
     public static JOB_SUBMIT_DIALOG_OPTS = [
-        "%zowe.jobs.confirmSubmission.disabled%",
-        "%zowe.jobs.confirmSubmission.yourJobs%",
-        "%zowe.jobs.confirmSubmission.otherUserJobs%",
-        "%zowe.jobs.confirmSubmission.allJobs%",
+        vscode.l10n.t("Disabled"),
+        vscode.l10n.t("Your Jobs"),
+        vscode.l10n.t("Other user Jobs"),
+        vscode.l10n.t("All Jobs"),
     ];
     public static SORT_DIRS: string[] = [vscode.l10n.t("Ascending"), vscode.l10n.t("Descending")];
     public static HISTORY_VIEW_TABS = {

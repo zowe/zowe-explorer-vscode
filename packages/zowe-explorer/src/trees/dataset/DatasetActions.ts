@@ -1934,12 +1934,8 @@ export class DatasetActions {
             return true; // Default behavior: allow submission without confirmation
         }
 
-        const camelCase = confirmationOption
-            .toLowerCase()
-            .split(" ")
-            .map((word, index) => (index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)))
-            .join("");
-        const dialogOption = Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(`%zowe.jobs.confirmSubmission.${camelCase}%`);
+        // Compare directly with localized values
+        const dialogOption = Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption);
 
         switch (dialogOption) {
             case Definitions.JobSubmitDialogOpts.YourJobs:

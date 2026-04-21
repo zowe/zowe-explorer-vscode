@@ -299,6 +299,7 @@
   "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager": "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager",
   "All": "All",
   "All Files": "All Files",
+  "All Jobs": "All Jobs",
   "all PDS members in {0}/Node label": {
     "message": "all PDS members in {0}",
     "comment": [
@@ -1628,6 +1629,7 @@
   "Optimized the refresh functionality in Zowe Explorer for performance and stability. Now, the profiles are refreshed once before refreshing all the tree providers. <a>#3524</a>": "Optimized the refresh functionality in Zowe Explorer for performance and stability. Now, the profiles are refreshed once before refreshing all the tree providers. <a>#3524</a>",
   "Options": "Options",
   "Other": "Other",
+  "Other user Jobs": "Other user Jobs",
   "Override file extension": "Override file extension",
   "Override File Extension": "Override File Extension",
   "Override file extension (current: {0})": "Override file extension (current: {0})",
@@ -2342,6 +2344,7 @@
       "Profile name"
     ]
   },
+  "Your Jobs": "Your Jobs",
   "z/OS default codepage": "z/OS default codepage",
   "Zowe Explorer": "Zowe Explorer",
   "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
