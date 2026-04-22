@@ -13,6 +13,7 @@ import {
     type qpItem,
     type qpOpts,
 } from "zowex-sdk";
+import { SshClientCache } from "./SshClientCache";
 
 export class VscePromptApi extends AbstractConfigManager {
     protected showMessage(message: string, messageType: MESSAGE_TYPE): void {
@@ -122,8 +123,7 @@ export class VscePromptApi extends AbstractConfigManager {
     }
 
     protected getProfileSchemas(): imperative.IProfileTypeConfiguration[] {
-        // TODO Remove cast to any when ProfilesCache is made protected
-        const profCache = (this as any).profilesCache;
+        const profCache = SshClientCache.inst.profilesCache;
 
         return [
             // biome-ignore lint/suspicious/noExplicitAny: Accessing protected method

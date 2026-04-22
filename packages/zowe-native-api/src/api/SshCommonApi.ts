@@ -72,7 +72,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
 
                     if (finalErr) {
                         const authSuccessful = await AuthHandler.promptForAuthentication(profile, {
-                            authMethods: SshClientCache.profilesCache as unknown as IAuthMethods,
+                            authMethods: SshClientCache.inst.profilesCache as unknown as IAuthMethods,
                             imperativeError: finalErr,
                         });
                         if (authSuccessful) {

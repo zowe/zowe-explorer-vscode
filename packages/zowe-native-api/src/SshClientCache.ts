@@ -82,8 +82,8 @@ export class SshClientCache extends vscode.Disposable {
         return SshClientCache.mInstance;
     }
 
-    public static get profilesCache(): ProfilesCache {
-        return SshClientCache.mInstance.mProfilesCache;
+    public get profilesCache(): ProfilesCache {
+        return this.mProfilesCache;
     }
 
     public async connect(
