@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import * as zoweNativeApi from "@zowe/zowe-native-api";
 import {
     DataSetAttributesProvider,
     IApiExplorerExtender,
@@ -128,6 +129,11 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
         this.registerMvsApi(new ZoweExplorerZosmf.MvsApi());
         this.registerJesApi(new ZoweExplorerZosmf.JesApi());
         this.registerCommandApi(new ZoweExplorerZosmf.CommandApi());
+
+        this.registerMvsApi(new zoweNativeApi.SshMvsApi(this.getDataSetAttrProvider?.()));
+        this.registerUssApi(new zoweNativeApi.SshUssApi());
+        this.registerJesApi(new zoweNativeApi.SshJesApi());
+        this.registerCommandApi(new zoweNativeApi.SshCommandApi());
     }
 
     // TODO: the redundant functions that follow could be done with generics, but as we are using

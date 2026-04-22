@@ -56,6 +56,7 @@ import { TroubleshootError } from "../../utils/TroubleshootError";
 import { ReleaseNotes } from "../../utils/ReleaseNotes";
 import { JobFSProvider } from "../job/JobFSProvider";
 import { ZosmfRestClient } from "@zowe/core-for-zowe-sdk";
+import * as zoweNativeApi from "@zowe/zowe-native-api";
 
 export class SharedInit {
     public static onDidActivateExtensionEmitter = new vscode.EventEmitter<void>();
@@ -190,6 +191,13 @@ export class SharedInit {
             tso: TsoCommandHandler.getInstance(),
             uss: UnixCommandHandler.getInstance(),
         };
+
+        // Zowe Native registrations
+        context.subscriptions.push(...zoweNativeApi.registerCommands(context, ZoweExplorerApiRegister.getInstance()));
+        context.subscriptions.push(zoweNativeApi.SshClientCache.inst);
+        context.subscriptions.push(zoweNativeApi.watchNativeSshSetting(context));
+
+        zoweNativeApi.registerSshErrorCorrelations();
 
         // Webview for editing persistent items on Zowe Explorer
         context.subscriptions.push(

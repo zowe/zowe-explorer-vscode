@@ -191,7 +191,7 @@
   "zowe.history.deprecationMsg": "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.",
   "zowe.settings.overrideWithEnvironmentVariables": "Indicates if environment variables should override values stored in Zowe configuration profiles on disk.",
   "zowe.settings.socketConnectTimeout": "The amount of time to wait for a connection to be initiated with the server, in milliseconds.",
-  "zowe.settings.requestTimeout": "The amount of time to wait for a REST request to complete, in milliseconds.",
+  "zowe.settings.requestTimeout": "The amount of time to wait for a request to complete, in milliseconds.",
   "zowe.settings.displayReleaseNotes": "Should display the Zowe Explorer release notes after an update.",
   "zowe.settings.zosmfMaxConcurrentRequests": "The maximum number of REST requests to process concurrently. Set to 0 to disable throttling.",
   "zowe.settings.zosmfRequestQueueTimeout": "The maximum amount of time a REST request should wait in the request queue before being cancelled, in milliseconds.",

@@ -787,6 +787,21 @@
         "command": "zowe.displayReleaseNotes",
         "title": "%zowe.displayReleaseNotes%",
         "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.zowex.connect",
+        "title": "Zowe-SSH: Connect to Host...",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.zowex.restart",
+        "title": "Zowe-SSH: Restart Zowe Server on Host...",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.zowex.uninstall",
+        "title": "Zowe-SSH: Uninstall Zowe Server from Host...",
+        "category": "Zowe Explorer"
       }
     ],
     "menus": {
@@ -2249,6 +2264,56 @@
           "default": false,
           "description": "%zowe.commands.tso.defaultProfile%",
           "scope": "window"
+        },
+        "zowex.zowex.keepAliveInterval": {
+          "type": "number",
+          "default": 30,
+          "description": "Number of seconds between keep-alive messages to keep connection active. Set to 0 to disable keep-alive.",
+          "scope": "window"
+        },
+        "zowe.zowex.serverAutoUpdate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically re-deploy the Zowe Remote SSH server if out of date.",
+          "scope": "window"
+        },
+        "zowe.zowex.serverInstallPath": {
+          "type": "object",
+          "description": "Mapping of SSH hostname to server install path for that host. Defaults to '~/.zowe-server'.",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "scope": "window"
+        },
+        "zowe.zowex.workerCount": {
+          "type": "number",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 50,
+          "description": "Number of worker threads for the Zowe Remote SSH server. Each worker runs as a separate process in its own address space.",
+          "scope": "window"
+        },
+        "zowe.zowex.responseTimeout": {
+          "type": "number",
+          "default": 60,
+          "minimum": 1,
+          "maximum": 600,
+          "description": "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.",
+          "scope": "window"
+        },
+        "zowe.zowex.experimentalNativeSsh": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use an experimental native SSH client for improved performance. Not yet fully tested.",
+          "scope": "window"
+        },
+        "zowe.zowex.defaultHandshakeTimeout": {
+          "type": "number",
+          "description": "Time in milliseconds to wait for the SSH handshake to complete.",
+          "default": 30000,
+          "minimum": 1000,
+          "maximum": 120000,
+          "scope": "window"
         }
       }
     },
@@ -2332,6 +2397,7 @@
     "@zowe/zos-jobs-for-zowe-sdk": "^8.31.0",
     "@zowe/zosmf-for-zowe-sdk": "^8.31.0",
     "@zowe/zowe-explorer-api": "workspace:*",
+    "@zowe/zowe-native-api": "workspace:*",
     "dayjs": "^1.11.10",
     "isbinaryfile": "4.0.4",
     "promise-queue": "2.2.5"
