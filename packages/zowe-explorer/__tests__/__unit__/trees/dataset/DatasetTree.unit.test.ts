@@ -6911,6 +6911,8 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
         const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
         testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.PROD.PDS", member: "A*,B*" }], fakeSessionNode as any);
         expect(fakeChildren[0].memberPattern).toBe("A*,B*");
+        withProfileMock.mockRestore();
+    });
     it("strips _fav from a PDS node that already has _fav before adding isFilterSearch", () => {
         const testTree = new DatasetTree();
         const fakeChildren = [

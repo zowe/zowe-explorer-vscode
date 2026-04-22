@@ -6311,8 +6311,8 @@ describe("DatasetActions - downloading functions", () => {
                 apiResponse: { items: null },
             });
 
-            await expect(DatasetActions.downloadAllMembers(pdsNode)).rejects.toThrow();
-
+            await DatasetActions.downloadAllMembers(pdsNode);
+            expect(Gui.showMessage).toHaveBeenCalledWith("The selected data set has no members to download.");
             expect(mockGetDataSetDownloadOptions.mock).not.toHaveBeenCalled();
         });
 

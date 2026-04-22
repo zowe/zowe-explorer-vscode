@@ -855,7 +855,7 @@ export class DatasetActions {
             return;
         }
 
-        const children = allMembersRes.apiResponse?.items;
+        const children = allMembersRes.apiResponse?.items ?? [];
         if (children.length === 0) {
             Gui.showMessage(vscode.l10n.t("The selected data set has no members to download."));
             return;
