@@ -10,7 +10,7 @@
  */
 
 import type { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
-import { imperative, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { type ClientOptions, type ExistingClientRequest, ZSshClient, ZSshUtils } from "zowex-sdk";
 import { ConfigUtils } from "./ConfigUtils";
@@ -63,7 +63,7 @@ export class SshClientCache extends vscode.Disposable {
         CLOSE: "Close",
     };
 
-    private constructor() {
+    private constructor(private readonly mProfilesCache: ProfilesCache) {
         super(() => this.dispose());
     }
 
@@ -73,11 +73,17 @@ export class SshClientCache extends vscode.Disposable {
         }
     }
 
-    public static get inst(): SshClientCache {
-        if (SshClientCache.mInstance == null) {
-            SshClientCache.mInstance = new SshClientCache();
-        }
+    public static initialize(profCache: ProfilesCache): SshClientCache {
+        SshClientCache.mInstance = new SshClientCache(profCache);
         return SshClientCache.mInstance;
+    }
+
+    public static get inst(): SshClientCache {
+        return SshClientCache.mInstance;
+    }
+
+    public static get profilesCache(): ProfilesCache {
+        return SshClientCache.mInstance.mProfilesCache;
     }
 
     public async connect(
@@ -102,7 +108,7 @@ export class SshClientCache extends vscode.Disposable {
             const vsceConfig = getVsceConfig();
             const keepAliveInterval = vsceConfig.get<number>("zowex.keepAliveInterval");
             const numWorkers = vsceConfig.get<number>("zowex.workerCount");
-            const requestTimeout = vsceConfig.get<number>("settings.requestTimeout");
+            const requestTimeout = (vsceConfig.get<number>("settings.requestTimeout", 0) / 1000) || 60;
             const responseTimeout = vsceConfig.get<number>("zowex.responseTimeout") ?? 60;
             const useNativeSsh = vsceConfig.get<boolean>("zowex.experimentalNativeSsh", false);
             const autoUpdate = vsceConfig.get<boolean>("zowex.serverAutoUpdate", true);
@@ -180,9 +186,7 @@ export class SshClientCache extends vscode.Disposable {
         }
         clientSession.status = ServerStatus.RESTARTING;
         const profile = clientSession.profile;
-        const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi();
-        const profCache = zoweExplorerApi.getExplorerExtenderApi().getProfilesCache();
-        const updatedProfile = await profCache.getLoadedProfConfig(profile.name!, profile.type);
+        const updatedProfile = await this.mProfilesCache.getLoadedProfConfig(profile.name!, profile.type);
 
         if (updatedProfile == null) {
             throw new Error(

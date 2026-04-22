@@ -11,15 +11,7 @@
 
 import { ImperativeError } from "@zowe/imperative";
 import { type SshSession, ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
-import {
-    AuthHandler,
-    ErrorCorrelator,
-    type IAuthMethods,
-    imperative,
-    type MainframeInteraction,
-    ZoweExplorerApiType,
-    ZoweVsCodeExtension,
-} from "@zowe/zowe-explorer-api";
+import { AuthHandler, ErrorCorrelator, type IAuthMethods, imperative, type MainframeInteraction, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { type ZSshClient, ZSshUtils } from "zowex-sdk";
 import { SshClientCache } from "../SshClientCache";
@@ -71,7 +63,6 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                     !profile.profile?.privateKey &&
                     `${err}`.includes("All configured authentication methods failed")
                 ) {
-                    const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi();
                     let finalErr: ImperativeError | undefined;
                     finalErr = new ImperativeError({
                         msg: ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err as Error, {
@@ -81,7 +72,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
 
                     if (finalErr) {
                         const authSuccessful = await AuthHandler.promptForAuthentication(profile, {
-                            authMethods: zoweExplorerApi.getExplorerExtenderApi().getProfilesCache() as unknown as IAuthMethods,
+                            authMethods: SshClientCache.profilesCache as unknown as IAuthMethods,
                             imperativeError: finalErr,
                         });
                         if (authSuccessful) {

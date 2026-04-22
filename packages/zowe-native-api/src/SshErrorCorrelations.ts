@@ -9,18 +9,13 @@
  *
  */
 
-import { ErrorCorrelator, ZoweExplorerApiType, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { ErrorCorrelator, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { SshErrors } from "zowex-sdk";
 
 /**
  * Registers all SSH-specific error correlations with the Zowe Explorer ErrorCorrelator
  */
 export function registerSshErrorCorrelations(): void {
-    const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi();
-    if (!zoweExplorerApi) {
-        return;
-    }
-
     const errorCorrelator = ErrorCorrelator.getInstance();
     if (!errorCorrelator) {
         return;

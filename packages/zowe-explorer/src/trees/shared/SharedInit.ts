@@ -193,8 +193,9 @@ export class SharedInit {
         };
 
         // Zowe Native registrations
-        context.subscriptions.push(...zoweNativeApi.registerCommands(context, ZoweExplorerApiRegister.getInstance()));
-        context.subscriptions.push(zoweNativeApi.SshClientCache.inst);
+        const zoweExplorerApi = ZoweExplorerApiRegister.getInstance().getExplorerExtenderApi();
+        context.subscriptions.push(...zoweNativeApi.registerCommands(context, zoweExplorerApi));
+        context.subscriptions.push(zoweNativeApi.SshClientCache.initialize(zoweExplorerApi.getProfilesCache()));
         context.subscriptions.push(zoweNativeApi.watchNativeSshSetting(context));
 
         zoweNativeApi.registerSshErrorCorrelations();
