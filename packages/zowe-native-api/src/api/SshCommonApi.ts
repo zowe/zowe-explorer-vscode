@@ -13,6 +13,7 @@ import { ImperativeError } from "@zowe/imperative";
 import { type SshSession, ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 import {
     AuthHandler,
+    ErrorCorrelator,
     type IAuthMethods,
     imperative,
     type MainframeInteraction,
@@ -46,7 +47,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                 // Check if this is a private key authentication failure
                 if (ZSshUtils.isPrivateKeyAuthFailure(errorMessage, !!profile.profile?.privateKey)) {
                     vscode.window.showWarningMessage(
-                        `Private key authentication failed for "${profile.name}". Falling back to password authentication...`,
+                        `Private key authentication failed for "${profile.name}". Falling back to password authentication...`
                     );
 
                     try {
@@ -58,10 +59,10 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                         }
                     } catch (retryErr) {
                         imperative.Logger.getAppLogger().warn(
-                            `Password authentication failed after 3 attempts for profile ${profile.name}: ${retryErr}`,
+                            `Password authentication failed after 3 attempts for profile ${profile.name}: ${retryErr}`
                         );
                         vscode.window.showErrorMessage(
-                            `Authentication failed for profile ${profile.name}. Both private key and password authentication failed.`,
+                            `Authentication failed for profile ${profile.name}. Both private key and password authentication failed.`
                         );
                         return "inactive";
                     }
@@ -71,25 +72,16 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                     `${err}`.includes("All configured authentication methods failed")
                 ) {
                     const zoweExplorerApi = ZoweVsCodeExtension.getZoweExplorerApi();
-                    const extenderApi = await zoweExplorerApi.getExplorerExtenderApi();
                     let finalErr: ImperativeError | undefined;
-                    if (extenderApi) {
-                        const errorCorrelator = extenderApi.getErrorCorrelator?.();
-                        if (errorCorrelator) {
-                            finalErr = new ImperativeError({
-                                msg: await errorCorrelator.correlateError(ZoweExplorerApiType.All, err as Error, {
-                                    templateArgs: { profileName: profile.name! },
-                                }).message,
-                            });
-                        }
-                    } else {
-                        finalErr = new ImperativeError({ msg: `${err}` });
-                    }
+                    finalErr = new ImperativeError({
+                        msg: ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err as Error, {
+                            templateArgs: { profileName: profile.name! },
+                        }).message,
+                    });
+
                     if (finalErr) {
                         const authSuccessful = await AuthHandler.promptForAuthentication(profile, {
-                            authMethods: zoweExplorerApi
-                                .getExplorerExtenderApi()
-                                .getProfilesCache() as unknown as IAuthMethods,
+                            authMethods: zoweExplorerApi.getExplorerExtenderApi().getProfilesCache() as unknown as IAuthMethods,
                             imperativeError: finalErr,
                         });
                         if (authSuccessful) {
@@ -101,7 +93,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                         err as Error,
                         ZoweExplorerApiType.All,
                         "SSH connection status check failed",
-                        false,
+                        false
                     );
                 }
 
@@ -127,9 +119,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
      * @param profile The profile that failed private key authentication
      * @returns Updated profile with password, or undefined if user cancelled or max attempts reached
      */
-    private async handlePrivateKeyFailure(
-        profile: imperative.IProfileLoaded,
-    ): Promise<imperative.IProfileLoaded | undefined> {
+    private async handlePrivateKeyFailure(profile: imperative.IProfileLoaded): Promise<imperative.IProfileLoaded | undefined> {
         for (let attempts = 0; attempts < 3; attempts++) {
             try {
                 // Prompt for password using VS Code's native input box
