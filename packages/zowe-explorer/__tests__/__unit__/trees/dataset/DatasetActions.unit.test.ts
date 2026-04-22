@@ -5407,9 +5407,9 @@ describe("DatasetActions - filterDatasetTree", () => {
             expect(result).toBe(INVALID_PATTERN_ERROR);
         });
 
-        it("should return error message for pattern with invalid character (space)", () => {
+        it("should return undefined for pattern with space (used in multi-pattern input)", () => {
             const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATA SET");
-            expect(result).toBe(INVALID_PATTERN_ERROR);
+            expect(result).toBeUndefined();
         });
 
         it("should return error message for pattern with invalid character (slash)", () => {
@@ -5422,9 +5422,9 @@ describe("DatasetActions - filterDatasetTree", () => {
             expect(result).toBe(INVALID_PATTERN_ERROR);
         });
 
-        it("should return error message for pattern with invalid character (comma)", () => {
+        it("should return undefined for pattern with comma (used as dataset separator)", () => {
             const result = (DatasetActions as any).validateDatasetPattern("HLQ,DATASET");
-            expect(result).toBe(INVALID_PATTERN_ERROR);
+            expect(result).toBeUndefined();
         });
 
         it("should return error message for pattern with invalid character (semicolon)", () => {
@@ -5512,9 +5512,9 @@ describe("DatasetActions - filterDatasetTree", () => {
             expect(result).toBeUndefined();
         });
 
-        it("should trim whitespace and return error for invalid pattern", () => {
+        it("should trim whitespace and validate correctly for pattern with space separator", () => {
             const result = (DatasetActions as any).validateDatasetPattern("  HLQ DATASET  ");
-            expect(result).toBe(INVALID_PATTERN_ERROR);
+            expect(result).toBeUndefined();
         });
 
         it("should handle complex valid pattern with multiple members notation", () => {
@@ -5555,6 +5555,26 @@ describe("DatasetActions - filterDatasetTree", () => {
         it("should handle very long valid pattern", () => {
             const longPattern = "A".repeat(100) + ".DATASET";
             const result = (DatasetActions as any).validateDatasetPattern(longPattern);
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for pattern with multiple comma-separated member filters", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATASET(A*,B*)");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for multi-qualifier dataset with multiple member filters", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.MID.DATASET(A*,B*)");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for multiple dataset patterns separated by comma and space", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.PDS(A*,B*), HLQ.OTHER(C*)");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for dataset pattern with single member filter", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("dataset.name(a*)");
             expect(result).toBeUndefined();
         });
     });
@@ -6291,8 +6311,8 @@ describe("DatasetActions - downloading functions", () => {
                 apiResponse: { items: null },
             });
 
-            await expect(DatasetActions.downloadAllMembers(pdsNode)).rejects.toThrow();
-
+            await DatasetActions.downloadAllMembers(pdsNode);
+            expect(Gui.showMessage).toHaveBeenCalledWith("The selected data set has no members to download.");
             expect(mockGetDataSetDownloadOptions.mock).not.toHaveBeenCalled();
         });
 
