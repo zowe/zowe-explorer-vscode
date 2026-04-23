@@ -419,6 +419,7 @@
   "Clear filter for profile": "Clear filter for profile",
   "Click on a filter to change its value": "Click on a filter to change its value",
   "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:": "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:",
+  "Column settings": "Column settings",
   "Command response: {0}/Command response": {
     "message": "Command response: {0}",
     "comment": [
@@ -899,6 +900,7 @@
   "File History": "File History",
   "File Properties": "File Properties",
   "File Type": "File Type",
+  "Filter": "Filter",
   "Filter by file size": "Filter by file size",
   "Filter by file type (c=character, d=directory, f=file, l=symlink, p=pipe, s=socket)": "Filter by file type (c=character, d=directory, f=file, l=symlink, p=pipe, s=socket)",
   "Filter by group owner or GID": "Filter by group owner or GID",
@@ -1232,6 +1234,7 @@
   "Getting data set templates.": "Getting data set templates.",
   "Global": "Global",
   "Global: in the Zowe home directory": "Global: in the Zowe home directory",
+  "Go back": "Go back",
   "Go to Local Filtering": "Go to Local Filtering",
   "Group": "Group",
   "Grouped Common methods into Singleton classes. <a>#2109</a>": "Grouped Common methods into Singleton classes. <a>#2109</a>",
@@ -1589,6 +1592,7 @@
   "Open Folder": "Open Folder",
   "Open Job": "Open Job",
   "Open selected data set": "Open selected data set",
+  "Open selected items": "Open selected items",
   "Open the **Command Palette** and search for Zowe Explorer: List Data Sets, select a profile, and enter a search filter.": "Open the **Command Palette** and search for Zowe Explorer: List Data Sets, select a profile, and enter a search filter.",
   "Open the data set": "Open the data set",
   "Open the job in the Jobs tree": "Open the job in the Jobs tree",
@@ -1636,6 +1640,7 @@
   "Pin": "Pin",
   "Pin or unpin the row": "Pin or unpin the row",
   "Pin rows to keep them visible while scrolling": "Pin rows to keep them visible while scrolling",
+  "Pin selected rows": "Pin selected rows",
   "Please enter a valid USS path.": "Please enter a valid USS path.",
   "Please install associated VS Code extension for custom credential manager or revert to default.": "Please install associated VS Code extension for custom credential manager or revert to default.",
   "Please review the following lines:": "Please review the following lines:",
@@ -1977,8 +1982,11 @@
   },
   "Size": "Size",
   "Solved issue with a conflicting keybinding for Edit History, changed keybinding to Ctrl+Alt+y for Windows and ⌘ Cmd+⌥ Opt+y for macOS. <a>#2543</a>": "Solved issue with a conflicting keybinding for Edit History, changed keybinding to Ctrl+Alt+y for Windows and ⌘ Cmd+⌥ Opt+y for macOS. <a>#2543</a>",
+  "Sort": "Sort",
   "Sort Direction": "Sort Direction",
   "Sort encoding by the latest encoding and filter any duplicate encoding if it already exists.": "Sort encoding by the latest encoding and filter any duplicate encoding if it already exists.",
+  "Sorted Ascending": "Sorted Ascending",
+  "Sorted Descending": "Sorted Descending",
   "Sorting updated for {0}/Node label": {
     "message": "Sorting updated for {0}",
     "comment": [
@@ -2171,6 +2179,7 @@
   "Unknown": "Unknown",
   "unknown retcode": "unknown retcode",
   "Unpin": "Unpin",
+  "Unpin selected rows": "Unpin selected rows",
   "Update": "Update",
   "Update Credentials": "Update Credentials",
   "Update dependencies for technical currency purposes": "Update dependencies for technical currency purposes",
@@ -2212,7 +2221,7 @@
   "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>": "Updated Zowe SDKs to 8.26.1 for technical currency. <a>#3696</a>",
   "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>": "Updated Zowe SDKs to 8.29.9 for technical currency. <a>#4040</a>",
   "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>": "Updated Zowe SDKs to 8.30.1 for technical currency. <a>#4079</a>",
-  "Updated Zowe SDKs to 8.31.0 for technical currency. <a>#4130</a>": "Updated Zowe SDKs to 8.31.0 for technical currency. <a>#4130</a>",
+  "Updated Zowe SDKs to 8.31.0 for technical currency. <a>#4117</a>": "Updated Zowe SDKs to 8.31.0 for technical currency. <a>#4117</a>",
   "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>": "Updated Zowe SDKs to version 8.28.0 to address an issue where copying a PDS member to a data set across LPARs failed. This occurred when the target PDS already contained members, but none matched the name of the PDS member being copied. <a>#3848</a>",
   "Updating data set templates.": "Updating data set templates.",
   "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
