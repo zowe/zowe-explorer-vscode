@@ -31,6 +31,11 @@ export const DS_EXTENSION_MAP: Map<string, (string | RegExp)[]> = new Map([
     [".log", ["LOG", /SPFLOG/]],
 ]);
 
+export enum DsType {
+    PdsMember,
+    Pds,
+    Ps,
+}
 export class DsEntry extends FileEntry implements DsEntryProps {
     public metadata: DsEntryMetadata;
 
