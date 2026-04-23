@@ -11,12 +11,14 @@
 
 import type * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import type { MainframeInteraction } from "@zowe/zowe-explorer-api";
-import { B64String } from "zowex-sdk";
+import { B64String } from "@zowe/zowex-for-zowe-sdk";
 import { SshCommonApi } from "./SshCommonApi";
 
 export class SshJesApi extends SshCommonApi implements MainframeInteraction.IJes {
     public async getJobsByParameters(params: zosjobs.IGetJobsParms): Promise<zosjobs.IJob[]> {
-        const response = await (await this.client).jobs.listJobs({
+        const response = await (
+            await this.client
+        ).jobs.listJobs({
             owner: params.owner?.toUpperCase(),
             prefix: params.prefix,
         });
@@ -26,12 +28,14 @@ export class SshJesApi extends SshCommonApi implements MainframeInteraction.IJes
                 jobname: item.name,
                 status: item.status,
                 retcode: item.retcode === "------" ? item.status : item.retcode,
-            }),
+            })
         ) as zosjobs.IJob[];
     }
 
     public async getJob(jobid: string): Promise<zosjobs.IJob> {
-        const response = await (await this.client).jobs.getStatus({
+        const response = await (
+            await this.client
+        ).jobs.getStatus({
             jobId: jobid.toUpperCase(),
         });
         return {
@@ -43,7 +47,9 @@ export class SshJesApi extends SshCommonApi implements MainframeInteraction.IJes
     }
 
     public async getSpoolFiles(_jobname: string, jobid: string): Promise<zosjobs.IJobFile[]> {
-        const response = await (await this.client).jobs.listSpools({
+        const response = await (
+            await this.client
+        ).jobs.listSpools({
             jobId: jobid.toUpperCase(),
         });
         return response.items as unknown as zosjobs.IJobFile[];
@@ -54,7 +60,9 @@ export class SshJesApi extends SshCommonApi implements MainframeInteraction.IJes
     }
 
     public async getSpoolContentById(_jobname: string, jobid: string, spoolId: number): Promise<string> {
-        const response = await (await this.client).jobs.readSpool({
+        const response = await (
+            await this.client
+        ).jobs.readSpool({
             spoolId,
             jobId: jobid.toUpperCase(),
         });
@@ -62,39 +70,45 @@ export class SshJesApi extends SshCommonApi implements MainframeInteraction.IJes
     }
 
     public async getJclForJob(job: zosjobs.IJob): Promise<string> {
-        const response = await (await this.client).jobs.getJcl({
+        const response = await (
+            await this.client
+        ).jobs.getJcl({
             jobId: job.jobid.toUpperCase(),
         });
         return response.data;
     }
 
     public async cancelJob(job: zosjobs.IJob): Promise<boolean> {
-        const response = await (await this.client).jobs.cancelJob({
+        const response = await (
+            await this.client
+        ).jobs.cancelJob({
             jobId: job.jobid.toUpperCase(),
         });
         return response.success;
     }
 
-    public async submitJcl(
-        jcl: string,
-        _internalReaderRecfm?: string,
-        _internalReaderLrecl?: string,
-    ): Promise<zosjobs.IJob> {
-        const response = await (await this.client).jobs.submitJcl({
+    public async submitJcl(jcl: string, _internalReaderRecfm?: string, _internalReaderLrecl?: string): Promise<zosjobs.IJob> {
+        const response = await (
+            await this.client
+        ).jobs.submitJcl({
             jcl: B64String.encode(jcl),
         });
         return { jobid: response.jobId, jobname: response.jobName } as zosjobs.IJob;
     }
 
     public async submitJob(jobDataSet: string): Promise<zosjobs.IJob> {
-        const response = await (await this.client).jobs.submitJob({
+        const response = await (
+            await this.client
+        ).jobs.submitJob({
             dsname: jobDataSet,
         });
         return { jobid: response.jobId, jobname: response.jobName } as zosjobs.IJob;
     }
 
     public async deleteJob(_jobname: string, jobid: string): Promise<void> {
-        const response = await (await this.client).jobs.deleteJob({
+        const response = await (
+            await this.client
+        ).jobs.deleteJob({
             jobId: jobid,
         });
         if (!response.success) {

@@ -413,14 +413,14 @@ importers:
         specifier: ^8.11.0
         version: 8.31.0(@zowe/imperative@8.31.0)
       '@zowe/zowe-explorer-api':
-        specifier: ^3.3.0
-        version: 3.4.2
+        specifier: 'workspace:* '
+        version: link:../zowe-explorer-api
+      '@zowe/zowex-for-zowe-sdk':
+        specifier: file:../../../zowe-native-proto/packages/sdk
+        version: zowex-sdk@file:../zowe-native-proto/packages/sdk(@zowe/imperative@8.31.0)(@zowe/zos-uss-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(rxjs@7.8.1)
       ssh2:
         specifier: ^1.16.0
         version: 1.17.0
-      zowex-sdk:
-        specifier: file:../../../zowe-native-proto/packages/sdk
-        version: file:../zowe-native-proto/packages/sdk(@zowe/imperative@8.31.0)(@zowe/zos-uss-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(rxjs@7.8.1)
     devDependencies:
       '@types/ssh2':
         specifier: ^1.15.4
@@ -2285,9 +2285,6 @@ packages:
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
-
-  '@zowe/zowe-explorer-api@3.4.2':
-    resolution: {integrity: sha512-0hqVlvneFxqT8MhiMI+FFxFEdLrqR/u3dZ0yMzaVwOoYb0QFMAuinzkIM6bkGkTYv+9aGC86942igp1hg9viDw==}
 
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
@@ -9877,25 +9874,6 @@ snapshots:
     dependencies:
       '@zowe/core-for-zowe-sdk': 8.31.0(@zowe/imperative@8.31.0)
       '@zowe/imperative': 8.31.0
-
-  '@zowe/zowe-explorer-api@3.4.2':
-    dependencies:
-      '@types/vscode': 1.89.0
-      '@zowe/core-for-zowe-sdk': 8.31.0(@zowe/imperative@8.31.0)
-      '@zowe/imperative': 8.31.0
-      '@zowe/secrets-for-zowe-sdk': 8.29.4
-      '@zowe/zos-console-for-zowe-sdk': 8.31.0(@zowe/core-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(@zowe/imperative@8.31.0)
-      '@zowe/zos-files-for-zowe-sdk': 8.31.0(@zowe/core-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(@zowe/imperative@8.31.0)
-      '@zowe/zos-jobs-for-zowe-sdk': 8.31.0(@zowe/core-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(@zowe/imperative@8.31.0)
-      '@zowe/zos-tso-for-zowe-sdk': 8.31.0(@zowe/core-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(@zowe/imperative@8.31.0)
-      '@zowe/zos-uss-for-zowe-sdk': 8.31.0(@zowe/imperative@8.31.0)
-      '@zowe/zosmf-for-zowe-sdk': 8.31.0(@zowe/core-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(@zowe/imperative@8.31.0)
-      async-mutex: 0.5.0
-      deep-object-diff: 1.1.9
-      mustache: 4.2.0
-      semver: 7.7.4
-    transitivePeerDependencies:
-      - supports-color
 
   abbrev@1.1.1: {}
 

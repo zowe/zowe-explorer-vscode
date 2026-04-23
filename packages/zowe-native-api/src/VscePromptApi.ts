@@ -12,7 +12,7 @@ import {
     type ProgressCallback,
     type qpItem,
     type qpOpts,
-} from "zowex-sdk";
+} from "@zowe/zowex-for-zowe-sdk";
 import { SshClientCache } from "./SshClientCache";
 
 export class VscePromptApi extends AbstractConfigManager {

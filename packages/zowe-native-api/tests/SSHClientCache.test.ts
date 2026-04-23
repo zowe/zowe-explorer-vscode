@@ -12,7 +12,7 @@
 import { imperative, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
-import { ZSshClient, ZSshUtils } from "zowex-sdk";
+import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { SshClientCache } from "../src/SshClientCache";
 import { deployWithProgress, getVsceConfig } from "../src/Utilities";
 
@@ -61,7 +61,7 @@ vi.mock("@zowe/zowe-explorer-api", () => {
     };
 });
 
-vi.mock("zowex-sdk", () => {
+vi.mock("@zowe/zowex-for-zowe-sdk", () => {
     return {
         ZSshClient: {
             create: vi.fn(),
@@ -163,7 +163,7 @@ describe("SshClientCache", () => {
                 expect.anything(),
                 expect.objectContaining({
                     keepAliveInterval: 30,
-                }),
+                })
             );
         });
 
@@ -185,7 +185,7 @@ describe("SshClientCache", () => {
                 expect.anything(),
                 expect.objectContaining({
                     requests: new Set(),
-                }),
+                })
             );
         });
 
@@ -307,9 +307,7 @@ describe("SshClientCache", () => {
             // Simulate profile deletion from config
             mockGetLoadedProfConfig.mockResolvedValueOnce(null);
 
-            await expect((cache as any).reloadClient(clientId, false)).rejects.toThrow(
-                /Could not load profile testProfile/,
-            );
+            await expect((cache as any).reloadClient(clientId, false)).rejects.toThrow(/Could not load profile testProfile/);
         });
     });
 
@@ -368,7 +366,7 @@ describe("SshClientCache", () => {
                 expect.stringContaining("stopped unexpectedly"),
                 "Reload",
                 "Reload and Retry",
-                "Close",
+                "Close"
             );
 
             expect(reloadSpy).toHaveBeenCalledWith(clientId, false);
@@ -386,7 +384,7 @@ describe("SshClientCache", () => {
                 expect.stringContaining("A request timed out."),
                 "Reload",
                 "Reload and Retry",
-                "Close",
+                "Close"
             );
             vi.mocked(vscode.window.showErrorMessage).mockClear();
             session.status = 1; // ServerStatus.DOWN
@@ -395,7 +393,7 @@ describe("SshClientCache", () => {
                 expect.stringContaining("A request timed out because the server is down."),
                 "Reload",
                 "Reload and Retry",
-                "Close",
+                "Close"
             );
         });
 
@@ -418,9 +416,7 @@ describe("SshClientCache", () => {
             const unsupportedError = new Error("Error CEE3561S");
             await (cache as any).handleClientError(clientId, unsupportedError);
 
-            expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-                expect.stringContaining("doesn't currently support this version of z/OS"),
-            );
+            expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(expect.stringContaining("doesn't currently support this version of z/OS"));
         });
 
         it("should show generic message for unclassified errors", async () => {
@@ -470,7 +466,7 @@ describe("SshClientCache", () => {
                     ...mockOpts,
                     onClose: expect.any(Function),
                     onError: expect.any(Function),
-                }),
+                })
             );
 
             const createCallArgs = vi.mocked(ZSshClient.create).mock.calls[0];

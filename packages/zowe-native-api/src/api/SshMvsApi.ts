@@ -22,7 +22,7 @@ import {
     imperative,
     type MainframeInteraction,
 } from "@zowe/zowe-explorer-api";
-import { B64String, type Dataset, type DatasetAttributes, type ds } from "zowex-sdk";
+import { B64String, type Dataset, type DatasetAttributes, type ds } from "@zowe/zowex-for-zowe-sdk";
 import { SshCommonApi } from "./SshCommonApi";
 
 class SshAttributesProvider implements IAttributesProvider {
@@ -65,16 +65,15 @@ class SshAttributesProvider implements IAttributesProvider {
 export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs {
     private attrProvider = new SshAttributesProvider();
 
-    public constructor(
-        dsAttrProvider?: DataSetAttributesProvider,
-        public profile?: imperative.IProfileLoaded,
-    ) {
+    public constructor(dsAttrProvider?: DataSetAttributesProvider, public profile?: imperative.IProfileLoaded) {
         super(profile);
         dsAttrProvider?.register(this.attrProvider);
     }
 
     public async dataSet(filter: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
-        const response = await (await this.client).ds.listDatasets({
+        const response = await (
+            await this.client
+        ).ds.listDatasets({
             pattern: filter,
             attributes: options?.attributes,
         });
@@ -108,7 +107,9 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
     }
 
     public async allMembers(dataSetName: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
-        const response = await (await this.client).ds.listDsMembers({
+        const response = await (
+            await this.client
+        ).ds.listDsMembers({
             dsname: dataSetName,
             attributes: options?.attributes,
             pattern: options?.pattern,
@@ -140,10 +141,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         });
     }
 
-    public async getContents(
-        dataSetName: string,
-        options: zosfiles.IDownloadSingleOptions,
-    ): Promise<zosfiles.IZosFilesResponse> {
+    public async getContents(dataSetName: string, options: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
         let writeStream = options.stream;
         if (options.file != null) {
             imperative.IO.createDirsSyncFromFilePath(options.file);
@@ -152,7 +150,9 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         if (writeStream == null) {
             throw new Error("Failed to get contents: No stream or file path provided");
         }
-        const response = await (await this.client).ds.readDataset({
+        const response = await (
+            await this.client
+        ).ds.readDataset({
             dsname: dataSetName,
             encoding: options.binary ? "binary" : options.encoding,
             // Pass stream if file is provided, otherwise use buffer to read into memory
@@ -165,14 +165,12 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         return this.buildZosFilesResponse({ etag: response.etag });
     }
 
-    public async uploadFromBuffer(
-        buffer: Buffer,
-        dataSetName: string,
-        options?: zosfiles.IUploadOptions,
-    ): Promise<zosfiles.IZosFilesResponse> {
+    public async uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
         let response: ds.WriteDatasetResponse;
         try {
-            response = await (await this.client).ds.writeDataset({
+            response = await (
+                await this.client
+            ).ds.writeDataset({
                 dsname: dataSetName,
                 encoding: options?.binary ? "binary" : options?.encoding,
                 data: B64String.encode(buffer),
@@ -187,15 +185,13 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         return this.buildZosFilesResponse({ etag: response.etag });
     }
 
-    public async putContents(
-        inputFilePath: string,
-        dataSetName: string,
-        options?: zosfiles.IUploadOptions,
-    ): Promise<zosfiles.IZosFilesResponse> {
+    public async putContents(inputFilePath: string, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
         // Determine if we need to generate a member name for PDS uploads
         const dsname = await this.resolveDataSetName(inputFilePath, dataSetName);
 
-        const response = await (await this.client).ds.writeDataset({
+        const response = await (
+            await this.client
+        ).ds.writeDataset({
             dsname,
             encoding: options?.encoding,
             stream: () => createReadStream(inputFilePath),
@@ -222,7 +218,9 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         }
 
         // Check if the target is a PDS by fetching data set attributes
-        const dsInfo = await (await this.client).ds.listDatasets({
+        const dsInfo = await (
+            await this.client
+        ).ds.listDatasets({
             pattern: dataSetName,
             attributes: true,
         });
@@ -270,7 +268,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
     public async createDataSet(
         _dataSetType: zosfiles.CreateDataSetTypeEnum,
         dataSetName: string,
-        options?: Partial<zosfiles.ICreateDataSetOptions>,
+        options?: Partial<zosfiles.ICreateDataSetOptions>
     ): Promise<zosfiles.IZosFilesResponse> {
         const datasetAttributes: DatasetAttributes = {
             dsname: dataSetName,
@@ -280,7 +278,9 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         };
         let response: ds.CreateDatasetResponse = { success: false };
         try {
-            response = await (await this.client).ds.createDataset({
+            response = await (
+                await this.client
+            ).ds.createDataset({
                 dsname: dataSetName,
                 attributes: datasetAttributes,
             });
@@ -292,13 +292,12 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         return this.buildZosFilesResponse(response, response.success);
     }
 
-    public async createDataSetMember(
-        dataSetName: string,
-        _options?: zosfiles.IUploadOptions,
-    ): Promise<zosfiles.IZosFilesResponse> {
+    public async createDataSetMember(dataSetName: string, _options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
         let response: ds.CreateMemberResponse = { success: false };
         try {
-            response = await (await this.client).ds.createMember({
+            response = await (
+                await this.client
+            ).ds.createMember({
                 dsname: dataSetName,
             });
             if (!response.success) {
@@ -311,26 +310,22 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         return this.buildZosFilesResponse(response, response.success);
     }
 
-    public async allocateLikeDataSet(
-        _dataSetName: string,
-        _likeDataSetName: string,
-    ): Promise<zosfiles.IZosFilesResponse> {
+    public async allocateLikeDataSet(_dataSetName: string, _likeDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Not yet implemented");
     }
 
     public async copyDataSetMember(
         { dsn: _fromDataSetName, member: _fromMemberName }: zosfiles.IDataSet,
         { dsn: _toDataSetName, member: _toMemberName }: zosfiles.IDataSet,
-        _options?: { replace?: boolean },
+        _options?: { replace?: boolean }
     ): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Not yet implemented");
     }
 
-    public async renameDataSet(
-        currentDataSetName: string,
-        newDataSetName: string,
-    ): Promise<zosfiles.IZosFilesResponse> {
-        const response = await (await this.client).ds.renameDataset({
+    public async renameDataSet(currentDataSetName: string, newDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
+        const response = await (
+            await this.client
+        ).ds.renameDataset({
             dsnameBefore: currentDataSetName,
             dsnameAfter: newDataSetName,
         });
@@ -339,12 +334,10 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         });
     }
 
-    public async renameDataSetMember(
-        dsname: string,
-        memberBefore: string,
-        memberAfter: string,
-    ): Promise<zosfiles.IZosFilesResponse> {
-        const response = await (await this.client).ds.renameMember({
+    public async renameDataSetMember(dsname: string, memberBefore: string, memberAfter: string): Promise<zosfiles.IZosFilesResponse> {
+        const response = await (
+            await this.client
+        ).ds.renameMember({
             dsname,
             memberBefore,
             memberAfter,
@@ -361,7 +354,9 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
     public async hRecallDataSet(dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
         let response: ds.RestoreDatasetResponse = { success: false };
         try {
-            response = await (await this.client).ds.restoreDataset({
+            response = await (
+                await this.client
+            ).ds.restoreDataset({
                 dsname: dataSetName,
             });
             if (!response.success) {
@@ -374,11 +369,10 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         return this.buildZosFilesResponse(response);
     }
 
-    public async deleteDataSet(
-        dataSetName: string,
-        _options?: zosfiles.IDeleteDatasetOptions,
-    ): Promise<zosfiles.IZosFilesResponse> {
-        const response = await (await this.client).ds.deleteDataset({
+    public async deleteDataSet(dataSetName: string, _options?: zosfiles.IDeleteDatasetOptions): Promise<zosfiles.IZosFilesResponse> {
+        const response = await (
+            await this.client
+        ).ds.deleteDataset({
             dsname: dataSetName,
         });
         return this.buildZosFilesResponse({

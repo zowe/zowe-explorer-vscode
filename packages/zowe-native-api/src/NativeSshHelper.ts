@@ -15,7 +15,7 @@ import { imperative } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { getVsceConfig } from "./VsceConfig";
 
-const sdkPackageJson = require("zowex-sdk/package.json");
+const sdkPackageJson = require("@zowe/zowex-for-zowe-sdk/package.json");
 const RUSSH_VERSION: string = sdkPackageJson.optionalDependencies!.russh;
 
 const NATIVE_TRIPLES: Record<string, Record<string, string>> = {

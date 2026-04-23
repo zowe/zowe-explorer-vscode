@@ -11,7 +11,7 @@
 
 import { Gui, imperative, ZoweExplorerApiType, type IApiExplorerExtender } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { ZSshUtils } from "zowex-sdk";
+import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils } from "./ConfigUtils";
 import { VscePromptApi } from "./VscePromptApi";
 import { SshClientCache } from "./SshClientCache";

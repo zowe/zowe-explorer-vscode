@@ -13,7 +13,7 @@ import { ImperativeError } from "@zowe/imperative";
 import { type SshSession, ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 import { AuthHandler, ErrorCorrelator, type IAuthMethods, imperative, type MainframeInteraction, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { type ZSshClient, ZSshUtils } from "zowex-sdk";
+import { type ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { SshClientCache } from "../SshClientCache";
 import { SshErrorHandler } from "../SshErrorHandler";
 

@@ -10,7 +10,7 @@
  */
 
 import { type IZoweTree, type IZoweTreeNode, type imperative, type IApiExplorerExtender } from "@zowe/zowe-explorer-api";
-import { ZSshClient } from "zowex-sdk";
+import { ZSshClient } from "@zowe/zowex-for-zowe-sdk";
 import { getVsceConfig } from "./VsceConfig";
 
 // biome-ignore lint/complexity/noStaticOnlyClass: Utilities class has static methods

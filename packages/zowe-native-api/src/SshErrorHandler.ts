@@ -11,7 +11,7 @@
 
 import { ImperativeError } from "@zowe/imperative";
 import { ErrorCorrelator, type ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
-import { RpcErrorCode, SshErrors } from "zowex-sdk";
+import { RpcErrorCode, SshErrors } from "@zowe/zowex-for-zowe-sdk";
 
 /**
  * Enhanced error handling utility for SSH operations using Zowe Explorer's ErrorCorrelator

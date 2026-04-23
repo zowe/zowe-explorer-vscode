@@ -14,7 +14,7 @@ import type { IProfile } from "@zowe/imperative";
 import { Gui, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import * as vscode from "vscode";
-import { type AbstractConfigManager, MESSAGE_TYPE, type PrivateKeyWarningOptions, ZSshClient } from "zowex-sdk";
+import { type AbstractConfigManager, MESSAGE_TYPE, type PrivateKeyWarningOptions, ZSshClient } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils, VscePromptApi } from "../src/ConfigUtils";
 import { getVsceConfig } from "../src/Utilities";
 
@@ -158,13 +158,8 @@ describe("SshConfigUtils", () => {
         it("should add a session when visible is true and session is not present", async () => {
             await ConfigUtils.showSessionInTree("testProfile", true);
 
-            expect(mockProvider.addSession).toHaveBeenCalledWith(
-                expect.objectContaining({ sessionName: "testProfile", profileType: "ssh" }),
-            );
-            expect(mockLocalStorage.setValue).toHaveBeenCalledWith(
-                "datasetProvider",
-                expect.objectContaining({ sessions: ["testProfile"] }),
-            );
+            expect(mockProvider.addSession).toHaveBeenCalledWith(expect.objectContaining({ sessionName: "testProfile", profileType: "ssh" }));
+            expect(mockLocalStorage.setValue).toHaveBeenCalledWith("datasetProvider", expect.objectContaining({ sessions: ["testProfile"] }));
         });
         it("should delete a session when visible is false and session is present", async () => {
             const fakeNode = { getProfileName: () => "testProfile" };
@@ -173,10 +168,7 @@ describe("SshConfigUtils", () => {
             await ConfigUtils.showSessionInTree("testProfile", false);
 
             expect(mockProvider.deleteSession).toHaveBeenCalledWith(fakeNode);
-            expect(mockLocalStorage.setValue).toHaveBeenCalledWith(
-                "datasetProvider",
-                expect.objectContaining({ sessions: [] }),
-            );
+            expect(mockLocalStorage.setValue).toHaveBeenCalledWith("datasetProvider", expect.objectContaining({ sessions: [] }));
         });
     });
     describe("VscePromptApi", () => {
@@ -490,17 +482,13 @@ describe("SshConfigUtils", () => {
                         oldHost: "/old/path",
                         newHost: "/new/path",
                     },
-                    vscode.ConfigurationTarget.Global,
+                    vscode.ConfigurationTarget.Global
                 );
             });
             it("adds a new host and path entry when serverPathMap is empty", () => {
                 mockGet.mockReturnValue(undefined);
                 (instance as any).storeServerPath("newHost", "/new/path");
-                expect(mockUpdate).toHaveBeenCalledWith(
-                    "serverInstallPath",
-                    { newHost: "/new/path" },
-                    vscode.ConfigurationTarget.Global,
-                );
+                expect(mockUpdate).toHaveBeenCalledWith("serverInstallPath", { newHost: "/new/path" }, vscode.ConfigurationTarget.Global);
             });
         });
 

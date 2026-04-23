@@ -10,7 +10,7 @@
  */
 
 import { ErrorCorrelator, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
-import { SshErrors } from "zowex-sdk";
+import { SshErrors } from "@zowe/zowex-for-zowe-sdk";
 
 /**
  * Registers all SSH-specific error correlations with the Zowe Explorer ErrorCorrelator

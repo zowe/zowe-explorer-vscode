@@ -12,7 +12,7 @@
 import type { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { imperative, ProfilesCache } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { type ClientOptions, type ExistingClientRequest, ZSshClient, ZSshUtils } from "zowex-sdk";
+import { type ClientOptions, type ExistingClientRequest, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils } from "./ConfigUtils";
 import { deployWithProgress } from "./ServerDeployment";
 import { getVsceConfig } from "./VsceConfig";
