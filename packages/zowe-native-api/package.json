@@ -14,9 +14,13 @@
       "default": "./lib/index.js"
     }
   },
+  "files": [
+    "lib"
+  ],
+  "types": "lib/index.d.ts",
   "scripts": {
-    "build": "tsc -p . --noEmit && pnpm madge",
-    "clean": "rimraf bin out coverage",
+    "build": "tsc -p ./ && pnpm madge",
+    "clean": "rimraf bin lib coverage",
     "compile": "rspack --mode development",
     "license": "node ../../scripts/updateLicenses.mjs",
     "lint": "npx @biomejs/biome check --write src benchmarks tests",

@@ -443,6 +443,15 @@
   "zowe.commands.useIntegratedTerminals": {
     "Allow commands to be executed using integrated terminals": ""
   },
+  "zowe.commands.zowex.connect": {
+    "Connect to zowex server on host...": ""
+  },
+  "zowe.commands.zowex.restart": {
+    "Restart zowex server on host...": ""
+  },
+  "zowe.commands.zowex.uninstall": {
+    "Uninstall zowex server from host...": ""
+  },
   "zowe.automaticProfileValidation": {
     "Allow automatic validation of profiles.": ""
   },
@@ -576,7 +585,7 @@
     "The amount of time to wait for a connection to be initiated with the server, in milliseconds.": ""
   },
   "zowe.settings.requestTimeout": {
-    "The amount of time to wait for a REST request to complete, in milliseconds.": ""
+    "The amount of time to wait for a request to complete, in milliseconds.": ""
   },
   "zowe.settings.displayReleaseNotes": {
     "Should display the Zowe Explorer release notes after an update.": ""
@@ -592,6 +601,27 @@
   },
   "zowe.table.hidePinnedRowsWarning": {
     "Hide the warning message when pinning many rows to table views.": ""
+  },
+  "zowe.zowex.keepAliveInterval": {
+    "Number of seconds between keep-alive messages to keep connection active. Set to 0 to disable keep-alive.": ""
+  },
+  "zowe.zowex.serverAutoUpdate": {
+    "Automatically re-deploy the Zowe Remote SSH server if out of date.": ""
+  },
+  "zowe.zowex.serverInstallPath": {
+    "Mapping of SSH hostname to server install path for that host. Defaults to '~/.zowe-server'.": ""
+  },
+  "zowe.zowex.workerCount": {
+    "Number of worker threads for the Zowe Remote SSH server. Each worker runs as a separate process in its own address space.": ""
+  },
+  "zowe.zowex.responseTimeout": {
+    "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.": ""
+  },
+  "zowe.zowex.experimentalNativeSsh": {
+    "Use an experimental native SSH client for improved performance. Not yet fully tested.": ""
+  },
+  "zowe.zowex.defaultHandshakeTimeout": {
+    "Time in milliseconds to wait for the SSH handshake to complete.": ""
   },
   "'{0}' not found in directory '{1}'": "",
   "(default)": "",

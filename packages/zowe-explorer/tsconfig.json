@@ -19,7 +19,8 @@
     "resolveJsonModule": true,
     "rootDir": ".",
     "paths": {
-      "@zowe/zowe-explorer-api": ["../zowe-explorer-api"]
+      "@zowe/zowe-explorer-api": ["../zowe-explorer-api"],
+      "@zowe/zowe-native-api": ["../zowe-native-api"]
     },
     "types": ["node", "jest"]
   },
@@ -30,5 +31,5 @@
     "./node_modules/vscode/vscode.d.ts",
     "./node_modules/vscode/lib/*"
   ],
-  "references": [{ "path": "../zowe-explorer-api" }]
+  "references": [{ "path": "../zowe-explorer-api" }, { "path": "../zowe-native-api" }]
 }

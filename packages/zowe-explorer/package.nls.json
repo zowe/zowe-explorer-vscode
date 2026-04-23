@@ -147,6 +147,9 @@
   "zowe.commands.uss.history": "Toggle if Unix Commands persist locally",
   "zowe.commands.alwaysEdit": "Allow commands to be edited before submitting",
   "zowe.commands.useIntegratedTerminals": "Allow commands to be executed using integrated terminals",
+  "zowe.commands.zowex.connect": "Connect to zowex server on host...",
+  "zowe.commands.zowex.restart": "Restart zowex server on host...",
+  "zowe.commands.zowex.uninstall": "Uninstall zowex server from host...",
   "zowe.automaticProfileValidation": "Allow automatic validation of profiles.",
   "zowe.pollInterval.info": "Default interval (in milliseconds) when polling spool files.",
   "zowe.jobs.paginate.enabled": "Toggle to enable job spool pagination.",
@@ -196,5 +199,12 @@
   "zowe.settings.zosmfMaxConcurrentRequests": "The maximum number of REST requests to process concurrently. Set to 0 to disable throttling.",
   "zowe.settings.zosmfRequestQueueTimeout": "The maximum amount of time a REST request should wait in the request queue before being cancelled, in milliseconds.",
   "zowe.table.maxPinnedRows": "Maximum number of rows that can be pinned to the top of table views.",
-  "zowe.table.hidePinnedRowsWarning": "Hide the warning message when pinning many rows to table views."
+  "zowe.table.hidePinnedRowsWarning": "Hide the warning message when pinning many rows to table views.",
+  "zowe.zowex.keepAliveInterval": "Number of seconds between keep-alive messages to keep connection active. Set to 0 to disable keep-alive.",
+  "zowe.zowex.serverAutoUpdate": "Automatically re-deploy the Zowe Remote SSH server if out of date.",
+  "zowe.zowex.serverInstallPath": "Mapping of SSH hostname to server install path for that host. Defaults to '~/.zowe-server'.",
+  "zowe.zowex.workerCount": "Number of worker threads for the Zowe Remote SSH server. Each worker runs as a separate process in its own address space.",
+  "zowe.zowex.responseTimeout": "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.",
+  "zowe.zowex.experimentalNativeSsh": "Use an experimental native SSH client for improved performance. Not yet fully tested.",
+  "zowe.zowex.defaultHandshakeTimeout": "Time in milliseconds to wait for the SSH handshake to complete."
 }

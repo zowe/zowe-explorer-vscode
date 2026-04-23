@@ -33,6 +33,7 @@ module.exports = {
                     "zowe-explorer": "Zowe Explorer",
                     "zowe-explorer-ftp-extension": "IBM z/OS FTP for Zowe Explorer",
                     "zowe-explorer-api": "Zowe Explorer APIs",
+                    "zowe-native-api": "Zowe Remote SSH APIs",
                 },
                 headerLine: "## TBD Release",
             },
