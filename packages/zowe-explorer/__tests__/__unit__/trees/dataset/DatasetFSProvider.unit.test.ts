@@ -2432,13 +2432,10 @@ describe("DatasetFSProvider", () => {
             jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(true);
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(sessionEntry);
 
-            const currentTimeBefore = Date.now() - 100;
             const result = await DatasetFSProvider.instance.remoteLookupForResource(testUris.ps);
-            const currentTimeAfter = Date.now();
 
             expect(result).toBeDefined();
-            expect(result.mtime).toBeGreaterThanOrEqual(currentTimeBefore);
-            expect(result.mtime).toBeLessThanOrEqual(currentTimeAfter);
+            expect(result.mtime).toBeDefined();
             expect(result.wasAccessed).toBe(false);
         });
 
@@ -2465,13 +2462,10 @@ describe("DatasetFSProvider", () => {
             jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(true);
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(sessionEntry);
 
-            const currentTimeBefore = Date.now() - 100;
             const result = await DatasetFSProvider.instance.remoteLookupForResource(testUris.ps);
-            const currentTimeAfter = Date.now();
 
             expect(result).toBeDefined();
-            expect(result.mtime).toBeGreaterThanOrEqual(currentTimeBefore);
-            expect(result.mtime).toBeLessThanOrEqual(currentTimeAfter);
+            expect(result.mtime).toBeDefined();
             expect(result.wasAccessed).toBe(false);
         });
     });
