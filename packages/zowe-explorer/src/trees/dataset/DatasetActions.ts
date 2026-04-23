@@ -1929,22 +1929,27 @@ export class DatasetActions {
 
         const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
 
-        switch (Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption)) {
-            case Definitions.JobSubmitDialogOpts.OtherUserJobs:
-                if (!ownsJob && !(await showConfirmationDialog())) {
-                    return false;
+        // Handle undefined, null, or non-string values (e.g., legacy boolean values)
+        if (!confirmationOption || typeof confirmationOption !== "string") {
+            return true; // Default behavior: allow submission without confirmation
+        }
+
+        // Compare directly with localized values
+        const dialogOption = Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption);
+
+        switch (dialogOption) {
+            case Definitions.JobSubmitDialogOpts.YourJobs:
+                if (ownsJob) {
+                    return await showConfirmationDialog();
                 }
                 break;
-            case Definitions.JobSubmitDialogOpts.YourJobs:
-                if (ownsJob && !(await showConfirmationDialog())) {
-                    return false;
+            case Definitions.JobSubmitDialogOpts.OtherUserJobs:
+                if (!ownsJob) {
+                    return await showConfirmationDialog();
                 }
                 break;
             case Definitions.JobSubmitDialogOpts.AllJobs:
-                if (!(await showConfirmationDialog())) {
-                    return false;
-                }
-                break;
+                return await showConfirmationDialog();
             case Definitions.JobSubmitDialogOpts.Disabled:
             default:
                 break;
