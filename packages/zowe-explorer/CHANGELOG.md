@@ -36,6 +36,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where focus was lost on a previously selected tree item after opening a Zowe resource (Data set, USS file, or Job) in the editor and closing it using `Ctrl+W`. Screen readers will now announce when focus is restored. [#4025](https://github.com/zowe/zowe-explorer-vscode/issues/4025)
 - Fixed an issue where loading profiles could wrongly assume token authentication if parent profile defines multiple auth types. [#4105](https://github.com/zowe/zowe-explorer-vscode/issues/4105)
 - Fixed an issue where the USS tree collapsed down to the top level set from the initial filter.[#3932](https://github.com/zowe/zowe-explorer-vscode/issues/3932)
+- Fixed an issue that would allow multiple member-filter on a single dataset search. [#2037](https://github.com/zowe/zowe-explorer-vscode/issues/2037)
 - Fixed an issue where the editor tab remained open after deleting a sequential data set. The editor now automatically closes when the data set is deleted. [#4050](https://github.com/zowe/zowe-explorer-vscode/issues/4050)
 - Fixed extended to include PDS members and USS files. [#4050](https://github.com/zowe/zowe-explorer-vscode/issues/4050)
 
