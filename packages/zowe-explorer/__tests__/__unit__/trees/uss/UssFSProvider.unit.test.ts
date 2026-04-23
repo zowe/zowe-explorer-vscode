@@ -1696,6 +1696,67 @@ describe("UssFSProvider", () => {
             expect(err).toBeDefined();
             lookupParentDirMock.mockRestore();
         });
+
+        it("rolls back optimistic entry creation when a non-412 error occurs", async () => {
+            const folder = {
+                ...testEntries.folder,
+                entries: new Map(),
+                size: 0,
+                metadata: { ...testEntries.folder.metadata },
+            };
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
+            // Mock uploadEntry to throw a non-412 error
+            const uploadEntryMock = jest.spyOn(UssFSProvider.instance as any, "uploadEntry").mockRejectedValueOnce(new Error("Network error"));
+            const _handleErrorMock = jest.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation();
+            const fireSoonMock = jest.spyOn(UssFSProvider.instance as any, "fireSoon").mockImplementation();
+            const newContents = new Uint8Array([1, 2, 3]);
+
+            await expect(UssFSProvider.instance.writeFile(testUris.file, newContents, { create: true, overwrite: true })).rejects.toThrow(
+                "Network error"
+            );
+
+            // Verify the entry was optimistically created then rolled back
+            expect(folder.entries.has("aFile.txt")).toBe(false);
+            expect(folder.size).toBe(0);
+            expect(_handleErrorMock).toHaveBeenCalled();
+
+            lookupParentDirMock.mockRestore();
+            uploadEntryMock.mockRestore();
+            _handleErrorMock.mockRestore();
+            fireSoonMock.mockRestore();
+        });
+
+        it("rolls back optimistic entry creation when user rejects conflict resolution", async () => {
+            const folder = {
+                ...testEntries.folder,
+                entries: new Map(),
+                size: 0,
+                metadata: { ...testEntries.folder.metadata },
+            };
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
+            // Mock uploadEntry to throw a 412 error
+            const uploadEntryMock = jest
+                .spyOn(UssFSProvider.instance as any, "uploadEntry")
+                .mockRejectedValueOnce(new Error("Rest API failure with HTTP(S) status 412"));
+            // Mock user choosing NOT to overwrite (e.g., choosing "Compare" option)
+            const handleConflictMock = jest.spyOn(UssFSProvider.instance as any, "_handleConflict").mockResolvedValue(ConflictViewSelection.Compare);
+            const fireSoonMock = jest.spyOn(UssFSProvider.instance as any, "fireSoon").mockImplementation();
+            const newContents = new Uint8Array([1, 2, 3]);
+
+            await expect(UssFSProvider.instance.writeFile(testUris.file, newContents, { create: true, overwrite: true })).rejects.toThrow(
+                "Conflict: Remote contents have changed."
+            );
+
+            // Verify the entry was optimistically created then rolled back
+            expect(folder.entries.has("aFile.txt")).toBe(false);
+            expect(folder.size).toBe(0);
+            expect(handleConflictMock).toHaveBeenCalled();
+
+            lookupParentDirMock.mockRestore();
+            uploadEntryMock.mockRestore();
+            handleConflictMock.mockRestore();
+            fireSoonMock.mockRestore();
+        });
     });
 
     describe("makeEmptyFileWithEncoding", () => {

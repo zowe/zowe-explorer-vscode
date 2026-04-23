@@ -492,7 +492,7 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Replace");
         const createEntrySpy = jest.spyOn(UssFSProvider.instance, "createEntry");
         const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "fireSoon");
-        const existsSpy = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
 
         await USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
 
@@ -525,7 +525,7 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Replace");
         const createEntrySpy = jest.spyOn(UssFSProvider.instance, "createEntry");
         const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "fireSoon");
-        const existsSpy = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+        jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
 
         const mockParent = {
             entries: new Map([["testDir", { name: "testDir" }]]),
