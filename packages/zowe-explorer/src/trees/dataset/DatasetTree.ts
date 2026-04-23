@@ -1767,15 +1767,37 @@ Would you like to do this now?`,
     }
 
     public extractPatterns(userInput: string): DatasetMatch[] {
-        // Split the user input by comma to handle each pattern.
-        return userInput.split(",").map((p) => {
+        // Split the user input by commas, but only on commas outside parentheses.
+        // This allows member patterns like dataset(a*,b*) to stay together.
+        const segments: string[] = [];
+        let current = "";
+        let depth = 0;
+        for (const ch of userInput) {
+            if (ch === "(") {
+                depth++;
+                current += ch;
+            } else if (ch === ")") {
+                depth = Math.max(0, depth - 1);
+                current += ch;
+            } else if (ch === "," && depth === 0) {
+                segments.push(current);
+                current = "";
+            } else {
+                current += ch;
+            }
+        }
+        if (current.length > 0) {
+            segments.push(current);
+        }
+
+        return segments.map((p) => {
             // Check if the pattern contains parentheses with text inside (member wildcard)
-            const match = /((?:.{1,8}){1,4})\((.{0,8})\)/.exec(p);
+            const match = /^\s*(.*?)\((.+)\)\s*$/.exec(p);
             if (match) {
                 const [, dataSetName, memberName] = match;
                 return {
-                    dsn: dataSetName,
-                    member: memberName,
+                    dsn: dataSetName.trim(),
+                    member: memberName.trim(),
                 };
             }
 
@@ -1819,13 +1841,16 @@ Would you like to do this now?`,
     private patternAppliesToChild(child: IZoweDatasetTreeNode, item: DatasetMatch): boolean {
         const name = (child.label as string).split(".");
         let includes = false;
-        if (!child.pattern) {
-            let index = 0;
-            for (const each of item.dsn.split(".")) {
-                includes = this.checkFilterPattern(name[index], each);
-                child.pattern = includes ? item.dsn : "";
-                index++;
+        let index = 0;
+        for (const each of item.dsn.split(".")) {
+            includes = this.checkFilterPattern(name[index], each);
+            index++;
+            if (!includes) {
+                break;
             }
+        }
+        if (includes) {
+            child.pattern = child.pattern ? child.pattern + "," + item.dsn : item.dsn;
         }
 
         return includes;
@@ -1836,7 +1861,7 @@ Would you like to do this now?`,
             for (const item of patterns.filter((p) => p.member && this.patternAppliesToChild(child, p))) {
                 // Only apply to PDS that match the given patterns
                 if (SharedContext.isPds(child)) {
-                    child.memberPattern = item.member;
+                    child.memberPattern = child.memberPattern ? child.memberPattern + "," + item.member : item.member;
                     if (!SharedContext.isFilterFolder(child)) {
                         // Reset to clean context: stripped of _fav and profile suffix
                         // Filtered PDS must not be favoritable; withProfile re-adds the profile at the end
