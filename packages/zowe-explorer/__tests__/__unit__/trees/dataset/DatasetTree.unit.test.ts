@@ -37,10 +37,7 @@ import {
     FsAbstractUtils,
     ZoweVsCodeExtension,
     DsType,
-<<<<<<< HEAD
-=======
     Paginator,
->>>>>>> origin/main
 } from "@zowe/zowe-explorer-api";
 import { Constants, JwtCheckResult } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
@@ -2854,11 +2851,8 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
     it("updates stats with modified date and user ID if provided in API", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
-<<<<<<< HEAD
-=======
         jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
         jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
->>>>>>> origin/main
         jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);

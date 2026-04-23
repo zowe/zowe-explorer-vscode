@@ -364,11 +364,7 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
 
         const createEntrySpy = jest.spyOn(UssFSProvider.instance, "createEntry");
-<<<<<<< HEAD
-        const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "_fireSoon");
-=======
         const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "fireSoon");
->>>>>>> origin/main
         const writeFileSpy = jest.spyOn(vscode.workspace.fs, "writeFile").mockResolvedValueOnce();
 
         await USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
@@ -408,28 +404,18 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Cancel");
 
         const createEntrySpy = jest.spyOn(UssFSProvider.instance, "createEntry");
-<<<<<<< HEAD
-        const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "_fireSoon");
-        const writeFileSpy = jest.spyOn(vscode.workspace.fs, "writeFile").mockResolvedValueOnce();
-=======
         const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "fireSoon");
         const writeFileSpy = jest.spyOn(vscode.workspace.fs, "writeFile").mockResolvedValueOnce();
         createEntrySpy.mockClear();
         fireSoonSpy.mockClear();
->>>>>>> origin/main
         writeFileSpy.mockClear();
 
         await USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
 
         expect(fileListSpy).toHaveBeenCalledWith("/test/path");
         expect(showMessageSpy).toHaveBeenCalled();
-<<<<<<< HEAD
-        expect(createEntrySpy).toHaveBeenCalled();
-        expect(fireSoonSpy).toHaveBeenCalled();
-=======
         expect(createEntrySpy).not.toHaveBeenCalled(); // Cancelled - no optimistic entry creation
         expect(fireSoonSpy).not.toHaveBeenCalled(); // Cancelled - no notification
->>>>>>> origin/main
         expect(createSpy).not.toHaveBeenCalled(); // Cancelled
         expect(writeFileSpy).not.toHaveBeenCalled(); // Cancelled
     });
