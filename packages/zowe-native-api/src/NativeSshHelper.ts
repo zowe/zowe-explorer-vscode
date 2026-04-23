@@ -90,7 +90,7 @@ export function watchNativeSshSetting(context: vscode.ExtensionContext): vscode.
     handleEnabled();
 
     return vscode.workspace.onDidChangeConfiguration((e) => {
-        if (e.affectsConfiguration("zowex-vsce.experimentalNativeSsh")) {
+        if (e.affectsConfiguration("zowe.zowex.experimentalNativeSsh")) {
             handleEnabled();
         }
     });

@@ -126,6 +126,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:1",
                 mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: true },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
@@ -136,6 +137,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:2",
                 mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: true },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -147,6 +149,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:3",
                 mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: true },
@@ -160,6 +163,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:4",
                 mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -171,6 +175,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:5",
                 mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -183,6 +188,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:6",
                 mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -200,6 +206,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:7",
                 mock: [
+                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
