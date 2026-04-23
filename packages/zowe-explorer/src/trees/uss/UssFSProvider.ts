@@ -134,7 +134,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 // When listing a folder, the folder's stats will be represented as the "." entry.
                 const apiMtime = (fileResp.apiResponse?.items ?? [])?.[0]?.mtime;
 
-                if (apiMtime === undefined) {
+                if (apiMtime == null) {
                     entry.wasAccessed = false;
                     entry.mtime = Date.now();
                 } else {
