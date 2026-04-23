@@ -143,7 +143,9 @@ export class USSActions {
                                 parent.entries.delete(fileName);
                                 parent.size -= 1;
                             }
-                        } catch {}
+                        } catch (err) {
+                            ZoweLogger.trace("Failed to clean up cache entry: " + err.message);
+                        }
                     }
                     throw error;
                 }

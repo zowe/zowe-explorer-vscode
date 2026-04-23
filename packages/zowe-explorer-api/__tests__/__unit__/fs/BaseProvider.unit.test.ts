@@ -86,6 +86,66 @@ describe("diffOverwrite", () => {
         expect(blockMocks.lookupAsFileMock).toHaveBeenCalledWith(globalMocks.testFileUri);
         expect(blockMocks.writeFileMock).not.toHaveBeenCalled();
     });
+
+    it("calls writeFile with closeEditor=true by default (single parameter overload)", async () => {
+        const blockMocks = getBlockMocks();
+        const fsEntry = {
+            ...globalMocks.fileFsEntry,
+            conflictData: {
+                contents: new Uint8Array([4, 5, 6]),
+                etag: undefined,
+                size: 3,
+            },
+        };
+        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        blockMocks.lookupAsFileMock.mockReturnValueOnce(fsEntry);
+
+        const prov = new (BaseProvider as any)();
+        await prov.diffOverwrite(globalMocks.testFileUri); // Single parameter - should close editor
+
+        expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
+        executeCommandMock.mockRestore();
+    });
+
+    it("calls writeFile with closeEditor=false when explicitly set (two parameter overload)", async () => {
+        const blockMocks = getBlockMocks();
+        const fsEntry = {
+            ...globalMocks.fileFsEntry,
+            conflictData: {
+                contents: new Uint8Array([4, 5, 6]),
+                etag: undefined,
+                size: 3,
+            },
+        };
+        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        blockMocks.lookupAsFileMock.mockReturnValueOnce(fsEntry);
+
+        const prov = new (BaseProvider as any)();
+        await prov.diffOverwrite(globalMocks.testFileUri, false); // Two parameters - should NOT close editor
+
+        expect(executeCommandMock).not.toHaveBeenCalledWith("workbench.action.closeActiveEditor");
+        executeCommandMock.mockRestore();
+    });
+
+    it("calls writeFile with closeEditor=true when explicitly set (two parameter overload)", async () => {
+        const blockMocks = getBlockMocks();
+        const fsEntry = {
+            ...globalMocks.fileFsEntry,
+            conflictData: {
+                contents: new Uint8Array([4, 5, 6]),
+                etag: undefined,
+                size: 3,
+            },
+        };
+        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+        blockMocks.lookupAsFileMock.mockReturnValueOnce(fsEntry);
+
+        const prov = new (BaseProvider as any)();
+        await prov.diffOverwrite(globalMocks.testFileUri, true); // Two parameters - should close editor
+
+        expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
+        executeCommandMock.mockRestore();
+    });
 });
 
 describe("diffUseRemote", () => {

@@ -46,8 +46,15 @@ export class BaseProvider {
 
     /**
      * Action for overwriting the remote contents with local data from the provider.
-     * @param remoteUri The "remote conflict" URI shown in the diff view
+     * @param uri The URI shown in the diff view
      */
+    public async diffOverwrite(uri: vscode.Uri): Promise<void>;
+    /**
+     * Action for overwriting the remote contents with local data from the provider.
+     * @param uri The URI shown in the diff view
+     * @param closeEditor Whether to close the editor after overwriting
+     */
+    public async diffOverwrite(uri: vscode.Uri, closeEditor: boolean): Promise<void>;
     public async diffOverwrite(uri: vscode.Uri, closeEditor: boolean = true): Promise<void> {
         const fsEntry = this._lookupAsFile(uri);
         if (fsEntry == null) {

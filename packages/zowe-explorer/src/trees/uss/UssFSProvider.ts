@@ -792,7 +792,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         } catch (err) {
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 // Some unknown error happened, rollback optimistic entry creation
-                if (isNew && parentDir.entries.has(fileName)) {
+                if (isNew && parentDir?.entries.has(fileName)) {
                     parentDir.entries.delete(fileName);
                     parentDir.size -= 1;
                 }
@@ -1103,6 +1103,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param uri The URI that represents the new file or directory path
      * @param ussType The type of entry to create ("file" or "directory")
      * @returns The newly created USS entry (either UssFile or UssDirectory)
+     * @throws lookupParentDirectory throws an error if the parent directory is not found
      */
     public createEntry(uri: vscode.Uri, ussType: "file" | "directory"): UssFile | UssDirectory {
         const basename = path.posix.basename(uri.path);
