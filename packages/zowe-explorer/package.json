@@ -1065,7 +1065,7 @@
           "group": "inline@1"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(session|pds).*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(session|pds).*/ && !listMultiSelection && zowe.vscode-extension-for-zowe.showZoweResources",
           "command": "zowe.ds.tableView",
           "group": "100_zowe_tableview"
         },
@@ -1500,7 +1500,7 @@
           "group": "099_zowe_jobsProfileAuthentication"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection && zowe.vscode-extension-for-zowe.showZoweResources",
           "command": "zowe.jobs.tableView",
           "group": "100_zowe_tableview"
         },
@@ -2196,6 +2196,13 @@
           "default": false,
           "description": "%zowe.settings.overrideWithEnvironmentVariables%",
           "scope": "window"
+        },
+        "zowe.featureEnablement.tableView": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "**Table View for Datasets and Jobs**\n\nEnable the table view feature that allows viewing datasets and jobs in a tabular format in the Zowe Resources panel.",
+          "scope": "window",
+          "order": 1
         },
         "zowe.settings.socketConnectTimeout": {
           "type": "number",

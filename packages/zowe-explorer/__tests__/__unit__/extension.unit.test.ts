@@ -32,10 +32,12 @@ import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 import { JobTree } from "../../src/trees/job/JobTree";
 import { MockedProperty } from "../__mocks__/mockUtils";
 import { ZoweExplorerApiRegister } from "../../src/extending/ZoweExplorerApiRegister";
+import { TableViewUtils } from "../../src/utils/TableViewUtils";
 
 jest.mock("../../src/utils/LoggerUtils");
 jest.mock("../../src/tools/ZoweLogger");
 jest.mock("../../src/utils/ReleaseNotes");
+jest.mock("../../src/utils/TableViewUtils");
 jest.mock("vscode");
 jest.mock("fs");
 jest.mock("fs-extra");
@@ -507,6 +509,29 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that activate correctly executes", () => {
         expect(allCommands.map((c) => c.cmd)).toEqual(globalMocks.expectedCommands);
+    });
+
+    it("Tests that TableViewUtils.initialize is called during activation", async () => {
+        const initializeSpy = jest.spyOn(TableViewUtils, "initialize");
+
+        globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
+        globalMocks.mockExistsSync.mockReturnValueOnce(false);
+        globalMocks.mockGetConfiguration.mockReturnValue({
+            persistence: true,
+            get: (_setting: string) => "",
+            update: jest.fn(),
+            inspect: (_configuration: string) => {
+                return {
+                    workspaceValue: undefined,
+                    globalValue: undefined,
+                };
+            },
+        });
+
+        await extension.activate(globalMocks.mockExtension);
+
+        expect(initializeSpy).toHaveBeenCalledWith(globalMocks.mockExtension);
+        initializeSpy.mockRestore();
     });
 
     it("Tests that activate() fails when trying to load with an invalid config", async () => {
