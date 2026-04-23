@@ -348,7 +348,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
 
         this.tooltip = USSUtils.injectAdditionalDataToTooltip(this, this.fullPath);
-        this.dirty = true;
+        // Don't set dirty = true here as it can cause the parent directory to refresh and collapse
+        // The visual update is handled by setIcon -> nodeDataChanged
     }
 
     public get openedDocumentInstance(): vscode.TextDocument {
@@ -446,7 +447,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public setIcon(iconPath: { light: string; dark: string }): void {
         ZoweLogger.trace("ZoweUSSNode.setIcon called.");
         this.iconPath = iconPath;
-        vscode.commands.executeCommand("zowe.uss.refreshUSSInTree", this);
+        // Use nodeDataChanged instead of refreshElement to avoid collapsing the tree
+        // refreshElement marks the node as dirty which triggers a full parent refresh
+        SharedTreeProviders.providers.uss?.nodeDataChanged?.(this);
     }
 
     public async deleteUSSNode(ussFileProvider: Types.IZoweUSSTreeType, _filePath: string, cancelled: boolean = false): Promise<void> {
@@ -493,6 +496,20 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (parentEquivNode != null) {
             // Refresh the correct node (parent of node to delete) to reflect changes
             ussFileProvider.refreshElement(parentEquivNode);
+        }
+
+        if (this.resourceUri) {
+            const nodePath = this.resourceUri.path;
+            const tabsToClose = vscode.window.tabGroups.all
+                .flatMap((group) => group.tabs)
+                .filter((tab) => {
+                    const uri = (tab.input as any)?.uri;
+                    if (!uri) return false;
+                    return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
+                });
+            if (tabsToClose.length > 0) {
+                await vscode.window.tabGroups.close(tabsToClose);
+            }
         }
     }
 

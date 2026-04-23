@@ -730,6 +730,122 @@ describe("ZoweUSSNode Unit Tests - node.setEncoding() and encoding behaviors", (
         node.contextValue = Constants.USS_SESSION_CONTEXT;
         expect(node.setEncoding.bind(node)).toThrow("Cannot set encoding for node with context ussSession");
     });
+
+    it("does not mark node as dirty when setting encoding", () => {
+        const globalMocks = createGlobalMocks();
+        const binaryEncoding = { kind: "binary" };
+        getEncodingMock.mockReturnValue(binaryEncoding);
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
+        node.dirty = false;
+        node.setEncoding(binaryEncoding);
+        // Verify that dirty flag is not set to true, preventing parent refresh
+        expect(node.dirty).toBe(false);
+    });
+
+    it("calls nodeDataChanged instead of refreshElement when setting encoding", () => {
+        const globalMocks = createGlobalMocks();
+        const binaryEncoding = { kind: "binary" };
+        getEncodingMock.mockReturnValue(binaryEncoding);
+
+        // Mock the USS tree provider
+        const mockNodeDataChanged = jest.fn();
+        const mockUssProvider = {
+            nodeDataChanged: mockNodeDataChanged,
+        };
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
+            uss: mockUssProvider,
+        } as any);
+
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
+
+        node.setEncoding(binaryEncoding);
+
+        // Verify nodeDataChanged was called (which only repaints, doesn't refresh)
+        expect(mockNodeDataChanged).toHaveBeenCalledWith(node);
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function node.setIcon()", () => {
+    it("calls nodeDataChanged instead of refreshElement to prevent tree collapse", () => {
+        const globalMocks = createGlobalMocks();
+        const mockNodeDataChanged = jest.fn();
+        const mockUssProvider = {
+            nodeDataChanged: mockNodeDataChanged,
+        };
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
+            uss: mockUssProvider,
+        } as any);
+
+        const node = new ZoweUSSNode({
+            label: "iconTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
+
+        const iconPath = {
+            light: "/path/to/light/icon.svg",
+            dark: "/path/to/dark/icon.svg",
+        };
+
+        node.setIcon(iconPath);
+
+        // Verify nodeDataChanged was called instead of refreshElement
+        expect(mockNodeDataChanged).toHaveBeenCalledWith(node);
+        expect(node.iconPath).toEqual(iconPath);
+    });
+
+    it("handles missing USS provider gracefully", () => {
+        const globalMocks = createGlobalMocks();
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
+            uss: undefined,
+        } as any);
+
+        const node = new ZoweUSSNode({
+            label: "iconTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
+
+        const iconPath = {
+            light: "/path/to/light/icon.svg",
+            dark: "/path/to/dark/icon.svg",
+        };
+
+        // Should not throw error when provider is undefined
+        expect(() => node.setIcon(iconPath)).not.toThrow();
+        expect(node.iconPath).toEqual(iconPath);
+    });
+
+    it("handles missing nodeDataChanged method gracefully", () => {
+        const globalMocks = createGlobalMocks();
+        const mockUssProvider = {} as any; // Provider without nodeDataChanged
+        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
+            uss: mockUssProvider,
+        } as any);
+
+        const node = new ZoweUSSNode({
+            label: "iconTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
+
+        const iconPath = {
+            light: "/path/to/light/icon.svg",
+            dark: "/path/to/dark/icon.svg",
+        };
+
+        // Should not throw error when nodeDataChanged is undefined
+        expect(() => node.setIcon(iconPath)).not.toThrow();
+        expect(node.iconPath).toEqual(iconPath);
+    });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
@@ -803,6 +919,82 @@ describe("ZoweUSSNode Unit Tests - Function node.deleteUSSNode()", () => {
 
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
         expect(blockMocks.testUSSTree.refresh).not.toHaveBeenCalled();
+    });
+
+    it("Tests that open USS file editors are closed when file is deleted", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        const ussFileNode = new ZoweUSSNode({
+            label: "testfile.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.mParent,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        ussFileNode.fullPath = "/u/myuser/testfile.txt";
+        ussFileNode.parentPath = "/u/myuser";
+
+        const fileTab = { input: { uri: ussFileNode.resourceUri } };
+        (vscode.window.tabGroups as any).all = [{ tabs: [fileTab] }];
+        (vscode.window.tabGroups.close as jest.Mock).mockResolvedValue(undefined);
+
+        await ussFileNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
+
+        expect(vscode.window.tabGroups.close).toHaveBeenCalledWith([fileTab]);
+        (vscode.window.tabGroups as any).all = [];
+    });
+
+    it("Tests that open USS folder editors are closed when folder is deleted", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        const ussFolderNode = new ZoweUSSNode({
+            label: "testfolder",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            parentNode: blockMocks.mParent,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        ussFolderNode.fullPath = "/u/myuser/testfolder";
+        ussFolderNode.parentPath = "/u/myuser";
+        ussFolderNode.contextValue = Constants.USS_DIR_CONTEXT;
+
+        const childTab = { input: { uri: { path: ussFolderNode.resourceUri.path + "/file1.txt" } } };
+        const unrelatedTab = { input: { uri: { path: "/other/unrelated.txt" } } };
+        (vscode.window.tabGroups as any).all = [{ tabs: [childTab, unrelatedTab] }];
+        (vscode.window.tabGroups.close as jest.Mock).mockResolvedValue(undefined);
+
+        await ussFolderNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
+
+        expect(vscode.window.tabGroups.close).toHaveBeenCalledWith([childTab]);
+        (vscode.window.tabGroups as any).all = [];
+    });
+
+    it("Tests that deletion does not close tabs when no resourceUri", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        const ussFileNode = new ZoweUSSNode({
+            label: "testfile.txt",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.mParent,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        ussFileNode.fullPath = "/u/myuser/testfile.txt";
+        ussFileNode.parentPath = "/u/myuser";
+        ussFileNode.resourceUri = undefined;
+
+        (vscode.window.tabGroups.close as jest.Mock).mockClear();
+        (vscode.window.tabGroups as any).all = [];
+
+        await ussFileNode.deleteUSSNode(blockMocks.testUSSTree, "", false);
+
+        expect(vscode.window.tabGroups.close).not.toHaveBeenCalled();
     });
 });
 
