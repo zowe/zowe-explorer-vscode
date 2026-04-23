@@ -2285,4 +2285,69 @@ describe("DatasetFSProvider", () => {
             });
         });
     });
+
+    describe("mtime handling for undefined values", () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        it("handles remoteLookupForResource with missing m4date", async () => {
+            const mockMvsApi = {
+                dataSet: jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [{
+                            dsname: "USER.DATA.PS"
+                        }]
+                    }
+                }),
+            };
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+
+            const sessionEntry = new FilterEntry("sestest");
+            sessionEntry.metadata = testEntries.session.metadata;
+            jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(true);
+            jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(sessionEntry);
+
+            const currentTimeBefore = Date.now() - 100;
+            const result = await DatasetFSProvider.instance.remoteLookupForResource(testUris.ps);
+            const currentTimeAfter = Date.now();
+
+            expect(result).toBeDefined();
+            expect(result.mtime).toBeGreaterThanOrEqual(currentTimeBefore);
+            expect(result.mtime).toBeLessThanOrEqual(currentTimeAfter);
+            expect(result.wasAccessed).toBe(false);
+        });
+
+        it("handles remoteLookupForResource with falsy m4date", async () => {
+            const mockMvsApi = {
+                dataSet: jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [{
+                            dsname: "USER.DATA.PS",
+                            m4date: "",
+                            mtime: "12:34:56",
+                            msec: "123"
+                        }]
+                    }
+                }),
+            };
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+
+            const sessionEntry = new FilterEntry("sestest");
+            sessionEntry.metadata = testEntries.session.metadata;
+            jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(true);
+            jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(sessionEntry);
+
+            const currentTimeBefore = Date.now() - 100;
+            const result = await DatasetFSProvider.instance.remoteLookupForResource(testUris.ps);
+            const currentTimeAfter = Date.now();
+
+            expect(result).toBeDefined();
+            expect(result.mtime).toBeGreaterThanOrEqual(currentTimeBefore);
+            expect(result.mtime).toBeLessThanOrEqual(currentTimeAfter);
+            expect(result.wasAccessed).toBe(false);
+        });
+    });
 });
