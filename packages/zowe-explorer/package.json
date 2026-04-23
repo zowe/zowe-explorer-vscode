@@ -1075,7 +1075,7 @@
           "group": "inline@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*_fav.*/",
           "command": "zowe.removeFavorite",
           "group": "inline"
         },
@@ -1195,7 +1195,7 @@
           "group": "002_zowe_dsTransfer@7"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*(_fav|_filterFav).*)session.*/ && !listMultiSelection",
           "command": "zowe.saveSearch",
           "group": "003_zowe_dsWorkspace@0"
         },
@@ -1205,12 +1205,12 @@
           "group": "003_zowe_dsWorkspace@0"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*_fav.*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*(_fav|_filterFav).*/ && !listMultiSelection",
           "command": "zowe.removeFavorite",
           "group": "003_zowe_dsWorkspace@1"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*_fav.*/",
           "command": "zowe.removeFavorite",
           "group": "003_zowe_dsWorkspace@1"
         },

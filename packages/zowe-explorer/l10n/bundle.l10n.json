@@ -49,6 +49,12 @@
     ]
   },
   "{0} members failed to load due to invalid name errors for {1}": "{0} members failed to load due to invalid name errors for {1}",
+  "{0} members/Number of favorited members in a PDS": {
+    "message": "{0} members",
+    "comment": [
+      "Number of favorited members in a PDS"
+    ]
+  },
   "{0} renamed from {1} to {2}/Node typeOld nameNew name": {
     "message": "{0} renamed from {1} to {2}",
     "comment": [
@@ -80,6 +86,12 @@
     "message": "{0}. Or select a profile to add to the USS tree.",
     "comment": [
       "Instruction for add profile quick pick"
+    ]
+  },
+  "{0}/{1} members/Number of favorited members out of total members in a PDS": {
+    "message": "{0}/{1} members",
+    "comment": [
+      "Number of favorited members out of total members in a PDS"
     ]
   },
   "**Behavior:** Each command opens a dedicated terminal panel (for example, only MVS commands in the MVS terminal).": "**Behavior:** Each command opens a dedicated terminal panel (for example, only MVS commands in the MVS terminal).",
@@ -114,6 +126,8 @@
   "#### Windows custom persistence levels": "#### Windows custom persistence levels",
   "<a>#2828</a>": "<a>#2828</a>",
   "$(plus) Create a new Unix command": "$(plus) Create a new Unix command",
+  "1 member": "1 member",
+  "1/1 member": "1/1 member",
   "A {0} already exists with this name. Please choose a different name./Node type": {
     "message": "A {0} already exists with this name. Please choose a different name.",
     "comment": [
@@ -285,7 +299,7 @@
   "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager": "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager",
   "All": "All",
   "All Files": "All Files",
-  "All jobs": "All jobs",
+  "All Jobs": "All Jobs",
   "all PDS members in {0}/Node label": {
     "message": "all PDS members in {0}",
     "comment": [
@@ -973,7 +987,7 @@
   "Fixed an accessibility issue in the \"Add Profile\" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference \"Create a New Team Configuration File\" and \"Edit Team Configuration File\" to guide keyboard and screen reader users. <a>#4028</a>": "Fixed an accessibility issue in the \"Add Profile\" dialog where the placeholder text did not match the actual available options. The instructions now clearly reference \"Create a New Team Configuration File\" and \"Edit Team Configuration File\" to guide keyboard and screen reader users. <a>#4028</a>",
   "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>": "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>",
   "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>": "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>",
-  "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Replaced the inaccessible markdown link with keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>": "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Replaced the inaccessible markdown link with keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>",
+  "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Added a keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>": "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Added a keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>",
   "Fixed an accessibility issue where screen readers did not provide instructions for configuring job polling. Added descriptive prompts and placeholder text explaining how polling works, the expected input format, and what happens when polling is active. <a>#4029</a>": "Fixed an accessibility issue where screen readers did not provide instructions for configuring job polling. Added descriptive prompts and placeholder text explaining how polling works, the expected input format, and what happens when polling is active. <a>#4029</a>",
   "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>": "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>",
   "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>": "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>",
@@ -983,6 +997,7 @@
   "Fixed an issue seen where extender favorites not showing in the tree views. <a>#3470</a>": "Fixed an issue seen where extender favorites not showing in the tree views. <a>#3470</a>",
   "Fixed an issue seen with outdated profile information in the z/OS tree view data during upload and download of data set and USS files. <a>#3457</a>": "Fixed an issue seen with outdated profile information in the z/OS tree view data during upload and download of data set and USS files. <a>#3457</a>",
   "Fixed an issue that prevented screen readers from reading Unix file attributes in the Unix file attributes webview, and added clear tags to help users understand how to edit those attributes.<a>#4024</a>": "Fixed an issue that prevented screen readers from reading Unix file attributes in the Unix file attributes webview, and added clear tags to help users understand how to edit those attributes.<a>#4024</a>",
+  "Fixed an issue that would allow multiple member-filter on a single dataset search. <a>#2037</a>": "Fixed an issue that would allow multiple member-filter on a single dataset search. <a>#2037</a>",
   "Fixed an issue to review inconsistent capitalization across translation strings. <a>#2935</a>": "Fixed an issue to review inconsistent capitalization across translation strings. <a>#2935</a>",
   "Fixed an issue where a 401 error could occur when opening PDS members after updating credentials within the same user session. <a>#3150</a>": "Fixed an issue where a 401 error could occur when opening PDS members after updating credentials within the same user session. <a>#3150</a>",
   "Fixed an issue where a 401 Unauthorized error is thrown by the FileSystemProvider implementations when the user cancels or closes an authentication prompt. Now, the filesystem throws a more explicit AuthCancelledError in this scenario. <a>#3662</a>": "Fixed an issue where a 401 Unauthorized error is thrown by the FileSystemProvider implementations when the user cancels or closes an authentication prompt. Now, the filesystem throws a more explicit AuthCancelledError in this scenario. <a>#3662</a>",
@@ -990,6 +1005,7 @@
   "Fixed an issue where a newly-created data set member might be opened without an extension. <a>#3555</a>": "Fixed an issue where a newly-created data set member might be opened without an extension. <a>#3555</a>",
   "Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. <a>#3294</a>": "Fixed an issue where a recalled PDS is expandable after it is migrated through Zowe Explorer. <a>#3294</a>",
   "Fixed an issue where a TypeError occurred when applying VS Code proxy settings to an invalid session. <a>#3425</a>": "Fixed an issue where a TypeError occurred when applying VS Code proxy settings to an invalid session. <a>#3425</a>",
+  "Fixed an issue where adding an item to favorites was still incorrectly showing the \"Add to Favorites\" icon on it. <a>#3712</a>": "Fixed an issue where adding an item to favorites was still incorrectly showing the \"Add to Favorites\" icon on it. <a>#3712</a>",
   "Fixed an issue where an error appeared when moving an empty PDS across LPARs. <a>#4001</a>": "Fixed an issue where an error appeared when moving an empty PDS across LPARs. <a>#4001</a>",
   "Fixed an issue where an incorrect profile name is shown in the output for the \"Issue Unix Command\" function when an SSH profile is required to issue commands. <a>#3646</a>": "Fixed an issue where an incorrect profile name is shown in the output for the \"Issue Unix Command\" function when an SSH profile is required to issue commands. <a>#3646</a>",
   "Fixed an issue where an invalid session on a profile caused an unexpected Profile auth error login dialog to appear. <a>#3524</a>": "Fixed an issue where an invalid session on a profile caused an unexpected Profile auth error login dialog to appear. <a>#3524</a>",
@@ -1014,6 +1030,7 @@
   "Fixed an issue where edit history does not show the correct information. <a>#3432</a>": "Fixed an issue where edit history does not show the correct information. <a>#3432</a>",
   "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>": "Fixed an issue where editing a team config file or updating secrets in the OS credential vault could trigger multiple events for a single action. <a>#3296</a>",
   "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>": "Fixed an issue where favorites for extender profile types were duplicated in the tree views. <a>#3548</a>",
+  "Fixed an issue where favoriting a single member in a PDS was adding the entire PDS with all members to the favorites tree. <a>#1356</a>": "Fixed an issue where favoriting a single member in a PDS was adding the entire PDS with all members to the favorites tree. <a>#1356</a>",
   "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>": "Fixed an issue where fetching a USS file using UssFSProvider.stat() with a fetch=true query would cause Zowe Explorer to get stuck in an infinite loop. <a>#3321</a>",
   "Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. <a>#3554</a>": "Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. <a>#3554</a>",
   "Fixed an issue where file system URIs with trailing slashes failed to resolve. <a>#3904</a>": "Fixed an issue where file system URIs with trailing slashes failed to resolve. <a>#3904</a>",
@@ -1213,6 +1230,7 @@
   "Fixed the loading of previously saved profiles in the tree views.": "Fixed the loading of previously saved profiles in the tree views.",
   "Fixed the recent search job id filter. <a>#2562</a>": "Fixed the recent search job id filter. <a>#2562</a>",
   "Fixed the Secure Credentials Enabled setting to update the ~/.zowe/settings/imperative.json file upon change of the setting without overwriting preexisting data in the file.": "Fixed the Secure Credentials Enabled setting to update the ~/.zowe/settings/imperative.json file upon change of the setting without overwriting preexisting data in the file.",
+  "Fixed the submit job confirmation dialog box failing to display when a job is submitted. <a>#4097</a>": "Fixed the submit job confirmation dialog box failing to display when a job is submitted. <a>#4097</a>",
   "Fixed tooltip for Unix System Services profiles to display relevant text. <a>#4019</a>": "Fixed tooltip for Unix System Services profiles to display relevant text. <a>#4019</a>",
   "Fixed tree item labels failing to update after renaming an MVS or USS file or folder. <a>#2656</a>": "Fixed tree item labels failing to update after renaming an MVS or USS file or folder. <a>#2656</a>",
   "Fixed unintended behavior in ProfileUtils.isProfileUsingBasicAuth. <a>#2664</a>": "Fixed unintended behavior in ProfileUtils.isProfileUsingBasicAuth. <a>#2664</a>",
@@ -1392,10 +1410,10 @@
       "Session name"
     ]
   },
-  "Job submitted: {0}/Job name and ID": {
+  "Job submitted: {0}/Job name and ID with set job command": {
     "message": "Job submitted: {0}",
     "comment": [
-      "Job name and ID"
+      "Job name and ID with set job command"
     ]
   },
   "jobActions.modifyCommand.apiNonExisting": "jobActions.modifyCommand.apiNonExisting",
@@ -1464,6 +1482,12 @@
     "comment": [
       "Member name",
       "PDS name"
+    ]
+  },
+  "Member {0} is already in favorites/Member name": {
+    "message": "Member {0} is already in favorites",
+    "comment": [
+      "Member name"
     ]
   },
   "Member Name": "Member Name",
@@ -1607,7 +1631,7 @@
   "Optimized the refresh functionality in Zowe Explorer for performance and stability. Now, the profiles are refreshed once before refreshing all the tree providers. <a>#3524</a>": "Optimized the refresh functionality in Zowe Explorer for performance and stability. Now, the profiles are refreshed once before refreshing all the tree providers. <a>#3524</a>",
   "Options": "Options",
   "Other": "Other",
-  "Other user jobs": "Other user jobs",
+  "Other user Jobs": "Other user Jobs",
   "Override file extension": "Override file extension",
   "Override File Extension": "Override File Extension",
   "Override file extension (current: {0})": "Override file extension (current: {0})",
@@ -2329,7 +2353,7 @@
       "Profile name"
     ]
   },
-  "Your jobs": "Your jobs",
+  "Your Jobs": "Your Jobs",
   "z/OS default codepage": "z/OS default codepage",
   "Zowe Explorer": "Zowe Explorer",
   "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",

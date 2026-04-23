@@ -617,7 +617,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     if (dsEntry.etag !== resp.apiResponse.etag) {
                         dsEntry.mtime = Date.now();
                         if (dsEntry.etag) {
-                            this._fireSoon({ type: vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
+                            this.fireSoon({ type: vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
                         }
                     }
                     dsEntry.etag = resp.apiResponse.etag;
@@ -885,7 +885,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entry.mtime = Date.now();
             entry.size = content.byteLength;
 
-            this._fireSoon({ type: isNew ? vscode.FileChangeType.Created : vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
+            this.fireSoon({ type: isNew ? vscode.FileChangeType.Created : vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
         } catch (err) {
             if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 entry.data = content;
@@ -925,8 +925,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     newErr.stack += `\n${lineLabel}\n${group.text}\n`;
                 }
 
+                // Rollback optimistic entry creation on error
+                if (isNew && parent.entries.has(basename)) {
+                    parent.entries.delete(basename);
+                }
                 this._handleError(newErr);
                 throw newErr;
+            }
+            // Rollback optimistic entry creation on error
+            if (isNew && parent.entries.has(basename)) {
+                parent.entries.delete(basename);
             }
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({
@@ -1001,7 +1009,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         parent.entries.delete(entry.name);
         parent.size -= 1;
 
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri });
     }
 
     public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
@@ -1066,7 +1074,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         }
 
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
     }
 
     private validatePath(uri: vscode.Uri): void {

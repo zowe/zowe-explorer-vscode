@@ -43,7 +43,7 @@ import { IconGenerator } from "../../icons/IconGenerator";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { SharedContext } from "../shared/SharedContext";
 import { AuthUtils } from "../../utils/AuthUtils";
-import type { Definitions } from "../../configuration/Definitions";
+import { Definitions } from "../../configuration/Definitions";
 import type { DatasetTree } from "./DatasetTree";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetUtils } from "./DatasetUtils";
@@ -70,6 +70,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public filter?: Sorting.DatasetFilter;
     public resourceUri?: vscode.Uri;
     public inFilterPrompt = false;
+    public pdsFavoriteState?: Definitions.PdsFavoriteState;
+    public favoritedMemberNames?: string[];
 
     private paginator?: Paginator<IZosFilesResponse>;
     private paginatorData?: {
@@ -307,7 +309,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         // Gets the datasets from the pattern or members of the dataset and displays any thrown errors
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
-        const responses = await this.getDatasets(cachedProfile, paginate);
+
+        // Disable pagination for favorited PDS with specific members:
+        // Pagination is currently designed/implemented in DS nodes to minimize requests.
+        // We can revisit in the future to support local pagination in this case if requested.
+        const shouldPaginate =
+            paginate && !(SharedContext.isFavoritePds(this) && this.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers);
+
+        const responses = await this.getDatasets(cachedProfile, shouldPaginate);
         if (responses == null) {
             return [];
         }
@@ -419,8 +428,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
 
                 if (dsNode?.resourceUri != null) {
+                    // Determine if the node is collapsible (PDS or sequential data set)
+                    // If the node is collapsible, it is a PDS
+                    // If the node is not collapsible, it is a PDS member
                     const isCollapsible = dsNode.collapsibleState != vscode.TreeItemCollapsibleState.None;
                     let dsType = isCollapsible ? DsType.Pds : DsType.PdsMember;
+                    // If the node is sequential (by checking if the parent node is a session) and not collapsible, it is a sequential data set
                     const isSequential = SharedContext.isSession(this);
                     if (isSequential && !isCollapsible) {
                         dsType = DsType.Ps;
@@ -481,6 +494,24 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 .filter(filter ? ZoweDatasetNode.filterBy(filter) : (_c): boolean => true)
                 .sort(ZoweDatasetNode.sortBy(sortOpts));
 
+            // For favorited PDS with specific member favorites, filter to only show those members
+            if (SharedContext.isFavoritePds(this) && this.favoritedMemberNames != null) {
+                const totalMembers = this.children.length;
+                this.children = this.children.filter((child) => this.favoritedMemberNames.includes(child.label as string));
+                // Don't set description of filter is set, prefer filter description
+                if (!this.filter) {
+                    this.description = ZoweDatasetNode.memberCountDescription(this.children.length, totalMembers);
+                }
+            }
+
+            if (SharedContext.isFavoritePds(this)) {
+                for (const child of this.children) {
+                    if (SharedContext.isDsMember(child) && !SharedContext.isFavorite(child)) {
+                        child.contextValue = SharedContext.asFavorite(child);
+                    }
+                }
+            }
+
             if (SharedContext.isSession(this)) {
                 const dsTree = SharedTreeProviders.ds as DatasetTree;
                 // Reset and remove previous search patterns in case pattern has changed
@@ -493,7 +524,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const canNavigate = this.paginator && (this.paginator.canGoPrevious() || this.paginator.canGoNext());
 
         if (
-            paginate &&
+            shouldPaginate &&
             canNavigate &&
             (SharedContext.isSession(this) || SharedContext.isPds(this)) &&
             this.paginatorData.totalItems > this.paginator.getMaxItemsPerPage()
@@ -1107,6 +1138,27 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         this.dirty = true;
+    }
+
+    public static memberCountDescription(count: number, total?: number): string {
+        if (total != null) {
+            if (total === 1) {
+                return vscode.l10n.t("1/1 member");
+            }
+            return vscode.l10n.t({
+                message: "{0}/{1} members",
+                args: [count, total],
+                comment: ["Number of favorited members out of total members in a PDS"],
+            });
+        }
+        if (count === 1) {
+            return vscode.l10n.t("1 member");
+        }
+        return vscode.l10n.t({
+            message: "{0} members",
+            args: [count],
+            comment: ["Number of favorited members in a PDS"],
+        });
     }
 
     /**

@@ -274,7 +274,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
         });
 
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
+        this.fireSoon({ type: vscode.FileChangeType.Changed, uri });
 
         if (query.has("startLine") && !query.has("endLine")) {
             spoolEntry.data = Buffer.concat([spoolEntry.data, bufBuilder.read() ?? new Uint8Array()]);
@@ -392,7 +392,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             throw err;
         }
         parent.entries.delete(entry.name);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri });
     }
 
     // unsupported
