@@ -299,7 +299,7 @@
   "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager": "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager",
   "All": "All",
   "All Files": "All Files",
-  "All jobs": "All jobs",
+  "All Jobs": "All Jobs",
   "all PDS members in {0}/Node label": {
     "message": "all PDS members in {0}",
     "comment": [
@@ -1229,6 +1229,7 @@
   "Fixed the loading of previously saved profiles in the tree views.": "Fixed the loading of previously saved profiles in the tree views.",
   "Fixed the recent search job id filter. <a>#2562</a>": "Fixed the recent search job id filter. <a>#2562</a>",
   "Fixed the Secure Credentials Enabled setting to update the ~/.zowe/settings/imperative.json file upon change of the setting without overwriting preexisting data in the file.": "Fixed the Secure Credentials Enabled setting to update the ~/.zowe/settings/imperative.json file upon change of the setting without overwriting preexisting data in the file.",
+  "Fixed the submit job confirmation dialog box failing to display when a job is submitted. <a>#4097</a>": "Fixed the submit job confirmation dialog box failing to display when a job is submitted. <a>#4097</a>",
   "Fixed tooltip for Unix System Services profiles to display relevant text. <a>#4019</a>": "Fixed tooltip for Unix System Services profiles to display relevant text. <a>#4019</a>",
   "Fixed tree item labels failing to update after renaming an MVS or USS file or folder. <a>#2656</a>": "Fixed tree item labels failing to update after renaming an MVS or USS file or folder. <a>#2656</a>",
   "Fixed unintended behavior in ProfileUtils.isProfileUsingBasicAuth. <a>#2664</a>": "Fixed unintended behavior in ProfileUtils.isProfileUsingBasicAuth. <a>#2664</a>",
@@ -1629,7 +1630,7 @@
   "Optimized the refresh functionality in Zowe Explorer for performance and stability. Now, the profiles are refreshed once before refreshing all the tree providers. <a>#3524</a>": "Optimized the refresh functionality in Zowe Explorer for performance and stability. Now, the profiles are refreshed once before refreshing all the tree providers. <a>#3524</a>",
   "Options": "Options",
   "Other": "Other",
-  "Other user jobs": "Other user jobs",
+  "Other user Jobs": "Other user Jobs",
   "Override file extension": "Override file extension",
   "Override File Extension": "Override File Extension",
   "Override file extension (current: {0})": "Override file extension (current: {0})",
@@ -2344,7 +2345,7 @@
       "Profile name"
     ]
   },
-  "Your jobs": "Your jobs",
+  "Your Jobs": "Your Jobs",
   "z/OS default codepage": "z/OS default codepage",
   "Zowe Explorer": "Zowe Explorer",
   "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
