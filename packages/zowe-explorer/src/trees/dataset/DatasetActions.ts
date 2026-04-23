@@ -855,7 +855,7 @@ export class DatasetActions {
             return;
         }
 
-        const children = allMembersRes.apiResponse?.items;
+        const children = allMembersRes.apiResponse?.items ?? [];
         if (children.length === 0) {
             Gui.showMessage(vscode.l10n.t("The selected data set has no members to download."));
             return;
@@ -3161,8 +3161,9 @@ export class DatasetActions {
             return vscode.l10n.t("Data set pattern cannot be empty");
         }
 
-        // Allow member notation like HLQ.DATASET(MEMBER) or standard patterns
-        const validPattern = /^[A-Za-z0-9$#@*%][A-Za-z0-9$#@*%.\-()]*$/;
+        // Allow member notation like HLQ.DATASET(MEMBER) or HLQ.DATASET(A*,B*) or standard patterns
+        // Commas inside parentheses separate member filters; commas outside separate dataset patterns
+        const validPattern = /^[A-Za-z0-9$#@*%][A-Za-z0-9$#@*%.\-(),\s]*$/;
         if (!validPattern.test(trimmedInput)) {
             return vscode.l10n.t("Invalid data set pattern. Use alphanumeric characters, $, #, @, *, %, ., -, and () for members");
         }
