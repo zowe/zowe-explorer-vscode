@@ -661,7 +661,7 @@ describe("Test src/shared/extension", () => {
                     vscode.Uri.from({
                         scheme: ZoweScheme.DS,
                         path: "/profile/TEST.DS",
-                    }),
+                    })
                 ),
             };
 
@@ -1067,7 +1067,7 @@ describe("Test src/shared/extension", () => {
 
     describe("isDocumentASpool", () => {
         let onProfileUpdated: jest.Mock;
-        
+
         beforeAll(() => {
             onProfileUpdated = jest.fn().mockReturnValue(new vscode.Disposable(jest.fn()));
             Object.defineProperty(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated", {

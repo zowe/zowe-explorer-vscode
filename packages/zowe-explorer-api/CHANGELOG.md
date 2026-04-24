@@ -434,7 +434,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
   - Updated `MainframeInteraction.ts`, see changes below:
     - Modified `getStatus` to add `string` type to the optional parameter `profileType`
   - Updated `IZoweTree.ts`, see changes below:
-  
+
     - Modified `checkCurrentProfile(node: IZoweTreeNode);` to return `Validation.IValidationProfile | Promise<Validation.IValidationProfile>`
     - Modified `getSearchHistory()` to return `string[]`
     - Modified `getAllLoadedItems()` to return `IZoweTreeNode[] | Promise<IZoweTreeNode[]>`

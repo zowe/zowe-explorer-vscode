@@ -186,10 +186,7 @@ export class BaseProvider {
     private _updateProfileRecursive(entry: IFileSystemEntry, updatedProfile: imperative.IProfileLoaded): void {
         if (!entry) return;
 
-        if (
-            entry.metadata?.profile?.name === updatedProfile.name &&
-            entry.metadata?.profile?.type === updatedProfile.type
-        ) {
+        if (entry.metadata?.profile?.name === updatedProfile.name && entry.metadata?.profile?.type === updatedProfile.type) {
             entry.metadata.profile = updatedProfile;
         }
 
