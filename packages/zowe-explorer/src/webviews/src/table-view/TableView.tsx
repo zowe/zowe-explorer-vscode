@@ -648,29 +648,11 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         attachTooltip(icon, l10n.t("Filter"));
       });
 
-      // Try multiple possible sort icon selectors
-      const sortIconSelectors = [
-        ".ag-header-icon.ag-sort-ascending-icon",
-        ".ag-header-icon.ag-sort-descending-icon",
-        ".ag-header-icon.ag-sort-none-icon",
-        ".ag-icon.ag-icon-asc",
-        ".ag-icon.ag-icon-desc",
-        ".ag-icon.ag-icon-none",
-        ".ag-sort-indicator-icon",
-        ".ag-header-cell-sortable .ag-header-icon:not(.ag-header-cell-filter-button)",
-      ];
+      // Query for ascending and descending sort icons only (not unsorted columns)
+      const sortIconSelector = ".ag-icon.ag-icon-asc, .ag-icon.ag-icon-desc";
+      const sortIcons = document.querySelectorAll<HTMLElement>(sortIconSelector);
 
-      let sortIcons: NodeListOf<HTMLElement> | null = null;
-
-      for (const selector of sortIconSelectors) {
-        const icons = document.querySelectorAll<HTMLElement>(selector);
-        if (icons.length > 0) {
-          sortIcons = icons;
-          break;
-        }
-      }
-
-      if (sortIcons && sortIcons.length > 0) {
+      if (sortIcons.length > 0) {
         sortIcons.forEach((icon) => {
           // Determine sort state from the icon's class or parent cell
           const parentCell = icon.closest(".ag-header-cell");
