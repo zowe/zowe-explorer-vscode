@@ -196,7 +196,7 @@ export class SharedInit {
         const zoweExplorerApi = ZoweExplorerApiRegister.getInstance().getExplorerExtenderApi();
         context.subscriptions.push(...zoweNativeApi.registerCommands(context, zoweExplorerApi));
         context.subscriptions.push(zoweNativeApi.SshClientCache.initialize(zoweExplorerApi.getProfilesCache()));
-        context.subscriptions.push(zoweNativeApi.watchNativeSshSetting(context));
+        zoweNativeApi.handleNativeSshSettings(context);
 
         zoweNativeApi.registerSshErrorCorrelations();
 
@@ -271,6 +271,9 @@ export class SharedInit {
         // Register functions & event listeners
         context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {
+                if (e.affectsConfiguration(Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH)) {
+                    zoweNativeApi.handleNativeSshSettings(context);
+                }
                 // If the log folder location has been changed, update current log folder preference
                 if (e.affectsConfiguration(Constants.SETTINGS_LOGS_FOLDER_PATH) || e.affectsConfiguration(Constants.LOGGER_SETTINGS)) {
                     await SharedInit.initZoweLogger(context);

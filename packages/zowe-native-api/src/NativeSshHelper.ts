@@ -78,22 +78,12 @@ async function ensureNativeBinary(context: vscode.ExtensionContext): Promise<voi
     );
 }
 
-export function watchNativeSshSetting(context: vscode.ExtensionContext): vscode.Disposable {
-    const handleEnabled = (): void => {
-        if (!getVsceConfig().get<boolean>("zowex.experimentalNativeSsh")) {
-            return;
-        }
-        ensureNativeBinary(context).catch((err: Error) => {
-            imperative.Logger.getAppLogger().error("Failed to download native SSH binary: %s", err.message);
-            vscode.window.showErrorMessage(`Failed to download native SSH binary: ${err.message}`);
-        });
-    };
-
-    handleEnabled();
-
-    return vscode.workspace.onDidChangeConfiguration((e) => {
-        if (e.affectsConfiguration("zowe.zowex.experimentalNativeSsh")) {
-            handleEnabled();
-        }
+export function handleNativeSshSettings(context: vscode.ExtensionContext): void {
+    if (!getVsceConfig().get<boolean>("zowex.experimentalNativeSsh")) {
+        return;
+    }
+    ensureNativeBinary(context).catch((err: Error) => {
+        imperative.Logger.getAppLogger().error("Failed to download native SSH binary: %s", err.message);
+        vscode.window.showErrorMessage(`Failed to download native SSH binary: ${err.message}`);
     });
 }
