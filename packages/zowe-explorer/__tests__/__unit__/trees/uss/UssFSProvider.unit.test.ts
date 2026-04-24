@@ -1131,6 +1131,7 @@ describe("UssFSProvider", () => {
             );
             autoDetectEncodingMock.mockRestore();
         });
+
     });
 
     describe("fetchEncodingForUri", () => {
@@ -2765,6 +2766,117 @@ describe("UssFSProvider", () => {
                 autoDetectEncodingMock.mockRestore();
                 waitForUnlockMock.mockRestore();
                 setStatusBarMessageMock.mockRestore();
+            });
+        });
+    });
+
+    describe("mtime handling for undefined values", () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        describe("remoteLookupForResource method", () => {
+            it("handles undefined mtime from fileList response", async () => {
+                const mockUssApi = {
+                    fileList: jest.fn().mockResolvedValue({
+                        success: true,
+                        apiResponse: {
+                            items: [{
+                                name: "aFile.txt",
+                                mode: "-rw-r--r--"
+                                // No mtime field
+                            }]
+                        }
+                    })
+                };
+                jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
+
+                // Mock the session folder setup
+                const sessionEntry = new UssDirectory("sestest");
+                sessionEntry.metadata = testEntries.session.metadata;
+                jest.spyOn(UssFSProvider.instance as any, "_lookupAsDirectory").mockImplementation((uri) => {
+                    if (uri.path === "/sestest") {
+                        return sessionEntry;
+                    }
+                    return testEntries.folder;
+                });
+
+                const currentTimeBefore = Date.now();
+                const result = await UssFSProvider.instance.remoteLookupForResource(testUris.file);
+                const currentTimeAfter = Date.now();
+
+                expect(result).toBeDefined();
+                expect(result.mtime).toBeGreaterThanOrEqual(currentTimeBefore);
+                expect(result.mtime).toBeLessThanOrEqual(currentTimeAfter);
+                expect(result.wasAccessed).toBe(false); // Should be invalidated
+            });
+
+            it("handles null mtime gracefully", async () => {
+                const mockUssApi = {
+                    fileList: jest.fn().mockResolvedValue({
+                        success: true,
+                        apiResponse: {
+                            items: [{
+                                name: "aFile.txt",
+                                mode: "-rw-r--r--",
+                                mtime: null // explicitly null mtime
+                            }]
+                        }
+                    })
+                };
+                jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
+
+                // Mock the session folder setup
+                const sessionEntry = new UssDirectory("sestest");
+                sessionEntry.metadata = testEntries.session.metadata;
+                jest.spyOn(UssFSProvider.instance as any, "_lookupAsDirectory").mockImplementation((uri) => {
+                    if (uri.path === "/sestest") {
+                        return sessionEntry;
+                    }
+                    return testEntries.folder;
+                });
+
+                const currentTimeBefore = Date.now();
+                const result = await UssFSProvider.instance.remoteLookupForResource(testUris.file);
+                const currentTimeAfter = Date.now();
+
+                expect(result).toBeDefined();
+                expect(result.mtime).toBeGreaterThanOrEqual(currentTimeBefore);
+                expect(result.mtime).toBeLessThanOrEqual(currentTimeAfter);
+                expect(result.wasAccessed).toBe(false); // Should be invalidated
+            });
+
+            it("handles valid mtime from fileList response", async () => {
+                const validMtime = "2021-01-01T12:34:56.000Z";
+                const mockUssApi = {
+                    fileList: jest.fn().mockResolvedValue({
+                        success: true,
+                        apiResponse: {
+                            items: [{
+                                name: "aFile.txt",
+                                mode: "-rw-r--r--",
+                                mtime: validMtime
+                            }]
+                        }
+                    })
+                };
+                jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
+
+                // Mock the session folder setup
+                const sessionEntry = new UssDirectory("sestest");
+                sessionEntry.metadata = testEntries.session.metadata;
+                jest.spyOn(UssFSProvider.instance as any, "_lookupAsDirectory").mockImplementation((uri) => {
+                    if (uri.path === "/sestest") {
+                        return sessionEntry;
+                    }
+                    return testEntries.folder;
+                });
+
+                const result = await UssFSProvider.instance.remoteLookupForResource(testUris.file);
+
+                expect(result).toBeDefined();
+                expect(result.mtime).toBeGreaterThan(0); // Should be updated to the API time
+                expect(result.wasAccessed).toBe(false); // Should be invalidated
             });
         });
     });
