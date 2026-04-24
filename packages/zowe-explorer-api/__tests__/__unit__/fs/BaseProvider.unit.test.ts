@@ -859,6 +859,26 @@ describe("updateProfile", () => {
         expect(entry.metadata.profile).toEqual(otherProfile);
     });
 
+    it("should not update entries with same profile name but different type", () => {
+        prov.root = new DirEntry("");
+        const otherProfile = { name: "testProfile", type: "ssh" };
+        const newProfile = { name: "testProfile", type: "zosmf", updated: true };
+
+        prov.root.entries.set("file.txt", {
+            name: "file.txt",
+            type: vscode.FileType.File,
+            metadata: {
+                path: "/file.txt",
+                profile: otherProfile,
+            },
+        });
+
+        prov.updateProfile(newProfile);
+
+        const entry = prov.root.entries.get("file.txt");
+        expect(entry.metadata.profile).toEqual(otherProfile);
+    });
+
     it("should handle null or undefined entries gracefully", () => {
         prov.root = new DirEntry("");
         const newProfile = { name: "testProfile", type: "zowe" };

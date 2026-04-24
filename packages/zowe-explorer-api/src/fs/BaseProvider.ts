@@ -175,7 +175,7 @@ export class BaseProvider {
     }
 
     /**
-     * Updates the profile reference for all cached entries matching the profile name.
+     * Updates the profile reference for all cached entries matching the profile name and type.
      * Called when a profile is updated (reactivated, credentials changed, etc.)
      * @param updatedProfile The updated profile object
      */
@@ -186,7 +186,10 @@ export class BaseProvider {
     private _updateProfileRecursive(entry: IFileSystemEntry, updatedProfile: imperative.IProfileLoaded): void {
         if (!entry) return;
 
-        if (entry.metadata?.profile?.name === updatedProfile.name) {
+        if (
+            entry.metadata?.profile?.name === updatedProfile.name &&
+            entry.metadata?.profile?.type === updatedProfile.type
+        ) {
             entry.metadata.profile = updatedProfile;
         }
 
