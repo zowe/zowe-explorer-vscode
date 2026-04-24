@@ -13,18 +13,21 @@ import { type IZoweTree, type IZoweTreeNode, type imperative, type IApiExplorerE
 import { ZSshClient } from "@zowe/zowex-for-zowe-sdk";
 import { getVsceConfig } from "./VsceConfig";
 
-// biome-ignore lint/complexity/noStaticOnlyClass: Utilities class has static methods
 export class ConfigUtils {
     public static getServerPath(profile?: imperative.IProfile): string {
         const serverPathMap: Record<string, string> = getVsceConfig().get("zowex.serverInstallPath") ?? {};
-        return (profile && serverPathMap[profile?.host]) ?? process.env.ZOWE_OPT_SERVER_PATH ?? profile?.serverPath ?? ZSshClient.DEFAULT_SERVER_PATH;
+        return (
+            (profile && serverPathMap[profile?.host]) ??
+            process.env.ZOWE_OPT_SERVER_PATH ??
+            (profile?.serverPath as string) ??
+            ZSshClient.DEFAULT_SERVER_PATH
+        );
     }
 
     public static async showSessionInTree(profileName: string, visible: boolean, zoweExplorerApi: IApiExplorerExtender): Promise<void> {
         // This method is a hack until the ZE API offers a method to show/hide profile in tree
         // See https://github.com/zowe/zowe-explorer-vscode/issues/3506
         const treeProviders = ["datasetProvider", "ussFileProvider", "jobsProvider"].map(
-            // biome-ignore lint/suspicious/noExplicitAny: Accessing internal properties
             (prop) => (zoweExplorerApi as any)[prop] as IZoweTree<IZoweTreeNode>
         );
         const localStorage = zoweExplorerApi.getLocalStorage?.();

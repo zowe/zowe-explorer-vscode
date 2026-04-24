@@ -39,7 +39,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                 // Check if this is a private key authentication failure
                 if (ZSshUtils.isPrivateKeyAuthFailure(errorMessage, !!profile.profile?.privateKey)) {
                     vscode.window.showWarningMessage(
-                        `Private key authentication failed for "${profile.name}". Falling back to password authentication...`
+                        `Private key authentication failed for "${profile.name as string}". Falling back to password authentication...`
                     );
 
                     try {
@@ -51,20 +51,19 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                         }
                     } catch (retryErr) {
                         imperative.Logger.getAppLogger().warn(
-                            `Password authentication failed after 3 attempts for profile ${profile.name}: ${retryErr}`
+                            `Password authentication failed after 3 attempts for profile ${profile.name as string}: ${(retryErr as Error).message}`
                         );
                         vscode.window.showErrorMessage(
-                            `Authentication failed for profile ${profile.name}. Both private key and password authentication failed.`
+                            `Authentication failed for profile ${profile.name as string}. Both private key and password authentication failed.`
                         );
                         return "inactive";
                     }
                 } else if (
                     profile.profile?.password &&
                     !profile.profile?.privateKey &&
-                    `${err}`.includes("All configured authentication methods failed")
+                    `${(err as Error).message}`.includes("All configured authentication methods failed")
                 ) {
-                    let finalErr: ImperativeError | undefined;
-                    finalErr = new ImperativeError({
+                    const finalErr = new ImperativeError({
                         msg: ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err as Error, {
                             templateArgs: { profileName: profile.name! },
                         }).message,
@@ -111,14 +110,15 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
      * @returns Updated profile with password, or undefined if user cancelled or max attempts reached
      */
     private async handlePrivateKeyFailure(profile: imperative.IProfileLoaded): Promise<imperative.IProfileLoaded | undefined> {
+        // eslint-disable-next-line no-magic-numbers
         for (let attempts = 0; attempts < 3; attempts++) {
             try {
                 // Prompt for password using VS Code's native input box
                 const password = await vscode.window.showInputBox({
-                    title: `${profile.profile?.user}@${profile.profile?.host}'s password:`,
+                    title: `${profile.profile?.user as string}@${profile.profile?.host as string}'s password:`,
                     password: true,
                     placeHolder: "Enter your password",
-                    prompt: `Enter password for ${profile.profile?.user}@${profile.profile?.host}`,
+                    prompt: `Enter password for ${profile.profile?.user as string}@${profile.profile?.host as string}`,
                     ignoreFocusOut: true,
                 });
 
@@ -144,7 +144,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                     // If we get here, the password is valid
                     return testProfile;
                 } catch (authError) {
-                    const authErrorMessage = `${authError}`;
+                    const authErrorMessage = `${(authError as Error).message}`;
                     if (authErrorMessage.includes("FOTS1668")) {
                         vscode.window.showErrorMessage("Password expired on target system");
                         return undefined;
@@ -153,7 +153,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                     vscode.window.showWarningMessage(`Password authentication failed (${attempts + 1}/3)`);
                 }
             } catch (error) {
-                imperative.Logger.getAppLogger().error(`Failed to handle private key failure: ${error}`);
+                imperative.Logger.getAppLogger().error(`Failed to handle private key failure: ${(error as Error).message}`);
                 return undefined;
             }
         }

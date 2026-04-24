@@ -26,10 +26,14 @@ export function registerCommands(context: vscode.ExtensionContext, zoweExplorerA
             imperative.Logger.getAppLogger().trace("Running connect command for profile %s", profName);
             const vscePromptApi = new VscePromptApi(await profCache.getProfileInfo());
             const profile = await vscePromptApi.promptForProfile(profName);
-            if (!profile?.profile) return;
+            if (!profile?.profile) {
+                return;
+            }
             const defaultServerPath = ConfigUtils.getServerPath(profile.profile);
             const deployDirectory = await vscePromptApi.promptForDeployDirectory(profile.profile.host, defaultServerPath);
-            if (!deployDirectory) return;
+            if (!deployDirectory) {
+                return;
+            }
 
             const sshSession = ZSshUtils.buildSession(profile.profile);
             const deployStatus = await deployWithProgress(sshSession, deployDirectory);
@@ -38,7 +42,7 @@ export function registerCommands(context: vscode.ExtensionContext, zoweExplorerA
             }
 
             await ConfigUtils.showSessionInTree(profile.name!, true, zoweExplorerApi);
-            const infoMsg = `Installed Zowe Remote SSH server on ${profile.profile.host ?? profile.name}`;
+            const infoMsg = `Installed Zowe Remote SSH server on ${(profile.profile.host as string) ?? profile.name}`;
             imperative.Logger.getAppLogger().info(infoMsg);
             await Gui.showMessage(infoMsg);
         }),
@@ -46,19 +50,26 @@ export function registerCommands(context: vscode.ExtensionContext, zoweExplorerA
             imperative.Logger.getAppLogger().trace("Running restart command for profile %s", profName);
             const vscePromptApi = new VscePromptApi(await profCache.getProfileInfo());
             const profile = await vscePromptApi.promptForProfile(profName);
-            if (!profile?.profile) return;
+            if (!profile?.profile) {
+                return;
+            }
 
             await SshClientCache.inst.connect(profile, { restart: true, retryRequests: false });
 
-            imperative.Logger.getAppLogger().info(`Restarted Zowe Remote SSH server on ${profile.profile?.host ?? profile.name}`);
+            imperative.Logger.getAppLogger().info(`Restarted Zowe Remote SSH server on ${(profile.profile?.host as string) ?? profile.name}`);
             const statusMsg = Gui.setStatusBarMessage("Restarted Zowe Remote SSH server");
-            setTimeout(() => statusMsg.dispose(), 5000);
+            setTimeout(() => {
+                statusMsg.dispose();
+                // eslint-disable-next-line no-magic-numbers
+            }, 5000);
         }),
         vscode.commands.registerCommand(`${EXTENSION_NAME}.zowex.uninstall`, async (profName?: string) => {
             imperative.Logger.getAppLogger().trace("Running uninstall command for profile %s", profName);
             const vscePromptApi = new VscePromptApi(await profCache.getProfileInfo());
             const profile = await vscePromptApi.promptForProfile(profName);
-            if (!profile?.profile) return;
+            if (!profile?.profile) {
+                return;
+            }
 
             SshClientCache.inst.end(profile);
             const serverPath = ConfigUtils.getServerPath(profile.profile);
@@ -70,7 +81,7 @@ export function registerCommands(context: vscode.ExtensionContext, zoweExplorerA
                 onError: errorCallback,
             });
 
-            const infoMsg = `Uninstalled Zowe Remote SSH server from ${profile.profile.host ?? profile.name}`;
+            const infoMsg = `Uninstalled Zowe Remote SSH server from ${(profile.profile.host as string) ?? profile.name}`;
             imperative.Logger.getAppLogger().info(infoMsg);
             await Gui.showMessage(infoMsg);
         }),

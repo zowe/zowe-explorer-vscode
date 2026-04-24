@@ -126,11 +126,10 @@ export class VscePromptApi extends AbstractConfigManager {
         const profCache = SshClientCache.inst.profilesCache;
 
         return [
-            // biome-ignore lint/suspicious/noExplicitAny: Accessing protected method
-            ...(profCache as any).getCoreProfileTypes(),
+            ...profCache.getCoreProfileTypes(),
             ...profCache.getConfigArray(),
             ProfileConstants.BaseProfile,
-        ];
+        ] as imperative.IProfileTypeConfiguration[];
     }
 
     protected async showPrivateKeyWarning(opts: PrivateKeyWarningOptions): Promise<boolean> {

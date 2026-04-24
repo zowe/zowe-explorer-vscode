@@ -15,8 +15,10 @@ import { imperative } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { getVsceConfig } from "./VsceConfig";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const sdkPackageJson = require("@zowe/zowex-for-zowe-sdk/package.json");
 const RUSSH_VERSION: string = sdkPackageJson.optionalDependencies!.russh;
+const SSH_TIMEOUT: number = 60e3;
 
 const NATIVE_TRIPLES: Record<string, Record<string, string>> = {
     win32: {
@@ -56,7 +58,7 @@ async function ensureNativeBinary(context: vscode.ExtensionContext): Promise<voi
         },
         async () => {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 60e3);
+            const timeoutId = setTimeout(() => controller.abort(), SSH_TIMEOUT);
             let response: Response;
             try {
                 response = await fetch(`https://unpkg.com/russh@${RUSSH_VERSION}/${filename}`, {
@@ -77,11 +79,11 @@ async function ensureNativeBinary(context: vscode.ExtensionContext): Promise<voi
 }
 
 export function watchNativeSshSetting(context: vscode.ExtensionContext): vscode.Disposable {
-    const handleEnabled = () => {
+    const handleEnabled = (): void => {
         if (!getVsceConfig().get<boolean>("zowex.experimentalNativeSsh")) {
             return;
         }
-        ensureNativeBinary(context).catch((err) => {
+        ensureNativeBinary(context).catch((err: Error) => {
             imperative.Logger.getAppLogger().error("Failed to download native SSH binary: %s", err.message);
             vscode.window.showErrorMessage(`Failed to download native SSH binary: ${err.message}`);
         });

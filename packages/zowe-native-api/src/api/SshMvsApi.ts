@@ -24,8 +24,10 @@ import {
 } from "@zowe/zowe-explorer-api";
 import { B64String, type Dataset, type DatasetAttributes, type ds } from "@zowe/zowex-for-zowe-sdk";
 import { SshCommonApi } from "./SshCommonApi";
+import type Stream from "node:stream";
 
 class SshAttributesProvider implements IAttributesProvider {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     private readonly extensionName = require("../../package.json").displayName;
 
     public constructor(public cachedAttrs?: Dataset) {}
@@ -156,7 +158,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             dsname: dataSetName,
             encoding: options.binary ? "binary" : options.encoding,
             // Pass stream if file is provided, otherwise use buffer to read into memory
-            stream: options.file ? () => writeStream : undefined,
+            stream: options.file ? (): Stream.Writable => writeStream : undefined,
         });
         if (options.stream != null) {
             options.stream.write(B64String.decode(response.data));
@@ -255,6 +257,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         memberName = memberName.replace(/^\d+/, "");
 
         // Truncate to 8 characters max
+        // eslint-disable-next-line no-magic-numbers
         memberName = memberName.substring(0, 8);
 
         // If empty, use a default
@@ -305,16 +308,16 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             }
         } catch (error) {
             Gui.errorMessage(`Failed to create data set member: ${dataSetName}`);
-            Gui.errorMessage(`Error: ${error}`);
+            Gui.errorMessage(`Error: ${(error as Error).message}`);
         }
         return this.buildZosFilesResponse(response, response.success);
     }
 
-    public async allocateLikeDataSet(_dataSetName: string, _likeDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
+    public allocateLikeDataSet(_dataSetName: string, _likeDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Not yet implemented");
     }
 
-    public async copyDataSetMember(
+    public copyDataSetMember(
         { dsn: _fromDataSetName, member: _fromMemberName }: zosfiles.IDataSet,
         { dsn: _toDataSetName, member: _toMemberName }: zosfiles.IDataSet,
         _options?: { replace?: boolean }
@@ -347,7 +350,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         });
     }
 
-    public async hMigrateDataSet(_dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
+    public hMigrateDataSet(_dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
         throw new Error("Not yet implemented");
     }
 
@@ -364,7 +367,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             }
         } catch (error) {
             Gui.errorMessage(`Failed to restore dataset ${dataSetName}`);
-            Gui.errorMessage(`Error: ${error}`);
+            Gui.errorMessage(`Error: ${(error as Error).message}`);
         }
         return this.buildZosFilesResponse(response);
     }
@@ -380,7 +383,6 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         });
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: apiResponse has no strong type
     private buildZosFilesResponse(apiResponse: any, success = true, errorText?: string): zosfiles.IZosFilesResponse {
         return { apiResponse, commandResponse: "", success, errorMessage: errorText };
     }

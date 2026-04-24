@@ -19,10 +19,8 @@ import { vi } from "vitest";
 // This module must be imported before any module that transitively requires vscode.
 const vscodeMock = createVSCodeMock(vi);
 const originalRequire = Module.prototype.require;
-// biome-ignore lint/suspicious/noExplicitAny: Patching Node.js module loader
 (Module.prototype as any).require = function (...args: any[]) {
     if (args[0] === "vscode") return vscodeMock;
-    // biome-ignore lint/suspicious/noExplicitAny: Required for apply signature
     return originalRequire.apply(this, args as any);
 };
 
@@ -65,8 +63,7 @@ export async function setupTargets(): Promise<void> {
     const sshAttrs = profileInfo.getDefaultProfile("ssh");
     if (!zosmfAttrs || !sshAttrs) throw new Error("Default zosmf or ssh profile not found");
 
-    const toProfile = (merged: IProfMergedArg) =>
-        Object.fromEntries(merged.knownArgs.map((arg: IProfArgAttrs) => [arg.argName, arg.argValue]));
+    const toProfile = (merged: IProfMergedArg) => Object.fromEntries(merged.knownArgs.map((arg: IProfArgAttrs) => [arg.argName, arg.argValue]));
 
     const zosmfProfile = toProfile(profileInfo.mergeArgsForProfile(zosmfAttrs, { getSecureVals: true }));
     const sshProfile = toProfile(profileInfo.mergeArgsForProfile(sshAttrs, { getSecureVals: true }));

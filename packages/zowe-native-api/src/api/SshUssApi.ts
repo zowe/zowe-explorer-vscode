@@ -14,6 +14,7 @@ import type * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { imperative, type MainframeInteraction, type Types } from "@zowe/zowe-explorer-api";
 import { B64String, type uss } from "@zowe/zowex-for-zowe-sdk";
 import { SshCommonApi } from "./SshCommonApi";
+import type Stream from "node:stream";
 
 export class SshUssApi extends SshCommonApi implements MainframeInteraction.IUss {
     public async fileList(ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
@@ -50,7 +51,7 @@ export class SshUssApi extends SshCommonApi implements MainframeInteraction.IUss
             fspath: ussFilePath,
             encoding: options.binary ? "binary" : options.encoding,
             // Pass stream if file is provided, otherwise use buffer to read into memory
-            stream: options.file ? () => writeStream : undefined,
+            stream: options.file ? (): Stream.Writable => writeStream : undefined,
         });
         if (options.stream != null) {
             options.stream.write(B64String.decode(response.data));
@@ -91,7 +92,7 @@ export class SshUssApi extends SshCommonApi implements MainframeInteraction.IUss
         return this.buildZosFilesResponse({ etag: response.etag });
     }
 
-    public async uploadDirectory(
+    public uploadDirectory(
         _inputDirectoryPath: string,
         _ussDirectoryPath: string,
         _options: zosfiles.IUploadOptions
@@ -227,7 +228,6 @@ export class SshUssApi extends SshCommonApi implements MainframeInteraction.IUss
         return this.buildZosFilesResponse(undefined, success);
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: The apiResponse has no strong type
     private buildZosFilesResponse(apiResponse: any, success = true): zosfiles.IZosFilesResponse {
         return { apiResponse, commandResponse: "", success };
     }

@@ -17,7 +17,9 @@ import { SshCommonApi } from "./SshCommonApi";
 
 export class SshCommandApi extends SshCommonApi implements MainframeInteraction.ICommand {
     public async issueTsoCommandWithParms?(command: string, _parms?: IStartTsoParms): Promise<IIssueResponse> {
-        const response = await (await this.client).tso.issueCmd({
+        const response = await (
+            await this.client
+        ).tso.issueCmd({
             commandText: command,
         });
         return {
@@ -30,8 +32,10 @@ export class SshCommandApi extends SshCommonApi implements MainframeInteraction.
 
     public async issueMvsCommand?(command: string, consoleName?: string): Promise<IConsoleResponse> {
         try {
-            const user = this.profile?.profile?.user;
-            const response = await (await this.client).console.issueCmd({
+            const user: string = this.profile?.profile?.user;
+            const response = await (
+                await this.client
+            ).console.issueCmd({
                 commandText: command,
                 consoleName: consoleName ?? (user ? `${user.slice(0, -2)}CN` : "ZOWE00CN"),
             });
@@ -43,13 +47,13 @@ export class SshCommandApi extends SshCommonApi implements MainframeInteraction.
         } catch (err) {
             return {
                 success: false,
-                commandResponse: `${err}`,
-                zosmfResponse: [{ "cmd-response": `${err}` }],
+                commandResponse: `${(err as Error).message}`,
+                zosmfResponse: [{ "cmd-response": `${(err as Error).message}` }],
             };
         }
     }
 
-    public async issueUnixCommand?(_command: string, _cwd: string, _sshSession?: SshSession): Promise<string> {
+    public issueUnixCommand?(_command: string, _cwd: string, _sshSession?: SshSession): Promise<string> {
         throw new Error("Method not implemented.");
     }
 

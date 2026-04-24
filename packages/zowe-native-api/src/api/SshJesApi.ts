@@ -55,7 +55,7 @@ export class SshJesApi extends SshCommonApi implements MainframeInteraction.IJes
         return response.items as unknown as zosjobs.IJobFile[];
     }
 
-    public async downloadSpoolContent(_parms: zosjobs.IDownloadAllSpoolContentParms): Promise<void> {
+    public downloadSpoolContent(_parms: zosjobs.IDownloadAllSpoolContentParms): Promise<void> {
         throw new Error("Not yet implemented");
     }
 
