@@ -27,7 +27,6 @@ import {
     AuthHandler,
     IFileSystemEntry,
     ConflictViewSelection,
-    ConflictViewSelection,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { USSFileStructure } from "./USSFileStructure";
