@@ -36,6 +36,7 @@ import {
     NavigationTreeItem,
     FsAbstractUtils,
     ZoweVsCodeExtension,
+    DsType,
     Paginator,
 } from "@zowe/zowe-explorer-api";
 import { Constants, JwtCheckResult } from "../../../../src/configuration/Constants";
@@ -370,8 +371,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const writeFileMock = jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
-        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        const writeFileMock = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.pattern = "test";
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -413,7 +413,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(testTree);
 
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
-        expect(writeFileMock).toHaveBeenCalledWith(sampleChildren[0].resourceUri, new Uint8Array(), { create: true, overwrite: false });
+        expect(writeFileMock).toHaveBeenCalledWith(sampleChildren[0].resourceUri, DsType.Ps);
         expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
         expect(children).toEqual(sampleChildren);
     });
@@ -2853,6 +2853,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const blockMocks = createBlockMocks(globalMocks);
         jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
         jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         const newNode = new ZoweDatasetNode({

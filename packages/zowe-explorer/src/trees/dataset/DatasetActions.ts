@@ -27,6 +27,7 @@ import {
     ZosEncoding,
     MessageSeverity,
     Poller,
+    DsType,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
@@ -301,6 +302,11 @@ export class DatasetActions {
             }
             throw new Error(err);
         }
+
+        DatasetFSProvider.instance.fireSoon({
+            type: vscode.FileChangeType.Created,
+            uri: node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, dsName), query: "" }),
+        });
     }
 
     private static async focusOnNewDs(
@@ -1246,8 +1252,13 @@ export class DatasetActions {
             const label = parent.label as string;
             const profile = parent.getProfile();
             let replace: Definitions.ShouldReplace;
+            const extension = DatasetUtils.getExtension(label);
+            const memberUri = parent.resourceUri.with({
+                path: path.posix.join(parent.resourceUri.path, `${name}${extension ?? ""}`),
+            });
+
             try {
-                replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem");
+                replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem", memberUri);
                 if (replace !== "cancel") {
                     await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(label + "(" + name + ")", {
                         responseTimeout: profile.profile?.responseTimeout,
@@ -1264,6 +1275,11 @@ export class DatasetActions {
                 throw err;
             }
 
+            if (!DatasetFSProvider.instance.exists(memberUri) || replace === "replace") {
+                const writeUri = replace === "replace" ? memberUri.with({ query: "forceUpload=true" }) : memberUri;
+                await vscode.workspace.fs.writeFile(writeUri, new Uint8Array());
+            }
+
             parent.dirty = true;
             datasetProvider.refreshElement(parent);
 
@@ -1277,10 +1293,6 @@ export class DatasetActions {
             }
 
             if (newNode != null) {
-                if (replace === "notFound") {
-                    await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
-                }
-
                 await vscode.commands.executeCommand("vscode.open", newNode.resourceUri);
             }
             datasetProvider.refresh();
@@ -2811,7 +2823,8 @@ export class DatasetActions {
     public static async determineReplacement(
         nodeProfile: imperative.IProfileLoaded,
         name: string,
-        type: Definitions.ReplaceDSType
+        type: Definitions.ReplaceDSType,
+        uri?: vscode.Uri
     ): Promise<Definitions.ShouldReplace> {
         ZoweLogger.trace("dataset.actions.determineReplacement called.");
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(nodeProfile);
@@ -2827,6 +2840,10 @@ export class DatasetActions {
             if (res?.success && res.apiResponse?.items.some((m) => m.member == member.toUpperCase())) {
                 q = vscode.l10n.t("The data set member already exists.\nDo you want to replace it?");
                 replace = stringReplace === (await Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
+                if (replace && uri && !DatasetFSProvider.instance.exists(uri)) {
+                    DatasetFSProvider.instance.createEntry(uri, DsType.PdsMember);
+                    DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                }
             }
         } else {
             const res = await mvsApi.dataSet(name, options);
@@ -2841,6 +2858,10 @@ export class DatasetActions {
                     );
                 }
                 replace = stringReplace === (await Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
+                if (replace && uri && !DatasetFSProvider.instance.exists(uri)) {
+                    DatasetFSProvider.instance.createEntry(uri, type === "po" ? DsType.Pds : DsType.Ps);
+                    DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                }
             }
         }
         // Sonar cloud code-smell :'(
