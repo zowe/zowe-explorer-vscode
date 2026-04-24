@@ -13,7 +13,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed an issue in the `BaseProvider._handleConflict` function where the editor would incorrectly close during file conflict resolution. [#4162](https://github.com/zowe/zowe-explorer-vscode/pull/4162)
 - Fixed an issue where `Gui.openFileDialog` method could fail if default URL with `vscode-remote` scheme is provided. [#4127](https://github.com/zowe/zowe-explorer-vscode/pull/4127)
+- Fixed JSDocs on `IZoweTree` to match parameter names proporly. [4077](https://github.com/zowe/zowe-explorer-vscode/pull/4077)
 - Updated Zowe SDKs to `8.31.0` for technical currency. [#4117](https://github.com/zowe/zowe-explorer-vscode/pull/4117)
 - Updated BaseProvider to fix an issue where cached file system entries would not reflect profile updates (reactivations, credential changes, etc.) in the Data Sets, Jobs, and USS trees. [#4141](https://github.com/zowe/zowe-explorer-vscode/issues/4141)
 

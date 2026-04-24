@@ -214,10 +214,6 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;
-        this._fireSoon(
-            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.join(uri.path, "..") }) },
-            { type: vscode.FileChangeType.Created, uri }
-        );
     }
 
     /**
@@ -279,7 +275,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
         });
 
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
+        this.fireSoon({ type: vscode.FileChangeType.Changed, uri });
 
         if (query.has("startLine") && !query.has("endLine")) {
             spoolEntry.data = Buffer.concat([spoolEntry.data, bufBuilder.read() ?? new Uint8Array()]);
@@ -349,7 +345,6 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 path: path.posix.join(parent.metadata.path, basename),
             };
             parent.entries.set(spoolName, entry);
-            this._fireSoon({ type: vscode.FileChangeType.Created, uri });
         } else {
             entry.data = content;
             entry.mtime = Date.now();
@@ -398,7 +393,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             throw err;
         }
         parent.entries.delete(entry.name);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri });
     }
 
     // unsupported
