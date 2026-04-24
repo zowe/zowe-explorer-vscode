@@ -599,24 +599,6 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     if (!tooltipEl) {
       tooltipEl = document.createElement("div");
       tooltipEl.id = "header-icon-tooltip";
-      tooltipEl.style.cssText = `
-        position: fixed;
-        background-color: var(--vscode-editorHoverWidget-background, #252526);
-        border: 1px solid var(--vscode-editorHoverWidget-border, #3e3e42);
-        color: var(--vscode-editorHoverWidget-foreground, #cccccc);
-        padding: 0.5em 0.75em;
-        border-radius: 3px;
-        font-size: 0.9em;
-        z-index: 10001;
-        display: none;
-        pointer-events: none;
-        white-space: normal;
-        word-wrap: break-word;
-        max-width: 250px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        line-height: 1.4;
-      `;
       document.body.appendChild(tooltipEl);
     }
     const tooltip = tooltipEl;
