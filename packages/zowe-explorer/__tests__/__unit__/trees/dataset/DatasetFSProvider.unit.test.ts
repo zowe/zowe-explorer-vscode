@@ -1653,6 +1653,127 @@ describe("DatasetFSProvider", () => {
 
             expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri.with({ path: "/sestest/USER.DATA.PDS.NEW" }));
         });
+
+        describe("mtime update scenarios", () => {
+            it("should update mtime when m4date is provided with separate mtime and msec fields", async () => {
+                const fakePs = Object.assign(Object.create(Object.getPrototypeOf(testEntries.ps)), testEntries.ps);
+                fakePs.mtime = 1000; // Set initial mtime to a different value
+
+                jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePs);
+                jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(testEntries.session);
+                jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                    isRoot: false,
+                    slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                    profileName: "sestest",
+                    profile: testEntries.ps.metadata.profile,
+                });
+
+                const dataSetMock = jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                name: "USER.DATA.PS",
+                                dsorg: "PS",
+                                m4date: "2024-08-08",
+                                mtime: "12:34:56",
+                                msec: "123",
+                            },
+                        ],
+                    },
+                    commandResponse: "",
+                });
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    dataSet: dataSetMock,
+                } as any);
+
+                const result = await DatasetFSProvider.instance.stat(testUris.ps);
+
+                // Verify the mtime was updated to the new calculated value
+                const expectedTime = dayjs("2024-08-08 12:34:56:123").valueOf();
+                expect(result.mtime).toBe(expectedTime);
+                expect(fakePs.wasAccessed).toBe(false);
+            });
+
+            it("should update mtime when m4date is provided without separate mtime field", async () => {
+                const fakePs = Object.assign(Object.create(Object.getPrototypeOf(testEntries.ps)), testEntries.ps);
+                fakePs.mtime = 1000; // Set initial mtime to a different value
+
+                jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePs);
+                jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(testEntries.session);
+                jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                    isRoot: false,
+                    slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                    profileName: "sestest",
+                    profile: testEntries.ps.metadata.profile,
+                });
+
+                const dataSetMock = jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                name: "USER.DATA.PS",
+                                dsorg: "PS",
+                                m4date: "2024-08-08T14:30:15.789Z",
+                            },
+                        ],
+                    },
+                    commandResponse: "",
+                });
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    dataSet: dataSetMock,
+                } as any);
+
+                const result = await DatasetFSProvider.instance.stat(testUris.ps);
+
+                // Verify the mtime was updated using just the m4date
+                const expectedTime = dayjs("2024-08-08T14:30:15.789Z").valueOf();
+                expect(result.mtime).toBe(expectedTime);
+                expect(fakePs.wasAccessed).toBe(false);
+            });
+
+            it("should not update entry when mtime matches the calculated new time", async () => {
+                const expectedTime = dayjs("2024-08-08 12:34:56:123").valueOf();
+                const fakePs = Object.assign(Object.create(Object.getPrototypeOf(testEntries.ps)), testEntries.ps);
+                fakePs.mtime = expectedTime; // Set mtime to match what will be calculated
+                fakePs.wasAccessed = true; // Set to true to verify it's not changed
+
+                jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePs);
+                jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(testEntries.session);
+                jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                    isRoot: false,
+                    slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                    profileName: "sestest",
+                    profile: testEntries.ps.metadata.profile,
+                });
+
+                const dataSetMock = jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                name: "USER.DATA.PS",
+                                dsorg: "PS",
+                                m4date: "2024-08-08",
+                                mtime: "12:34:56",
+                                msec: "123",
+                            },
+                        ],
+                    },
+                    commandResponse: "",
+                });
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    dataSet: dataSetMock,
+                } as any);
+
+                const result = await DatasetFSProvider.instance.stat(testUris.ps);
+
+                // Verify the mtime was not changed and wasAccessed remains true
+                expect(result.mtime).toBe(expectedTime);
+                expect(fakePs.wasAccessed).toBe(true); // Should remain unchanged
+            });
+        });
     });
 
     describe("fetchEntriesForDataset", () => {
@@ -2283,6 +2404,69 @@ describe("DatasetFSProvider", () => {
                 await Promise.all([DatasetFSProvider.instance.readDirectory(pdsUri), DatasetFSProvider.instance.stat(memberUri)]);
                 expect(readDirImplSpy).toHaveBeenCalledTimes(2);
             });
+        });
+    });
+
+    describe("mtime handling for undefined values", () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        it("handles remoteLookupForResource with missing m4date", async () => {
+            const mockMvsApi = {
+                dataSet: jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                dsname: "USER.DATA.PS",
+                            },
+                        ],
+                    },
+                }),
+            };
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+
+            const sessionEntry = new FilterEntry("sestest");
+            sessionEntry.metadata = testEntries.session.metadata;
+            jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(true);
+            jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(sessionEntry);
+
+            const result = await DatasetFSProvider.instance.remoteLookupForResource(testUris.ps);
+
+            expect(result).toBeDefined();
+            expect(result.mtime).toBeDefined();
+            expect(result.wasAccessed).toBe(false);
+        });
+
+        it("handles remoteLookupForResource with falsy m4date", async () => {
+            const mockMvsApi = {
+                dataSet: jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                dsname: "USER.DATA.PS",
+                                m4date: "",
+                                mtime: "12:34:56",
+                                msec: "123",
+                            },
+                        ],
+                    },
+                }),
+            };
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+
+            const sessionEntry = new FilterEntry("sestest");
+            sessionEntry.metadata = testEntries.session.metadata;
+            jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(true);
+            jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(sessionEntry);
+
+            const result = await DatasetFSProvider.instance.remoteLookupForResource(testUris.ps);
+
+            expect(result).toBeDefined();
+            expect(result.mtime).toBeDefined();
+            expect(result.wasAccessed).toBe(false);
         });
     });
 });
