@@ -2838,6 +2838,12 @@ export class DatasetActions {
             const member = name.split("(")[1].slice(0, -1);
             const res = await mvsApi.allMembers(dsname, options);
             if (res?.success && res.apiResponse?.items.some((m) => m.member == member.toUpperCase())) {
+                if (uri) {
+                    if (!DatasetFSProvider.instance.exists(uri)) {
+                        DatasetFSProvider.instance.createEntry(uri, DsType.PdsMember);
+                        DatasetFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                    }
+                }
                 q = vscode.l10n.t("The data set member already exists.\nDo you want to replace it?");
                 replace = stringReplace === (await Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
                 if (replace && uri && !DatasetFSProvider.instance.exists(uri)) {
@@ -2850,6 +2856,12 @@ export class DatasetActions {
             // Filter results to ensure exact match (e.g., A.B should not match A.B.C)
             const exactMatch = res?.success && res.apiResponse?.items.some((item) => item.dsname?.toUpperCase() === name.toUpperCase());
             if (exactMatch) {
+                if (uri) {
+                    if (!DatasetFSProvider.instance.exists(uri)) {
+                        DatasetFSProvider.instance.createEntry(uri, type === "po" ? DsType.Pds : DsType.Ps);
+                        DatasetFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                    }
+                }
                 if (type === "ps") {
                     q = vscode.l10n.t("The physical sequential (PS) data set already exists.\nDo you want to replace it?");
                 } else if (type === "po") {
