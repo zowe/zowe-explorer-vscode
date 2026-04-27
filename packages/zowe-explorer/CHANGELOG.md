@@ -17,6 +17,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Updated USS and data set file system providers to generate notifications based on remote system changes rather than local file system cache updates. [#4162](https://github.com/zowe/zowe-explorer-vscode/pull/4162)
 - Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. [#3554](https://github.com/zowe/zowe-explorer-vscode/issues/3554)
 - Fixed an issue where file system URIs with trailing slashes failed to resolve. [#3904](https://github.com/zowe/zowe-explorer-vscode/issues/3904)
 - Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. [#4032](https://github.com/zowe/zowe-explorer-vscode/issues/4032)
@@ -39,6 +40,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue that would allow multiple member-filter on a single dataset search. [#2037](https://github.com/zowe/zowe-explorer-vscode/issues/2037)
 - Fixed an issue where the editor tab remained open after deleting a sequential data set. The editor now automatically closes when the data set is deleted. [#4050](https://github.com/zowe/zowe-explorer-vscode/issues/4050)
 - Fixed extended to include PDS members and USS files. [#4050](https://github.com/zowe/zowe-explorer-vscode/issues/4050)
+- Fixed the submit job confirmation dialog box failing to display when a job is submitted. [#4097](https://github.com/zowe/zowe-explorer-vscode/issues/4097)
 
 ## `3.4.2`
 

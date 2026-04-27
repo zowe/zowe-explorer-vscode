@@ -31,6 +31,8 @@ import {
     Types,
     imperative,
     IFileSystemEntry,
+    DsType,
+    ConflictViewSelection,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -148,10 +150,17 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const ds = items?.[0];
             if (ds != null && "m4date" in ds) {
                 const { m4date, mtime, msec } = ds;
-                const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
-                if (entry.mtime != newTime) {
-                    entry.mtime = newTime;
+                if (m4date) {
+                    // Handle both formats: separate mtime/msec fields vs combined in m4date
+                    const newTime = mtime ? dayjs(`${m4date} ${mtime}:${msec || "00"}`).valueOf() : dayjs(m4date).valueOf();
+                    if (entry.mtime != newTime) {
+                        entry.mtime = newTime;
+                        entry.wasAccessed = false;
+                    }
+                } else {
+                    // For profiles that don't provide mtime data, always invalidate to force refresh
                     entry.wasAccessed = false;
+                    entry.mtime = Date.now();
                 }
             }
             return entry;
@@ -305,12 +314,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 tempEntry.metadata = new DsEntryMetadata({ ...entry.metadata, path: path.posix.join(entry.metadata.path, fullMemberName) });
             }
 
-            if (ds.m4date && ds.mtime) {
-                const newTime = dayjs(`${ds.m4date} ${ds.mtime}:${ds.msec || "00"}`).valueOf();
+            if (ds.m4date) {
+                const newTime = ds.mtime ? dayjs(`${ds.m4date} ${ds.mtime}:${ds.msec || "00"}`).valueOf() : dayjs(ds.m4date).valueOf();
                 if (newTime && tempEntry.mtime !== newTime) {
                     tempEntry.mtime = newTime;
                     tempEntry.wasAccessed = false;
                 }
+            } else if (ds.member) {
+                // For profiles that don't provide mtime data, always invalidate to force refresh
+                tempEntry.wasAccessed = false;
+                tempEntry.mtime = Date.now();
             }
 
             entry.entries.set(fullMemberName, tempEntry);
@@ -527,10 +540,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         parent.mtime = Date.now();
         parent.size += 1;
-        this._fireSoon(
-            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.join(uri.path, "..") }) },
-            { type: vscode.FileChangeType.Created, uri }
-        );
     }
 
     /**
@@ -607,13 +616,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     dsEntry.data = data;
                     if (dsEntry.etag !== resp.apiResponse.etag) {
                         dsEntry.mtime = Date.now();
+                        if (dsEntry.etag) {
+                            this.fireSoon({ type: vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
+                        }
                     }
                     dsEntry.etag = resp.apiResponse.etag;
                     dsEntry.size = dsEntry.data.byteLength;
                 }
             });
             ZoweLogger.trace(`[DatasetFSProvider] fetchDatasetAtUri fired a change event for ${uri.toString()}`);
-            this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
 
             if (options?.editor) {
                 await this._updateResourceInEditor(uri);
@@ -818,7 +829,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
         const basename = path.posix.basename(uri.path);
         const parent = this.lookupParentDirectory(uri);
-        const isPdsMember = FsDatasetsUtils.isPdsEntry(parent);
         let entry: FileEntry = parent.entries.get(basename);
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
@@ -830,56 +840,60 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileExists(uri);
         }
 
-        // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
+        // Track whether this entry is new (not previously in the local member list).
+        // This determines whether to fire a Created or Changed notification.
+        const isNew = !entry;
+
+        if (isNew) {
+            const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+            const uriPath = uri.path
+                .substring(uriInfo.slashAfterProfilePos + 1)
+                .split("/")
+                .filter(Boolean);
+            const ds = new DsEntry(basename, uriPath.length === this.EXPECTED_MEMBER_LENGTH);
+            ds.metadata = new DsEntryMetadata({
+                path: path.posix.join(parent.metadata.path, basename),
+                profile: parent.metadata.profile,
+            });
+            ds.data = new Uint8Array();
+            parent.entries.set(basename, ds);
+            entry = ds;
+        }
+
         const urlQuery = new URLSearchParams(uri.query);
         const forceUpload = urlQuery.has("forceUpload");
         const encodingParam = urlQuery.get("encoding") || undefined;
 
-        // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
-
         try {
-            if (!entry) {
-                entry = new DsEntry(basename, isPdsMember);
+            if (urlQuery.has("inDiff")) {
+                // Allow users to edit files in diff view.
+                // If in diff view, we don't want to make any API calls, just keep track of latest
+                // changes to data.
                 entry.data = content;
-                const profInfo = parent.metadata
-                    ? new DsEntryMetadata({
-                          profile: parent.metadata.profile,
-                          path: path.posix.join(parent.metadata.path, basename),
-                      })
-                    : this._getInfoFromUri(uri);
-                entry.metadata = profInfo;
-
-                if (content.byteLength > 0) {
-                    // Pass encodingParam and e-tag if write was successful.
-                    const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload, encodingParam);
-                    entry.etag = resp.apiResponse.etag;
-                    entry.data = content;
-                }
-                parent.entries.set(basename, entry);
-                this._fireSoon({ type: vscode.FileChangeType.Created, uri });
-            } else {
-                if (urlQuery.has("inDiff")) {
-                    // Allow users to edit files in diff view.
-                    // If in diff view, we don't want to make any API calls, just keep track of latest
-                    // changes to data.
-                    entry.data = content;
-                    entry.mtime = Date.now();
-                    entry.size = content.byteLength;
-                    entry.inDiffView = true;
-                    return;
-                }
-
-                if (entry.wasAccessed || content.length > 0) {
-                    const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload, encodingParam);
-                    entry.etag = resp.apiResponse.etag;
-                }
-                entry.data = content;
+                entry.mtime = Date.now();
+                entry.size = content.byteLength;
+                entry.inDiffView = true;
+                return;
             }
+
+            if (!isNew || content.length > 0) {
+                const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload, encodingParam);
+                entry = parent.entries.get(basename) as FileEntry;
+                entry.etag = resp.apiResponse.etag;
+            }
+            entry.data = content;
+            entry.mtime = Date.now();
+            entry.size = content.byteLength;
+
+            this.fireSoon({ type: isNew ? vscode.FileChangeType.Created : vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
         } catch (err) {
             if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 entry.data = content;
                 // Prompt the user with the conflict dialog
-                await this._handleConflict(uri, entry);
+                const selection = await this._handleConflict(uri, entry);
+                if (selection !== ConflictViewSelection.Overwrite) {
+                    throw vscode.FileSystemError.Unavailable(vscode.l10n.t("Conflict: Remote contents have changed."));
+                }
                 return;
             }
             if (err instanceof imperative.ImperativeError && err.message.includes("Zowe Explorer: Unsafe upload")) {
@@ -911,8 +925,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     newErr.stack += `\n${lineLabel}\n${group.text}\n`;
                 }
 
+                // Rollback optimistic entry creation on error
+                if (isNew && parent.entries.has(basename)) {
+                    parent.entries.delete(basename);
+                }
                 this._handleError(newErr);
                 throw newErr;
+            }
+            // Rollback optimistic entry creation on error
+            if (isNew && parent.entries.has(basename)) {
+                parent.entries.delete(basename);
             }
             this._handleError(err, {
                 additionalContext: vscode.l10n.t({
@@ -930,10 +952,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             });
             throw err;
         }
-
-        entry.mtime = Date.now();
-        entry.size = content.byteLength;
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
     }
 
     /**
@@ -991,7 +1009,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         parent.entries.delete(entry.name);
         parent.size -= 1;
 
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri });
     }
 
     public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
@@ -1056,7 +1074,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         }
 
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
     }
 
     private validatePath(uri: vscode.Uri): void {
@@ -1074,5 +1092,32 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         if (segmentToCheck.startsWith(".")) {
             throw vscode.FileSystemError.FileNotFound(uri);
         }
+    }
+
+    /**
+     * Creates a new dataset entry in the provider at the given URI.
+     * @param uri The URI that represents the new dataset path
+     * @param dsType The type of dataset to create (PDS, PS, or PDS member)
+     * @returns The newly created dataset entry (either PdsEntry or DsEntry)
+     */
+    public createEntry(uri: vscode.Uri, dsType: DsType): PdsEntry | DsEntry {
+        const basename = path.posix.basename(uri.path);
+        const parent = this.lookupParentDirectory(uri);
+        let entry: PdsEntry | DsEntry;
+        if (dsType !== DsType.Pds) {
+            entry = new DsEntry(basename, dsType === DsType.PdsMember);
+            entry.data = new Uint8Array();
+        } else {
+            entry = new PdsEntry(basename);
+        }
+        const profInfo = parent.metadata
+            ? new DsEntryMetadata({
+                  profile: parent.metadata.profile,
+                  path: path.posix.join(parent.metadata.path, basename),
+              })
+            : this._getInfoFromUri(uri);
+        entry.metadata = profInfo;
+        parent.entries.set(basename, entry);
+        return entry;
     }
 }
