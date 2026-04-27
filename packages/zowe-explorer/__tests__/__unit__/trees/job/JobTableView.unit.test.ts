@@ -109,7 +109,7 @@ describe("JobTableView unit tests", () => {
             const blockMocks = getBlockMocks();
             const reveal = jest.fn();
             const sharedTreeProvidersMock = new MockedProperty(SharedTreeProviders, "job", {
-                get: () => ({ getTreeView: () => ({ reveal } as any) } as any),
+                get: () => ({ getTreeView: () => ({ reveal }) as any }) as any,
             });
             (JobTableView as any).cachedChildren = [blockMocks.jobNode];
             await JobTableView.displayInTree({} as any, {

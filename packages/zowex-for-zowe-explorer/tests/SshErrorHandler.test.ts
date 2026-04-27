@@ -154,11 +154,7 @@ describe("SshErrorHandler", () => {
 
             const result = await errorHandler.handleError(testError, ZoweExplorerApiType.Uss, "File upload", true);
 
-            expect(mockShowErrorMessage).toHaveBeenCalledWith(
-                "File upload: Temporary failure",
-                "Retry",
-                "Show Details",
-            );
+            expect(mockShowErrorMessage).toHaveBeenCalledWith("File upload: Temporary failure", "Retry", "Show Details");
             expect(result).toBe("Retry");
         });
 
@@ -181,9 +177,7 @@ describe("SshErrorHandler", () => {
 
             expect(mockCreateOutputChannel).toHaveBeenCalledWith("Zowe Remote SSH");
             expect(mockOutputChannel.appendLine).toHaveBeenCalledWith("Error: Detailed error");
-            expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
-                "Stack: Error: Detailed error\n    at test.js:1:1",
-            );
+            expect(mockOutputChannel.appendLine).toHaveBeenCalledWith("Stack: Error: Detailed error\n    at test.js:1:1");
             expect(mockOutputChannel.show).toHaveBeenCalled();
         });
 
@@ -333,7 +327,7 @@ describe("SshErrorHandler", () => {
                 expect.any(Error),
                 expect.objectContaining({
                     additionalContext: "File operations (chmod command)",
-                }),
+                })
             );
         });
 
@@ -353,7 +347,7 @@ describe("SshErrorHandler", () => {
                 expect.any(Error),
                 expect.objectContaining({
                     additionalContext: "execute command",
-                }),
+                })
             );
         });
     });

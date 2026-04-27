@@ -9,13 +9,7 @@
  *
  */
 
-import {
-    type ErrorCorrelator,
-    type IApiExplorerExtender,
-    type Types,
-    ZoweExplorerApiType,
-    ZoweVsCodeExtension,
-} from "@zowe/zowe-explorer-api";
+import { type ErrorCorrelator, type IApiExplorerExtender, type Types, ZoweExplorerApiType, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { afterEach, beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
 import { registerSshErrorCorrelations } from "../src/SshErrorCorrelations";
 
@@ -111,9 +105,7 @@ describe("SshErrorCorrelations", () => {
         });
 
         it("should register FOTS4241 authentication failure correlation", () => {
-            const authFailureCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FOTS4241",
-            );
+            const authFailureCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FOTS4241");
 
             expect(authFailureCall).toBeDefined();
             expect(authFailureCall[0]).toBe(ZoweExplorerApiType.All);
@@ -136,9 +128,7 @@ describe("SshErrorCorrelations", () => {
         });
 
         it("should register FOTS4134 unsafe key agreement correlation", () => {
-            const unsafeKeyCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FOTS4134",
-            );
+            const unsafeKeyCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FOTS4134");
 
             expect(unsafeKeyCall).toBeDefined();
             const correlation = unsafeKeyCall[2];
@@ -149,9 +139,7 @@ describe("SshErrorCorrelations", () => {
         });
 
         it("should register FOTS4231 server unsafe key agreement correlation", () => {
-            const serverUnsafeCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FOTS4231",
-            );
+            const serverUnsafeCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FOTS4231");
 
             expect(serverUnsafeCall).toBeDefined();
             const correlation = serverUnsafeCall[2];
@@ -161,9 +149,7 @@ describe("SshErrorCorrelations", () => {
         });
 
         it("should register FOTS4203 host key ownership correlation", () => {
-            const hostKeyCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FOTS4203",
-            );
+            const hostKeyCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FOTS4203");
 
             expect(hostKeyCall).toBeDefined();
             const correlation = hostKeyCall[2];
@@ -174,9 +160,7 @@ describe("SshErrorCorrelations", () => {
         });
 
         it("should register FOTS4240 key exchange error correlation", () => {
-            const kexErrorCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FOTS4240",
-            );
+            const kexErrorCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FOTS4240");
 
             expect(kexErrorCall).toBeDefined();
             const correlation = kexErrorCall[2];
@@ -194,9 +178,7 @@ describe("SshErrorCorrelations", () => {
         });
 
         it("should register FOTS4314 xreallocarray memory error correlation", () => {
-            const memoryCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FOTS4314",
-            );
+            const memoryCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FOTS4314");
 
             expect(memoryCall).toBeDefined();
             const correlation = memoryCall[2];
@@ -204,17 +186,12 @@ describe("SshErrorCorrelations", () => {
             expect(correlation.matches).toEqual(expect.arrayContaining([expect.any(RegExp), "FOTS4314"]));
             expect(correlation.summary).toContain("out of memory");
             expect(correlation.tips).toEqual(
-                expect.arrayContaining([
-                    expect.stringContaining("Close other applications"),
-                    expect.stringContaining("Restart the SSH client"),
-                ]),
+                expect.arrayContaining([expect.stringContaining("Close other applications"), expect.stringContaining("Restart the SSH client")])
             );
         });
 
         it("should register FOTS4315 xrecallocarray memory error correlation", () => {
-            const memoryCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FOTS4315",
-            );
+            const memoryCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FOTS4315");
 
             expect(memoryCall).toBeDefined();
             const correlation = memoryCall[2];
@@ -224,9 +201,7 @@ describe("SshErrorCorrelations", () => {
         });
 
         it("should register FOTS4216 session state allocation error correlation", () => {
-            const sessionCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FOTS4216",
-            );
+            const sessionCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FOTS4216");
 
             expect(sessionCall).toBeDefined();
             const correlation = sessionCall[2];
@@ -236,9 +211,7 @@ describe("SshErrorCorrelations", () => {
         });
 
         it("should register FOTS4311 state allocation error correlation", () => {
-            const stateCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FOTS4311",
-            );
+            const stateCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FOTS4311");
 
             expect(stateCall).toBeDefined();
             const correlation = stateCall[2];
@@ -255,33 +228,22 @@ describe("SshErrorCorrelations", () => {
         });
 
         it("should register FSUM6260 write error correlation", () => {
-            const writeErrorCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FSUM6260",
-            );
+            const writeErrorCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FSUM6260");
 
             expect(writeErrorCall).toBeDefined();
             const correlation = writeErrorCall[2];
             expect(correlation.errorCode).toBe("FSUM6260");
             expect(correlation.matches).toEqual(
-                expect.arrayContaining([
-                    expect.any(RegExp),
-                    "FSUM6260",
-                    "Failed to upload server PAX file with RC 4: Error: Failure",
-                ]),
+                expect.arrayContaining([expect.any(RegExp), "FSUM6260", "Failed to upload server PAX file with RC 4: Error: Failure"])
             );
             expect(correlation.summary).toContain("Failed to write to file");
             expect(correlation.tips).toEqual(
-                expect.arrayContaining([
-                    expect.stringContaining("write permissions"),
-                    expect.stringContaining("disk has sufficient free space"),
-                ]),
+                expect.arrayContaining([expect.stringContaining("write permissions"), expect.stringContaining("disk has sufficient free space")])
             );
         });
 
         it("should register FOTS4152 openpty error correlation", () => {
-            const ptyCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FOTS4152",
-            );
+            const ptyCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FOTS4152");
 
             expect(ptyCall).toBeDefined();
             const correlation = ptyCall[2];
@@ -291,9 +253,7 @@ describe("SshErrorCorrelations", () => {
         });
 
         it("should register FOTS4154 packet connection error correlation", () => {
-            const packetCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FOTS4154",
-            );
+            const packetCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FOTS4154");
 
             expect(packetCall).toBeDefined();
             const correlation = packetCall[2];
@@ -303,9 +263,7 @@ describe("SshErrorCorrelations", () => {
         });
 
         it("should register FOTS4150 kex_setup error correlation", () => {
-            const kexSetupCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FOTS4150",
-            );
+            const kexSetupCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FOTS4150");
 
             expect(kexSetupCall).toBeDefined();
             const correlation = kexSetupCall[2];
@@ -315,9 +273,7 @@ describe("SshErrorCorrelations", () => {
         });
 
         it("should register FOTS4312 cipher initialization error correlation", () => {
-            const cipherCall = mockErrorCorrelator.addCorrelation.mock.calls.find(
-                (call) => call[2].errorCode === "FOTS4312",
-            );
+            const cipherCall = mockErrorCorrelator.addCorrelation.mock.calls.find((call) => call[2].errorCode === "FOTS4312");
 
             expect(cipherCall).toBeDefined();
             const correlation = cipherCall[2];

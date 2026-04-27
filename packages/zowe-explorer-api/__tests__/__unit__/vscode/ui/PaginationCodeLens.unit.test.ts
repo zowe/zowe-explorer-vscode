@@ -14,7 +14,12 @@ import { PaginationCodeLens } from "../../../../src/vscode/ui/PaginationCodeLens
 jest.mock("vscode", () => {
     return {
         Range: class {
-            public constructor(public startLine: number, public _startChar: number, public endLine: number, public _endChar: number) {
+            public constructor(
+                public startLine: number,
+                public _startChar: number,
+                public endLine: number,
+                public _endChar: number
+            ) {
                 this.start = { line: startLine };
                 this.end = { line: endLine };
             }
@@ -22,7 +27,10 @@ jest.mock("vscode", () => {
             public end: { line: number };
         },
         CodeLens: class {
-            public constructor(public range: any, public command: any) {}
+            public constructor(
+                public range: any,
+                public command: any
+            ) {}
         },
         l10n: {
             t: (str: string) => str,

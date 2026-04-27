@@ -67,7 +67,10 @@ class SshAttributesProvider implements IAttributesProvider {
 export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs {
     private attrProvider = new SshAttributesProvider();
 
-    public constructor(dsAttrProvider?: DataSetAttributesProvider, public profile?: imperative.IProfileLoaded) {
+    public constructor(
+        dsAttrProvider?: DataSetAttributesProvider,
+        public profile?: imperative.IProfileLoaded
+    ) {
         super(profile);
         dsAttrProvider?.register(this.attrProvider);
     }

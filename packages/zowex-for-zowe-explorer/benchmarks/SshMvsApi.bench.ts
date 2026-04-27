@@ -25,7 +25,7 @@ describe("Data Sets", () => {
                 async () => {
                     await target.mvs.dataSet("SYS1.*");
                 },
-                { iterations: 1, throws: true },
+                { iterations: 1, throws: true }
             );
         }
     });
@@ -37,7 +37,7 @@ describe("Data Sets", () => {
                 async () => {
                     await target.mvs.dataSet("SYS1.*", { attributes: true });
                 },
-                { iterations: 1, throws: true },
+                { iterations: 1, throws: true }
             );
         }
     });
@@ -49,7 +49,7 @@ describe("Data Sets", () => {
                 async () => {
                     await target.mvs.allMembers("SYS1.MACLIB");
                 },
-                { iterations: 1, throws: true },
+                { iterations: 1, throws: true }
             );
         }
     });
@@ -61,7 +61,7 @@ describe("Data Sets", () => {
                 async () => {
                     await target.mvs.allMembers("SYS1.MACLIB", { attributes: true });
                 },
-                { iterations: 1, throws: true },
+                { iterations: 1, throws: true }
             );
         }
     });
@@ -72,11 +72,7 @@ describe("Data Sets", () => {
                 target.name,
                 async () => {
                     const dsName = `${PREFIX}.BP${RANDOM_STR}`;
-                    await target.mvs.createDataSet(
-                        CreateDataSetTypeEnum.DATA_SET_PARTITIONED,
-                        dsName,
-                        CreateDefaults.DATA_SET.PARTITIONED,
-                    );
+                    await target.mvs.createDataSet(CreateDataSetTypeEnum.DATA_SET_PARTITIONED, dsName, CreateDefaults.DATA_SET.PARTITIONED);
                     try {
                         await target.mvs.uploadFromBuffer(Buffer.from("HELLO BENCH"), `${dsName}(MEMBER1)`);
                         await target.mvs.getContents(`${dsName}(MEMBER1)`, { stream: new PassThrough() });
@@ -84,7 +80,7 @@ describe("Data Sets", () => {
                         await target.mvs.deleteDataSet(dsName);
                     }
                 },
-                { iterations: 1, throws: true },
+                { iterations: 1, throws: true }
             );
         }
     });
@@ -95,11 +91,7 @@ describe("Data Sets", () => {
                 target.name,
                 async () => {
                     const dsName = `${PREFIX}.BS${RANDOM_STR}`;
-                    await target.mvs.createDataSet(
-                        CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-                        dsName,
-                        CreateDefaults.DATA_SET.SEQUENTIAL,
-                    );
+                    await target.mvs.createDataSet(CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, dsName, CreateDefaults.DATA_SET.SEQUENTIAL);
                     try {
                         await target.mvs.uploadFromBuffer(Buffer.from("HELLO BENCH"), dsName);
                         await target.mvs.getContents(dsName, { stream: new PassThrough() });
@@ -107,7 +99,7 @@ describe("Data Sets", () => {
                         await target.mvs.deleteDataSet(dsName);
                     }
                 },
-                { iterations: 1, throws: true },
+                { iterations: 1, throws: true }
             );
         }
     });

@@ -23,7 +23,7 @@ describe("Jobs", () => {
                 async () => {
                     await target.jes.getJobsByParameters({});
                 },
-                { iterations: 1, throws: true },
+                { iterations: 1, throws: true }
             );
         }
     });
@@ -40,7 +40,7 @@ describe("Jobs", () => {
                         await target.jes.deleteJob(job.jobname, job.jobid);
                     }
                 },
-                { iterations: 1, throws: true },
+                { iterations: 1, throws: true }
             );
         }
     });
@@ -58,7 +58,7 @@ describe("Jobs", () => {
                         await target.jes.deleteJob(job.jobname, job.jobid);
                     }
                 },
-                { iterations: 1, throws: true },
+                { iterations: 1, throws: true }
             );
         }
     });

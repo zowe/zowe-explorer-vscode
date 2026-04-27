@@ -4073,7 +4073,7 @@ describe("Dataset Actions Unit Tests - Function confirmJobSubmission", () => {
             () =>
                 ({
                     get: () => Constants.JOB_SUBMIT_DIALOG_OPTS[1],
-                } as any)
+                }) as any
         );
         jest.spyOn(Gui, "warningMessage").mockResolvedValue({
             title: "Submit",
@@ -4628,7 +4628,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
         expect(createEntrySpy).toHaveBeenCalledWith(testUri, DsType.PdsMember);
         expect(fireSoonSpy).toHaveBeenCalledWith({
             type: vscode.FileChangeType.Created,
-            uri: testUri.with({ query: "" })
+            uri: testUri.with({ query: "" }),
         });
 
         allMembersSpy.mockRestore();
@@ -4651,9 +4651,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
             },
         });
 
-        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists")
-            .mockReturnValueOnce(false)
-            .mockReturnValueOnce(false);
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false).mockReturnValueOnce(false);
         const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation();
 
@@ -4667,7 +4665,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
         expect(createEntrySpy).toHaveBeenCalledTimes(2);
         expect(fireSoonSpy).toHaveBeenCalledWith({
             type: vscode.FileChangeType.Created,
-            uri: testUri.with({ query: "" })
+            uri: testUri.with({ query: "" }),
         });
 
         allMembersSpy.mockRestore();
@@ -4704,7 +4702,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
         expect(createEntrySpy).toHaveBeenCalledWith(testUri, DsType.Pds);
         expect(fireSoonSpy).toHaveBeenCalledWith({
             type: vscode.FileChangeType.Created,
-            uri: testUri.with({ query: "" })
+            uri: testUri.with({ query: "" }),
         });
 
         dataSetSpy.mockRestore();
@@ -4727,9 +4725,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
             },
         });
 
-        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists")
-            .mockReturnValueOnce(false)
-            .mockReturnValueOnce(false);
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false).mockReturnValueOnce(false);
         const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation();
 
@@ -4743,7 +4739,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
         expect(createEntrySpy).toHaveBeenCalledTimes(2);
         expect(fireSoonSpy).toHaveBeenCalledWith({
             type: vscode.FileChangeType.Created,
-            uri: testUri.with({ query: "" })
+            uri: testUri.with({ query: "" }),
         });
 
         allMembersSpy.mockRestore();
@@ -4766,9 +4762,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
             },
         });
 
-        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists")
-            .mockReturnValueOnce(false)
-            .mockReturnValueOnce(false);
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false).mockReturnValueOnce(false);
         const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation();
 
@@ -4782,7 +4776,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
         expect(createEntrySpy).toHaveBeenCalledTimes(2);
         expect(fireSoonSpy).toHaveBeenCalledWith({
             type: vscode.FileChangeType.Created,
-            uri: testUri.with({ query: "" })
+            uri: testUri.with({ query: "" }),
         });
 
         dataSetSpy.mockRestore();

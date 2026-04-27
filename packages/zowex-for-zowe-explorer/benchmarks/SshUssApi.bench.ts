@@ -24,7 +24,7 @@ describe("USS", () => {
                 async () => {
                     await target.uss.fileList(USS_DIR);
                 },
-                { iterations: 1, throws: true },
+                { iterations: 1, throws: true }
             );
         }
     });
@@ -36,7 +36,7 @@ describe("USS", () => {
                 async () => {
                     await target.uss.fileList(USS_DIR, { attributes: true });
                 },
-                { iterations: 1, throws: true },
+                { iterations: 1, throws: true }
             );
         }
     });
@@ -55,7 +55,7 @@ describe("USS", () => {
                         await target.uss.delete(ussFile);
                     }
                 },
-                { iterations: 1, throws: true },
+                { iterations: 1, throws: true }
             );
         }
     });

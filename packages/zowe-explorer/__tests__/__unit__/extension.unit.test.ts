@@ -426,7 +426,7 @@ async function createGlobalMocks() {
                     update: jest.fn(),
                     keys: jest.fn(() => []),
                 },
-            } as unknown as vscode.ExtensionContext)
+            }) as unknown as vscode.ExtensionContext
     );
     globalMocks.mockExtension = new mockExtensionCreator();
 
