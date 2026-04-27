@@ -2199,7 +2199,7 @@
         },
         "zowe.featureEnablement.tableView": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "markdownDescription": "**Table View for Datasets and Jobs**\n\nEnable the table view feature that allows viewing datasets and jobs in a tabular format in the Zowe Resources panel.",
           "scope": "window",
           "order": 1
