@@ -38,6 +38,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the USS tree collapsed down to the top level set from the initial filter.[#3932](https://github.com/zowe/zowe-explorer-vscode/issues/3932)
 - Fixed an issue that would allow multiple member-filter on a single dataset search. [#2037](https://github.com/zowe/zowe-explorer-vscode/issues/2037)
 - Fixed an issue where the editor tab remained open after deleting a sequential data set. The editor now automatically closes when the data set is deleted. [#4050](https://github.com/zowe/zowe-explorer-vscode/issues/4050)
+- Fixed an issue where cached file system entries would not reflect profile updates (reactivations, credential changes, etc.) in the Data Sets, Jobs, and USS trees. [#4141](https://github.com/zowe/zowe-explorer-vscode/issues/4141)
 - Fixed extended to include PDS members and USS files. [#4050](https://github.com/zowe/zowe-explorer-vscode/issues/4050)
 - Fixed the submit job confirmation dialog box failing to display when a job is submitted. [#4097](https://github.com/zowe/zowe-explorer-vscode/issues/4097)
 
