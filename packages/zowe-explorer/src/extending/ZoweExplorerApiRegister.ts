@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import * as zoweNativeApi from "@zowe/zowe-native-api";
+import * as zowex from "@zowe/zowex-for-zowe-explorer";
 import {
     DataSetAttributesProvider,
     IApiExplorerExtender,
@@ -130,10 +130,10 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
         this.registerJesApi(new ZoweExplorerZosmf.JesApi());
         this.registerCommandApi(new ZoweExplorerZosmf.CommandApi());
 
-        this.registerMvsApi(new zoweNativeApi.SshMvsApi(this.getDataSetAttrProvider?.()));
-        this.registerUssApi(new zoweNativeApi.SshUssApi());
-        this.registerJesApi(new zoweNativeApi.SshJesApi());
-        this.registerCommandApi(new zoweNativeApi.SshCommandApi());
+        this.registerMvsApi(new zowex.SshMvsApi(this.getDataSetAttrProvider?.()));
+        this.registerUssApi(new zowex.SshUssApi());
+        this.registerJesApi(new zowex.SshJesApi());
+        this.registerCommandApi(new zowex.SshCommandApi());
     }
 
     // TODO: the redundant functions that follow could be done with generics, but as we are using
@@ -257,7 +257,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
                     message: "Internal error: Tried to call a non-existing USS API in API register: {0}",
                     args: [profile.type],
                     comment: ["Profile type"],
-                })
+                }),
             );
         }
     }
@@ -279,7 +279,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
                     message: "Internal error: Tried to call a non-existing MVS API in API register: {0}",
                     args: [profile.type],
                     comment: ["Profile type"],
-                })
+                }),
             );
         }
     }
@@ -301,7 +301,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
                     message: "Internal error: Tried to call a non-existing JES API in API register: {0}",
                     args: [profile.type],
                     comment: ["Profile type"],
-                })
+                }),
             );
         }
     }
@@ -323,7 +323,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
                     message: "Internal error: Tried to call a non-existing Command API in API register: {0}",
                     args: [profile.type],
                     comment: ["Profile type"],
-                })
+                }),
             );
         }
     }
@@ -351,7 +351,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
                                 message: "Internal error: Tried to call a non-existing Common API in API register: {0}",
                                 args: [profile.type],
                                 comment: ["Profile type"],
-                            })
+                            }),
                         );
                     }
                 }

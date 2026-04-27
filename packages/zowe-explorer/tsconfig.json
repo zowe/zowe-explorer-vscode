@@ -20,7 +20,7 @@
     "rootDir": ".",
     "paths": {
       "@zowe/zowe-explorer-api": ["../zowe-explorer-api"],
-      "@zowe/zowe-native-api": ["../zowe-native-api"]
+      "@zowe/zowex-for-zowe-explorer": ["../zowex-for-zowe-explorer"]
     },
     "types": ["node", "jest"]
   },
@@ -31,5 +31,5 @@
     "./node_modules/vscode/vscode.d.ts",
     "./node_modules/vscode/lib/*"
   ],
-  "references": [{ "path": "../zowe-explorer-api" }, { "path": "../zowe-native-api" }]
+  "references": [{ "path": "../zowe-explorer-api" }, { "path": "../zowex-for-zowe-explorer" }]
 }

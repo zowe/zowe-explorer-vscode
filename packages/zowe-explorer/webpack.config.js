@@ -34,7 +34,7 @@ const config = (mode) => ({
         extensions: [".ts", ".js"],
         alias: {
             "@zowe/zowe-explorer-api$": path.resolve(__dirname, "..", "zowe-explorer-api/src"),
-            "@zowe/zowe-native-api$": path.resolve(__dirname, "..", "zowe-native-api/src"),
+            "@zowe/zowex-for-zowe-explorer$": path.resolve(__dirname, "..", "zowex-for-zowe-explorer/src"),
         },
         conditionNames: ["@zowe:bundler", "..."],
     },

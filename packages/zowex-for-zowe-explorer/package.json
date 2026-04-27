@@ -1,10 +1,10 @@
 {
-  "name": "@zowe/zowe-native-api",
+  "name": "@zowe/zowex-for-zowe-explorer",
   "displayName": "Zowe Remote SSH",
   "description": "Zowe Remote SSH VS Code APIs for Zowe Explorer",
   "version": "0.4.0",
   "publisher": "Zowe",
-  "repository": "https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowe-native-api",
+  "repository": "https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowex-for-zowe-explorer",
   "license": "EPL-2.0",
   "private": true,
   "main": "lib/index.js",

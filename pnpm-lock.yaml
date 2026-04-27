@@ -193,9 +193,9 @@ importers:
       '@zowe/zowe-explorer-api':
         specifier: workspace:*
         version: link:../zowe-explorer-api
-      '@zowe/zowe-native-api':
+      '@zowe/zowex-for-zowe-explorer':
         specifier: workspace:*
-        version: link:../zowe-native-api
+        version: link:../zowex-for-zowe-explorer
       dayjs:
         specifier: ^1.11.10
         version: 1.11.11
@@ -407,7 +407,7 @@ importers:
         specifier: ^2.3.2
         version: 2.3.2(vite@6.4.2(@types/node@22.15.34)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.3))
 
-  packages/zowe-native-api:
+  packages/zowex-for-zowe-explorer:
     dependencies:
       '@zowe/core-for-zowe-sdk':
         specifier: ^8.11.0

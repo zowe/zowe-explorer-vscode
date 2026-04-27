@@ -2397,7 +2397,7 @@
     "@zowe/zos-jobs-for-zowe-sdk": "^8.31.0",
     "@zowe/zosmf-for-zowe-sdk": "^8.31.0",
     "@zowe/zowe-explorer-api": "workspace:*",
-    "@zowe/zowe-native-api": "workspace:*",
+    "@zowe/zowex-for-zowe-explorer": "workspace:*",
     "dayjs": "^1.11.10",
     "isbinaryfile": "4.0.4",
     "promise-queue": "2.2.5"

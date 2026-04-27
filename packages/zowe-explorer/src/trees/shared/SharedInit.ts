@@ -56,7 +56,7 @@ import { TroubleshootError } from "../../utils/TroubleshootError";
 import { ReleaseNotes } from "../../utils/ReleaseNotes";
 import { JobFSProvider } from "../job/JobFSProvider";
 import { ZosmfRestClient } from "@zowe/core-for-zowe-sdk";
-import * as zoweNativeApi from "@zowe/zowe-native-api";
+import * as zowex from "@zowe/zowex-for-zowe-explorer";
 
 export class SharedInit {
     public static onDidActivateExtensionEmitter = new vscode.EventEmitter<void>();
@@ -160,7 +160,7 @@ export class SharedInit {
                         SharedInit.isRestoringFocus = false;
                     }
                 }
-            })
+            }),
         );
 
         // Update imperative.json to false only when VS Code setting is set to false
@@ -168,7 +168,7 @@ export class SharedInit {
             vscode.commands.registerCommand("zowe.updateSecureCredentials", (customCredentialManager?: string) => {
                 ProfilesUtils.updateCredentialManagerSetting(customCredentialManager);
                 ProfilesUtils.writeOverridesFile();
-            })
+            }),
         );
 
         context.subscriptions.push(
@@ -180,7 +180,7 @@ export class SharedInit {
                         await JobActions.spoolFilePollEvent(doc);
                     }
                 }
-            })
+            }),
         );
 
         // Contribute the "Zowe Resources" view as a WebviewView panel in Zowe Explorer.
@@ -194,23 +194,23 @@ export class SharedInit {
 
         // Zowe Native registrations
         const zoweExplorerApi = ZoweExplorerApiRegister.getInstance().getExplorerExtenderApi();
-        context.subscriptions.push(...zoweNativeApi.registerCommands(context, zoweExplorerApi));
-        context.subscriptions.push(zoweNativeApi.SshClientCache.initialize(zoweExplorerApi.getProfilesCache()));
-        zoweNativeApi.handleNativeSshSettings(context);
+        context.subscriptions.push(...zowex.registerCommands(context, zoweExplorerApi));
+        context.subscriptions.push(zowex.SshClientCache.initialize(zoweExplorerApi.getProfilesCache()));
+        zowex.handleNativeSshSettings(context);
 
-        zoweNativeApi.registerSshErrorCorrelations();
+        zowex.registerSshErrorCorrelations();
 
         // Webview for editing persistent items on Zowe Explorer
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.editHistory", () => {
                 return new SharedHistoryView(context, providers, commandProviders);
-            })
+            }),
         );
 
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.displayReleaseNotes", () => {
                 ReleaseNotes.display(context, true); // Always display when command is run
-            })
+            }),
         );
 
         // Display release notes on activation
@@ -219,19 +219,19 @@ export class SharedInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.promptCredentials", async (node: IZoweTreeNode) => {
                 await ProfilesUtils.promptCredentials(node);
-            })
+            }),
         );
 
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.profileManagement", async (node: IZoweTreeNode) => {
                 await ProfileManagement.manageProfile(node);
-            })
+            }),
         );
 
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.updateSchema", async () => {
                 await SharedActions.updateSchemaCommand();
-            })
+            }),
         );
 
         context.subscriptions.push(
@@ -241,7 +241,7 @@ export class SharedInit {
                 } else if (localUri.scheme === ZoweScheme.DS) {
                     await DatasetFSProvider.instance.diffOverwrite(localUri);
                 }
-            })
+            }),
         );
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.diff.useRemoteContent", async (localUri) => {
@@ -250,7 +250,7 @@ export class SharedInit {
                 } else if (localUri.scheme === ZoweScheme.DS) {
                     await DatasetFSProvider.instance.diffUseRemote(localUri);
                 }
-            })
+            }),
         );
 
         context.subscriptions.push(
@@ -259,20 +259,20 @@ export class SharedInit {
                 const ret = await certWizard.userSubmission.promise;
                 certWizard.panel.dispose();
                 return ret;
-            })
+            }),
         );
 
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.executeNavCallback", async (callback: () => void | PromiseLike<void>) => {
                 await callback();
-            })
+            }),
         );
 
         // Register functions & event listeners
         context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {
                 if (e.affectsConfiguration(Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH)) {
-                    zoweNativeApi.handleNativeSshSettings(context);
+                    zowex.handleNativeSshSettings(context);
                 }
                 // If the log folder location has been changed, update current log folder preference
                 if (e.affectsConfiguration(Constants.SETTINGS_LOGS_FOLDER_PATH) || e.affectsConfiguration(Constants.LOGGER_SETTINGS)) {
@@ -288,7 +288,7 @@ export class SharedInit {
                 if (e.affectsConfiguration(Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS)) {
                     const maxConcurrentRequests = SettingsConfig.getDirectValue(
                         Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS,
-                        Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS
+                        Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS,
                     );
                     ZosmfRestClient.setThrottlingOptions({
                         maxConcurrentRequests,
@@ -298,28 +298,28 @@ export class SharedInit {
                 if (e.affectsConfiguration(Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT)) {
                     const queueTimeout = SettingsConfig.getDirectValue(
                         Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT,
-                        Constants.ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT
+                        Constants.ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT,
                     );
                     ZosmfRestClient.setThrottlingOptions({
                         queueTimeout,
                     });
                     ZoweLogger.info(`z/OSMF queue timeout set to ${queueTimeout} milliseconds.`);
                 }
-            })
+            }),
         );
 
         context.subscriptions.push(
-            ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => SharedUtils.handleProfileChange(providers, profile))
+            ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => SharedUtils.handleProfileChange(providers, profile)),
         );
 
         if (providers.ds || providers.uss) {
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.openRecentMember", () => SharedActions.openRecentMemberPrompt(providers.ds, providers.uss))
+                vscode.commands.registerCommand("zowe.openRecentMember", () => SharedActions.openRecentMemberPrompt(providers.ds, providers.uss)),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.searchInAllLoadedItems", async () =>
-                    SharedActions.searchInAllLoadedItems(providers.ds, providers.uss)
-                )
+                    SharedActions.searchInAllLoadedItems(providers.ds, providers.uss),
+                ),
             );
         }
         if (providers.ds || providers.uss || providers.job) {
@@ -327,29 +327,31 @@ export class SharedInit {
                 vscode.commands.registerCommand("zowe.disableValidation", (node) => {
                     Profiles.getInstance().disableValidation(node);
                     SharedTreeProviders.getProviderForNode(node).refreshElement(node);
-                })
+                }),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.enableValidation", (node) => {
                     Profiles.getInstance().enableValidation(node);
                     SharedTreeProviders.getProviderForNode(node).refreshElement(node);
-                })
+                }),
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.ssoLogin", (node: IZoweTreeNode) => SharedTreeProviders.getProviderForNode(node).ssoLogin(node))
+                vscode.commands.registerCommand("zowe.ssoLogin", (node: IZoweTreeNode) =>
+                    SharedTreeProviders.getProviderForNode(node).ssoLogin(node),
+                ),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.ssoLogout", (node: IZoweTreeNode) =>
-                    SharedTreeProviders.getProviderForNode(node).ssoLogout(node)
-                )
+                    SharedTreeProviders.getProviderForNode(node).ssoLogout(node),
+                ),
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.deleteProfile", (node: IZoweTreeNode) => Profiles.getInstance().deleteProfile(node))
+                vscode.commands.registerCommand("zowe.deleteProfile", (node: IZoweTreeNode) => Profiles.getInstance().deleteProfile(node)),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.editSession", async (node: IZoweTreeNode) => {
                     await SharedTreeProviders.getProviderForNode(node).editSession(node);
-                })
+                }),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand(
@@ -362,13 +364,13 @@ export class SharedInit {
                         if (selectedNodes.length) {
                             await TreeViewUtils.fixVsCodeMultiSelect(SharedTreeProviders.getProviderForNode(selectedNodes[0]));
                         }
-                    }
-                )
+                    },
+                ),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.saveSearch", async (node: IZoweTreeNode) => {
                     await SharedTreeProviders.getProviderForNode(node).saveSearch(node);
-                })
+                }),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.addFavorite", async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]) => {
@@ -376,7 +378,7 @@ export class SharedInit {
                     for (const item of selectedNodes) {
                         await SharedTreeProviders.getProviderForNode(item).addFavorite(item);
                     }
-                })
+                }),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.removeFavorite", async (node: IZoweTreeNode, nodeList: IZoweTreeNode[]) => {
@@ -384,13 +386,13 @@ export class SharedInit {
                     for (const item of selectedNodes) {
                         await SharedTreeProviders.getProviderForNode(item).removeFavorite(item);
                     }
-                })
+                }),
             );
             context.subscriptions.push(vscode.commands.registerCommand("zowe.addToWorkspace", SharedUtils.addToWorkspace));
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.removeFavProfile", (node: IZoweTreeNode) =>
-                    SharedTreeProviders.getProviderForNode(node).removeFavProfile(node.label as string, true)
-                )
+                    SharedTreeProviders.getProviderForNode(node).removeFavProfile(node.label as string, true),
+                ),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.openWithEncoding", async (node: IZoweTreeNode, encoding?: ZosEncoding): Promise<void> => {
@@ -400,7 +402,7 @@ export class SharedInit {
                     } else {
                         throw new Error("Method not implemented.");
                     }
-                })
+                }),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.issueTsoCmd", async (node?, command?) => {
@@ -409,7 +411,7 @@ export class SharedInit {
                     } else {
                         await commandProviders.tso.issueTsoCommand();
                     }
-                })
+                }),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.issueUnixCmd", async (node?, command?) => {
@@ -418,7 +420,7 @@ export class SharedInit {
                     } else {
                         await commandProviders.uss.issueUnixCommand();
                     }
-                })
+                }),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.issueMvsCmd", async (node?, command?) => {
@@ -427,52 +429,52 @@ export class SharedInit {
                     } else {
                         await commandProviders.mvs.issueMvsCommand();
                     }
-                })
+                }),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.selectForCompare", (node: IZoweTreeNode) => {
                     LocalFileManagement.selectFileForCompare(node);
-                })
+                }),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.compareWithSelected", async (node: IZoweTreeNode) => {
                     await LocalFileManagement.compareChosenFileContent(node);
-                })
+                }),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.compareWithSelectedReadOnly", async (node: IZoweTreeNode) => {
                     await LocalFileManagement.compareChosenFileContent(node, true);
-                })
+                }),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.compareFileStarted", (): boolean => {
                     return LocalFileManagement.fileSelectedToCompare;
-                })
+                }),
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.copyExternalLink", (node: IZoweTreeNode) => SharedUtils.copyExternalLink(context, node))
+                vscode.commands.registerCommand("zowe.copyExternalLink", (node: IZoweTreeNode) => SharedUtils.copyExternalLink(context, node)),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.revealOutputChannel", (): void => {
                     ZoweLogger.zeOutputChannel.show();
-                })
+                }),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand(
                     "zowe.troubleshootError",
-                    (error: CorrelatedError, stackTrace?: string) => new TroubleshootError(context, { error, stackTrace })
-                )
+                    (error: CorrelatedError, stackTrace?: string) => new TroubleshootError(context, { error, stackTrace }),
+                ),
             );
             context.subscriptions.push(vscode.window.registerUriHandler(ZoweUriHandler.getInstance()));
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.placeholderCommand", () => {
                     // This command does nothing, its here to let us disable individual items in the tree view
-                })
+                }),
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.setupRemoteWorkspaceFolders", async (profileType?: string) => {
                     await this.setupRemoteWorkspaceFolders(undefined, profileType);
-                })
+                }),
             );
 
             // initialize the Constants.filesToCompare array during initialization
@@ -481,7 +483,7 @@ export class SharedInit {
 
         const maxConcurrentRequests = SettingsConfig.getDirectValue(
             Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS,
-            Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS
+            Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS,
         );
         const queueTimeout = SettingsConfig.getDirectValue(Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT, Constants.ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT);
         ZosmfRestClient.setThrottlingOptions({ maxConcurrentRequests, queueTimeout });
@@ -500,7 +502,7 @@ export class SharedInit {
                     }
                     return Promise.resolve();
                 },
-            })
+            }),
         );
     }
 
@@ -513,7 +515,7 @@ export class SharedInit {
         ZoweLogger.trace("shared.init.watchConfigProfile called.");
         const watchers: vscode.FileSystemWatcher[] = [];
         watchers.push(
-            vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(FileManagement.getZoweDir(), "{zowe.config,zowe.config.user}.json"))
+            vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(FileManagement.getZoweDir(), "{zowe.config,zowe.config.user}.json")),
         );
 
         const workspacePath = ZoweVsCodeExtension.workspaceRoot?.uri.fsPath;
@@ -529,21 +531,21 @@ export class SharedInit {
                     ZoweLogger.info(vscode.l10n.t("Team config file created, refreshing Zowe Explorer."));
                     await SharedActions.refreshAll();
                     ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.CREATE);
-                }, 100) // eslint-disable-line no-magic-numbers
+                }, 100), // eslint-disable-line no-magic-numbers
             );
             watcher.onDidDelete(
                 SharedUtils.debounceAsync(async () => {
                     ZoweLogger.info(vscode.l10n.t("Team config file deleted, refreshing Zowe Explorer."));
                     await SharedActions.refreshAll();
                     ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.DELETE);
-                }, 100) // eslint-disable-line no-magic-numbers
+                }, 100), // eslint-disable-line no-magic-numbers
             );
             watcher.onDidChange(
                 SharedUtils.debounceAsync(async () => {
                     ZoweLogger.info(vscode.l10n.t("Team config file updated, refreshing Zowe Explorer."));
                     await SharedActions.refreshAll();
                     ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
-                }, 100) // eslint-disable-line no-magic-numbers
+                }, 100), // eslint-disable-line no-magic-numbers
             );
         });
 
@@ -568,7 +570,7 @@ export class SharedInit {
                     await ProfilesUtils.setupProfileInfo();
                     await SharedActions.refreshAll();
                     ZoweExplorerApiRegister.getInstance().onCredMgrUpdateEmitter.fire(Validation.EventType.UPDATE);
-                }
+                },
             );
             context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
         } catch (err) {
@@ -647,7 +649,7 @@ export class SharedInit {
      */
     public static async watchForZoweButtonClick(): Promise<void> {
         const availableTreeProviders: string[] = Object.keys(SharedTreeProviders.providers).filter(
-            (provider) => (SharedTreeProviders.providers[provider] as IZoweTree<IZoweTreeNode>).getTreeView() !== undefined
+            (provider) => (SharedTreeProviders.providers[provider] as IZoweTree<IZoweTreeNode>).getTreeView() !== undefined,
         );
         if (!availableTreeProviders.length) {
             return;
