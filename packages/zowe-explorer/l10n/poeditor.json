@@ -733,6 +733,7 @@
   "Added new data set creation template for partitioned data set extended. <a>#2600</a>": "",
   "Added new edit feature on Edit Attributes view for changing file tags on USS. <a>#2113</a>": "",
   "Added new right-click action for Submit as JCL for local files in the VS Code file explorer as well as files opened in the VS Code text editor. <a>#2475</a>": "",
+  "Added new vs code toggle setting for enabling various features within zowe explorer.": "",
   "Added new Zowe Explorer z/OS Console webview with access via VS Code command pallete to issue MVS Console commands. <a>#2925</a>": "",
   "Added Open with Encoding to the context menu of Job Spool files. <a>#1941</a>": "",
   "Added option to edit team configuration file via the + button for easy access. <a>#1896</a>": "",
