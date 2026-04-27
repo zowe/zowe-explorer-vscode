@@ -7,6 +7,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## Recent Changes
 
 - **Breaking:** Renamed contributed setting IDs from `zowe-native-proto` to `zowex`. All references to `zowe-native-proto` should be replaced with `zowex` in VS Code `settings.json` files. [#831](https://github.com/zowe/zowex/issues/831)
+- **Breaking:** Refactored the code to be directly integrated into Zowe Explorer. []()
+- **Breaking:** Changed the settings to align with Zowe Explorer. []()
+  - `zowex-vsce.requestTimeout` -> `zowe.settings.requestTimeout`
+  - All others, replace the setting prefix `zowex-vsce` with `zowe.zowex`
 
 ## `0.4.0`
 
