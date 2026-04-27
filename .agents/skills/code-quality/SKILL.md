@@ -20,7 +20,7 @@ When refactoring or writing code for the Zowe Explorer monorepo, follow these pr
 - **File System Access:** **NEVER** use direct Node.js `fs` or `path` calls for mainframe resources. Always use `vscode.workspace.fs` or Zowe filesystem providers.
 - **Temporary Files:** **NEVER** use hardcoded temporary directories. Always use `extensionContext.storageUri` or `globalStorageUri`.
 - **Security:** **NEVER** log user credentials or passwords to the console.
-- **Configuration:** **NEVER** read `config.yaml` or user's Zowe config for more context (`**/zowe.config.json`). Use `Profiles.ts` or Zowe SDK profile management APIs.
+- **Configuration:** **NEVER** read the user's Zowe config for more context (`**/zowe.config.json`) as it circumvents Zowe SDK logic. Use `Profiles.ts` or profile management APIs from Imperative.
 
 ## Refactoring Patterns
 
