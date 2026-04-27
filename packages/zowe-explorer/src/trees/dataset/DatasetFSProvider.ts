@@ -150,10 +150,17 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const ds = items?.[0];
             if (ds != null && "m4date" in ds) {
                 const { m4date, mtime, msec } = ds;
-                const newTime = dayjs(`${m4date} ${mtime}:${msec}`).valueOf();
-                if (entry.mtime != newTime) {
-                    entry.mtime = newTime;
+                if (m4date) {
+                    // Handle both formats: separate mtime/msec fields vs combined in m4date
+                    const newTime = mtime ? dayjs(`${m4date} ${mtime}:${msec || "00"}`).valueOf() : dayjs(m4date).valueOf();
+                    if (entry.mtime != newTime) {
+                        entry.mtime = newTime;
+                        entry.wasAccessed = false;
+                    }
+                } else {
+                    // For profiles that don't provide mtime data, always invalidate to force refresh
                     entry.wasAccessed = false;
+                    entry.mtime = Date.now();
                 }
             }
             return entry;
@@ -307,12 +314,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 tempEntry.metadata = new DsEntryMetadata({ ...entry.metadata, path: path.posix.join(entry.metadata.path, fullMemberName) });
             }
 
-            if (ds.m4date && ds.mtime) {
-                const newTime = dayjs(`${ds.m4date} ${ds.mtime}:${ds.msec || "00"}`).valueOf();
+            if (ds.m4date) {
+                const newTime = ds.mtime ? dayjs(`${ds.m4date} ${ds.mtime}:${ds.msec || "00"}`).valueOf() : dayjs(ds.m4date).valueOf();
                 if (newTime && tempEntry.mtime !== newTime) {
                     tempEntry.mtime = newTime;
                     tempEntry.wasAccessed = false;
                 }
+            } else if (ds.member) {
+                // For profiles that don't provide mtime data, always invalidate to force refresh
+                tempEntry.wasAccessed = false;
+                tempEntry.mtime = Date.now();
             }
 
             entry.entries.set(fullMemberName, tempEntry);
