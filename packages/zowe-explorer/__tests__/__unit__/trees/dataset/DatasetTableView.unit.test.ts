@@ -67,11 +67,11 @@ describe("TreeDataSource", () => {
             }));
 
             const dsNodes = dataSets.map((ds) => ds.node);
-            const getStatsMock = jest
-                .spyOn(ZoweDatasetNode.prototype, "getStats")
-                .mockImplementation(function (this: ZoweDatasetNode): Types.DatasetStats {
-                    return dataSets.find((ds) => ds.node.label === this.label)?.stats as Types.DatasetStats;
-                });
+            const getStatsMock = jest.spyOn(ZoweDatasetNode.prototype, "getStats").mockImplementation(function (
+                this: ZoweDatasetNode
+            ): Types.DatasetStats {
+                return dataSets.find((ds) => ds.node.label === this.label)?.stats as Types.DatasetStats;
+            });
             dsProfileNode.children = dsNodes;
             const getChildrenMock = jest.spyOn(dsProfileNode, "getChildren").mockImplementation((_paginate) => {
                 return Promise.resolve(dsNodes);

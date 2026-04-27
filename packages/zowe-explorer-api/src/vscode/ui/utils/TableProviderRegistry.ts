@@ -70,7 +70,7 @@ export class TableProviderRegistry {
             this.providers.set(tableId, []);
         }
 
-        const existingProviders = this.providers.get(tableId)!;
+        const existingProviders = this.providers.get(tableId);
         if (!existingProviders.includes(provider)) {
             existingProviders.push(provider);
         }

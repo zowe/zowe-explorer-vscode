@@ -584,8 +584,8 @@ export class USSActions {
                     downloadOpts.encoding.kind === "binary"
                         ? "binary"
                         : downloadOpts.encoding.kind === "other"
-                        ? downloadOpts.encoding.codepage
-                        : "EBCDIC";
+                          ? downloadOpts.encoding.codepage
+                          : "EBCDIC";
 
                 return vscode.l10n.t("Select specific encoding for file (current: {0})", encodingName);
             }

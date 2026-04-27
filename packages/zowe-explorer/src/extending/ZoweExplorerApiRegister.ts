@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import * as zowex from "@zowe/zowex-for-zowe-explorer";
 import {
     DataSetAttributesProvider,
     IApiExplorerExtender,
@@ -128,6 +129,11 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
         this.registerMvsApi(new ZoweExplorerZosmf.MvsApi());
         this.registerJesApi(new ZoweExplorerZosmf.JesApi());
         this.registerCommandApi(new ZoweExplorerZosmf.CommandApi());
+
+        this.registerMvsApi(new zowex.SshMvsApi(this.getDataSetAttrProvider?.()));
+        this.registerUssApi(new zowex.SshUssApi());
+        this.registerJesApi(new zowex.SshJesApi());
+        this.registerCommandApi(new zowex.SshCommandApi());
     }
 
     // TODO: the redundant functions that follow could be done with generics, but as we are using

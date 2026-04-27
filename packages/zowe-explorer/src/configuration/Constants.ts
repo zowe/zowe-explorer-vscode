@@ -16,7 +16,7 @@ import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
 export class Constants {
-    public static readonly COMMAND_COUNT = 129;
+    public static readonly COMMAND_COUNT = 132;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
     public static readonly MAX_DISPLAYED_DELETE_NAMES = 10;
@@ -71,6 +71,7 @@ export class Constants {
     public static readonly VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
     public static ROOTPATH = path.join(__dirname, "..", "..");
     public static readonly SETTINGS_LOGS_FOLDER_PATH = "zowe.files.logsFolder.path";
+    public static readonly SETTINGS_EXPERIMENTAL_NATIVE_SSH = "zowe.zowex.experimentalNativeSsh";
     public static readonly SETTINGS_DS_DEFAULT_BINARY = "zowe.ds.default.binary";
     public static readonly SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
     public static readonly SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";

@@ -794,8 +794,8 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
         await SharedActions.refreshAll();
         expect(removeSessionSpy).toHaveBeenCalledTimes(6);
         expect([...removedProfNames]).toEqual(["zosmf", "zosmf2"]);
-        expect(addDefaultSessionSpy).toHaveBeenCalledTimes(3);
-        expect([...addedProfTypes]).toEqual(["zosmf"]);
+        expect(addDefaultSessionSpy).toHaveBeenCalledTimes(6);
+        expect([...addedProfTypes]).toEqual(["zosmf", "ssh"]);
     });
 
     it("should avoid running the refresh logic twice if a refresh is already in progress", async () => {
@@ -814,7 +814,7 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
 
         // expect same amount of assertions even though refresh was called twice
         expect(removeSessionSpy).toHaveBeenCalledTimes(6);
-        expect(addDefaultSessionSpy).toHaveBeenCalledTimes(3);
+        expect(addDefaultSessionSpy).toHaveBeenCalledTimes(6);
     });
 });
 

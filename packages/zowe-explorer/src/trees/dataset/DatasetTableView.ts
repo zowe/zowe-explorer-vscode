@@ -228,7 +228,10 @@ export function buildMemberInfo(member: any, parentUri: string): IDataSetInfo {
  * API-based data source that directly queries the MVS API with a pattern
  */
 export class PatternDataSource implements IDataSetSource {
-    public constructor(public profile: imperative.IProfileLoaded, private pattern: string) {
+    public constructor(
+        public profile: imperative.IProfileLoaded,
+        private pattern: string
+    ) {
         this.pattern = this.pattern.toLocaleUpperCase();
     }
 

@@ -19,7 +19,10 @@ type TroubleshootData = {
 };
 
 export class TroubleshootError extends WebView {
-    public constructor(context: ExtensionContext, public errorData: TroubleshootData) {
+    public constructor(
+        context: ExtensionContext,
+        public errorData: TroubleshootData
+    ) {
         super(l10n.t("Troubleshoot Error"), "troubleshoot-error", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
         });

@@ -189,7 +189,7 @@ export function App() {
         </pre>
       </strong>
       <VSCodeDivider />
-      {attributes.initial?.directory ?? false ? null : (
+      {(attributes.initial?.directory ?? false) ? null : (
         <div style={{ marginTop: "1em", display: "flex", marginLeft: "1em" }}>
           <VSCodeTextField
             readonly={attributes.current.tag === notSupported}
@@ -287,7 +287,7 @@ export function App() {
           </div>
           {readonly && (
             <span style={{ marginLeft: "1em", color: "var(--vscode-editorLightBulb-foreground)" }}>
-              {l10n.t("The API does not support updating attributes for this")} {attributes.initial?.directory ?? false ? "directory" : "file"}.
+              {l10n.t("The API does not support updating attributes for this")} {(attributes.initial?.directory ?? false) ? "directory" : "file"}.
             </span>
           )}
         </div>

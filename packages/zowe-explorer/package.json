@@ -787,6 +787,21 @@
         "command": "zowe.displayReleaseNotes",
         "title": "%zowe.displayReleaseNotes%",
         "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.zowex.connect",
+        "title": "%zowe.commands.zowex.connect%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.zowex.restart",
+        "title": "%zowe.commands.zowex.restart%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.zowex.uninstall",
+        "title": "%zowe.commands.zowex.uninstall%",
+        "category": "Zowe Explorer"
       }
     ],
     "menus": {
@@ -2249,6 +2264,56 @@
           "default": false,
           "description": "%zowe.commands.tso.defaultProfile%",
           "scope": "window"
+        },
+        "zowex.zowex.keepAliveInterval": {
+          "type": "number",
+          "default": 30,
+          "description": "%zowe.zowex.keepAliveInterval%",
+          "scope": "window"
+        },
+        "zowe.zowex.serverAutoUpdate": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.zowex.serverAutoUpdate%",
+          "scope": "window"
+        },
+        "zowe.zowex.serverInstallPath": {
+          "type": "object",
+          "description": "%zowe.zowex.serverInstallPath%",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "scope": "window"
+        },
+        "zowe.zowex.workerCount": {
+          "type": "number",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 50,
+          "description": "%zowe.zowex.workerCount%",
+          "scope": "window"
+        },
+        "zowe.zowex.responseTimeout": {
+          "type": "number",
+          "default": 60,
+          "minimum": 1,
+          "maximum": 600,
+          "description": "%zowe.zowex.responseTimeout%",
+          "scope": "window"
+        },
+        "zowe.zowex.experimentalNativeSsh": {
+          "type": "boolean",
+          "default": false,
+          "description": "%zowe.zowex.experimentalNativeSsh%",
+          "scope": "window"
+        },
+        "zowe.zowex.defaultHandshakeTimeout": {
+          "type": "number",
+          "description": "%zowe.zowex.defaultHandshakeTimeout%",
+          "default": 30000,
+          "minimum": 1000,
+          "maximum": 120000,
+          "scope": "window"
         }
       }
     },
@@ -2332,6 +2397,7 @@
     "@zowe/zos-jobs-for-zowe-sdk": "^8.31.0",
     "@zowe/zosmf-for-zowe-sdk": "^8.31.0",
     "@zowe/zowe-explorer-api": "workspace:*",
+    "@zowe/zowex-for-zowe-explorer": "workspace:*",
     "dayjs": "^1.11.10",
     "isbinaryfile": "4.0.4",
     "promise-queue": "2.2.5"
