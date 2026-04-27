@@ -3006,5 +3006,74 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 path.join("/test/download/path", "file.txt")
             );
         });
+
+        it("should pass abortDownload callback wired to CancellationToken", async () => {
+            const mockNode = createMockNode();
+            mockNode.fullPath = "/u/test/directory";
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                overwrite: true,
+                dirOptions: { followSymlinks: true, chooseFilterOptions: false },
+                dirFilterOptions: { includeHidden: false, filesys: false },
+                encoding: undefined,
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [{}, {}] } });
+
+            const mockToken = { isCancellationRequested: false, onCancellationRequested: jest.fn() };
+            let capturedOptions: any;
+
+            globalMocks.ussApi.downloadDirectory.mockImplementation(async (_path: any, opts: any) => {
+                capturedOptions = opts;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                expect(options.cancellable).toBe(true);
+                return await callback({ report: jest.fn() }, mockToken);
+            });
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(capturedOptions.abortDownload).toBeDefined();
+            expect(typeof capturedOptions.abortDownload).toBe("function");
+            expect(capturedOptions.abortDownload()).toBe(false);
+
+            mockToken.isCancellationRequested = true;
+            expect(capturedOptions.abortDownload()).toBe(true);
+        });
+
+        it("should pass abortDownload that returns false when token is undefined", async () => {
+            const mockNode = createMockNode();
+            mockNode.fullPath = "/u/test/directory";
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                overwrite: true,
+                dirOptions: { followSymlinks: true, chooseFilterOptions: false },
+                dirFilterOptions: { includeHidden: false, filesys: false },
+                encoding: undefined,
+            };
+
+            jest.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [{}, {}] } });
+
+            let capturedOptions: any;
+
+            globalMocks.ussApi.downloadDirectory.mockImplementation(async (_path: any, opts: any) => {
+                capturedOptions = opts;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback({ report: jest.fn() }, undefined);
+            });
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(capturedOptions.abortDownload()).toBe(false);
+        });
     });
 });

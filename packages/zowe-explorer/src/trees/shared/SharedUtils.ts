@@ -705,7 +705,20 @@ export class SharedUtils {
         let hasErrors = false;
         const detailedInfo: string[] = [];
 
-        if (response.success === false) {
+        const wasCancelled =
+            response.success === false && typeof response.commandResponse === "string" && response.commandResponse.includes("cancelled");
+
+        if (wasCancelled) {
+            const downloadResult = response.apiResponse?.downloadResult;
+            // downloadResult may come from IDownloadAmResult (downloaded: number, total) or IDownloadUssDirResult (downloaded: string[], totalCount)
+            const downloadedCount = Array.isArray(downloadResult?.downloaded) ? downloadResult.downloaded.length : downloadResult?.downloaded;
+            const totalCount = downloadResult?.total ?? downloadResult?.totalCount;
+            if (downloadedCount != null && totalCount != null) {
+                message = vscode.l10n.t("{0} download was cancelled. {1} of {2} item(s) were downloaded.", downloadType, downloadedCount, totalCount);
+            } else {
+                message = vscode.l10n.t("{0} download was cancelled.", downloadType);
+            }
+        } else if (response.success === false) {
             hasErrors = true;
             message = vscode.l10n.t("{0} download completed with errors.", downloadType);
         } else {
@@ -715,14 +728,16 @@ export class SharedUtils {
         if (response.commandResponse) {
             const commandResponse = response.commandResponse.toString();
 
-            if (commandResponse.includes("already exists") || commandResponse.includes("skipped")) {
-                hasWarnings = true;
-                detailedInfo.push("Some files were skipped because they already exist.");
-            }
+            if (!wasCancelled) {
+                if (commandResponse.includes("already exists") || commandResponse.includes("skipped")) {
+                    hasWarnings = true;
+                    detailedInfo.push("Some files were skipped because they already exist.");
+                }
 
-            if (commandResponse.includes("failed") || commandResponse.includes("error")) {
-                hasErrors = true;
-                detailedInfo.push("Some files failed to download due to errors.");
+                if (commandResponse.includes("failed") || commandResponse.includes("error")) {
+                    hasErrors = true;
+                    detailedInfo.push("Some files failed to download due to errors.");
+                }
             }
 
             ZoweLogger.info(`Download response details: ${String(commandResponse)}`);

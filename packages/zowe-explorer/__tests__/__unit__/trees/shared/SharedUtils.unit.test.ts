@@ -2037,6 +2037,58 @@ describe("Shared utils unit tests - function handleDownloadResponse", () => {
         expect(blockMocks.loggerInfo).toHaveBeenCalledWith("Download response details: 12345");
         expect(blockMocks.showMessage).toHaveBeenCalledWith(vscode.l10n.t("{0} downloaded successfully.", "File"));
     });
+
+    it("shows info message with download counts when download was cancelled and downloadResult is available", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: false,
+            commandResponse: "The download was cancelled by the user.",
+            apiResponse: {
+                downloadResult: { downloaded: 3, total: 10 },
+            },
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "Data set members");
+
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(
+            vscode.l10n.t("{0} download was cancelled. {1} of {2} item(s) were downloaded.", "Data set members", 3, 10)
+        );
+        expect(blockMocks.errorMessage).not.toHaveBeenCalled();
+        expect(blockMocks.warningMessage).not.toHaveBeenCalled();
+    });
+
+    it("shows info message without counts when download was cancelled and downloadResult is not available", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: false,
+            commandResponse: "The download was cancelled by the user.",
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "Data set members");
+
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(vscode.l10n.t("{0} download was cancelled.", "Data set members"));
+        expect(blockMocks.errorMessage).not.toHaveBeenCalled();
+        expect(blockMocks.warningMessage).not.toHaveBeenCalled();
+    });
+
+    it("does not parse warning/error keywords in commandResponse when download was cancelled", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: false,
+            commandResponse: "The download was cancelled - some files failed and already exists",
+            apiResponse: {
+                downloadResult: { downloaded: 0, total: 5 },
+            },
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(
+            vscode.l10n.t("{0} download was cancelled. {1} of {2} item(s) were downloaded.", "File", 0, 5)
+        );
+        expect(blockMocks.errorMessage).not.toHaveBeenCalled();
+        expect(blockMocks.warningMessage).not.toHaveBeenCalled();
+    });
 });
 
 describe("SharedUtils helpers", () => {
