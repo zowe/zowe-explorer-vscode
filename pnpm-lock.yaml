@@ -416,8 +416,8 @@ importers:
         specifier: 'workspace:* '
         version: link:../zowe-explorer-api
       '@zowe/zowex-for-zowe-sdk':
-        specifier: file:../../../zowe-native-proto/packages/sdk
-        version: zowex-sdk@file:../zowe-native-proto/packages/sdk(@zowe/imperative@8.31.0)(@zowe/zos-uss-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(rxjs@7.8.1)
+        specifier: ^0.5.0
+        version: 0.5.0(@zowe/imperative@8.31.0)(@zowe/zos-uss-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(rxjs@7.8.1)
       ssh2:
         specifier: ^1.16.0
         version: 1.17.0
@@ -2285,6 +2285,12 @@ packages:
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
+
+  '@zowe/zowex-for-zowe-sdk@0.5.0':
+    resolution: {integrity: sha512-xAibp8FR0XN/QpJbjhU03TiuuB6mWdxFXgpcMj3RRFP1qZ1mk024c1bGKL1VLcOzNT+bo5zs4Qzr+sSSX1I6Zw==}
+    peerDependencies:
+      '@zowe/imperative': ^8.11.0
+      '@zowe/zos-uss-for-zowe-sdk': ^8.11.0
 
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
@@ -7466,12 +7472,6 @@ packages:
     resolution: {integrity: sha512-SLGFqVTudzhtZyYXnrGnMdGwgo3I8jk3ZnownxqnXkR5k6N0/GkxpLiqkjsTRhl6go3S/8Jwmbpj6JgeTQ1x4g==}
     engines: {node: '>= 8'}
 
-  zowex-sdk@file:../zowe-native-proto/packages/sdk:
-    resolution: {directory: ../zowe-native-proto/packages/sdk, type: directory}
-    peerDependencies:
-      '@zowe/imperative': ^8.11.0
-      '@zowe/zos-uss-for-zowe-sdk': ^8.11.0
-
 snapshots:
 
   '@ampproject/remapping@2.3.0':
@@ -9874,6 +9874,20 @@ snapshots:
     dependencies:
       '@zowe/core-for-zowe-sdk': 8.31.0(@zowe/imperative@8.31.0)
       '@zowe/imperative': 8.31.0
+
+  '@zowe/zowex-for-zowe-sdk@0.5.0(@zowe/imperative@8.31.0)(@zowe/zos-uss-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(rxjs@7.8.1)':
+    dependencies:
+      '@zowe/imperative': 8.31.0
+      '@zowe/zos-uss-for-zowe-sdk': 8.31.0(@zowe/imperative@8.31.0)
+      base64-stream: 1.0.0
+      es-toolkit: 1.45.1
+      node-ssh: 13.2.1
+      ssh-config: 5.1.0
+      ssh2: 1.17.0
+    optionalDependencies:
+      russh: 0.1.36(rxjs@7.8.1)
+    transitivePeerDependencies:
+      - rxjs
 
   abbrev@1.1.1: {}
 
@@ -15976,17 +15990,3 @@ snapshots:
     dependencies:
       ftp4: 0.3.13
       q: 1.4.1
-
-  zowex-sdk@file:../zowe-native-proto/packages/sdk(@zowe/imperative@8.31.0)(@zowe/zos-uss-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(rxjs@7.8.1):
-    dependencies:
-      '@zowe/imperative': 8.31.0
-      '@zowe/zos-uss-for-zowe-sdk': 8.31.0(@zowe/imperative@8.31.0)
-      base64-stream: 1.0.0
-      es-toolkit: 1.45.1
-      node-ssh: 13.2.1
-      ssh-config: 5.1.0
-      ssh2: 1.17.0
-    optionalDependencies:
-      russh: 0.1.36(rxjs@7.8.1)
-    transitivePeerDependencies:
-      - rxjs

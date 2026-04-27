@@ -37,7 +37,7 @@
     "@zowe/core-for-zowe-sdk": "^8.11.0",
     "@zowe/zowe-explorer-api": "workspace:* ",
     "ssh2": "^1.16.0",
-    "@zowe/zowex-for-zowe-sdk": "file:../../../zowe-native-proto/packages/sdk"
+    "@zowe/zowex-for-zowe-sdk": "^0.5.0"
   },
   "devDependencies": {
     "@types/ssh2": "^1.15.4",
