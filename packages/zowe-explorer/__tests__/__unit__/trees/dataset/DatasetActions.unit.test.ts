@@ -22,6 +22,7 @@ import {
     PdsEntry,
     DirEntry,
     MainframeInteraction,
+    DsType,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { Workspace } from "../../../../src/configuration/Workspace";
@@ -4598,6 +4599,197 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
 
         dataSetSpy.mockRestore();
     });
+
+    it("Should create entry and fire change event when URI is provided and member exists but FSProvider entry doesn't exist", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const testUri = vscode.Uri.parse("zowe-ds://sestest/HLQ.PDS(MEMBER1)");
+
+        const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ member: "MEMBER1" }],
+            },
+        });
+
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
+        const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "_fireSoon").mockImplementation();
+
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "HLQ.PDS(MEMBER1)", "mem", testUri);
+
+        expect(result).toBe("replace");
+        expect(allMembersSpy).toHaveBeenCalledWith("HLQ.PDS", { responseTimeout: undefined });
+        expect(existsSpy).toHaveBeenCalledWith(testUri);
+        expect(createEntrySpy).toHaveBeenCalledWith(testUri, DsType.PdsMember);
+        expect(fireSoonSpy).toHaveBeenCalledWith({
+            type: vscode.FileChangeType.Created,
+            uri: testUri.with({ query: "" })
+        });
+
+        allMembersSpy.mockRestore();
+        existsSpy.mockRestore();
+        createEntrySpy.mockRestore();
+        fireSoonSpy.mockRestore();
+    });
+
+    it("Should create entry and fire change event during replacement when URI exists and FSProvider entry doesn't exist", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const testUri = vscode.Uri.parse("zowe-ds://sestest/HLQ.PDS(MEMBER1)");
+
+        const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ member: "MEMBER1" }],
+            },
+        });
+
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists")
+            .mockReturnValueOnce(false)
+            .mockReturnValueOnce(false);
+        const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
+        const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation();
+
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "HLQ.PDS(MEMBER1)", "mem", testUri);
+
+        expect(result).toBe("replace");
+        expect(allMembersSpy).toHaveBeenCalledWith("HLQ.PDS", { responseTimeout: undefined });
+        expect(existsSpy).toHaveBeenCalledTimes(2);
+        expect(createEntrySpy).toHaveBeenCalledTimes(2);
+        expect(fireSoonSpy).toHaveBeenCalledWith({
+            type: vscode.FileChangeType.Created,
+            uri: testUri.with({ query: "" })
+        });
+
+        allMembersSpy.mockRestore();
+        existsSpy.mockRestore();
+        createEntrySpy.mockRestore();
+        fireSoonSpy.mockRestore();
+    });
+
+    it("Should create entry and fire change event when URI is provided and dataset exists but FSProvider entry doesn't exist", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const testUri = vscode.Uri.parse("zowe-ds://sestest/HLQ.PDS");
+
+        const dataSetSpy = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ dsname: "HLQ.PDS" }],
+            },
+        });
+
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
+        const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "_fireSoon").mockImplementation();
+
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "HLQ.PDS", "po", testUri);
+
+        expect(result).toBe("replace");
+        expect(dataSetSpy).toHaveBeenCalledWith("HLQ.PDS", { responseTimeout: undefined });
+        expect(existsSpy).toHaveBeenCalledWith(testUri);
+        expect(createEntrySpy).toHaveBeenCalledWith(testUri, DsType.Pds);
+        expect(fireSoonSpy).toHaveBeenCalledWith({
+            type: vscode.FileChangeType.Created,
+            uri: testUri.with({ query: "" })
+        });
+
+        dataSetSpy.mockRestore();
+        existsSpy.mockRestore();
+        createEntrySpy.mockRestore();
+        fireSoonSpy.mockRestore();
+    });
+
+    it("Should create entry and fire change event when replacing existing member and URI doesn't exist in FSProvider", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const testUri = vscode.Uri.parse("zowe-ds://sestest/HLQ.PDS(MEMBER1)");
+
+        const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ member: "MEMBER1" }],
+            },
+        });
+
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists")
+            .mockReturnValueOnce(false)
+            .mockReturnValueOnce(false);
+        const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
+        const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation();
+
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "HLQ.PDS(MEMBER1)", "mem", testUri);
+
+        expect(result).toBe("replace");
+        expect(allMembersSpy).toHaveBeenCalledWith("HLQ.PDS", { responseTimeout: undefined });
+        expect(existsSpy).toHaveBeenCalledTimes(2);
+        expect(createEntrySpy).toHaveBeenCalledTimes(2);
+        expect(fireSoonSpy).toHaveBeenCalledWith({
+            type: vscode.FileChangeType.Created,
+            uri: testUri.with({ query: "" })
+        });
+
+        allMembersSpy.mockRestore();
+        existsSpy.mockRestore();
+        createEntrySpy.mockRestore();
+        fireSoonSpy.mockRestore();
+    });
+
+    it("Should create entry and fire change event when replacing existing dataset and URI doesn't exist in FSProvider", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const testUri = vscode.Uri.parse("zowe-ds://sestest/HLQ.PS");
+
+        const dataSetSpy = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ dsname: "HLQ.PS" }],
+            },
+        });
+
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists")
+            .mockReturnValueOnce(false)
+            .mockReturnValueOnce(false);
+        const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
+        const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation();
+
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "HLQ.PS", "ps", testUri);
+
+        expect(result).toBe("replace");
+        expect(dataSetSpy).toHaveBeenCalledWith("HLQ.PS", { responseTimeout: undefined });
+        expect(existsSpy).toHaveBeenCalledTimes(2);
+        expect(createEntrySpy).toHaveBeenCalledTimes(2);
+        expect(fireSoonSpy).toHaveBeenCalledWith({
+            type: vscode.FileChangeType.Created,
+            uri: testUri.with({ query: "" })
+        });
+
+        dataSetSpy.mockRestore();
+        existsSpy.mockRestore();
+        createEntrySpy.mockRestore();
+        fireSoonSpy.mockRestore();
+    });
 });
 
 describe("Dataset Actions Unit Tests - upload with encoding", () => {
@@ -5407,9 +5599,9 @@ describe("DatasetActions - filterDatasetTree", () => {
             expect(result).toBe(INVALID_PATTERN_ERROR);
         });
 
-        it("should return error message for pattern with invalid character (space)", () => {
+        it("should return undefined for pattern with space (used in multi-pattern input)", () => {
             const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATA SET");
-            expect(result).toBe(INVALID_PATTERN_ERROR);
+            expect(result).toBeUndefined();
         });
 
         it("should return error message for pattern with invalid character (slash)", () => {
@@ -5422,9 +5614,9 @@ describe("DatasetActions - filterDatasetTree", () => {
             expect(result).toBe(INVALID_PATTERN_ERROR);
         });
 
-        it("should return error message for pattern with invalid character (comma)", () => {
+        it("should return undefined for pattern with comma (used as dataset separator)", () => {
             const result = (DatasetActions as any).validateDatasetPattern("HLQ,DATASET");
-            expect(result).toBe(INVALID_PATTERN_ERROR);
+            expect(result).toBeUndefined();
         });
 
         it("should return error message for pattern with invalid character (semicolon)", () => {
@@ -5512,9 +5704,9 @@ describe("DatasetActions - filterDatasetTree", () => {
             expect(result).toBeUndefined();
         });
 
-        it("should trim whitespace and return error for invalid pattern", () => {
+        it("should trim whitespace and validate correctly for pattern with space separator", () => {
             const result = (DatasetActions as any).validateDatasetPattern("  HLQ DATASET  ");
-            expect(result).toBe(INVALID_PATTERN_ERROR);
+            expect(result).toBeUndefined();
         });
 
         it("should handle complex valid pattern with multiple members notation", () => {
@@ -5555,6 +5747,26 @@ describe("DatasetActions - filterDatasetTree", () => {
         it("should handle very long valid pattern", () => {
             const longPattern = "A".repeat(100) + ".DATASET";
             const result = (DatasetActions as any).validateDatasetPattern(longPattern);
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for pattern with multiple comma-separated member filters", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATASET(A*,B*)");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for multi-qualifier dataset with multiple member filters", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.MID.DATASET(A*,B*)");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for multiple dataset patterns separated by comma and space", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.PDS(A*,B*), HLQ.OTHER(C*)");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for dataset pattern with single member filter", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("dataset.name(a*)");
             expect(result).toBeUndefined();
         });
     });
@@ -6291,8 +6503,8 @@ describe("DatasetActions - downloading functions", () => {
                 apiResponse: { items: null },
             });
 
-            await expect(DatasetActions.downloadAllMembers(pdsNode)).rejects.toThrow();
-
+            await DatasetActions.downloadAllMembers(pdsNode);
+            expect(Gui.showMessage).toHaveBeenCalledWith("The selected data set has no members to download.");
             expect(mockGetDataSetDownloadOptions.mock).not.toHaveBeenCalled();
         });
 

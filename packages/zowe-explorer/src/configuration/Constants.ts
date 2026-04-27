@@ -277,9 +277,9 @@ export class Constants {
     };
     public static JOB_SUBMIT_DIALOG_OPTS = [
         vscode.l10n.t("Disabled"),
-        vscode.l10n.t("Your jobs"),
-        vscode.l10n.t("Other user jobs"),
-        vscode.l10n.t("All jobs"),
+        vscode.l10n.t("Your Jobs"),
+        vscode.l10n.t("Other user Jobs"),
+        vscode.l10n.t("All Jobs"),
     ];
     public static SORT_DIRS: string[] = [vscode.l10n.t("Ascending"), vscode.l10n.t("Descending")];
     public static HISTORY_VIEW_TABS = {

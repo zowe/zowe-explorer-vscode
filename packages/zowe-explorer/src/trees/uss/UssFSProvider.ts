@@ -26,6 +26,7 @@ import {
     ZoweExplorerApiType,
     AuthHandler,
     IFileSystemEntry,
+    ConflictViewSelection,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { USSFileStructure } from "./USSFileStructure";
@@ -133,11 +134,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             if (fileResp.success) {
                 // Regardless of the resource type, it will be the first item in a successful response.
                 // When listing a folder, the folder's stats will be represented as the "." entry.
-                const newTime = dayjs((fileResp.apiResponse?.items ?? [])?.[0]?.mtime ?? entry.mtime).valueOf();
-                if (entry.mtime != newTime) {
-                    entry.mtime = newTime;
-                    // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
+                const apiMtime = (fileResp.apiResponse?.items ?? [])?.[0]?.mtime;
+
+                if (apiMtime == null) {
                     entry.wasAccessed = false;
+                    entry.mtime = Date.now();
+                } else {
+                    const newTime = dayjs(apiMtime).valueOf();
+                    if (entry.mtime != newTime) {
+                        entry.mtime = newTime;
+                        // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
+                        entry.wasAccessed = false;
+                    }
                 }
             }
         } catch (err) {
@@ -280,7 +288,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     rawItems.length === 1 && rawItems[0].name === uriBasename && !(rawItems[0].mode as string | undefined)?.startsWith("d");
                 const isDirectoryResponse =
                     (hasSelfEntry && (rawItems.find((item) => item.name === ".")?.mode as string | undefined)?.startsWith("d")) ||
-                    (rawItems.length > 0 && !hasSelfEntry && !isSingleFileMatch);
+                    (rawItems.length > 0 && !hasSelfEntry && !isSingleFileMatch) ||
+                    (rawItems.length === 0 && !hasSelfEntry); // Handle empty directories;
                 if (isDirectoryResponse) {
                     this._createDirectoryRecursive(uri);
                 }
@@ -543,12 +552,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             };
         } else {
             file.data = data;
+            if (file.etag !== resp.apiResponse.etag) {
+                file.mtime = Date.now();
+                if (file.etag) {
+                    this.fireSoon({ type: vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
+                }
+            }
             file.etag = resp.apiResponse.etag;
             file.size = file.data.byteLength;
         }
 
-        ZoweLogger.trace(`[UssFSProvider] fetchFileAtUri fired a change event for ${uri.toString()}`);
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
+        ZoweLogger.trace(`[UssFSProvider] fetchFileAtUri finished for ${uri.toString()}`);
 
         if (options?.editor) {
             await this._updateResourceInEditor(uri);
@@ -742,46 +756,53 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             throw vscode.FileSystemError.FileExists(uri);
         }
 
+        // This determines whether to fire a Created or Changed notification.
+        const isNew = !entry;
+
+        if (isNew) {
+            entry = new UssFile(fileName);
+            // Build the metadata for the file using the parent's metadata (if available),
+            // or build it using the helper function
+            entry.metadata = {
+                ...parentDir.metadata,
+                path: path.posix.join(parentDir.metadata.path, fileName),
+            };
+            entry.data = new Uint8Array();
+            parentDir.entries.set(fileName, entry);
+            parentDir.mtime = Date.now();
+            parentDir.size += 1;
+        }
+
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
         const urlQuery = new URLSearchParams(uri.query);
         const forceUpload = urlQuery.has("forceUpload");
+
         try {
-            if (!entry) {
-                entry = new UssFile(fileName);
-                // Build the metadata for the file using the parent's metadata (if available),
-                // or build it using the helper function
-                entry.metadata = {
-                    ...parentDir.metadata,
-                    path: path.posix.join(parentDir.metadata.path, fileName),
-                };
-
-                if (content.byteLength > 0) {
-                    // user is trying to edit a file that was just deleted: make the API call
-                    const resp = await this.uploadEntry(entry as UssFile, content, { forceUpload });
-                    entry.etag = resp.apiResponse.etag;
-                }
+            if (entry.inDiffView || urlQuery.has("inDiff")) {
+                // Allow users to edit the local copy of a file in the diff view, but don't make any API calls.
+                entry.inDiffView = true;
                 entry.data = content;
-                parentDir.entries.set(fileName, entry);
-                this._fireSoon({ type: vscode.FileChangeType.Created, uri });
-            } else {
-                if (entry.inDiffView || urlQuery.has("inDiff")) {
-                    // Allow users to edit the local copy of a file in the diff view, but don't make any API calls.
-                    entry.inDiffView = true;
-                    entry.data = content;
-                    entry.mtime = Date.now();
-                    entry.size = content.byteLength;
-                    return;
-                }
-
-                if (entry.wasAccessed || content.length > 0) {
-                    const resp = await this.uploadEntry(entry as UssFile, content, { forceUpload });
-                    entry.etag = resp.apiResponse.etag;
-                }
-                entry.data = content;
+                entry.mtime = Date.now();
+                entry.size = content.byteLength;
+                return;
             }
+
+            if (!isNew || content.length > 0) {
+                const resp = await this.uploadEntry(entry as UssFile, content, { forceUpload });
+                entry.etag = resp.apiResponse.etag;
+            }
+            entry.data = content;
+            entry.mtime = Date.now();
+            entry.size = content.byteLength;
+
+            this.fireSoon({ type: isNew ? vscode.FileChangeType.Created : vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
         } catch (err) {
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
-                // Some unknown error happened, don't update the entry
+                // Some unknown error happened, rollback optimistic entry creation
+                if (isNew && parentDir?.entries.has(fileName)) {
+                    parentDir.entries.delete(fileName);
+                    parentDir.size -= 1;
+                }
                 this._handleError(err, {
                     apiType: ZoweExplorerApiType.Uss,
                     retry: {
@@ -796,13 +817,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
             entry.data = content;
             // Prompt the user with the conflict dialog
-            await this._handleConflict(uri, entry);
+            const selection = await this._handleConflict(uri, entry);
+            if (selection !== ConflictViewSelection.Overwrite) {
+                // Rollback optimistic entry creation if user chooses not to overwrite
+                if (isNew && parentDir.entries.has(fileName)) {
+                    parentDir.entries.delete(fileName);
+                    parentDir.size -= 1;
+                }
+                throw vscode.FileSystemError.Unavailable(vscode.l10n.t("Conflict: Remote contents have changed."));
+            }
             return;
         }
-
-        entry.mtime = Date.now();
-        entry.size = content.byteLength;
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
     }
 
     public makeEmptyFileWithEncoding(uri: vscode.Uri, encoding: ZosEncoding): void {
@@ -894,7 +919,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             this._updateChildPaths(entry);
         }
         parentDir.entries.set(newName, entry);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
     }
 
     /**
@@ -942,7 +967,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.mtime = Date.now();
         parent.size -= 1;
 
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
+        this.fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
     }
 
     public async copy(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
@@ -1081,6 +1106,39 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     /**
+     * Creates a new USS file or directory entry in the provider at the given URI.
+     * @param uri The URI that represents the new file or directory path
+     * @param ussType The type of entry to create ("file" or "directory")
+     * @returns The newly created USS entry (either UssFile or UssDirectory)
+     * @throws lookupParentDirectory throws an error if the parent directory is not found
+     */
+    public createEntry(uri: vscode.Uri, ussType: "file" | "directory"): UssFile | UssDirectory {
+        const basename = path.posix.basename(uri.path);
+        const parent = this.lookupParentDirectory(uri);
+        let entry: UssFile | UssDirectory;
+        if (ussType === "directory") {
+            entry = new UssDirectory(basename);
+        } else {
+            entry = new UssFile(basename);
+            entry.data = new Uint8Array();
+        }
+
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+        const profInfo = !uriInfo.isRoot
+            ? {
+                  profile: uriInfo.profile,
+                  path: path.posix.join(parent.metadata.path, basename),
+              }
+            : this._getInfoFromUri(uri);
+        entry.metadata = profInfo;
+
+        parent.entries.set(entry.name, entry);
+        parent.mtime = Date.now();
+        parent.size += 1;
+        return entry;
+    }
+
+    /**
      * Creates a directory entry in the provider at the given URI.
      * @param uri The URI that represents a new directory path
      */
@@ -1105,10 +1163,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;
-        this._fireSoon(
-            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.join(uri.path, "..") }) },
-            { type: vscode.FileChangeType.Created, uri }
-        );
     }
 
     public watch(_resource: vscode.Uri, _options?: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
