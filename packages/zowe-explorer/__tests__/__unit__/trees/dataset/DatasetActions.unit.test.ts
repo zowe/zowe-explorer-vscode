@@ -2777,7 +2777,6 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         const spyAction = jest.fn();
 
         // SEQUENTIAL
-        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
         node.contextValue = Constants.DS_DS_CONTEXT;
         clipboard.writeText(
             JSON.stringify([
@@ -2791,14 +2790,13 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         jest.spyOn(DatasetActions, "copySequentialDatasets").mockImplementationOnce(async (clipboardContent) => {
             await DatasetActions.copyProcessor(clipboardContent, "ps", spyAction);
         });
+        const determineReplacementSpySeq = jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("replace");
         spyAction.mockClear();
-        mocked(Gui.showMessage).mockClear();
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
         expect(spyAction).toHaveBeenCalled();
-        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+        expect(determineReplacementSpySeq).toHaveBeenCalled();
 
         //PARTITIONED
-        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
         node.contextValue = Constants.DS_PDS_CONTEXT;
         clipboard.writeText(
             JSON.stringify([
@@ -2812,11 +2810,11 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         jest.spyOn(DatasetActions, "copyPartitionedDatasets").mockImplementationOnce(async (clipboardContent) => {
             await DatasetActions.copyProcessor(clipboardContent, "po", spyAction);
         });
+        const determineReplacementSpyPo = jest.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("replace");
         spyAction.mockClear();
-        mocked(Gui.showMessage).mockClear();
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
         expect(spyAction).toHaveBeenCalled();
-        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+        expect(determineReplacementSpyPo).toHaveBeenCalled();
 
         spyListDs.mockReset().mockClear();
     });
@@ -2959,6 +2957,25 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             ])
         );
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
+    });
+
+    it("Should show error when pasting non-dataset content into the Data Sets view (cross-view paste)", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_DS_CONTEXT;
+
+        // Simulate USS content on clipboard (no dataSetName property)
+        clipboard.writeText(JSON.stringify({ ussPath: "/u/user/file.txt" }));
+
+        await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith(
+            expect.stringContaining("Cross-view paste is not supported")
+        );
     });
 });
 

@@ -688,6 +688,12 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const prof = this.getProfile();
         try {
             const fileTreeToPaste: USSFileStructure.UssFileTree = JSON.parse(clipboardContents);
+            if (fileTreeToPaste == null || typeof fileTreeToPaste !== "object" || !("ussPath" in fileTreeToPaste)) {
+                await Gui.errorMessage(
+                    vscode.l10n.t("Cross-view paste is not supported. Copy USS files first before pasting into the USS view.")
+                );
+                return;
+            }
             const api = ZoweExplorerApiRegister.getUssApi(this.profile);
 
             const task: imperative.ITaskWithStatus = {
