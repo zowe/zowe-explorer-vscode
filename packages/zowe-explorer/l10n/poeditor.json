@@ -1246,6 +1246,7 @@
   "Fixed an issue where the mismatch etag error returned was not triggering the diff editor, resulting in possible loss of data due to the issue. <a>#2277</a>": "",
   "Fixed an issue where the onProfilesUpdate event did not fire after secure credentials were updated. <a>#2822</a>": "",
   "Fixed an issue where the onProfileUpdated event emitter was not guaranteed to be the same across Zowe Explorer and extenders, causing some event listeners to not fire when an extender fires the event emitter. <a>#3622</a>": "",
+  "Fixed an issue where the profile status did not refresh after updating credentials <a>#4141</a>": "",
   "Fixed an issue where the ProfilesUtils.getProfileInfo function returned a new ProfileInfo instance that ignored the ZOWE_CLI_HOME environment variable and workspace paths. <a>#3168</a>": "",
   "Fixed an issue where the remote conflict icons showed when using the \"Compare with Selected\" feature. <a>#3085</a>": "",
   "Fixed an issue where the SharedActions.refreshAll function runs unexpectedly while a user performs an action in the tree views (such as listing data sets, USS files, jobs, etc.). <a>#3524</a>": "",
