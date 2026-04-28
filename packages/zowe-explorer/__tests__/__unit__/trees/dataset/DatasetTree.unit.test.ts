@@ -36,6 +36,7 @@ import {
     NavigationTreeItem,
     FsAbstractUtils,
     ZoweVsCodeExtension,
+    DsType,
     Paginator,
 } from "@zowe/zowe-explorer-api";
 import { Constants, JwtCheckResult } from "../../../../src/configuration/Constants";
@@ -370,8 +371,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
-        const writeFileMock = jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
-        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        const writeFileMock = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.pattern = "test";
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
@@ -413,7 +413,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(testTree);
 
         const children = await testTree.getChildren(testTree.mSessionNodes[1]);
-        expect(writeFileMock).toHaveBeenCalledWith(sampleChildren[0].resourceUri, new Uint8Array(), { create: true, overwrite: false });
+        expect(writeFileMock).toHaveBeenCalledWith(sampleChildren[0].resourceUri, DsType.Ps);
         expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
         expect(children).toEqual(sampleChildren);
     });
@@ -2853,6 +2853,7 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
         const blockMocks = createBlockMocks(globalMocks);
         jest.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation();
         jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
+        jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         const newNode = new ZoweDatasetNode({
@@ -6765,6 +6766,58 @@ describe("Dataset Tree Unit Tests - Function extractPatterns", () => {
             },
         ]);
     });
+    it("Handles multiple comma-separated member patterns inside parentheses", () => {
+        const testTree = new DatasetTree();
+        expect(testTree.extractPatterns("HLQ.PROD.PDS(A*,B*)")).toStrictEqual([
+            {
+                dsn: "HLQ.PROD.PDS",
+                member: "A*,B*",
+            },
+        ]);
+    });
+    it("Handles dataset.name with multiple member patterns", () => {
+        const testTree = new DatasetTree();
+        expect(testTree.extractPatterns("dataset.name(a*,b*)")).toStrictEqual([
+            {
+                dsn: "dataset.name",
+                member: "a*,b*",
+            },
+        ]);
+    });
+    it("Handles data.set.name with multiple member patterns", () => {
+        const testTree = new DatasetTree();
+        expect(testTree.extractPatterns("data.set.name(a*,b*)")).toStrictEqual([
+            {
+                dsn: "data.set.name",
+                member: "a*,b*",
+            },
+        ]);
+    });
+    it("Handles mixed multi-member and single-member patterns separated by comma", () => {
+        const testTree = new DatasetTree();
+        expect(testTree.extractPatterns("HLQ.PDS(A*,B*), HLQ.OTHER(C*)")).toStrictEqual([
+            {
+                dsn: "HLQ.PDS",
+                member: "A*,B*",
+            },
+            {
+                dsn: "HLQ.OTHER",
+                member: "C*",
+            },
+        ]);
+    });
+    it("Handles multi-member pattern mixed with dataset-only pattern", () => {
+        const testTree = new DatasetTree();
+        expect(testTree.extractPatterns("HLQ.PDS(A*,B*), HLQ.DEV.*")).toStrictEqual([
+            {
+                dsn: "HLQ.PDS",
+                member: "A*,B*",
+            },
+            {
+                dsn: "HLQ.DEV.*",
+            },
+        ]);
+    });
 });
 
 describe("Dataset Tree Unit Tests - Function buildFinalPattern", () => {
@@ -6816,6 +6869,49 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
         const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
         testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.PROD.PDS", member: "A*" }], fakeSessionNode as any);
         expect(fakeChildren[0].iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.filterFolderOpen).path);
+        withProfileMock.mockRestore();
+    });
+    it("accumulates member patterns when multiple patterns match the same PDS", () => {
+        const testTree = new DatasetTree();
+        const fakeSessionNode = { dirty: false, contextValue: Constants.DS_SESSION_CONTEXT };
+        const fakeChildren = [
+            {
+                label: "HLQ.PROD.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                iconPath: undefined,
+                pattern: "",
+                memberPattern: "",
+            },
+        ];
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+        testTree.applyPatternsToChildren(
+            fakeChildren as any[],
+            [
+                { dsn: "HLQ.PROD.PDS", member: "A*" },
+                { dsn: "HLQ.PROD.PDS", member: "B*" },
+            ],
+            fakeSessionNode as any
+        );
+        expect(fakeChildren[0].memberPattern).toBe("A*,B*");
+        withProfileMock.mockRestore();
+    });
+    it("sets comma-separated member pattern from a single DatasetMatch with multiple members", () => {
+        const testTree = new DatasetTree();
+        const fakeSessionNode = { dirty: false, contextValue: Constants.DS_SESSION_CONTEXT };
+        const fakeChildren = [
+            {
+                label: "HLQ.PROD.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                iconPath: undefined,
+                pattern: "",
+                memberPattern: "",
+            },
+        ];
+        const withProfileMock = jest.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+        testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.PROD.PDS", member: "A*,B*" }], fakeSessionNode as any);
+        expect(fakeChildren[0].memberPattern).toBe("A*,B*");
         withProfileMock.mockRestore();
     });
     it("strips _fav from a PDS node that already has _fav before adding isFilterSearch", () => {
