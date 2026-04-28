@@ -57,6 +57,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
     private constructor() {
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.Jobs, this.onDidChangeFile);
+        ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => this.updateProfile(profile));
         this.root = new DirEntry("");
     }
 
