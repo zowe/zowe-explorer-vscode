@@ -1,3 +1,4 @@
+---
 name: zedc
 description: Use the Zowe Explorer Development CLI (zedc) ONLY when the user explicitly mentions or requests "zedc". Provides sandboxed testing, environment setup, and package management.
 metadata:

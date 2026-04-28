@@ -1,3 +1,4 @@
+---
 name: code-quality
 description: Refactor, deduplicate, and improve TypeScript code quality in the Zowe Explorer monorepo. Use when refactoring or checking code quality in packages/zowe-explorer/ and packages/zowe-explorer-api/.
 metadata:
