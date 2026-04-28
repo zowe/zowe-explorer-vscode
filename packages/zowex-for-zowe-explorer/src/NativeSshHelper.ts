@@ -13,7 +13,6 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { imperative } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { getVsceConfig } from "./VsceConfig";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const sdkPackageJson = require("@zowe/zowex-for-zowe-sdk/package.json");
@@ -79,7 +78,7 @@ async function ensureNativeBinary(context: vscode.ExtensionContext): Promise<voi
 }
 
 export function handleNativeSshSettings(context: vscode.ExtensionContext): void {
-    if (!getVsceConfig().get<boolean>("zowex.experimentalNativeSsh")) {
+    if (!vscode.workspace.getConfiguration("zowe").get<boolean>("zowex.experimentalNativeSsh")) {
         return;
     }
     ensureNativeBinary(context).catch((err: Error) => {

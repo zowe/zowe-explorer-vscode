@@ -9,13 +9,13 @@
  *
  */
 
+import * as vscode from "vscode";
 import { type IZoweTree, type IZoweTreeNode, type imperative, type IApiExplorerExtender } from "@zowe/zowe-explorer-api";
 import { ZSshClient } from "@zowe/zowex-for-zowe-sdk";
-import { getVsceConfig } from "./VsceConfig";
 
 export class ConfigUtils {
     public static getServerPath(profile?: imperative.IProfile): string {
-        const serverPathMap: Record<string, string> = getVsceConfig().get("zowex.serverInstallPath") ?? {};
+        const serverPathMap: Record<string, string> = vscode.workspace.getConfiguration("zowe").get("zowex.serverInstallPath") ?? {};
         return (
             (profile && serverPathMap[profile?.host]) ??
             process.env.ZOWE_OPT_SERVER_PATH ??

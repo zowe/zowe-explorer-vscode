@@ -2,7 +2,6 @@ import { ProfileConstants } from "@zowe/core-for-zowe-sdk";
 import type { ISshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import * as vscode from "vscode";
 import { Gui, ZoweVsCodeExtension, imperative } from "@zowe/zowe-explorer-api";
-import { getVsceConfig } from "./VsceConfig";
 import {
     AbstractConfigManager,
     type IDisposable,
@@ -184,20 +183,20 @@ export class VscePromptApi extends AbstractConfigManager {
     }
 
     protected storeServerPath(host: string, path: string): void {
-        const config = getVsceConfig();
-        let serverPathMap: Record<string, string> = getVsceConfig().get("zowex.serverInstallPath") ?? {};
+        const config = vscode.workspace.getConfiguration("zowe");
+        let serverPathMap: Record<string, string> = config.get("zowex.serverInstallPath") ?? {};
         if (!serverPathMap) {
             serverPathMap = {};
         }
         serverPathMap[host] = path;
-        config.update("serverInstallPath", serverPathMap, vscode.ConfigurationTarget.Global);
+        config.update("zowex.serverInstallPath", serverPathMap, vscode.ConfigurationTarget.Global);
     }
 
     protected getClientSetting<T>(setting: keyof ISshSession): T | undefined {
         const settingMap: { [K in keyof ISshSession]: string } = {
             handshakeTimeout: "zowex.defaultHandshakeTimeout",
         };
-        return settingMap[setting] ? getVsceConfig().get<T>(settingMap[setting]) : undefined;
+        return settingMap[setting] ? vscode.workspace.getConfiguration("zowe").get<T>(settingMap[setting]) : undefined;
     }
 
     protected showStatusBar(): IDisposable | undefined {

@@ -16,13 +16,12 @@ import { ConfigUtils } from "./ConfigUtils";
 import { VscePromptApi } from "./VscePromptApi";
 import { SshClientCache } from "./SshClientCache";
 import { SshErrorHandler } from "./SshErrorHandler";
-import { EXTENSION_NAME } from "./VsceConfig";
 import { deployWithProgress } from "./ServerDeployment";
 
 export function registerCommands(context: vscode.ExtensionContext, zoweExplorerApi: IApiExplorerExtender): vscode.Disposable[] {
     const profCache = zoweExplorerApi.getProfilesCache();
     return [
-        vscode.commands.registerCommand(`${EXTENSION_NAME}.zowex.connect`, async (profName?: string) => {
+        vscode.commands.registerCommand(`zowe.zowex.connect`, async (profName?: string) => {
             imperative.Logger.getAppLogger().trace("Running connect command for profile %s", profName);
             const vscePromptApi = new VscePromptApi(await profCache.getProfileInfo());
             const profile = await vscePromptApi.promptForProfile(profName);
@@ -46,7 +45,7 @@ export function registerCommands(context: vscode.ExtensionContext, zoweExplorerA
             imperative.Logger.getAppLogger().info(infoMsg);
             await Gui.showMessage(infoMsg);
         }),
-        vscode.commands.registerCommand(`${EXTENSION_NAME}.zowex.restart`, async (profName?: string) => {
+        vscode.commands.registerCommand(`zowe.zowex.restart`, async (profName?: string) => {
             imperative.Logger.getAppLogger().trace("Running restart command for profile %s", profName);
             const vscePromptApi = new VscePromptApi(await profCache.getProfileInfo());
             const profile = await vscePromptApi.promptForProfile(profName);
@@ -63,7 +62,7 @@ export function registerCommands(context: vscode.ExtensionContext, zoweExplorerA
                 // eslint-disable-next-line no-magic-numbers
             }, 5000);
         }),
-        vscode.commands.registerCommand(`${EXTENSION_NAME}.zowex.uninstall`, async (profName?: string) => {
+        vscode.commands.registerCommand(`zowe.zowex.uninstall`, async (profName?: string) => {
             imperative.Logger.getAppLogger().trace("Running uninstall command for profile %s", profName);
             const vscePromptApi = new VscePromptApi(await profCache.getProfileInfo());
             const profile = await vscePromptApi.promptForProfile(profName);

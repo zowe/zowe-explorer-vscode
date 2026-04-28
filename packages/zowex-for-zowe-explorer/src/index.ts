@@ -4,5 +4,4 @@ export * from "./NativeSshHelper";
 export * from "./SshClientCache";
 export * from "./SshErrorCorrelations";
 export * from "./Utilities";
-export * from "./VsceConfig";
 export * from "./VscePromptApi";
