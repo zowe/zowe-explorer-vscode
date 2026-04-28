@@ -802,6 +802,43 @@ describe("Profiles Unit Tests - function validateProfile", () => {
         await Profiles.getInstance().validateProfiles(profile);
         expect(errorHandlingSpy).toHaveBeenCalledWith(testError, { profile });
     });
+    it("should retry checkCurrentProfile if errorHandling returns true", async () => {
+        createGlobalMocks();
+        const profilesForValidation: Validation.IValidationProfile[] = [];
+        const getStatusSpy = jest.fn();
+        Object.defineProperty(Profiles.getInstance(), "profilesForValidation", {
+            get: () => profilesForValidation,
+            set: (value) => {
+                profilesForValidation.length = 0;
+                profilesForValidation.push(...value);
+            },
+            configurable: true,
+        });
+        jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValueOnce({
+            getStatus: getStatusSpy,
+        } as never);
+        const testError = new Error("failed to validate profile");
+        const testProfile = {
+            name: "test1",
+            message: "",
+            type: "",
+            failNotFound: false,
+        };
+        getStatusSpy.mockImplementation(() => {
+            throw testError;
+        });
+        jest.spyOn(AuthUtils, "errorHandling").mockResolvedValue(true);
+        profilesForValidation.push({ name: "test1", status: "unverified" });
+        const checkCurrentProfileSpy = jest.spyOn(Profiles.getInstance(), "checkCurrentProfile").mockResolvedValue({
+            name: "test1",
+            status: "active",
+        });
+        await expect(Profiles.getInstance().validateProfiles(testProfile)).resolves.toEqual({
+            name: "test1",
+            status: "active",
+        });
+        expect(checkCurrentProfileSpy).toHaveBeenCalledWith(testProfile);
+    });
     it("should return an object with profile validation status of 'unverified' from session status if validated profiles doesn't exist", async () => {
         createBlockMocks();
         await expect(
