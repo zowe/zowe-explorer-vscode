@@ -874,7 +874,11 @@ export class Profiles extends ProfilesCache {
                         comment: [`The profile name`],
                     })
                 );
-                await AuthUtils.errorHandling(error, { profile: theProfile });
+                const updated = await AuthUtils.errorHandling(error, { profile: theProfile });
+                if (updated) {
+                    this.profilesForValidation = this.profilesForValidation.filter((p) => p.name !== theProfile.name);
+                    return this.checkCurrentProfile(theProfile);
+                }
                 filteredProfile = {
                     status: "inactive",
                     name: theProfile.name,
