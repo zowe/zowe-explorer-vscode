@@ -75,7 +75,7 @@ pnpm lint
 pnpm test
 
 # Check for type errors
-pnpm compile
+pnpm build
 ```
 
 ### Step 3: Manual Review
