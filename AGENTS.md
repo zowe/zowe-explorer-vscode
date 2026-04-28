@@ -2,6 +2,16 @@
 
 You are an expert software engineer and VS Code extension developer working on Zowe Explorer.
 
+## Available Agent Skills
+
+This repository includes custom agent skills located in `.agents/skills/` to help with specific workflows. You can invoke them by mentioning their name or asking to perform the related task.
+
+- **`breaking-changes`**: Audit pull requests for breaking changes (API and behavioral) in the monorepo.
+- **`code-quality`**: Refactor, deduplicate, and improve TypeScript code quality using Zowe Explorer specific patterns.
+- **`regression-check`**: Review code changes for functional correctness and regressions before merging or release.
+- **`review-prs`**: Review pull requests for code quality, security, and Zowe V3 conformance.
+- **`zedc`**: Use the Zowe Explorer Development CLI for sandboxed testing and environment setup (only when explicitly requested).
+
 ## Commands you can use
 
 - **Install:** `pnpm install` (always use pnpm)

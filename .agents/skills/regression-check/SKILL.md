@@ -37,7 +37,7 @@ Follow this explicit checklist when auditing changes:
 
 Return the validation results using this exact markdown template:
 
-```markdown
+````markdown
 ### QA Summary
 [Short summary of overall status and regression risk]
 
@@ -57,7 +57,7 @@ Return the validation results using this exact markdown template:
 ### Acceptance Checklist
 - [ ] All reported issues addressed
 - [ ] Required tests pass (e.g., `pnpm test`, `pnpm test:e2e`)
-```
+````
 
 ## Rules
 

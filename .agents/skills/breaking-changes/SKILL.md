@@ -31,7 +31,7 @@ Follow this exact sequence when auditing:
 
 Use this exact template for the final output, sorting items from most impactful to least impactful:
 
-```markdown
+````markdown
 # Breaking Changes Audit Report
 
 ## High Impact (`zowe-explorer-api`)
@@ -39,7 +39,7 @@ Use this exact template for the final output, sorting items from most impactful 
   - **Type:** [API / Behavioral]
   - **Impact:** [Brief summary of who is affected and how]
   - **Details:** [1-2 bullets explaining the break]
-  - **Migration:** [How extenders should adapt]
+  - **Migration:** [How to avoid breaking changes for extenders]
 
 ## Moderate/Low Impact (`zowe-explorer`)
 - **PR #[Number]: [Title]**
@@ -47,4 +47,4 @@ Use this exact template for the final output, sorting items from most impactful 
   - **Impact:** [Brief summary]
   - **Details:** [1-2 bullets]
   - **Migration:** [If applicable]
-```
+````
