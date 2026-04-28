@@ -5,7 +5,7 @@ on:
     paths:
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
-      - packages/zowe-native-api/**
+      - packages/zowex-for-zowe-explorer/**
       - .github/workflows/report-artifact-pr.yml
       - .github/resources/artifact-template.hbs
 
