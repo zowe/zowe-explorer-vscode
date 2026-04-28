@@ -39,6 +39,18 @@ export const tableProps = (
     ensureDomOrder: true,
     rowData: tableData.rows,
     getRowId: tableData.options?.customTreeMode ? (params: any) => params.data._tree?.id : undefined,
+    // Enable keyboard navigation for row selection
+    suppressRowClickSelection: false,
+    rowSelection: tableData.options?.selectEverything ? "multiple" : undefined,
+    suppressCellFocus: false,
+    navigateToNextCell: (params: any) => {
+        // Allow default navigation behavior
+        return params.nextCellPosition;
+    },
+    tabToNextCell: (params: any) => {
+        // Allow default tab navigation
+        return params.nextCellPosition;
+    },
     columnDefs: tableData.columns?.map((col) => ({
         sortable: true,
         sortingOrder: ["asc", "desc", null],
