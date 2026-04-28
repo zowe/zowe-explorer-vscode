@@ -68,7 +68,7 @@ describe("KeytarCredentialManager", () => {
             expect(keytar).toBeDefined();
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
-            expect(Object.keys((keytar as object)["keyring"]).length).toBe(5);
+            expect(Object.keys((keytar as object)["keyring"]).length).toBe(6);
         });
 
         it("should handle credential-manager in Imperative settings", () => {
@@ -84,7 +84,7 @@ describe("KeytarCredentialManager", () => {
             expect(keytar).toBeDefined();
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
-            expect(Object.keys((keytar as object)["keyring"]).length).toBe(5);
+            expect(Object.keys((keytar as object)["keyring"]).length).toBe(6);
         });
 
         it("should handle empty Imperative settings", () => {
