@@ -12,7 +12,7 @@ Use this skill to validate a completed or nearly completed feature, bug fix, or 
 - **Direct filesystem access**: `fs` or `path` node module calls for mainframe resources will break. Always verify the use of Zowe filesystem providers or `vscode.workspace.fs`.
 - **Silent UI Failures**: Unhandled promises in `Actions` classes (e.g., `MvsActions`, `UssActions`) might fail silently. Ensure actions use `AuthUtils.errorHandling` and display appropriate messages via `Gui`, or implement essential error handling for scenarios that `AuthUtils.errorHandling` does not cover.
 - **Extension API Contract**: Modifying method signatures or expected arguments in `zowe-explorer-api` can break dependent extensions without failing local tests.
-- **Activation Crashes**: A failure or unhandled exception during `registerApis()` or `initForZowe()` will prevent the entire extension from activating.
+- **Activation Crashes**: A failure or unhandled exception during extension initialization or `initForZowe()` will prevent the entire extension from activating.
 
 ## Validation Workflow
 
@@ -20,7 +20,7 @@ Follow this explicit checklist when auditing changes:
 
 - [ ] **Step 1: Extension Initialization**
   - Verify the extension activates successfully without crashes in the debug console or log output.
-  - Ensure `activate()`, `registerApis()`, and `initForZowe()` complete without unhandled errors.
+  - Ensure `activate()` and `initForZowe()` complete without unhandled errors.
 - [ ] **Step 2: Tree View Actions**
   - Verify context menu actions (e.g., copy, paste, delete, rename, upload) function correctly on affected tree nodes.
   - Check that tree view state refreshes appropriately after modifications.
