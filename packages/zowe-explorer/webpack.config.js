@@ -83,6 +83,12 @@ const config = (mode) => ({
                 test: /\.node$/,
                 loader: "node-loader",
             },
+            {
+                // Patch russh/lib/native.js to load .node binaries from prebuilds/
+                // using __non_webpack_require__ so webpack doesn't try to bundle them.
+                test: /russh[\\/]lib[\\/]native\.js$/,
+                loader: path.resolve(__dirname, "russh-native-loader.js"),
+            },
         ],
     },
     plugins: [

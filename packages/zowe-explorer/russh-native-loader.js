@@ -9,7 +9,7 @@
  *
  */
 
-// rspack loader for russh/lib/native.js
+// webpack loader for russh/lib/native.js
 // Patches the .node require to use __non_webpack_require__ and load from prebuilds/.
 module.exports = function (source) {
     return source.replace(

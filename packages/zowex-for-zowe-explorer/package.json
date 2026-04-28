@@ -21,7 +21,6 @@
   "scripts": {
     "build": "tsc -p ./ && pnpm madge",
     "clean": "rimraf bin lib coverage",
-    "compile": "rspack --mode development",
     "license": "node ../../scripts/updateLicenses.mjs",
     "newlint": "concurrently -n \"_eslint_,prettier\" \"pnpm lint:all\" \"pnpm lint:pretty\"",
     "newlint:html": "(mkdir -p \"results\" || true) && eslint . --format html > results/eslint.html",
@@ -37,8 +36,7 @@
     "oldtest:ui": "vitest --ui --coverage",
     "oldtest:watch": "vitest --watch",
     "test": "echo 'Not Implemented'",
-    "vscode:prepublish": "rspack --mode production",
-    "watch": "rspack --mode development --watch"
+    "watch": "tsc --watch -p ./"
   },
   "dependencies": {
     "@zowe/core-for-zowe-sdk": "^8.11.0",
