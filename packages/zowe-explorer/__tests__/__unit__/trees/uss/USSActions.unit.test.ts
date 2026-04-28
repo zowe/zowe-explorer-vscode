@@ -95,6 +95,7 @@ function createGlobalMocks() {
     const profilesForValidation = { status: "active", name: "fake" };
 
     jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
+    jest.spyOn(UssFSProvider.instance, "createEntry").mockImplementation();
     Object.defineProperty(Gui, "setStatusBarMessage", { value: globalMocks.setStatusBarMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.showInformationMessage, configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.mockShowInputBox, configurable: true });
@@ -292,7 +293,8 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
         const getUssApiMock = jest.fn().mockReturnValue(ussApi);
         ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
-        const createSpy = jest.spyOn(ussApi, "create");
+        const createSpy = jest.spyOn(ussApi, "create").mockResolvedValue({} as any);
+        createSpy.mockClear();
 
         blockMocks.ussNode.contextValue = Constants.USS_BINARY_FILE_CONTEXT;
         blockMocks.ussNode.fullPath = "/test/path";
@@ -314,7 +316,8 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
         const getUssApiMock = jest.fn().mockReturnValue(ussApi);
         ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
-        const createSpy = jest.spyOn(ussApi, "create");
+        const createSpy = jest.spyOn(ussApi, "create").mockResolvedValue({} as any);
+        createSpy.mockClear();
 
         blockMocks.ussNode.contextValue = Constants.USS_BINARY_FILE_CONTEXT;
         blockMocks.ussNode.fullPath = "/test/path";
@@ -329,6 +332,92 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         await USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
         expect(createSpy).toHaveBeenCalledWith("/test/path/testFile", "file");
         expect(refreshElemSpy).toHaveBeenCalled();
+    });
+
+    it("Tests that createUSSNode prompts for replacement if the node already exists and handles replacement", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testProfile = createIProfile();
+        const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
+        const getUssApiMock = jest.fn().mockReturnValue(ussApi);
+        ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
+
+        const fileListSpy = jest.spyOn(ussApi, "fileList").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ name: "testFile", mode: "-rw-r--r--" }],
+            },
+        } as any);
+        const createSpy = jest.spyOn(ussApi, "create").mockResolvedValue({} as any);
+        createSpy.mockClear();
+
+        blockMocks.ussNode.contextValue = Constants.USS_BINARY_FILE_CONTEXT;
+        blockMocks.ussNode.fullPath = "/test/path";
+
+        globalMocks.mockShowInputBox.mockReturnValueOnce("testFile");
+
+        // Mock the user clicking "Replace"
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Replace");
+
+        jest.spyOn(blockMocks.testTreeView, "reveal").mockReturnValueOnce(new Promise((resolve) => resolve(null)));
+        jest.spyOn(blockMocks.ussNode, "getChildren").mockResolvedValueOnce([]);
+
+        const createEntrySpy = jest.spyOn(UssFSProvider.instance, "createEntry");
+        const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "fireSoon");
+        const writeFileSpy = jest.spyOn(vscode.workspace.fs, "writeFile").mockResolvedValueOnce();
+
+        await USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
+
+        expect(fileListSpy).toHaveBeenCalledWith("/test/path");
+        expect(showMessageSpy).toHaveBeenCalled();
+        expect(createEntrySpy).toHaveBeenCalled();
+        expect(fireSoonSpy).toHaveBeenCalled();
+        expect(createSpy).not.toHaveBeenCalled(); // Since we are replacing, create shouldn't be called
+        expect(writeFileSpy).toHaveBeenCalled();
+    });
+
+    it("Tests that createUSSNode prompts for replacement if the node already exists and handles cancellation", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testProfile = createIProfile();
+        const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
+        const getUssApiMock = jest.fn().mockReturnValue(ussApi);
+        ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
+
+        const fileListSpy = jest.spyOn(ussApi, "fileList").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ name: "testFile", mode: "-rw-r--r--" }],
+            },
+        } as any);
+        const createSpy = jest.spyOn(ussApi, "create").mockResolvedValue({} as any);
+        createSpy.mockClear();
+
+        blockMocks.ussNode.contextValue = Constants.USS_BINARY_FILE_CONTEXT;
+        blockMocks.ussNode.fullPath = "/test/path";
+
+        globalMocks.mockShowInputBox.mockReturnValueOnce("testFile");
+
+        // Mock the user clicking "Cancel"
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Cancel");
+
+        const createEntrySpy = jest.spyOn(UssFSProvider.instance, "createEntry");
+        const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "fireSoon");
+        const writeFileSpy = jest.spyOn(vscode.workspace.fs, "writeFile").mockResolvedValueOnce();
+        createEntrySpy.mockClear();
+        fireSoonSpy.mockClear();
+        writeFileSpy.mockClear();
+
+        await USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
+
+        expect(fileListSpy).toHaveBeenCalledWith("/test/path");
+        expect(showMessageSpy).toHaveBeenCalled();
+        expect(createEntrySpy).not.toHaveBeenCalled(); // Cancelled - no optimistic entry creation
+        expect(fireSoonSpy).not.toHaveBeenCalled(); // Cancelled - no notification
+        expect(createSpy).not.toHaveBeenCalled(); // Cancelled
+        expect(writeFileSpy).not.toHaveBeenCalled(); // Cancelled
     });
 
     it("Tests that createUSSNode fails if an error is thrown", async () => {
@@ -378,6 +467,90 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         await expect(USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "folder")).rejects.toThrow();
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
         createMock.mockRestore();
+    });
+
+    it("Tests that createUSSNode cache cleanup functionality exists and works correctly", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testProfile = createIProfile();
+        const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
+        const getUssApiMock = jest.fn().mockReturnValue(ussApi);
+        ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
+
+        const fileListSpy = jest.spyOn(ussApi, "fileList").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ name: "testFile", mode: "-rw-r--r--" }],
+            },
+        } as any);
+
+        blockMocks.ussNode.contextValue = Constants.USS_BINARY_FILE_CONTEXT;
+        blockMocks.ussNode.fullPath = "/test/path";
+        globalMocks.mockShowInputBox.mockReturnValueOnce("testFile");
+
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Replace");
+        const createEntrySpy = jest.spyOn(UssFSProvider.instance, "createEntry");
+        const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "fireSoon");
+        jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+
+        await USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "file");
+
+        expect(fileListSpy).toHaveBeenCalledWith("/test/path");
+        expect(showMessageSpy).toHaveBeenCalled();
+        expect(createEntrySpy).toHaveBeenCalled();
+        expect(fireSoonSpy).toHaveBeenCalled();
+    });
+
+    it("Tests that createUSSNode does not clean up cache entry when operations outside try-catch fail", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const testProfile = createIProfile();
+        const ussApi = ZoweExplorerApiRegister.getUssApi(testProfile);
+        const getUssApiMock = jest.fn().mockReturnValue(ussApi);
+        ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
+
+        const fileListSpy = jest.spyOn(ussApi, "fileList").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ name: "testDir", mode: "drwxr-xr-x" }],
+            },
+        } as any);
+
+        blockMocks.ussNode.contextValue = Constants.USS_DIR_CONTEXT;
+        blockMocks.ussNode.fullPath = "/test/path";
+        globalMocks.mockShowInputBox.mockReturnValueOnce("testDir");
+
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Replace");
+        const createEntrySpy = jest.spyOn(UssFSProvider.instance, "createEntry");
+        const fireSoonSpy = jest.spyOn(UssFSProvider.instance, "fireSoon");
+        jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+
+        const mockParent = {
+            entries: new Map([["testDir", { name: "testDir" }]]),
+            size: 1,
+        };
+        const lookupParentDirectorySpy = jest.spyOn(UssFSProvider.instance, "lookupParentDirectory").mockReturnValue(mockParent as any);
+
+        jest.spyOn(blockMocks.ussNode, "getChildren").mockRejectedValueOnce(new Error("getChildren failed"));
+
+        let testError;
+        try {
+            await USSActions.createUSSNode(blockMocks.ussNode, blockMocks.testUSSTree, "directory");
+        } catch (err) {
+            testError = err;
+        }
+
+        expect(fileListSpy).toHaveBeenCalledWith("/test/path");
+        expect(showMessageSpy).toHaveBeenCalled();
+        expect(createEntrySpy).toHaveBeenCalled();
+        expect(fireSoonSpy).toHaveBeenCalled();
+        expect(testError?.message).toEqual("getChildren failed");
+
+        expect(lookupParentDirectorySpy).not.toHaveBeenCalled();
+        expect(mockParent.entries.has("testDir")).toBe(true);
+        expect(mockParent.size).toBe(1);
     });
 });
 
