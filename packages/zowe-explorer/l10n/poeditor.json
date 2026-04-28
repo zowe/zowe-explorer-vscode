@@ -1178,6 +1178,7 @@
   "Fixed an issue where automatic file extension detection identified file types incorrectly. <a>#3181</a>": "",
   "Fixed an issue where binary USS files were not fetched using the \"Pull from Mainframe\" context menu option. <a>#3355</a>": "",
   "Fixed an issue where cached encoding was applied for all profiles with the same data set or USS path in the \"Open with Encoding\" menu. <a>#3363</a>": "",
+  "Fixed an issue where cached file system entries would not reflect profile updates (reactivations, credential changes, etc.) in the Data Sets, Jobs, and USS trees. <a>#4141</a>": "",
   "Fixed an issue where calling vscode.workspace.fs.readFile with a PDS member URI would throw an error when the PDS already existed as a filesystem entry. <a>#3267</a>": "",
   "Fixed an issue where cancelling multiple commands in rapid succession could render the terminal unusable. <a>#3640</a>": "",
   "Fixed an issue where cancelling Unix, MVS or TSO command still submits the command. <a>#3422</a>": "",
