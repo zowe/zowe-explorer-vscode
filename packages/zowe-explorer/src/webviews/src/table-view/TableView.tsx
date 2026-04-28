@@ -619,15 +619,21 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         tooltip.textContent = text;
         tooltip.style.display = "block";
 
-        // Center horizontally on the element
-        const tooltipWidth = 250;
-        let left = rect.left + rect.width / 2 - tooltipWidth / 2;
-        // Ensure tooltip doesn't go off-screen
-        if (left < 0) left = 5;
-        if (left + tooltipWidth > window.innerWidth) left = window.innerWidth - tooltipWidth - 5;
+        // Position tooltip directly below the icon, aligned to the icon's left edge
+        const tooltipWidth = tooltip.offsetWidth || 250;
+        let left = rect.left;
+        
+        // Ensure tooltip doesn't go off-screen to the right
+        if (left + tooltipWidth > window.innerWidth) {
+          left = window.innerWidth - tooltipWidth - 5;
+        }
+        // Ensure tooltip doesn't go off-screen to the left
+        if (left < 5) {
+          left = 5;
+        }
 
         tooltip.style.left = `${left}px`;
-        tooltip.style.top = `${rect.bottom + 8}px`;
+        tooltip.style.top = `${rect.bottom + 4}px`;
       };
 
       const leave = () => {
