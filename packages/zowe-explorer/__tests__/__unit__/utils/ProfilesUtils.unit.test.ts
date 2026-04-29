@@ -38,7 +38,6 @@ import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
 import { FilterItem } from "../../../src/management/FilterManagement";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
-import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { Definitions } from "../../../src/configuration/Definitions";
@@ -1620,9 +1619,10 @@ describe("ProfilesUtils unit tests", () => {
                 getSession: jest.fn().mockReturnValue(fakeSession),
             };
 
-            const getInstanceSpy = jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            const mockApiRegister = {
                 getCommonApi: jest.fn().mockReturnValue(mockCommonApi),
-            } as any);
+            };
+            ProfilesUtils.setApiRegister(mockApiRegister as any);
 
             const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
             const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
@@ -1633,8 +1633,8 @@ describe("ProfilesUtils unit tests", () => {
             return {
                 mockNode,
                 mockCommonApi,
+                mockApiRegister,
                 changePasswordFn,
-                getInstanceSpy,
                 errorMessageSpy,
                 infoMessageSpy,
                 warningMessageSpy,
@@ -1656,7 +1656,7 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should show error if no API is found for the profile", async () => {
             const mocks = createChangePasswordMocks();
-            mocks.getInstanceSpy.mockReturnValue({
+            ProfilesUtils.setApiRegister({
                 getCommonApi: jest.fn().mockImplementation(() => {
                     throw new Error("No API");
                 }),
@@ -1667,7 +1667,7 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should show error if changePassword is not supported by the API", async () => {
             const mocks = createChangePasswordMocks();
-            mocks.getInstanceSpy.mockReturnValue({
+            ProfilesUtils.setApiRegister({
                 getCommonApi: jest.fn().mockReturnValue({
                     getSession: jest.fn().mockReturnValue(fakeSession),
                 }),
@@ -1679,7 +1679,7 @@ describe("ProfilesUtils unit tests", () => {
         it("should show error if unable to create a session", async () => {
             const mocks = createChangePasswordMocks();
             mocks.mockCommonApi.getSession = jest.fn().mockReturnValue(undefined);
-            mocks.getInstanceSpy.mockReturnValue({
+            ProfilesUtils.setApiRegister({
                 getCommonApi: jest.fn().mockReturnValue(mocks.mockCommonApi),
             } as any);
             await ProfilesUtils.changePassword(mocks.mockNode);
