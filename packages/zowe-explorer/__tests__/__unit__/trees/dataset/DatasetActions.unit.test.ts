@@ -4628,7 +4628,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
         expect(createEntrySpy).toHaveBeenCalledWith(testUri, DsType.PdsMember);
         expect(fireSoonSpy).toHaveBeenCalledWith({
             type: vscode.FileChangeType.Created,
-            uri: testUri.with({ query: "" })
+            uri: testUri.with({ query: "" }),
         });
 
         allMembersSpy.mockRestore();
@@ -4651,9 +4651,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
             },
         });
 
-        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists")
-            .mockReturnValueOnce(false)
-            .mockReturnValueOnce(false);
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false).mockReturnValueOnce(false);
         const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation();
 
@@ -4667,7 +4665,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
         expect(createEntrySpy).toHaveBeenCalledTimes(2);
         expect(fireSoonSpy).toHaveBeenCalledWith({
             type: vscode.FileChangeType.Created,
-            uri: testUri.with({ query: "" })
+            uri: testUri.with({ query: "" }),
         });
 
         allMembersSpy.mockRestore();
@@ -4704,7 +4702,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
         expect(createEntrySpy).toHaveBeenCalledWith(testUri, DsType.Pds);
         expect(fireSoonSpy).toHaveBeenCalledWith({
             type: vscode.FileChangeType.Created,
-            uri: testUri.with({ query: "" })
+            uri: testUri.with({ query: "" }),
         });
 
         dataSetSpy.mockRestore();
@@ -4727,9 +4725,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
             },
         });
 
-        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists")
-            .mockReturnValueOnce(false)
-            .mockReturnValueOnce(false);
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false).mockReturnValueOnce(false);
         const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation();
 
@@ -4743,7 +4739,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
         expect(createEntrySpy).toHaveBeenCalledTimes(2);
         expect(fireSoonSpy).toHaveBeenCalledWith({
             type: vscode.FileChangeType.Created,
-            uri: testUri.with({ query: "" })
+            uri: testUri.with({ query: "" }),
         });
 
         allMembersSpy.mockRestore();
@@ -4766,9 +4762,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
             },
         });
 
-        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists")
-            .mockReturnValueOnce(false)
-            .mockReturnValueOnce(false);
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false).mockReturnValueOnce(false);
         const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
         const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation();
 
@@ -4782,7 +4776,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
         expect(createEntrySpy).toHaveBeenCalledTimes(2);
         expect(fireSoonSpy).toHaveBeenCalledWith({
             type: vscode.FileChangeType.Created,
-            uri: testUri.with({ query: "" })
+            uri: testUri.with({ query: "" }),
         });
 
         dataSetSpy.mockRestore();
@@ -7264,6 +7258,82 @@ describe("DatasetActions - downloading functions", () => {
                     binary: false,
                 })
             );
+        });
+    });
+
+    describe("executeDownloadWithProgress", () => {
+        const executeDownloadWithProgress = (DatasetActions as any).executeDownloadWithProgress;
+
+        let mockHandleDownloadResponse: MockedProperty;
+        let mockAuthErrorHandling: MockedProperty;
+        let mockNode: any;
+        const mockProfile = { name: "testProfile" };
+        const mockProgress = { report: jest.fn() };
+        const mockToken = { isCancellationRequested: false };
+
+        beforeEach(() => {
+            mockNode = { getProfile: jest.fn().mockReturnValue(mockProfile) };
+            Object.defineProperty(DatasetActions, "executeDownloadWithProgress", {
+                value: executeDownloadWithProgress,
+                configurable: true,
+                writable: true,
+            });
+            (vscode.window.withProgress as jest.Mock).mockImplementation((_options: any, callback: any) => callback(mockProgress, mockToken));
+            mockHandleDownloadResponse = new MockedProperty(SharedUtils, "handleDownloadResponse", undefined, jest.fn().mockResolvedValue(undefined));
+            mockAuthErrorHandling = new MockedProperty(AuthUtils, "errorHandling", undefined, jest.fn().mockResolvedValue(undefined));
+        });
+
+        afterEach(() => {
+            (vscode.window.withProgress as jest.Mock).mockReset();
+            mockHandleDownloadResponse[Symbol.dispose]();
+            mockAuthErrorHandling[Symbol.dispose]();
+        });
+
+        it("should call vscode.window.withProgress with the correct title, location, and cancellable flag", async () => {
+            const downloadFn = jest.fn().mockResolvedValue({ response: { success: true }, downloadedPath: "/path/file" });
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "DS", mockNode, true);
+
+            expect(vscode.window.withProgress).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    title: "test download",
+                    cancellable: true,
+                }),
+                expect.any(Function)
+            );
+        });
+
+        it("should default cancellable to false when not provided", async () => {
+            const downloadFn = jest.fn().mockResolvedValue({ response: { success: true }, downloadedPath: "/path/file" });
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "DS", mockNode);
+
+            expect(vscode.window.withProgress).toHaveBeenCalledWith(expect.objectContaining({ cancellable: false }), expect.any(Function));
+        });
+
+        it("should invoke downloadFn with progress and token, then call handleDownloadResponse on success", async () => {
+            const mockResponse = { success: true, commandResponse: "ok" };
+            const mockDownloadedPath = "/test/path/file.txt";
+            const downloadFn = jest.fn().mockResolvedValue({ response: mockResponse, downloadedPath: mockDownloadedPath });
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "MEMBER", mockNode, false);
+
+            expect(downloadFn).toHaveBeenCalledWith(mockProgress, mockToken);
+            expect(mockHandleDownloadResponse.mock).toHaveBeenCalledWith(mockResponse, "MEMBER", mockDownloadedPath);
+            expect(mockAuthErrorHandling.mock).not.toHaveBeenCalled();
+        });
+
+        it("should call AuthUtils.errorHandling when downloadFn throws, and not call handleDownloadResponse", async () => {
+            const error = new Error("Download failed");
+            const downloadFn = jest.fn().mockRejectedValue(error);
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "DS", mockNode, false);
+
+            expect(mockAuthErrorHandling.mock).toHaveBeenCalledWith(error, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile: mockProfile,
+            });
+            expect(mockHandleDownloadResponse.mock).not.toHaveBeenCalled();
         });
     });
 });
