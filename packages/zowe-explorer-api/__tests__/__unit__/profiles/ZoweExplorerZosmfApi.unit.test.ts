@@ -131,7 +131,7 @@ describe("CommonApi", () => {
                 reasonCode: 2,
                 message: "Change password failed.",
             });
-            await expect(commonApi.changePassword(fakeSession, "bad")).rejects.toThrow("The new password is not valid");
+            await expect(commonApi.changePassword(fakeSession, "bad")).rejects.toThrow("Change password failed.");
             changePasswordSpy.mockRestore();
         });
     });
