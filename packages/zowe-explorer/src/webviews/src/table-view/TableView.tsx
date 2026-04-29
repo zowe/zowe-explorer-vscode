@@ -83,8 +83,6 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
   const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
   // Holds either a MutationObserver (new) or a NodeJS.Timeout (legacy fallback)
   const tooltipCleanupRef = useRef<MutationObserver | NodeJS.Timeout | null>(null);
-  // Store keyboard event handler for cleanup
-  const keyboardHandlerRef = useRef<((event: KeyboardEvent) => void) | null>(null);
 
   const contextMenu = useContextMenu({
     options: [
@@ -543,7 +541,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     getLocalizationContents();
   }, [localization]);
 
-  // Cleanup tooltip observer, keyboard handler, and custom tooltip element on component unmount
+  // Cleanup tooltip observer and custom tooltip element on component unmount
   useEffect(() => {
     return () => {
       if (tooltipCleanupRef.current) {
@@ -554,16 +552,6 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         }
         tooltipCleanupRef.current = null;
       }
-      
-      // Remove keyboard event listener
-      if (keyboardHandlerRef.current) {
-        const gridContainer = document.querySelector(".ag-root-wrapper");
-        if (gridContainer) {
-          gridContainer.removeEventListener("keydown", keyboardHandlerRef.current as any);
-        }
-        keyboardHandlerRef.current = null;
-      }
-      
       document.getElementById("header-icon-tooltip")?.remove();
     };
   }, []);
@@ -601,93 +589,6 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
   const onGridReady = () => {
     messageHandler.send("api-ready");
-
-    // ---------------------------------------------------------------
-    // Keyboard Navigation Setup for Row Selection
-    // ---------------------------------------------------------------
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (!gridRef.current?.api) return;
-
-      const focusedCell = gridRef.current.api.getFocusedCell();
-      if (!focusedCell) return;
-
-      const rowNode = gridRef.current.api.getDisplayedRowAtIndex(focusedCell.rowIndex);
-      if (!rowNode) return;
-
-      // Space key: Toggle row selection
-      if (event.code === "Space" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
-        event.preventDefault();
-        event.stopPropagation();
-        rowNode.setSelected(!rowNode.isSelected());
-        return;
-      }
-
-      // Enter key: Select row (if not already selected)
-      if (event.code === "Enter" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (!rowNode.isSelected()) {
-          rowNode.setSelected(true);
-        }
-        return;
-      }
-
-      // Ctrl/Cmd + A: Select all rows
-      if (event.code === "KeyA" && (event.ctrlKey || event.metaKey)) {
-        event.preventDefault();
-        event.stopPropagation();
-        gridRef.current.api.selectAll();
-        return;
-      }
-
-      // Escape: Deselect all rows
-      if (event.code === "Escape") {
-        event.preventDefault();
-        event.stopPropagation();
-        gridRef.current.api.deselectAll();
-        return;
-      }
-
-      // Shift + Space: Range selection from last selected to current
-      if (event.code === "Space" && event.shiftKey) {
-        event.preventDefault();
-        event.stopPropagation();
-        const selectedNodes = gridRef.current.api.getSelectedNodes();
-        if (selectedNodes.length > 0) {
-          const lastSelectedIndex = selectedNodes[selectedNodes.length - 1].rowIndex!;
-          const currentIndex = focusedCell.rowIndex;
-          const startIndex = Math.min(lastSelectedIndex, currentIndex);
-          const endIndex = Math.max(lastSelectedIndex, currentIndex);
-          
-          for (let i = startIndex; i <= endIndex; i++) {
-            const node = gridRef.current.api.getDisplayedRowAtIndex(i);
-            if (node) {
-              node.setSelected(true);
-            }
-          }
-        } else {
-          rowNode.setSelected(true);
-        }
-        return;
-      }
-
-      // Ctrl/Cmd + Space: Toggle selection without deselecting others
-      if (event.code === "Space" && (event.ctrlKey || event.metaKey)) {
-        event.preventDefault();
-        event.stopPropagation();
-        rowNode.setSelected(!rowNode.isSelected());
-        return;
-      }
-    };
-
-    // Store handler reference for cleanup
-    keyboardHandlerRef.current = handleKeyDown;
-
-    // Attach keyboard event listener to the grid container
-    const gridContainer = document.querySelector(".ag-root-wrapper");
-    if (gridContainer) {
-      gridContainer.addEventListener("keydown", handleKeyDown as any);
-    }
 
     // ---------------------------------------------------------------
     // Tooltip setup for AG Grid header filter and sort icons
