@@ -642,7 +642,11 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         const profile = parentNode.getProfile();
 
         let node: ZoweDatasetNode;
-        if (contextValue.includes(Constants.DS_PDS_CONTEXT) || contextValue.includes(Constants.DS_DS_CONTEXT)) {
+        if (
+            contextValue.includes(Constants.DS_PDS_CONTEXT) ||
+            contextValue.includes(Constants.DS_DS_CONTEXT) ||
+            contextValue.includes(Constants.VSAM_CONTEXT)
+        ) {
             if (contextValue.includes(Constants.DS_PDS_CONTEXT)) {
                 node = new ZoweDatasetNode({
                     label,
@@ -934,6 +938,8 @@ Would you like to do this now?`,
                 this.updateNodeFavContext(node.getProfileName(), node.label as string, "pds");
             } else if (SharedContext.isFavoriteDs(temp)) {
                 this.updateNodeFavContext(node.getProfileName(), node.label as string, "ds");
+            } else if (SharedContext.isFavoriteVsam(temp)) {
+                this.updateNodeFavContext(node.getProfileName(), node.label as string, "vsam");
             } else if (SharedContext.isDsSession(temp)) {
                 this.updateSessionFilterFavContext(node.getProfileName());
             }
@@ -1096,13 +1102,13 @@ Would you like to do this now?`,
     }
 
     /**
-     * Updates the context value of a PDS, data set, or session node in the search tree to reflect whether it is currently favorited.
+     * Updates the context value of a PDS, data set, VSAM, or session node in the search tree to reflect whether it is currently favorited.
      *
      * @param profileName The profile name to search for
      * @param nodeLabel The label of the node to match
-     * @param nodeType "pds" | "ds" | "session" - the type of node to update
+     * @param nodeType "pds" | "ds" | "vsam" - the type of node to update
      */
-    private updateNodeFavContext(profileName: string, nodeLabel: string, nodeType: "pds" | "ds"): void {
+    private updateNodeFavContext(profileName: string, nodeLabel: string, nodeType: "pds" | "ds" | "vsam"): void {
         ZoweLogger.trace("DatasetTree.updateNodeFavContext called.");
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
 
@@ -1111,18 +1117,23 @@ Would you like to do this now?`,
                 continue;
             }
 
-            // For pds | ds nodes, find matching children of the session node
+            // For pds | ds | vsam nodes, find matching children of the session node
             for (const child of sessionNode.children ?? []) {
                 if (child.label !== nodeLabel) {
                     continue;
                 }
-                const matchesType = nodeType === "pds" ? SharedContext.isPds(child) : SharedContext.isDs(child);
+                const matchesType =
+                    nodeType === "pds" ? SharedContext.isPds(child) : nodeType === "vsam" ? SharedContext.isVsam(child) : SharedContext.isDs(child);
                 if (!matchesType || SharedContext.isFilterFolder(child) || child.contextValue?.includes(Constants.FILTER_SEARCH)) {
                     continue;
                 }
                 const isFavInTree = SharedContext.isFavorite(child);
                 const isFavMatcher = (n: IZoweDatasetTreeNode): boolean =>
-                    nodeType === "pds" ? SharedContext.isFavoritePds(n) : SharedContext.isFavoriteDs(n);
+                    nodeType === "pds"
+                        ? SharedContext.isFavoritePds(n)
+                        : nodeType === "vsam"
+                        ? SharedContext.isFavoriteVsam(n)
+                        : SharedContext.isFavoriteDs(n);
                 const existsInFavs = profileNodeInFavorites?.children.some((fav) => fav.label === nodeLabel && isFavMatcher(fav)) ?? false;
 
                 if (existsInFavs && !isFavInTree) {
@@ -1407,6 +1418,7 @@ Would you like to do this now?`,
         const removedNodeLabel = node.label as string;
         const wasPds = SharedContext.isFavoritePds(node);
         const wasDs = SharedContext.isFavoriteDs(node);
+        const wasVsam = SharedContext.isFavoriteVsam(node);
         const wasSession = SharedContext.isFavorite(node) && SharedContext.isDsSession(node);
         profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
             (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
@@ -1422,6 +1434,8 @@ Would you like to do this now?`,
             this.updateNodeFavContext(profileName, removedNodeLabel, "pds");
         } else if (wasDs) {
             this.updateNodeFavContext(profileName, removedNodeLabel, "ds");
+        } else if (wasVsam) {
+            this.updateNodeFavContext(profileName, removedNodeLabel, "vsam");
         } else if (wasSession) {
             this.updateSessionFilterFavContext(profileName);
         }
