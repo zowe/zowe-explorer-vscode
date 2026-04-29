@@ -27,6 +27,7 @@ import {
     ZosEncoding,
     MessageSeverity,
     Poller,
+    DsType,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
@@ -301,6 +302,11 @@ export class DatasetActions {
             }
             throw new Error(err);
         }
+
+        DatasetFSProvider.instance.fireSoon({
+            type: vscode.FileChangeType.Created,
+            uri: node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, dsName), query: "" }),
+        });
     }
 
     private static async focusOnNewDs(
@@ -842,8 +848,21 @@ export class DatasetActions {
             return;
         }
 
-        const children = await node.getChildren();
-        if (!children || children.length === 0) {
+        const datasetName = node.label?.toString();
+
+        const allMembersRes = await mvsApi.allMembers(datasetName);
+        if (!allMembersRes?.success) {
+            await AuthUtils.errorHandling(allMembersRes?.commandResponse, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile,
+                dsName: datasetName,
+                scenario: vscode.l10n.t("Unable to retrieve members of data set."),
+            });
+            return;
+        }
+
+        const children = allMembersRes.apiResponse?.items ?? [];
+        if (children.length === 0) {
             Gui.showMessage(vscode.l10n.t("The selected data set has no members to download."));
             return;
         }
@@ -872,11 +891,11 @@ export class DatasetActions {
             async (progress) => {
                 let realPercentComplete = 0;
                 const realTotalEntries = children.length;
+                let numDownloaded = 0;
                 const task: imperative.ITaskWithStatus = {
                     set percentComplete(value: number) {
                         realPercentComplete = value;
-                        // eslint-disable-next-line no-magic-numbers
-                        Gui.reportProgress(progress, realTotalEntries, Math.floor((value * realTotalEntries) / 100), "");
+                        Gui.reportProgress(progress, realTotalEntries, ++numDownloaded, "");
                     },
                     get percentComplete(): number {
                         return realPercentComplete;
@@ -885,7 +904,6 @@ export class DatasetActions {
                     stageName: 0, // TaskStage.IN_PROGRESS
                 };
 
-                const datasetName = node.label as string;
                 const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
 
                 const extensionMap = await DatasetUtils.getExtensionMap(
@@ -1186,9 +1204,25 @@ export class DatasetActions {
         // refresh Tree View & favorites
         datasetProvider.refresh();
         for (const member of memberParents) {
-            datasetProvider.refreshElement(member);
+            const equivalentParent = datasetProvider.findEquivalentNode(member, SharedContext.isFavorite(member)) as IZoweDatasetTreeNode;
+            const nodeToRefresh = equivalentParent ?? (SharedContext.isFavorite(member) ? undefined : member);
+
+            // When deleting the last member of a favorited PDS, the favorite parent can be removed.
+            // Refresh the surviving equivalent node when available to avoid stale tree-item references.
+            if (nodeToRefresh != null) {
+                datasetProvider.refreshElement(nodeToRefresh);
+            }
         }
-        await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, nodes[0].getParent());
+
+        let nodeForMultiSelect = nodes[0].getParent() as IZoweDatasetTreeNode;
+        if (nodeForMultiSelect != null && SharedContext.isFavorite(nodeForMultiSelect)) {
+            const equivalentNode = datasetProvider.findEquivalentNode(nodeForMultiSelect, true) as IZoweDatasetTreeNode;
+            nodeForMultiSelect =
+                equivalentNode ??
+                datasetProvider.mSessionNodes.find((ses) => ses.label?.toString() === nodes[0].getProfileName()) ??
+                nodeForMultiSelect;
+        }
+        await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, nodeForMultiSelect);
     }
 
     /**
@@ -1218,8 +1252,13 @@ export class DatasetActions {
             const label = parent.label as string;
             const profile = parent.getProfile();
             let replace: Definitions.ShouldReplace;
+            const extension = DatasetUtils.getExtension(label);
+            const memberUri = parent.resourceUri.with({
+                path: path.posix.join(parent.resourceUri.path, `${name}${extension ?? ""}`),
+            });
+
             try {
-                replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem");
+                replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem", memberUri);
                 if (replace !== "cancel") {
                     await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(label + "(" + name + ")", {
                         responseTimeout: profile.profile?.responseTimeout,
@@ -1236,6 +1275,11 @@ export class DatasetActions {
                 throw err;
             }
 
+            if (!DatasetFSProvider.instance.exists(memberUri) || replace === "replace") {
+                const writeUri = replace === "replace" ? memberUri.with({ query: "forceUpload=true" }) : memberUri;
+                await vscode.workspace.fs.writeFile(writeUri, new Uint8Array());
+            }
+
             parent.dirty = true;
             datasetProvider.refreshElement(parent);
 
@@ -1249,10 +1293,6 @@ export class DatasetActions {
             }
 
             if (newNode != null) {
-                if (replace === "notFound") {
-                    await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
-                }
-
                 await vscode.commands.executeCommand("vscode.open", newNode.resourceUri);
             }
             datasetProvider.refresh();
@@ -1729,8 +1769,8 @@ export class DatasetActions {
                 const jobDisplay = `${job.jobname}(${job.jobid})`;
                 const message = vscode.l10n.t({
                     message: "Job submitted: {0}",
-                    args: [jobDisplay],
-                    comment: ["Job name and ID"],
+                    args: [`[${jobDisplay}](${setJobCmd})`],
+                    comment: ["Job name and ID with set job command"],
                 });
                 ZoweLogger.info(
                     vscode.l10n.t({
@@ -1901,22 +1941,27 @@ export class DatasetActions {
 
         const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
 
-        switch (Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption)) {
-            case Definitions.JobSubmitDialogOpts.OtherUserJobs:
-                if (!ownsJob && !(await showConfirmationDialog())) {
-                    return false;
+        // Handle undefined, null, or non-string values (e.g., legacy boolean values)
+        if (!confirmationOption || typeof confirmationOption !== "string") {
+            return true; // Default behavior: allow submission without confirmation
+        }
+
+        // Compare directly with localized values
+        const dialogOption = Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption);
+
+        switch (dialogOption) {
+            case Definitions.JobSubmitDialogOpts.YourJobs:
+                if (ownsJob) {
+                    return await showConfirmationDialog();
                 }
                 break;
-            case Definitions.JobSubmitDialogOpts.YourJobs:
-                if (ownsJob && !(await showConfirmationDialog())) {
-                    return false;
+            case Definitions.JobSubmitDialogOpts.OtherUserJobs:
+                if (!ownsJob) {
+                    return await showConfirmationDialog();
                 }
                 break;
             case Definitions.JobSubmitDialogOpts.AllJobs:
-                if (!(await showConfirmationDialog())) {
-                    return false;
-                }
-                break;
+                return await showConfirmationDialog();
             case Definitions.JobSubmitDialogOpts.Disabled:
             default:
                 break;
@@ -1976,8 +2021,8 @@ export class DatasetActions {
                 const jobDisplay = `${job.jobname}(${job.jobid})`;
                 const message = vscode.l10n.t({
                     message: "Job submitted: {0}",
-                    args: [jobDisplay],
-                    comment: ["Job name and ID"],
+                    args: [`[${jobDisplay}](${setJobCmd})`],
+                    comment: ["Job name and ID with set job command"],
                 });
                 ZoweLogger.info(
                     vscode.l10n.t({
@@ -2072,9 +2117,31 @@ export class DatasetActions {
         } else {
             node.getSessionNode().dirty = true;
         }
-        await datasetProvider.removeFavorite(node);
 
         const isMember = SharedContext.isDsMember(node);
+
+        // If the deleted node is a member, and the PDS is "EntirePds" state, then don't downgrade it to "SpecificMembers"
+        // as the member no longer exists so the entire Pds is still favorited
+        // unless the deleted member is the only one left in the PDS, then remove the PDS from favorites
+        if (isMember) {
+            const parentPds = node.getParent();
+            const profileName = node.getProfileName();
+            const profileNodeInFavorites = datasetProvider.mFavorites.find((favProfile) => favProfile.label?.toString() === profileName);
+            const favPds = profileNodeInFavorites?.children.find(
+                (child) => child.label === parentPds?.label && SharedContext.isFavoritePds(child)
+            ) as ZoweDatasetNode | undefined;
+
+            const isEntirePdsFavorite =
+                favPds != null && (favPds.pdsFavoriteState == null || favPds.pdsFavoriteState === Definitions.PdsFavoriteState.EntirePds);
+            const knownMemberCount = (parentPds?.children ?? []).filter((c) => SharedContext.isDsMember(c)).length;
+            const hasOtherKnownMembers = knownMemberCount > 1;
+
+            if (!(isEntirePdsFavorite && hasOtherKnownMembers)) {
+                await datasetProvider.removeFavorite(node);
+            }
+        } else {
+            await datasetProvider.removeFavorite(node);
+        }
 
         // If the node is a dataset member, go up a level in the node tree
         // to find the relevant, matching node
@@ -2756,7 +2823,8 @@ export class DatasetActions {
     public static async determineReplacement(
         nodeProfile: imperative.IProfileLoaded,
         name: string,
-        type: Definitions.ReplaceDSType
+        type: Definitions.ReplaceDSType,
+        uri?: vscode.Uri
     ): Promise<Definitions.ShouldReplace> {
         ZoweLogger.trace("dataset.actions.determineReplacement called.");
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(nodeProfile);
@@ -2770,14 +2838,30 @@ export class DatasetActions {
             const member = name.split("(")[1].slice(0, -1);
             const res = await mvsApi.allMembers(dsname, options);
             if (res?.success && res.apiResponse?.items.some((m) => m.member == member.toUpperCase())) {
+                if (uri) {
+                    if (!DatasetFSProvider.instance.exists(uri)) {
+                        DatasetFSProvider.instance.createEntry(uri, DsType.PdsMember);
+                        DatasetFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                    }
+                }
                 q = vscode.l10n.t("The data set member already exists.\nDo you want to replace it?");
                 replace = stringReplace === (await Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
+                if (replace && uri && !DatasetFSProvider.instance.exists(uri)) {
+                    DatasetFSProvider.instance.createEntry(uri, DsType.PdsMember);
+                    DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                }
             }
         } else {
             const res = await mvsApi.dataSet(name, options);
             // Filter results to ensure exact match (e.g., A.B should not match A.B.C)
             const exactMatch = res?.success && res.apiResponse?.items.some((item) => item.dsname?.toUpperCase() === name.toUpperCase());
             if (exactMatch) {
+                if (uri) {
+                    if (!DatasetFSProvider.instance.exists(uri)) {
+                        DatasetFSProvider.instance.createEntry(uri, type === "po" ? DsType.Pds : DsType.Ps);
+                        DatasetFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                    }
+                }
                 if (type === "ps") {
                     q = vscode.l10n.t("The physical sequential (PS) data set already exists.\nDo you want to replace it?");
                 } else if (type === "po") {
@@ -2786,6 +2870,10 @@ export class DatasetActions {
                     );
                 }
                 replace = stringReplace === (await Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
+                if (replace && uri && !DatasetFSProvider.instance.exists(uri)) {
+                    DatasetFSProvider.instance.createEntry(uri, type === "po" ? DsType.Pds : DsType.Ps);
+                    DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                }
             }
         }
         // Sonar cloud code-smell :'(
@@ -3106,8 +3194,9 @@ export class DatasetActions {
             return vscode.l10n.t("Data set pattern cannot be empty");
         }
 
-        // Allow member notation like HLQ.DATASET(MEMBER) or standard patterns
-        const validPattern = /^[A-Za-z0-9$#@*%][A-Za-z0-9$#@*%.\-()]*$/;
+        // Allow member notation like HLQ.DATASET(MEMBER) or HLQ.DATASET(A*,B*) or standard patterns
+        // Commas inside parentheses separate member filters; commas outside separate dataset patterns
+        const validPattern = /^[A-Za-z0-9$#@*%][A-Za-z0-9$#@*%.\-(),\s]*$/;
         if (!validPattern.test(trimmedInput)) {
             return vscode.l10n.t("Invalid data set pattern. Use alphanumeric characters, $, #, @, *, %, ., -, and () for members");
         }

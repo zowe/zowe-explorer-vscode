@@ -1,3 +1,5 @@
+/// <reference types="jest" />
+
 /**
  * This program and the accompanying materials are made available under the terms of the
  * Eclipse Public License v2.0 which accompanies this distribution, and is available at
@@ -23,6 +25,7 @@ import {
     ZoweScheme,
     imperative,
     ZoweVsCodeExtension,
+    ConflictViewSelection,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
@@ -646,6 +649,145 @@ describe("UssFSProvider", () => {
             });
             existsSpy.mockRestore();
         });
+        it("creates a directory entry for child-only directory listings from legacy extenders", async () => {
+            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+                fileList: jest.fn().mockResolvedValueOnce({
+                    success: true,
+                    commandResponse: "",
+                    apiResponse: {
+                        items: [
+                            { name: "test.txt", mode: "-rwxrwxrwx" },
+                            { name: "innerFolder", mode: "drwxrwxrwx" },
+                        ],
+                    },
+                }),
+            } as any);
+            const existsSpy = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createRecursiveSpy = jest.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation();
+
+            expect(await UssFSProvider.instance.listFiles(testProfile, testUris.folder)).toStrictEqual({
+                success: true,
+                commandResponse: "",
+                apiResponse: {
+                    items: [
+                        { name: "test.txt", mode: "-rwxrwxrwx" },
+                        { name: "innerFolder", mode: "drwxrwxrwx" },
+                    ],
+                },
+            });
+            expect(createRecursiveSpy).toHaveBeenCalledWith(testUris.folder);
+
+            createRecursiveSpy.mockRestore();
+            existsSpy.mockRestore();
+        });
+        it("creates a directory entry when the response includes the dot self-entry", async () => {
+            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+                fileList: jest.fn().mockResolvedValueOnce({
+                    success: true,
+                    commandResponse: "",
+                    apiResponse: {
+                        items: [
+                            { name: ".", mode: "drwxrwxrwx" },
+                            { name: "child.txt", mode: "-rwxrwxrwx" },
+                        ],
+                    },
+                }),
+            } as any);
+            const existsSpy = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createRecursiveSpy = jest.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation();
+
+            await UssFSProvider.instance.listFiles(testProfile, testUris.folder);
+
+            expect(createRecursiveSpy).toHaveBeenCalledWith(testUris.folder);
+
+            createRecursiveSpy.mockRestore();
+            existsSpy.mockRestore();
+        });
+        it("does not create a directory entry when the response describes a plain file", async () => {
+            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+                fileList: jest.fn().mockResolvedValueOnce({
+                    success: true,
+                    commandResponse: "",
+                    apiResponse: {
+                        items: [{ name: "aFile.txt", mode: "-rwxrwxrwx" }],
+                    },
+                }),
+            } as any);
+            const existsSpy = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createRecursiveSpy = jest.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation();
+
+            expect(await UssFSProvider.instance.listFiles(testProfile, testUris.file)).toStrictEqual({
+                success: true,
+                commandResponse: "",
+                apiResponse: {
+                    items: [{ name: "aFile.txt", mode: "-rwxrwxrwx" }],
+                },
+            });
+            expect(createRecursiveSpy).not.toHaveBeenCalled();
+
+            createRecursiveSpy.mockRestore();
+            existsSpy.mockRestore();
+        });
+        it("keeps dot entries when keepRelative is true and skips directory creation", async () => {
+            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+                fileList: jest.fn().mockResolvedValueOnce({
+                    success: true,
+                    commandResponse: "",
+                    apiResponse: {
+                        items: [
+                            { name: ".", mode: "drwxrwxrwx" },
+                            { name: "..", mode: "drwxrwxrwx" },
+                            { name: "test.txt", mode: "-rwxrwxrwx" },
+                        ],
+                    },
+                }),
+            } as any);
+            const existsSpy = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createRecursiveSpy = jest.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation();
+
+            expect(await UssFSProvider.instance.listFiles(testProfile, testUris.folder, true)).toStrictEqual({
+                success: true,
+                commandResponse: "",
+                apiResponse: {
+                    items: [
+                        { name: ".", mode: "drwxrwxrwx" },
+                        { name: "..", mode: "drwxrwxrwx" },
+                        { name: "test.txt", mode: "-rwxrwxrwx" },
+                    ],
+                },
+            });
+            expect(createRecursiveSpy).not.toHaveBeenCalled();
+
+            createRecursiveSpy.mockRestore();
+            existsSpy.mockRestore();
+        });
+        it("creates a directory entry when listing a directory that contains a file with matching basename", async () => {
+            // Edge case: listing /u/users/ibmuser/temp (directory) that contains a file named "temp"
+            const tempDirUri = testUris.folder.with({ path: "/sestest/u/users/ibmuser/temp" });
+            jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+                fileList: jest.fn().mockResolvedValueOnce({
+                    success: true,
+                    commandResponse: "",
+                    apiResponse: {
+                        items: [
+                            { name: "temp", mode: "-rwxrwxrwx" }, // File with same name as directory
+                            { name: "other.txt", mode: "-rwxrwxrwx" },
+                        ],
+                    },
+                }),
+            } as any);
+            const existsSpy = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createRecursiveSpy = jest.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation();
+
+            await UssFSProvider.instance.listFiles(testProfile, tempDirUri);
+
+            // Should create directory because response contains only children (no "." entry)
+            // and the file named "temp" is a child, not the directory itself
+            expect(createRecursiveSpy).toHaveBeenCalledWith(tempDirUri);
+
+            createRecursiveSpy.mockRestore();
+            existsSpy.mockRestore();
+        });
         it("properly returns an unsuccessful response", async () => {
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
                 fileList: jest.fn().mockResolvedValueOnce({
@@ -720,6 +862,34 @@ describe("UssFSProvider", () => {
                 createDirMock.mockRestore();
                 createRecursiveSpy.mockRestore();
             });
+            it("non-existent URI applies mtime and size to the created file entry", async () => {
+                const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
+                const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValueOnce(null);
+                const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [{ name: testEntries.innerFile.name, mode: "-rwxrwxrwx", mtime: "2026-04-02T12:00:00Z", size: 321 }],
+                    },
+                    commandResponse: "",
+                });
+                const folderEntry = { ...testEntries.folder, entries: new Map() };
+                const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(folderEntry);
+
+                const result = (await (UssFSProvider.instance as any).fetchEntries(testUris.innerFile, {
+                    isRoot: false,
+                    slashAfterProfilePos: testUris.innerFile.path.indexOf("/", 1),
+                    profile: testProfile,
+                    profileName: testProfile.name,
+                })) as UssFile;
+
+                expect(result.size).toBe(321);
+                expect(result.mtime).toBeDefined();
+
+                existsMock.mockRestore();
+                lookupMock.mockRestore();
+                listFilesMock.mockRestore();
+                lookupParentDirMock.mockRestore();
+            });
         });
         describe("folder", () => {
             it("existing URI", async () => {
@@ -745,6 +915,37 @@ describe("UssFSProvider", () => {
                 expect(existsMock).toHaveBeenCalledWith(testUris.folder);
                 expect(lookupMock).toHaveBeenCalledWith(testUris.folder, true);
                 expect(listFilesMock).toHaveBeenCalledTimes(1);
+                existsMock.mockRestore();
+                lookupMock.mockRestore();
+                listFilesMock.mockRestore();
+            });
+            it("updates mtime and size for an existing entry of the same type", async () => {
+                const fakeFolder = Object.assign(Object.create(Object.getPrototypeOf(testEntries.folder)), testEntries.folder);
+                const existingFile = new UssFile("test.txt");
+                existingFile.metadata = { profile: testProfile, path: "/aFolder/test.txt" };
+                existingFile.type = FileType.File;
+                fakeFolder.entries = new Map([["test.txt", existingFile]]);
+
+                const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
+                const lookupMock = jest.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValue(fakeFolder);
+                const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [{ name: "test.txt", mode: "-rwxrwxrwx", mtime: "2026-04-02T12:05:00Z", size: 654 }],
+                    },
+                    commandResponse: "",
+                });
+
+                await (UssFSProvider.instance as any).fetchEntries(testUris.folder, {
+                    isRoot: false,
+                    slashAfterProfilePos: testUris.folder.path.indexOf("/", 1),
+                    profile: testProfile,
+                    profileName: testProfile.name,
+                });
+
+                expect(existingFile.size).toBe(654);
+                expect(existingFile.mtime).toBeDefined();
+
                 existsMock.mockRestore();
                 lookupMock.mockRestore();
                 listFilesMock.mockRestore();
@@ -817,7 +1018,7 @@ describe("UssFSProvider", () => {
         });
         it("returns early if it failed to fetch contents", async () => {
             const fileEntry = { ...testEntries.file };
-            const _fireSoonSpy = jest.spyOn((UssFSProvider as any).prototype, "_fireSoon");
+            const fireSoonSpy = jest.spyOn((UssFSProvider as any).prototype, "fireSoon");
             const lookupAsFileMock = jest.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValueOnce(undefined);
             jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
@@ -827,7 +1028,7 @@ describe("UssFSProvider", () => {
             await UssFSProvider.instance.fetchFileAtUri(testUris.file);
             expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
             expect(autoDetectEncodingMock).toHaveBeenCalledWith(fileEntry);
-            expect(_fireSoonSpy).not.toHaveBeenCalled();
+            expect(fireSoonSpy).not.toHaveBeenCalled();
             autoDetectEncodingMock.mockRestore();
         });
         it("calls getContents to get the data for a file entry with encoding", async () => {
@@ -930,6 +1131,7 @@ describe("UssFSProvider", () => {
             );
             autoDetectEncodingMock.mockRestore();
         });
+
     });
 
     describe("fetchEncodingForUri", () => {
@@ -1314,7 +1516,9 @@ describe("UssFSProvider", () => {
             const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
             const newContents = new Uint8Array([3, 6, 9]);
-            const handleConflictMock = jest.spyOn(UssFSProvider.instance as any, "_handleConflict").mockImplementation();
+            const handleConflictMock = jest
+                .spyOn(UssFSProvider.instance as any, "_handleConflict")
+                .mockResolvedValue(ConflictViewSelection.Overwrite);
             const _handleErrorMock = jest.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation();
             await expect(UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true })).rejects.toThrow();
 
@@ -1347,7 +1551,9 @@ describe("UssFSProvider", () => {
             const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const autoDetectEncodingMock = jest.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
             const newContents = new Uint8Array([3, 6, 9]);
-            const handleConflictMock = jest.spyOn(UssFSProvider.instance as any, "_handleConflict").mockImplementation();
+            const handleConflictMock = jest
+                .spyOn(UssFSProvider.instance as any, "_handleConflict")
+                .mockResolvedValue(ConflictViewSelection.Overwrite);
             await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true });
 
             expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
@@ -1398,8 +1604,9 @@ describe("UssFSProvider", () => {
             autoDetectEncodingMock.mockRestore();
         });
 
-        it("updates an empty, unaccessed file entry in the FSP without sending data", async () => {
+        it("updates an empty, unaccessed file entry in the FSP", async () => {
             const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({} as any);
+            const uploadEntryMock = jest.spyOn(UssFSProvider.instance as any, "uploadEntry").mockResolvedValue({ apiResponse: { etag: "NEWTAG" } });
             const folder = {
                 ...testEntries.folder,
                 entries: new Map([[testEntries.file.name, { ...testEntries.file, wasAccessed: false }]]),
@@ -1412,6 +1619,7 @@ describe("UssFSProvider", () => {
             const fileEntry = folder.entries.get("aFile.txt")!;
             expect(fileEntry.data?.length).toBe(0);
             ussApiMock.mockRestore();
+            uploadEntryMock.mockRestore();
         });
 
         it("updates a file when open in the diff view", async () => {
@@ -1434,7 +1642,7 @@ describe("UssFSProvider", () => {
             const fileEntry = folder.entries.get("aFile.txt")!;
             expect(fileEntry.data?.length).toBe(0);
             expect(fileEntry.inDiffView).toBe(true);
-            expect(ussApiMock).not.toHaveBeenCalled();
+            ussApiMock.mockRestore();
         });
 
         it("throws an error if entry doesn't exist and 'create' option is false", async () => {
@@ -1488,6 +1696,67 @@ describe("UssFSProvider", () => {
             }
             expect(err).toBeDefined();
             lookupParentDirMock.mockRestore();
+        });
+
+        it("rolls back optimistic entry creation when a non-412 error occurs", async () => {
+            const folder = {
+                ...testEntries.folder,
+                entries: new Map(),
+                size: 0,
+                metadata: { ...testEntries.folder.metadata },
+            };
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
+            // Mock uploadEntry to throw a non-412 error
+            const uploadEntryMock = jest.spyOn(UssFSProvider.instance as any, "uploadEntry").mockRejectedValueOnce(new Error("Network error"));
+            const _handleErrorMock = jest.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation();
+            const fireSoonMock = jest.spyOn(UssFSProvider.instance as any, "fireSoon").mockImplementation();
+            const newContents = new Uint8Array([1, 2, 3]);
+
+            await expect(UssFSProvider.instance.writeFile(testUris.file, newContents, { create: true, overwrite: true })).rejects.toThrow(
+                "Network error"
+            );
+
+            // Verify the entry was optimistically created then rolled back
+            expect(folder.entries.has("aFile.txt")).toBe(false);
+            expect(folder.size).toBe(0);
+            expect(_handleErrorMock).toHaveBeenCalled();
+
+            lookupParentDirMock.mockRestore();
+            uploadEntryMock.mockRestore();
+            _handleErrorMock.mockRestore();
+            fireSoonMock.mockRestore();
+        });
+
+        it("rolls back optimistic entry creation when user rejects conflict resolution", async () => {
+            const folder = {
+                ...testEntries.folder,
+                entries: new Map(),
+                size: 0,
+                metadata: { ...testEntries.folder.metadata },
+            };
+            const lookupParentDirMock = jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
+            // Mock uploadEntry to throw a 412 error
+            const uploadEntryMock = jest
+                .spyOn(UssFSProvider.instance as any, "uploadEntry")
+                .mockRejectedValueOnce(new Error("Rest API failure with HTTP(S) status 412"));
+            // Mock user choosing NOT to overwrite (e.g., choosing "Compare" option)
+            const handleConflictMock = jest.spyOn(UssFSProvider.instance as any, "_handleConflict").mockResolvedValue(ConflictViewSelection.Compare);
+            const fireSoonMock = jest.spyOn(UssFSProvider.instance as any, "fireSoon").mockImplementation();
+            const newContents = new Uint8Array([1, 2, 3]);
+
+            await expect(UssFSProvider.instance.writeFile(testUris.file, newContents, { create: true, overwrite: true })).rejects.toThrow(
+                "Conflict: Remote contents have changed."
+            );
+
+            // Verify the entry was optimistically created then rolled back
+            expect(folder.entries.has("aFile.txt")).toBe(false);
+            expect(folder.size).toBe(0);
+            expect(handleConflictMock).toHaveBeenCalled();
+
+            lookupParentDirMock.mockRestore();
+            uploadEntryMock.mockRestore();
+            handleConflictMock.mockRestore();
+            fireSoonMock.mockRestore();
         });
     });
 
@@ -2170,6 +2439,29 @@ describe("UssFSProvider", () => {
         });
     });
 
+    describe("createEntry", () => {
+        it("creates a file entry", () => {
+            const fakeFolderEntry = new UssDirectory("aFolder");
+            fakeFolderEntry.metadata = testEntries.folder.metadata;
+            jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
+            const entry = UssFSProvider.instance.createEntry(testUris.file, "file");
+            expect(entry).toBeInstanceOf(UssFile);
+            expect(entry.name).toBe("aFile.txt");
+            expect(fakeFolderEntry.entries.has("aFile.txt")).toBe(true);
+        });
+
+        it("creates a directory entry", () => {
+            const fakeFolderEntry = new UssDirectory("aFolder");
+            fakeFolderEntry.metadata = testEntries.folder.metadata;
+            jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
+            const testFolderUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/u/myuser/folderName/newFolder" });
+            const entry = UssFSProvider.instance.createEntry(testFolderUri, "directory");
+            expect(entry).toBeInstanceOf(UssDirectory);
+            expect(entry.name).toBe("newFolder");
+            expect(fakeFolderEntry.entries.has("newFolder")).toBe(true);
+        });
+    });
+
     describe("watch", () => {
         it("returns a new, empty Disposable object", () => {
             expect(UssFSProvider.instance.watch(testUris.file)).toBeInstanceOf(Disposable);
@@ -2474,6 +2766,117 @@ describe("UssFSProvider", () => {
                 autoDetectEncodingMock.mockRestore();
                 waitForUnlockMock.mockRestore();
                 setStatusBarMessageMock.mockRestore();
+            });
+        });
+    });
+
+    describe("mtime handling for undefined values", () => {
+        beforeEach(() => {
+            jest.clearAllMocks();
+        });
+
+        describe("remoteLookupForResource method", () => {
+            it("handles undefined mtime from fileList response", async () => {
+                const mockUssApi = {
+                    fileList: jest.fn().mockResolvedValue({
+                        success: true,
+                        apiResponse: {
+                            items: [{
+                                name: "aFile.txt",
+                                mode: "-rw-r--r--"
+                                // No mtime field
+                            }]
+                        }
+                    })
+                };
+                jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
+
+                // Mock the session folder setup
+                const sessionEntry = new UssDirectory("sestest");
+                sessionEntry.metadata = testEntries.session.metadata;
+                jest.spyOn(UssFSProvider.instance as any, "_lookupAsDirectory").mockImplementation((uri) => {
+                    if (uri.path === "/sestest") {
+                        return sessionEntry;
+                    }
+                    return testEntries.folder;
+                });
+
+                const currentTimeBefore = Date.now();
+                const result = await UssFSProvider.instance.remoteLookupForResource(testUris.file);
+                const currentTimeAfter = Date.now();
+
+                expect(result).toBeDefined();
+                expect(result.mtime).toBeGreaterThanOrEqual(currentTimeBefore);
+                expect(result.mtime).toBeLessThanOrEqual(currentTimeAfter);
+                expect(result.wasAccessed).toBe(false); // Should be invalidated
+            });
+
+            it("handles null mtime gracefully", async () => {
+                const mockUssApi = {
+                    fileList: jest.fn().mockResolvedValue({
+                        success: true,
+                        apiResponse: {
+                            items: [{
+                                name: "aFile.txt",
+                                mode: "-rw-r--r--",
+                                mtime: null // explicitly null mtime
+                            }]
+                        }
+                    })
+                };
+                jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
+
+                // Mock the session folder setup
+                const sessionEntry = new UssDirectory("sestest");
+                sessionEntry.metadata = testEntries.session.metadata;
+                jest.spyOn(UssFSProvider.instance as any, "_lookupAsDirectory").mockImplementation((uri) => {
+                    if (uri.path === "/sestest") {
+                        return sessionEntry;
+                    }
+                    return testEntries.folder;
+                });
+
+                const currentTimeBefore = Date.now();
+                const result = await UssFSProvider.instance.remoteLookupForResource(testUris.file);
+                const currentTimeAfter = Date.now();
+
+                expect(result).toBeDefined();
+                expect(result.mtime).toBeGreaterThanOrEqual(currentTimeBefore);
+                expect(result.mtime).toBeLessThanOrEqual(currentTimeAfter);
+                expect(result.wasAccessed).toBe(false); // Should be invalidated
+            });
+
+            it("handles valid mtime from fileList response", async () => {
+                const validMtime = "2021-01-01T12:34:56.000Z";
+                const mockUssApi = {
+                    fileList: jest.fn().mockResolvedValue({
+                        success: true,
+                        apiResponse: {
+                            items: [{
+                                name: "aFile.txt",
+                                mode: "-rw-r--r--",
+                                mtime: validMtime
+                            }]
+                        }
+                    })
+                };
+                jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
+
+                // Mock the session folder setup
+                const sessionEntry = new UssDirectory("sestest");
+                sessionEntry.metadata = testEntries.session.metadata;
+                jest.spyOn(UssFSProvider.instance as any, "_lookupAsDirectory").mockImplementation((uri) => {
+                    if (uri.path === "/sestest") {
+                        return sessionEntry;
+                    }
+                    return testEntries.folder;
+                });
+
+                const result = await UssFSProvider.instance.remoteLookupForResource(testUris.file);
+
+                expect(result).toBeDefined();
+                expect(result.mtime).toBeGreaterThan(0); // Should be updated to the API time
+                expect(result.wasAccessed).toBe(false); // Should be invalidated
             });
         });
     });
