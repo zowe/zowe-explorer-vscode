@@ -10,6 +10,7 @@ This repository includes custom agent skills located in `.agents/skills/` to hel
 - **`code-quality`**: Refactor, deduplicate, and improve TypeScript code quality using Zowe Explorer specific patterns.
 - **`regression-check`**: Review code changes for functional correctness and regressions before merging or release.
 - **`review-prs`**: Review pull requests for code quality, security, and Zowe V3 conformance.
+- **`testing`**: Write and maintain Jest unit tests and WDIO/Cucumber end-to-end tests using project-specific helpers and conventions.
 - **`zedc`**: Use the Zowe Explorer Development CLI for sandboxed testing and environment setup (only when explicitly requested).
 
 ## Commands you can use
@@ -76,9 +77,10 @@ ZoweLogger.error(`Operation failed for ${profile}: ${error.message}`);
 ## Testing practices
 
 - **Unit Tests**: Standardized with `jest` and `ts-jest`. Located in `__tests__` directories within each package.
-- **Integration Tests**: BDD-style tests using `wdio` and Cucumber in `packages/zowe-explorer`.
+- **End-to-End Tests**: BDD-style tests using `wdio` and Cucumber in `packages/zowe-explorer/__tests__/__e2e__/` (require a real Zowe team config and `.env`).
 - **Mocks**: Use `jest-mock-vscode` for VS Code API mocking and follow established mock patterns.
 - **Coverage**: Maintain or improve coverage when adding new logic. `pnpm test` generates coverage reports.
+- **For deeper guidance** (mock factories, `MockedProperty`, e2e env vars, page-object conventions, anti-patterns), use the `testing` skill in `.agents/skills/testing/SKILL.md`.
 
 ## Boundaries
 
