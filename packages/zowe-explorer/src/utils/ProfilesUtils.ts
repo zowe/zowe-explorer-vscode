@@ -17,6 +17,7 @@ import {
     ZoweTreeNode,
     FileManagement,
     Gui,
+    MainframeInteraction,
     ProfilesCache,
     imperative,
     ZoweVsCodeExtension,
@@ -31,7 +32,6 @@ import { AuthUtils } from "./AuthUtils";
 import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { Definitions } from "../configuration/Definitions";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
-import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { IProfileLoaded, ISession, SessConstants } from "@zowe/imperative";
 
 export class ProfilesUtils {
@@ -517,9 +517,12 @@ export class ProfilesUtils {
             return;
         }
 
-        let commonApi: ReturnType<typeof ZoweExplorerApiRegister.prototype.getCommonApi>;
+        let commonApi: MainframeInteraction.ICommon;
         try {
-            commonApi = ZoweExplorerApiRegister.getInstance().getCommonApi(profile);
+            commonApi = ProfilesUtils.apiRegister?.getCommonApi?.(profile);
+            if (!commonApi) {
+                throw new Error();
+            }
         } catch {
             Gui.errorMessage(vscode.l10n.t("No API found for the selected profile."));
             return;
