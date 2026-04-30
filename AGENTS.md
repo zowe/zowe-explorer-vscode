@@ -96,7 +96,7 @@ ZoweLogger.error(`Operation failed for ${profile}: ${error.message}`);
   - **NEVER** use direct `fs` or `path` calls for mainframe resources.
   - **NEVER** use hardcoded temporary directories.
   - **NEVER** log user credentials or passwords to the console.
-  - **NEVER** read `config.yaml` or user's Zowe config for more context (`**/zowe.config.json`).
+  - **NEVER** read `config.yaml` or user's Zowe config for more context (`**/zowe.config.*json`).
 
 ## PR instructions
 
