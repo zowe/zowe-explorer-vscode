@@ -35,7 +35,7 @@ Read these before writing or modifying tests.
 
 ### Run Tests
 ```bash
-cd packages/zowe-explorer && npx jest <file-name-fragment>
+cd packages/zowe-explorer && pnpm exec jest <file-name-fragment>
 ```
 
 ### Mock Factories

@@ -20,7 +20,7 @@ This repository includes custom agent skills located in `.agents/skills/` to hel
 - **Build Parallel:** `pnpm build:parallel`
 - **Test (All):** `pnpm test`
 - **Test (Package):** `cd packages/<package-name> && pnpm test`
-- **Test (Single File):** `cd packages/<package-name> && npx jest <test-file-name>`
+- **Test (Single File):** `cd packages/<package-name> && pnpm exec jest <test-file-name>`
 - **E2E Tests:** `cd packages/zowe-explorer && pnpm test:e2e` (runs WebDriver-automated tests in VS Code)
 - **Lint & Format:** `pnpm lint` and `pnpm pretty`
 - **Check Dependencies:** `pnpm madge` (detects circular dependencies)
