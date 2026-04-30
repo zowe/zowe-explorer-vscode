@@ -25,6 +25,7 @@ Expert reviewer for Zowe Explorer codebase focusing on security, quality, and AP
 - [ ] No code duplication (DRY principle)
 - [ ] Variable/function names are descriptive
 - [ ] Tests cover the changes adequately
+- [ ] All promises have `then/catch` blocks or `await`ed where applicable
 
 ### Zowe-Specific
 
