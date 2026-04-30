@@ -164,6 +164,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.changePassword",
+        "title": "%zowe.changePassword%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.profileManagement",
         "title": "%zowe.profileManagement%",
         "category": "Zowe Explorer"

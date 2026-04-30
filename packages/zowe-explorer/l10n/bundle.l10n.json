@@ -379,7 +379,15 @@
   "Certificate Key for Authentication.": "Certificate Key for Authentication.",
   "Certificate Keys": "Certificate Keys",
   "Certificate Wizard": "Certificate Wizard",
+  "Change Password": "Change Password",
+  "Change Password is not supported for profile type \"{0}\"./Profile type": {
+    "message": "Change Password is not supported for profile type \"{0}\".",
+    "comment": [
+      "Profile type"
+    ]
+  },
   "Change the Authentication Method": "Change the Authentication Method",
+  "Change your password on the server and update stored password": "Change your password on the server and update stored password",
   "Changed default base profile naming scheme in newly generated configuration files to prevent name and property conflicts between Global and Project profiles <a>#2682</a>": "Changed default base profile naming scheme in newly generated configuration files to prevent name and property conflicts between Global and Project profiles <a>#2682</a>",
   "Changed the jobs pagination setting to be disabled by default and the default records to fetch from 100 to 1000 due to customer feedback. <a>#3743</a>": "Changed the jobs pagination setting to be disabled by default and the default records to fetch from 100 to 1000 due to customer feedback. <a>#3743</a>",
   "Changed ZoweExplorerExtender.initForZowe profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] to a required argument to address issues seen after registration of profile type when not passed. <a>#2575</a>": "Changed ZoweExplorerExtender.initForZowe profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] to a required argument to address issues seen after registration of profile type when not passed. <a>#2575</a>",
@@ -448,6 +456,8 @@
   "Configure and apply file filtering options (currently configured)": "Configure and apply file filtering options (currently configured)",
   "Configure Filter Options": "Configure Filter Options",
   "Confirm": "Confirm",
+  "Confirm new password": "Confirm new password",
+  "Confirm New Password": "Confirm New Password",
   "Conflict: Remote contents have changed.": "Conflict: Remote contents have changed.",
   "Connection Name": "Connection Name",
   "Contents": "Contents",
@@ -504,6 +514,8 @@
       "Encoding name"
     ]
   },
+  "Current Password": "Current Password",
+  "Current password does not match the stored credentials. Password was not changed.": "Current password does not match the stored credentials. Password was not changed.",
   "Current Records": "Current Records",
   "Custom credential manager {0} found, attempting to activate./Credential manager display name": {
     "message": "Custom credential manager {0} found, attempting to activate.",
@@ -665,12 +677,14 @@
   "Enter an allocation unit": "Enter an allocation unit",
   "Enter an SMS data class": "Enter an SMS data class",
   "Enter command here...": "Enter command here...",
+  "Enter current password": "Enter current password",
   "Enter Data Set Pattern": "Enter Data Set Pattern",
   "Enter file extension (e.g. csv)": "Enter file extension (e.g. csv)",
   "Enter job owner ID": "Enter job owner ID",
   "Enter job prefix": "Enter job prefix",
   "Enter job status": "Enter job status",
   "Enter local filter...": "Enter local filter...",
+  "Enter new password": "Enter new password",
   "Enter or update the MVS command": "Enter or update the MVS command",
   "Enter or update the TSO command": "Enter or update the TSO command",
   "Enter or update the Unix command": "Enter or update the Unix command",
@@ -786,6 +800,12 @@
   "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>": "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>",
   "Exposed commands to drive search in the USS views. <a>#3933</a>": "Exposed commands to drive search in the USS views. <a>#3933</a>",
   "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>": "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>",
+  "Failed to change password: {0}/Error message": {
+    "message": "Failed to change password: {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
   "Failed to copy {0} to {1}/Source pathDestination path": {
     "message": "Failed to copy {0} to {1}",
     "comment": [
@@ -1534,6 +1554,7 @@
   "Name of member": "Name of member",
   "New features and enhancements": "New features and enhancements",
   "New filter": "New filter",
+  "New Password": "New Password",
   "Next page": "Next page",
   "No": "No",
   "No {0} entries found for this version.": "No {0} entries found for this version.",
@@ -1544,6 +1565,7 @@
       "Session label"
     ]
   },
+  "No API found for the selected profile.": "No API found for the selected profile.",
   "No changelog entries found for this version.": "No changelog entries found for this version.",
   "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
   "No data set favorites found.": "No data set favorites found.",
@@ -1568,6 +1590,7 @@
       "Session label"
     ]
   },
+  "No profile found for the selected node.": "No profile found for the selected node.",
   "No profiles available": "No profiles available",
   "No profiles available.": "No profiles available.",
   "No recent members found.": "No recent members found.",
@@ -1652,6 +1675,19 @@
   "Partitioned Data Set: Default": "Partitioned Data Set: Default",
   "Partitioned Data Set: Extended": "Partitioned Data Set: Extended",
   "Password": "Password",
+  "Password changed on the server but failed to update locally stored credentials. Consider right clicking profile -> Manage Profile -> Update Credentials with new password immediately. {0}/Error message": {
+    "message": "Password changed on the server but failed to update locally stored credentials. Consider right clicking profile -> Manage Profile -> Update Credentials with new password immediately. {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "Password for {0} was successfully changed/Profile name": {
+    "message": "Password for {0} was successfully changed",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Passwords do not match. Password was not changed.": "Passwords do not match. Password was not changed.",
   "Pasting files...": "Pasting files...",
   "Path: ": "Path: ",
   "Pattern: ": "Pattern: ",
@@ -2164,6 +2200,7 @@
   "Type": "Type",
   "Type the new pattern to add to history": "Type the new pattern to add to history",
   "Unable to copy data set.": "Unable to copy data set.",
+  "Unable to create a session for the selected profile.": "Unable to create a session for the selected profile.",
   "Unable to create data set.": "Unable to create data set.",
   "Unable to create member.": "Unable to create member.",
   "Unable to create node:": "Unable to create node:",

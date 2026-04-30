@@ -220,6 +220,12 @@ export class SharedInit {
         );
 
         context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.changePassword", async (node: IZoweTreeNode) => {
+                await ProfilesUtils.changePassword(node);
+            })
+        );
+
+        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.updateSchema", async () => {
                 await SharedActions.updateSchemaCommand();
             })

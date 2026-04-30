@@ -108,6 +108,13 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public logout(session: imperative.Session): Promise<void> {
             return Logout.apimlLogout(session);
         }
+
+        public async changePassword(session: imperative.Session, newPassword: string): Promise<void> {
+            const response = await zosmf.ZosmfChangePassword.changePassword(session, newPassword);
+            if (!response.success) {
+                throw new Error(response.message ?? "Password change failed");
+            }
+        }
     }
 
     /**
