@@ -2745,7 +2745,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                expectedDir
+                expectedDir,
+                false
             );
         });
 
@@ -2785,7 +2786,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                expect.stringMatching(/u.test.directory$/)
+                expect.stringMatching(/u.test.directory$/),
+                false
             );
         });
 
@@ -2848,7 +2850,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                path.join("/test/download/path", "file.txt")
+                path.join("/test/download/path", "file.txt"),
+                false
             );
         });
 
@@ -3003,7 +3006,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                path.join("/test/download/path", "file.txt")
+                path.join("/test/download/path", "file.txt"),
+                false
             );
         });
 

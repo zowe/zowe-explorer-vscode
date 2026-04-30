@@ -823,7 +823,7 @@ export class DatasetActions {
             async (progress, token) => {
                 try {
                     const { response, downloadedPath } = await downloadFn(progress, token);
-                    void SharedUtils.handleDownloadResponse(response, downloadType, downloadedPath);
+                    void SharedUtils.handleDownloadResponse(response, downloadType, downloadedPath, token?.isCancellationRequested);
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
                 }

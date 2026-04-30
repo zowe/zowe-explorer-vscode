@@ -7319,7 +7319,7 @@ describe("DatasetActions - downloading functions", () => {
             await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "MEMBER", mockNode, false);
 
             expect(downloadFn).toHaveBeenCalledWith(mockProgress, mockToken);
-            expect(mockHandleDownloadResponse.mock).toHaveBeenCalledWith(mockResponse, "MEMBER", mockDownloadedPath);
+            expect(mockHandleDownloadResponse.mock).toHaveBeenCalledWith(mockResponse, "MEMBER", mockDownloadedPath, false);
             expect(mockAuthErrorHandling.mock).not.toHaveBeenCalled();
         });
 

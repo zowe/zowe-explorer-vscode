@@ -2048,7 +2048,7 @@ describe("Shared utils unit tests - function handleDownloadResponse", () => {
             },
         };
 
-        await SharedUtils.handleDownloadResponse(response, "Data set members");
+        await SharedUtils.handleDownloadResponse(response, "Data set members", "", true);
 
         expect(blockMocks.showMessage).toHaveBeenCalledWith(
             vscode.l10n.t("{0} download was cancelled. {1} of {2} item(s) were downloaded.", "Data set members", 3, 10)
@@ -2064,7 +2064,7 @@ describe("Shared utils unit tests - function handleDownloadResponse", () => {
             commandResponse: "The download was cancelled by the user.",
         };
 
-        await SharedUtils.handleDownloadResponse(response, "Data set members");
+        await SharedUtils.handleDownloadResponse(response, "Data set members", "", true);
 
         expect(blockMocks.showMessage).toHaveBeenCalledWith(vscode.l10n.t("{0} download was cancelled.", "Data set members"));
         expect(blockMocks.errorMessage).not.toHaveBeenCalled();
@@ -2081,7 +2081,7 @@ describe("Shared utils unit tests - function handleDownloadResponse", () => {
             },
         };
 
-        await SharedUtils.handleDownloadResponse(response, "File");
+        await SharedUtils.handleDownloadResponse(response, "File", "", true);
 
         expect(blockMocks.showMessage).toHaveBeenCalledWith(
             vscode.l10n.t("{0} download was cancelled. {1} of {2} item(s) were downloaded.", "File", 0, 5)

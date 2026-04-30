@@ -690,8 +690,9 @@ export class SharedUtils {
      * @param response The response from the download API
      * @param downloadType The type of download (File, Directory, Data set, etc.)
      * @param downloadedPath The path to the downloaded file or directory (optional)
+     * @param wasCancelled Whether the download was cancelled by the user (optional)
      */
-    public static async handleDownloadResponse(response: any, downloadType: string, downloadedPath?: string): Promise<void> {
+    public static async handleDownloadResponse(response: any, downloadType: string, downloadedPath?: string, wasCancelled?: boolean): Promise<void> {
         ZoweLogger.trace("SharedUtils.handleDownloadResponse called.");
 
         if (!response) {
@@ -704,9 +705,6 @@ export class SharedUtils {
         let hasWarnings = false;
         let hasErrors = false;
         const detailedInfo: string[] = [];
-
-        const wasCancelled =
-            response.success === false && typeof response.commandResponse === "string" && response.commandResponse.includes("cancelled");
 
         if (wasCancelled) {
             const downloadResult = response.apiResponse?.downloadResult;
