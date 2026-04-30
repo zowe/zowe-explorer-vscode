@@ -11,6 +11,7 @@ Audit pull requests in the Zowe Explorer repository for breaking changes. This s
 ## Gotchas
 
 - **Extender API is sacred**: `packages/zowe-explorer-api/` is high-sensitivity. NEVER allow removal of public APIs without `@deprecated` annotations and keeping them for 1+ major version.
+- **API signature stability**: Public API method signatures must not change (except for adding optional parameters). This includes parameter types, return types, parameter order, and parameter names that extenders may rely on.
 - **Namespaces matter**: Watch out for changes in namespaces like `MainframeInteraction` or `Types`. Changes to these are almost always breaking for extenders.
 - **UI/Internal is flexible**: `packages/zowe-explorer/` is moderate-sensitivity. Changes here are generally fine unless they break Zowe V3 Conformance requirements (e.g., command naming, VS Code conventions) or default behaviors expected by extenders through VS Code APIs (such as `FileSystemProvider`, editor behavior, etc.).
 - **Behavioral breaks**: Altered return values, changed defaults, or modified command behaviors can break backward compatibility even if the type signature remains the same.
