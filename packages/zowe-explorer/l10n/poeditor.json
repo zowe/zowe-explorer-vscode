@@ -612,7 +612,7 @@
     "Mapping of SSH hostname to server install path for that host. Defaults to '~/.zowe-server'.": ""
   },
   "zowe.zowex.workerCount": {
-    "Number of worker threads for the Zowe Remote SSH server. Each worker runs as a separate process in its own address space.": ""
+    "Number of workers for the Zowe Remote SSH server. Each worker runs as a separate thread within a single address space.": ""
   },
   "zowe.zowex.responseTimeout": {
     "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.": ""
