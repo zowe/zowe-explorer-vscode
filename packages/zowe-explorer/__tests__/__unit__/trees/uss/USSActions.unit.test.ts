@@ -2956,10 +2956,10 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             expect(capturedTask.percentComplete).toBe(100);
             expect(reportProgressSpy).toHaveBeenCalledTimes(4);
-            expect(reportProgressSpy).toHaveBeenNthCalledWith(1, mockProgress, 4, 1, "");
-            expect(reportProgressSpy).toHaveBeenNthCalledWith(2, mockProgress, 4, 2, "");
-            expect(reportProgressSpy).toHaveBeenNthCalledWith(3, mockProgress, 4, 3, "");
-            expect(reportProgressSpy).toHaveBeenNthCalledWith(4, mockProgress, 4, 4, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(1, mockProgress, 4, 0, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(2, mockProgress, 4, 1, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(3, mockProgress, 4, 2, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(4, mockProgress, 4, 3, "");
 
             reportProgressSpy.mockRestore();
         });

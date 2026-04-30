@@ -899,7 +899,7 @@ export class DatasetActions {
                 const task: imperative.ITaskWithStatus = {
                     set percentComplete(value: number) {
                         realPercentComplete = value;
-                        Gui.reportProgress(progress, realTotalEntries, ++numDownloaded, "");
+                        Gui.reportProgress(progress, realTotalEntries, numDownloaded++, "");
                     },
                     get percentComplete(): number {
                         return realPercentComplete;

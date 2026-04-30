@@ -6676,9 +6676,9 @@ describe("DatasetActions - downloading functions", () => {
 
             expect(capturedTask.percentComplete).toBe(100);
             expect(reportProgressSpy).toHaveBeenCalledTimes(3);
-            expect(reportProgressSpy).toHaveBeenNthCalledWith(1, mockProgress, 3, 1, "");
-            expect(reportProgressSpy).toHaveBeenNthCalledWith(2, mockProgress, 3, 2, "");
-            expect(reportProgressSpy).toHaveBeenNthCalledWith(3, mockProgress, 3, 3, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(1, mockProgress, 3, 0, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(2, mockProgress, 3, 1, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(3, mockProgress, 3, 2, "");
 
             reportProgressSpy.mockRestore();
         });
