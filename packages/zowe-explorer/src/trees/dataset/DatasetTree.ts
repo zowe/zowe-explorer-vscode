@@ -1122,18 +1122,31 @@ Would you like to do this now?`,
                 if (child.label !== nodeLabel) {
                     continue;
                 }
-                const matchesType =
-                    nodeType === "pds" ? SharedContext.isPds(child) : nodeType === "vsam" ? SharedContext.isVsam(child) : SharedContext.isDs(child);
+                // Check if child matches the expected node type
+                let matchesType = false;
+                if (nodeType === "pds") {
+                    matchesType = SharedContext.isPds(child);
+                } else if (nodeType === "vsam") {
+                    matchesType = SharedContext.isVsam(child);
+                } else {
+                    matchesType = SharedContext.isDs(child);
+                }
+
                 if (!matchesType || SharedContext.isFilterFolder(child) || child.contextValue?.includes(Constants.FILTER_SEARCH)) {
                     continue;
                 }
                 const isFavInTree = SharedContext.isFavorite(child);
-                const isFavMatcher = (n: IZoweDatasetTreeNode): boolean =>
-                    nodeType === "pds"
-                        ? SharedContext.isFavoritePds(n)
-                        : nodeType === "vsam"
-                        ? SharedContext.isFavoriteVsam(n)
-                        : SharedContext.isFavoriteDs(n);
+
+                // Determine the appropriate favorite matcher based on node type
+                const isFavMatcher = (n: IZoweDatasetTreeNode): boolean => {
+                    if (nodeType === "pds") {
+                        return SharedContext.isFavoritePds(n);
+                    } else if (nodeType === "vsam") {
+                        return SharedContext.isFavoriteVsam(n);
+                    } else {
+                        return SharedContext.isFavoriteDs(n);
+                    }
+                };
                 const existsInFavs = profileNodeInFavorites?.children.some((fav) => fav.label === nodeLabel && isFavMatcher(fav)) ?? false;
 
                 if (existsInFavs && !isFavInTree) {
