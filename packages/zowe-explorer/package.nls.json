@@ -203,7 +203,7 @@
   "zowe.zowex.keepAliveInterval": "Number of seconds between keep-alive messages to keep connection active. Set to 0 to disable keep-alive.",
   "zowe.zowex.serverAutoUpdate": "Automatically re-deploy the Zowe Remote SSH server if out of date.",
   "zowe.zowex.serverInstallPath": "Mapping of SSH hostname to server install path for that host. Defaults to '~/.zowe-server'.",
-  "zowe.zowex.workerCount": "Number of worker threads for the Zowe Remote SSH server. Each worker runs as a separate process in its own address space.",
+  "zowe.zowex.workerCount": "Number of workers for the Zowe Remote SSH server. Each worker runs as a separate thread within a single address space.",
   "zowe.zowex.responseTimeout": "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.",
   "zowe.zowex.experimentalNativeSsh": "Use an experimental native SSH client for improved performance. Not yet fully tested.",
   "zowe.zowex.defaultHandshakeTimeout": "Time in milliseconds to wait for the SSH handshake to complete."
