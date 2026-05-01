@@ -14,6 +14,6 @@
 module.exports = function (source) {
     return source.replace(
         /require\(`\.\.\/russh\.\$\{nativeModule\}\.node`\)/,
-        '__non_webpack_require__(require("path").join(__dirname, "..", "prebuilds", `russh.${nativeModule}.node`))'
+        '__non_webpack_require__(require("path").join(__dirname, "..", "..", "prebuilds", `russh.${nativeModule}.node`))'
     );
 };
