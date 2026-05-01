@@ -9,19 +9,28 @@
  *
  */
 
+import { vi, describe, beforeEach, afterEach, it, expect } from "vitest";
+
+vi.mock("fs", () => ({
+    existsSync: vi.fn(),
+}));
+vi.mock("fs/promises", () => ({
+    readFile: vi.fn(),
+    writeFile: vi.fn(),
+    mkdir: vi.fn(),
+}));
+
 import * as fs from "fs";
 import * as fsPromises from "fs/promises";
 import { FeatureFlags, FeatureFlagsAccess, FlagAccessLevel } from "../../../src";
 
 const FLAGS_FILE = "feature-flags.json";
-jest.mock("fs");
 
 describe("FeatureFlags", () => {
-    let readFileSpy: jest.SpyInstance;
-    let writeFileSpy: jest.SpyInstance;
-    let mkdirSpy: jest.SpyInstance;
-    let existsSyncSpy: jest.SpyInstance;
-
+    let readFileSpy: any;
+    let writeFileSpy: any;
+    let mkdirSpy: any;
+    let existsSyncSpy: any;
     beforeEach(() => {
         const currentFlags = (FeatureFlags as any).flags;
         for (const key in currentFlags) delete currentFlags[key];
@@ -30,14 +39,14 @@ describe("FeatureFlags", () => {
             (FeatureFlags as any).initialized = false;
         }
 
-        readFileSpy = jest.spyOn(fsPromises, "readFile").mockResolvedValue("{}");
-        writeFileSpy = jest.spyOn(fsPromises, "writeFile").mockResolvedValue(undefined);
-        mkdirSpy = jest.spyOn(fsPromises, "mkdir").mockResolvedValue(undefined as any);
-        existsSyncSpy = jest.spyOn(fs, "existsSync").mockReturnValue(true);
+        readFileSpy = vi.mocked(fsPromises.readFile).mockResolvedValue("{}");
+        writeFileSpy = vi.mocked(fsPromises.writeFile).mockResolvedValue(undefined);
+        mkdirSpy = vi.mocked(fsPromises.mkdir).mockResolvedValue(undefined as any);
+        existsSyncSpy = vi.mocked(fs.existsSync).mockReturnValue(true);
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("should initialize and load flags from disk", async () => {
@@ -118,7 +127,7 @@ describe("FeatureFlags", () => {
 describe("FeatureFlagsAccess (ACL)", () => {
     beforeEach(() => {
         (FeatureFlags as any).flags = {};
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         (FeatureFlagsAccess as any).accessControl = {
             goodTestKey: FlagAccessLevel.Read | FlagAccessLevel.Write,
         };

@@ -24,7 +24,10 @@
   "devDependencies": {
     "@types/mustache": "^4.2.5",
     "@types/semver": "^7.5.0",
-    "copyfiles": "^2.4.1"
+    "@vitest/coverage-v8": "^3.2.4",
+    "copyfiles": "^2.4.1",
+    "jest-mock-vscode": "^3.0.5",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "@types/vscode": "^1.53.2",
@@ -44,7 +47,7 @@
   },
   "scripts": {
     "build": "pnpm check-cli && pnpm copy-secrets && pnpm clean && pnpm license && tsc -p ./ && pnpm madge",
-    "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
+    "test:unit": "vitest run --coverage",
     "test": "pnpm test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"pnpm lint:all\" \"pnpm lint:pretty\"",
     "lint:all": "pnpm run \"/^lint:[hst].*/\"",

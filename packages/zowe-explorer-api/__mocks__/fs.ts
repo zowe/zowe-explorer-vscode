@@ -9,15 +9,17 @@
  *
  */
 
-const fs = jest.genMockFromModule("fs") as any;
-const origExistsSync = jest.requireActual("fs").existsSync;
-const origReadFileSync = jest.requireActual("fs").readFileSync;
-const mockReadFileSync = fs.readFileSync;
+import { vi } from "vitest";
 
-function readFileSync(filePath: string, encoding?: string) {
+const actualFs = await vi.importActual<typeof import("fs")>("fs");
+const autoMockedFs = await vi.importMock<typeof import("fs")>("fs");
+
+const mockReadFileSync = vi.fn();
+
+function readFileSync(filePath: string, encoding?: any) {
     // Don't mock if yargs is trying to load a locale json file
-    if (filePath.match(/node_modules.yargs/)) {
-        return origReadFileSync(filePath, encoding);
+    if (filePath.match(/node_modules\.yargs/)) {
+        return actualFs.readFileSync(filePath as any, encoding);
     }
     return mockReadFileSync(filePath, encoding);
 }
@@ -26,9 +28,9 @@ function realpathSync(path: string): string {
     return path;
 }
 
-fs.readFileSync = readFileSync;
-fs.realpathSync = realpathSync;
-fs.realpathSync.native = realpathSync;
-fs.existsSync = origExistsSync;
+autoMockedFs.readFileSync = readFileSync as any;
+autoMockedFs.realpathSync = realpathSync as any;
+autoMockedFs.realpathSync.native = realpathSync as any;
+autoMockedFs.existsSync = vi.fn(actualFs.existsSync);
 
-module.exports = fs;
+export default autoMockedFs;
