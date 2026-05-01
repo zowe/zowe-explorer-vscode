@@ -14,6 +14,7 @@ import { Gui } from "../../../src/globals/Gui";
 import { PromptCredentialsOptions, ZoweVsCodeExtension, ProfilesCache, Types } from "../../../src";
 import { Login, Logout } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
+import { vi } from "vitest";
 
 describe("ZoweVsCodeExtension", () => {
     const fakeLogger = { debug: vi.fn() };
@@ -436,9 +437,7 @@ describe("ZoweVsCodeExtension", () => {
             // case 1: User selects "user/password" for login quick pick
             const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
 
-            const promptCertMock = vi
-                .spyOn(ZoweVsCodeExtension as any, "promptCertificate")
-                .mockRejectedValueOnce(new Error("invalid certificate"));
+            const promptCertMock = vi.spyOn(ZoweVsCodeExtension as any, "promptCertificate").mockRejectedValueOnce(new Error("invalid certificate"));
             await expect(ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" })).resolves.toBe(false);
             expect(promptCertMock).toHaveBeenCalled();
             expect(quickPickMock).toHaveBeenCalled();

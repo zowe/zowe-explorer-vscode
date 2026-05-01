@@ -8,7 +8,6 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
 
 import { WebView } from "../../../../src/vscode/ui";
 import * as vscode from "vscode";

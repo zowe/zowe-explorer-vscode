@@ -12,6 +12,7 @@ import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import { VscSettings } from "../../../../src/vscode/doc/VscSettings";
+import { vi } from "vitest";
 
 function createGlobalMocks() {
     const globalMocks = {

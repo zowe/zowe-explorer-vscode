@@ -11,6 +11,7 @@
 import { vi } from "vitest";
 import { ErrorCorrelator, Gui, CorrelatedError, ZoweExplorerApiType } from "../../../src/";
 import { ImperativeError } from "@zowe/imperative";
+import { vi } from "vitest";
 import { commands } from "vscode";
 
 describe("addCorrelation", () => {
@@ -104,7 +105,7 @@ describe("displayError", () => {
                 new CorrelatedError({ correlation: { summary: "Summary of network error" }, initialError: "This is the full error message" })
             );
         const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockResolvedValueOnce("More info").mockResolvedValueOnce("Show log");
-        const executeCommandMock = vi.spyOn(commands, "executeCommand").mockImplementation((() => undefined) as any);
+        const executeCommandMock = vi.spyOn(commands, "executeCommand").mockImplementation();
         await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(errorMessageMock).toHaveBeenCalledWith("Summary of network error", { items: ["More info"] });
@@ -119,7 +120,7 @@ describe("displayError", () => {
         });
         const correlateErrorMock = vi.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValueOnce(error);
         const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockResolvedValueOnce("More info").mockResolvedValueOnce("Troubleshoot");
-        const executeCommandMock = vi.spyOn(commands, "executeCommand").mockImplementation((() => undefined) as any);
+        const executeCommandMock = vi.spyOn(commands, "executeCommand").mockImplementation();
         await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(errorMessageMock).toHaveBeenCalledWith("Summary of network error", { items: ["More info"] });
