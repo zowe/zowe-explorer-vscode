@@ -55,10 +55,7 @@ export class ZoweLogger {
         }
         loggerConfigCopy.log4jsConfig.appenders.vscodeOutputChannel = {
             type: { configure: this.zoweOutputChannelAppenderConfigurer.bind(this) },
-            layout: {
-                type: "pattern",
-                pattern: "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m",
-            },
+            layout: loggerConfigCopy.log4jsConfig.appenders.app.layout,
         };
         loggerConfigCopy.log4jsConfig.categories.app.appenders.push("vscodeOutputChannel");
         imperative.Logger.initLogger(loggerConfigCopy);
