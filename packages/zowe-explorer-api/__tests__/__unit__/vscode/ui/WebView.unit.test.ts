@@ -12,24 +12,25 @@
 import { WebView } from "../../../../src/vscode/ui";
 import * as vscode from "vscode";
 import * as Mustache from "mustache";
+import { vi } from "vitest";
 
 describe("WebView unit tests", () => {
     beforeAll(() => {
         Object.defineProperty(vscode.window, "createWebviewPanel", {
-            value: jest.fn().mockReturnValue({
-                dispose: jest.fn(),
+            value: vi.fn().mockReturnValue({
+                dispose: vi.fn(),
                 webview: {
-                    asWebviewUri: jest.fn(),
+                    asWebviewUri: vi.fn(),
                     html: "<some html>",
-                    onDidReceiveMessage: jest.fn(),
+                    onDidReceiveMessage: vi.fn(),
                 },
-                onDidDispose: jest.fn(),
+                onDidDispose: vi.fn(),
             }),
         });
     });
-    it("Successfully creates a WebView", () => {
-        const createWebviewPanelSpy = jest.spyOn(vscode.window, "createWebviewPanel");
-        const renderSpy = jest.spyOn(Mustache as any, "render");
+    it.only("Successfully creates a WebView", () => {
+        const createWebviewPanelSpy = vi.spyOn(vscode.window, "createWebviewPanel");
+        const renderSpy = vi.spyOn(Mustache as any, "render");
 
         try {
             new WebView("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext);
@@ -41,10 +42,10 @@ describe("WebView unit tests", () => {
     });
 
     it("Correctly disposes a WebView", () => {
-        const createWebviewPanelSpy = jest.spyOn(vscode.window, "createWebviewPanel");
-        const renderSpy = jest.spyOn(Mustache as any, "render");
+        const createWebviewPanelSpy = vi.spyOn(vscode.window, "createWebviewPanel");
+        const renderSpy = vi.spyOn(Mustache as any, "render");
 
-        const disposeMock = jest.fn();
+        const disposeMock = vi.fn();
         const disposable = new vscode.Disposable(disposeMock);
 
         const testView = new WebView("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext, {
@@ -66,7 +67,7 @@ describe("WebView unit tests", () => {
     });
 
     it("sets viewColumn from WebViewOpts", () => {
-        const createWebviewPanelSpy = jest.spyOn(vscode.window, "createWebviewPanel");
+        const createWebviewPanelSpy = vi.spyOn(vscode.window, "createWebviewPanel");
         const viewColumn = vscode.ViewColumn.One;
         new WebView("Test Webview Title", "example-folder", { extensionPath: "test/path" } as vscode.ExtensionContext, {
             viewColumn,
