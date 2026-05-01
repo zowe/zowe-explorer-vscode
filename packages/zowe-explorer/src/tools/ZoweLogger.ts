@@ -113,11 +113,11 @@ export class ZoweLogger {
 
     private static vscodeOutputChannelAppender(layout: LayoutFunction): (loggingEvent: LoggingEvent) => void {
         return (loggingEvent: LoggingEvent) => {
-            this.zeOutputChannel?.appendLine(layout(loggingEvent));
+            ZoweLogger.zeOutputChannel?.appendLine(layout(loggingEvent));
         };
     }
 
     private static zoweOutputChannelAppenderConfigurer(config: Config, layouts: LayoutsParam): (LoggingEvent: LoggingEvent) => void {
-        return this.vscodeOutputChannelAppender(layouts.layout(config.layout.type, config.layout));
+        return ZoweLogger.vscodeOutputChannelAppender(layouts.layout(config.layout.type, config.layout));
     }
 }
