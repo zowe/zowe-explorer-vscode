@@ -10,8 +10,9 @@
  */
 
 import { PaginationCodeLens } from "../../../../src/vscode/ui/PaginationCodeLens";
+import { vi } from "vitest";
 
-jest.mock("vscode", () => {
+vi.mock("vscode", () => {
     return {
         Range: class {
             public constructor(public startLine: number, public _startChar: number, public endLine: number, public _endChar: number) {
