@@ -9,6 +9,8 @@
  *
  */
 
+import { vi } from "vitest";
+
 /**
  * A provider result represents the values a provider, like the [`HoverProvider`](#HoverProvider),
  * may return. For once this is the actual result type `T`, like `Hover`, or a thenable that resolves
@@ -453,10 +455,10 @@ export namespace window {
             activeTab: undefined,
             tabs: [],
         },
-        close: jest.fn(),
+        close: vi.fn(),
     };
 
-    export let activeTextEditor: TextDocument | undefined = { fileName: "placeholderFile.txt" } as any;
+    export const activeTextEditor: TextDocument | undefined = { fileName: "placeholderFile.txt" } as any;
 
     /**
      * Show an information message to users. Optionally provide an array of items which will be presented as
@@ -486,9 +488,15 @@ export namespace window {
         return undefined;
     }
 
-    const { window: mockWindow } = require("jest-mock-vscode").createVSCodeMock(jest);
-    export const showQuickPick = mockWindow.showQuickPick;
-    export const createWebviewPanel = mockWindow.createWebviewPanel;
+    export function createWebviewPanel(_viewType: string, _title: string, _showOptions: any, _options?: any): any {
+        return {
+            onDidDispose: vi.fn(),
+            webview: {
+                asWebviewUri: vi.fn((uri) => uri.toString()),
+                onDidReceiveMessage: vi.fn(),
+            },
+        };
+    }
 
     /**
      * Options to configure the behavior of the message.
@@ -905,7 +913,7 @@ export class EventEmitter<T> {
     /**
      * The event listeners can subscribe to.
      */
-    event: Event<T> = jest.fn().mockImplementation((listener) => {
+    event: Event<T> = vi.fn().mockImplementation((listener) => {
         this.subscribers.push(listener);
         return new Disposable(() => {
             const idx = this.subscribers.findIndex((v) => v === listener);
@@ -1143,11 +1151,11 @@ export namespace workspace {
     }
 
     export function onDidCloseTextDocument(_event): Disposable {
-        return Disposable;
+        return new Disposable(() => {});
     }
 
     export function onWillSaveTextDocument(_event): Disposable {
-        return Disposable;
+        return new Disposable(() => {});
     }
 
     /**

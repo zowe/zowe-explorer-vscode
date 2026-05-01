@@ -11,10 +11,11 @@
 
 import * as imperative from "@zowe/imperative";
 import { IAttributesProvider, AttributeInfo } from "../../src/dataset/DatasetAttributesProvider";
+import { vi } from "vitest";
 
 export function createConfigInstance() {
     return {
-        load: jest.fn(),
+        load: vi.fn(),
     } as any;
 }
 
@@ -23,8 +24,8 @@ export function createConfigLoad() {
         configName: "zowe.config.json",
         api: {
             layers: {
-                merge: jest.fn(),
-                activate: jest.fn(),
+                merge: vi.fn(),
+                activate: vi.fn(),
             },
         },
         layers: [
@@ -43,8 +44,8 @@ export function createConfigLoad() {
                 user: true,
             },
         ],
-        setSchema: jest.fn(),
-        save: jest.fn(),
+        setSchema: vi.fn(),
+        save: vi.fn(),
     } as any;
 }
 

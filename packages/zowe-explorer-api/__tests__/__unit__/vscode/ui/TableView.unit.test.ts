@@ -10,22 +10,23 @@
  */
 
 import { join } from "path";
+import { diff } from "deep-object-diff";
+import * as fs from "fs";
+import { vi } from "vitest";
 import { Table, TableBuilder, WebView, Gui } from "../../../../src";
 import { ConfigurationTarget, env, EventEmitter, Uri, window, workspace } from "vscode";
 import * as crypto from "crypto";
-import { diff } from "deep-object-diff";
-import * as fs from "fs";
 
-jest.mock("fs");
+vi.mock("fs");
 function createGlobalMocks() {
     const mockPanel = {
-        dispose: jest.fn(),
-        onDidDispose: jest.fn(),
-        webview: { asWebviewUri: (uri) => uri.toString(), onDidReceiveMessage: jest.fn(), postMessage: jest.fn() },
+        dispose: vi.fn(),
+        onDidDispose: vi.fn(),
+        webview: { asWebviewUri: (uri) => uri.toString(), onDidReceiveMessage: vi.fn(), postMessage: vi.fn() },
     };
     // Mock `vscode.window.createWebviewPanel` to return a usable panel object
-    const createWebviewPanelMock = jest.spyOn(window, "createWebviewPanel").mockReturnValueOnce(mockPanel as any);
-    const spyReadFile = jest.fn((path, encoding, callback) => {
+    const createWebviewPanelMock = vi.spyOn(window, "createWebviewPanel").mockReturnValueOnce(mockPanel as any);
+    const spyReadFile = vi.fn((path, encoding, callback) => {
         callback(null, "file contents");
     });
     Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
@@ -38,7 +39,7 @@ function createGlobalMocks() {
                 id: "Zowe.vscode-extension-for-zowe",
             },
         },
-        updateWebviewMock: jest.spyOn((Table.View as any).prototype, "updateWebview"),
+        updateWebviewMock: vi.spyOn((Table.View as any).prototype, "updateWebview"),
     };
 }
 
@@ -89,7 +90,7 @@ describe("Table.View", () => {
             const view = new Table.View(globalMocks.context as any, false, { title: "Table" } as any);
 
             // case 1: Post message was not successful; updateWebview returns false
-            const postMessageMock = jest.spyOn(view.panel.webview, "postMessage").mockResolvedValueOnce(false);
+            const postMessageMock = vi.spyOn(view.panel.webview, "postMessage").mockResolvedValueOnce(false);
             await expect((view as any).updateWebview()).resolves.toBe(false);
             expect(postMessageMock).toHaveBeenCalledWith({
                 command: "ondatachanged",
@@ -103,7 +104,7 @@ describe("Table.View", () => {
             });
 
             // case 2: Post message was successful; updateWebview returns true and event is fired
-            const emitterFireMock = jest.spyOn(EventEmitter.prototype, "fire");
+            const emitterFireMock = vi.spyOn(EventEmitter.prototype, "fire");
             postMessageMock.mockResolvedValueOnce(true);
             await expect((view as any).updateWebview()).resolves.toBe(true);
             const tableData = {
@@ -144,11 +145,12 @@ describe("Table.View", () => {
 
     describe("getId", () => {
         it("returns a valid ID for the table view", () => {
+            const mockRandomUUID = vi.mocked(crypto.randomUUID);
+
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, false, { title: "Table" } as any);
-            const randomUuidMock = jest.spyOn(crypto, "randomUUID").mockReturnValueOnce("foo-bar-baz-qux-quux");
-            expect(view.getId()).toBe("Table-foo##Zowe.vscode-extension-for-zowe");
-            expect(randomUuidMock).toHaveBeenCalled();
+            expect(view.getId()).toBe("Table-test##Zowe.vscode-extension-for-zowe");
+            expect(mockRandomUUID).toHaveBeenCalled();
         });
     });
 
@@ -246,7 +248,7 @@ describe("Table.View", () => {
         it("does nothing if no command is provided", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Table w/ changing display" } as any);
-            const onTableDisplayChangedFireMock = jest.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
+            const onTableDisplayChangedFireMock = vi.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
             globalMocks.updateWebviewMock.mockClear();
             const tableData = { rows: [{ a: 1, b: 1, c: 1 }] };
             await view.onMessageReceived({
@@ -259,7 +261,7 @@ describe("Table.View", () => {
         it("fires the onTableDisplayChanged event when handling the 'ondisplaychanged' command", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Table w/ changing display" } as any);
-            const onTableDisplayChangedFireMock = jest.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
+            const onTableDisplayChangedFireMock = vi.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
             const tableData = { rows: [{ a: 1, b: 1, c: 1 }] };
             await view.onMessageReceived({
                 command: "ondisplaychanged",
@@ -272,7 +274,7 @@ describe("Table.View", () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, false, { title: "Table w/ editable columns" } as any);
             await view.setColumns([{ field: "a", editable: true }, { field: "b" }, { field: "c" }]);
-            const onTableDataEditedFireMock = jest.spyOn((view as any).onTableDataEditedEmitter, "fire");
+            const onTableDataEditedFireMock = vi.spyOn((view as any).onTableDataEditedEmitter, "fire");
             const tableData = { rows: [{ a: 1, b: 1, c: 1 }] };
             const editData = {
                 value: 2,
@@ -290,7 +292,7 @@ describe("Table.View", () => {
         it("calls updateWebview when handling the 'ready' command", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Table w/ changing display" } as any);
-            globalMocks.updateWebviewMock.mockImplementation();
+            globalMocks.updateWebviewMock.mockImplementation(() => {});
             await view.onMessageReceived({
                 command: "ready",
             });
@@ -301,7 +303,7 @@ describe("Table.View", () => {
         it("should handle the case where 'GET_LOCALIZATION' is the command sent", async () => {
             const globalMocks = await createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, false, { title: "Table" } as any);
-            const postMessageSpy = jest.spyOn(view.panel.webview, "postMessage");
+            const postMessageSpy = vi.spyOn(view.panel.webview, "postMessage");
             await view.onMessageReceived({ command: "GET_LOCALIZATION" });
             expect(postMessageSpy).toHaveBeenCalledWith({
                 command: "GET_LOCALIZATION",
@@ -314,7 +316,7 @@ describe("Table.View", () => {
         it("calls vscode.env.clipboard.writeText when handling the 'copy' command", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Table w/ copy" } as any);
-            const writeTextMock = jest.spyOn(env.clipboard, "writeText").mockImplementation();
+            const writeTextMock = vi.spyOn(env.clipboard, "writeText").mockImplementation(() => Promise.resolve());
             const mockWebviewMsg = {
                 command: "copy",
                 payload: { row: { a: 1, b: 1, c: 1 } },
@@ -327,7 +329,7 @@ describe("Table.View", () => {
         it("calls vscode.env.clipboard.writeText when handling the 'copy-cell' command", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, { title: "Table w/ copy-cell" } as any);
-            const writeTextMock = jest.spyOn(env.clipboard, "writeText").mockImplementation();
+            const writeTextMock = vi.spyOn(env.clipboard, "writeText").mockImplementation(() => Promise.resolve());
             const mockWebviewMsg = {
                 command: "copy-cell",
                 payload: { cell: 1, row: { a: 1, b: 1, c: 1 } },
@@ -351,7 +353,7 @@ describe("Table.View", () => {
                 },
             };
             const view = new Table.View(globalMocks.context as any, false, data);
-            const writeTextMock = jest.spyOn(env.clipboard, "writeText");
+            const writeTextMock = vi.spyOn(env.clipboard, "writeText");
             const mockWebviewMsg = {
                 command: "nonexistent-action",
                 payload: { row: data.rows[0] },
@@ -363,9 +365,9 @@ describe("Table.View", () => {
 
         it("runs the callback for an action that exists", async () => {
             const globalMocks = createGlobalMocks();
-            const allCallbackMock = jest.fn();
-            const zeroCallbackMock = jest.fn();
-            const multiCallbackMock = jest.fn();
+            const allCallbackMock = vi.fn();
+            const zeroCallbackMock = vi.fn();
+            const multiCallbackMock = vi.fn();
             const data = {
                 title: "Some table",
                 rows: [{ a: 1, b: 1, c: 1 }],
@@ -411,7 +413,7 @@ describe("Table.View", () => {
                 },
             };
             const view = new Table.View(globalMocks.context as any, false, data);
-            const writeTextMock = jest.spyOn(env.clipboard, "writeText");
+            const writeTextMock = vi.spyOn(env.clipboard, "writeText");
 
             // case 1: A cell action that exists for all rows
             const mockWebviewMsg = {
@@ -449,7 +451,7 @@ describe("Table.View", () => {
 
         it("runs the callback for a no-selection action that exists", async () => {
             const globalMocks = createGlobalMocks();
-            const noSelectionCallbackMock = jest.fn();
+            const noSelectionCallbackMock = vi.fn();
             const data = {
                 title: "Some table",
                 rows: [{ a: 1, b: 1, c: 1 }],
@@ -580,7 +582,7 @@ describe("Table.View", () => {
             const mockRow = { red: 255, green: 0, blue: 255 };
             const data = { title: "Table w/ content", rows: [] };
             const view = new Table.View(globalMocks.context as any, data as any);
-            globalMocks.updateWebviewMock.mockImplementation();
+            globalMocks.updateWebviewMock.mockImplementation(() => {});
             await view.setContent([mockRow]);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             expect((view as any).data.rows[0]).toStrictEqual(mockRow);
@@ -602,7 +604,7 @@ describe("Table.View", () => {
             ] as Table.ColumnOpts[];
             const data = { title: "Table w/ cols", columns: [], rows: [] };
             const view = new Table.View(globalMocks.context as any, data as any);
-            globalMocks.updateWebviewMock.mockImplementation();
+            globalMocks.updateWebviewMock.mockImplementation(() => {});
             await view.addColumns(...mockCols);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             expect((view as any).data.columns).toStrictEqual(
@@ -624,7 +626,7 @@ describe("Table.View", () => {
             const mockRow = { blue: true, yellow: false, violet: true };
             const data = { title: "Table w/ no initial rows", rows: [] };
             const view = new Table.View(globalMocks.context as any, data as any);
-            globalMocks.updateWebviewMock.mockImplementation();
+            globalMocks.updateWebviewMock.mockImplementation(() => {});
             await view.addContent(mockRow);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             expect((view as any).data.rows[0]).toStrictEqual(mockRow);
@@ -637,7 +639,7 @@ describe("Table.View", () => {
             const globalMocks = createGlobalMocks();
             const data = { title: "Table w/ no initial rows", contextOpts: { all: [] }, rows: [] };
             const view = new Table.View(globalMocks.context as any, data as any);
-            globalMocks.updateWebviewMock.mockImplementation();
+            globalMocks.updateWebviewMock.mockImplementation(() => {});
 
             // case 1: Adding a context menu option with conditional to all rows
             const contextOpt = {
@@ -673,7 +675,7 @@ describe("Table.View", () => {
             const globalMocks = createGlobalMocks();
             const data = { title: "Table w/ no initial rows", contextOpts: { all: [] }, rows: [] };
             const view = new Table.View(globalMocks.context as any, data as any);
-            globalMocks.updateWebviewMock.mockImplementation();
+            globalMocks.updateWebviewMock.mockImplementation(() => {});
 
             // case 1: Adding a context menu option without conditional to all rows
             const contextOpt = {
@@ -709,7 +711,7 @@ describe("Table.View", () => {
             const globalMocks = createGlobalMocks();
             const data = { title: "Table w/ no initial rows", actions: { all: [] }, rows: [] };
             const view = new Table.View(globalMocks.context as any, data as any);
-            globalMocks.updateWebviewMock.mockImplementation();
+            globalMocks.updateWebviewMock.mockImplementation(() => {});
 
             // case 1: Adding an action to all rows
             const action = {
@@ -745,7 +747,7 @@ describe("Table.View", () => {
             const globalMocks = createGlobalMocks();
             const data = { title: "Table w/ no initial rows", actions: { all: [] }, rows: [] };
             const view = new Table.View(globalMocks.context as any, data as any);
-            globalMocks.updateWebviewMock.mockImplementation();
+            globalMocks.updateWebviewMock.mockImplementation(() => {});
 
             // case 1: Adding an action without conditional to all rows
             const action = {
@@ -792,7 +794,7 @@ describe("Table.View", () => {
             // case 1: Update the contents of a single row with new contents
             const data = { title: "Table w/ content", rows: [{ a: 1, b: 2, c: 3 }] };
             const view = new Table.View(globalMocks.context as any, data as any);
-            globalMocks.updateWebviewMock.mockImplementation();
+            globalMocks.updateWebviewMock.mockImplementation(() => {});
             await view.updateRow(0, mockRow);
             expect(globalMocks.updateWebviewMock).toHaveBeenCalled();
             globalMocks.updateWebviewMock.mockClear();
@@ -808,12 +810,12 @@ describe("Table.View", () => {
     describe("async condition checking", () => {
         it("handles check-condition-for-action with sync function condition", async () => {
             const globalMocks = createGlobalMocks();
-            const conditionFn = jest.fn().mockReturnValue(true);
+            const conditionFn = vi.fn().mockReturnValue(true);
             const action = {
                 title: "Test Action",
                 command: "test-action",
                 condition: conditionFn,
-                callback: { typ: "single-row", fn: jest.fn() },
+                callback: { typ: "single-row", fn: vi.fn() },
             } as Table.Action;
 
             const data = {
@@ -825,7 +827,7 @@ describe("Table.View", () => {
             };
             const view = new Table.View(globalMocks.context as any, false, data);
 
-            const mockPostMessage = jest.fn();
+            const mockPostMessage = vi.fn();
             (view as any).panel = { webview: { postMessage: mockPostMessage } };
 
             const message = {
@@ -850,12 +852,12 @@ describe("Table.View", () => {
 
         it("handles check-condition-for-action with async function condition", async () => {
             const globalMocks = createGlobalMocks();
-            const conditionFn = jest.fn().mockResolvedValue(false);
+            const conditionFn = vi.fn().mockResolvedValue(false);
             const action = {
                 title: "Async Action",
                 command: "async-action",
                 condition: conditionFn,
-                callback: { typ: "single-row", fn: jest.fn() },
+                callback: { typ: "single-row", fn: vi.fn() },
             } as Table.Action;
 
             const data = {
@@ -867,7 +869,7 @@ describe("Table.View", () => {
             };
             const view = new Table.View(globalMocks.context as any, false, data);
 
-            const mockPostMessage = jest.fn();
+            const mockPostMessage = vi.fn();
             (view as any).panel = { webview: { postMessage: mockPostMessage } };
 
             const message = {
@@ -896,7 +898,7 @@ describe("Table.View", () => {
                 title: "String Condition Action",
                 command: "string-condition",
                 condition: "(data) => data.value > 100",
-                callback: { typ: "single-row", fn: jest.fn() },
+                callback: { typ: "single-row", fn: vi.fn() },
             } as Table.Action;
 
             const data = {
@@ -908,7 +910,7 @@ describe("Table.View", () => {
             };
             const view = new Table.View(globalMocks.context as any, false, data);
 
-            const mockPostMessage = jest.fn();
+            const mockPostMessage = vi.fn();
             (view as any).panel = { webview: { postMessage: mockPostMessage } };
 
             const message = {
@@ -932,12 +934,12 @@ describe("Table.View", () => {
 
         it("handles check-condition-for-action with context menu option", async () => {
             const globalMocks = createGlobalMocks();
-            const conditionFn = jest.fn().mockReturnValue(true);
+            const conditionFn = vi.fn().mockReturnValue(true);
             const contextOpt = {
                 title: "Context Action",
                 command: "context-action",
                 condition: conditionFn,
-                callback: { typ: "single-row", fn: jest.fn() },
+                callback: { typ: "single-row", fn: vi.fn() },
             } as Table.ContextMenuOption;
 
             const data = {
@@ -949,7 +951,7 @@ describe("Table.View", () => {
             };
             const view = new Table.View(globalMocks.context as any, false, data);
 
-            const mockPostMessage = jest.fn();
+            const mockPostMessage = vi.fn();
             (view as any).panel = { webview: { postMessage: mockPostMessage } };
 
             const message = {
@@ -974,14 +976,14 @@ describe("Table.View", () => {
 
         it("handles check-condition-for-action when condition throws error", async () => {
             const globalMocks = createGlobalMocks();
-            const conditionFn = jest.fn().mockImplementation(() => {
+            const conditionFn = vi.fn().mockImplementation(() => {
                 throw new Error("Test condition error");
             });
             const action = {
                 title: "Error Action",
                 command: "error-action",
                 condition: conditionFn,
-                callback: { typ: "single-row", fn: jest.fn() },
+                callback: { typ: "single-row", fn: vi.fn() },
             } as Table.Action;
 
             const data = {
@@ -993,7 +995,7 @@ describe("Table.View", () => {
             };
             const view = new Table.View(globalMocks.context as any, false, data);
 
-            const mockPostMessage = jest.fn();
+            const mockPostMessage = vi.fn();
             (view as any).panel = { webview: { postMessage: mockPostMessage } };
 
             const message = {
@@ -1019,11 +1021,11 @@ describe("Table.View", () => {
     describe("dynamic titles", () => {
         it("handles get-dynamic-title-for-action with function title", async () => {
             const globalMocks = createGlobalMocks();
-            const titleFn = jest.fn().mockReturnValue("Dynamic Title");
+            const titleFn = vi.fn().mockReturnValue("Dynamic Title");
             const action = {
                 title: titleFn,
                 command: "dynamic-title-action",
-                callback: { typ: "single-row", fn: jest.fn() },
+                callback: { typ: "single-row", fn: vi.fn() },
             } as Table.Action;
 
             const data = {
@@ -1034,7 +1036,7 @@ describe("Table.View", () => {
             };
             const view = new Table.View(globalMocks.context as any, false, data as any);
 
-            const mockPostMessage = jest.fn();
+            const mockPostMessage = vi.fn();
             (view as any).panel = { webview: { postMessage: mockPostMessage } };
 
             const message = {
@@ -1058,11 +1060,11 @@ describe("Table.View", () => {
 
         it("handles get-dynamic-title-for-action with async function title", async () => {
             const globalMocks = createGlobalMocks();
-            const titleFn = jest.fn().mockResolvedValue("Async Dynamic Title");
+            const titleFn = vi.fn().mockResolvedValue("Async Dynamic Title");
             const action = {
                 title: titleFn,
                 command: "async-dynamic-title-action",
-                callback: { typ: "single-row", fn: jest.fn() },
+                callback: { typ: "single-row", fn: vi.fn() },
             } as Table.Action;
 
             const data = {
@@ -1073,7 +1075,7 @@ describe("Table.View", () => {
             };
             const view = new Table.View(globalMocks.context as any, false, data as any);
 
-            const mockPostMessage = jest.fn();
+            const mockPostMessage = vi.fn();
             (view as any).panel = { webview: { postMessage: mockPostMessage } };
 
             const message = {
@@ -1100,7 +1102,7 @@ describe("Table.View", () => {
             const action = {
                 title: "Static Title",
                 command: "static-title-action",
-                callback: { typ: "single-row", fn: jest.fn() },
+                callback: { typ: "single-row", fn: vi.fn() },
             } as Table.Action;
 
             const data = {
@@ -1111,7 +1113,7 @@ describe("Table.View", () => {
             };
             const view = new Table.View(globalMocks.context as any, false, data as any);
 
-            const mockPostMessage = jest.fn();
+            const mockPostMessage = vi.fn();
             (view as any).panel = { webview: { postMessage: mockPostMessage } };
 
             const message = {
@@ -1134,13 +1136,13 @@ describe("Table.View", () => {
 
         it("handles get-dynamic-title-for-action when title function throws error", async () => {
             const globalMocks = createGlobalMocks();
-            const titleFn = jest.fn().mockImplementation(() => {
+            const titleFn = vi.fn().mockImplementation(() => {
                 throw new Error("Test title error");
             });
             const action = {
                 title: titleFn,
                 command: "error-title-action",
-                callback: { typ: "single-row", fn: jest.fn() },
+                callback: { typ: "single-row", fn: vi.fn() },
             } as Table.Action;
 
             const data = {
@@ -1151,7 +1153,7 @@ describe("Table.View", () => {
             };
             const view = new Table.View(globalMocks.context as any, false, data as any);
 
-            const mockPostMessage = jest.fn();
+            const mockPostMessage = vi.fn();
             (view as any).panel = { webview: { postMessage: mockPostMessage } };
 
             const message = {
@@ -1176,12 +1178,12 @@ describe("Table.View", () => {
     describe("hide conditions", () => {
         it("handles check-hide-condition-for-action with function returning true", async () => {
             const globalMocks = createGlobalMocks();
-            const hideConditionFn = jest.fn().mockReturnValue(true);
+            const hideConditionFn = vi.fn().mockReturnValue(true);
             const action = {
                 title: "Hide Me",
                 command: "hide-action",
                 hideCondition: hideConditionFn,
-                callback: { typ: "single-row", fn: jest.fn() },
+                callback: { typ: "single-row", fn: vi.fn() },
             } as Table.Action;
 
             const data = {
@@ -1192,7 +1194,7 @@ describe("Table.View", () => {
             };
             const view = new Table.View(globalMocks.context as any, false, data as any);
 
-            const mockPostMessage = jest.fn();
+            const mockPostMessage = vi.fn();
             (view as any).panel = { webview: { postMessage: mockPostMessage } };
 
             const message = {
@@ -1216,12 +1218,12 @@ describe("Table.View", () => {
 
         it("handles check-hide-condition-for-action with async function", async () => {
             const globalMocks = createGlobalMocks();
-            const hideConditionFn = jest.fn().mockResolvedValue(true);
+            const hideConditionFn = vi.fn().mockResolvedValue(true);
             const action = {
                 title: "Hide Me Async",
                 command: "hide-action-async",
                 hideCondition: hideConditionFn,
-                callback: { typ: "single-row", fn: jest.fn() },
+                callback: { typ: "single-row", fn: vi.fn() },
             } as Table.Action;
 
             const data = {
@@ -1232,7 +1234,7 @@ describe("Table.View", () => {
             };
             const view = new Table.View(globalMocks.context as any, false, data as any);
 
-            const mockPostMessage = jest.fn();
+            const mockPostMessage = vi.fn();
             (view as any).panel = { webview: { postMessage: mockPostMessage } };
 
             const message = {
@@ -1259,7 +1261,7 @@ describe("Table.View", () => {
             const action = {
                 title: "Don't Hide Me",
                 command: "no-hide-action",
-                callback: { typ: "single-row", fn: jest.fn() },
+                callback: { typ: "single-row", fn: vi.fn() },
             } as Table.Action;
 
             const data = {
@@ -1270,7 +1272,7 @@ describe("Table.View", () => {
             };
             const view = new Table.View(globalMocks.context as any, false, data as any);
 
-            const mockPostMessage = jest.fn();
+            const mockPostMessage = vi.fn();
             (view as any).panel = { webview: { postMessage: mockPostMessage } };
 
             const message = {
@@ -1326,12 +1328,12 @@ describe("Table.View", () => {
 
     describe("AG Grid API methods", () => {
         let view: Table.View;
-        let requestSpy: jest.SpyInstance;
+        let requestSpy: any;
 
         beforeEach(() => {
             const globalMocks = createGlobalMocks();
             view = new Table.View(globalMocks.context as any, { title: "API Test" } as any);
-            requestSpy = jest.spyOn(view, "request").mockResolvedValue(true);
+            requestSpy = vi.spyOn(view, "request").mockResolvedValue(true);
         });
 
         afterEach(() => {
@@ -1395,9 +1397,9 @@ describe("Table.View", () => {
 
     describe("pinRows warning functionality", () => {
         let view: Table.View;
-        let requestSpy: jest.SpyInstance;
+        let requestSpy: any;
         let configMock: any;
-        let warningMessageSpy: jest.SpyInstance;
+        let warningMessageSpy: any;
 
         beforeEach(() => {
             const globalMocks = createGlobalMocks();
@@ -1405,20 +1407,20 @@ describe("Table.View", () => {
 
             // Mock the configuration
             configMock = {
-                get: jest.fn(),
-                update: jest.fn().mockResolvedValue(undefined),
+                get: vi.fn(),
+                update: vi.fn().mockResolvedValue(undefined),
             };
-            jest.spyOn(workspace, "getConfiguration").mockReturnValue(configMock);
+            vi.spyOn(workspace, "getConfiguration").mockReturnValue(configMock);
 
             // Mock the warning message
-            warningMessageSpy = jest.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+            warningMessageSpy = vi.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
 
             // Mock the request method to simulate different scenarios
-            requestSpy = jest.spyOn(view, "request");
+            requestSpy = vi.spyOn(view, "request");
         });
 
         afterEach(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should show warning when pinning rows that exceed maxPinnedRows limit", async () => {
@@ -1528,7 +1530,7 @@ describe("Table.View", () => {
             view = new Table.View(globalMocks.context as any, { title: "Request Test" } as any);
             (view as any).panel = {
                 webview: {
-                    postMessage: jest.fn(),
+                    postMessage: vi.fn(),
                 },
             };
         });
@@ -1544,7 +1546,7 @@ describe("Table.View", () => {
         describe("pending requests handling", () => {
             it("should resolve pending request with payload when message has requestId and no error", async () => {
                 createGlobalMocks();
-                const postMessageMock = jest.spyOn(view.panel.webview, "postMessage").mockResolvedValue(true);
+                const postMessageMock = vi.spyOn(view.panel.webview, "postMessage").mockResolvedValue(true);
 
                 // Start a request to create a pending request
                 const requestPromise = view.request("test-command", { data: "test-data" });
@@ -1574,7 +1576,7 @@ describe("Table.View", () => {
 
             it("should reject pending request with error when message has requestId and error", async () => {
                 createGlobalMocks();
-                const postMessageMock = jest.spyOn(view.panel.webview, "postMessage").mockResolvedValue(true);
+                const postMessageMock = vi.spyOn(view.panel.webview, "postMessage").mockResolvedValue(true);
 
                 // Start a request to create a pending request
                 const requestPromise = view.request("test-command", { data: "test-data" });
@@ -1604,7 +1606,7 @@ describe("Table.View", () => {
 
             it("should not handle message when requestId exists but no pending request found", async () => {
                 createGlobalMocks();
-                const onTableDisplayChangedFireMock = jest.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
+                const onTableDisplayChangedFireMock = vi.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
 
                 // Simulate a message with requestId but no corresponding pending request
                 await view.onMessageReceived({
@@ -1619,7 +1621,7 @@ describe("Table.View", () => {
 
             it("should not handle message when requestId is missing", async () => {
                 createGlobalMocks();
-                const onTableDisplayChangedFireMock = jest.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
+                const onTableDisplayChangedFireMock = vi.spyOn((view as any).onTableDisplayChangedEmitter, "fire");
 
                 // Simulate a message without requestId
                 await view.onMessageReceived({
@@ -1645,7 +1647,7 @@ describe("Table.Instance", () => {
                     { a: 3, b: 2, c: 1, d: true, e: 6 },
                 ])
                 .addColumns([{ field: "a" }, { field: "b" }, { field: "c" }, { field: "d" }, { field: "e" }]);
-            const disposeMock = jest.spyOn((WebView as any).prototype, "dispose").mockImplementationOnce(jest.fn());
+            const disposeMock = vi.spyOn((WebView as any).prototype, "dispose").mockImplementationOnce(vi.fn());
             const instance = builder.build();
             instance.dispose();
             expect(disposeMock).toHaveBeenCalled();

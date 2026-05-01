@@ -11,11 +11,12 @@
 
 import * as vscode from "vscode";
 import { VscSettings } from "../../../../src/vscode/doc/VscSettings";
+import { vi } from "vitest";
 
 function createGlobalMocks() {
     const globalMocks = {
-        vscConfSpy: jest.spyOn(vscode.workspace, "getConfiguration"),
-        getConfiguration: jest.fn(),
+        vscConfSpy: vi.spyOn(vscode.workspace, "getConfiguration"),
+        getConfiguration: vi.fn(),
         testProxyVars: {
             http_proxy: "host.com",
             https_proxy: "host.com",
@@ -24,8 +25,8 @@ function createGlobalMocks() {
             proxy_strict_ssl: true,
         },
     };
-    globalMocks.getConfiguration = jest.fn().mockReturnValue({
-        get: jest.fn(),
+    globalMocks.getConfiguration = vi.fn().mockReturnValue({
+        get: vi.fn(),
     });
     globalMocks.vscConfSpy.mockImplementation(globalMocks.getConfiguration);
 
@@ -35,7 +36,7 @@ function createGlobalMocks() {
 describe("VscSettings", () => {
     describe("getVsCodeProxySettings", () => {
         beforeEach(() => {
-            jest.resetAllMocks();
+            vi.resetAllMocks();
         });
         it("should return undefined with VSC proxy support off", () => {
             const globalMocks = createGlobalMocks();
@@ -69,7 +70,7 @@ describe("VscSettings", () => {
 
         it("should handle if the configuration does exist", () => {
             const globalMocks = createGlobalMocks();
-            globalMocks.getConfiguration.mockReturnValueOnce({ get: jest.fn().mockReturnValue("testReturnedValue") });
+            globalMocks.getConfiguration.mockReturnValueOnce({ get: vi.fn().mockReturnValue("testReturnedValue") });
             expect(VscSettings.getDirectValue("zowe.test", "testValue")).toEqual("testReturnedValue");
         });
     });

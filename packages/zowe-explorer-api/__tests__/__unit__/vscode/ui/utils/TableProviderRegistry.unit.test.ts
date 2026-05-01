@@ -11,22 +11,22 @@
 
 import { Logger } from "@zowe/imperative";
 import { Table, TableActionProvider, TableProviderRegistry } from "../../../../../src";
-
+import { vi } from "vitest";
 describe("TableProviderRegistry", () => {
     let registry: TableProviderRegistry;
     let mockProvider: TableActionProvider;
     let mockProvider2: TableActionProvider;
     let mockContext: Table.Context.IBaseData;
-    let mockLogger: { error: jest.Mock };
+    let mockLogger: { error: ReturnType<typeof vi.fn> };
 
     beforeAll(() => {
-        jest.spyOn(Logger, "getImperativeLogger").mockReturnValue({
-            error: jest.fn(),
+        vi.spyOn(Logger, "getImperativeLogger").mockReturnValue({
+            error: vi.fn(),
         } as any);
     });
 
     afterAll(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     beforeEach(() => {
@@ -36,13 +36,13 @@ describe("TableProviderRegistry", () => {
 
         // Create mock providers
         mockProvider = {
-            provideActions: jest.fn(),
-            provideContextMenuItems: jest.fn(),
+            provideActions: vi.fn(),
+            provideContextMenuItems: vi.fn(),
         };
 
         mockProvider2 = {
-            provideActions: jest.fn(),
-            provideContextMenuItems: jest.fn(),
+            provideActions: vi.fn(),
+            provideContextMenuItems: vi.fn(),
         };
 
         // Create mock context
@@ -52,12 +52,12 @@ describe("TableProviderRegistry", () => {
         };
 
         // Setup logger mock
-        mockLogger = { error: jest.fn() };
-        (Logger.getImperativeLogger as jest.Mock).mockReturnValue(mockLogger);
+        mockLogger = { error: vi.fn() };
+        vi.spyOn(Logger, "getImperativeLogger").mockReturnValue(mockLogger as any);
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe("singleton pattern", () => {
@@ -150,7 +150,7 @@ describe("TableProviderRegistry", () => {
         });
 
         it("should do nothing if provider is not registered", () => {
-            const unregisteredProvider = { provideActions: jest.fn() };
+            const unregisteredProvider = { provideActions: vi.fn() };
 
             expect(() => {
                 registry.unregisterProvider("test-table", unregisteredProvider);
@@ -174,7 +174,7 @@ describe("TableProviderRegistry", () => {
                 command: "test-command",
                 callback: {
                     typ: "no-selection",
-                    fn: jest.fn(),
+                    fn: vi.fn(),
                 },
             },
         ];
@@ -185,13 +185,13 @@ describe("TableProviderRegistry", () => {
                 command: "test-command-2",
                 callback: {
                     typ: "single-row",
-                    fn: jest.fn(),
+                    fn: vi.fn(),
                 },
             },
         ];
 
         it("should return actions from a registered provider", async () => {
-            (mockProvider.provideActions as jest.Mock).mockResolvedValue(mockActions);
+            (mockProvider.provideActions as ReturnType<typeof vi.fn>).mockResolvedValue(mockActions);
             registry.registerProvider("test-table", mockProvider);
 
             const actions = await registry.getActions(mockContext);
@@ -201,8 +201,8 @@ describe("TableProviderRegistry", () => {
         });
 
         it("should return actions from multiple providers", async () => {
-            (mockProvider.provideActions as jest.Mock).mockResolvedValue(mockActions);
-            (mockProvider2.provideActions as jest.Mock).mockResolvedValue(mockActions2);
+            (mockProvider.provideActions as ReturnType<typeof vi.fn>).mockResolvedValue(mockActions);
+            (mockProvider2.provideActions as ReturnType<typeof vi.fn>).mockResolvedValue(mockActions2);
 
             registry.registerProvider("test-table", mockProvider);
             registry.registerProvider("test-table", mockProvider2);
@@ -222,8 +222,8 @@ describe("TableProviderRegistry", () => {
 
         it("should handle provider errors gracefully", async () => {
             const error = new Error("Provider error");
-            (mockProvider.provideActions as jest.Mock).mockRejectedValue(error);
-            (mockProvider2.provideActions as jest.Mock).mockResolvedValue(mockActions2);
+            (mockProvider.provideActions as ReturnType<typeof vi.fn>).mockRejectedValue(error);
+            (mockProvider2.provideActions as ReturnType<typeof vi.fn>).mockResolvedValue(mockActions2);
 
             registry.registerProvider("test-table", mockProvider);
             registry.registerProvider("test-table", mockProvider2);
@@ -235,7 +235,7 @@ describe("TableProviderRegistry", () => {
         });
 
         it("should handle synchronous provider responses", async () => {
-            (mockProvider.provideActions as jest.Mock).mockReturnValue(mockActions);
+            (mockProvider.provideActions as ReturnType<typeof vi.fn>).mockReturnValue(mockActions);
             registry.registerProvider("test-table", mockProvider);
 
             const actions = await registry.getActions(mockContext);
@@ -251,7 +251,7 @@ describe("TableProviderRegistry", () => {
                 command: "test-context-command",
                 callback: {
                     typ: "cell",
-                    fn: jest.fn(),
+                    fn: vi.fn(),
                 },
             },
         ];
@@ -262,13 +262,13 @@ describe("TableProviderRegistry", () => {
                 command: "test-context-command-2",
                 callback: {
                     typ: "multi-row",
-                    fn: jest.fn(),
+                    fn: vi.fn(),
                 },
             },
         ];
 
         it("should return context menu items from a registered provider", async () => {
-            (mockProvider.provideContextMenuItems as jest.Mock).mockResolvedValue(mockContextItems);
+            (mockProvider.provideContextMenuItems as ReturnType<typeof vi.fn>).mockResolvedValue(mockContextItems);
             registry.registerProvider("test-table", mockProvider);
 
             const items = await registry.getContextMenuItems(mockContext);
@@ -278,8 +278,8 @@ describe("TableProviderRegistry", () => {
         });
 
         it("should return context menu items from multiple providers", async () => {
-            (mockProvider.provideContextMenuItems as jest.Mock).mockResolvedValue(mockContextItems);
-            (mockProvider2.provideContextMenuItems as jest.Mock).mockResolvedValue(mockContextItems2);
+            (mockProvider.provideContextMenuItems as ReturnType<typeof vi.fn>).mockResolvedValue(mockContextItems);
+            (mockProvider2.provideContextMenuItems as ReturnType<typeof vi.fn>).mockResolvedValue(mockContextItems2);
 
             registry.registerProvider("test-table", mockProvider);
             registry.registerProvider("test-table", mockProvider2);
@@ -298,7 +298,7 @@ describe("TableProviderRegistry", () => {
         });
 
         it("should handle providers without provideContextMenuItems method", async () => {
-            const providerWithoutContextMenu = { provideActions: jest.fn() };
+            const providerWithoutContextMenu = { provideActions: vi.fn() };
             registry.registerProvider("test-table", providerWithoutContextMenu);
 
             const items = await registry.getContextMenuItems(mockContext);
@@ -308,8 +308,8 @@ describe("TableProviderRegistry", () => {
 
         it("should handle provider errors gracefully", async () => {
             const error = new Error("Context menu provider error");
-            (mockProvider.provideContextMenuItems as jest.Mock).mockRejectedValue(error);
-            (mockProvider2.provideContextMenuItems as jest.Mock).mockResolvedValue(mockContextItems2);
+            (mockProvider.provideContextMenuItems as ReturnType<typeof vi.fn>).mockRejectedValue(error);
+            (mockProvider2.provideContextMenuItems as ReturnType<typeof vi.fn>).mockResolvedValue(mockContextItems2);
 
             registry.registerProvider("test-table", mockProvider);
             registry.registerProvider("test-table", mockProvider2);
@@ -321,7 +321,7 @@ describe("TableProviderRegistry", () => {
         });
 
         it("should handle synchronous provider responses", async () => {
-            (mockProvider.provideContextMenuItems as jest.Mock).mockReturnValue(mockContextItems);
+            (mockProvider.provideContextMenuItems as ReturnType<typeof vi.fn>).mockReturnValue(mockContextItems);
             registry.registerProvider("test-table", mockProvider);
 
             const items = await registry.getContextMenuItems(mockContext);
@@ -382,35 +382,35 @@ describe("TableProviderRegistry", () => {
             };
 
             const downloadProvider = {
-                provideActions: jest.fn().mockResolvedValue([
+                provideActions: vi.fn().mockResolvedValue([
                     {
                         title: "Download",
                         command: "download-dataset",
-                        callback: { typ: "single-row", fn: jest.fn() },
+                        callback: { typ: "single-row", fn: vi.fn() },
                     },
                 ]),
-                provideContextMenuItems: jest.fn().mockResolvedValue([
+                provideContextMenuItems: vi.fn().mockResolvedValue([
                     {
                         title: "Download",
                         command: "download-dataset",
-                        callback: { typ: "single-row", fn: jest.fn() },
+                        callback: { typ: "single-row", fn: vi.fn() },
                     },
                 ]),
             };
 
             const deleteProvider = {
-                provideActions: jest.fn().mockResolvedValue([
+                provideActions: vi.fn().mockResolvedValue([
                     {
                         title: "Delete",
                         command: "delete-dataset",
-                        callback: { typ: "multi-row", fn: jest.fn() },
+                        callback: { typ: "multi-row", fn: vi.fn() },
                     },
                 ]),
-                provideContextMenuItems: jest.fn().mockResolvedValue([
+                provideContextMenuItems: vi.fn().mockResolvedValue([
                     {
                         title: "Delete",
                         command: "delete-dataset",
-                        callback: { typ: "multi-row", fn: jest.fn() },
+                        callback: { typ: "multi-row", fn: vi.fn() },
                     },
                 ]),
             };
