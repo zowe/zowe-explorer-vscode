@@ -11,6 +11,7 @@
 
 import { TableBuilder, TableMediator } from "../../../../../src/";
 import * as vscode from "vscode";
+import { vi } from "vitest";
 
 // TableMediator unit tests
 
@@ -21,7 +22,7 @@ function createGlobalMocks() {
         webview: { asWebviewUri: (uri) => uri.toString(), onDidReceiveMessage: (_fn) => {} },
     };
     // Mock `vscode.window.createWebviewPanel` to return a usable panel object
-    const createWebviewPanelMock = jest.spyOn(vscode.window, "createWebviewPanel").mockReturnValueOnce(mockPanel as any);
+    const createWebviewPanelMock = vi.spyOn(vscode.window, "createWebviewPanel").mockReturnValueOnce(mockPanel as any);
 
     const extensionContext = {
         extensionPath: "/a/b/c/zowe-explorer",

@@ -11,6 +11,7 @@
 
 import { window } from "vscode";
 import { Table, TableBuilder, TableMediator } from "../../../../../src";
+import { vi } from "vitest";
 
 // TableBuilder unit tests
 
@@ -20,7 +21,7 @@ function createGlobalMocks() {
         webview: { asWebviewUri: (uri) => uri.toString(), onDidReceiveMessage: (_fn) => {} },
     };
     // Mock `vscode.window.createWebviewPanel` to return a usable panel object
-    const createWebviewPanelMock = jest.spyOn(window, "createWebviewPanel").mockReturnValueOnce(mockPanel as any);
+    const createWebviewPanelMock = vi.spyOn(window, "createWebviewPanel").mockReturnValueOnce(mockPanel as any);
 
     return {
         createWebviewPanelMock,
@@ -175,7 +176,7 @@ describe("TableBuilder", () => {
                 ],
             } as Record<number | "all", Table.ContextMenuOption[]>;
 
-            const addCtxOptSpy = jest.spyOn(builder, "addContextOption");
+            const addCtxOptSpy = vi.spyOn(builder, "addContextOption");
             const builderCtxOpts = builder.contextOptions(ctxOpts);
             expect(builderCtxOpts).toBeInstanceOf(TableBuilder);
             expect(addCtxOptSpy).toHaveBeenCalledTimes(1);
@@ -322,7 +323,7 @@ describe("TableBuilder", () => {
                     },
                 ] as Table.Action[],
             };
-            const rowActionSpy = jest.spyOn(builder, "addRowAction");
+            const rowActionSpy = vi.spyOn(builder, "addRowAction");
             const builderAction = builder.rowActions(rowActions);
             expect(rowActionSpy).toHaveBeenCalledTimes(2);
             expect(builderAction).toBeInstanceOf(TableBuilder);
@@ -356,7 +357,7 @@ describe("TableBuilder", () => {
                 { a: 1, b: 2, c: 3, d: false, e: 5 },
                 { a: 3, b: 2, c: 1, d: true, e: 6 },
             ];
-            const addTableSpy = jest.spyOn(TableMediator.prototype, "addTable");
+            const addTableSpy = vi.spyOn(TableMediator.prototype, "addTable");
             const builder = new TableBuilder(globalMocks.context as any)
                 .addRows(newRows)
                 .addColumns([{ field: "a" }, { field: "b" }, { field: "c" }, { field: "d" }, { field: "e" }]);

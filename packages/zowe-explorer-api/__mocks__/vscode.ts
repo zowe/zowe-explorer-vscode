@@ -488,6 +488,16 @@ export namespace window {
         return undefined;
     }
 
+    export function createWebviewPanel(_viewType: string, _title: string, _showOptions: any, _options?: any): any {
+        return {
+            onDidDispose: vi.fn(),
+            webview: {
+                asWebviewUri: vi.fn((uri) => uri.toString()),
+                onDidReceiveMessage: vi.fn(),
+            },
+        };
+    }
+
     /**
      * Options to configure the behavior of the message.
      *
