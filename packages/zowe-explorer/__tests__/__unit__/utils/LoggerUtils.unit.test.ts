@@ -54,8 +54,6 @@ function createGlobalMocks(): { [key: string]: any } {
         },
         configurable: true,
     });
-    jest.spyOn(ZoweLogger as any, "getDate").mockReturnValue("2023/1/1");
-    jest.spyOn(ZoweLogger as any, "getTime").mockReturnValue("08:00:00");
     Object.defineProperty(core, "padLeft", { value: jest.fn(), configurable: true });
     Object.defineProperty(SettingsConfig, "setDirectValue", { value: newMocks.mockSetDirectValue, configurable: true });
 
