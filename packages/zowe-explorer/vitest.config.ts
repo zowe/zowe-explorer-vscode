@@ -18,15 +18,12 @@ import { defineProject } from "vitest/config";
 
 export default defineProject({
     test: {
-        name: "zowe-explorer-api",
+        name: "zowe-explorer",
         globals: true,
         environment: "node",
-        setupFiles: ["vitest.setup.ts"],
-        include: ["__tests__/**/*.(spec|test).ts"],
-        // Use forked processes (matches Jest's default worker model) so each
-        // test file gets its own Node process and module-level state cannot
-        // leak between files.
-        pool: "forks",
+        setupFiles: ["__tests__/__unit__/vitest.setup.ts"],
+        include: ["__tests__/__unit__/**/*.(spec|test).ts"],
+        exclude: ["**/node_modules/**", "**/__tests__/__integration__/**", "**/__tests__/__e2e__/**", "**/out/**"],
         testTimeout: 10000,
         hookTimeout: 10000,
         // Mirror Jest's defaults so legacy tests retain the same lifecycle

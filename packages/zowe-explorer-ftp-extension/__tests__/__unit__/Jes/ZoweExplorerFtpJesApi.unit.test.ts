@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 /* eslint-disable @typescript-eslint/unbound-method */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -21,19 +22,19 @@ import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
-jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
-jest.mock("../../../src/extension.ts");
+vi.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
+vi.mock("../../../src/extension.ts");
 
 describe("FtpJesApi", () => {
     let JesApi: FtpJesApi;
     beforeAll(() => {
         const profile: imperative.IProfileLoaded = { message: "", type: "zftp", failNotFound: false, profile: { host: "example.com", port: 22 } };
         JesApi = new FtpJesApi(profile);
-        JesApi.checkedProfile = jest.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
-        JesApi.ftpClient = jest.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
-        JesApi.releaseConnection = jest.fn();
-        globals.SESSION_MAP.get = jest.fn().mockReturnValue({ jesListConnection: { isConnected: () => true } });
-        globals.LOGGER.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");
+        JesApi.checkedProfile = vi.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
+        JesApi.ftpClient = vi.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
+        JesApi.releaseConnection = vi.fn();
+        globals.SESSION_MAP.get = vi.fn().mockReturnValue({ jesListConnection: { isConnected: () => true } });
+        globals.LOGGER.getExtensionName = vi.fn().mockReturnValue("Zowe Explorer FTP Extension");
     });
 
     it("should list jobs by owner and prefix.", async () => {
@@ -41,7 +42,7 @@ describe("FtpJesApi", () => {
             { jobId: "123", jobName: "JOB1" },
             { jobId: "234", jobName: "JOB2" },
         ];
-        JobUtils.listJobs = jest.fn().mockReturnValue(response);
+        JobUtils.listJobs = vi.fn().mockReturnValue(response);
         const mockParams = {
             owner: "IBMUSER",
             prefix: "*",
@@ -55,7 +56,7 @@ describe("FtpJesApi", () => {
 
     it("should get job by jobid.", async () => {
         const jobStatus = { jobId: "123", jobName: "JOB1" };
-        JobUtils.findJobByID = jest.fn().mockReturnValue(jobStatus);
+        JobUtils.findJobByID = vi.fn().mockReturnValue(jobStatus);
         const mockParams = {
             jobid: "123",
         };
@@ -68,7 +69,7 @@ describe("FtpJesApi", () => {
 
     it("should get spoolfiles.", async () => {
         const response = { jobId: "123", jobName: "JOB1", spoolFiles: [{ id: 1 }] };
-        JobUtils.findJobByID = jest.fn().mockReturnValue(response);
+        JobUtils.findJobByID = vi.fn().mockReturnValue(response);
         const mockParams = {
             jobname: "JOB1",
             jobid: "123",
@@ -82,10 +83,10 @@ describe("FtpJesApi", () => {
 
     it("should download spool content.", async () => {
         const jobDetails = { jobId: "123", jobName: "JOB1", spoolFiles: [{ id: 1 }, { id: 2 }] };
-        JobUtils.findJobByID = jest.fn().mockReturnValue(jobDetails);
-        JobUtils.getSpoolFiles = jest.fn().mockReturnValue(jobDetails.spoolFiles);
-        imperative.IO.createDirsSyncFromFilePath = jest.fn();
-        imperative.IO.writeFile = jest.fn();
+        JobUtils.findJobByID = vi.fn().mockReturnValue(jobDetails);
+        JobUtils.getSpoolFiles = vi.fn().mockReturnValue(jobDetails.spoolFiles);
+        imperative.IO.createDirsSyncFromFilePath = vi.fn();
+        imperative.IO.writeFile = vi.fn();
         const mockParams = {
             parms: { jobname: "JOB1", jobid: "123", outDir: "/a/b/c" },
         };
@@ -103,14 +104,14 @@ describe("FtpJesApi", () => {
         const mockParams = {
             parms: { jobname: "JOB1", jobid: "123", outDir: "/a/b/c" },
         };
-        JobUtils.findJobByID = jest.fn().mockReturnValue(jobDetails);
+        JobUtils.findJobByID = vi.fn().mockReturnValue(jobDetails);
 
         await expect(JesApi.downloadSpoolContent(mockParams.parms)).rejects.toThrow();
     });
 
     it("should get spool content by id.", async () => {
         const response = TestUtils.getSingleLineStream();
-        JobUtils.getSpoolFileContent = jest.fn().mockReturnValue(response);
+        JobUtils.getSpoolFileContent = vi.fn().mockReturnValue(response);
         const mockParams = {
             jobname: "JOB1",
             jobid: "123",
@@ -126,8 +127,8 @@ describe("FtpJesApi", () => {
     it("should submit job.", async () => {
         const response = { jobid: "123", jobname: "JOB1" };
         const content = TestUtils.getSingleLineStream();
-        DataSetUtils.downloadDataSet = jest.fn().mockReturnValue(content);
-        JobUtils.submitJob = jest.fn().mockReturnValue(response.jobid);
+        DataSetUtils.downloadDataSet = vi.fn().mockReturnValue(content);
+        JobUtils.submitJob = vi.fn().mockReturnValue(response.jobid);
         const mockParams = {
             jobDataSet: "IBMUSER.DS2(M1)",
         };
@@ -139,7 +140,7 @@ describe("FtpJesApi", () => {
     });
 
     it("should delete job.", async () => {
-        JobUtils.deleteJob = jest.fn();
+        JobUtils.deleteJob = vi.fn();
         const mockParams = {
             jobname: "JOB1",
             jobid: "123",
@@ -150,8 +151,8 @@ describe("FtpJesApi", () => {
     });
 
     it("should throw error when list jobs by owner and prefix failed.", async () => {
-        jest.spyOn(JobUtils, "listJobs").mockImplementationOnce(
-            jest.fn((_val) => {
+        vi.spyOn(JobUtils, "listJobs").mockImplementationOnce(
+            vi.fn((_val) => {
                 throw new Error("List jobs failed.");
             })
         );
@@ -161,8 +162,8 @@ describe("FtpJesApi", () => {
     });
 
     it("should throw error when get job failed.", async () => {
-        jest.spyOn(JobUtils, "findJobByID").mockImplementationOnce(
-            jest.fn((_val) => {
+        vi.spyOn(JobUtils, "findJobByID").mockImplementationOnce(
+            vi.fn((_val) => {
                 throw new Error("Get jobs failed.");
             })
         );
@@ -172,8 +173,8 @@ describe("FtpJesApi", () => {
     });
 
     it("should throw error when get spool files failed.", async () => {
-        jest.spyOn(JobUtils, "findJobByID").mockImplementationOnce(
-            jest.fn((_val) => {
+        vi.spyOn(JobUtils, "findJobByID").mockImplementationOnce(
+            vi.fn((_val) => {
                 throw new Error("Get jobs failed.");
             })
         );
@@ -183,8 +184,8 @@ describe("FtpJesApi", () => {
     });
 
     it("should throw error when download spool contents failed.", async () => {
-        jest.spyOn(JobUtils, "findJobByID").mockImplementationOnce(
-            jest.fn((_val) => {
+        vi.spyOn(JobUtils, "findJobByID").mockImplementationOnce(
+            vi.fn((_val) => {
                 throw new Error("Get jobs failed.");
             })
         );
@@ -197,8 +198,8 @@ describe("FtpJesApi", () => {
     });
 
     it("should throw error when get spool contents by id failed.", async () => {
-        jest.spyOn(JobUtils, "getSpoolFileContent").mockImplementationOnce(
-            jest.fn((_val) => {
+        vi.spyOn(JobUtils, "getSpoolFileContent").mockImplementationOnce(
+            vi.fn((_val) => {
                 throw new Error("Get spool file content failed.");
             })
         );
@@ -208,8 +209,8 @@ describe("FtpJesApi", () => {
     });
 
     it("should throw error when submit job failed", async () => {
-        jest.spyOn(JobUtils, "submitJob").mockImplementationOnce(
-            jest.fn((_val) => {
+        vi.spyOn(JobUtils, "submitJob").mockImplementationOnce(
+            vi.fn((_val) => {
                 throw new Error("Submit job failed.");
             })
         );
@@ -219,8 +220,8 @@ describe("FtpJesApi", () => {
     });
 
     it("should throw error when delete job failed", async () => {
-        jest.spyOn(JobUtils, "deleteJob").mockImplementationOnce(
-            jest.fn((_val) => {
+        vi.spyOn(JobUtils, "deleteJob").mockImplementationOnce(
+            vi.fn((_val) => {
                 throw new Error("Delete job failed.");
             })
         );

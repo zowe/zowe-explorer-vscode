@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
@@ -22,55 +23,55 @@ import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 
-jest.mock("../../../../src/tools/ZoweLocalStorage");
+vi.mock("../../../../src/tools/ZoweLocalStorage");
 
 async function createGlobalMocks() {
     const newMocks = {
-        mockRefresh: jest.fn(),
-        showOpenDialog: jest.fn(),
-        showInformationMessage: jest.fn(),
-        openTextDocument: jest.fn(),
-        mockRefreshElement: jest.fn(),
-        mockFindFavoritedNode: jest.fn(),
-        mockFindNonFavoritedNode: jest.fn(),
-        mockUploadFile: jest.fn(),
+        mockRefresh: vi.fn(),
+        showOpenDialog: vi.fn(),
+        showInformationMessage: vi.fn(),
+        openTextDocument: vi.fn(),
+        mockRefreshElement: vi.fn(),
+        mockFindFavoritedNode: vi.fn(),
+        mockFindNonFavoritedNode: vi.fn(),
+        mockUploadFile: vi.fn(),
         treeView: createTreeView(),
         session: createISession(),
         profileOne: createIProfile(),
-        showInputBox: jest.fn(),
-        showErrorMessage: jest.fn(),
-        showQuickPick: jest.fn(),
-        getConfiguration: jest.fn(),
-        existsSync: jest.fn(),
-        createSessCfgFromArgs: jest.fn(),
-        refreshAll: jest.fn(),
+        showInputBox: vi.fn(),
+        showErrorMessage: vi.fn(),
+        showQuickPick: vi.fn(),
+        getConfiguration: vi.fn(),
+        existsSync: vi.fn(),
+        createSessCfgFromArgs: vi.fn(),
+        refreshAll: vi.fn(),
         profilesForValidation: { status: "active", name: "fake" },
     };
 
     Object.defineProperty(vscode.window, "showOpenDialog", { value: newMocks.showOpenDialog, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", { value: newMocks.showInformationMessage, configurable: true });
     Object.defineProperty(vscode.workspace, "openTextDocument", { value: newMocks.openTextDocument, configurable: true });
-    Object.defineProperty(vscode, "ProgressLocation", { value: jest.fn(), configurable: true });
+    Object.defineProperty(vscode, "ProgressLocation", { value: vi.fn(), configurable: true });
     Object.defineProperty(vscode.window, "withProgress", {
-        value: jest.fn().mockImplementation((progLocation, callback) => {
+        value: vi.fn().mockImplementation((progLocation, callback) => {
             const progress = {
-                report: jest.fn(),
+                report: vi.fn(),
             };
             const token = {
                 isCancellationRequested: false,
-                onCancellationRequested: jest.fn(),
+                onCancellationRequested: vi.fn(),
             };
             return callback(progress, token);
         }),
         configurable: true,
     });
     Object.defineProperty(vscode.window, "createTreeView", {
-        value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+        value: vi.fn().mockReturnValue({ onDidCollapseElement: vi.fn() }),
         configurable: true,
     });
 
-    const putContents = jest.fn().mockResolvedValue({ success: true, commandResponse: "", apiResponse: {} });
-    ZoweExplorerApiRegister.getMvsApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getMvsApi>>().mockReturnValue({ putContents });
+    const putContents = vi.fn().mockResolvedValue({ success: true, commandResponse: "", apiResponse: {} });
+    ZoweExplorerApiRegister.getMvsApi = vi.fn<any, Parameters<typeof ZoweExplorerApiRegister.getMvsApi>>().mockReturnValue({ putContents });
 
     return newMocks;
 }
@@ -83,7 +84,7 @@ describe("mvsNodeActions", () => {
         return newMocks;
     }
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
     it("should call upload dialog and upload file from session node", async () => {
         const globalMocks = await createGlobalMocks();
@@ -171,13 +172,13 @@ describe("mvsNodeActions", () => {
         const fileUri = { fsPath: "/tmp/foo" };
         globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
         Object.defineProperty(vscode.window, "withProgress", {
-            value: jest.fn().mockImplementation((progLocation, callback) => {
+            value: vi.fn().mockImplementation((progLocation, callback) => {
                 const progress = {
-                    report: jest.fn(),
+                    report: vi.fn(),
                 };
                 const token = {
                     isCancellationRequested: true,
-                    onCancellationRequested: jest.fn(),
+                    onCancellationRequested: vi.fn(),
                 };
                 return callback(progress, token);
             }),
@@ -204,15 +205,15 @@ describe("mvsNodeActions", () => {
         const fileUri = { fsPath: "/tmp/foo" };
         globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
         const mockMvsApi2 = await ZoweExplorerApiRegister.getMvsApi(globalMocks.profileOne);
-        const getMvsApiMock2 = jest.fn();
+        const getMvsApiMock2 = vi.fn();
         getMvsApiMock2.mockReturnValue(mockMvsApi2);
         ZoweExplorerApiRegister.getMvsApi = getMvsApiMock2.bind(ZoweExplorerApiRegister);
-        jest.spyOn(mockMvsApi2, "putContents").mockResolvedValue({
+        vi.spyOn(mockMvsApi2, "putContents").mockResolvedValue({
             success: false,
             commandResponse: "",
             apiResponse: {},
         });
-        const errHandlerSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
+        const errHandlerSpy = vi.spyOn(AuthUtils, "errorHandling").mockImplementation((() => undefined) as any);
         await DatasetActions.uploadDialog(node, testTree);
 
         expect(errHandlerSpy).toHaveBeenCalled();
@@ -231,12 +232,12 @@ describe("mvsNodeActions", () => {
         const fileUri = { fsPath: "/tmp/foo" };
         globalMocks.showOpenDialog.mockReturnValueOnce([fileUri]);
         const mockMvsApi2 = await ZoweExplorerApiRegister.getMvsApi(globalMocks.profileOne);
-        const getMvsApiMock2 = jest.fn();
+        const getMvsApiMock2 = vi.fn();
         getMvsApiMock2.mockReturnValue(mockMvsApi2);
         ZoweExplorerApiRegister.getMvsApi = getMvsApiMock2.bind(ZoweExplorerApiRegister);
         const testError = new Error("putContents failed");
-        jest.spyOn(mockMvsApi2, "putContents").mockRejectedValue(testError);
-        const errHandlerSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
+        vi.spyOn(mockMvsApi2, "putContents").mockRejectedValue(testError);
+        const errHandlerSpy = vi.spyOn(AuthUtils, "errorHandling").mockImplementation((() => undefined) as any);
         await DatasetActions.uploadDialog(node, testTree);
         expect(errHandlerSpy).toHaveBeenCalledWith(testError, { apiType: ZoweExplorerApiType.Mvs, profile: globalMocks.profileOne });
     });
@@ -245,9 +246,9 @@ describe("mvsNodeActions", () => {
 describe("Dataset Actions - upload with encoding", () => {
     function createBlockMocks(globalMocks) {
         Object.defineProperty(vscode.window, "withProgress", {
-            value: jest.fn().mockImplementation((progLocation, callback) => {
-                const progress = { report: jest.fn() };
-                const token = { isCancellationRequested: false, onCancellationRequested: jest.fn() };
+            value: vi.fn().mockImplementation((progLocation, callback) => {
+                const progress = { report: vi.fn() };
+                const token = { isCancellationRequested: false, onCancellationRequested: vi.fn() };
                 return callback(progress, token);
             }),
             configurable: true,
@@ -268,19 +269,19 @@ describe("Dataset Actions - upload with encoding", () => {
     }
 
     afterEach(() => {
-        jest.resetAllMocks();
-        jest.restoreAllMocks();
-        jest.clearAllMocks();
+        vi.resetAllMocks();
+        vi.restoreAllMocks();
+        vi.clearAllMocks();
     });
 
     it("uploadDialogWithEncoding calls uploadFileWithEncoding with user codepage", async () => {
         const globalMocks = await createGlobalMocks();
         const { node } = createBlockMocks(globalMocks);
         const dsTree = createDatasetTree(node, globalMocks.treeView);
-        jest.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "other", codepage: "IBM-1047" } as any);
+        vi.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "other", codepage: "IBM-1047" } as any);
         const fileUri = { fsPath: "/tmp/foo.txt" } as any;
         globalMocks.showOpenDialog.mockReturnValue([fileUri]);
-        const uploadWithEncSpy = jest.spyOn(DatasetActions, "uploadFileWithEncoding").mockResolvedValue({ success: true } as any);
+        const uploadWithEncSpy = vi.spyOn(DatasetActions, "uploadFileWithEncoding").mockResolvedValue({ success: true } as any);
 
         await DatasetActions.uploadDialogWithEncoding(node as any, dsTree as any);
 
@@ -291,8 +292,8 @@ describe("Dataset Actions - upload with encoding", () => {
     it("uploadFileWithEncoding maps binary and codepage options correctly", async () => {
         const globalMocks = await createGlobalMocks();
         const { node } = createBlockMocks(globalMocks);
-        const putContents = jest.fn().mockResolvedValue({ success: true });
-        ZoweExplorerApiRegister.getMvsApi = jest.fn<any, Parameters<typeof ZoweExplorerApiRegister.getMvsApi>>().mockReturnValue({ putContents });
+        const putContents = vi.fn().mockResolvedValue({ success: true });
+        ZoweExplorerApiRegister.getMvsApi = vi.fn<any, Parameters<typeof ZoweExplorerApiRegister.getMvsApi>>().mockReturnValue({ putContents });
 
         await DatasetActions.uploadFileWithEncoding(node as any, "/tmp/a.txt", { kind: "binary" } as any);
         expect(putContents).toHaveBeenLastCalledWith("/tmp/a.txt", "PDS.DATA", expect.objectContaining({ binary: true }));
@@ -303,30 +304,30 @@ describe("Dataset Actions - upload with encoding", () => {
 });
 
 describe("dsNodeActions", () => {
-    const mockRemoveFavorite = jest.fn();
-    const mockcreateZoweSession = jest.fn();
-    const mockaddSearchHistory = jest.fn();
-    const mockgetSearchHistory = jest.fn();
-    const mockRefresh = jest.fn();
-    const mockRefreshElement = jest.fn();
-    const mockGetChildren = jest.fn();
-    const mockGetTreeView = jest.fn();
-    const mockPattern = jest.fn();
-    const mockRenameFavorite = jest.fn();
-    const mockUpdateFavorites = jest.fn();
-    const mockRenameNode = jest.fn();
-    const mockFindFavoritedNode = jest.fn();
-    const mockFindNonFavoritedNode = jest.fn();
-    const mockGetProfileName = jest.fn();
-    const mockGetSession = jest.fn();
-    const mockGetProfiles = jest.fn();
-    const mockLoadNamedProfile = jest.fn();
+    const mockRemoveFavorite = vi.fn();
+    const mockcreateZoweSession = vi.fn();
+    const mockaddSearchHistory = vi.fn();
+    const mockgetSearchHistory = vi.fn();
+    const mockRefresh = vi.fn();
+    const mockRefreshElement = vi.fn();
+    const mockGetChildren = vi.fn();
+    const mockGetTreeView = vi.fn();
+    const mockPattern = vi.fn();
+    const mockRenameFavorite = vi.fn();
+    const mockUpdateFavorites = vi.fn();
+    const mockRenameNode = vi.fn();
+    const mockFindFavoritedNode = vi.fn();
+    const mockFindNonFavoritedNode = vi.fn();
+    const mockGetProfileName = vi.fn();
+    const mockGetSession = vi.fn();
+    const mockGetProfiles = vi.fn();
+    const mockLoadNamedProfile = vi.fn();
 
     function getDSTree() {
         const dsNode1 = getDSNode();
-        const DatasetTree = jest.fn().mockImplementation(() => {
+        const DatasetTree = vi.fn().mockImplementation(() => {
             return {
-                log: jest.fn(),
+                log: vi.fn(),
                 mSessionNodes: [],
                 mFavorites: [],
                 addSession: mockcreateZoweSession,
@@ -379,21 +380,21 @@ describe("dsNodeActions", () => {
         const globalMocks = await createGlobalMocks();
         mockLoadNamedProfile.mockReturnValue(globalMocks.profileOne);
         Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
+            value: vi.fn(() => {
                 return {
                     allProfiles: [{ name: "firstName" }, { name: "secondName" }],
                     defaultProfile: { name: "firstName" },
                     type: "zosmf",
-                    enableValidationContext: jest.fn(),
+                    enableValidationContext: vi.fn(),
                     loadNamedProfile: mockLoadNamedProfile,
-                    checkCurrentProfile: jest.fn(() => {
+                    checkCurrentProfile: vi.fn(() => {
                         return globalMocks.profilesForValidation;
                     }),
-                    getBaseProfile: jest.fn(() => {
+                    getBaseProfile: vi.fn(() => {
                         return globalMocks.profileOne;
                     }),
                     profilesForValidation: [],
-                    validateProfiles: jest.fn(),
+                    validateProfiles: vi.fn(),
                 };
             }),
         });
@@ -404,45 +405,45 @@ describe("dsNodeActions", () => {
         Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick });
         Object.defineProperty(vscode.window, "showInformationMessage", { value: globalMocks.showInformationMessage });
         // Object.defineProperty(, "createSessCfgFromArgs", { value: globalMocks.createSessCfgFromArgs });
-        Object.defineProperty(SharedActions, "refreshAll", { value: jest.fn() });
+        Object.defineProperty(SharedActions, "refreshAll", { value: vi.fn() });
     };
     const testDSTree = getDSTree();
 
     afterEach(() => {
-        jest.resetAllMocks();
-        jest.restoreAllMocks();
-        jest.clearAllMocks();
+        vi.resetAllMocks();
+        vi.restoreAllMocks();
+        vi.clearAllMocks();
     });
     describe("refreshAll", () => {
         it("Testing that refreshAllJobs is executed successfully", async () => {
             const globalMocks = await createGlobalMocks();
             await createBlockMocks();
             Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn(() => {
+                value: vi.fn(() => {
                     return {
                         getDefaultProfile: mockLoadNamedProfile,
                         loadNamedProfile: mockLoadNamedProfile,
                         usesSecurity: true,
-                        enableValidationContext: jest.fn(),
-                        getProfiles: jest.fn(() => {
+                        enableValidationContext: vi.fn(),
+                        getProfiles: vi.fn(() => {
                             return [
                                 { name: globalMocks.profileOne.name, profile: globalMocks.profileOne },
                                 { name: globalMocks.profileOne.name, profile: globalMocks.profileOne },
                             ];
                         }),
-                        getBaseProfile: jest.fn(() => {
+                        getBaseProfile: vi.fn(() => {
                             return globalMocks.profileOne;
                         }),
-                        refresh: jest.fn(),
-                        checkCurrentProfile: jest.fn(() => {
+                        refresh: vi.fn(),
+                        checkCurrentProfile: vi.fn(() => {
                             return globalMocks.profilesForValidation;
                         }),
                         profilesForValidation: [],
-                        validateProfiles: jest.fn(),
+                        validateProfiles: vi.fn(),
                     };
                 }),
             });
-            const spy = jest.spyOn(SharedActions, "refreshAll");
+            const spy = vi.spyOn(SharedActions, "refreshAll");
             await SharedActions.refreshAll(testDSTree);
             expect(spy).toHaveBeenCalledTimes(1);
         });

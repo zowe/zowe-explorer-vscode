@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import { DirEntry, FileEntry, FilterEntry, ProfilesCache, ZoweScheme, imperative } from "../../../../src";
 import { MockedProperty } from "../../../../__mocks__/mockUtils";
@@ -42,7 +43,7 @@ describe("getInfoForUri", () => {
             type: "zosmf",
             profile: { port: 443 },
         };
-        jest.spyOn(profilesCache, "loadNamedProfile").mockReturnValue(fakeProfile as imperative.IProfileLoaded);
+        vi.spyOn(profilesCache, "loadNamedProfile").mockReturnValue(fakeProfile as imperative.IProfileLoaded);
         expect(FsAbstractUtils.getInfoForUri(fakeUri, profilesCache)).toStrictEqual({
             isRoot: false,
             slashAfterProfilePos: fakeUri.path.indexOf("/", 1),

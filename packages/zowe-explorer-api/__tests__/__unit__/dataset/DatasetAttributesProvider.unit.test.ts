@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import { AttributeEntryInfo, DataSetAttributesProvider } from "../../../src";
 import { ExtenderAttr, FailExtenderAttr } from "../../../__mocks__/mockCreators/shared";
@@ -19,7 +20,7 @@ describe("DatasetAttributeProvider", () => {
     const dsContext = { dsName: "TEST", profile: {} as IProfileLoaded };
 
     const mockAttr = (title: string) => ({
-        fetchAttributes: jest.fn().mockReturnValue([{ title, keys: new Map() }]),
+        fetchAttributes: vi.fn().mockReturnValue([{ title, keys: new Map() }]),
     });
 
     const mockedReturnValue = [
@@ -38,7 +39,7 @@ describe("DatasetAttributeProvider", () => {
     beforeEach(() => {
         provider = DataSetAttributesProvider.getInstance();
         provider.providers.length = 0;
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("Should be able to register a DataSetAttributeProvider", () => {
@@ -53,7 +54,7 @@ describe("DatasetAttributeProvider", () => {
     });
 
     it("Should be able to fetchAll implementations from DataSetAttributeProviders", async () => {
-        jest.spyOn(ExtenderAttr.prototype, "fetchAttributes").mockImplementationOnce(() => mockedReturnValue);
+        vi.spyOn(ExtenderAttr.prototype, "fetchAttributes").mockImplementationOnce(() => mockedReturnValue);
         provider.register(new ExtenderAttr());
 
         const fetchAll = await provider.fetchAll(dsContext);
@@ -78,10 +79,10 @@ describe("DatasetAttributeProvider", () => {
         provider.register(new ExtenderAttr());
         provider.register(new FailExtenderAttr());
 
-        jest.spyOn(ExtenderAttr.prototype, "fetchAttributes").mockImplementationOnce(() => mockedReturnValue);
+        vi.spyOn(ExtenderAttr.prototype, "fetchAttributes").mockImplementationOnce(() => mockedReturnValue);
 
-        const mockLogger = { error: jest.fn() };
-        jest.spyOn(Logger, "getAppLogger").mockReturnValue(mockLogger as any);
+        const mockLogger = { error: vi.fn() };
+        vi.spyOn(Logger, "getAppLogger").mockReturnValue(mockLogger as any);
 
         const fetchAll = await provider.fetchAll(dsContext);
 
@@ -108,7 +109,7 @@ describe("DatasetAttributeProvider", () => {
         };
 
         const mockExtender = {
-            fetchAttributes: jest.fn().mockImplementation((context) => {
+            fetchAttributes: vi.fn().mockImplementation((context) => {
                 // Verify that attributes are passed to the extender
                 expect(context.attributes).toBeDefined();
                 expect(context.attributes?.dsname).toBe("TEST.DATASET");

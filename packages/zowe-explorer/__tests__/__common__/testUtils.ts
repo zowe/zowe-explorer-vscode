@@ -9,6 +9,8 @@
  *
  */
 
+import { MockInstance, vi } from "vitest";
+
 export interface ITestContext {
     context: { subscriptions: any[] } | any;
     value: any;
@@ -17,7 +19,7 @@ export interface ITestContext {
 }
 
 export interface IJestMock {
-    spy: jest.SpyInstance;
+    spy: MockInstance;
     arg: any[];
     ret?: any;
 }
@@ -29,7 +31,7 @@ export interface IJestIt {
 }
 
 function spyOnSubscription(sub: IJestIt): void {
-    const spyMap = new Map<jest.SpyInstance, IJestMock[]>();
+    const spyMap = new Map<MockInstance, IJestMock[]>();
 
     sub.mock.forEach((mock) => {
         if (!spyMap.has(mock.spy)) {
@@ -44,7 +46,7 @@ function spyOnSubscription(sub: IJestIt): void {
             if (mock.ret != null) {
                 spy.mockReturnValueOnce(mock.ret);
             } else {
-                spy.mockImplementationOnce(jest.fn());
+                spy.mockImplementationOnce(vi.fn());
             }
         });
     });

@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import * as sharedMock from "../../__mocks__/mockCreators/shared";
@@ -21,19 +22,19 @@ import { createUSSNode, createUSSSessionNode } from "../../__mocks__/mockCreator
 import { LocalFileManagement } from "../../../src/management/LocalFileManagement";
 import { createISession, createIProfile } from "../../__mocks__/mockCreators/shared";
 
-jest.mock("vscode");
-jest.mock("../../../src/tools/ZoweLocalStorage");
+vi.mock("vscode");
+vi.mock("../../../src/tools/ZoweLocalStorage");
 
 describe("LocalFileManagement unit tests", () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     function createGlobalMocks() {
         const profile = sharedMock.createValidIProfile();
         const session = sharedMock.createISession();
-        jest.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation();
-        jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation();
+        vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+        vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
         const dsSession = dsMock.createDatasetSessionNode(session, profile);
         const ussSession = createUSSSessionNode(session, profile);
 
@@ -53,8 +54,8 @@ describe("LocalFileManagement unit tests", () => {
                 ],
             },
             mockFileInfo: { path: "/u/fake/path/file.txt" },
-            warnLogSpy: jest.spyOn(ZoweLogger, "warn").mockImplementation(),
-            executeCommand: jest.spyOn(vscode.commands, "executeCommand").mockImplementation(),
+            warnLogSpy: vi.spyOn(ZoweLogger, "warn").mockImplementation((() => undefined) as any),
+            executeCommand: vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any),
         };
     }
 
@@ -96,9 +97,9 @@ describe("LocalFileManagement unit tests", () => {
             const node2 = createUSSNode(createISession(), createIProfile());
             node2.label = "node2";
             LocalFileManagement.filesToCompare = [createUSSNode(createISession(), createIProfile())];
-            const setCompareSelectionSpy = jest.spyOn(LocalFileManagement, "setCompareSelection");
-            const resetSpy = jest.spyOn(LocalFileManagement, "resetCompareSelection");
-            const traceSpy = jest.spyOn(ZoweLogger, "trace");
+            const setCompareSelectionSpy = vi.spyOn(LocalFileManagement, "setCompareSelection");
+            const resetSpy = vi.spyOn(LocalFileManagement, "resetCompareSelection");
+            const traceSpy = vi.spyOn(ZoweLogger, "trace");
             LocalFileManagement.selectFileForCompare(node2);
             expect(resetSpy).toHaveBeenCalled();
             expect(setCompareSelectionSpy).toHaveBeenCalledWith(true);
@@ -110,7 +111,7 @@ describe("LocalFileManagement unit tests", () => {
     describe("resetCompareSelection", () => {
         it("resets the compare selection and calls setCompareSelection", () => {
             const node = createUSSNode(createISession(), createIProfile());
-            const setCompareSelectionSpy = jest.spyOn(LocalFileManagement, "setCompareSelection");
+            const setCompareSelectionSpy = vi.spyOn(LocalFileManagement, "setCompareSelection");
             LocalFileManagement.filesToCompare = [node];
             LocalFileManagement.resetCompareSelection();
             expect(setCompareSelectionSpy).toHaveBeenCalled();

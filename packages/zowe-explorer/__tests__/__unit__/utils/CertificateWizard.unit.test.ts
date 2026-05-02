@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import { Gui } from "@zowe/zowe-explorer-api";
 import * as fs from "fs";
@@ -15,7 +16,7 @@ import { CertificateWizard } from "../../../src/utils/CertificateWizard";
 import { ExtensionContext, Uri } from "vscode";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 
-jest.mock("fs");
+vi.mock("fs");
 describe("CertificateWizard", () => {
     const context = { extensionPath: "some/fake/ext/path" } as unknown as ExtensionContext;
     it("handles the promptCert message", async () => {
@@ -23,9 +24,9 @@ describe("CertificateWizard", () => {
             cert: "/a/b/cert.pem",
             certKey: "/a/b/cert.key.pem",
         });
-        const postMessageMock = jest.spyOn(certWizard.panel.webview, "postMessage").mockImplementation();
+        const postMessageMock = vi.spyOn(certWizard.panel.webview, "postMessage").mockImplementation((() => undefined) as any);
         const uri = Uri.file("/a/b/cert.pem");
-        const showOpenDialogMock = jest.spyOn(Gui, "showOpenDialog").mockResolvedValueOnce([uri]);
+        const showOpenDialogMock = vi.spyOn(Gui, "showOpenDialog").mockResolvedValueOnce([uri]);
         await (certWizard as any).onDidReceiveMessage({
             command: "promptCert",
         });
@@ -43,9 +44,9 @@ describe("CertificateWizard", () => {
             cert: "/a/b/cert.pem",
             certKey: "/a/b/cert.key.pem",
         });
-        const postMessageMock = jest.spyOn(certWizard.panel.webview, "postMessage").mockImplementation();
+        const postMessageMock = vi.spyOn(certWizard.panel.webview, "postMessage").mockImplementation((() => undefined) as any);
         const uri = Uri.file("/a/b/cert.key.pem");
-        const showOpenDialogMock = jest.spyOn(Gui, "showOpenDialog").mockResolvedValueOnce([uri]);
+        const showOpenDialogMock = vi.spyOn(Gui, "showOpenDialog").mockResolvedValueOnce([uri]);
         await (certWizard as any).onDidReceiveMessage({
             command: "promptCertKey",
         });
@@ -63,7 +64,7 @@ describe("CertificateWizard", () => {
             cert: "/a/b/cert.pem",
             certKey: "/a/b/cert.key.pem",
         });
-        const resolveMock = jest.spyOn(certWizard.userSubmission, "resolve").mockImplementation();
+        const resolveMock = vi.spyOn(certWizard.userSubmission, "resolve").mockImplementation((() => undefined) as any);
         (certWizard as any).opts = {
             cert: "/a/b/cert.pem",
             certKey: "/a/b/cert.key.pem",
@@ -79,7 +80,7 @@ describe("CertificateWizard", () => {
             cert: "/a/b/cert.pem",
             certKey: "/a/b/cert.key.pem",
         });
-        const postMessageMock = jest.spyOn(certWizard.panel.webview, "postMessage").mockImplementation();
+        const postMessageMock = vi.spyOn(certWizard.panel.webview, "postMessage").mockImplementation((() => undefined) as any);
         await (certWizard as any).onDidReceiveMessage({
             command: "ready",
         });
@@ -96,9 +97,9 @@ describe("CertificateWizard", () => {
             certKey: "/a/b/cert.key.pem",
         });
         Object.defineProperty(certWizard.panel, "dispose", {
-            value: jest.fn(),
+            value: vi.fn(),
         });
-        const traceMock = jest.spyOn(ZoweLogger, "trace").mockImplementation();
+        const traceMock = vi.spyOn(ZoweLogger, "trace").mockImplementation((() => undefined) as any);
         await (certWizard as any).onDidReceiveMessage({
             command: "close",
         });
@@ -106,7 +107,7 @@ describe("CertificateWizard", () => {
     });
 
     it("handles the get_localization message", async () => {
-        const spyReadFile = jest.fn((path, encoding, callback) => {
+        const spyReadFile = vi.fn((path, encoding, callback) => {
             callback(null, "file contents");
         });
         Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
@@ -114,7 +115,7 @@ describe("CertificateWizard", () => {
             cert: "/a/b/cert.pem",
             certKey: "/a/b/cert.key.pem",
         });
-        const postMessageMock = jest.spyOn(certWizard.panel.webview, "postMessage").mockImplementation();
+        const postMessageMock = vi.spyOn(certWizard.panel.webview, "postMessage").mockImplementation((() => undefined) as any);
         (certWizard as any).onDidReceiveMessage({
             command: "GET_LOCALIZATION",
         });
@@ -123,7 +124,7 @@ describe("CertificateWizard", () => {
     });
 
     it("if this.panel doesn't exist in GET_LOCALIZATION", async () => {
-        const spyReadFile = jest.fn((path, encoding, callback) => {
+        const spyReadFile = vi.fn((path, encoding, callback) => {
             callback(null, "file contents");
         });
         Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
@@ -139,7 +140,7 @@ describe("CertificateWizard", () => {
     });
 
     it("if read file throwing an error in GET_LOCALIZATION", async () => {
-        const spyReadFile = jest.fn((path, encoding, callback) => {
+        const spyReadFile = vi.fn((path, encoding, callback) => {
             callback("error", "file contents");
         });
         Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });

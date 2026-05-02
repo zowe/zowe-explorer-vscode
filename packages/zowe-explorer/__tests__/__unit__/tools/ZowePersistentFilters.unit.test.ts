@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
@@ -15,7 +16,7 @@ import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { ZowePersistentFilters } from "../../../src/tools/ZowePersistentFilters";
 
 describe("PersistentFilters Unit Test", () => {
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: vi.fn(), configurable: true });
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({
@@ -39,7 +40,7 @@ describe("PersistentFilters Unit Test", () => {
                     },
                 ],
             }),
-            update: jest.fn(),
+            update: vi.fn(),
             keys: () => [],
         },
         configurable: true,

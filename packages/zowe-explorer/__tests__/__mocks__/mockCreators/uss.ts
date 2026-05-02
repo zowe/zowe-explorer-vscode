@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import { Constants } from "../../../src/configuration/Constants";
@@ -22,29 +23,29 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     const newTree = new USSTree();
     newTree.mSessionNodes = [...sessionNodes];
     newTree.mFavorites = favoriteNodes;
-    newTree.addSession = jest.fn();
-    newTree.getSessions = jest.fn().mockReturnValue([]);
-    newTree.getFavorites = jest.fn();
-    newTree.getSearchHistory = jest.fn();
-    newTree.removeSearchHistory = jest.fn();
-    newTree.resetSearchHistory = jest.fn();
-    newTree.resetFileHistory = jest.fn();
-    newTree.refresh = jest.fn();
-    newTree.nodeDataChanged = jest.fn();
-    newTree.checkCurrentProfile = jest.fn();
-    newTree.refreshElement = jest.fn();
-    newTree.getChildren = jest.fn();
-    newTree.addFavorite = jest.fn().mockImplementation((newFavorite) => newTree.mFavorites.push(newFavorite));
-    newTree.removeFavorite = jest.fn().mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, newTree.mFavorites));
-    newTree.openItemFromPath = jest.fn();
-    newTree.deleteSession = jest.fn().mockImplementation((badSession) => removeNodeFromArray(badSession, newTree.mSessionNodes));
-    newTree.getAllLoadedItems = jest.fn();
-    newTree.getTreeView = jest.fn().mockImplementation(() => treeView);
-    newTree.getTreeItem = jest.fn().mockImplementation(() => new vscode.TreeItem("test"));
-    newTree.getTreeType = jest.fn().mockImplementation(() => PersistenceSchemaEnum.USS);
-    newTree.setItem = jest.fn();
-    newTree.addSearchHistory = jest.fn();
-    newTree.getFileHistory = jest.fn();
+    newTree.addSession = vi.fn();
+    newTree.getSessions = vi.fn().mockReturnValue([]);
+    newTree.getFavorites = vi.fn();
+    newTree.getSearchHistory = vi.fn();
+    newTree.removeSearchHistory = vi.fn();
+    newTree.resetSearchHistory = vi.fn();
+    newTree.resetFileHistory = vi.fn();
+    newTree.refresh = vi.fn();
+    newTree.nodeDataChanged = vi.fn();
+    newTree.checkCurrentProfile = vi.fn();
+    newTree.refreshElement = vi.fn();
+    newTree.getChildren = vi.fn();
+    newTree.addFavorite = vi.fn().mockImplementation((newFavorite) => newTree.mFavorites.push(newFavorite));
+    newTree.removeFavorite = vi.fn().mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, newTree.mFavorites));
+    newTree.openItemFromPath = vi.fn();
+    newTree.deleteSession = vi.fn().mockImplementation((badSession) => removeNodeFromArray(badSession, newTree.mSessionNodes));
+    newTree.getAllLoadedItems = vi.fn();
+    newTree.getTreeView = vi.fn().mockImplementation(() => treeView);
+    newTree.getTreeItem = vi.fn().mockImplementation(() => new vscode.TreeItem("test"));
+    newTree.getTreeType = vi.fn().mockImplementation(() => PersistenceSchemaEnum.USS);
+    newTree.setItem = vi.fn();
+    newTree.addSearchHistory = vi.fn();
+    newTree.getFileHistory = vi.fn();
 
     return newTree;
 }

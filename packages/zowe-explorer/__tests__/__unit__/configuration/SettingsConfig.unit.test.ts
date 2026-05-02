@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { MockInstance, vi } from "vitest";
 
 import * as vscode from "vscode";
 import { Gui } from "@zowe/zowe-explorer-api";
@@ -18,7 +19,7 @@ import { Definitions } from "../../../src/configuration/Definitions";
 
 describe("SettingsConfig Unit Tests", () => {
     beforeEach(() => {
-        Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "trace", { value: vi.fn(), configurable: true });
         Object.defineProperty(ZoweLocalStorage, "globalState", {
             value: {
                 get: () => ({
@@ -30,33 +31,33 @@ describe("SettingsConfig Unit Tests", () => {
                     fileHistory: [],
                     templates: [],
                 }),
-                update: jest.fn(),
+                update: vi.fn(),
                 keys: () => [],
             },
             configurable: true,
         });
     });
     afterEach(() => {
-        jest.clearAllMocks();
-        jest.resetAllMocks();
-        jest.restoreAllMocks();
+        vi.clearAllMocks();
+        vi.resetAllMocks();
+        vi.restoreAllMocks();
     });
     describe("function migrateToLocalStorage", () => {
         it("should successfully migrate to local storage old VS Code persistent settings", async () => {
-            jest.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
+            vi.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
                 inspect: () => ({ globalValue: "test" }),
             });
-            const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
-            const promptReloadSpy = jest.spyOn(SettingsConfig as any, "promptReload");
+            const setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue");
+            const promptReloadSpy = vi.spyOn(SettingsConfig as any, "promptReload");
             await (SettingsConfig as any).migrateToLocalStorage();
             expect(setValueSpy).toHaveBeenCalledTimes(8);
             expect(promptReloadSpy).toHaveBeenCalledTimes(1);
         });
         it("should successfully migrate to local storage and update data set templates to new setting", async () => {
-            jest.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
+            vi.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
                 inspect: () => ({ globalValue: "test" }),
             });
-            jest.spyOn(SettingsConfig as any, "getDirectValue").mockReturnValue({
+            vi.spyOn(SettingsConfig as any, "getDirectValue").mockReturnValue({
                 get: () => ({
                     persistence: true,
                     favorites: [],
@@ -79,9 +80,9 @@ describe("SettingsConfig Unit Tests", () => {
                     ],
                 }),
             });
-            const templateSpy = jest.spyOn(SettingsConfig, "setMigratedDsTemplates");
-            const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
-            const promptReloadSpy = jest.spyOn(SettingsConfig as any, "promptReload");
+            const templateSpy = vi.spyOn(SettingsConfig, "setMigratedDsTemplates");
+            const setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue");
+            const promptReloadSpy = vi.spyOn(SettingsConfig as any, "promptReload");
             await (SettingsConfig as any).migrateToLocalStorage();
             expect(templateSpy).toHaveBeenCalledTimes(1);
             expect(setValueSpy).toHaveBeenCalledTimes(8);
@@ -93,8 +94,8 @@ describe("SettingsConfig Unit Tests", () => {
         it("should return false if setting is undefined or empty", () => {
             const falseCases = [undefined, {}];
             for (const retVal of falseCases) {
-                jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce({
-                    inspect: jest.fn().mockReturnValue(retVal),
+                vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce({
+                    inspect: vi.fn().mockReturnValue(retVal),
                 } as any);
                 expect(SettingsConfig.isConfigSettingSetByUser("zowe.setting")).toBe(false);
             }
@@ -110,8 +111,8 @@ describe("SettingsConfig Unit Tests", () => {
                 { workspaceFolderLanguageValue: "f" },
             ];
             for (const retVal of trueCases) {
-                jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce({
-                    inspect: jest.fn().mockReturnValue(retVal),
+                vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce({
+                    inspect: vi.fn().mockReturnValue(retVal),
                 } as any);
                 expect(SettingsConfig.isConfigSettingSetByUser("zowe.setting")).toBe(true);
             }
@@ -120,8 +121,8 @@ describe("SettingsConfig Unit Tests", () => {
 
     describe("function promptReload", () => {
         it("should trigger a reload when prompted", async () => {
-            jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Reload Window");
-            const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
+            vi.spyOn(Gui, "showMessage").mockResolvedValueOnce("Reload Window");
+            const executeCommandSpy = vi.spyOn(vscode.commands, "executeCommand");
             await expect((SettingsConfig as any).promptReload()).resolves.toEqual(undefined);
             expect(executeCommandSpy).toHaveBeenCalledWith("workbench.action.reloadWindow");
         });
@@ -130,14 +131,14 @@ describe("SettingsConfig Unit Tests", () => {
     describe("function standardizeGlobalSettings", () => {
         it("should standardize the global settings", async () => {
             const privateSettingsConfig = SettingsConfig as any;
-            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
                 inspect: () => ({
                     globalValue: "test",
                 }),
-                update: jest.fn(),
+                update: vi.fn(),
             } as any);
 
-            jest.spyOn(privateSettingsConfig, "zoweOldConfigurations", "get").mockReturnValue([
+            vi.spyOn(privateSettingsConfig, "zoweOldConfigurations", "get").mockReturnValue([
                 "Zowe-DS-Persistent",
                 "Zowe-USS-Persistent",
                 "Zowe-Jobs-Persistent",
@@ -149,14 +150,14 @@ describe("SettingsConfig Unit Tests", () => {
     describe("function standardizeWorkspaceSettings", () => {
         it("should standardize workspace settings", async () => {
             const privateSettingsConfig = SettingsConfig as any;
-            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
                 inspect: () => ({
                     workspaceValue: "test",
                 }),
-                update: jest.fn(),
+                update: vi.fn(),
             } as any);
 
-            jest.spyOn(privateSettingsConfig, "zoweOldConfigurations", "get").mockReturnValue([
+            vi.spyOn(privateSettingsConfig, "zoweOldConfigurations", "get").mockReturnValue([
                 "Zowe-DS-Persistent",
                 "Zowe-USS-Persistent",
                 "Zowe-Jobs-Persistent",
@@ -172,40 +173,40 @@ describe("SettingsConfig Unit Tests", () => {
                 value: [{ uri: { fsPath: "test", scheme: "file" } }],
                 configurable: true,
             });
-            jest.spyOn(SettingsConfig as any, "zoweOldConfigurations", "get").mockReturnValue(["zowe.settings.test"]);
+            vi.spyOn(SettingsConfig as any, "zoweOldConfigurations", "get").mockReturnValue(["zowe.settings.test"]);
         });
 
         it("should standardize workspace settings if not migrated and workspace is open", async () => {
-            jest.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
+            vi.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
                 inspect: () => ({
                     globalValue: "vtest",
                     workspaceValue: "",
                 }),
             });
-            const standardizeWorkspaceSettingsSpy = jest.spyOn(SettingsConfig as any, "standardizeWorkspaceSettings").mockImplementation();
+            const standardizeWorkspaceSettingsSpy = vi.spyOn(SettingsConfig as any, "standardizeWorkspaceSettings").mockImplementation((() => undefined) as any);
             await expect(SettingsConfig.standardizeSettings()).resolves.not.toThrow();
             expect(standardizeWorkspaceSettingsSpy).toHaveBeenCalledTimes(1);
         });
 
         it("should standardize global settings if not migrated", async () => {
-            jest.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
+            vi.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
                 inspect: () => ({
                     globalValue: "test",
                     workspaceValue: "vtest",
                 }),
             });
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValueOnce(true);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValueOnce(false);
-            const standardizeGlobalSettingsSpy = jest.spyOn(SettingsConfig as any, "standardizeGlobalSettings").mockImplementation();
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValueOnce(true);
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValueOnce(false);
+            const standardizeGlobalSettingsSpy = vi.spyOn(SettingsConfig as any, "standardizeGlobalSettings").mockImplementation((() => undefined) as any);
             await expect(SettingsConfig.standardizeSettings()).resolves.not.toThrow();
             expect(standardizeGlobalSettingsSpy).toHaveBeenCalledTimes(1);
         });
         it("should migrate to local storage old persistent VS Code settings if not migrated yet", async () => {
-            jest.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
+            vi.spyOn(SettingsConfig as any, "configurations", "get").mockReturnValue({
                 inspect: () => ({ workspaceValue: "test" }),
             });
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValueOnce(false);
-            const migrateToLocalStorageSpy = jest.spyOn(SettingsConfig as any, "migrateToLocalStorage");
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValueOnce(false);
+            const migrateToLocalStorageSpy = vi.spyOn(SettingsConfig as any, "migrateToLocalStorage");
             await expect(SettingsConfig.standardizeSettings()).resolves.not.toThrow();
             expect(migrateToLocalStorageSpy).toHaveBeenCalledTimes(1);
         });
@@ -213,10 +214,10 @@ describe("SettingsConfig Unit Tests", () => {
 
     describe("function migrateSettingsAtLevel", () => {
         function getBlockMocks() {
-            const configurationsMock = jest.spyOn(SettingsConfig as any, "configurations", "get");
-            const setDirectValueMock = jest.spyOn(SettingsConfig, "setDirectValue").mockImplementation();
-            const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
-            jest.spyOn(SettingsConfig, "setMigratedDsTemplates").mockImplementation();
+            const configurationsMock = vi.spyOn(SettingsConfig as any, "configurations", "get");
+            const setDirectValueMock = vi.spyOn(SettingsConfig, "setDirectValue").mockImplementation((() => undefined) as any);
+            const setValueMock = vi.spyOn(ZoweLocalStorage, "setValue").mockImplementation((() => undefined) as any);
+            vi.spyOn(SettingsConfig, "setMigratedDsTemplates").mockImplementation((() => undefined) as any);
 
             return {
                 configurationsMock,
@@ -266,18 +267,18 @@ describe("SettingsConfig Unit Tests", () => {
     });
 
     describe("function migrateShowHiddenFilesDefault", () => {
-        let getValueSpy: jest.SpyInstance;
-        let setValueSpy: jest.SpyInstance;
-        let getConfigurationSpy: jest.SpyInstance;
-        let getExtensionSpy: jest.SpyInstance;
-        let errorMessageSpy: jest.SpyInstance;
+        let getValueSpy: MockInstance;
+        let setValueSpy: MockInstance;
+        let getConfigurationSpy: MockInstance;
+        let getExtensionSpy: MockInstance;
+        let errorMessageSpy: MockInstance;
 
         beforeEach(() => {
-            getValueSpy = jest.spyOn(ZoweLocalStorage, "getValue");
-            setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
-            getConfigurationSpy = jest.spyOn(vscode.workspace, "getConfiguration");
-            getExtensionSpy = jest.spyOn(vscode.extensions, "getExtension");
-            errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+            getValueSpy = vi.spyOn(ZoweLocalStorage, "getValue");
+            setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue");
+            getConfigurationSpy = vi.spyOn(vscode.workspace, "getConfiguration");
+            getExtensionSpy = vi.spyOn(vscode.extensions, "getExtension");
+            errorMessageSpy = vi.spyOn(Gui, "errorMessage");
         });
 
         it("should skip migration if already completed", async () => {
@@ -293,11 +294,11 @@ describe("SettingsConfig Unit Tests", () => {
         it("should not set value if user has explicitly set globalValue", async () => {
             getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
-                inspect: jest.fn().mockReturnValue({
+                inspect: vi.fn().mockReturnValue({
                     globalValue: true,
                     workspaceValue: undefined,
                 }),
-                update: jest.fn(),
+                update: vi.fn(),
             };
             getConfigurationSpy.mockReturnValue(mockConfig);
 
@@ -311,11 +312,11 @@ describe("SettingsConfig Unit Tests", () => {
         it("should not set value if user has explicitly set workspaceValue", async () => {
             getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
-                inspect: jest.fn().mockReturnValue({
+                inspect: vi.fn().mockReturnValue({
                     globalValue: undefined,
                     workspaceValue: false,
                 }),
-                update: jest.fn(),
+                update: vi.fn(),
             };
             getConfigurationSpy.mockReturnValue(mockConfig);
 
@@ -329,11 +330,11 @@ describe("SettingsConfig Unit Tests", () => {
         it("should set default to true for V3 extension when user has not set value", async () => {
             getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
-                inspect: jest.fn().mockReturnValue({
+                inspect: vi.fn().mockReturnValue({
                     globalValue: undefined,
                     workspaceValue: undefined,
                 }),
-                update: jest.fn().mockResolvedValue(undefined),
+                update: vi.fn().mockResolvedValue(undefined),
             };
             getConfigurationSpy.mockReturnValue(mockConfig);
             getExtensionSpy.mockReturnValue({
@@ -350,11 +351,11 @@ describe("SettingsConfig Unit Tests", () => {
         it("should set default to true for V2 extension when user has not set value", async () => {
             getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
-                inspect: jest.fn().mockReturnValue({
+                inspect: vi.fn().mockReturnValue({
                     globalValue: undefined,
                     workspaceValue: undefined,
                 }),
-                update: jest.fn().mockResolvedValue(undefined),
+                update: vi.fn().mockResolvedValue(undefined),
             };
             getConfigurationSpy.mockReturnValue(mockConfig);
             getExtensionSpy.mockReturnValue({
@@ -370,11 +371,11 @@ describe("SettingsConfig Unit Tests", () => {
         it("should set default to true for V1 extension when user has not set value", async () => {
             getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
-                inspect: jest.fn().mockReturnValue({
+                inspect: vi.fn().mockReturnValue({
                     globalValue: undefined,
                     workspaceValue: undefined,
                 }),
-                update: jest.fn().mockResolvedValue(undefined),
+                update: vi.fn().mockResolvedValue(undefined),
             };
             getConfigurationSpy.mockReturnValue(mockConfig);
             getExtensionSpy.mockReturnValue({
@@ -390,11 +391,11 @@ describe("SettingsConfig Unit Tests", () => {
         it("should set default to false for V4 extension when user has not set value", async () => {
             getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
-                inspect: jest.fn().mockReturnValue({
+                inspect: vi.fn().mockReturnValue({
                     globalValue: undefined,
                     workspaceValue: undefined,
                 }),
-                update: jest.fn().mockResolvedValue(undefined),
+                update: vi.fn().mockResolvedValue(undefined),
             };
             getConfigurationSpy.mockReturnValue(mockConfig);
             getExtensionSpy.mockReturnValue({
@@ -410,11 +411,11 @@ describe("SettingsConfig Unit Tests", () => {
         it("should set default to false for V5 extension when user has not set value", async () => {
             getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
-                inspect: jest.fn().mockReturnValue({
+                inspect: vi.fn().mockReturnValue({
                     globalValue: undefined,
                     workspaceValue: undefined,
                 }),
-                update: jest.fn().mockResolvedValue(undefined),
+                update: vi.fn().mockResolvedValue(undefined),
             };
             getConfigurationSpy.mockReturnValue(mockConfig);
             getExtensionSpy.mockReturnValue({
@@ -430,11 +431,11 @@ describe("SettingsConfig Unit Tests", () => {
         it("should mark migration complete even if extension is not found", async () => {
             getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
-                inspect: jest.fn().mockReturnValue({
+                inspect: vi.fn().mockReturnValue({
                     globalValue: undefined,
                     workspaceValue: undefined,
                 }),
-                update: jest.fn(),
+                update: vi.fn(),
             };
             getConfigurationSpy.mockReturnValue(mockConfig);
             getExtensionSpy.mockReturnValue(undefined);
@@ -471,11 +472,11 @@ describe("SettingsConfig Unit Tests", () => {
         it("should handle version with pre-release suffix correctly", async () => {
             getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
-                inspect: jest.fn().mockReturnValue({
+                inspect: vi.fn().mockReturnValue({
                     globalValue: undefined,
                     workspaceValue: undefined,
                 }),
-                update: jest.fn().mockResolvedValue(undefined),
+                update: vi.fn().mockResolvedValue(undefined),
             };
             getConfigurationSpy.mockReturnValue(mockConfig);
             getExtensionSpy.mockReturnValue({
@@ -491,11 +492,11 @@ describe("SettingsConfig Unit Tests", () => {
         it("should handle edge case where both globalValue and workspaceValue are set", async () => {
             getValueSpy.mockReturnValue(Definitions.V3MigrationStatus.None);
             const mockConfig = {
-                inspect: jest.fn().mockReturnValue({
+                inspect: vi.fn().mockReturnValue({
                     globalValue: true,
                     workspaceValue: false,
                 }),
-                update: jest.fn(),
+                update: vi.fn(),
             };
             getConfigurationSpy.mockReturnValue(mockConfig);
 

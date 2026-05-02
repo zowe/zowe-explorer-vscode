@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import { createTreeView } from "../../../__mocks__/mockCreators/shared";
 import { Constants } from "../../../../src/configuration/Constants";
@@ -18,9 +19,9 @@ describe("TreeProvider Unit Tests - getters", () => {
         const mockTree = createTreeView("ds");
         await SharedTreeProviders.initializeProviders(
             {
-                ds: jest.fn(() => mockTree) as any,
-                uss: jest.fn(),
-                job: jest.fn(),
+                ds: vi.fn(() => mockTree) as any,
+                uss: vi.fn(),
+                job: vi.fn(),
             },
             () => {}
         );
@@ -30,9 +31,9 @@ describe("TreeProvider Unit Tests - getters", () => {
         const mockTree = createTreeView("uss");
         await SharedTreeProviders.initializeProviders(
             {
-                ds: jest.fn(),
-                uss: jest.fn(() => mockTree) as any,
-                job: jest.fn(),
+                ds: vi.fn(),
+                uss: vi.fn(() => mockTree) as any,
+                job: vi.fn(),
             },
             () => {}
         );
@@ -42,9 +43,9 @@ describe("TreeProvider Unit Tests - getters", () => {
         const mockTree = createTreeView("job");
         await SharedTreeProviders.initializeProviders(
             {
-                ds: jest.fn(),
-                uss: jest.fn(),
-                job: jest.fn(() => mockTree) as any,
+                ds: vi.fn(),
+                uss: vi.fn(),
+                job: vi.fn(() => mockTree) as any,
             },
             () => {}
         );
@@ -68,7 +69,7 @@ describe("TreeProvider Unit Tests - Function sessionIsPresentInOtherTrees", () =
 
 describe("TreeProvider Unit Tests - Function contextValueExistsAcrossTrees", () => {
     it("should return true if the context value passed in exists across other trees", () => {
-        jest.spyOn(SharedTreeProviders, "getSessionForAllTrees").mockReturnValue([
+        vi.spyOn(SharedTreeProviders, "getSessionForAllTrees").mockReturnValue([
             { getLabel: () => "test1", contextValue: Constants.DS_SESSION_CONTEXT + Constants.VALIDATE_SUFFIX } as any,
             { getLabel: () => "test1", contextValue: Constants.USS_SESSION_CONTEXT + Constants.VALIDATE_SUFFIX } as any,
             { getLabel: () => "test1", contextValue: Constants.JOBS_SESSION_CONTEXT + Constants.VALIDATE_SUFFIX } as any,

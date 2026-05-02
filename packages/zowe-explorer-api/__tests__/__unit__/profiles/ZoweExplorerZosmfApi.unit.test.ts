@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { MockInstance, vi } from "vitest";
 
 import { Login, Logout } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
@@ -28,7 +29,7 @@ type ParametersWithProfileArgs<F> = F extends (...args: infer P) => any ? [...Pa
 type ITestApi<T> = {
     [K in keyof T]: {
         name: K;
-        spy: jest.SpyInstance;
+        spy: MockInstance;
         args: ParametersWithProfileArgs<T[K]>;
         transform?: (args: ParametersWithProfileArgs<T[K]>) => any[];
     };
@@ -56,6 +57,28 @@ const loadedProfile: imperative.IProfileLoaded = {
 
 const fakeSession = imperative.Session.createFromUrl(new URL("https://example.com"));
 
+// `vi.spyOn` on the same object property multiple times produces *nested*
+// wrappers under Vitest (unlike Jest, which detects and reuses the existing
+// spy). Several tables below intentionally list the same SDK method more
+// than once with different arg variants — this helper guarantees a single
+// shared spy per method so impl overrides made by `expectApiWithSession`
+// take effect on the outermost wrapper.
+const sharedSpyCache = new WeakMap<object, Map<PropertyKey, MockInstance>>();
+function sharedSpyOn<T extends object, K extends keyof T>(target: T, method: K): MockInstance {
+    let perTarget = sharedSpyCache.get(target);
+    if (!perTarget) {
+        perTarget = new Map<PropertyKey, MockInstance>();
+        sharedSpyCache.set(target, perTarget);
+    }
+    const existing = perTarget.get(method as PropertyKey);
+    if (existing) {
+        return existing;
+    }
+    const spy = vi.spyOn(target, method as any);
+    perTarget.set(method as PropertyKey, spy);
+    return spy;
+}
+
 const mISshSession: zosuss.ISshSession = {
     hostname: "example.com",
     port: 22,
@@ -72,7 +95,7 @@ async function expectUnixCommandApiWithSshSession<T>(
             callback("test");
         }
     );
-    const spywhenpathnotspecified = jest.spyOn(zosuss.Shell, "executeSsh");
+    const spywhenpathnotspecified = vi.spyOn(zosuss.Shell, "executeSsh");
     spywhenpathnotspecified.mockImplementation(
         (_sshobject: zosuss.SshSession, _command: string, callback: (data: string) => void, _cleanStdout?: boolean) => {
             callback("test");
@@ -83,8 +106,15 @@ async function expectUnixCommandApiWithSshSession<T>(
     expect(spy).toHaveBeenCalled();
 }
 async function expectApiWithSession<T>({ name, spy, args, transform }: ITestApi<T>, apiInstance: MainframeInteraction.ICommon): Promise<void> {
-    spy.mockClear().mockResolvedValue(undefined);
-    const getSessionSpy = jest.spyOn(apiInstance, "getSession").mockReturnValue(fakeSession);
+    spy.mockClear();
+    spy.mockReset();
+    spy.mockResolvedValue(undefined);
+    // Some test entries spy on the same SDK function multiple times at module
+    // load. Under Vitest those redundant `vi.spyOn` calls can yield distinct
+    // wrappers; pin the implementation through a direct `mockImplementation`
+    // call as well so the actual SDK method is never invoked.
+    spy.mockImplementation((() => Promise.resolve(undefined)) as any);
+    const getSessionSpy = vi.spyOn(apiInstance, "getSession").mockReturnValue(fakeSession);
     await apiInstance[name as string](...Object.values(args));
     expect(getSessionSpy).toHaveBeenCalledTimes(1);
     const params: unknown[] = transform ? transform(args) : args;
@@ -102,7 +132,7 @@ describe("CommonApi", () => {
         it("returns a built session from _getSession and does not throw error", () => {
             const api = new ZoweExplorerZosmf.CommonApi(loadedProfile);
             let session: imperative.Session;
-            const _getSessionSpy = jest.spyOn(api as any, "_getSession");
+            const _getSessionSpy = vi.spyOn(api as any, "_getSession");
             expect(() => (session = api.getSession())).not.toThrow();
             expect(_getSessionSpy).toHaveBeenCalledTimes(1);
             expect(session).not.toBeUndefined();
@@ -112,14 +142,14 @@ describe("CommonApi", () => {
 
 describe("ZosmfUssApi", () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe("_getSession", () => {
         const exampleSession = Object.assign(Object.create(Object.getPrototypeOf(fakeSession)), fakeSession);
         exampleSession.ISession.password = loadedProfile.profile?.password;
         exampleSession.ISession.user = loadedProfile.profile?.user;
-        jest.spyOn(ProfilesCache, "getProfileSessionWithVscProxy").mockReturnValueOnce(exampleSession);
+        vi.spyOn(ProfilesCache, "getProfileSessionWithVscProxy").mockReturnValueOnce(exampleSession);
 
         it("should include profile properties in the built session object", () => {
             const api = new ZoweExplorerZosmf.UssApi(loadedProfile);
@@ -133,8 +163,8 @@ describe("ZosmfUssApi", () => {
 
     describe("updateAttributes", () => {
         const ussApi = new ZoweExplorerZosmf.UssApi(loadedProfile);
-        const getSessionMock = jest.spyOn(ussApi, "getSession").mockReturnValue(fakeSession);
-        const putUSSPayload = jest.spyOn(zosfiles.Utilities, "putUSSPayload").mockResolvedValue(Buffer.from("test"));
+        const getSessionMock = vi.spyOn(ussApi, "getSession").mockReturnValue(fakeSession);
+        const putUSSPayload = vi.spyOn(zosfiles.Utilities, "putUSSPayload").mockResolvedValue(Buffer.from("test"));
 
         it("updates group and owner if provided", async () => {
             const resp = await ussApi.updateAttributes("/some/path", {
@@ -225,13 +255,13 @@ describe("ZosmfUssApi", () => {
     });
 
     describe("misc", () => {
-        const getProfileSessionWithVscProxySpy = jest.spyOn(ProfilesCache, "getProfileSessionWithVscProxy").mockImplementation((session) => {
+        const getProfileSessionWithVscProxySpy = vi.spyOn(ProfilesCache, "getProfileSessionWithVscProxy").mockImplementation((session) => {
             session.ISession.user = fakeProfile.user;
             session.ISession.password = fakeProfile.password;
             session.ISession.basePath = fakeProfile.basePath;
             return session;
         });
-        let getDirectValueSpy: jest.SpyInstance;
+        let getDirectValueSpy: MockInstance;
 
         afterAll(() => {
             getProfileSessionWithVscProxySpy.mockRestore();
@@ -239,7 +269,7 @@ describe("ZosmfUssApi", () => {
         });
 
         it("uploads a file from buffer", async () => {
-            const uploadFileSpy = jest.spyOn(zosfiles.Upload, "bufferToUssFile").mockImplementation();
+            const uploadFileSpy = vi.spyOn(zosfiles.Upload, "bufferToUssFile").mockImplementation((() => undefined) as any);
             const zosmfApi = new ZoweExplorerZosmf.UssApi(loadedProfile);
             const buf = Buffer.from("123abc");
             await zosmfApi.uploadFromBuffer(buf, "/some/uss/path");
@@ -268,7 +298,7 @@ describe("ZosmfUssApi", () => {
 
         it("getSessionFromCommandArgument should build session from arguments and modify the session socket connection timeout", () => {
             const zosmfApi = new ZoweExplorerZosmf.UssApi(loadedProfile);
-            getDirectValueSpy = jest.spyOn(VscSettings, "getDirectValue").mockReturnValueOnce(30000);
+            getDirectValueSpy = vi.spyOn(VscSettings, "getDirectValue").mockReturnValueOnce(30000);
             const session = zosmfApi.getSessionFromCommandArgument(fakeProfile as unknown as imperative.ICommandArguments);
             expect(session).toBeDefined();
             const sessCfg: imperative.ISession = {
@@ -285,7 +315,7 @@ describe("ZosmfUssApi", () => {
 
         it("getSessionFromCommandArgument should build session from arguments and modify the session request connection timeout", () => {
             const zosmfApi = new ZoweExplorerZosmf.UssApi(loadedProfile);
-            getDirectValueSpy = jest.spyOn(VscSettings, "getDirectValue").mockReturnValueOnce(undefined).mockReturnValueOnce(30000);
+            getDirectValueSpy = vi.spyOn(VscSettings, "getDirectValue").mockReturnValueOnce(undefined).mockReturnValueOnce(30000);
             const session = zosmfApi.getSessionFromCommandArgument(fakeProfile as unknown as imperative.ICommandArguments);
             expect(session).toBeDefined();
             const sessCfg: imperative.ISession = {
@@ -345,9 +375,12 @@ describe("ZosmfUssApi", () => {
         });
 
         it("getSession should log error when it fails", () => {
-            jest.resetAllMocks();
+            // Use clearAllMocks instead of resetAllMocks: under Vitest, resetAllMocks
+            // also restores spies created at module load time, which would un-stub
+            // the Zowe SDK entry points used by later tests in this file.
+            vi.clearAllMocks();
             const zosmfApi = new ZoweExplorerZosmf.UssApi({} as unknown as imperative.IProfileLoaded);
-            const loggerSpy = jest.spyOn(imperative.Logger.prototype, "error").mockReturnValue("");
+            const loggerSpy = vi.spyOn(imperative.Logger.prototype, "error").mockReturnValue("");
             const session = zosmfApi.getSession();
             expect(session).toBeUndefined();
             expect(loggerSpy).toHaveBeenCalledTimes(1);
@@ -355,7 +388,7 @@ describe("ZosmfUssApi", () => {
 
         it("getStatus should validate active profile", async () => {
             const zosmfApi = new ZoweExplorerZosmf.UssApi(loadedProfile);
-            const checkStatusSpy = jest.spyOn(zosmf.CheckStatus, "getZosmfInfo").mockResolvedValue({});
+            const checkStatusSpy = vi.spyOn(zosmf.CheckStatus, "getZosmfInfo").mockResolvedValue({});
             const status = await zosmfApi.getStatus({ profile: fakeProfile } as unknown as imperative.IProfileLoaded, "zosmf");
             expect(status).toBe("active");
             expect(checkStatusSpy).toHaveBeenCalledTimes(1);
@@ -363,7 +396,7 @@ describe("ZosmfUssApi", () => {
 
         it("getStatus should validate inactive profile", async () => {
             const zosmfApi = new ZoweExplorerZosmf.UssApi(loadedProfile);
-            const checkStatusSpy = jest.spyOn(zosmf.CheckStatus, "getZosmfInfo").mockResolvedValue(undefined as unknown as zosmf.IZosmfInfoResponse);
+            const checkStatusSpy = vi.spyOn(zosmf.CheckStatus, "getZosmfInfo").mockResolvedValue(undefined as unknown as zosmf.IZosmfInfoResponse);
             const status = await zosmfApi.getStatus({ profile: fakeProfile } as unknown as imperative.IProfileLoaded, "zosmf");
             expect(status).toBe("inactive");
             expect(checkStatusSpy).toHaveBeenCalledTimes(1);
@@ -371,11 +404,11 @@ describe("ZosmfUssApi", () => {
 
         it("should test that copy calls zowe.Utilities.putUSSPayload", async () => {
             const api = new ZoweExplorerZosmf.UssApi(loadedProfile);
-            api.getSession = jest.fn();
+            api.getSession = vi.fn();
             const response = Buffer.from("hello world!");
 
             Object.defineProperty(zosfiles.Utilities, "putUSSPayload", {
-                value: jest.fn().mockResolvedValue(response),
+                value: vi.fn().mockResolvedValue(response),
                 configurable: true,
             });
 
@@ -390,8 +423,8 @@ describe("ZosmfUssApi", () => {
 
         it("login and logout should call APIML endpoints", async () => {
             const zosmfApi = new ZoweExplorerZosmf.UssApi(loadedProfile);
-            const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("");
-            const logoutSpy = jest.spyOn(Logout, "apimlLogout").mockResolvedValue();
+            const loginSpy = vi.spyOn(Login, "apimlLogin").mockResolvedValue("");
+            const logoutSpy = vi.spyOn(Logout, "apimlLogout").mockResolvedValue();
 
             await zosmfApi.login(fakeSession);
             expect(loginSpy).toHaveBeenCalledWith(fakeSession);
@@ -402,7 +435,7 @@ describe("ZosmfUssApi", () => {
 
         it("should retrieve the tag of a file", async () => {
             const zosmfApi = new ZoweExplorerZosmf.UssApi(loadedProfile);
-            jest.spyOn(JSON, "parse").mockReturnValue({
+            vi.spyOn(JSON, "parse").mockReturnValue({
                 stdout: ["-t UTF-8 tesfile.txt"],
             });
 
@@ -415,7 +448,7 @@ describe("ZosmfUssApi", () => {
 
         it("should update the tag attribute when passed in", async () => {
             const zosmfApi = new ZoweExplorerZosmf.UssApi(loadedProfile);
-            const changeTagSpy = jest.fn();
+            const changeTagSpy = vi.fn();
             Object.defineProperty(zosfiles.Utilities, "putUSSPayload", {
                 value: changeTagSpy,
                 configurable: true,
@@ -426,7 +459,7 @@ describe("ZosmfUssApi", () => {
 
         it("calls putUSSPayload to move a directory from old path to new path", async () => {
             const api = new ZoweExplorerZosmf.UssApi(loadedProfile);
-            const putUssPayloadSpy = jest.fn();
+            const putUssPayloadSpy = vi.fn();
             Object.defineProperty(zosfiles.Utilities, "putUSSPayload", {
                 value: putUssPayloadSpy,
                 configurable: true,
@@ -439,59 +472,59 @@ describe("ZosmfUssApi", () => {
     const ussApis: ITestApi<ZoweExplorerZosmf.UssApi>[] = [
         {
             name: "isFileTagBinOrAscii",
-            spy: jest.spyOn(zosfiles.Utilities, "isFileTagBinOrAscii"),
+            spy: sharedSpyOn(zosfiles.Utilities, "isFileTagBinOrAscii"),
             args: ["ussPath"],
         },
         {
             name: "fileList",
-            spy: jest.spyOn(zosfiles.List, "fileList"),
+            spy: sharedSpyOn(zosfiles.List, "fileList"),
             args: ["ussPath", fakeProperties],
         },
         {
             name: "isFileTagBinOrAscii",
-            spy: jest.spyOn(zosfiles.Utilities, "isFileTagBinOrAscii"),
+            spy: sharedSpyOn(zosfiles.Utilities, "isFileTagBinOrAscii"),
             args: ["ussPath"],
         },
         {
             name: "getContents",
-            spy: jest.spyOn(zosfiles.Download, "ussFile"),
+            spy: sharedSpyOn(zosfiles.Download, "ussFile"),
             args: ["ussPath", fakeProperties],
         },
         {
             name: "downloadDirectory",
-            spy: jest.spyOn(zosfiles.Download, "ussDir"),
+            spy: sharedSpyOn(zosfiles.Download, "ussDir"),
             args: ["ussDirectoryPath", fakeProperties, undefined],
             transform: (args) => [args[0], fakeProperties, args[2]],
         },
         {
             name: "putContent",
-            spy: jest.spyOn(zosfiles.Upload, "fileToUssFile"),
+            spy: sharedSpyOn(zosfiles.Upload, "fileToUssFile"),
             args: ["localPath", "ussPath", fakeProperties],
         },
         {
             name: "uploadDirectory",
-            spy: jest.spyOn(zosfiles.Upload, "dirToUSSDirRecursive"),
+            spy: sharedSpyOn(zosfiles.Upload, "dirToUSSDirRecursive"),
             args: ["localPath", "ussPath", fakeProperties],
         },
         {
             name: "create",
-            spy: jest.spyOn(zosfiles.Create, "uss"),
+            spy: sharedSpyOn(zosfiles.Create, "uss"),
             args: ["ussPath", "file", "777", fakeProperties],
         },
         {
             name: "delete",
-            spy: jest.spyOn(zosfiles.Delete, "ussFile"),
+            spy: sharedSpyOn(zosfiles.Delete, "ussFile"),
             args: ["/ussPath", false, fakeProperties],
             transform: (args) => [args[0].slice(1), args[1], fakeProperties],
         },
         {
             name: "delete",
-            spy: jest.spyOn(zosfiles.Delete, "ussFile"),
+            spy: sharedSpyOn(zosfiles.Delete, "ussFile"),
             args: ["ussPath", false, fakeProperties],
         },
         {
             name: "rename",
-            spy: jest.spyOn(zosfiles.Utilities, "renameUSSFile"),
+            spy: sharedSpyOn(zosfiles.Utilities, "renameUSSFile"),
             args: ["ussPath1", "ussPath2"],
         },
     ];
@@ -506,48 +539,48 @@ describe("ZosmfMvsApi", () => {
     const mvsApis: ITestApi<ZoweExplorerZosmf.MvsApi>[] = [
         {
             name: "dataSet",
-            spy: jest.spyOn(zosfiles.List, "dataSet"),
+            spy: sharedSpyOn(zosfiles.List, "dataSet"),
             args: ["dsname", fakeProperties],
         },
         {
             name: "allMembers",
-            spy: jest.spyOn(zosfiles.List, "allMembers"),
+            spy: sharedSpyOn(zosfiles.List, "allMembers"),
             args: ["dsname", fakeProperties],
         },
         {
             name: "getContents",
-            spy: jest.spyOn(zosfiles.Download, "dataSet"),
+            spy: sharedSpyOn(zosfiles.Download, "dataSet"),
             args: ["dsname", fakeProperties],
         },
         {
             name: "downloadAllMembers",
-            spy: jest.spyOn(zosfiles.Download, "allMembers"),
+            spy: sharedSpyOn(zosfiles.Download, "allMembers"),
             args: ["dsname", fakeProperties],
         },
         {
             name: "putContents",
-            spy: jest.spyOn(zosfiles.Upload, "pathToDataSet"),
+            spy: sharedSpyOn(zosfiles.Upload, "pathToDataSet"),
             args: ["localPath", "dsname", fakeProperties],
         },
         {
             name: "createDataSet",
-            spy: jest.spyOn(zosfiles.Create, "dataSet"),
+            spy: sharedSpyOn(zosfiles.Create, "dataSet"),
             args: [0, "dsname", fakeProperties],
         },
         {
             name: "createDataSetMember",
-            spy: jest.spyOn(zosfiles.Upload, "bufferToDataSet"),
+            spy: sharedSpyOn(zosfiles.Upload, "bufferToDataSet"),
             args: ["dsname", fakeProperties],
             transform: (args) => [Buffer.from(""), ...args],
         },
         {
             name: "allocateLikeDataSet",
-            spy: jest.spyOn(zosfiles.Create, "dataSetLike"),
+            spy: sharedSpyOn(zosfiles.Create, "dataSetLike"),
             args: ["dsname1", "dsname2", fakeProperties],
         },
         {
             name: "copyDataSetMember",
-            spy: jest.spyOn(zosfiles.Copy, "dataSet"),
+            spy: sharedSpyOn(zosfiles.Copy, "dataSet"),
             args: [
                 { dsn: "dsname1", member: "member1" },
                 { dsn: "dsname2", member: "member2" },
@@ -557,7 +590,7 @@ describe("ZosmfMvsApi", () => {
         },
         {
             name: "copyDataSetMember",
-            spy: jest.spyOn(zosfiles.Copy, "dataSet"),
+            spy: sharedSpyOn(zosfiles.Copy, "dataSet"),
             args: [
                 { dsn: "dsname1", member: "member1" },
                 { dsn: "dsname2", member: "member2" },
@@ -566,7 +599,7 @@ describe("ZosmfMvsApi", () => {
         },
         {
             name: "copyDataSetMember",
-            spy: jest.spyOn(zosfiles.Copy, "dataSet"),
+            spy: sharedSpyOn(zosfiles.Copy, "dataSet"),
             args: [
                 { dsn: "dsname1", member: "member1" },
                 { dsn: "dsname2", member: "member2" },
@@ -575,47 +608,47 @@ describe("ZosmfMvsApi", () => {
         },
         {
             name: "renameDataSet",
-            spy: jest.spyOn(zosfiles.Rename, "dataSet"),
+            spy: sharedSpyOn(zosfiles.Rename, "dataSet"),
             args: ["dsname1", "dsname2", fakeProperties],
         },
         {
             name: "renameDataSetMember",
-            spy: jest.spyOn(zosfiles.Rename, "dataSetMember"),
+            spy: sharedSpyOn(zosfiles.Rename, "dataSetMember"),
             args: ["dsname", "member1", "member2", fakeProperties],
         },
         {
             name: "hMigrateDataSet",
-            spy: jest.spyOn(zosfiles.HMigrate, "dataSet"),
+            spy: sharedSpyOn(zosfiles.HMigrate, "dataSet"),
             args: ["dsname", fakeProperties],
         },
         {
             name: "hRecallDataSet",
-            spy: jest.spyOn(zosfiles.HRecall, "dataSet"),
+            spy: sharedSpyOn(zosfiles.HRecall, "dataSet"),
             args: ["dsname", fakeProperties],
         },
         {
             name: "deleteDataSet",
-            spy: jest.spyOn(zosfiles.Delete, "dataSet"),
+            spy: sharedSpyOn(zosfiles.Delete, "dataSet"),
             args: ["dsname", fakeProperties],
         },
         {
             name: "deleteDataSet",
-            spy: jest.spyOn(zosfiles.Delete, "vsam"),
+            spy: sharedSpyOn(zosfiles.Delete, "vsam"),
             args: ["dsname", { volume: "*VSAM*", ...fakeProperties }],
         },
         {
             name: "dataSetsMatchingPattern",
-            spy: jest.spyOn(zosfiles.List, "dataSetsMatchingPattern"),
+            spy: sharedSpyOn(zosfiles.List, "dataSetsMatchingPattern"),
             args: [["SAMPLE.A*", "SAMPLE.B*"], fakeProperties],
         },
         {
             name: "searchDataSets",
-            spy: jest.spyOn(zosfiles.Search, "dataSets"),
+            spy: sharedSpyOn(zosfiles.Search, "dataSets"),
             args: [{ pattern: "SAMPLE.A*", searchString: "test", listOptions: { ...fakeProperties }, getOptions: { ...fakeProperties } }],
         },
         {
             name: "copyDataSet",
-            spy: jest.spyOn(zosfiles.Copy, "dataSet"),
+            spy: sharedSpyOn(zosfiles.Copy, "dataSet"),
             args: ["FROM.NAME", "TO.NAME", undefined, undefined, fakeProperties],
             transform: (args) => [{ dsn: args[1] }, { enq: undefined, "from-dataset": { dsn: args[0] }, replace: undefined, ...fakeProperties }],
         },
@@ -627,7 +660,7 @@ describe("ZosmfMvsApi", () => {
     });
 
     it("uploads a data set from buffer", async () => {
-        const uploadFileSpy = jest.spyOn(zosfiles.Upload, "bufferToDataSet").mockImplementation();
+        const uploadFileSpy = vi.spyOn(zosfiles.Upload, "bufferToDataSet").mockImplementation((() => undefined) as any);
         const zosmfApi = new ZoweExplorerZosmf.MvsApi(loadedProfile);
         const buf = Buffer.from("123abc");
         await zosmfApi.uploadFromBuffer(buf, "SOME.DS(MEMB)");
@@ -635,7 +668,7 @@ describe("ZosmfMvsApi", () => {
     });
 
     it("Test copyDataSetCrossLpar()", async () => {
-        const copySpy = jest.spyOn(zosfiles.Copy, "dataSetCrossLPAR").mockImplementation();
+        const copySpy = vi.spyOn(zosfiles.Copy, "dataSetCrossLPAR").mockImplementation((() => undefined) as any);
         const zosmfApi = new ZoweExplorerZosmf.MvsApi(loadedProfile);
         await zosmfApi.copyDataSetCrossLpar("TO.NAME", "TO.MEMBER", undefined as any, loadedProfile);
         expect(copySpy).toHaveBeenCalled();
@@ -644,8 +677,8 @@ describe("ZosmfMvsApi", () => {
     describe("deleteDataSet with undefined options", () => {
         it("should call Delete.dataSet and not throw TypeError when options is undefined", () => {
             const mvsApi = new ZoweExplorerZosmf.MvsApi(loadedProfile);
-            const deleteDataSetSpy = jest.spyOn(zosfiles.Delete, "dataSet").mockResolvedValue({ success: true });
-            const deleteVsamSpy = jest.spyOn(zosfiles.Delete, "vsam").mockResolvedValue({ success: true });
+            const deleteDataSetSpy = vi.spyOn(zosfiles.Delete, "dataSet").mockResolvedValue({ success: true });
+            const deleteVsamSpy = vi.spyOn(zosfiles.Delete, "vsam").mockResolvedValue({ success: true });
 
             deleteDataSetSpy.mockClear();
             deleteVsamSpy.mockClear();
@@ -666,12 +699,12 @@ describe("ZosmfMvsApi", () => {
 
     describe("MvsApi.getCount", () => {
         let mvsApi: ZoweExplorerZosmf.MvsApi;
-        let dataSetsMatchingPatternSpy: jest.SpyInstance;
+        let dataSetsMatchingPatternSpy: MockInstance;
         const patterns = ["SAMPLE.A*", "SAMPLE.B*"];
         beforeEach(() => {
-            jest.clearAllMocks();
+            vi.clearAllMocks();
             mvsApi = new ZoweExplorerZosmf.MvsApi(loadedProfile);
-            dataSetsMatchingPatternSpy = jest.spyOn(zosfiles.List, "dataSetsMatchingPattern");
+            dataSetsMatchingPatternSpy = vi.spyOn(zosfiles.List, "dataSetsMatchingPattern");
         });
         test("returns correct count when successful and response is array", async () => {
             const mockResponse = {
@@ -723,57 +756,57 @@ describe("ZosmfJesApi", () => {
     const jesApis: ITestApi<ZoweExplorerZosmf.JesApi>[] = [
         {
             name: "getJobsByParameters",
-            spy: jest.spyOn(zosjobs.GetJobs, "getJobsByParameters"),
+            spy: sharedSpyOn(zosjobs.GetJobs, "getJobsByParameters"),
             args: [{}],
         },
         {
             name: "getJob",
-            spy: jest.spyOn(zosjobs.GetJobs, "getJob"),
+            spy: sharedSpyOn(zosjobs.GetJobs, "getJob"),
             args: ["jobid"],
         },
         {
             name: "getSpoolFiles",
-            spy: jest.spyOn(zosjobs.GetJobs, "getSpoolFiles"),
+            spy: sharedSpyOn(zosjobs.GetJobs, "getSpoolFiles"),
             args: ["jobname", "jobid"],
         },
         {
             name: "downloadSpoolContent",
-            spy: jest.spyOn(zosjobs.DownloadJobs, "downloadAllSpoolContentCommon"),
+            spy: sharedSpyOn(zosjobs.DownloadJobs, "downloadAllSpoolContentCommon"),
             args: [{ jobname: "jobname", jobid: "jobid" }],
         },
         {
             name: "downloadSingleSpool",
-            spy: jest.spyOn(zosjobs.DownloadJobs, "downloadSpoolContentCommon"),
+            spy: sharedSpyOn(zosjobs.DownloadJobs, "downloadSpoolContentCommon"),
             args: [{ jobname: "jobname", jobid: "jobid" }],
         },
         {
             name: "getSpoolContentById",
-            spy: jest.spyOn(zosjobs.GetJobs, "getSpoolContentById"),
+            spy: sharedSpyOn(zosjobs.GetJobs, "getSpoolContentById"),
             args: ["jobname", "jobid", 100, undefined],
         },
         {
             name: "getJclForJob",
-            spy: jest.spyOn(zosjobs.GetJobs, "getJclCommon"),
+            spy: sharedSpyOn(zosjobs.GetJobs, "getJclCommon"),
             args: [{} as any],
         },
         {
             name: "submitJcl",
-            spy: jest.spyOn(zosjobs.SubmitJobs, "submitJcl"),
+            spy: sharedSpyOn(zosjobs.SubmitJobs, "submitJcl"),
             args: ["jcl", "FB", "80", undefined],
         },
         {
             name: "submitJob",
-            spy: jest.spyOn(zosjobs.SubmitJobs, "submitJob"),
+            spy: sharedSpyOn(zosjobs.SubmitJobs, "submitJob"),
             args: ["dsname"],
         },
         {
             name: "deleteJob",
-            spy: jest.spyOn(zosjobs.DeleteJobs, "deleteJob"),
+            spy: sharedSpyOn(zosjobs.DeleteJobs, "deleteJob"),
             args: ["jobname", "jobid"],
         },
         {
             name: "deleteJobWithInfo",
-            spy: jest.spyOn(zosjobs.DeleteJobs, "deleteJob"),
+            spy: sharedSpyOn(zosjobs.DeleteJobs, "deleteJob"),
             args: ["jobname", "jobid"],
         },
     ];
@@ -785,7 +818,7 @@ describe("ZosmfJesApi", () => {
 
     describe("cancelJob", () => {
         const api = new ZoweExplorerZosmf.JesApi();
-        const cancelJobForJob = jest.fn();
+        const cancelJobForJob = vi.fn();
 
         beforeAll(() => {
             Object.defineProperty(zosjobs.CancelJobs, "cancelJobForJob", { value: cancelJobForJob });
@@ -822,7 +855,7 @@ describe("ZosmfJesApi", () => {
                     jobEncoding: "IBM-1147",
                 },
             } as unknown as imperative.IProfileLoaded;
-            const submitJclSpy = jest.spyOn(zosjobs.SubmitJobs, "submitJcl");
+            const submitJclSpy = vi.spyOn(zosjobs.SubmitJobs, "submitJcl");
             await api.submitJcl("iefbr14");
             expect(submitJclSpy).toHaveBeenLastCalledWith(undefined, "iefbr14", undefined, undefined, "IBM-1147");
         });
@@ -837,8 +870,8 @@ describe("ZosmfJesApi", () => {
                     jobEncoding: "IBM-1147",
                 },
             } as unknown as imperative.IProfileLoaded;
-            const getDatasetSpy = jest.spyOn(zosfiles.Get, "dataSet").mockResolvedValue(Buffer.from("fakeJcl"));
-            const submitJclSpy = jest.spyOn(zosjobs.SubmitJobs, "submitJcl");
+            const getDatasetSpy = vi.spyOn(zosfiles.Get, "dataSet").mockResolvedValue(Buffer.from("fakeJcl"));
+            const submitJclSpy = vi.spyOn(zosjobs.SubmitJobs, "submitJcl");
             await api.submitJob("IBMUSER.JCL(IEFBR14)");
             expect(getDatasetSpy).toHaveBeenLastCalledWith(undefined, "IBMUSER.JCL(IEFBR14)", { encoding: "IBM-1047" });
             expect(submitJclSpy).toHaveBeenLastCalledWith(undefined, "fakeJcl", undefined, undefined, "IBM-1147");
@@ -851,19 +884,19 @@ describe("ZosmfCommandApi", () => {
     const commandApis: ITestApi<ZoweExplorerZosmf.CommandApi>[] = [
         {
             name: "issueTsoCommandWithParms",
-            spy: jest.spyOn(zostso.IssueTso, "issueTsoCommand"),
+            spy: sharedSpyOn(zostso.IssueTso, "issueTsoCommand"),
             args: ["command", { account: "ACCT#" }],
             transform: (args) => [args[1].account, ...args],
         },
         {
             name: "issueTsoCommandWithParms",
-            spy: jest.spyOn(zostso.IssueTso, "issueTsoCmd"),
+            spy: sharedSpyOn(zostso.IssueTso, "issueTsoCmd"),
             args: ["command", { account: "ACCT#" }, true],
             transform: () => ["command", { addressSpaceOptions: { account: "ACCT#" } }],
         },
         {
             name: "issueMvsCommand",
-            spy: jest.spyOn(zosconsole.IssueCommand, "issue"),
+            spy: sharedSpyOn(zosconsole.IssueCommand, "issue"),
             args: ["command", "defcn"],
             transform: (args) => [{ command: args[0], consoleName: args[1], processResponses: true }],
         },
@@ -876,7 +909,7 @@ describe("ZosmfCommandApi", () => {
     const UnixcommandApiwithsshSession: ITestApi<ZoweExplorerZosmf.CommandApi>[] = [
         {
             name: "issueUnixCommand",
-            spy: jest.spyOn(zosuss.Shell, "executeSshCwd"),
+            spy: sharedSpyOn(zosuss.Shell, "executeSshCwd"),
             args: ["command", "cwd"],
         },
     ];

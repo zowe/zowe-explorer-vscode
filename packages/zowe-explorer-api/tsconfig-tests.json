@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "types": ["node", "jest"],
+    "types": ["node", "vitest/globals"],
     "target": "es2015",
     "module": "commonjs",
     "noEmit": true,

@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { MockInstance, vi } from "vitest";
 
 import * as vscode from "vscode";
 import * as fs from "fs";
@@ -19,32 +20,32 @@ import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 
-jest.mock("../../../../src/tools/ZoweLogger");
-jest.mock("fs");
+vi.mock("../../../../src/tools/ZoweLogger");
+vi.mock("fs");
 
 function createGlobalMocks() {
     const globalMocks = {
-        writeText: jest.fn(),
-        l10nT: jest.fn(),
-        readdirSync: jest.fn(),
-        dirname: jest.fn(),
-        basename: jest.fn(),
-        getTag: jest.fn(),
-        isFileTagBinOrAscii: jest.fn(),
-        getUssApi: jest.fn(),
-        isUssDirectory: jest.fn(),
-        getChildren: jest.fn(),
-        getEncoding: jest.fn(),
-        setEncoding: jest.fn(),
-        getProfile: jest.fn(),
+        writeText: vi.fn(),
+        l10nT: vi.fn(),
+        readdirSync: vi.fn(),
+        dirname: vi.fn(),
+        basename: vi.fn(),
+        getTag: vi.fn(),
+        isFileTagBinOrAscii: vi.fn(),
+        getUssApi: vi.fn(),
+        isUssDirectory: vi.fn(),
+        getChildren: vi.fn(),
+        getEncoding: vi.fn(),
+        setEncoding: vi.fn(),
+        getProfile: vi.fn(),
         spies: {
-            writeText: null as jest.SpyInstance | null,
-            l10nT: null as jest.SpyInstance | null,
-            readdirSync: null as jest.SpyInstance | null,
-            dirname: null as jest.SpyInstance | null,
-            basename: null as jest.SpyInstance | null,
-            getUssApi: null as jest.SpyInstance | null,
-            isUssDirectory: null as jest.SpyInstance | null,
+            writeText: null as MockInstance | null,
+            l10nT: null as MockInstance | null,
+            readdirSync: null as MockInstance | null,
+            dirname: null as MockInstance | null,
+            basename: null as MockInstance | null,
+            getUssApi: null as MockInstance | null,
+            isUssDirectory: null as MockInstance | null,
         },
         vscodeMocks: [] as MockedProperty[],
     };
@@ -53,11 +54,11 @@ function createGlobalMocks() {
 }
 
 function setupSpies(globalMocks: any) {
-    globalMocks.spies.readdirSync = jest.spyOn(fs, "readdirSync").mockImplementation(globalMocks.readdirSync);
-    globalMocks.spies.dirname = jest.spyOn(path, "dirname").mockImplementation(globalMocks.dirname);
-    globalMocks.spies.basename = jest.spyOn(path, "basename").mockImplementation(globalMocks.basename);
-    globalMocks.spies.getUssApi = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockImplementation(globalMocks.getUssApi);
-    globalMocks.spies.isUssDirectory = jest.spyOn(SharedContext, "isUssDirectory").mockImplementation(globalMocks.isUssDirectory);
+    globalMocks.spies.readdirSync = vi.spyOn(fs, "readdirSync").mockImplementation(globalMocks.readdirSync);
+    globalMocks.spies.dirname = vi.spyOn(path, "dirname").mockImplementation(globalMocks.dirname);
+    globalMocks.spies.basename = vi.spyOn(path, "basename").mockImplementation(globalMocks.basename);
+    globalMocks.spies.getUssApi = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockImplementation(globalMocks.getUssApi);
+    globalMocks.spies.isUssDirectory = vi.spyOn(SharedContext, "isUssDirectory").mockImplementation(globalMocks.isUssDirectory);
     globalMocks.vscodeMocks.push(new MockedProperty(vscode.env.clipboard, "writeText", undefined, globalMocks.writeText));
     globalMocks.vscodeMocks.push(new MockedProperty(vscode.l10n, "t", undefined, globalMocks.l10nT));
 }
@@ -79,7 +80,7 @@ describe("USSUtils Unit Tests - fileExistsCaseSensitiveSync", () => {
     beforeEach(() => {
         globalMocks = createGlobalMocks();
         setupSpies(globalMocks);
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     afterEach(() => {
@@ -150,7 +151,7 @@ describe("USSUtils Unit Tests - autoDetectEncoding", () => {
     beforeEach(() => {
         globalMocks = createGlobalMocks();
         setupSpies(globalMocks);
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     afterEach(() => {
@@ -159,10 +160,10 @@ describe("USSUtils Unit Tests - autoDetectEncoding", () => {
 
     it("should return early when node already has binary encoding", async () => {
         const mockNode = {
-            getEncoding: jest.fn().mockResolvedValue({ kind: "binary" }),
-            setEncoding: jest.fn(),
+            getEncoding: vi.fn().mockResolvedValue({ kind: "binary" }),
+            setEncoding: vi.fn(),
             fullPath: "/test/file.txt",
-            getProfile: jest.fn(),
+            getProfile: vi.fn(),
         } as unknown as IZoweUSSTreeNode;
 
         await USSUtils.autoDetectEncoding(mockNode);
@@ -173,10 +174,10 @@ describe("USSUtils Unit Tests - autoDetectEncoding", () => {
 
     it("should return early when node already has defined encoding", async () => {
         const mockNode = {
-            getEncoding: jest.fn().mockResolvedValue({ kind: "other", codepage: "IBM-1047" }),
-            setEncoding: jest.fn(),
+            getEncoding: vi.fn().mockResolvedValue({ kind: "other", codepage: "IBM-1047" }),
+            setEncoding: vi.fn(),
             fullPath: "/test/file.txt",
-            getProfile: jest.fn(),
+            getProfile: vi.fn(),
         } as unknown as IZoweUSSTreeNode;
 
         await USSUtils.autoDetectEncoding(mockNode);
@@ -187,14 +188,14 @@ describe("USSUtils Unit Tests - autoDetectEncoding", () => {
 
     it("should use getTag when available and set binary encoding for binary tag", async () => {
         const mockNode = {
-            getEncoding: jest.fn().mockResolvedValue(undefined),
-            setEncoding: jest.fn(),
+            getEncoding: vi.fn().mockResolvedValue(undefined),
+            setEncoding: vi.fn(),
             fullPath: "/test/file.txt",
-            getProfile: jest.fn().mockReturnValue({ profile: {} }),
+            getProfile: vi.fn().mockReturnValue({ profile: {} }),
         } as unknown as IZoweUSSTreeNode;
 
         const mockApi = {
-            getTag: jest.fn().mockResolvedValue("binary"),
+            getTag: vi.fn().mockResolvedValue("binary"),
         };
 
         globalMocks.getUssApi.mockReturnValue(mockApi);
@@ -207,14 +208,14 @@ describe("USSUtils Unit Tests - autoDetectEncoding", () => {
 
     it("should use getTag when available and set binary encoding for mixed tag", async () => {
         const mockNode = {
-            getEncoding: jest.fn().mockResolvedValue(undefined),
-            setEncoding: jest.fn(),
+            getEncoding: vi.fn().mockResolvedValue(undefined),
+            setEncoding: vi.fn(),
             fullPath: "/test/file.txt",
-            getProfile: jest.fn().mockReturnValue({ profile: {} }),
+            getProfile: vi.fn().mockReturnValue({ profile: {} }),
         } as unknown as IZoweUSSTreeNode;
 
         const mockApi = {
-            getTag: jest.fn().mockResolvedValue("mixed"),
+            getTag: vi.fn().mockResolvedValue("mixed"),
         };
 
         globalMocks.getUssApi.mockReturnValue(mockApi);
@@ -227,14 +228,14 @@ describe("USSUtils Unit Tests - autoDetectEncoding", () => {
 
     it("should use getTag when available and set codepage encoding for tagged file", async () => {
         const mockNode = {
-            getEncoding: jest.fn().mockResolvedValue(undefined),
-            setEncoding: jest.fn(),
+            getEncoding: vi.fn().mockResolvedValue(undefined),
+            setEncoding: vi.fn(),
             fullPath: "/test/file.txt",
-            getProfile: jest.fn().mockReturnValue({ profile: {} }),
+            getProfile: vi.fn().mockReturnValue({ profile: {} }),
         } as unknown as IZoweUSSTreeNode;
 
         const mockApi = {
-            getTag: jest.fn().mockResolvedValue("utf-8"),
+            getTag: vi.fn().mockResolvedValue("utf-8"),
         };
 
         globalMocks.getUssApi.mockReturnValue(mockApi);
@@ -247,14 +248,14 @@ describe("USSUtils Unit Tests - autoDetectEncoding", () => {
 
     it("should use getTag when available and set undefined encoding for untagged file", async () => {
         const mockNode = {
-            getEncoding: jest.fn().mockResolvedValue(undefined),
-            setEncoding: jest.fn(),
+            getEncoding: vi.fn().mockResolvedValue(undefined),
+            setEncoding: vi.fn(),
             fullPath: "/test/file.txt",
-            getProfile: jest.fn().mockReturnValue({ profile: {} }),
+            getProfile: vi.fn().mockReturnValue({ profile: {} }),
         } as unknown as IZoweUSSTreeNode;
 
         const mockApi = {
-            getTag: jest.fn().mockResolvedValue("untagged"),
+            getTag: vi.fn().mockResolvedValue("untagged"),
         };
 
         globalMocks.getUssApi.mockReturnValue(mockApi);
@@ -267,15 +268,15 @@ describe("USSUtils Unit Tests - autoDetectEncoding", () => {
 
     it("should use isFileTagBinOrAscii when getTag is not available and file is binary", async () => {
         const mockNode = {
-            getEncoding: jest.fn().mockResolvedValue(undefined),
-            setEncoding: jest.fn(),
+            getEncoding: vi.fn().mockResolvedValue(undefined),
+            setEncoding: vi.fn(),
             fullPath: "/test/file.txt",
-            getProfile: jest.fn().mockReturnValue({ profile: {} }),
+            getProfile: vi.fn().mockReturnValue({ profile: {} }),
         } as unknown as IZoweUSSTreeNode;
 
         const mockApi = {
             getTag: null,
-            isFileTagBinOrAscii: jest.fn().mockResolvedValue(true),
+            isFileTagBinOrAscii: vi.fn().mockResolvedValue(true),
         };
 
         globalMocks.getUssApi.mockReturnValue(mockApi);
@@ -288,15 +289,15 @@ describe("USSUtils Unit Tests - autoDetectEncoding", () => {
 
     it("should use isFileTagBinOrAscii when getTag is not available and file is text", async () => {
         const mockNode = {
-            getEncoding: jest.fn().mockResolvedValue(undefined),
-            setEncoding: jest.fn(),
+            getEncoding: vi.fn().mockResolvedValue(undefined),
+            setEncoding: vi.fn(),
             fullPath: "/test/file.txt",
-            getProfile: jest.fn().mockReturnValue({ profile: {} }),
+            getProfile: vi.fn().mockReturnValue({ profile: {} }),
         } as unknown as IZoweUSSTreeNode;
 
         const mockApi = {
             getTag: null,
-            isFileTagBinOrAscii: jest.fn().mockResolvedValue(false),
+            isFileTagBinOrAscii: vi.fn().mockResolvedValue(false),
         };
 
         globalMocks.getUssApi.mockReturnValue(mockApi);
@@ -309,16 +310,16 @@ describe("USSUtils Unit Tests - autoDetectEncoding", () => {
 
     it("should use provided profile instead of node profile", async () => {
         const mockNode = {
-            getEncoding: jest.fn().mockResolvedValue(undefined),
-            setEncoding: jest.fn(),
+            getEncoding: vi.fn().mockResolvedValue(undefined),
+            setEncoding: vi.fn(),
             fullPath: "/test/file.txt",
-            getProfile: jest.fn().mockReturnValue({ profile: {} }),
+            getProfile: vi.fn().mockReturnValue({ profile: {} }),
         } as unknown as IZoweUSSTreeNode;
 
         const providedProfile = { profile: { name: "testProfile" } } as unknown as imperative.IProfileLoaded;
 
         const mockApi = {
-            getTag: jest.fn().mockResolvedValue("untagged"),
+            getTag: vi.fn().mockResolvedValue("untagged"),
         };
 
         globalMocks.getUssApi.mockReturnValue(mockApi);

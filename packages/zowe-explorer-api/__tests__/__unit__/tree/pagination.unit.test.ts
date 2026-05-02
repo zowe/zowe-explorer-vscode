@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { Mock, vi } from "vitest";
 
 import { Paginator, FetchFn, IFetchResult, NavigationTreeItem } from "../../../src";
 import * as vscode from "vscode";
@@ -32,7 +33,7 @@ const createMockFetchFunction = (totalItems: number, options?: MockFetchOptions)
     const returnLessItemsOnCursor = options?.returnLessItemsOnCursor;
     const failOnCursorProvided = !!options && Object.prototype.hasOwnProperty.call(options, "failOnCursor");
 
-    return jest.fn((cursor: string | undefined, limit: number): IFetchResult<MockDataItem, string> => {
+    return vi.fn((cursor: string | undefined, limit: number): IFetchResult<MockDataItem, string> => {
         if (failOnCursorProvided && cursor === failOnCursor) {
             throw new Error(`Simulated fetch error for cursor: ${cursor}`);
         }
@@ -72,7 +73,7 @@ describe("Paginator", () => {
     let paginator: Paginator<MockDataItem>;
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe("constructor", () => {
@@ -127,7 +128,7 @@ describe("Paginator", () => {
         it("should determine hasNextPage correctly when fetch returns fewer items than limit but has cursor", async () => {
             // Simulate scenario where API returns a next cursor even if fewer items were returned than the limit
             // (e.g., due to filtering or reaching the end soon)
-            const lessItemsFetch = jest.fn((cursor: string | undefined, limit: number): Promise<IFetchResult<MockDataItem, string>> => {
+            const lessItemsFetch = vi.fn((cursor: string | undefined, limit: number): Promise<IFetchResult<MockDataItem, string>> => {
                 if (cursor === undefined) {
                     return Promise.resolve({
                         items: createMockData(MAX_ITEMS_PER_PAGE - 1, "item-0-"), // Return 4 items
@@ -195,7 +196,7 @@ describe("Paginator", () => {
         });
 
         it("should handle fetch errors during initialization", async () => {
-            const errorFetch = jest.fn().mockRejectedValue(new Error("Fetch failed"));
+            const errorFetch = vi.fn().mockRejectedValue(new Error("Fetch failed"));
             paginator = new Paginator(MAX_ITEMS_PER_PAGE, errorFetch);
             await expect(paginator.initialize()).rejects.toThrow("Fetch failed");
             expect(paginator.getCurrentPageItems()).toEqual([]);
@@ -205,7 +206,7 @@ describe("Paginator", () => {
         });
 
         it("should not fetch if already loading", async () => {
-            const slowFetch = jest.fn(
+            const slowFetch = vi.fn(
                 () =>
                     new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
                         setTimeout(() => resolve({ items: [], nextPageCursor: undefined }), 50)
@@ -227,7 +228,7 @@ describe("Paginator", () => {
             paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
             await paginator.initialize(); // Load first page (items 0-4)
             // Reset mock calls after initialize
-            (mockFetch as jest.Mock).mockClear();
+            (mockFetch as Mock).mockClear();
         });
 
         it("should fetch the next page successfully", async () => {
@@ -250,7 +251,7 @@ describe("Paginator", () => {
 
         it("should fetch the last page successfully", async () => {
             await paginator.fetchNextPage(); // Fetch page 2 (items 5-9)
-            (mockFetch as jest.Mock).mockClear();
+            (mockFetch as Mock).mockClear();
 
             expect(paginator.canGoNext()).toBe(true);
             const nextPageItems = await paginator.fetchNextPage(); // Fetch page 3 (items 10-11)
@@ -271,7 +272,7 @@ describe("Paginator", () => {
             });
             paginator = new Paginator(MAX_ITEMS_PER_PAGE, mockFetch);
             await paginator.initialize(); // Page 1 (0-4)
-            (mockFetch as jest.Mock).mockClear();
+            (mockFetch as Mock).mockClear();
 
             await paginator.fetchNextPage(); // Fetch page 2 (should get 2 items: 5-6, based on mock)
 
@@ -289,7 +290,7 @@ describe("Paginator", () => {
         });
 
         it("should resolve gracefully if trying to fetch next page while already loading", async () => {
-            const slowFetch = jest.fn(
+            const slowFetch = vi.fn(
                 () =>
                     new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
                         setTimeout(() => resolve({ items: createMockData(MAX_ITEMS_PER_PAGE, "slow-"), nextPageCursor: "slow-cursor" }), 50)
@@ -336,7 +337,7 @@ describe("Paginator", () => {
             await paginator.fetchNextPage(); // Load page 3 (10-11)
             // Now on page 3, previous cursors should be [undefined, "cursor-4"]
             // (cursor to get page 1, cursor to get page 2)
-            (mockFetch as jest.Mock).mockClear();
+            (mockFetch as Mock).mockClear();
         });
 
         it("should fetch the previous page successfully", async () => {
@@ -359,7 +360,7 @@ describe("Paginator", () => {
 
         it("should fetch back to the first page successfully", async () => {
             await paginator.fetchPreviousPage(); // Go back to page 2 (5-9)
-            (mockFetch as jest.Mock).mockClear();
+            (mockFetch as Mock).mockClear();
 
             expect(paginator.canGoPrevious()).toBe(true);
             const firstPageItems = await paginator.fetchPreviousPage(); // Fetch page 1 (items 0-4)
@@ -384,7 +385,7 @@ describe("Paginator", () => {
         it("should resolve gracefully if trying to fetch previous page while already loading", async () => {
             await paginator.fetchPreviousPage(); // Go back to page 2 first to ensure canGoPrevious is true
 
-            const slowFetch = jest.fn(
+            const slowFetch = vi.fn(
                 () =>
                     new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
                         setTimeout(() => resolve({ items: createMockData(MAX_ITEMS_PER_PAGE, "slow-prev-"), nextPageCursor: "slow-prev-cursor" }), 50)
@@ -428,7 +429,7 @@ describe("Paginator", () => {
 
     describe("refetchCurrentPage", () => {
         it("should refetch the current page", async () => {
-            const refetchTest = jest.fn().mockReturnValue({
+            const refetchTest = vi.fn().mockReturnValue({
                 items: createMockData(MAX_ITEMS_PER_PAGE),
                 nextPageCursor: "cursor-5",
                 totalItems: 12,
@@ -485,7 +486,7 @@ describe("Paginator", () => {
         });
 
         it("isLoading should reflect loading state", async () => {
-            const slowFetch = jest.fn(
+            const slowFetch = vi.fn(
                 () =>
                     new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
                         setTimeout(() => resolve({ items: [], nextPageCursor: undefined }), 10)
@@ -537,7 +538,7 @@ describe("Paginator", () => {
         });
 
         it("canGoNext and canGoPrevious should be false while loading", async () => {
-            const slowFetch = jest.fn(
+            const slowFetch = vi.fn(
                 () =>
                     new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
                         setTimeout(() => resolve({ items: createMockData(MAX_ITEMS_PER_PAGE), nextPageCursor: "cursor-next" }), 50)
@@ -562,7 +563,7 @@ describe("Paginator", () => {
 
     describe("Setter Methods", () => {
         it("setMaxItemsPerPage updates the maxItemsPerPage when given a valid number", () => {
-            const slowFetch = jest.fn(
+            const slowFetch = vi.fn(
                 () =>
                     new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
                         setTimeout(() => resolve({ items: createMockData(MAX_ITEMS_PER_PAGE), nextPageCursor: "cursor-next" }), 50)
@@ -574,7 +575,7 @@ describe("Paginator", () => {
         });
 
         it("setMaxItemsPerPage throws when the given number is invalid", () => {
-            const slowFetch = jest.fn(
+            const slowFetch = vi.fn(
                 () =>
                     new Promise<IFetchResult<MockDataItem, string>>((resolve) =>
                         setTimeout(() => resolve({ items: createMockData(MAX_ITEMS_PER_PAGE), nextPageCursor: "cursor-next" }), 50)
@@ -589,9 +590,9 @@ describe("Paginator", () => {
 
 describe("NavigationTreeItem", () => {
     it("can successfully construct an instance with the given arguments", () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         const command = "zowe.navTreeItem.testCommand";
-        const themeIconConstructor = jest.fn();
+        const themeIconConstructor = vi.fn();
         const themeIconMockedProp = new MockedProperty(vscode, "ThemeIcon", {
             constructor: themeIconConstructor,
         } as any);
@@ -602,8 +603,8 @@ describe("NavigationTreeItem", () => {
     });
 
     it("can successfully construct a instance with the given arguments - disabled nav item", () => {
-        const callback = jest.fn();
-        const themeIconConstructor = jest.fn();
+        const callback = vi.fn();
+        const themeIconConstructor = vi.fn();
         const themeIconMockedProp = new MockedProperty(vscode, "ThemeIcon", {
             constructor: themeIconConstructor,
         } as any);

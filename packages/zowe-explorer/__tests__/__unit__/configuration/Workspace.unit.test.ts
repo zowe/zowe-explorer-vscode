@@ -8,14 +8,15 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { Mock, vi } from "vitest";
 
 import * as vscode from "vscode";
 import { Constants } from "../../../src/configuration/Constants";
 import { Workspace } from "../../../src/configuration/Workspace";
 
-function createGlobalMocks(): { [key: string]: jest.Mock } {
-    const activeTextEditor = jest.fn();
-    const executeCommand = jest.fn();
+function createGlobalMocks(): { [key: string]: Mock } {
+    const activeTextEditor = vi.fn();
+    const executeCommand = vi.fn();
 
     Object.defineProperty(vscode.window, "activeTextEditor", { get: activeTextEditor, configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand, configurable: true });

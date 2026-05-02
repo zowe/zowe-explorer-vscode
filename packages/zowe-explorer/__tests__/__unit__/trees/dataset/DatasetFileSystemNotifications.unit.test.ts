@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import { FileChangeType, Uri } from "vscode";
 import * as vscode from "vscode";
@@ -47,16 +48,16 @@ describe("DatasetFSProvider File System Notifications", () => {
     let mockedProperty: MockedProperty;
 
     beforeEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
         mockedProperty = new MockedProperty(Profiles, "getInstance", {
-            value: jest.fn().mockReturnValue({
-                loadNamedProfile: jest.fn().mockReturnValue(testProfile),
+            value: vi.fn().mockReturnValue({
+                loadNamedProfile: vi.fn().mockReturnValue(testProfile),
                 allProfiles: [],
-                getProfileFromConfig: jest.fn(),
+                getProfileFromConfig: vi.fn(),
             } as any),
         });
-        jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
-        jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+        vi.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation((() => undefined) as any);
+        vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
             isRoot: false,
             slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
             profileName: "sestest",
@@ -80,8 +81,8 @@ describe("DatasetFSProvider File System Notifications", () => {
     describe("createDirectory", () => {
         it("should create directory entry in parent", () => {
             const fakeSessionEntry = { ...testEntries.session, entries: new Map() };
-            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
-            jest.spyOn(DatasetFSProvider.instance as any, "fireSoon");
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
 
             DatasetFSProvider.instance.createDirectory(testUris.pds);
 
@@ -91,8 +92,8 @@ describe("DatasetFSProvider File System Notifications", () => {
         it("should not fire event if directory already exists", () => {
             const fakeSessionEntry = { ...testEntries.session, entries: new Map() };
             fakeSessionEntry.entries.set("USER.DATA.PDS", testEntries.pds);
-            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
-            const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance as any, "fireSoon");
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            const fireSoonSpy = vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
 
             DatasetFSProvider.instance.createDirectory(testUris.pds);
 
@@ -101,8 +102,8 @@ describe("DatasetFSProvider File System Notifications", () => {
 
         it("should update parent mtime and size when creating new directory", () => {
             const fakeSessionEntry = { ...testEntries.session, entries: new Map(), mtime: 0, size: 0 };
-            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
-            jest.spyOn(DatasetFSProvider.instance as any, "fireSoon");
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
 
             const beforeCreate = Date.now();
             DatasetFSProvider.instance.createDirectory(testUris.pds);
@@ -117,11 +118,11 @@ describe("DatasetFSProvider File System Notifications", () => {
     describe("writeFile - New Entry Creation", () => {
         it("should fire Created event when creating a new PS entry", async () => {
             const fakeSessionEntry = { ...testEntries.session, entries: new Map() };
-            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
-            jest.spyOn(DatasetFSProvider.instance as any, "uploadEntry").mockResolvedValue({
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry").mockResolvedValue({
                 apiResponse: { etag: "NEWTAG" },
             });
-            const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance as any, "fireSoon");
+            const fireSoonSpy = vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
 
             const content = new Uint8Array([1, 2, 3]);
             await DatasetFSProvider.instance.writeFile(testUris.ps, content, { create: true, overwrite: false });
@@ -135,11 +136,11 @@ describe("DatasetFSProvider File System Notifications", () => {
 
         it("should create new DsEntry as PDS member when creating in PDS", async () => {
             const fakePdsEntry = { ...testEntries.pds, entries: new Map() };
-            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakePdsEntry);
-            jest.spyOn(DatasetFSProvider.instance as any, "uploadEntry").mockResolvedValue({
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakePdsEntry);
+            vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry").mockResolvedValue({
                 apiResponse: { etag: "NEWTAG" },
             });
-            jest.spyOn(DatasetFSProvider.instance as any, "fireSoon");
+            vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
 
             const content = new Uint8Array([1, 2, 3]);
             await DatasetFSProvider.instance.writeFile(testUris.pdsMember, content, { create: true, overwrite: false });
@@ -151,9 +152,9 @@ describe("DatasetFSProvider File System Notifications", () => {
 
         it("should not upload empty file on creation", async () => {
             const fakeSessionEntry = { ...testEntries.session, entries: new Map() };
-            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
-            const uploadEntrySpy = jest.spyOn(DatasetFSProvider.instance as any, "uploadEntry");
-            jest.spyOn(DatasetFSProvider.instance as any, "fireSoon");
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            const uploadEntrySpy = vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry");
+            vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
 
             const content = new Uint8Array(); // Empty
             await DatasetFSProvider.instance.writeFile(testUris.ps, content, { create: true, overwrite: false });
@@ -173,11 +174,11 @@ describe("DatasetFSProvider File System Notifications", () => {
             existingEntry.wasAccessed = true;
 
             const fakeSessionEntry = { ...testEntries.session, entries: new Map([["USER.DATA.PS", existingEntry]]) };
-            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
-            jest.spyOn(DatasetFSProvider.instance as any, "uploadEntry").mockResolvedValue({
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry").mockResolvedValue({
                 apiResponse: { etag: "NEWTAG" },
             });
-            const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance as any, "fireSoon");
+            const fireSoonSpy = vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
 
             const content = new Uint8Array([4, 5, 6]);
             await DatasetFSProvider.instance.writeFile(testUris.ps, content, { create: false, overwrite: true });
@@ -201,11 +202,11 @@ describe("DatasetFSProvider File System Notifications", () => {
             existingEntry.wasAccessed = true;
 
             const fakeSessionEntry = { ...testEntries.session, entries: new Map([["USER.DATA.PS", existingEntry]]) };
-            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
-            jest.spyOn(DatasetFSProvider.instance as any, "uploadEntry").mockResolvedValue({
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry").mockResolvedValue({
                 apiResponse: { etag: "NEWTAG" },
             });
-            jest.spyOn(DatasetFSProvider.instance as any, "fireSoon");
+            vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
 
             const content = new Uint8Array([1, 2, 3, 4, 5]);
             await DatasetFSProvider.instance.writeFile(testUris.ps, content, { create: false, overwrite: true });
@@ -228,9 +229,9 @@ describe("DatasetFSProvider File System Notifications", () => {
             existingEntry.wasAccessed = true;
 
             const fakeSessionEntry = { ...testEntries.session, entries: new Map([["USER.DATA.PS", existingEntry]]) };
-            jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
-            const uploadEntrySpy = jest.spyOn(DatasetFSProvider.instance as any, "uploadEntry");
-            jest.spyOn(DatasetFSProvider.instance as any, "fireSoon");
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            const uploadEntrySpy = vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry");
+            vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
 
             const diffUri = testUris.ps.with({ query: "inDiff=true" });
             const content = new Uint8Array([1, 2, 3]);

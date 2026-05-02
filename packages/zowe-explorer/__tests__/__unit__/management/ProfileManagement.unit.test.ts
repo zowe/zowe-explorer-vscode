@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as sharedMock from "../../__mocks__/mockCreators/shared";
 import * as dsMock from "../../__mocks__/mockCreators/datasets";
@@ -27,13 +28,13 @@ import { ProfileManagement } from "../../../src/management/ProfileManagement";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { Definitions } from "../../../src/configuration/Definitions";
 
-jest.mock("fs");
-jest.mock("vscode");
-jest.mock("../../../src/tools/ZoweLocalStorage");
+vi.mock("fs");
+vi.mock("vscode");
+vi.mock("../../../src/tools/ZoweLocalStorage");
 
 describe("ProfileManagement unit tests", () => {
     afterEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
     function createGlobalMocks(): any {
         const newMocks = {
@@ -41,12 +42,12 @@ describe("ProfileManagement unit tests", () => {
             mockBasicAuthProfile: sharedMock.createValidIProfile(),
             mockTokenAuthProfile: sharedMock.createTokenAuthIProfile(),
             mockNoAuthProfile: sharedMock.createNoAuthIProfile(),
-            opCancelledSpy: jest.spyOn(Gui, "infoMessage"),
+            opCancelledSpy: vi.spyOn(Gui, "infoMessage"),
             mockDsSessionNode: ZoweDatasetNode,
             mockUnixSessionNode: ZoweUSSNode,
             mockJobSessionNode: ZoweJobNode,
-            mockResolveQp: jest.fn(),
-            mockCreateQp: jest.fn(),
+            mockResolveQp: vi.fn(),
+            mockCreateQp: vi.fn(),
             mockUpdateChosen: ProfileManagement.basicAuthUpdateQpItems[ProfileManagement.AuthQpLabels.update],
             mockAddBasicChosen: ProfileManagement.basicAuthAddQpItems[ProfileManagement.AuthQpLabels.add],
             mockLoginChosen: ProfileManagement.tokenAuthLoginQpItem[ProfileManagement.AuthQpLabels.login],
@@ -73,24 +74,24 @@ describe("ProfileManagement unit tests", () => {
                 newMocks.mockTreeProviders.job.mSessionNodes.push(newMocks.mockJobSessionNode);
             },
             FileSystemProvider: {
-                createDirectory: jest.fn(),
+                createDirectory: vi.fn(),
             },
         };
 
-        jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
-        Object.defineProperty(ProfilesUtils, "promptCredentials", { value: jest.fn(), configurable: true });
-        newMocks.promptSpy = jest.spyOn(ProfilesUtils, "promptCredentials");
-        Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-        newMocks.debugLogSpy = jest.spyOn(ZoweLogger, "debug");
+        vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
+        Object.defineProperty(ProfilesUtils, "promptCredentials", { value: vi.fn(), configurable: true });
+        newMocks.promptSpy = vi.spyOn(ProfilesUtils, "promptCredentials");
+        Object.defineProperty(ZoweLogger, "debug", { value: vi.fn(), configurable: true });
+        newMocks.debugLogSpy = vi.spyOn(ZoweLogger, "debug");
         Object.defineProperty(Gui, "resolveQuickPick", { value: newMocks.mockResolveQp, configurable: true });
         newMocks.mockCreateQp.mockReturnValue({
-            show: jest.fn(() => {
+            show: vi.fn(() => {
                 return {};
             }),
-            hide: jest.fn(() => {
+            hide: vi.fn(() => {
                 return {};
             }),
-            onDidAccept: jest.fn(() => {
+            onDidAccept: vi.fn(() => {
                 return {};
             }),
         });
@@ -98,37 +99,37 @@ describe("ProfileManagement unit tests", () => {
         newMocks.mockDsSessionNode = dsMock.createDatasetSessionNode(newMocks.mockSession, newMocks.mockBasicAuthProfile) as any;
         newMocks.mockProfileInstance = sharedMock.createInstanceOfProfile(newMocks.mockBasicAuthProfile);
         Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn().mockReturnValue(newMocks.mockProfileInstance),
+            value: vi.fn().mockReturnValue(newMocks.mockProfileInstance),
             configurable: true,
         });
-        Object.defineProperty(newMocks.mockProfileInstance, "editSession", { value: jest.fn(), configurable: true });
-        newMocks.editSpy = jest.spyOn(newMocks.mockProfileInstance, "editSession");
-        Object.defineProperty(newMocks.mockProfileInstance, "ssoLogin", { value: jest.fn(), configurable: true });
-        newMocks.loginSpy = jest.spyOn(newMocks.mockProfileInstance, "ssoLogin");
-        Object.defineProperty(newMocks.mockProfileInstance, "handleSwitchAuthentication", { value: jest.fn(), configurable: true });
-        newMocks.handleSwitchAuthenticationSpy = jest.spyOn(newMocks.mockProfileInstance, "handleSwitchAuthentication");
-        Object.defineProperty(newMocks.mockProfileInstance, "ssoLogout", { value: jest.fn(), configurable: true });
-        newMocks.logoutSpy = jest.spyOn(newMocks.mockProfileInstance, "ssoLogout");
-        Object.defineProperty(vscode.commands, "executeCommand", { value: jest.fn(), configurable: true });
-        newMocks.commandSpy = jest.spyOn(vscode.commands, "executeCommand");
-        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(newMocks.mockTreeProviders);
+        Object.defineProperty(newMocks.mockProfileInstance, "editSession", { value: vi.fn(), configurable: true });
+        newMocks.editSpy = vi.spyOn(newMocks.mockProfileInstance, "editSession");
+        Object.defineProperty(newMocks.mockProfileInstance, "ssoLogin", { value: vi.fn(), configurable: true });
+        newMocks.loginSpy = vi.spyOn(newMocks.mockProfileInstance, "ssoLogin");
+        Object.defineProperty(newMocks.mockProfileInstance, "handleSwitchAuthentication", { value: vi.fn(), configurable: true });
+        newMocks.handleSwitchAuthenticationSpy = vi.spyOn(newMocks.mockProfileInstance, "handleSwitchAuthentication");
+        Object.defineProperty(newMocks.mockProfileInstance, "ssoLogout", { value: vi.fn(), configurable: true });
+        newMocks.logoutSpy = vi.spyOn(newMocks.mockProfileInstance, "ssoLogout");
+        Object.defineProperty(vscode.commands, "executeCommand", { value: vi.fn(), configurable: true });
+        newMocks.commandSpy = vi.spyOn(vscode.commands, "executeCommand");
+        vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(newMocks.mockTreeProviders);
 
         return newMocks;
     }
 
     describe("unit tests around basic auth selections", () => {
         beforeEach(() => {
-            jest.resetModules();
+            vi.resetModules();
         });
 
         afterAll(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockBasicAuthProfile.name as string} is using basic authentication.`;
-            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
-            globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockBasicAuthProfile);
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+            globalMocks.mockDsSessionNode.getProfile = vi.fn().mockReturnValue(globalMocks.mockBasicAuthProfile);
             return globalMocks;
         }
         it("profile using basic authentication should see Operation Cancelled when escaping quick pick", async () => {
@@ -161,7 +162,7 @@ describe("ProfileManagement unit tests", () => {
         it("profile using basic authentication should see hide session command called for profile in data set tree view", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
             Object.defineProperty(mocks.mockProfileInstance, "getProfileInfo", {
-                value: jest.fn().mockResolvedValue(mocks.mockProfileInfo as imperative.ProfileInfo),
+                value: vi.fn().mockResolvedValue(mocks.mockProfileInfo as imperative.ProfileInfo),
                 configurable: true,
             });
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockHideProfChosen);
@@ -173,18 +174,18 @@ describe("ProfileManagement unit tests", () => {
     });
     describe("unit tests around token auth selections", () => {
         beforeEach(() => {
-            jest.resetModules();
+            vi.resetModules();
         });
 
         afterAll(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockTokenAuthProfile.name as string} is using token authentication.`;
             globalMocks.mockUnixSessionNode = unixMock.createUSSSessionNode(globalMocks.mockSession, globalMocks.mockBasicAuthProfile) as any;
-            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
-            globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
-            globalMocks.mockUnixSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
+            globalMocks.mockDsSessionNode.getProfile = vi.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
+            globalMocks.mockUnixSessionNode.getProfile = vi.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
             return globalMocks;
         }
         it("profile using token authentication should see Operation Cancelled when escaping quick pick", async () => {
@@ -234,7 +235,7 @@ describe("ProfileManagement unit tests", () => {
         });
         it("profile using token authentication should see handleSwitchAuthentication called when Change the Authentication method chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
-            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockSwitchAuthChosen);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
@@ -243,8 +244,8 @@ describe("ProfileManagement unit tests", () => {
     describe("unit tests around no auth declared selections", () => {
         function createBlockMocks(globalMocks): any {
             globalMocks.logMsg = `Profile ${globalMocks.mockNoAuthProfile.name as string} authentication method is unknown.`;
-            jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "none" } } as any);
-            globalMocks.mockDsSessionNode.getProfile = jest.fn().mockReturnValue(globalMocks.mockNoAuthProfile);
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "none" } } as any);
+            globalMocks.mockDsSessionNode.getProfile = vi.fn().mockReturnValue(globalMocks.mockNoAuthProfile);
             return globalMocks;
         }
         it("profile with no authentication method should see Operation Cancelled when escaping quick pick", async () => {
@@ -296,17 +297,17 @@ describe("ProfileManagement unit tests", () => {
     describe("handleHideProfiles unit tests", () => {
         it("should display 'operation cancelled' if no option is selected for hiding a profile", async () => {
             const mocks = createGlobalMocks();
-            const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
-            jest.spyOn(Profiles as any, "promptChangeForAllTrees").mockReturnValue(undefined);
+            const infoMessageSpy = vi.spyOn(Gui, "infoMessage");
+            vi.spyOn(Profiles as any, "promptChangeForAllTrees").mockReturnValue(undefined);
             await expect(ProfileManagement["handleHideProfiles"](mocks.mockDsSessionNode)).resolves.toEqual(undefined);
             expect(infoMessageSpy).toHaveBeenCalledTimes(1);
         });
         it("should hide the job session", async () => {
             const mocks = createGlobalMocks();
-            const commandSpy = jest.spyOn(vscode.commands, "executeCommand");
-            jest.spyOn(Profiles as any, "promptChangeForAllTrees").mockReturnValue(Profiles["getPromptChangeForAllTreesOptions"]()[1]);
+            const commandSpy = vi.spyOn(vscode.commands, "executeCommand");
+            vi.spyOn(Profiles as any, "promptChangeForAllTrees").mockReturnValue(Profiles["getPromptChangeForAllTreesOptions"]()[1]);
             mocks.mockJobSessionNode.contextValue = Constants.JOBS_SESSION_CONTEXT;
-            mocks.mockJobSessionNode.getLabel = jest.fn(() => "test");
+            mocks.mockJobSessionNode.getLabel = vi.fn(() => "test");
             await expect(ProfileManagement["handleHideProfiles"](mocks.mockJobSessionNode)).resolves.toEqual(undefined);
             expect(commandSpy).toHaveBeenCalledWith("zowe.removeSession", mocks.mockJobSessionNode, null, false);
         });
@@ -316,57 +317,57 @@ describe("ProfileManagement unit tests", () => {
         function createBlockMocks(globalMocks): any {
             const theMocks = {
                 registry: {
-                    registeredMvsApiTypes: jest.fn(),
-                    registeredUssApiTypes: jest.fn(),
-                    registeredJesApiTypes: jest.fn(),
+                    registeredMvsApiTypes: vi.fn(),
+                    registeredUssApiTypes: vi.fn(),
+                    registeredJesApiTypes: vi.fn(),
                 },
             };
             globalMocks.mockProfileInstance.allProfiles = [{ name: "sestest" }];
-            jest.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(sharedMock.createValidIProfile());
+            vi.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(sharedMock.createValidIProfile());
             Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
-                value: jest.fn().mockReturnValue(theMocks.registry),
+                value: vi.fn().mockReturnValue(theMocks.registry),
                 configurable: true,
             });
             return theMocks;
         }
         afterEach(() => {
-            jest.clearAllMocks();
-            jest.resetAllMocks();
+            vi.clearAllMocks();
+            vi.resetAllMocks();
         });
         it("should return zosmf profile registered with the MVS tree", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
-            blockMocks.registry.registeredMvsApiTypes = jest.fn().mockReturnValueOnce("zosmf");
+            blockMocks.registry.registeredMvsApiTypes = vi.fn().mockReturnValueOnce("zosmf");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS)).toEqual(["sestest"]);
         });
         it("should return zosmf profile registered with the USS tree", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
-            blockMocks.registry.registeredUssApiTypes = jest.fn().mockReturnValueOnce("zosmf");
+            blockMocks.registry.registeredUssApiTypes = vi.fn().mockReturnValueOnce("zosmf");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.USS)).toEqual(["sestest"]);
         });
         it("should return zosmf profile registered with the JES tree", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
-            blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zosmf");
+            blockMocks.registry.registeredJesApiTypes = vi.fn().mockReturnValueOnce("zosmf");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual(["sestest"]);
         });
         it("should return empty array with no profiles in allProfiles", () => {
             const globalMocks = createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             globalMocks.mockProfileInstance.allProfiles = [];
-            const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
+            const regSpy = vi.spyOn(blockMocks.registry, "registeredJesApiTypes");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
             expect(regSpy).not.toHaveBeenCalled();
         });
         it("should return empty array when profile in allProfiles doesn't load", () => {
             const globalMocks = createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
-            jest.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(undefined);
-            const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
+            vi.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(undefined);
+            const regSpy = vi.spyOn(blockMocks.registry, "registeredJesApiTypes");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
             expect(regSpy).not.toHaveBeenCalled();
         });
         it("should return empty array when profile type isn't registered", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
-            blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zftp");
+            blockMocks.registry.registeredJesApiTypes = vi.fn().mockReturnValueOnce("zftp");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
         });
         it("should return empty array when unknown tree is forcefully passed", () => {
@@ -377,9 +378,9 @@ describe("ProfileManagement unit tests", () => {
             const globalMocks = createGlobalMocks();
             createBlockMocks(globalMocks);
             const thrownError = new Error("fake error");
-            const warnSpy = jest.spyOn(ZoweLogger, "warn");
+            const warnSpy = vi.spyOn(ZoweLogger, "warn");
             Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn().mockImplementationOnce(() => {
+                value: vi.fn().mockImplementationOnce(() => {
                     throw thrownError;
                 }),
                 configurable: true,
@@ -393,57 +394,57 @@ describe("ProfileManagement unit tests", () => {
         function createBlockMocks(globalMocks): any {
             const theMocks = {
                 registry: {
-                    registeredMvsApiTypes: jest.fn(),
-                    registeredUssApiTypes: jest.fn(),
-                    registeredJesApiTypes: jest.fn(),
+                    registeredMvsApiTypes: vi.fn(),
+                    registeredUssApiTypes: vi.fn(),
+                    registeredJesApiTypes: vi.fn(),
                 },
             };
             globalMocks.mockProfileInstance.allProfiles = [{ name: "sestest" }];
-            jest.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(sharedMock.createValidIProfile());
+            vi.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(sharedMock.createValidIProfile());
             Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
-                value: jest.fn().mockReturnValue(theMocks.registry),
+                value: vi.fn().mockReturnValue(theMocks.registry),
                 configurable: true,
             });
             return theMocks;
         }
         afterEach(() => {
-            jest.clearAllMocks();
-            jest.resetAllMocks();
+            vi.clearAllMocks();
+            vi.resetAllMocks();
         });
         it("should return zosmf profile registered with the MVS tree", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
-            blockMocks.registry.registeredMvsApiTypes = jest.fn().mockReturnValueOnce("zosmf");
+            blockMocks.registry.registeredMvsApiTypes = vi.fn().mockReturnValueOnce("zosmf");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.MVS)).toEqual(["sestest"]);
         });
         it("should return zosmf profile registered with the USS tree", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
-            blockMocks.registry.registeredUssApiTypes = jest.fn().mockReturnValueOnce("zosmf");
+            blockMocks.registry.registeredUssApiTypes = vi.fn().mockReturnValueOnce("zosmf");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.USS)).toEqual(["sestest"]);
         });
         it("should return zosmf profile registered with the JES tree", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
-            blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zosmf");
+            blockMocks.registry.registeredJesApiTypes = vi.fn().mockReturnValueOnce("zosmf");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual(["sestest"]);
         });
         it("should return empty array with no profiles in allProfiles", () => {
             const globalMocks = createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             globalMocks.mockProfileInstance.allProfiles = [];
-            const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
+            const regSpy = vi.spyOn(blockMocks.registry, "registeredJesApiTypes");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
             expect(regSpy).not.toHaveBeenCalled();
         });
         it("should return empty array when profile in allProfiles doesn't load", () => {
             const globalMocks = createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
-            jest.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(undefined);
-            const regSpy = jest.spyOn(blockMocks.registry, "registeredJesApiTypes");
+            vi.spyOn(globalMocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(undefined);
+            const regSpy = vi.spyOn(blockMocks.registry, "registeredJesApiTypes");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
             expect(regSpy).not.toHaveBeenCalled();
         });
         it("should return empty array when profile type isn't registered", () => {
             const blockMocks = createBlockMocks(createGlobalMocks());
-            blockMocks.registry.registeredJesApiTypes = jest.fn().mockReturnValueOnce("zftp");
+            blockMocks.registry.registeredJesApiTypes = vi.fn().mockReturnValueOnce("zftp");
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
         });
         it("should return empty array when unknown tree is forcefully passed", () => {
@@ -454,9 +455,9 @@ describe("ProfileManagement unit tests", () => {
             const globalMocks = createGlobalMocks();
             createBlockMocks(globalMocks);
             const thrownError = new Error("fake error");
-            const warnSpy = jest.spyOn(ZoweLogger, "warn");
+            const warnSpy = vi.spyOn(ZoweLogger, "warn");
             Object.defineProperty(Profiles, "getInstance", {
-                value: jest.fn().mockImplementationOnce(() => {
+                value: vi.fn().mockImplementationOnce(() => {
                     throw thrownError;
                 }),
                 configurable: true,

@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { Mock, vi } from "vitest";
 
 import * as vscode from "vscode";
 import { createISession, createIProfile } from "../../../__mocks__/mockCreators/shared";
@@ -42,126 +43,126 @@ describe("Test src/jobs/extension", () => {
         exampleData["jobSession"] = createJobSessionNode(exampleData.session, exampleData.profile);
         exampleData["job"] = createJobNode(exampleData["jobSession"], exampleData.profile);
 
-        const jobsProvider: { [key: string]: jest.Mock } = {
-            createZoweSchema: jest.fn(),
-            createZoweSession: jest.fn(),
-            filterPrompt: jest.fn(),
-            onDidChangeConfiguration: jest.fn(),
-            pollData: jest.fn(),
-            pollActiveJobs: jest.fn(),
-            filterJobsDialog: jest.fn(),
+        const jobsProvider: { [key: string]: Mock } = {
+            createZoweSchema: vi.fn(),
+            createZoweSession: vi.fn(),
+            filterPrompt: vi.fn(),
+            onDidChangeConfiguration: vi.fn(),
+            pollData: vi.fn(),
+            pollActiveJobs: vi.fn(),
+            filterJobsDialog: vi.fn(),
         };
         const commands: IJestIt[] = [
             {
                 name: "zowe.jobs.deleteJob",
                 parm: [test.value, test._],
-                mock: [{ spy: jest.spyOn(JobActions, "deleteCommand"), arg: [jobsProvider, test.value, test._] }],
+                mock: [{ spy: vi.spyOn(JobActions, "deleteCommand"), arg: [jobsProvider, test.value, test._] }],
             },
             {
                 name: "zowe.jobs.runModifyCommand",
-                mock: [{ spy: jest.spyOn(JobActions, "modifyCommand"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(JobActions, "modifyCommand"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.runStopCommand",
-                mock: [{ spy: jest.spyOn(JobActions, "stopCommand"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(JobActions, "stopCommand"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.refreshJobsServer",
-                mock: [{ spy: jest.spyOn(JobActions, "refreshJob"), arg: [test.value, jobsProvider] }],
+                mock: [{ spy: vi.spyOn(JobActions, "refreshJob"), arg: [test.value, jobsProvider] }],
             },
             {
                 name: "zowe.jobs.refreshAllJobs",
-                mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [] }],
+                mock: [{ spy: vi.spyOn(SharedActions, "refreshAll"), arg: [] }],
             },
             {
                 name: "zowe.jobs.refresh",
-                mock: [{ spy: jest.spyOn(SharedActions, "refreshProvider"), arg: [jobsProvider] }],
+                mock: [{ spy: vi.spyOn(SharedActions, "refreshProvider"), arg: [jobsProvider] }],
             },
             {
                 name: "zowe.jobs.refreshJob",
                 parm: [{ mParent: test.value }],
-                mock: [{ spy: jest.spyOn(JobActions, "refreshJob"), arg: [test.value, jobsProvider] }],
+                mock: [{ spy: vi.spyOn(JobActions, "refreshJob"), arg: [test.value, jobsProvider] }],
             },
             {
                 name: "zowe.jobs.downloadSingleSpool",
-                mock: [{ spy: jest.spyOn(JobActions, "downloadSingleSpool"), arg: [[test.value], false] }],
+                mock: [{ spy: vi.spyOn(JobActions, "downloadSingleSpool"), arg: [[test.value], false] }],
             },
             {
                 name: "zowe.jobs.downloadSingleSpoolBinary",
-                mock: [{ spy: jest.spyOn(JobActions, "downloadSingleSpool"), arg: [[test.value], true] }],
+                mock: [{ spy: vi.spyOn(JobActions, "downloadSingleSpool"), arg: [[test.value], true] }],
             },
             {
                 name: "zowe.jobs.addJobsSession",
-                mock: [{ spy: jest.spyOn(jobsProvider, "createZoweSession"), arg: [jobsProvider] }],
+                mock: [{ spy: vi.spyOn(jobsProvider, "createZoweSession"), arg: [jobsProvider] }],
             },
             {
                 name: "zowe.jobs.setOwner",
-                mock: [{ spy: jest.spyOn(JobActions, "setOwner"), arg: [test.value, jobsProvider] }],
+                mock: [{ spy: vi.spyOn(JobActions, "setOwner"), arg: [test.value, jobsProvider] }],
             },
             {
                 name: "zowe.jobs.setPrefix",
-                mock: [{ spy: jest.spyOn(JobActions, "setPrefix"), arg: [test.value, jobsProvider] }],
+                mock: [{ spy: vi.spyOn(JobActions, "setPrefix"), arg: [test.value, jobsProvider] }],
             },
             {
                 name: "zowe.jobs.downloadSpool",
-                mock: [{ spy: jest.spyOn(JobActions, "downloadSpool"), arg: [[test.value], false] }],
+                mock: [{ spy: vi.spyOn(JobActions, "downloadSpool"), arg: [[test.value], false] }],
             },
             {
                 name: "zowe.jobs.downloadSpoolBinary",
-                mock: [{ spy: jest.spyOn(JobActions, "downloadSpool"), arg: [[test.value], true] }],
+                mock: [{ spy: vi.spyOn(JobActions, "downloadSpool"), arg: [[test.value], true] }],
             },
             {
                 name: "zowe.jobs.getJobJcl",
                 mock: [
-                    { spy: jest.spyOn(SharedContext, "isJob"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(JobActions, "downloadJcl"), arg: [test.value] },
+                    { spy: vi.spyOn(SharedContext, "isJob"), arg: [test.value], ret: true },
+                    { spy: vi.spyOn(JobActions, "downloadJcl"), arg: [test.value] },
                 ],
             },
             {
                 name: "zowe.jobs.setJobSpool",
                 parm: [test._, test.value],
-                mock: [{ spy: jest.spyOn(JobActions, "focusOnJob"), arg: [jobsProvider, test._, test.value] }],
+                mock: [{ spy: vi.spyOn(JobActions, "focusOnJob"), arg: [jobsProvider, test._, test.value] }],
             },
             {
                 name: "zowe.jobs.search",
-                mock: [{ spy: jest.spyOn(jobsProvider, "filterPrompt"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(jobsProvider, "filterPrompt"), arg: [test.value] }],
             },
             {
                 name: "onDidChangeConfiguration",
-                mock: [{ spy: jest.spyOn(jobsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(jobsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.startPolling",
-                mock: [{ spy: jest.spyOn(jobsProvider, "pollData"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(jobsProvider, "pollData"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.stopPolling",
-                mock: [{ spy: jest.spyOn(jobsProvider, "pollData"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(jobsProvider, "pollData"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.startPollingActiveJobs",
-                mock: [{ spy: jest.spyOn(jobsProvider, "pollActiveJobs"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(jobsProvider, "pollActiveJobs"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.stopPollingActiveJobs",
-                mock: [{ spy: jest.spyOn(jobsProvider, "pollActiveJobs"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(jobsProvider, "pollActiveJobs"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.cancelJob",
-                mock: [{ spy: jest.spyOn(JobActions, "cancelJobs"), arg: [jobsProvider, [exampleData.job]] }],
+                mock: [{ spy: vi.spyOn(JobActions, "cancelJobs"), arg: [jobsProvider, [exampleData.job]] }],
                 parm: [exampleData.job],
             },
             {
                 name: "zowe.jobs.filterJobs",
-                mock: [{ spy: jest.spyOn(jobsProvider, "filterJobsDialog"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(jobsProvider, "filterJobsDialog"), arg: [test.value] }],
             },
             {
                 name: "zowe.jobs.tableView",
-                mock: [{ spy: jest.spyOn(JobTableView, "handleCommand"), arg: [test.context, test.value, undefined] }],
+                mock: [{ spy: vi.spyOn(JobTableView, "handleCommand"), arg: [test.context, test.value, undefined] }],
             },
             {
                 name: "zowe.jobs.loadMoreRecords",
-                mock: [{ spy: jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri"), arg: [{ scheme: ZoweScheme.Jobs }, undefined] }],
+                mock: [{ spy: vi.spyOn(JobFSProvider.instance, "fetchSpoolAtUri"), arg: [{ scheme: ZoweScheme.Jobs }, undefined] }],
                 parm: [{ scheme: ZoweScheme.Jobs }],
             },
         ];
@@ -173,22 +174,22 @@ describe("Test src/jobs/extension", () => {
             onDidChangeConfiguration = (fun: () => void) => {
                 return { onDidChangeConfiguration: fun };
             };
-            spyCreateJobsTree = jest.spyOn(JobInit, "createJobsTree");
-            jest.spyOn(SharedInit, "initSubscribers").mockImplementation(jest.fn());
+            spyCreateJobsTree = vi.spyOn(JobInit, "createJobsTree");
+            vi.spyOn(SharedInit, "initSubscribers").mockImplementation(vi.fn());
             Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
             Object.defineProperty(vscode.window, "showWarningMessage", { value: onDidChangeConfiguration });
-            Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+            Object.defineProperty(ZoweLogger, "trace", { value: vi.fn(), configurable: true });
             Object.defineProperty(ZoweLocalStorage, "globalState", {
                 value: {
                     get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
-                    update: jest.fn(),
+                    update: vi.fn(),
                     keys: () => [],
                 },
                 configurable: true,
             });
 
-            jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string) => {
+            vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string) => {
                 if (key === "zowe.jobs.paginate.enabled") {
                     return true;
                 }
@@ -204,7 +205,7 @@ describe("Test src/jobs/extension", () => {
             spyCreateJobsTree.mockResolvedValue(jobsProvider as any);
         });
         afterAll(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         processSubscriptions(commands, test);

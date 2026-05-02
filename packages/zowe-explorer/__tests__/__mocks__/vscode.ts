@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import { Progress, ProgressOptions, QuickPick, QuickPickItem } from "vscode";
 
@@ -713,23 +714,23 @@ export namespace window {
             busy: false,
             buttons: [],
             canSelectMany: false,
-            dispose: jest.fn(),
+            dispose: vi.fn(),
             enabled: true,
-            hide: jest.fn(),
+            hide: vi.fn(),
             ignoreFocusOut: false,
             items: [],
             matchOnDetail: false,
             matchOnDescription: false,
-            onDidAccept: jest.fn(),
-            onDidChangeActive: jest.fn(),
-            onDidChangeSelection: jest.fn(),
-            onDidChangeValue: jest.fn(),
-            onDidHide: jest.fn(),
-            onDidTriggerButton: jest.fn(),
-            onDidTriggerItemButton: jest.fn(),
+            onDidAccept: vi.fn(),
+            onDidChangeActive: vi.fn(),
+            onDidChangeSelection: vi.fn(),
+            onDidChangeValue: vi.fn(),
+            onDidHide: vi.fn(),
+            onDidTriggerButton: vi.fn(),
+            onDidTriggerItemButton: vi.fn(),
             placeholder: undefined,
             selectedItems: [],
-            show: jest.fn(),
+            show: vi.fn(),
             step: undefined,
             title: undefined,
             totalSteps: undefined,
@@ -818,11 +819,11 @@ export namespace window {
         options?: any
     ): any {
         return {
-            onDidDispose: jest.fn(),
+            onDidDispose: vi.fn(),
             webview: {
-                asWebviewUri: jest.fn(),
-                postMessage: jest.fn(),
-                onDidReceiveMessage: jest.fn(),
+                asWebviewUri: vi.fn(),
+                postMessage: vi.fn(),
+                onDidReceiveMessage: vi.fn(),
             },
         };
     }
@@ -862,9 +863,9 @@ export namespace window {
     }
 
     export const tabGroups = {
-        onDidChangeTabs: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+        onDidChangeTabs: vi.fn().mockReturnValue({ dispose: vi.fn() }),
         all: [] as any[],
-        close: jest.fn(),
+        close: vi.fn(),
     };
 }
 
@@ -1120,7 +1121,7 @@ export class EventEmitter<T> {
     /**
      * The event listeners can subscribe to.
      */
-    event: Event<T> = jest.fn().mockImplementation((listener) => {
+    event: Event<T> = vi.fn().mockImplementation((listener) => {
         this.subscribers.push(listener);
         return new Disposable(() => {
             const idx = this.subscribers.findIndex((v) => v === listener);
@@ -1397,7 +1398,7 @@ export enum FileSystemProviderErrorCode {
  * This class has factory methods for common error-cases, like `FileNotFound` when
  * a file or folder doesn't exist, use them like so: `throw vscode.FileSystemError.FileNotFound(someUri);`
  */
-export const { FileSystemError, Selection, Position, ThemeIcon, CodeLensProvider } = require("jest-mock-vscode").createVSCodeMock(jest);
+export const { FileSystemError, Selection, Position, ThemeIcon, CodeLensProvider } = require("jest-mock-vscode").createVSCodeMock(vi);
 
 /**
  * Namespace for dealing with the current workspace. A workspace is the representation
@@ -1440,7 +1441,7 @@ export namespace workspace {
          */
         readonly removed: readonly WorkspaceFolder[];
     }
-    export const onDidChangeWorkspaceFolders: Event<WorkspaceFoldersChangeEvent> = jest.fn();
+    export const onDidChangeWorkspaceFolders: Event<WorkspaceFoldersChangeEvent> = vi.fn();
 
     export function onDidCloseTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
     export function onDidOpenTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
@@ -1647,7 +1648,7 @@ export namespace workspace {
 
 // We need to do this since "delete" is a reserved keyword and cannot be defined as a function name.
 Object.defineProperty(workspace.fs, "delete", {
-    value: jest.fn(),
+    value: vi.fn(),
 });
 
 export interface InputBoxOptions {

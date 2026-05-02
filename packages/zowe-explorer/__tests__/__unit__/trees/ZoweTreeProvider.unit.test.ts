@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum, Sorting, AuthHandler, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
@@ -43,24 +44,24 @@ async function createGlobalMocks() {
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
-            update: jest.fn(),
+            update: vi.fn(),
             keys: () => [],
         },
         configurable: true,
     });
     const profile = createIProfile();
     const globalMocks = {
-        mockLoadNamedProfile: jest.fn(),
-        mockDefaultProfile: jest.fn(),
-        withProgress: jest.fn(),
-        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
-        mockAffects: jest.fn(),
-        mockEditSession: jest.fn(),
-        mockCheckCurrentProfile: jest.fn(),
-        mockDisableValidationContext: jest.fn(),
-        mockEnableValidationContext: jest.fn(),
-        getConfiguration: jest.fn(),
-        refresh: jest.fn(),
+        mockLoadNamedProfile: vi.fn(),
+        mockDefaultProfile: vi.fn(),
+        withProgress: vi.fn(),
+        createTreeView: vi.fn().mockReturnValue({ onDidCollapseElement: vi.fn() }),
+        mockAffects: vi.fn(),
+        mockEditSession: vi.fn(),
+        mockCheckCurrentProfile: vi.fn(),
+        mockDisableValidationContext: vi.fn(),
+        mockEnableValidationContext: vi.fn(),
+        getConfiguration: vi.fn(),
+        refresh: vi.fn(),
         testProfile: profile,
         testSession: createISession(),
         testResponse: createFileResponse({ items: [] }),
@@ -69,22 +70,22 @@ async function createGlobalMocks() {
         testUSSNode: null,
         testSessionNode: null,
         testTreeProvider: new ZoweTreeProvider(PersistenceSchemaEnum.USS, null),
-        mockGetProfileSetting: jest.fn(),
+        mockGetProfileSetting: vi.fn(),
         mockProfilesForValidation: [
             {
                 name: profile.name,
                 status: "active",
             },
         ],
-        mockProfilesValidationSetting: jest.fn(),
-        mockSsoLogin: jest.fn(),
-        mockSsoLogout: jest.fn(),
-        ProgressLocation: jest.fn().mockImplementation(() => {
+        mockProfilesValidationSetting: vi.fn(),
+        mockSsoLogin: vi.fn(),
+        mockSsoLogout: vi.fn(),
+        ProgressLocation: vi.fn().mockImplementation(() => {
             return {
                 Notification: 15,
             };
         }),
-        enums: jest.fn().mockImplementation(() => {
+        enums: vi.fn().mockImplementation(() => {
             return {
                 Global: 1,
                 Workspace: 2,
@@ -94,14 +95,14 @@ async function createGlobalMocks() {
         mockProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
         FileSystemProvider: {
-            createDirectory: jest.fn(),
+            createDirectory: vi.fn(),
         },
     };
 
-    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
+    vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
 
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
-        value: jest.fn(() => {
+        value: vi.fn(() => {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
@@ -110,13 +111,13 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
     Object.defineProperty(vscode.window, "withProgress", { value: globalMocks.withProgress, configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn().mockReturnValue({
+        value: vi.fn().mockReturnValue({
             allProfiles: [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }],
             getDefaultProfile: globalMocks.mockDefaultProfile,
             validProfile: Validation.ValidationType.VALID,
-            validateProfiles: jest.fn(),
+            validateProfiles: vi.fn(),
             loadNamedProfile: globalMocks.mockLoadNamedProfile,
-            getBaseProfile: jest.fn(() => {
+            getBaseProfile: vi.fn(() => {
                 return globalMocks.testProfile;
             }),
             editSession: globalMocks.mockEditSession,
@@ -126,7 +127,7 @@ async function createGlobalMocks() {
                 name: globalMocks.testProfile.name,
                 status: "active",
             }),
-            showProfileInactiveMsg: jest.fn(),
+            showProfileInactiveMsg: vi.fn(),
             getProfileSetting: globalMocks.mockGetProfileSetting.mockReturnValue({
                 name: globalMocks.testProfile.name,
                 status: "active",
@@ -139,10 +140,10 @@ async function createGlobalMocks() {
             ssoLogin: globalMocks.mockSsoLogin,
             ssoLogout: globalMocks.mockSsoLogout,
             getProfileInfo: () => globalMocks.mockProfileInfo,
-            fetchAllProfiles: jest.fn(() => {
+            fetchAllProfiles: vi.fn(() => {
                 return [{ name: "profile1" }, { name: "profile2" }, { name: "base" }];
             }),
-            fetchAllProfilesByType: jest.fn(() => {
+            fetchAllProfilesByType: vi.fn(() => {
                 return [{ name: "profile1" }];
             }),
         }),
@@ -199,7 +200,7 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
     it("Tests that editSession is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const spy = jest.spyOn(ZoweLogger, "trace");
+        const spy = vi.spyOn(ZoweLogger, "trace");
         await blockMocks.testJobsProvider.editSession(blockMocks.jobNode, globalMocks.testUSSTree);
         expect(globalMocks.mockEditSession).toHaveBeenCalled();
         expect(spy).toHaveBeenCalled();
@@ -208,9 +209,9 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
     it("Tests that the session is edited and added to only the specific tree modified", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const deleteSessionSpy = jest.spyOn(blockMocks.testJobsProvider, "deleteSession");
-        jest.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue(blockMocks.testJobsProvider);
-        jest.spyOn(blockMocks.jobNode, "getSession").mockReturnValue(null);
+        const deleteSessionSpy = vi.spyOn(blockMocks.testJobsProvider, "deleteSession");
+        vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue(blockMocks.testJobsProvider);
+        vi.spyOn(blockMocks.jobNode, "getSession").mockReturnValue(null);
         blockMocks.jobNode.contextValue = Constants.JOBS_SESSION_CONTEXT;
         await blockMocks.testJobsProvider.editSession(blockMocks.jobNode);
         expect(globalMocks.mockEditSession).toHaveBeenCalled();
@@ -221,7 +222,7 @@ describe("ZoweJobNode unit tests - Function editSession", () => {
 describe("Tree Provider unit tests, function getTreeItem", () => {
     it("Tests that getTreeItem returns an object of type vscode.TreeItem", async () => {
         const globalMocks = await createGlobalMocks();
-        const spy = jest.spyOn(ZoweLogger, "trace");
+        const spy = vi.spyOn(ZoweLogger, "trace");
         const sampleElement = new ZoweUSSNode({
             label: "/u/myUser",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -236,7 +237,7 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
 describe("Tree Provider unit tests, function getParent", () => {
     it("Tests that getParent returns undefined when called on a root node", async () => {
         const globalMocks = await createGlobalMocks();
-        const spy = jest.spyOn(ZoweLogger, "trace");
+        const spy = vi.spyOn(ZoweLogger, "trace");
         // Await return value from getChildren
         const rootChildren = await globalMocks.testUSSTree.getChildren();
         const parent = globalMocks.testUSSTree.getParent(rootChildren[1]);
@@ -266,19 +267,19 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.getConfiguration.mockReturnValue({
             get: () => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}"],
-            update: jest.fn(() => {
+            update: vi.fn(() => {
                 return {};
             }),
         });
 
-        const Event = jest.fn().mockImplementation(() => {
+        const Event = vi.fn().mockImplementation(() => {
             return {
                 affectsConfiguration: globalMocks.mockAffects,
             };
         });
         const e = new Event();
-        jest.spyOn(vscode.workspace, "getConfiguration").mockImplementationOnce(globalMocks.getConfiguration);
-        jest.spyOn(vscode.workspace, "getConfiguration").mockImplementationOnce(globalMocks.getConfiguration);
+        vi.spyOn(vscode.workspace, "getConfiguration").mockImplementationOnce(globalMocks.getConfiguration);
+        vi.spyOn(vscode.workspace, "getConfiguration").mockImplementationOnce(globalMocks.getConfiguration);
         globalMocks.getConfiguration.mockClear();
 
         await globalMocks.testUSSTree.onDidChangeConfiguration(e);
@@ -289,7 +290,7 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
 describe("Tree Provider unit tests, function flipState", () => {
     it("Testing that expand tree is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
-        const spy = jest.spyOn(ZoweLogger, "trace");
+        const spy = vi.spyOn(ZoweLogger, "trace");
         const folder = new ZoweUSSNode({
             label: "/u/myuser",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -348,8 +349,8 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     }
     beforeEach(() => {
         // we should always try to start with a clean state
-        jest.restoreAllMocks();
-        jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+        vi.restoreAllMocks();
+        vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
             getCommonApi: () => ({
                 getSession: () => createISession(),
             }),
@@ -367,8 +368,8 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     it("Tests that checkCurrentProfile is executed successfully with active status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
-        const checkJwtSpy = jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile");
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
+        const checkJwtSpy = vi.spyOn(ZoweTreeProvider as any, "checkJwtForProfile");
 
         await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
         expect(checkJwtSpy).toHaveBeenCalled();
@@ -378,7 +379,7 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
         const blockMocks = await createBlockMocks(globalMocks);
         blockMocks.jobNode.contextValue = "SERVER";
         Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
+            value: vi.fn(() => {
                 return {
                     checkCurrentProfile: globalMocks.mockCheckCurrentProfile.mockReturnValueOnce({
                         name: globalMocks.testProfile.name,
@@ -396,10 +397,10 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
     it("Tests that checkCurrentProfile is executed successfully with inactive status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
-            ds: { setStatusForSession: jest.fn(), mSessionNodes: [createDatasetSessionNode(createISession(), createIProfile())] } as any,
-            uss: { setStatusForSession: jest.fn(), mSessionNodes: [createUSSSessionNode(createISession(), createIProfile())] } as any,
-            job: { setStatusForSession: jest.fn(), mSessionNodes: [createJobSessionNode(createISession(), createIProfile())] } as any,
+        vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
+            ds: { setStatusForSession: vi.fn(), mSessionNodes: [createDatasetSessionNode(createISession(), createIProfile())] } as any,
+            uss: { setStatusForSession: vi.fn(), mSessionNodes: [createUSSSessionNode(createISession(), createIProfile())] } as any,
+            job: { setStatusForSession: vi.fn(), mSessionNodes: [createJobSessionNode(createISession(), createIProfile())] } as any,
         });
         blockMocks.jobNode.contextValue = "session";
         globalMocks.mockCheckCurrentProfile.mockResolvedValueOnce({
@@ -416,7 +417,7 @@ describe("Tree Provider Unit Tests - refreshHomeProfileContext", () => {
         const globalMocks = await createGlobalMocks();
         globalMocks.mockProfileInfo.usingTeamConfig = true;
         globalMocks.mockProfileInfo.getOsLocInfo = () => [{ global: true }];
-        const spy = jest.spyOn(ZoweLogger, "trace");
+        const spy = vi.spyOn(ZoweLogger, "trace");
         await expect(globalMocks.testUSSTree.refreshHomeProfileContext(globalMocks.testUSSNode)).resolves.not.toThrow();
         expect(globalMocks.testUSSNode.contextValue).toEqual("directory_home");
         expect(spy).toHaveBeenCalled();
@@ -427,7 +428,7 @@ describe("Tree Provider Unit Tests - refreshHomeProfileContext", () => {
 describe("Tree Provider Unit Tests - function getTreeType", () => {
     it("should return the persistence schema of the tree", async () => {
         const globalMocks = await createGlobalMocks();
-        const spy = jest.spyOn(ZoweLogger, "trace");
+        const spy = vi.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testUSSTree.getTreeType()).toEqual(globalMocks.testUSSTree.persistenceSchema);
         expect(spy).toHaveBeenCalled();
         spy.mockClear();
@@ -437,7 +438,7 @@ describe("Tree Provider Unit Tests - function getTreeType", () => {
 describe("Tree Provider Unit Tests - function findNonFavoritedNode", () => {
     it("should return undefined", async () => {
         const globalMocks = await createGlobalMocks();
-        const spy = jest.spyOn(ZoweLogger, "trace");
+        const spy = vi.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testTreeProvider.findNonFavoritedNode(globalMocks.testUSSNode)).toEqual(undefined);
         expect(spy).toHaveBeenCalled();
         spy.mockClear();
@@ -447,7 +448,7 @@ describe("Tree Provider Unit Tests - function findNonFavoritedNode", () => {
 describe("Tree Provider Unit Tests - function findFavoritedNode", () => {
     it("should return undefined", async () => {
         const globalMocks = await createGlobalMocks();
-        const spy = jest.spyOn(ZoweLogger, "trace");
+        const spy = vi.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testTreeProvider.findFavoritedNode(globalMocks.testUSSNode)).toEqual(undefined);
         expect(spy).toHaveBeenCalled();
         spy.mockClear();
@@ -457,7 +458,7 @@ describe("Tree Provider Unit Tests - function findFavoritedNode", () => {
 describe("Tree Provider Unit Tests - function renameFavorite", () => {
     it("should return undefined", async () => {
         const globalMocks = await createGlobalMocks();
-        const spy = jest.spyOn(ZoweLogger, "trace");
+        const spy = vi.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testTreeProvider.renameFavorite(globalMocks.testUSSNode, "test")).toEqual(undefined);
         expect(spy).toHaveBeenCalled();
         spy.mockClear();
@@ -467,7 +468,7 @@ describe("Tree Provider Unit Tests - function renameFavorite", () => {
 describe("Tree Provider Unit Tests - function renameNode", () => {
     it("should return undefined", async () => {
         const globalMocks = await createGlobalMocks();
-        const spy = jest.spyOn(ZoweLogger, "trace");
+        const spy = vi.spyOn(ZoweLogger, "trace");
         expect(globalMocks.testTreeProvider.renameNode("test", "test1", "test2")).toEqual(undefined);
         expect(spy).toHaveBeenCalled();
         spy.mockClear();
@@ -476,7 +477,7 @@ describe("Tree Provider Unit Tests - function renameNode", () => {
 
 describe("Tree Provider Unit Tests - function ssoLogin", () => {
     const createBlockMocks = () => {
-        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
+        const executeCommandSpy = vi.spyOn(vscode.commands, "executeCommand");
         return {
             executeCommandSpy,
         };
@@ -526,7 +527,7 @@ describe("Tree Provider Unit Tests - function ssoLogin", () => {
 
 describe("Tree Provider Unit Tests - function ssoLogout", () => {
     const createBlockMocks = () => {
-        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
+        const executeCommandSpy = vi.spyOn(vscode.commands, "executeCommand");
         return {
             executeCommandSpy,
         };
@@ -587,11 +588,11 @@ describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", ()
             { label: "sestest", getProfileName: (): string => "profile2" },
         ];
         globalMocks.testDSTree.getSessions = (): string[] => ["profile1", "profile2"];
-        globalMocks.testDSTree.addSingleSession = jest.fn();
+        globalMocks.testDSTree.addSingleSession = vi.fn();
 
-        const resetValidationSettingsSpy = jest.spyOn(SharedActions, "resetValidationSettings");
-        resetValidationSettingsSpy.mockImplementation().mockClear();
-        const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
+        const resetValidationSettingsSpy = vi.spyOn(SharedActions, "resetValidationSettings");
+        resetValidationSettingsSpy.mockImplementation((() => undefined) as any).mockClear();
+        const zoweLoggerWarnSpy = vi.spyOn(ZoweLogger, "warn");
 
         await expect(
             (ZoweTreeProvider.prototype as any).loadProfileByPersistedProfile(globalMocks.testDSTree, undefined, true)
@@ -609,11 +610,11 @@ describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", ()
             { label: "sestest", getProfileName: (): string => "profile2" },
         ];
         globalMocks.testDSTree.getSessions = (): string[] => ["profile1", "profile2"];
-        globalMocks.testDSTree.addSingleSession = jest.fn();
+        globalMocks.testDSTree.addSingleSession = vi.fn();
 
-        const resetValidationSettingsSpy = jest.spyOn(SharedActions, "resetValidationSettings");
-        resetValidationSettingsSpy.mockImplementation().mockClear();
-        const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
+        const resetValidationSettingsSpy = vi.spyOn(SharedActions, "resetValidationSettings");
+        resetValidationSettingsSpy.mockImplementation((() => undefined) as any).mockClear();
+        const zoweLoggerWarnSpy = vi.spyOn(ZoweLogger, "warn");
 
         await expect((ZoweTreeProvider.prototype as any).loadProfileByPersistedProfile(globalMocks.testDSTree, "zosmf", true)).resolves.not.toThrow();
         expect(globalMocks.testDSTree.addSingleSession).toHaveBeenCalledTimes(1);
@@ -626,15 +627,15 @@ describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", ()
         globalMocks.testDSTree = DatasetInit.createDatasetTree(imperative.Logger.getAppLogger());
         globalMocks.testDSTree.mSessionNodes = [{ label: "sestest", getProfileName: (): string => "profile1" }];
         globalMocks.testDSTree.getSessions = (): string[] => ["profile1"];
-        globalMocks.testDSTree.addSingleSession = jest.fn().mockImplementationOnce(() => Promise.resolve());
+        globalMocks.testDSTree.addSingleSession = vi.fn().mockImplementationOnce(() => Promise.resolve());
 
-        const resetValidationSettingsSpy = jest.spyOn(SharedActions, "resetValidationSettings");
-        resetValidationSettingsSpy.mockImplementation();
-        jest.spyOn(Profiles.getInstance(), "getDefaultProfile").mockImplementationOnce(() => {
+        const resetValidationSettingsSpy = vi.spyOn(SharedActions, "resetValidationSettings");
+        resetValidationSettingsSpy.mockImplementation((() => undefined) as any);
+        vi.spyOn(Profiles.getInstance(), "getDefaultProfile").mockImplementationOnce(() => {
             throw new Error();
         });
 
-        const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
+        const zoweLoggerWarnSpy = vi.spyOn(ZoweLogger, "warn");
 
         await expect(ZoweTreeProvider.prototype["loadProfileByPersistedProfile"](globalMocks.testDSTree, "zosmf", true)).resolves.not.toThrow();
         expect(globalMocks.testDSTree.addSingleSession).toHaveBeenCalledTimes(1); // only once due to error thrown with getDefaultProfile
@@ -648,12 +649,12 @@ describe("Tree Provider Unit Tests - function loadProfileByPersistedProfile", ()
 describe("Tree Provider Unit Tests - function isGlobalProfileNode", () => {
     it("returns true if the profile is located in the global config", async () => {
         const globalMocks = await createGlobalMocks();
-        const getAllProfilesMock = jest.spyOn(globalMocks.mockProfileInfo, "getAllProfiles").mockReturnValue([
+        const getAllProfilesMock = vi.spyOn(globalMocks.mockProfileInfo, "getAllProfiles").mockReturnValue([
             {
                 profName: "sestest",
             },
         ]);
-        const getOsLocInfoMock = jest.spyOn(globalMocks.mockProfileInfo, "getOsLocInfo").mockReturnValue([{ global: true }]);
+        const getOsLocInfoMock = vi.spyOn(globalMocks.mockProfileInfo, "getOsLocInfo").mockReturnValue([{ global: true }]);
         await expect((globalMocks.testTreeProvider as any).isGlobalProfileNode({ getProfileName: () => "sestest" })).resolves.toBe(true);
         getAllProfilesMock.mockRestore();
         getOsLocInfoMock.mockRestore();
@@ -661,12 +662,12 @@ describe("Tree Provider Unit Tests - function isGlobalProfileNode", () => {
 
     it("returns false if the node does not have HOME_SUFFIX in its contextValue", async () => {
         const globalMocks = await createGlobalMocks();
-        const getAllProfilesMock = jest.spyOn(globalMocks.mockProfileInfo, "getAllProfiles").mockReturnValue([
+        const getAllProfilesMock = vi.spyOn(globalMocks.mockProfileInfo, "getAllProfiles").mockReturnValue([
             {
                 profName: "sestest",
             },
         ]);
-        const getOsLocInfoMock = jest.spyOn(globalMocks.mockProfileInfo, "getOsLocInfo").mockReturnValue([{ global: false }]);
+        const getOsLocInfoMock = vi.spyOn(globalMocks.mockProfileInfo, "getOsLocInfo").mockReturnValue([{ global: false }]);
         await expect(
             (globalMocks.testTreeProvider as any).isGlobalProfileNode({
                 contextValue: Constants.FAV_PROFILE_CONTEXT,
@@ -680,7 +681,7 @@ describe("Tree Provider Unit Tests - function isGlobalProfileNode", () => {
 
 describe("Tree Provider Unit Tests - function checkJwtForProfile", () => {
     function getBlockMocks(supportTokens: boolean = true) {
-        const getAllProfiles = jest.fn().mockReturnValue([
+        const getAllProfiles = vi.fn().mockReturnValue([
             {
                 profName: "zosmf",
                 profType: "zosmf",
@@ -692,20 +693,20 @@ describe("Tree Provider Unit Tests - function checkJwtForProfile", () => {
                 },
             },
         ]);
-        const hasTokenExpiredForProfile = jest.fn();
-        const mergeArgsForProfile = jest.fn();
+        const hasTokenExpiredForProfile = vi.fn();
+        const mergeArgsForProfile = vi.fn();
         const profile = createIProfile();
         profile.profile.tokenValue = "abcdefgh12345678";
 
-        const getTokenTypeName = jest.fn().mockReturnValue(supportTokens ? "apimlAuthenticationToken" : undefined);
-        const getCommonApiMock = jest.spyOn(ZoweExplorerApiRegister.prototype, "getCommonApi").mockReturnValue({
+        const getTokenTypeName = vi.fn().mockReturnValue(supportTokens ? "apimlAuthenticationToken" : undefined);
+        const getCommonApiMock = vi.spyOn(ZoweExplorerApiRegister.prototype, "getCommonApi").mockReturnValue({
             getTokenTypeName,
         } as any);
 
-        const loadNamedProfile = jest.fn().mockResolvedValue(profile);
-        const showProfileInactiveMsg = jest.fn();
-        const profilesGetInstance = jest.spyOn(Profiles, "getInstance").mockReturnValue({
-            getProfileInfo: jest.fn().mockResolvedValue({
+        const loadNamedProfile = vi.fn().mockResolvedValue(profile);
+        const showProfileInactiveMsg = vi.fn();
+        const profilesGetInstance = vi.spyOn(Profiles, "getInstance").mockReturnValue({
+            getProfileInfo: vi.fn().mockResolvedValue({
                 hasTokenExpiredForProfile,
                 getAllProfiles,
                 mergeArgsForProfile,
@@ -762,7 +763,7 @@ describe("Tree Provider Unit Tests - function checkJwtForProfile", () => {
         it("prompts user to log in and returns valid if successful", async () => {
             const blockMocks = getBlockMocks();
             blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(true);
-            const promptForSsoLogin = jest.spyOn(AuthUtils, "promptForSsoLogin").mockResolvedValueOnce(true);
+            const promptForSsoLogin = vi.spyOn(AuthUtils, "promptForSsoLogin").mockResolvedValueOnce(true);
             expect(await (ZoweTreeProvider as any).checkJwtForProfile("zosmf")).toBe(JwtCheckResult.TokenValid);
             expect(blockMocks.hasTokenExpiredForProfile).toHaveBeenCalledWith("zosmf");
             expect(promptForSsoLogin).toHaveBeenCalled();
@@ -771,7 +772,7 @@ describe("Tree Provider Unit Tests - function checkJwtForProfile", () => {
         it("prompts user to log in and returns expired if user dismisses login prompt", async () => {
             const blockMocks = getBlockMocks();
             blockMocks.hasTokenExpiredForProfile.mockReturnValueOnce(true);
-            const promptForSsoLogin = jest.spyOn(AuthUtils, "promptForSsoLogin").mockResolvedValueOnce(false);
+            const promptForSsoLogin = vi.spyOn(AuthUtils, "promptForSsoLogin").mockResolvedValueOnce(false);
             expect(await (ZoweTreeProvider as any).checkJwtForProfile("zosmf")).toBe(JwtCheckResult.TokenExpired);
             expect(blockMocks.hasTokenExpiredForProfile).toHaveBeenCalledWith("zosmf");
             expect(promptForSsoLogin).toHaveBeenCalled();
@@ -789,16 +790,16 @@ describe("Tree Provider Unit Tests - function updateSessionContext", () => {
             job: createJobSessionNode(session, profile),
         };
         const sharedProviders = {
-            ds: { setStatusForSession: jest.fn(), mSessionNodes: [sessionNodes.ds] } as any,
-            uss: { setStatusForSession: jest.fn(), mSessionNodes: [sessionNodes.uss] } as any,
-            job: { setStatusForSession: jest.fn(), mSessionNodes: [sessionNodes.job] } as any,
+            ds: { setStatusForSession: vi.fn(), mSessionNodes: [sessionNodes.ds] } as any,
+            uss: { setStatusForSession: vi.fn(), mSessionNodes: [sessionNodes.uss] } as any,
+            job: { setStatusForSession: vi.fn(), mSessionNodes: [sessionNodes.job] } as any,
         };
         return {
             profile,
             session,
             sessionNodes,
             sharedProviders,
-            sharedProviderMock: jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValueOnce(sharedProviders),
+            sharedProviderMock: vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValueOnce(sharedProviders),
         };
     }
 
@@ -817,7 +818,7 @@ describe("Tree Provider Unit Tests - function setStatusInSession", () => {
     function getBlockMocks() {
         const profile = createIProfile();
         const session = createISession();
-        const nodeDataChanged = jest.spyOn(ZoweTreeProvider.prototype, "nodeDataChanged").mockImplementation();
+        const nodeDataChanged = vi.spyOn(ZoweTreeProvider.prototype, "nodeDataChanged").mockImplementation((() => undefined) as any);
         const treeProvider = new ZoweTreeProvider(PersistenceSchemaEnum.Dataset, createDatasetFavoritesNode());
         return {
             nodeDataChanged,
@@ -848,7 +849,7 @@ describe("Tree Provider Unit Tests - function setStatusInSession", () => {
     });
     it("returns early when a falsy node is provided", () => {
         const { treeProvider } = getBlockMocks();
-        const getIconByIdMock = jest.spyOn(IconGenerator, "getIconById").mockClear().mockImplementation();
+        const getIconByIdMock = vi.spyOn(IconGenerator, "getIconById").mockClear().mockImplementation((() => undefined) as any);
         (treeProvider as any).setStatusForSession(null, Validation.ValidationType.VALID);
         expect(getIconByIdMock).not.toHaveBeenCalled();
     });

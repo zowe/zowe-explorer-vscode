@@ -31,7 +31,7 @@
   ],
   "scripts": {
     "build": "pnpm clean && pnpm license && webpack --mode production && pnpm madge",
-    "test:unit": "jest \".*__tests__.*\\.unit\\.test\\.ts\" --coverage",
+    "test:unit": "vitest run --coverage",
     "test": "pnpm test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"pnpm lint:all\" \"pnpm run \"/pretty.*/\"\"",
     "lint:all": "pnpm run \"/^lint:[sth].*/\"",
@@ -57,57 +57,9 @@
     "@zowe/zos-jobs-for-zowe-sdk": "^8.31.0",
     "@zowe/zowe-explorer-api": "workspace:*"
   },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "ts",
-      "tsx"
-    ],
-    "testPathIgnorePatterns": [
-      "<rootDir>/src/decorators"
-    ],
-    "watchPathIgnorePatterns": [
-      "<rootDir>/results/unit"
-    ],
-    "transform": {
-      "^.+\\.(ts|tsx)$": [
-        "ts-jest",
-        {
-          "tsconfig": "tsconfig.json",
-          "diagnostics": false
-        }
-      ]
-    },
-    "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
-    "modulePathIgnorePatterns": [
-      "out/"
-    ],
-    "reporters": [
-      "default",
-      "jest-junit",
-      "jest-stare",
-      "jest-html-reporter"
-    ],
-    "coverageReporters": [
-      "json",
-      "lcov",
-      "text",
-      "cobertura"
-    ],
-    "coverageDirectory": "<rootDir>/results/unit/coverage",
-    "preset": "ts-jest"
-  },
-  "jest-html-reporter": {
-    "pageTitle": "Zowe FTP Extension Tests",
-    "outputPath": "results/unit/results.html"
-  },
-  "jest-stare": {
-    "resultDir": "results/unit/jest-stare",
-    "coverageLink": "../coverage/lcov-report/index.html"
-  },
-  "jest-junit": {
-    "outputDirectory": "<rootDir>/results/unit",
-    "outputName": "junit.xml"
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
+    "vitest": "^3.2.4"
   },
   "madge": {
     "detectiveOptions": {

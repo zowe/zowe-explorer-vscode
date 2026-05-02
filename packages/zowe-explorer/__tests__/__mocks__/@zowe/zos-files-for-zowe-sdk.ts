@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as imperative from "@zowe/imperative";
 import type { IListOptions } from "@zowe/zos-files-for-zowe-sdk";
@@ -193,8 +194,9 @@ export class IZosFilesResponse {
 }
 
 export class ZosFilesUtils {
-    public static getDirsFromDataSet = jest.fn().mockReturnValue("test/dataset/path");
+    public static getDirsFromDataSet = vi.fn().mockReturnValue("test/dataset/path");
     public static DEFAULT_FILE_EXTENSION = "txt";
 }
 
-export const { Copy } = jest.requireActual("@zowe/zos-files-for-zowe-sdk");
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+export const { Copy } = require("@zowe/zos-files-for-zowe-sdk") as typeof import("@zowe/zos-files-for-zowe-sdk");

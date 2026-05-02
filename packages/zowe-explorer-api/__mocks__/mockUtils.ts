@@ -8,12 +8,13 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { Mock, vi } from "vitest";
 
 // Used for the MockedProperty class (polyfills for Symbol.{asyncDispose, dispose})
 require("disposablestack/auto");
 
 // Idea is borrowed from: https://github.com/kulshekhar/ts-jest/blob/master/src/util/testing.ts
-export const mocked = <T extends (..._args: any[]) => any>(fn: T): jest.Mock<ReturnType<T>> => fn as any;
+export const mocked = <T extends (..._args: any[]) => any>(fn: T): Mock<ReturnType<T>> => fn as any;
 
 enum MockedValueType {
     Primitive,
@@ -35,7 +36,7 @@ export class MockedProperty {
     #originalDescriptor?: PropertyDescriptor;
 
     private initValueType() {
-        if (typeof this.#val === "function" || jest.isMockFunction(this.#val)) {
+        if (typeof this.#val === "function" || vi.isMockFunction(this.#val)) {
             this.#valType = MockedValueType.Function;
         } else if (typeof this.#val === "object" || Array.isArray(this.#val)) {
             this.#valType = MockedValueType.Ref;
@@ -52,7 +53,7 @@ export class MockedProperty {
         this.#originalDescriptor = descriptor ?? Object.getOwnPropertyDescriptor(object, key);
 
         if (!value) {
-            this.#val = jest.fn();
+            this.#val = vi.fn();
             this.#valType = MockedValueType.Function;
             Object.defineProperty(object, key, {
                 value: this.#val,
@@ -63,7 +64,7 @@ export class MockedProperty {
 
         if (typeof value === "function") {
             // wrap provided function around a Jest function, if needed
-            this.#val = jest.isMockFunction(value) ? value : jest.fn().mockImplementation(value);
+            this.#val = vi.isMockFunction(value) ? value : vi.fn().mockImplementation(value);
         } else {
             this.#val = value;
         }
@@ -84,7 +85,7 @@ export class MockedProperty {
             return;
         }
 
-        if (this.#valType === MockedValueType.Function && jest.isMockFunction(this.#val)) {
+        if (this.#valType === MockedValueType.Function && vi.isMockFunction(this.#val)) {
             this.#val.mockRestore();
         }
 
@@ -94,7 +95,7 @@ export class MockedProperty {
     }
 
     public get mock() {
-        if (!jest.isMockFunction(this.#val)) {
+        if (!vi.isMockFunction(this.#val)) {
             throw Error("MockedValue.mock called, but mocked value is not a Jest function");
         }
 

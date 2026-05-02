@@ -65,58 +65,6 @@
     "package": "pnpm build && pnpm pack && node ../../scripts/mv-pack.js zowe-zowe-explorer-api tgz",
     "copy-secrets": "copyfiles -f ../../node_modules/@zowe/secrets-for-zowe-sdk/prebuilds/*.node ./prebuilds"
   },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "ts",
-      "tsx"
-    ],
-    "testPathIgnorePatterns": [
-      "<rootDir>/src/decorators"
-    ],
-    "watchPathIgnorePatterns": [
-      "<rootDir>/results/unit"
-    ],
-    "transform": {
-      "^.+\\.tsx?$": [
-        "ts-jest",
-        {
-          "diagnostics": false,
-          "tsconfig": "tsconfig-tests.json"
-        }
-      ]
-    },
-    "testRegex": "__tests__.*\\.(spec|test)\\.ts$",
-    "modulePathIgnorePatterns": [
-      "out/"
-    ],
-    "reporters": [
-      "default",
-      "jest-junit",
-      "jest-stare",
-      "jest-html-reporter"
-    ],
-    "coverageReporters": [
-      "json",
-      "lcov",
-      "text",
-      "cobertura"
-    ],
-    "coverageDirectory": "<rootDir>/results/unit/coverage",
-    "preset": "ts-jest"
-  },
-  "jest-html-reporter": {
-    "pageTitle": "Zowe Explorer API Tests",
-    "outputPath": "results/unit/results.html"
-  },
-  "jest-stare": {
-    "resultDir": "results/unit/jest-stare",
-    "coverageLink": "../coverage/lcov-report/index.html"
-  },
-  "jest-junit": {
-    "outputDirectory": "<rootDir>/results/unit",
-    "outputName": "junit.xml"
-  },
   "madge": {
     "detectiveOptions": {
       "ts": {

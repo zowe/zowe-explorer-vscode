@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-
+import { Mock, MockInstance, vi } from "vitest";
 import * as vscode from "vscode";
 import * as core from "@zowe/core-for-zowe-sdk";
 import * as profUtils from "../../../../src/utils/ProfilesUtils";
@@ -34,49 +34,49 @@ import { ReleaseNotes } from "../../../../src/utils/ReleaseNotes";
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
-jest.mock("../../../../src/utils/LoggerUtils");
-jest.mock("../../../../src/tools/ZoweLogger");
-jest.mock("../../../../src/utils/ReleaseNotes");
+vi.mock("../../../../src/utils/LoggerUtils");
+vi.mock("../../../../src/tools/ZoweLogger");
+vi.mock("../../../../src/utils/ReleaseNotes");
 
-jest.mock("../../../../src/tools/ZoweLocalStorage", () => ({
+vi.mock("../../../../src/tools/ZoweLocalStorage", () => ({
     ZoweLocalStorage: {
-        globalState: { get: jest.fn(), update: jest.fn() },
-        workspaceState: { get: jest.fn(), update: jest.fn() },
-        getValue: jest.fn(),
-        setValue: jest.fn(),
+        globalState: { get: vi.fn(), update: vi.fn() },
+        workspaceState: { get: vi.fn(), update: vi.fn() },
+        getValue: vi.fn(),
+        setValue: vi.fn(),
     },
 }));
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
-        const executeCommand = { fun: jest.fn() };
+        const executeCommand = { fun: vi.fn() };
         const test: ITestContext = {
             context: { subscriptions: [] },
             value: {
                 test: "shared",
                 providers: { ds: "ds", uss: "uss", job: "job" },
-                affectsConfiguration: jest.fn(),
-                document: jest.fn(),
+                affectsConfiguration: vi.fn(),
+                document: vi.fn(),
                 text: "\n",
             },
             _: { _: "_" },
         };
-        const profileMocks = { deleteProfile: jest.fn(), disableValidation: jest.fn(), enableValidation: jest.fn(), refresh: jest.fn() };
-        const cmdProviders = { mvs: { issueMvsCommand: jest.fn() }, tso: { issueTsoCommand: jest.fn() }, uss: { issueUnixCommand: jest.fn() } };
+        const profileMocks = { deleteProfile: vi.fn(), disableValidation: vi.fn(), enableValidation: vi.fn(), refresh: vi.fn() };
+        const cmdProviders = { mvs: { issueMvsCommand: vi.fn() }, tso: { issueTsoCommand: vi.fn() }, uss: { issueUnixCommand: vi.fn() } };
         const treeProvider = {
-            addFavorite: jest.fn(),
-            deleteSession: jest.fn(),
-            editSession: jest.fn(),
-            getTreeView: jest.fn().mockReturnValue({ reveal: jest.fn() }),
-            openWithEncoding: jest.fn(),
-            refreshElement: jest.fn(),
-            removeFavorite: jest.fn(),
-            removeFavProfile: jest.fn(),
-            saveSearch: jest.fn(),
-            ssoLogin: jest.fn(),
-            ssoLogout: jest.fn(),
+            addFavorite: vi.fn(),
+            deleteSession: vi.fn(),
+            editSession: vi.fn(),
+            getTreeView: vi.fn().mockReturnValue({ reveal: vi.fn() }),
+            openWithEncoding: vi.fn(),
+            refreshElement: vi.fn(),
+            removeFavorite: vi.fn(),
+            removeFavProfile: vi.fn(),
+            saveSearch: vi.fn(),
+            ssoLogin: vi.fn(),
+            ssoLogout: vi.fn(),
         };
-        const onProfileUpdated = jest.fn().mockReturnValue(new vscode.Disposable(jest.fn()));
+        const onProfileUpdated = vi.fn().mockReturnValue(new vscode.Disposable(vi.fn()));
         const mockOnProfileUpdated = new MockedProperty(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated", undefined, onProfileUpdated);
 
         const commands: IJestIt[] = [
@@ -84,8 +84,8 @@ describe("Test src/shared/extension", () => {
                 name: "zowe.updateSecureCredentials",
                 parm: ["@zowe/cli"],
                 mock: [
-                    { spy: jest.spyOn(profUtils.ProfilesUtils, "updateCredentialManagerSetting"), arg: ["@zowe/cli"] },
-                    { spy: jest.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
+                    { spy: vi.spyOn(profUtils.ProfilesUtils, "updateCredentialManagerSetting"), arg: ["@zowe/cli"] },
+                    { spy: vi.spyOn(profUtils.ProfilesUtils, "writeOverridesFile"), arg: [] },
                 ],
             },
             {
@@ -94,30 +94,30 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.editHistory",
-                mock: [{ spy: jest.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders] }],
+                mock: [{ spy: vi.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders] }],
             },
             {
                 name: "zowe.displayReleaseNotes",
-                mock: [{ spy: jest.spyOn(ReleaseNotes, "display"), arg: [test.context, true] }],
+                mock: [{ spy: vi.spyOn(ReleaseNotes, "display"), arg: [test.context, true] }],
             },
             {
                 name: "zowe.promptCredentials",
-                mock: [{ spy: jest.spyOn(profUtils.ProfilesUtils, "promptCredentials"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(profUtils.ProfilesUtils, "promptCredentials"), arg: [test.value] }],
             },
             {
                 name: "zowe.certificateWizard",
                 mock: [
                     {
-                        spy: jest.spyOn(certWizard, "CertificateWizard").mockReturnValueOnce({
+                        spy: vi.spyOn(certWizard, "CertificateWizard").mockReturnValueOnce({
                             userSubmission: {
                                 promise: Promise.resolve({
                                     cert: "/a/b/cert.pem",
                                     certKey: "/a/b/cert.key.pem",
                                 }),
-                                resolve: jest.fn(),
-                                reject: jest.fn(),
+                                resolve: vi.fn(),
+                                reject: vi.fn(),
                             },
-                            panel: { dispose: jest.fn() } as any,
+                            panel: { dispose: vi.fn() } as any,
                         } as any),
                         arg: [test.context, test.value],
                     },
@@ -126,108 +126,108 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:1",
                 mock: [
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: true },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: true },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
                 ],
             },
             {
                 name: "onDidChangeConfiguration:2",
                 mock: [
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: true },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: true },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
                 ],
             },
             {
                 name: "onDidChangeConfiguration:3",
                 mock: [
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: true },
-                    { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
-                    { spy: jest.spyOn(SharedActions, "refreshAll"), arg: [] },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: true },
+                    { spy: vi.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
+                    { spy: vi.spyOn(SharedActions, "refreshAll"), arg: [] },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
                 ],
             },
             {
                 name: "onDidChangeConfiguration:4",
                 mock: [
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
                 ],
             },
             {
                 name: "onDidChangeConfiguration:5",
                 mock: [
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: true },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
-                    { spy: jest.spyOn(executeCommand, "fun"), arg: ["zowe.updateSecureCredentials"] },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: true },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
+                    { spy: vi.spyOn(executeCommand, "fun"), arg: ["zowe.updateSecureCredentials"] },
                 ],
             },
             {
                 name: "onDidChangeConfiguration:6",
                 mock: [
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: true },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: true },
                     {
-                        spy: jest.spyOn(SettingsConfig, "getDirectValue"),
+                        spy: vi.spyOn(SettingsConfig, "getDirectValue"),
                         arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS, Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS],
                         ret: 10,
                     },
-                    { spy: jest.spyOn(core.ZosmfRestClient, "setThrottlingOptions"), arg: [{ maxConcurrentRequests: 10 }] },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
+                    { spy: vi.spyOn(core.ZosmfRestClient, "setThrottlingOptions"), arg: [{ maxConcurrentRequests: 10 }] },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: false },
                 ],
             },
             {
                 name: "onDidChangeConfiguration:7",
                 mock: [
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
-                    { spy: jest.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: true },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS], ret: false },
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT], ret: true },
                     {
-                        spy: jest.spyOn(SettingsConfig, "getDirectValue"),
+                        spy: vi.spyOn(SettingsConfig, "getDirectValue"),
                         arg: [Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT, Constants.ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT],
                         ret: 300000,
                     },
-                    { spy: jest.spyOn(core.ZosmfRestClient, "setThrottlingOptions"), arg: [{ queueTimeout: 300000 }] },
+                    { spy: vi.spyOn(core.ZosmfRestClient, "setThrottlingOptions"), arg: [{ queueTimeout: 300000 }] },
                 ],
             },
             {
                 name: "zowe.openRecentMember",
-                mock: [{ spy: jest.spyOn(SharedActions, "openRecentMemberPrompt"), arg: ["ds", "uss"] }],
+                mock: [{ spy: vi.spyOn(SharedActions, "openRecentMemberPrompt"), arg: ["ds", "uss"] }],
             },
             {
                 name: "zowe.searchInAllLoadedItems",
-                mock: [{ spy: jest.spyOn(SharedActions, "searchInAllLoadedItems"), arg: ["ds", "uss"] }],
+                mock: [{ spy: vi.spyOn(SharedActions, "searchInAllLoadedItems"), arg: ["ds", "uss"] }],
             },
             {
                 name: "onDidSaveTextDocument:1",
@@ -242,120 +242,120 @@ describe("Test src/shared/extension", () => {
             {
                 name: "zowe.disableValidation",
                 mock: [
-                    { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
-                    { spy: jest.spyOn(profileMocks, "disableValidation"), arg: [test.value] },
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "refreshElement"), arg: [test.value] },
+                    { spy: vi.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
+                    { spy: vi.spyOn(profileMocks, "disableValidation"), arg: [test.value] },
+                    { spy: vi.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: vi.spyOn(treeProvider, "refreshElement"), arg: [test.value] },
                 ],
             },
             {
                 name: "zowe.enableValidation",
                 mock: [
-                    { spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
-                    { spy: jest.spyOn(profileMocks, "enableValidation"), arg: [test.value] },
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "refreshElement"), arg: [test.value] },
+                    { spy: vi.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks },
+                    { spy: vi.spyOn(profileMocks, "enableValidation"), arg: [test.value] },
+                    { spy: vi.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: vi.spyOn(treeProvider, "refreshElement"), arg: [test.value] },
                 ],
             },
             {
                 name: "zowe.ssoLogin",
                 mock: [
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "ssoLogin"), arg: [test.value] },
+                    { spy: vi.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: vi.spyOn(treeProvider, "ssoLogin"), arg: [test.value] },
                 ],
             },
             {
                 name: "zowe.ssoLogout",
                 mock: [
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "ssoLogout"), arg: [test.value] },
+                    { spy: vi.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: vi.spyOn(treeProvider, "ssoLogout"), arg: [test.value] },
                 ],
             },
             {
                 name: "zowe.deleteProfile",
-                mock: [{ spy: jest.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
+                mock: [{ spy: vi.spyOn(Profiles, "getInstance"), arg: [], ret: profileMocks }],
             },
             {
                 name: "zowe.editSession",
                 mock: [
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "editSession"), arg: [test.value] },
+                    { spy: vi.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: vi.spyOn(treeProvider, "editSession"), arg: [test.value] },
                 ],
             },
             {
                 name: "zowe.removeSession",
                 mock: [
-                    { spy: jest.spyOn(SharedContext, "isSession"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "deleteSession"), arg: [test.value, undefined] },
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: vi.spyOn(SharedContext, "isSession"), arg: [test.value], ret: true },
+                    { spy: vi.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: vi.spyOn(treeProvider, "deleteSession"), arg: [test.value, undefined] },
+                    { spy: vi.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
                 ],
             },
             {
                 name: "zowe.saveSearch",
                 mock: [
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "saveSearch"), arg: [test.value] },
+                    { spy: vi.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: vi.spyOn(treeProvider, "saveSearch"), arg: [test.value] },
                 ],
             },
             {
                 name: "zowe.addFavorite",
                 mock: [
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "addFavorite"), arg: [test.value] },
+                    { spy: vi.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: vi.spyOn(treeProvider, "addFavorite"), arg: [test.value] },
                 ],
             },
             {
                 name: "zowe.removeFavorite",
                 mock: [
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "removeFavorite"), arg: [test.value] },
+                    { spy: vi.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: vi.spyOn(treeProvider, "removeFavorite"), arg: [test.value] },
                 ],
             },
             {
                 name: "zowe.removeFavProfile",
                 parm: [{ label: test.value }],
                 mock: [
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [{ label: test.value }], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "removeFavProfile"), arg: [test.value, true] },
+                    { spy: vi.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [{ label: test.value }], ret: treeProvider },
+                    { spy: vi.spyOn(treeProvider, "removeFavProfile"), arg: [test.value, true] },
                 ],
             },
             {
                 name: "zowe.openWithEncoding",
                 mock: [
-                    { spy: jest.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
-                    { spy: jest.spyOn(treeProvider, "openWithEncoding"), arg: [test.value, undefined] },
+                    { spy: vi.spyOn(SharedTreeProviders, "getProviderForNode"), arg: [test.value], ret: treeProvider },
+                    { spy: vi.spyOn(treeProvider, "openWithEncoding"), arg: [test.value, undefined] },
                 ],
             },
             {
                 name: "zowe.issueTsoCmd:1",
-                mock: [{ spy: jest.spyOn(cmdProviders.tso, "issueTsoCommand"), arg: [undefined, undefined, test.value] }],
+                mock: [{ spy: vi.spyOn(cmdProviders.tso, "issueTsoCommand"), arg: [undefined, undefined, test.value] }],
             },
             {
                 name: "zowe.issueTsoCmd:2",
                 parm: [],
-                mock: [{ spy: jest.spyOn(cmdProviders.tso, "issueTsoCommand"), arg: [] }],
+                mock: [{ spy: vi.spyOn(cmdProviders.tso, "issueTsoCommand"), arg: [] }],
             },
             {
                 name: "zowe.issueMvsCmd:1",
-                mock: [{ spy: jest.spyOn(cmdProviders.mvs, "issueMvsCommand"), arg: [undefined, undefined, test.value] }],
+                mock: [{ spy: vi.spyOn(cmdProviders.mvs, "issueMvsCommand"), arg: [undefined, undefined, test.value] }],
             },
             {
                 name: "zowe.issueMvsCmd:2",
                 parm: [],
-                mock: [{ spy: jest.spyOn(cmdProviders.mvs, "issueMvsCommand"), arg: [] }],
+                mock: [{ spy: vi.spyOn(cmdProviders.mvs, "issueMvsCommand"), arg: [] }],
             },
             {
                 name: "zowe.selectForCompare",
-                mock: [{ spy: jest.spyOn(LocalFileManagement, "selectFileForCompare"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(LocalFileManagement, "selectFileForCompare"), arg: [test.value] }],
             },
             {
                 name: "zowe.compareWithSelected",
-                mock: [{ spy: jest.spyOn(LocalFileManagement, "compareChosenFileContent"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(LocalFileManagement, "compareChosenFileContent"), arg: [test.value] }],
             },
             {
                 name: "zowe.compareWithSelectedReadOnly",
-                mock: [{ spy: jest.spyOn(LocalFileManagement, "compareChosenFileContent"), arg: [test.value, true] }],
+                mock: [{ spy: vi.spyOn(LocalFileManagement, "compareChosenFileContent"), arg: [test.value, true] }],
             },
             {
                 name: "zowe.compareFileStarted",
@@ -363,21 +363,21 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.issueUnixCmd:1",
-                mock: [{ spy: jest.spyOn(cmdProviders.uss, "issueUnixCommand"), arg: [test.value, undefined] }],
+                mock: [{ spy: vi.spyOn(cmdProviders.uss, "issueUnixCommand"), arg: [test.value, undefined] }],
             },
             {
                 name: "zowe.issueUnixCmd:2",
                 parm: [],
-                mock: [{ spy: jest.spyOn(cmdProviders.uss, "issueUnixCommand"), arg: [] }],
+                mock: [{ spy: vi.spyOn(cmdProviders.uss, "issueUnixCommand"), arg: [] }],
             },
         ];
 
-        let zosmfRestClientSetThrottleOptionsSpy: jest.SpyInstance;
+        let zosmfRestClientSetThrottleOptionsSpy: MockInstance;
         beforeAll(() => {
-            jest.spyOn(MvsCommandHandler, "getInstance").mockReturnValue(cmdProviders.mvs as any);
-            jest.spyOn(TsoCommandHandler, "getInstance").mockReturnValue(cmdProviders.tso as any);
-            jest.spyOn(UnixCommandHandler, "getInstance").mockReturnValue(cmdProviders.uss as any);
-            jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string, defaultValue?: unknown): unknown => {
+            vi.spyOn(MvsCommandHandler, "getInstance").mockReturnValue(cmdProviders.mvs as any);
+            vi.spyOn(TsoCommandHandler, "getInstance").mockReturnValue(cmdProviders.tso as any);
+            vi.spyOn(UnixCommandHandler, "getInstance").mockReturnValue(cmdProviders.uss as any);
+            vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string, defaultValue?: unknown): unknown => {
                 return defaultValue;
             });
             test.context.extension = {
@@ -399,13 +399,13 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(core, "getZoweDir", { value: () => test.value });
             Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand.fun });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
-            zosmfRestClientSetThrottleOptionsSpy = jest.spyOn(core.ZosmfRestClient, "setThrottlingOptions");
+            zosmfRestClientSetThrottleOptionsSpy = vi.spyOn(core.ZosmfRestClient, "setThrottlingOptions");
             SharedInit.registerCommonCommands(test.context, test.value.providers);
         });
 
         afterAll(() => {
             mockOnProfileUpdated[Symbol.dispose]();
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should set up throttling for z/OSMF", () => {
@@ -426,7 +426,7 @@ describe("Test src/shared/extension", () => {
         });
 
         it("should register setupRemoteWorkspaces", () => {
-            jest.spyOn(vscode.commands, "registerCommand").mockImplementation(() => {
+            vi.spyOn(vscode.commands, "registerCommand").mockImplementation(() => {
                 return {} as vscode.Disposable;
             });
             SharedInit.registerCommonCommands(test.context, test.value.providers);
@@ -436,10 +436,10 @@ describe("Test src/shared/extension", () => {
 
     describe("onDidChangeTabs - tab close focus restoration", () => {
         let context: any;
-        let onDidChangeTabs: jest.Mock;
+        let onDidChangeTabs: Mock;
         let capturedTabsHandler: (e: any) => Promise<void>;
-        const mockReveal = jest.fn().mockResolvedValue(undefined);
-        const mockGetTreeView = jest.fn().mockReturnValue({ reveal: mockReveal });
+        const mockReveal = vi.fn().mockResolvedValue(undefined);
+        const mockGetTreeView = vi.fn().mockReturnValue({ reveal: mockReveal });
         const mockNode = { label: "TEST.DS", resourceUri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" }) };
         const mockProvider = {
             getTreeView: mockGetTreeView,
@@ -462,13 +462,13 @@ describe("Test src/shared/extension", () => {
 
         beforeEach(() => {
             context = { subscriptions: [] };
-            jest.useFakeTimers();
+            vi.useFakeTimers();
 
             Object.defineProperty(vscode, "workspace", {
                 value: {
                     ...vscode.workspace,
-                    onDidChangeConfiguration: jest.fn().mockReturnValue({ dispose: jest.fn() }),
-                    onDidSaveTextDocument: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+                    onDidChangeConfiguration: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+                    onDidSaveTextDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
                 },
                 configurable: true,
                 writable: true,
@@ -477,20 +477,20 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(vscode, "commands", {
                 value: {
                     ...vscode.commands,
-                    registerCommand: jest.fn().mockReturnValue({ dispose: jest.fn() }),
-                    executeCommand: jest.fn(),
+                    registerCommand: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+                    executeCommand: vi.fn(),
                 },
                 configurable: true,
                 writable: true,
             });
 
-            jest.spyOn(MvsCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: jest.fn() } as any);
-            jest.spyOn(TsoCommandHandler, "getInstance").mockReturnValue({ issueTsoCommand: jest.fn() } as any);
-            jest.spyOn(UnixCommandHandler, "getInstance").mockReturnValue({ issueUnixCommand: jest.fn() } as any);
+            vi.spyOn(MvsCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: vi.fn() } as any);
+            vi.spyOn(TsoCommandHandler, "getInstance").mockReturnValue({ issueTsoCommand: vi.fn() } as any);
+            vi.spyOn(UnixCommandHandler, "getInstance").mockReturnValue({ issueUnixCommand: vi.fn() } as any);
 
-            onDidChangeTabs = jest.fn().mockImplementation((handler) => {
+            onDidChangeTabs = vi.fn().mockImplementation((handler) => {
                 capturedTabsHandler = handler;
-                return { dispose: jest.fn() };
+                return { dispose: vi.fn() };
             });
 
             Object.defineProperty(vscode.window, "tabGroups", {
@@ -499,15 +499,15 @@ describe("Test src/shared/extension", () => {
                 writable: true,
             });
 
-            jest.spyOn(vscode.window, "setStatusBarMessage").mockReturnValue({ dispose: jest.fn() } as any);
-            jest.spyOn(vscode.l10n, "t").mockImplementation((msg: string, ...args: any[]) => args.reduce((m, a) => m.replace("{0}", a), msg));
+            vi.spyOn(vscode.window, "setStatusBarMessage").mockReturnValue({ dispose: vi.fn() } as any);
+            vi.spyOn(vscode.l10n, "t").mockImplementation((msg: string, ...args: any[]) => args.reduce((m, a) => m.replace("{0}", a), msg));
 
             SharedInit.isRestoringFocus = false;
             mockReveal.mockClear();
 
-            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockProvider as any);
-            jest.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockProvider as any);
-            jest.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockProvider as any);
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockProvider as any);
+            vi.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockProvider as any);
+            vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockProvider as any);
 
             SharedInit.registerCommonCommands(context, { ds: mockProvider, uss: mockProvider, job: mockProvider } as any);
         });
@@ -523,8 +523,8 @@ describe("Test src/shared/extension", () => {
                 configurable: true,
                 writable: true,
             });
-            jest.useRealTimers();
-            jest.restoreAllMocks();
+            vi.useRealTimers();
+            vi.restoreAllMocks();
         });
 
         it("should register the onDidChangeTabs event listener", () => {
@@ -541,7 +541,7 @@ describe("Test src/shared/extension", () => {
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            await jest.runAllTimersAsync();
+            await vi.runAllTimersAsync();
             await handlerPromise;
 
             expect(mockReveal).toHaveBeenCalledWith(mockNode, { select: true, focus: true });
@@ -553,7 +553,7 @@ describe("Test src/shared/extension", () => {
                 resourceUri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/profile/u/user/file.txt" }),
             };
             const ussProvider = { getTreeView: mockGetTreeView, mSessionNodes: [ussNode] };
-            jest.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(ussProvider as any);
+            vi.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(ussProvider as any);
 
             const activeUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/profile/u/user/file.txt" });
             mockActiveTab(activeUri);
@@ -563,7 +563,7 @@ describe("Test src/shared/extension", () => {
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            await jest.runAllTimersAsync();
+            await vi.runAllTimersAsync();
             await handlerPromise;
 
             expect(mockReveal).toHaveBeenCalledWith(ussNode, { select: true, focus: true });
@@ -575,7 +575,7 @@ describe("Test src/shared/extension", () => {
                 resourceUri: vscode.Uri.from({ scheme: ZoweScheme.Jobs, path: "/profile/JOB123" }),
             };
             const jobProvider = { getTreeView: mockGetTreeView, mSessionNodes: [jobNode] };
-            jest.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(jobProvider as any);
+            vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(jobProvider as any);
 
             const activeUri = vscode.Uri.from({ scheme: ZoweScheme.Jobs, path: "/profile/JOB123" });
             mockActiveTab(activeUri);
@@ -585,7 +585,7 @@ describe("Test src/shared/extension", () => {
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            await jest.runAllTimersAsync();
+            await vi.runAllTimersAsync();
             await handlerPromise;
 
             expect(mockReveal).toHaveBeenCalledWith(jobNode, { select: true, focus: true });
@@ -600,7 +600,7 @@ describe("Test src/shared/extension", () => {
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            await jest.runAllTimersAsync();
+            await vi.runAllTimersAsync();
             await handlerPromise;
 
             expect(mockReveal).not.toHaveBeenCalled();
@@ -636,14 +636,14 @@ describe("Test src/shared/extension", () => {
             mockActiveTab(activeUri);
 
             const notFoundProvider = { getTreeView: mockGetTreeView, mSessionNodes: [] };
-            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(notFoundProvider as any);
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(notFoundProvider as any);
 
             const closedTab = {
                 input: new vscode.TabInputText(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/TEST.DS" })),
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            await jest.runAllTimersAsync();
+            await vi.runAllTimersAsync();
             await handlerPromise;
 
             expect(mockReveal).not.toHaveBeenCalled();
@@ -670,7 +670,7 @@ describe("Test src/shared/extension", () => {
                 changed: [],
             });
 
-            await jest.runAllTimersAsync();
+            await vi.runAllTimersAsync();
             await handlerPromise;
             expect(mockReveal).not.toHaveBeenCalled();
         });
@@ -685,7 +685,7 @@ describe("Test src/shared/extension", () => {
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            await jest.runAllTimersAsync();
+            await vi.runAllTimersAsync();
             await handlerPromise;
 
             expect(SharedInit.isRestoringFocus).toBe(false);
@@ -700,7 +700,7 @@ describe("Test src/shared/extension", () => {
             };
 
             const handlerPromise = capturedTabsHandler({ closed: [closedTab], opened: [], changed: [] });
-            await jest.runAllTimersAsync();
+            await vi.runAllTimersAsync();
             await handlerPromise;
 
             expect(SharedInit.isRestoringFocus).toBe(false);
@@ -720,27 +720,27 @@ describe("Test src/shared/extension", () => {
         let context: any;
         let watcherPromise: any;
         const fakeUri = { fsPath: "fsPath" };
-        const mockEmitter = jest.fn();
+        const mockEmitter = vi.fn();
         const watcher: any = {
-            onDidCreate: jest.fn(),
-            onDidDelete: jest.fn(),
-            onDidChange: jest.fn(),
+            onDidCreate: vi.fn(),
+            onDidDelete: vi.fn(),
+            onDidChange: vi.fn(),
         };
         beforeEach(() => {
             context = { subscriptions: [] };
-            jest.clearAllMocks();
+            vi.clearAllMocks();
             Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [{ uri: fakeUri }], configurable: true });
-            jest.spyOn(vscode.workspace, "createFileSystemWatcher").mockReturnValue(watcher);
-            jest.spyOn(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "fire").mockImplementation(mockEmitter);
-            jest.spyOn(SharedUtils, "debounce").mockImplementation((cb: any) => cb);
+            vi.spyOn(vscode.workspace, "createFileSystemWatcher").mockReturnValue(watcher);
+            vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "fire").mockImplementation(mockEmitter);
+            vi.spyOn(SharedUtils, "debounce").mockImplementation((cb: any) => cb);
         });
 
         afterAll(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should be able to trigger onDidCreate listener", async () => {
-            const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
+            const spyRefreshAll = vi.spyOn(SharedActions, "refreshAll").mockImplementation((() => undefined) as any);
             watcher.onDidCreate.mockImplementationOnce((fun) => (watcherPromise = fun()));
             SharedInit.watchConfigProfile(context);
             await watcherPromise;
@@ -750,7 +750,7 @@ describe("Test src/shared/extension", () => {
         });
 
         it("should be able to trigger onDidDelete listener", async () => {
-            const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
+            const spyRefreshAll = vi.spyOn(SharedActions, "refreshAll").mockImplementation((() => undefined) as any);
             watcher.onDidDelete.mockImplementationOnce((fun) => (watcherPromise = fun()));
             SharedInit.watchConfigProfile(context);
             await watcherPromise;
@@ -760,7 +760,7 @@ describe("Test src/shared/extension", () => {
         });
 
         it("should be able to trigger onDidChange listener", async () => {
-            const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation();
+            const spyRefreshAll = vi.spyOn(SharedActions, "refreshAll").mockImplementation((() => undefined) as any);
             watcher.onDidChange.mockImplementationOnce((fun) => (watcherPromise = fun(fakeUri)));
             SharedInit.watchConfigProfile(context);
             await watcherPromise;
@@ -781,14 +781,14 @@ describe("Test src/shared/extension", () => {
                     return { close: () => {} } as any;
                 },
             };
-            const spyWatcher = jest.spyOn(imperative.EventOperator, "getWatcher").mockReturnValue(dummyWatcher);
-            const spyGuiError = jest.spyOn(Gui, "errorMessage");
+            const spyWatcher = vi.spyOn(imperative.EventOperator, "getWatcher").mockReturnValue(dummyWatcher);
+            const spyGuiError = vi.spyOn(Gui, "errorMessage");
 
             // Spy callback behavior
-            const spyTranslatedLog = jest.spyOn(vscode.l10n, "t");
-            const spyGetProfileInfo = jest.spyOn(profUtils.ProfilesUtils, "setupProfileInfo").mockImplementationOnce(jest.fn());
-            const spyReadConfigFromDisk = jest.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockImplementationOnce(jest.fn());
-            const spyRefreshAll = jest.spyOn(SharedActions, "refreshAll").mockImplementation(jest.fn());
+            const spyTranslatedLog = vi.spyOn(vscode.l10n, "t");
+            const spyGetProfileInfo = vi.spyOn(profUtils.ProfilesUtils, "setupProfileInfo").mockImplementationOnce(vi.fn());
+            const spyReadConfigFromDisk = vi.spyOn(profUtils.ProfilesUtils, "readConfigFromDisk").mockImplementationOnce(vi.fn());
+            const spyRefreshAll = vi.spyOn(SharedActions, "refreshAll").mockImplementation(vi.fn());
 
             // Setup watchers
             SharedInit.watchConfigProfile(context);
@@ -796,14 +796,14 @@ describe("Test src/shared/extension", () => {
             expect(spyWatcher).toHaveBeenCalled();
             expect(spyGuiError).not.toHaveBeenCalled();
 
-            jest.clearAllMocks();
+            vi.clearAllMocks();
             // Trigger Vault changes
             await onVaultUpdatedCallback();
             expect(spyTranslatedLog.mock.calls[0][0]).toContain("vault");
             expect(spyReadConfigFromDisk).toHaveBeenCalled();
             expect(spyRefreshAll).toHaveBeenCalled();
 
-            jest.clearAllMocks();
+            vi.clearAllMocks();
             // Trigger Vault changes
             await onCredentialManagerUpdatedCallback();
             expect(spyTranslatedLog.mock.calls[0][0]).toContain("credential management");
@@ -813,10 +813,10 @@ describe("Test src/shared/extension", () => {
 
         it("should handle errors when watching for vault or credMgr changes", async () => {
             const testError = "__TEST_ERROR__";
-            const spyWatcher = jest.spyOn(imperative.EventOperator, "getWatcher").mockImplementation(() => {
+            const spyWatcher = vi.spyOn(imperative.EventOperator, "getWatcher").mockImplementation(() => {
                 throw testError;
             });
-            const spyGuiError = jest.spyOn(Gui, "errorMessage");
+            const spyGuiError = vi.spyOn(Gui, "errorMessage");
 
             SharedInit.watchConfigProfile(context);
 
@@ -829,23 +829,23 @@ describe("Test src/shared/extension", () => {
     });
 
     describe("initSubscribers", () => {
-        const spyCollapse = jest.fn().mockImplementation((fun) => fun({ element: "collapse" }));
-        const spyExpand = jest.fn().mockImplementation((fun) => fun({ element: "expand" }));
-        const spyOnCollapsibleStateChange = jest.fn();
+        const spyCollapse = vi.fn().mockImplementation((fun) => fun({ element: "collapse" }));
+        const spyExpand = vi.fn().mockImplementation((fun) => fun({ element: "expand" }));
+        const spyOnCollapsibleStateChange = vi.fn();
         let context: any;
         const provider: any = { getTreeView: () => treeView, onCollapsibleStateChange: spyOnCollapsibleStateChange };
         const treeView = {
             onDidCollapseElement: spyCollapse,
             onDidExpandElement: spyExpand,
-            onDidChangeSelection: jest.fn().mockReturnValue({ dispose: jest.fn() }),
+            onDidChangeSelection: vi.fn().mockReturnValue({ dispose: vi.fn() }),
         };
 
         beforeEach(() => {
             context = { subscriptions: [] };
-            jest.clearAllMocks();
+            vi.clearAllMocks();
         });
         afterAll(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should setup listeners", () => {
@@ -864,24 +864,24 @@ describe("Test src/shared/extension", () => {
             removed: [],
         });
         describe("extender types", () => {
-            let mockGetSession: jest.Mock;
-            let mockGetCommonApi: jest.Mock;
+            let mockGetSession: Mock;
+            let mockGetCommonApi: Mock;
 
             beforeEach(() => {
-                mockGetSession = jest.fn().mockReturnValue({
+                mockGetSession = vi.fn().mockReturnValue({
                     ISession: {
                         type: "ssh",
                     },
                 });
 
-                mockGetCommonApi = jest.fn().mockReturnValue({
+                mockGetCommonApi = vi.fn().mockReturnValue({
                     getSession: mockGetSession,
                 });
 
-                jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+                vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
                     getCommonApi: mockGetCommonApi,
                 } as any);
-                jest.clearAllMocks();
+                vi.clearAllMocks();
             });
             it("should setup a remote workspace for an extender type", async () => {
                 const folderUri = {
@@ -890,7 +890,7 @@ describe("Test src/shared/extension", () => {
                     external: "zowe-uss:/ssh_profile/u/users/user/member",
                     path: "/ssh_profile/u/users/user/member",
                     scheme: "zowe-uss",
-                    with: jest.fn().mockReturnValue({
+                    with: vi.fn().mockReturnValue({
                         $mid: 1,
                         fsPath: "/ssh_profile/u/users/user/member",
                         external: "zowe-uss:/ssh_profile/u/users/user/member",
@@ -899,21 +899,21 @@ describe("Test src/shared/extension", () => {
                         query: "fetch=true",
                     }),
                 };
-                jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
+                vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
                     isRoot: false,
                     slashAfterProfilePos: 11,
                     profileName: "ssh_profile",
                     profile: { profile: {}, message: ".", type: "ssh", failNotFound: false },
                 });
 
-                const fakeWorkspaceFolders = jest.fn().mockReturnValue([folderUri]);
+                const fakeWorkspaceFolders = vi.fn().mockReturnValue([folderUri]);
                 new MockedProperty(vscode.workspace, "workspaceFolders", {
                     get: fakeWorkspaceFolders,
                     configurable: true,
                 });
 
                 // Replace real workspace with controlled data
-                jest.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue([
+                vi.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue([
                     {
                         uri: folderUri as any,
                         name: "[ssh_profile] /u/users/user/member",
@@ -923,22 +923,22 @@ describe("Test src/shared/extension", () => {
 
                 // Fake event fallback triggers workspaceFolders
                 const fakeEventInfo = getFakeEventInfo();
-                const addedArr = jest.fn(() => undefined);
+                const addedArr = vi.fn(() => undefined);
                 Object.defineProperty(fakeEventInfo, "added", {
                     get: addedArr,
                 });
 
                 // Mock getInfoForUri to return a profile name
-                const getInfoSpy = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({ profileName: "ssh_profile" } as any);
+                const getInfoSpy = vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({ profileName: "ssh_profile" } as any);
 
                 // Match profile name
                 await Profiles.createInstance(undefined as any);
-                const getProfileSpy = jest
+                const getProfileSpy = vi
                     .spyOn(Profiles.getInstance(), "getProfiles")
                     .mockReturnValue([{ name: "ssh_profile", type: "ssh", message: ".", failNotFound: false }]);
 
                 // Avoid real FS lookup
-                const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory").mockResolvedValue(undefined!);
+                const readDirMock = vi.spyOn(vscode.workspace.fs, "readDirectory").mockResolvedValue(undefined!);
 
                 await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "ssh");
 
@@ -951,7 +951,7 @@ describe("Test src/shared/extension", () => {
             it("should filter all workspaces and not read directory if profileType is undefined", async () => {
                 const folderUri = vscode.Uri.parse(`zowe-uss:/ssh_profile/u/users/user/member`);
 
-                jest.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue([
+                vi.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue([
                     {
                         uri: folderUri as any,
                         name: "[ssh_profile] /u/users/user/member",
@@ -960,18 +960,18 @@ describe("Test src/shared/extension", () => {
                 ]);
 
                 const fakeEventInfo = getFakeEventInfo();
-                const addedArr = jest.fn(() => undefined);
+                const addedArr = vi.fn(() => undefined);
                 Object.defineProperty(fakeEventInfo, "added", {
                     get: addedArr,
                 });
 
-                const getInfoSpy = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({ profileName: "ssh_profile" } as any);
+                const getInfoSpy = vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({ profileName: "ssh_profile" } as any);
 
                 await Profiles.createInstance(undefined as any);
 
-                const getProfileSpy = jest.spyOn(Profiles.getInstance(), "getProfiles").mockReturnValue([]);
+                const getProfileSpy = vi.spyOn(Profiles.getInstance(), "getProfiles").mockReturnValue([]);
 
-                const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory");
+                const readDirMock = vi.spyOn(vscode.workspace.fs, "readDirectory");
 
                 await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, undefined);
 
@@ -983,13 +983,13 @@ describe("Test src/shared/extension", () => {
         });
         describe("core types", () => {
             beforeEach(() => {
-                const mockGetCommonApi = jest.fn();
-                const mockGetSession = jest.fn().mockReturnValueOnce({
+                const mockGetCommonApi = vi.fn();
+                const mockGetSession = vi.fn().mockReturnValueOnce({
                     ISession: {
                         type: imperative.SessConstants.AUTH_TYPE_TOKEN,
                     },
                 });
-                jest.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
+                vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
                     getCommonApi: mockGetCommonApi.mockReturnValueOnce({
                         getSession: mockGetSession,
                     }),
@@ -1000,11 +1000,11 @@ describe("Test src/shared/extension", () => {
                         tokenValue: "mock-token",
                     },
                 };
-                const mockGetProfiles = jest.fn().mockReturnValueOnce([mockProfile]);
-                jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+                const mockGetProfiles = vi.fn().mockReturnValueOnce([mockProfile]);
+                vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                     getProfiles: mockGetProfiles,
                 } as any);
-                jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
+                vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
                     isRoot: false,
                     slashAfterProfilePos: 11,
                     profileName: "lpar.zosmf",
@@ -1013,7 +1013,7 @@ describe("Test src/shared/extension", () => {
             });
 
             it("should iterate over vscode.workspaces.workspaceFolders when no event is given", async () => {
-                const fakeWorkspaceFolders = jest.fn().mockReturnValue([]);
+                const fakeWorkspaceFolders = vi.fn().mockReturnValue([]);
                 const workspaceFoldersPropertyMock = new MockedProperty(vscode.workspace, "workspaceFolders", {
                     get: fakeWorkspaceFolders,
                     configurable: true,
@@ -1024,7 +1024,7 @@ describe("Test src/shared/extension", () => {
             });
             it("should iterate over the added folders when an event is given", async () => {
                 const fakeEventInfo = getFakeEventInfo();
-                const addedArr = jest.fn();
+                const addedArr = vi.fn();
                 Object.defineProperty(fakeEventInfo, "added", {
                     get: addedArr,
                 });
@@ -1033,29 +1033,29 @@ describe("Test src/shared/extension", () => {
             });
             it("calls DatasetFSProvider for ZoweScheme.DS", async () => {
                 const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/lpar.zosmf/TEST.PDS" }) }]);
-                const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory").mockImplementation();
+                const readDirMock = vi.spyOn(vscode.workspace.fs, "readDirectory").mockImplementation((() => undefined) as any);
                 await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "zosmf");
                 expect(readDirMock).toHaveBeenCalled();
                 readDirMock.mockRestore();
             });
             it("calls UssFSProvider for ZoweScheme.USS", async () => {
                 const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/lpar.zosmf/u/user/folder" }) }]);
-                const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory").mockImplementation();
+                const readDirMock = vi.spyOn(vscode.workspace.fs, "readDirectory").mockImplementation((() => undefined) as any);
                 await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "zosmf");
                 expect(readDirMock).toHaveBeenCalled();
                 readDirMock.mockRestore();
             });
             it("does nothing for file URIs", async () => {
                 const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: "file", path: "/a/b/c" }) }]);
-                const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory");
+                const readDirMock = vi.spyOn(vscode.workspace.fs, "readDirectory");
                 await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo);
                 expect(readDirMock).not.toHaveBeenCalled();
             });
             it("logs an error if one occurs", async () => {
                 const fakeEventInfo = getFakeEventInfo([{ uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/lpar.zosmf/TEST.PDS" }) }]);
                 const sampleError = new Error("issue fetching data set");
-                const readDirMock = jest.spyOn(vscode.workspace.fs, "readDirectory").mockRejectedValueOnce(sampleError);
-                const errorMock = jest.spyOn(ZoweLogger, "error").mockImplementation();
+                const readDirMock = vi.spyOn(vscode.workspace.fs, "readDirectory").mockRejectedValueOnce(sampleError);
+                const errorMock = vi.spyOn(ZoweLogger, "error").mockImplementation((() => undefined) as any);
                 await SharedInit.setupRemoteWorkspaceFolders(fakeEventInfo, "zosmf");
                 expect(errorMock).toHaveBeenCalledWith(sampleError.message);
                 expect(readDirMock).toHaveBeenCalled();
@@ -1066,11 +1066,11 @@ describe("Test src/shared/extension", () => {
 
     describe("isDocumentASpool", () => {
         beforeEach(() => {
-            jest.clearAllMocks();
+            vi.clearAllMocks();
         });
 
         afterAll(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should return true when document is a spool file", () => {
@@ -1097,10 +1097,10 @@ describe("Test src/shared/extension", () => {
             };
 
             // Mock the JobFSProvider.instance.lookup to return the SpoolEntry
-            const spyLookup = jest.spyOn(JobFSProvider.instance, "lookup").mockReturnValue(spoolEntry);
+            const spyLookup = vi.spyOn(JobFSProvider.instance, "lookup").mockReturnValue(spoolEntry);
 
             // isSpoolEntry should return true if it's given a SpoolEntry instance
-            const spyIsSpoolEntry = jest.spyOn(FsJobsUtils, "isSpoolEntry");
+            const spyIsSpoolEntry = vi.spyOn(FsJobsUtils, "isSpoolEntry");
 
             // Create a test URI
             const testUri = vscode.Uri.parse("zowe-jobs:/host.zosmf/JOB13965/IYK2ZOD2.JOB13965.JES2.JESMSGLG.2");
@@ -1116,7 +1116,7 @@ describe("Test src/shared/extension", () => {
 
         it("should return false when document is not a spool file", () => {
             // Mock the JobFSProvider.instance.lookup to return a non-spool entry
-            const spyLookup = jest.spyOn(JobFSProvider.instance, "lookup").mockReturnValue({
+            const spyLookup = vi.spyOn(JobFSProvider.instance, "lookup").mockReturnValue({
                 name: "regular-file.txt",
                 type: vscode.FileType.File,
                 ctime: 0,
@@ -1124,7 +1124,7 @@ describe("Test src/shared/extension", () => {
                 size: 0,
             } as any);
 
-            const spyIsSpoolEntry = jest.spyOn(FsJobsUtils, "isSpoolEntry");
+            const spyIsSpoolEntry = vi.spyOn(FsJobsUtils, "isSpoolEntry");
 
             // Create a test URI
             const testUri = vscode.Uri.parse("file:/path/to/regular-file.txt");
@@ -1140,10 +1140,10 @@ describe("Test src/shared/extension", () => {
 
         it("should return false when lookup returns undefined", () => {
             // Mock the JobFSProvider.instance.lookup to return undefined
-            const spyLookup = jest.spyOn(JobFSProvider.instance, "lookup").mockReturnValue(undefined);
+            const spyLookup = vi.spyOn(JobFSProvider.instance, "lookup").mockReturnValue(undefined);
 
             // Mock the FsJobsUtils.isSpoolEntry to return false
-            const spyIsSpoolEntry = jest.spyOn(FsJobsUtils, "isSpoolEntry");
+            const spyIsSpoolEntry = vi.spyOn(FsJobsUtils, "isSpoolEntry");
 
             // Create a test URI
             const testUri = vscode.Uri.parse("file:/path/to/nonexistent-file.txt");

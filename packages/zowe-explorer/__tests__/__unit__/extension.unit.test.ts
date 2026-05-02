@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import * as path from "path";
@@ -33,81 +34,81 @@ import { JobTree } from "../../src/trees/job/JobTree";
 import { MockedProperty } from "../__mocks__/mockUtils";
 import { ZoweExplorerApiRegister } from "../../src/extending/ZoweExplorerApiRegister";
 
-jest.mock("../../src/utils/LoggerUtils");
-jest.mock("../../src/tools/ZoweLogger");
-jest.mock("../../src/utils/ReleaseNotes");
-jest.mock("vscode");
-jest.mock("fs");
-jest.mock("fs-extra");
-jest.mock("util");
-jest.mock("isbinaryfile");
+vi.mock("../../src/utils/LoggerUtils");
+vi.mock("../../src/tools/ZoweLogger");
+vi.mock("../../src/utils/ReleaseNotes");
+vi.mock("vscode");
+vi.mock("fs");
+vi.mock("fs-extra");
+vi.mock("util");
+vi.mock("isbinaryfile");
 
 async function createGlobalMocks() {
-    const mockReadProfilesFromDisk = jest.fn().mockReturnValue(Promise.resolve());
+    const mockReadProfilesFromDisk = vi.fn().mockReturnValue(Promise.resolve());
     const globalMocks = {
-        mockLoadNamedProfile: jest.fn(),
-        mockMkdirSync: jest.fn(),
-        mockMoveSync: jest.fn(),
-        mockGetAllProfileNames: jest.fn(),
-        mockReveal: jest.fn(),
-        mockCreateTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
-        mockExecuteCommand: jest.fn(),
-        mockRegisterCommand: jest.fn(),
-        mockRegisterWebviewViewProvider: jest.fn(),
-        mockOnDidCloseTextDocument: jest.fn(),
-        mockOnDidSaveTextDocument: jest.fn(),
-        mockOnDidChangeSelection: jest.fn(),
-        mockOnDidChangeConfiguration: jest.fn(),
-        mockOnDidChangeVisibility: jest.fn(),
-        mockOnDidCollapseElement: jest.fn(),
-        mockOnDidExpandElement: jest.fn(),
-        mockExistsSync: jest.fn(),
-        mockCreateReadStream: jest.fn(),
-        mockReaddirSync: jest.fn(),
-        mockUnlinkSync: jest.fn(),
-        mockRmdirSync: jest.fn(),
-        mockReadFileSync: jest.fn(),
-        mockShowErrorMessage: jest.fn(),
-        mockShowWarningMessage: jest.fn(),
-        mockZosmfSession: jest.fn(),
-        mockCreateSessCfgFromArgs: jest.fn(),
-        mockUtilities: jest.fn(),
-        mockShowInformationMessage: jest.fn(),
-        mockSetStatusBarMessage: jest.fn(),
-        mockGetConfiguration: jest.fn(),
-        mockIsFile: jest.fn(),
-        mockLoad: jest.fn(),
-        mockRegisterTextDocumentContentProvider: jest.fn(),
-        mockFrom: jest.fn(),
-        mockUri: jest.fn(),
-        mockGetProfileName: jest.fn(),
-        mockCliHome: jest.fn().mockReturnValue(path.join(os.homedir(), ".zowe")),
-        mockIcInstance: jest.fn(),
-        mockImperativeConfig: jest.fn(),
+        mockLoadNamedProfile: vi.fn(),
+        mockMkdirSync: vi.fn(),
+        mockMoveSync: vi.fn(),
+        mockGetAllProfileNames: vi.fn(),
+        mockReveal: vi.fn(),
+        mockCreateTreeView: vi.fn().mockReturnValue({ onDidCollapseElement: vi.fn() }),
+        mockExecuteCommand: vi.fn(),
+        mockRegisterCommand: vi.fn(),
+        mockRegisterWebviewViewProvider: vi.fn(),
+        mockOnDidCloseTextDocument: vi.fn(),
+        mockOnDidSaveTextDocument: vi.fn(),
+        mockOnDidChangeSelection: vi.fn(),
+        mockOnDidChangeConfiguration: vi.fn(),
+        mockOnDidChangeVisibility: vi.fn(),
+        mockOnDidCollapseElement: vi.fn(),
+        mockOnDidExpandElement: vi.fn(),
+        mockExistsSync: vi.fn(),
+        mockCreateReadStream: vi.fn(),
+        mockReaddirSync: vi.fn(),
+        mockUnlinkSync: vi.fn(),
+        mockRmdirSync: vi.fn(),
+        mockReadFileSync: vi.fn(),
+        mockShowErrorMessage: vi.fn(),
+        mockShowWarningMessage: vi.fn(),
+        mockZosmfSession: vi.fn(),
+        mockCreateSessCfgFromArgs: vi.fn(),
+        mockUtilities: vi.fn(),
+        mockShowInformationMessage: vi.fn(),
+        mockSetStatusBarMessage: vi.fn(),
+        mockGetConfiguration: vi.fn(),
+        mockIsFile: vi.fn(),
+        mockLoad: vi.fn(),
+        mockRegisterTextDocumentContentProvider: vi.fn(),
+        mockFrom: vi.fn(),
+        mockUri: vi.fn(),
+        mockGetProfileName: vi.fn(),
+        mockCliHome: vi.fn().mockReturnValue(path.join(os.homedir(), ".zowe")),
+        mockIcInstance: vi.fn(),
+        mockImperativeConfig: vi.fn(),
         mockReadProfilesFromDisk: mockReadProfilesFromDisk,
-        mockImperativeProfileInfo: jest.fn().mockImplementation(() => {
+        mockImperativeProfileInfo: vi.fn().mockImplementation(() => {
             return {
                 mAppName: "",
                 mCredentials: {},
                 mUSingTeamConfig: true,
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                getZoweDir: jest.fn(),
+                getZoweDir: vi.fn(),
             };
         }),
-        mockPromptUserWithNoConfigs: jest.fn(),
-        mockUpdateCredMgrSetting: jest.fn(),
-        mockWriteOverridesFile: jest.fn(),
+        mockPromptUserWithNoConfigs: vi.fn(),
+        mockUpdateCredMgrSetting: vi.fn(),
+        mockWriteOverridesFile: vi.fn(),
         mockProfCacheProfileInfo: createInstanceOfProfileInfo(),
         mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
         testTreeView: null,
-        enums: jest.fn().mockImplementation(() => {
+        enums: vi.fn().mockImplementation(() => {
             return {
                 Global: 1,
                 Workspace: 2,
                 WorkspaceFolder: 3,
             };
         }),
-        UIKindEnums: jest.fn().mockImplementation(() => {
+        UIKindEnums: vi.fn().mockImplementation(() => {
             return {
                 Desktop: 1,
                 Web: 2,
@@ -123,29 +124,29 @@ async function createGlobalMocks() {
         testProfile: createIProfile(),
         testProfileOps: {
             allProfiles: [{ name: "firstName" }, { name: "secondName" }],
-            getProfiles: jest.fn().mockReturnValue([]),
+            getProfiles: vi.fn().mockReturnValue([]),
             defaultProfile: { name: "firstName" },
             getDefaultProfile: null,
-            getBaseProfile: jest.fn(),
+            getBaseProfile: vi.fn(),
             loadNamedProfile: null,
             validProfile: Validation.ValidationType.VALID,
-            checkCurrentProfile: jest.fn(),
-            usesSecurity: jest.fn().mockReturnValue(true),
-            getProfileSetting: jest.fn(),
-            disableValidation: jest.fn(),
-            enableValidation: jest.fn(),
-            disableValidationContext: jest.fn(),
-            enableValidationContext: jest.fn(),
-            validationArraySetup: jest.fn(),
-            fetchAllProfiles: jest.fn().mockResolvedValue([]),
-            fetchAllProfilesByType: jest.fn().mockResolvedValue([]),
+            checkCurrentProfile: vi.fn(),
+            usesSecurity: vi.fn().mockReturnValue(true),
+            getProfileSetting: vi.fn(),
+            disableValidation: vi.fn(),
+            enableValidation: vi.fn(),
+            disableValidationContext: vi.fn(),
+            enableValidationContext: vi.fn(),
+            validationArraySetup: vi.fn(),
+            fetchAllProfiles: vi.fn().mockResolvedValue([]),
+            fetchAllProfilesByType: vi.fn().mockResolvedValue([]),
             getProfileInfo: () => createInstanceOfProfileInfo(),
         },
         mockOnProfileUpdated: new MockedProperty(
             ZoweExplorerApiRegister,
             "onProfileUpdated",
             undefined,
-            jest.fn().mockReturnValue(new vscode.Disposable(jest.fn()))
+            vi.fn().mockReturnValue(new vscode.Disposable(vi.fn()))
         ),
         mockExtension: null,
         appName: vscode.env.appName,
@@ -286,7 +287,7 @@ async function createGlobalMocks() {
         ],
     };
 
-    jest.spyOn(ZoweVsCodeExtension as any, "onProfileUpdated", "get").mockReturnValue(jest.fn().mockReturnValue(new vscode.Disposable(jest.fn())));
+    vi.spyOn(ZoweVsCodeExtension as any, "onProfileUpdated", "get").mockReturnValue(vi.fn().mockReturnValue(new vscode.Disposable(vi.fn())));
     Object.defineProperty(fs, "mkdirSync", { value: globalMocks.mockMkdirSync, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", {
         value: globalMocks.mockCreateTreeView,
@@ -317,7 +318,7 @@ async function createGlobalMocks() {
         configurable: true,
     });
 
-    jest.spyOn(vscode.workspace, "getConfiguration").mockImplementationOnce(globalMocks.mockGetConfiguration);
+    vi.spyOn(vscode.workspace, "getConfiguration").mockImplementationOnce(globalMocks.mockGetConfiguration);
     Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", {
         value: globalMocks.mockOnDidChangeConfiguration,
         configurable: true,
@@ -378,10 +379,10 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode, "UIKind", { value: globalMocks.UIKindEnums, configurable: true });
     Object.defineProperty(vscode, "uriScheme", { value: globalMocks.uriScheme, configurable: true });
     Object.defineProperty(Profiles, "createInstance", {
-        value: jest.fn(() => globalMocks.testProfileOps),
+        value: vi.fn(() => globalMocks.testProfileOps),
     });
     Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => globalMocks.testProfileOps),
+        value: vi.fn(() => globalMocks.testProfileOps),
     });
     Object.defineProperty(SettingsConfig, "getDirectValue", {
         value: createGetConfigMock({
@@ -389,17 +390,17 @@ async function createGlobalMocks() {
             "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
         }),
     });
-    jest.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValue({
-        getTeamConfig: jest.fn().mockReturnValue({
-            exists: jest.fn(),
+    vi.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValue({
+        getTeamConfig: vi.fn().mockReturnValue({
+            exists: vi.fn(),
         }),
     } as any);
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
-        value: jest.fn(() => {
+        value: vi.fn(() => {
             return { value: globalMocks.mockProfCacheProfileInfo, configurable: true };
         }),
     });
-    Object.defineProperty(ZoweExplorerExtender, "showZoweConfigError", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweExplorerExtender, "showZoweConfigError", { value: vi.fn(), configurable: true });
     Object.defineProperty(imperative, "ProfileInfo", {
         get: globalMocks.mockImperativeProfileInfo,
         configurable: true,
@@ -410,7 +411,7 @@ async function createGlobalMocks() {
     });
 
     // Create a mocked extension context
-    const mockExtensionCreator = jest.fn(
+    const mockExtensionCreator = vi.fn(
         () =>
             ({
                 subscriptions: [],
@@ -422,22 +423,22 @@ async function createGlobalMocks() {
                     },
                 },
                 globalState: {
-                    get: jest.fn(),
-                    update: jest.fn(),
-                    keys: jest.fn(() => []),
+                    get: vi.fn(),
+                    update: vi.fn(),
+                    keys: vi.fn(() => []),
                 },
             }) as unknown as vscode.ExtensionContext
     );
     globalMocks.mockExtension = new mockExtensionCreator();
 
     Object.defineProperty(ZoweLocalStorage, "initializeZoweLocalStorage", {
-        value: jest.fn(),
+        value: vi.fn(),
         configurable: true,
     });
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
-            update: jest.fn(),
+            update: vi.fn(),
             keys: () => [],
         },
         configurable: true,
@@ -448,7 +449,7 @@ async function createGlobalMocks() {
     globalMocks.mockReadFileSync.mockReturnValue("");
     globalMocks.testProfileOps.getDefaultProfile = globalMocks.mockLoadNamedProfile;
     globalMocks.testProfileOps.loadNamedProfile = globalMocks.mockLoadNamedProfile;
-    globalMocks.testTreeView = jest.fn().mockImplementation(() => {
+    globalMocks.testTreeView = vi.fn().mockImplementation(() => {
         return {
             reveal: globalMocks.mockReveal,
             onDidExpandElement: globalMocks.mockOnDidExpandElement,
@@ -468,7 +469,7 @@ describe("Extension Unit Tests", () => {
     let globalMocks;
     beforeAll(async () => {
         globalMocks = await createGlobalMocks();
-        jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
+        vi.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
         Object.defineProperty(imperative, "ProfileInfo", {
             get: globalMocks.mockImperativeProfileInfo,
             configurable: true,
@@ -478,7 +479,7 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
             get: (_setting: string) => "",
-            update: jest.fn(),
+            update: vi.fn(),
             inspect: (_configuration: string) => {
                 return {
                     workspaceValue: undefined,
@@ -500,7 +501,7 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
             expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);
             expect(call[1]).toBeInstanceOf(Function);
-            allCommands.push({ cmd: call[0], fun: call[1], toMock: jest.fn() });
+            allCommands.push({ cmd: call[0], fun: call[1], toMock: vi.fn() });
         });
     });
 
@@ -514,10 +515,10 @@ describe("Extension Unit Tests", () => {
 
     it("Tests that activate() fails when trying to load with an invalid config", async () => {
         // Mock the FileManagement.getZoweDir to avoid calling the static method: ProfileInfo.getZoweDir()
-        jest.spyOn(FileManagement, "getZoweDir").mockImplementation();
+        vi.spyOn(FileManagement, "getZoweDir").mockImplementation((() => undefined) as any);
 
         Object.defineProperty(imperative, "ProfileInfo", {
-            value: jest.fn().mockImplementation(() => {
+            value: vi.fn().mockImplementation(() => {
                 throw new Error("Error in ProfileInfo to break activate function");
             }),
             configurable: true,
@@ -527,7 +528,7 @@ describe("Extension Unit Tests", () => {
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
             get: (_setting: string) => "",
-            update: jest.fn(),
+            update: vi.fn(),
             inspect: (_configuration: string) => {
                 return {
                     workspaceValue: undefined,
@@ -540,7 +541,7 @@ describe("Extension Unit Tests", () => {
         expect(ZoweExplorerExtender.showZoweConfigError).toHaveBeenCalled();
     });
     it("should deactivate the extension", async () => {
-        const spyAwaitAllSaves = jest.spyOn(ZoweSaveQueue, "all");
+        const spyAwaitAllSaves = vi.spyOn(ZoweSaveQueue, "all");
         await extension.deactivate();
         expect(spyAwaitAllSaves).toHaveBeenCalled();
         // Test that upload operations complete before cleaning temp dir
@@ -552,13 +553,13 @@ describe("Extension Unit Tests", () => {
     async function removeSessionTest(command: string, contextValue: string, providerObject: any) {
         const testNode: any = {
             contextValue: contextValue,
-            getProfile: jest.fn(),
-            getParent: jest.fn().mockReturnValue({ getLabel: jest.fn() }),
+            getProfile: vi.fn(),
+            getParent: vi.fn().mockReturnValue({ getLabel: vi.fn() }),
             label: "TestNode",
-            getLabel: jest.fn(() => "TestNode"),
+            getLabel: vi.fn(() => "TestNode"),
         };
 
-        const deleteSessionSpy = jest.spyOn(providerObject.prototype, "deleteSession");
+        const deleteSessionSpy = vi.spyOn(providerObject.prototype, "deleteSession");
         const commandFunction = allCommands.find((cmd) => command === cmd.cmd);
         await (commandFunction as any).fun(testNode, [testNode], true);
         expect(deleteSessionSpy).toHaveBeenCalled();
@@ -570,7 +571,7 @@ describe("Extension Unit Tests", () => {
             get: () => {
                 return [];
             },
-            update: jest.fn(),
+            update: vi.fn(),
             inspect: (_configuration: string) => {
                 return {
                     workspaceValue: undefined,

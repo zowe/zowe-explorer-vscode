@@ -8,28 +8,29 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { Mock, vi } from "vitest";
 
 import { Gui, IZoweTree, IZoweTreeNode } from "../../../src/";
 
 import * as vscode from "vscode";
 import { Constants } from "../../../src/globals";
-jest.mock("vscode");
+vi.mock("vscode");
 
-function createGlobalMocks(): { [key: string]: jest.Mock } {
+function createGlobalMocks(): { [key: string]: Mock } {
     const mocks = {
-        showInfoMessage: jest.fn(),
-        showErrorMessage: jest.fn(),
-        showWarningMessage: jest.fn(),
-        createOutputChannel: jest.fn(),
-        createQuickPick: jest.fn(),
-        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
-        createWebviewPanel: jest.fn(),
-        withProgress: jest.fn(),
-        showTextDocument: jest.fn(),
-        showQuickPick: jest.fn(),
-        setStatusBarMessage: jest.fn(),
-        showOpenDialog: jest.fn(),
-        showInputBox: jest.fn(),
+        showInfoMessage: vi.fn(),
+        showErrorMessage: vi.fn(),
+        showWarningMessage: vi.fn(),
+        createOutputChannel: vi.fn(),
+        createQuickPick: vi.fn(),
+        createTreeView: vi.fn().mockReturnValue({ onDidCollapseElement: vi.fn() }),
+        createWebviewPanel: vi.fn(),
+        withProgress: vi.fn(),
+        showTextDocument: vi.fn(),
+        showQuickPick: vi.fn(),
+        setStatusBarMessage: vi.fn(),
+        showOpenDialog: vi.fn(),
+        showInputBox: vi.fn(),
     };
 
     Object.defineProperty(vscode.window, "showInformationMessage", { value: mocks.showInfoMessage });
@@ -157,21 +158,21 @@ describe("Gui unit tests", () => {
 
     it("can resolve a quick pick when accepted", async () => {
         // eslint-disable-next-line @typescript-eslint/ban-types
-        const mockDidAccept = jest.fn((callback: Function) => callback());
+        const mockDidAccept = vi.fn((callback: Function) => callback());
         await Gui.resolveQuickPick({
             activeItems: ["test"],
             onDidAccept: mockDidAccept,
-            onDidHide: jest.fn(),
+            onDidHide: vi.fn(),
         } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
         expect(mockDidAccept).toHaveBeenCalledTimes(1);
     });
 
     it("can resolve a quick pick when hidden", async () => {
         // eslint-disable-next-line @typescript-eslint/ban-types
-        const mockDidHide = jest.fn((callback: Function) => callback());
+        const mockDidHide = vi.fn((callback: Function) => callback());
         await Gui.resolveQuickPick({
             activeItems: ["test"],
-            onDidAccept: jest.fn(),
+            onDidAccept: vi.fn(),
             onDidHide: mockDidHide,
         } as unknown as vscode.QuickPick<vscode.QuickPickItem>);
         expect(mockDidHide).toHaveBeenCalledTimes(1);
@@ -180,12 +181,12 @@ describe("Gui unit tests", () => {
 
 describe("Gui.utils - unit tests", () => {
     beforeEach(() => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
     });
 
     afterEach(() => {
-        jest.runOnlyPendingTimers();
-        jest.useRealTimers();
+        vi.runOnlyPendingTimers();
+        vi.useRealTimers();
     });
 
     it("returns false when checking if an invalid node was double-clicked", () => {

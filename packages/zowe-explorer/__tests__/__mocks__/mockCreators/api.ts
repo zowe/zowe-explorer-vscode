@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
@@ -16,7 +17,7 @@ export function createJesApi(profile: imperative.IProfileLoaded) {
     return ZoweExplorerApiRegister.getJesApi(profile);
 }
 export function bindJesApi(api: MainframeInteraction.IJes) {
-    const getJesApiMock = jest.fn();
+    const getJesApiMock = vi.fn();
     getJesApiMock.mockReturnValue(api);
     ZoweExplorerApiRegister.getJesApi = getJesApiMock.bind(ZoweExplorerApiRegister);
 }
@@ -25,7 +26,7 @@ export function createMvsApi(profile: imperative.IProfileLoaded) {
     return ZoweExplorerApiRegister.getMvsApi(profile);
 }
 export function bindMvsApi(api: MainframeInteraction.IMvs) {
-    const getMvsApiMock = jest.fn();
+    const getMvsApiMock = vi.fn();
     getMvsApiMock.mockReturnValue(api);
     ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
 }
@@ -34,7 +35,7 @@ export function createUssApi(profile: imperative.IProfileLoaded) {
     return ZoweExplorerApiRegister.getUssApi(profile);
 }
 export function bindUssApi(api: MainframeInteraction.IUss) {
-    const getUssApiMock = jest.fn();
+    const getUssApiMock = vi.fn();
     getUssApiMock.mockReturnValue(api);
     ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
 }
@@ -43,7 +44,7 @@ export function createCommandApi(profile: imperative.IProfileLoaded) {
     return ZoweExplorerApiRegister.getCommandApi(profile);
 }
 export function bindCommandApi(api: MainframeInteraction.IJes) {
-    const getCommandApiMock = jest.fn();
+    const getCommandApiMock = vi.fn();
     getCommandApiMock.mockReturnValue(api);
     ZoweExplorerApiRegister.getCommandApi = getCommandApiMock.bind(ZoweExplorerApiRegister);
 }

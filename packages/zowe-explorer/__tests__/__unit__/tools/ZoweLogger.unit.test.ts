@@ -8,33 +8,34 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { MockInstance, vi } from "vitest";
 
 import * as vscode from "vscode";
 import * as loggerConfig from "../../log4jsconfig.json";
 import * as path from "path";
 import { Gui, imperative, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
-jest.unmock("@zowe/imperative");
+vi.unmock("@zowe/imperative");
 
 describe("ZoweLogger", () => {
     let logger: imperative.Logger;
 
     beforeEach(() => {
         logger = imperative.Logger.getImperativeLogger();
-        jest.spyOn(imperative.Logger, "getImperativeLogger").mockReturnValue(logger);
+        vi.spyOn(imperative.Logger, "getImperativeLogger").mockReturnValue(logger);
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     describe("initializeZoweLogger", () => {
-        let initializeImperativeLoggerSpy: jest.SpyInstance;
-        let guiErrorMessageSpy: jest.SpyInstance;
+        let initializeImperativeLoggerSpy: MockInstance;
+        let guiErrorMessageSpy: MockInstance;
 
         beforeEach(() => {
-            initializeImperativeLoggerSpy = jest.spyOn(ZoweLogger as any, "initializeImperativeLogger").mockReturnValue(undefined);
-            guiErrorMessageSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue("");
+            initializeImperativeLoggerSpy = vi.spyOn(ZoweLogger as any, "initializeImperativeLogger").mockReturnValue(undefined);
+            guiErrorMessageSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue("");
         });
 
         it("should initialize the Imperative logger with extension path", async () => {
@@ -45,7 +46,7 @@ describe("ZoweLogger", () => {
         });
 
         it("should initialize the Imperative logger with custom logging path", async () => {
-            jest.spyOn(ZoweVsCodeExtension, "customLoggingPath", "get").mockReturnValue("someOtherPath");
+            vi.spyOn(ZoweVsCodeExtension, "customLoggingPath", "get").mockReturnValue("someOtherPath");
             await ZoweLogger.initializeZoweLogger({ extensionPath: "fakePath" } as any);
             expect(initializeImperativeLoggerSpy).toHaveBeenCalledTimes(1);
             expect(initializeImperativeLoggerSpy).toHaveBeenCalledWith("someOtherPath");
@@ -65,9 +66,9 @@ describe("ZoweLogger", () => {
     });
 
     describe("initializeImperativeLogger", () => {
-        let getLogSettingSpy: jest.SpyInstance;
-        let getAppLoggerSpy: jest.SpyInstance;
-        let initLoggerSpy: jest.SpyInstance;
+        let getLogSettingSpy: MockInstance;
+        let getAppLoggerSpy: MockInstance;
+        let initLoggerSpy: MockInstance;
 
         const loggerConfigCopy = JSON.parse(JSON.stringify(loggerConfig));
         loggerConfigCopy.log4jsConfig.appenders.app.filename = path.join("fakePath", "logs", "zowe.log");
@@ -82,9 +83,9 @@ describe("ZoweLogger", () => {
                 "INFO";
 
         beforeEach(() => {
-            initLoggerSpy = jest.spyOn(imperative.Logger, "initLogger").mockReturnValue(logger);
-            getAppLoggerSpy = jest.spyOn(imperative.Logger, "getAppLogger").mockReturnValue(logger);
-            getLogSettingSpy = jest.spyOn(ZoweLogger, "getLogSetting").mockReturnValue("INFO");
+            initLoggerSpy = vi.spyOn(imperative.Logger, "initLogger").mockReturnValue(logger);
+            getAppLoggerSpy = vi.spyOn(imperative.Logger, "getAppLogger").mockReturnValue(logger);
+            getLogSettingSpy = vi.spyOn(ZoweLogger, "getLogSetting").mockReturnValue("INFO");
         });
 
         it("should initialize an Imperative logger", () => {
@@ -106,10 +107,10 @@ describe("ZoweLogger", () => {
     });
 
     describe("log at levels", () => {
-        let writeLogMessageSpy: jest.SpyInstance;
+        let writeLogMessageSpy: MockInstance;
 
         beforeEach(() => {
-            writeLogMessageSpy = jest.spyOn(ZoweLogger as any, "writeLogMessage").mockReturnValue(undefined);
+            writeLogMessageSpy = vi.spyOn(ZoweLogger as any, "writeLogMessage").mockReturnValue(undefined);
         });
 
         it("should log trace", () => {
@@ -157,7 +158,7 @@ describe("ZoweLogger", () => {
         });
 
         it("should dispose of the Zowe logger", () => {
-            const fakeDispose = jest.fn();
+            const fakeDispose = vi.fn();
             ZoweLogger.zeOutputChannel = { dispose: fakeDispose } as any;
             ZoweLogger.disposeZoweLogger();
             expect(fakeDispose).toHaveBeenCalled();
@@ -165,12 +166,12 @@ describe("ZoweLogger", () => {
     });
 
     describe("getLogSetting", () => {
-        let getConfigurationSpy: jest.SpyInstance;
-        let getSpy: jest.SpyInstance;
+        let getConfigurationSpy: MockInstance;
+        let getSpy: MockInstance;
 
         beforeEach(() => {
-            getSpy = jest.fn();
-            getConfigurationSpy = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({ get: getSpy } as any);
+            getSpy = vi.fn();
+            getConfigurationSpy = vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({ get: getSpy } as any);
         });
 
         it("should return the configured log level", () => {
@@ -189,18 +190,18 @@ describe("ZoweLogger", () => {
     });
 
     describe("writeLogMessage", () => {
-        let imperativeTraceLoggerSpy: jest.SpyInstance;
-        let imperativeDebugLoggerSpy: jest.SpyInstance;
-        let imperativeInfoLoggerSpy: jest.SpyInstance;
-        let imperativeWarnLoggerSpy: jest.SpyInstance;
-        let imperativeErrorLoggerSpy: jest.SpyInstance;
-        let imperativeFatalLoggerSpy: jest.SpyInstance;
-        let imperativeSimpleLoggerSpy: jest.SpyInstance;
-        let imperativeLoggerSpy: jest.SpyInstance;
-        let getLogSettingSpy: jest.SpyInstance;
-        let appendLineSpy: jest.SpyInstance;
-        let censorRawDataSpy: jest.SpyInstance;
-        let createMessageSpy: jest.SpyInstance;
+        let imperativeTraceLoggerSpy: MockInstance;
+        let imperativeDebugLoggerSpy: MockInstance;
+        let imperativeInfoLoggerSpy: MockInstance;
+        let imperativeWarnLoggerSpy: MockInstance;
+        let imperativeErrorLoggerSpy: MockInstance;
+        let imperativeFatalLoggerSpy: MockInstance;
+        let imperativeSimpleLoggerSpy: MockInstance;
+        let imperativeLoggerSpy: MockInstance;
+        let getLogSettingSpy: MockInstance;
+        let appendLineSpy: MockInstance;
+        let censorRawDataSpy: MockInstance;
+        let createMessageSpy: MockInstance;
         const storedOutputChannel = ZoweLogger.zeOutputChannel;
 
         function loggerImplementation(message: string, ..._args: any[]): string {
@@ -208,23 +209,23 @@ describe("ZoweLogger", () => {
         }
 
         beforeEach(() => {
-            imperativeLoggerSpy = jest.spyOn(ZoweLogger, "imperativeLogger", "get").mockReturnValue(logger);
-            imperativeTraceLoggerSpy = jest.spyOn(logger, "trace").mockImplementation(loggerImplementation);
-            imperativeDebugLoggerSpy = jest.spyOn(logger, "debug").mockImplementation(loggerImplementation);
-            imperativeInfoLoggerSpy = jest.spyOn(logger, "info").mockImplementation(loggerImplementation);
-            imperativeWarnLoggerSpy = jest.spyOn(logger, "warn").mockImplementation(loggerImplementation);
-            imperativeErrorLoggerSpy = jest.spyOn(logger, "error").mockImplementation(loggerImplementation);
-            imperativeFatalLoggerSpy = jest.spyOn(logger, "fatal").mockImplementation(loggerImplementation);
-            imperativeSimpleLoggerSpy = jest.spyOn(logger, "simple").mockImplementation(loggerImplementation);
-            getLogSettingSpy = jest.spyOn(ZoweLogger, "getLogSetting").mockReturnValue("TRACE");
-            censorRawDataSpy = jest.spyOn(imperative.Censor, "censorRawData").mockImplementation((message: string) => {
+            imperativeLoggerSpy = vi.spyOn(ZoweLogger, "imperativeLogger", "get").mockReturnValue(logger);
+            imperativeTraceLoggerSpy = vi.spyOn(logger, "trace").mockImplementation(loggerImplementation);
+            imperativeDebugLoggerSpy = vi.spyOn(logger, "debug").mockImplementation(loggerImplementation);
+            imperativeInfoLoggerSpy = vi.spyOn(logger, "info").mockImplementation(loggerImplementation);
+            imperativeWarnLoggerSpy = vi.spyOn(logger, "warn").mockImplementation(loggerImplementation);
+            imperativeErrorLoggerSpy = vi.spyOn(logger, "error").mockImplementation(loggerImplementation);
+            imperativeFatalLoggerSpy = vi.spyOn(logger, "fatal").mockImplementation(loggerImplementation);
+            imperativeSimpleLoggerSpy = vi.spyOn(logger, "simple").mockImplementation(loggerImplementation);
+            getLogSettingSpy = vi.spyOn(ZoweLogger, "getLogSetting").mockReturnValue("TRACE");
+            censorRawDataSpy = vi.spyOn(imperative.Censor, "censorRawData").mockImplementation((message: string) => {
                 return message;
             });
-            createMessageSpy = jest.spyOn(ZoweLogger as any, "createMessage").mockImplementation((message: string, level: string) => {
+            createMessageSpy = vi.spyOn(ZoweLogger as any, "createMessage").mockImplementation((message: string, level: string) => {
                 return `[1970/01/01 12:00:00] [${level}] ${message}`;
             });
 
-            appendLineSpy = jest.fn();
+            appendLineSpy = vi.fn();
             ZoweLogger.zeOutputChannel = { appendLine: appendLineSpy } as any;
         });
 
@@ -339,12 +340,12 @@ describe("ZoweLogger", () => {
     });
 
     describe("createMessage", () => {
-        let getDateSpy: jest.SpyInstance;
-        let getTimeSpy: jest.SpyInstance;
+        let getDateSpy: MockInstance;
+        let getTimeSpy: MockInstance;
 
         beforeEach(() => {
-            getDateSpy = jest.spyOn(ZoweLogger as any, "getDate").mockReturnValue("1970/01/01");
-            getTimeSpy = jest.spyOn(ZoweLogger as any, "getTime").mockReturnValue("12:00:00");
+            getDateSpy = vi.spyOn(ZoweLogger as any, "getDate").mockReturnValue("1970/01/01");
+            getTimeSpy = vi.spyOn(ZoweLogger as any, "getTime").mockReturnValue("12:00:00");
         });
 
         it("should construct the message", () => {

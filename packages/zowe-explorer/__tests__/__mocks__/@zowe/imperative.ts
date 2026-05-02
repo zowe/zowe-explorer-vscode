@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 /**
  * This interface defines the options that can be sent into the download data set function
@@ -386,7 +387,8 @@ export class TextUtils {
     public static prettyJson(object: any, options?: any, color?: boolean, append?: string): string {
         return JSON.stringify(object);
     }
-    public static chalk = jest.requireActual("chalk");
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    public static chalk = require("chalk");
 }
 
 export class SessConstants {
@@ -434,7 +436,7 @@ export class DeferredPromise {
 }
 
 export class AuthOrder {
-    // private static originalAuthOrder = jest.requireActual("@zowe/imperative").AuthOrder;
+    // private static originalAuthOrder = vi.requireActual("@zowe/imperative").AuthOrder;
     public static addCredsToSession(...args: any[]): void {
         // this.originalAuthOrder.addCredsToSession(...args);
     }

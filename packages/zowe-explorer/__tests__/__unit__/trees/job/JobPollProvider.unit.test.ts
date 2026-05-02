@@ -8,18 +8,19 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import { Poller } from "@zowe/zowe-explorer-api";
 import { PollProvider } from "../../../../src/trees/job/JobPollProvider";
 
-jest.mock("vscode");
+vi.mock("vscode");
 
 describe("PollProvider - unit tests", () => {
     it("disposes the provider without errors", () => {
-        const forEachDisposableMock = jest.fn();
+        const forEachDisposableMock = vi.fn();
         (PollProvider as any).disposables = [{ dispose: forEachDisposableMock }];
-        const forEachSpy = jest.spyOn((PollProvider as any).disposables, "forEach");
+        const forEachSpy = vi.spyOn((PollProvider as any).disposables, "forEach");
         try {
             PollProvider.dispose();
         } catch (err) {
@@ -68,7 +69,7 @@ describe("PollProvider - unit tests", () => {
 
         const fileDecoration = PollProvider.provideFileDecoration(fakeUri, {
             isCancellationRequested: false,
-            onCancellationRequested: jest.fn(),
+            onCancellationRequested: vi.fn(),
         });
 
         expect(fileDecoration).not.toBe(null);
@@ -78,7 +79,7 @@ describe("PollProvider - unit tests", () => {
 
         const nullDecoration = PollProvider.provideFileDecoration(fakeUri, {
             isCancellationRequested: false,
-            onCancellationRequested: jest.fn(),
+            onCancellationRequested: vi.fn(),
         });
 
         expect(nullDecoration).toBe(null);

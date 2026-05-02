@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
@@ -32,7 +33,7 @@ export function createPersistentConfig(): Partial<Definitions.ZowePersistentFilt
                 favorites: ["[sestest]: TEST.PDS", "[profile1]: /u/myuser.txt{textFile}", "[profile2]: /u/myuser"],
             };
         },
-        update: jest.fn(() => {
+        update: vi.fn(() => {
             return {};
         }) as any,
     };
@@ -277,16 +278,16 @@ export function createAltTypeIProfile(): imperative.IProfileLoaded {
 export function createTreeView(selection?): vscode.TreeView<ZoweTreeProvider<any>> {
     const currSelection = selection ? selection : [];
     return {
-        reveal: jest.fn(),
-        onDidExpandElement: jest.fn(),
-        onDidCollapseElement: jest.fn(),
+        reveal: vi.fn(),
+        onDidExpandElement: vi.fn(),
+        onDidCollapseElement: vi.fn(),
         selection: currSelection,
-        onDidChangeSelection: jest.fn(),
+        onDidChangeSelection: vi.fn(),
         visible: true,
-        onDidChangeVisibility: jest.fn(),
-        dispose: jest.fn(),
-        addSingleSession: jest.fn(),
-        setStatusForSession: jest.fn(),
+        onDidChangeVisibility: vi.fn(),
+        dispose: vi.fn(),
+        addSingleSession: vi.fn(),
+        setStatusForSession: vi.fn(),
     } as unknown as vscode.TreeView<ZoweTreeProvider<any>>;
 }
 
@@ -305,8 +306,8 @@ export function createTextDocument(name: string, sessionNode?: ZoweDatasetNode |
         lineCount: null,
         lineAt: null,
         offsetAt: null,
-        positionAt: jest.fn(),
-        getText: jest.fn().mockReturnValue(""),
+        positionAt: vi.fn(),
+        getText: vi.fn().mockReturnValue(""),
         getWordRangeAtPosition: null,
         validateRange: null,
         validatePosition: null,
@@ -318,9 +319,9 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         addToConfigArray: Profiles.prototype.addToConfigArray,
         allProfiles: [profile],
         defaultProfile: { name: "sestest" },
-        getDefaultProfile: jest.fn(),
-        promptCredentials: jest.fn(),
-        loadNamedProfile: jest.fn(function (this: any, profileName: string) {
+        getDefaultProfile: vi.fn(),
+        promptCredentials: vi.fn(),
+        loadNamedProfile: vi.fn(function (this: any, profileName: string) {
             const match: imperative.IProfileLoaded | undefined = this.allProfiles?.find(
                 (prof: imperative.IProfileLoaded) => prof.name === profileName
             );
@@ -328,62 +329,62 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         }),
         usesSecurity: true,
         validProfile: Validation.ValidationType.VALID,
-        checkCurrentProfile: jest.fn(() => {
+        checkCurrentProfile: vi.fn(() => {
             return { status: "active", name: "sestest" };
         }),
         profilesForValidation: [{ status: "active", name: "sestest" }],
         profileTypeConfigurations: MOCK_PROFILES,
         getConfigArray: () => MOCK_PROFILES,
-        validateProfiles: jest.fn(),
-        getBaseProfile: jest.fn(),
-        enableValidationContext: jest.fn(),
-        enableValidation: jest.fn(),
-        disableValidationContext: jest.fn(),
-        disableValidation: jest.fn(),
-        getProfileSetting: jest.fn(),
-        resetValidationSettings: jest.fn(),
-        getValidSession: jest.fn(),
-        editSession: jest.fn(),
-        createZoweSession: jest.fn(),
-        createNewConnection: jest.fn(() => {
+        validateProfiles: vi.fn(),
+        getBaseProfile: vi.fn(),
+        enableValidationContext: vi.fn(),
+        enableValidation: vi.fn(),
+        disableValidationContext: vi.fn(),
+        disableValidation: vi.fn(),
+        getProfileSetting: vi.fn(),
+        resetValidationSettings: vi.fn(),
+        getValidSession: vi.fn(),
+        editSession: vi.fn(),
+        createZoweSession: vi.fn(),
+        createNewConnection: vi.fn(() => {
             return { newprofile: "fake" };
         }),
-        getProfiles: jest.fn(() => {
+        getProfiles: vi.fn(() => {
             return [
                 { name: profile.name, profile },
                 { name: profile.name, profile },
             ];
         }),
-        refresh: jest.fn(),
-        directLoad: jest.fn(),
-        getAllTypes: jest.fn(),
-        getProfileInfo: jest.fn(() => {
+        refresh: vi.fn(),
+        directLoad: vi.fn(),
+        getAllTypes: vi.fn(),
+        getProfileInfo: vi.fn(() => {
             return createInstanceOfProfileInfo();
         }),
-        getDefaultConfigProfile: jest.fn(),
-        getProfileFromConfig: jest.fn(),
-        getProfileLoaded: jest.fn(),
-        openConfigFile: jest.fn(),
-        fetchAllProfiles: jest.fn(() => {
+        getDefaultConfigProfile: vi.fn(),
+        getProfileFromConfig: vi.fn(),
+        getProfileLoaded: vi.fn(),
+        openConfigFile: vi.fn(),
+        fetchAllProfiles: vi.fn(() => {
             return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
         }),
-        fetchAllProfilesByType: jest.fn(() => {
+        fetchAllProfilesByType: vi.fn(() => {
             return [{ name: "sestest" }];
         }),
-        convertV1ProfToConfig: jest.fn(),
-        getLoadedProfConfig: jest.fn(),
-        shouldRemoveTokenFromProfile: jest.fn(),
-        getPropsForProfile: jest.fn(),
-        showProfileInactiveMsg: jest.fn(),
-        getConfigLayers: jest.fn(),
-        resolveTypePromise: jest.fn(() => Promise.resolve()),
+        convertV1ProfToConfig: vi.fn(),
+        getLoadedProfConfig: vi.fn(),
+        shouldRemoveTokenFromProfile: vi.fn(),
+        getPropsForProfile: vi.fn(),
+        showProfileInactiveMsg: vi.fn(),
+        getConfigLayers: vi.fn(),
+        resolveTypePromise: vi.fn(() => Promise.resolve()),
     } as any;
 }
 
 export function createInstanceOfProfilesCache() {
     return {
-        getProfileInfo: jest.fn().mockResolvedValue(createInstanceOfProfileInfo()),
-        loadNamedProfile: jest.fn(),
+        getProfileInfo: vi.fn().mockResolvedValue(createInstanceOfProfileInfo()),
+        loadNamedProfile: vi.fn(),
     };
 }
 
@@ -417,19 +418,19 @@ export function createInstanceOfProfileInfo() {
                 profLoc: { locType: 0, osLoc: ["location"], jsonLoc: "jsonLoc" },
             },
         ],
-        hasTokenExpiredForProfile: jest.fn(),
-        updateProperty: jest.fn(),
-        updateKnownProperty: jest.fn(),
-        createSession: jest.fn(),
+        hasTokenExpiredForProfile: vi.fn(),
+        updateProperty: vi.fn(),
+        updateKnownProperty: vi.fn(),
+        createSession: vi.fn(),
         getTeamConfig: () => ({
             api: {
                 secure: {
-                    securePropsForProfile: jest.fn().mockReturnValue([]),
+                    securePropsForProfile: vi.fn().mockReturnValue([]),
                 },
             },
             exists: true,
         }),
-        mergeArgsForProfile: jest.fn().mockReturnValue({
+        mergeArgsForProfile: vi.fn().mockReturnValue({
             knownArgs: [
                 {
                     argName: "user",
@@ -448,13 +449,13 @@ export function createInstanceOfProfileInfo() {
             ],
             missingArgs: [],
         }),
-        mergeArgsForProfileType: jest.fn(),
-        profAttrsToProfLoaded: jest.fn(),
-        readProfilesFromDisk: jest.fn(),
-        loadSecureArg: jest.fn(),
-        initSessCfg: jest.fn(),
-        getOsLocInfo: jest.fn(),
-        getZoweDir: jest.fn(),
+        mergeArgsForProfileType: vi.fn(),
+        profAttrsToProfLoaded: vi.fn(),
+        readProfilesFromDisk: vi.fn(),
+        loadSecureArg: vi.fn(),
+        initSessCfg: vi.fn(),
+        getOsLocInfo: vi.fn(),
+        getZoweDir: vi.fn(),
     } as any;
 }
 
@@ -477,12 +478,12 @@ export function createQuickPickContent(entered: any, itemArray: vscode.QuickPick
         ignoreFocusOut: true,
         items: itemArray,
         value: entered,
-        show: jest.fn(),
-        hide: jest.fn(),
-        onDidAccept: jest.fn(),
-        onDidHide: jest.fn(),
-        onDidChangeValue: jest.fn(),
-        dispose: jest.fn(),
+        show: vi.fn(),
+        hide: vi.fn(),
+        onDidAccept: vi.fn(),
+        onDidHide: vi.fn(),
+        onDidChangeValue: vi.fn(),
+        dispose: vi.fn(),
     };
 }
 
@@ -492,19 +493,19 @@ export function createInputBox(value: string): any {
         title: null,
         enabled: true,
         busy: false,
-        show: jest.fn(),
-        hide: jest.fn(),
+        show: vi.fn(),
+        hide: vi.fn(),
         step: null,
-        dispose: jest.fn(),
+        dispose: vi.fn(),
         ignoreFocusOut: false,
         totalSteps: null,
         placeholder: undefined,
         password: false,
-        onDidChangeValue: jest.fn(),
-        onDidAccept: jest.fn(),
-        onDidHide: jest.fn(),
+        onDidChangeValue: vi.fn(),
+        onDidAccept: vi.fn(),
+        onDidHide: vi.fn(),
         buttons: [],
-        onDidTriggerButton: jest.fn(),
+        onDidTriggerButton: vi.fn(),
         prompt: undefined,
         validationMessage: undefined,
         valueSelection: undefined,
@@ -514,10 +515,10 @@ export function createInputBox(value: string): any {
 
 export function createWorkspaceConfiguration(): vscode.WorkspaceConfiguration {
     return {
-        get: jest.fn(),
-        update: jest.fn(),
-        has: jest.fn(),
-        inspect: jest.fn(),
+        get: vi.fn(),
+        update: vi.fn(),
+        has: vi.fn(),
+        inspect: vi.fn(),
     };
 }
 
@@ -526,17 +527,17 @@ export function createQuickPickInstance(): vscode.QuickPick<vscode.QuickPickItem
         value: null,
         placeholder: createQuickPickItem(),
         items: undefined,
-        show: jest.fn(),
-        hide: jest.fn(),
-        onDidAccept: jest.fn(),
+        show: vi.fn(),
+        hide: vi.fn(),
+        onDidAccept: vi.fn(),
         ignoreFocusOut: false,
-        onDidHide: jest.fn(),
+        onDidHide: vi.fn(),
     } as any;
 }
 
 export function createConfigInstance() {
     return {
-        load: jest.fn(),
+        load: vi.fn(),
     } as any;
 }
 
@@ -545,8 +546,8 @@ export function createConfigLoad() {
         configName: "zowe.config.json",
         api: {
             layers: {
-                merge: jest.fn(),
-                activate: jest.fn(),
+                merge: vi.fn(),
+                activate: vi.fn(),
             },
         },
         layers: [
@@ -565,36 +566,36 @@ export function createConfigLoad() {
                 user: true,
             },
         ],
-        setSchema: jest.fn(),
-        save: jest.fn(),
+        setSchema: vi.fn(),
+        save: vi.fn(),
     } as any;
 }
 
 const originalGetDirectValue = SettingsConfig.getDirectValue;
 export function createGetConfigMock(settings: { [key: string]: any }) {
-    return jest.fn((key: string) => settings[key] ?? originalGetDirectValue(key));
+    return vi.fn((key: string) => settings[key] ?? originalGetDirectValue(key));
 }
 
 export function createOutputChannel() {
     return {
-        append: jest.fn(),
+        append: vi.fn(),
         name: "Zowe Explorer",
-        appendLine: jest.fn(),
-        clear: jest.fn(),
-        show: jest.fn(),
-        hide: jest.fn(),
-        dispose: jest.fn(),
-        replace: jest.fn(),
+        appendLine: vi.fn(),
+        clear: vi.fn(),
+        show: vi.fn(),
+        hide: vi.fn(),
+        dispose: vi.fn(),
+        replace: vi.fn(),
     } as vscode.OutputChannel;
 }
 
 export function createMockNode(name: string, context: string): IZoweTreeNode {
     return {
         dirty: false,
-        getLabel: jest.fn(() => name),
-        getChildren: jest.fn(),
-        getParent: jest.fn(),
-        getProfile: jest.fn(() => ({
+        getLabel: vi.fn(() => name),
+        getChildren: vi.fn(),
+        getParent: vi.fn(),
+        getProfile: vi.fn(() => ({
             name,
             profile: {
                 host: "fake",
@@ -605,11 +606,11 @@ export function createMockNode(name: string, context: string): IZoweTreeNode {
             message: "",
             failNotFound: false,
         })),
-        getProfileName: jest.fn(),
-        getSession: jest.fn(),
-        getSessionNode: jest.fn(),
-        setProfileToChoice: jest.fn(),
-        setSessionToChoice: jest.fn(),
+        getProfileName: vi.fn(),
+        getSession: vi.fn(),
+        getSessionNode: vi.fn(),
+        setProfileToChoice: vi.fn(),
+        setSessionToChoice: vi.fn(),
         label: name,
         contextValue: context,
     };
@@ -623,12 +624,12 @@ export function createTreeProviders() {
                 createMockNode("zosmf2", Constants.DS_SESSION_CONTEXT + Constants.NO_VALIDATE_SUFFIX),
             ],
             mFavorites: [],
-            deleteSession: jest.fn(),
-            removeSession: jest.fn(),
-            refresh: jest.fn(),
-            addSingleSession: jest.fn(),
-            setStatusForSession: jest.fn(),
-            refreshElement: jest.fn(),
+            deleteSession: vi.fn(),
+            removeSession: vi.fn(),
+            refresh: vi.fn(),
+            addSingleSession: vi.fn(),
+            setStatusForSession: vi.fn(),
+            refreshElement: vi.fn(),
         } as any,
         uss: {
             mSessionNodes: [
@@ -636,14 +637,14 @@ export function createTreeProviders() {
                 createMockNode("zosmf2", Constants.USS_SESSION_CONTEXT + Constants.NO_VALIDATE_SUFFIX),
             ],
             mFavorites: [],
-            deleteSession: jest.fn(),
-            removeSession: jest.fn(),
-            refresh: jest.fn(),
-            addSingleSession: jest.fn(),
-            setStatusForSession: jest.fn(),
-            refreshElement: jest.fn(),
-            addEncodingHistory: jest.fn(),
-            getEncodingHistory: jest.fn(),
+            deleteSession: vi.fn(),
+            removeSession: vi.fn(),
+            refresh: vi.fn(),
+            addSingleSession: vi.fn(),
+            setStatusForSession: vi.fn(),
+            refreshElement: vi.fn(),
+            addEncodingHistory: vi.fn(),
+            getEncodingHistory: vi.fn(),
         } as any,
         job: {
             mSessionNodes: [
@@ -651,11 +652,11 @@ export function createTreeProviders() {
                 createMockNode("zosmf2", Constants.JOBS_SESSION_CONTEXT + Constants.NO_VALIDATE_SUFFIX),
             ],
             mFavorites: [],
-            removeSession: jest.fn(),
-            deleteSession: jest.fn(),
-            refresh: jest.fn(),
-            addSingleSession: jest.fn(),
-            setStatusForSession: jest.fn(),
+            removeSession: vi.fn(),
+            deleteSession: vi.fn(),
+            refresh: vi.fn(),
+            addSingleSession: vi.fn(),
+            setStatusForSession: vi.fn(),
         } as any,
     };
 }
