@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-
+import { vi } from "vitest";
 import * as vscode from "vscode";
 import { Constants } from "../../../src/configuration/Constants";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
@@ -40,7 +40,7 @@ export function createDatasetFavoritesNode() {
 }
 
 export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, favoritesNode?: ZoweDatasetNode): any {
-    jest.spyOn(ZowePersistentFilters.prototype as any, "initialize").mockReturnValueOnce(undefined);
+    vi.spyOn(ZowePersistentFilters.prototype as any, "initialize").mockReturnValueOnce(undefined);
     const testDatasetTree = new DatasetTree();
     Object.assign(testDatasetTree, {
         mSessionNodes: [sessionNode],
@@ -48,63 +48,63 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         mFileHistory: [],
         mPersistence: [],
         mOnDidChangeTreeData: {
-            fire: jest.fn(),
+            fire: vi.fn(),
         },
         treeView,
-        addSession: jest.fn(),
-        addSearchHistory: jest.fn(),
-        addFileHistory: jest.fn().mockImplementation((newFile) => testDatasetTree.mFileHistory.push(newFile)),
-        addFavorite: jest.fn().mockImplementation((newFavorite) => testDatasetTree.mFavorites.push(newFavorite)),
-        addSearchedKeywordHistory: jest.fn(),
-        addSortSetting: jest.fn(),
-        getSearchHistory: jest.fn(),
-        getSearchedKeywordHistory: jest.fn(),
-        getFileHistory: jest.fn().mockImplementation(() => testDatasetTree.mFileHistory),
-        getSessions: jest.fn().mockReturnValue([]),
-        getFavorites: jest.fn(),
-        getSortSettings: jest.fn().mockReturnValue({}),
-        removeSearchHistory: jest.fn(),
-        removeSearchedKeywordHistory: jest.fn(),
-        resetSearchHistory: jest.fn(),
-        resetSearchedKeywordHistory: jest.fn(),
-        resetFileHistory: jest.fn(),
-        refresh: jest.fn(),
-        refreshElement: jest.fn(),
-        checkCurrentProfile: jest.fn(),
-        getChildren: jest.fn(),
-        getTreeType: jest.fn().mockReturnValue(PersistenceSchemaEnum.Dataset),
-        createZoweSchema: jest.fn(),
-        createZoweSession: jest.fn(),
-        createFilterString: jest.fn(),
-        setItem: jest.fn(),
-        getTreeView: jest.fn().mockReturnValue(treeView),
-        getAllLoadedItems: jest.fn(),
-        removeFavorite: jest.fn().mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testDatasetTree.mFavorites)),
-        removeFavProfile: jest.fn().mockImplementation((badFavProfileName) => {
+        addSession: vi.fn(),
+        addSearchHistory: vi.fn(),
+        addFileHistory: vi.fn().mockImplementation((newFile) => testDatasetTree.mFileHistory.push(newFile)),
+        addFavorite: vi.fn().mockImplementation((newFavorite) => testDatasetTree.mFavorites.push(newFavorite)),
+        addSearchedKeywordHistory: vi.fn(),
+        addSortSetting: vi.fn(),
+        getSearchHistory: vi.fn(),
+        getSearchedKeywordHistory: vi.fn(),
+        getFileHistory: vi.fn().mockImplementation(() => testDatasetTree.mFileHistory),
+        getSessions: vi.fn().mockReturnValue([]),
+        getFavorites: vi.fn(),
+        getSortSettings: vi.fn().mockReturnValue({}),
+        removeSearchHistory: vi.fn(),
+        removeSearchedKeywordHistory: vi.fn(),
+        resetSearchHistory: vi.fn(),
+        resetSearchedKeywordHistory: vi.fn(),
+        resetFileHistory: vi.fn(),
+        refresh: vi.fn(),
+        refreshElement: vi.fn(),
+        checkCurrentProfile: vi.fn(),
+        getChildren: vi.fn(),
+        getTreeType: vi.fn().mockReturnValue(PersistenceSchemaEnum.Dataset),
+        createZoweSchema: vi.fn(),
+        createZoweSession: vi.fn(),
+        createFilterString: vi.fn(),
+        setItem: vi.fn(),
+        getTreeView: vi.fn().mockReturnValue(treeView),
+        getAllLoadedItems: vi.fn(),
+        removeFavorite: vi.fn().mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testDatasetTree.mFavorites)),
+        removeFavProfile: vi.fn().mockImplementation((badFavProfileName) => {
             const badFavProfileNode = testDatasetTree.mFavorites.find((treeNode) => treeNode.label === badFavProfileName);
             removeNodeFromArray(badFavProfileNode, testDatasetTree.mFavorites);
         }),
-        deleteSession: jest.fn().mockImplementation((badSession) => removeNodeFromArray(badSession, testDatasetTree.mSessionNodes)),
-        removeFileHistory: jest
+        deleteSession: vi.fn().mockImplementation((badSession) => removeNodeFromArray(badSession, testDatasetTree.mSessionNodes)),
+        removeFileHistory: vi
             .fn()
             .mockImplementation((badFile) => testDatasetTree.mFileHistory.splice(testDatasetTree.mFileHistory.indexOf(badFile), 1)),
-        enterPattern: jest.fn(),
-        initializeFavorites: jest.fn(),
-        openItemFromPath: jest.fn(),
-        renameFavorite: jest.fn(),
-        updateFavorites: jest.fn(),
-        renameNode: jest.fn(),
-        findFavoritedNode: jest.fn(),
-        findNonFavoritedNode: jest.fn(),
-        findEquivalentNode: jest.fn(),
-        getProfileName: jest.fn(),
-        getSession: jest.fn(),
-        getProfiles: jest.fn(),
-        getProfile: jest.fn(),
-        getDsTemplates: jest.fn(),
-        addDsTemplate: jest.fn(),
+        enterPattern: vi.fn(),
+        initializeFavorites: vi.fn(),
+        openItemFromPath: vi.fn(),
+        renameFavorite: vi.fn(),
+        updateFavorites: vi.fn(),
+        renameNode: vi.fn(),
+        findFavoritedNode: vi.fn(),
+        findNonFavoritedNode: vi.fn(),
+        findEquivalentNode: vi.fn(),
+        getProfileName: vi.fn(),
+        getSession: vi.fn(),
+        getProfiles: vi.fn(),
+        getProfile: vi.fn(),
+        getDsTemplates: vi.fn(),
+        addDsTemplate: vi.fn(),
     });
-    jest.spyOn(testDatasetTree, "persistence", "get").mockReturnValue({ getSortSetting: jest.fn() });
+    vi.spyOn(testDatasetTree, "persistence", "get").mockReturnValue({ getSortSetting: vi.fn() });
     if (!favoritesNode) {
         return testDatasetTree;
     }

@@ -8,24 +8,25 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as fs from "fs";
 import * as imperative from "@zowe/imperative";
 import { Constants } from "../../../src/globals";
 import { KeytarCredentialManager } from "../../../src/security/KeytarCredentialManager";
 
-jest.mock("fs");
+vi.mock("fs");
 
 describe("KeytarCredentialManager", () => {
     const fakeDisplayName = "Keytar credential manager";
     const scsPluginName = "@zowe/secure-credential-store-for-zowe-cli";
 
     const keytarMocks = {
-        getPassword: jest.fn(),
-        findCredentials: jest.fn(),
-        findPassword: jest.fn(),
-        setPassword: jest.fn(),
-        deletePassword: jest.fn(),
+        getPassword: vi.fn(),
+        findCredentials: vi.fn(),
+        findPassword: vi.fn(),
+        setPassword: vi.fn(),
+        deletePassword: vi.fn(),
     };
 
     beforeEach(() => {
@@ -33,7 +34,7 @@ describe("KeytarCredentialManager", () => {
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it("should initialize with preset display name", () => {
@@ -52,12 +53,12 @@ describe("KeytarCredentialManager", () => {
         let loggerWarnSpy;
 
         beforeAll(() => {
-            loggerWarnSpy = jest.spyOn(imperative.Logger.prototype, "warn").mockImplementation();
+            loggerWarnSpy = vi.spyOn(imperative.Logger.prototype, "warn").mockImplementation((() => undefined) as any);
         });
 
         it("should handle CredentialManager in Imperative settings", () => {
-            jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
+            vi.spyOn(fs, "existsSync").mockReturnValueOnce(true);
+            const readFileSyncSpy = vi.spyOn(fs, "readFileSync").mockReturnValue(
                 JSON.stringify({
                     overrides: {
                         CredentialManager: scsPluginName,
@@ -72,8 +73,8 @@ describe("KeytarCredentialManager", () => {
         });
 
         it("should handle credential-manager in Imperative settings", () => {
-            jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
+            vi.spyOn(fs, "existsSync").mockReturnValueOnce(true);
+            const readFileSyncSpy = vi.spyOn(fs, "readFileSync").mockReturnValue(
                 JSON.stringify({
                     overrides: {
                         "credential-manager": scsPluginName,
@@ -88,8 +89,8 @@ describe("KeytarCredentialManager", () => {
         });
 
         it("should handle empty Imperative settings", () => {
-            jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({}));
+            vi.spyOn(fs, "existsSync").mockReturnValueOnce(true);
+            const readFileSyncSpy = vi.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({}));
             const keytar = KeytarCredentialManager.getSecurityModules("@zowe/secrets-for-zowe-sdk", false);
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).toHaveBeenCalledTimes(1);
@@ -97,8 +98,8 @@ describe("KeytarCredentialManager", () => {
         });
 
         it("should handle non-existent Imperative settings", () => {
-            jest.spyOn(fs, "existsSync").mockReturnValueOnce(false);
-            const readFileSyncSpy = jest.spyOn(fs, "readFileSync");
+            vi.spyOn(fs, "existsSync").mockReturnValueOnce(false);
+            const readFileSyncSpy = vi.spyOn(fs, "readFileSync");
             const keytar = KeytarCredentialManager.getSecurityModules("@zowe/secrets-for-zowe-sdk", false);
             expect(loggerWarnSpy).not.toHaveBeenCalled();
             expect(readFileSyncSpy).not.toHaveBeenCalled();
@@ -106,8 +107,8 @@ describe("KeytarCredentialManager", () => {
         });
 
         it("should handle error loading Imperative settings", () => {
-            jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValueOnce("invalid json");
+            vi.spyOn(fs, "existsSync").mockReturnValueOnce(true);
+            const readFileSyncSpy = vi.spyOn(fs, "readFileSync").mockReturnValueOnce("invalid json");
             const keytar = KeytarCredentialManager.getSecurityModules("@zowe/secrets-for-zowe-sdk", false);
             expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
             expect(loggerWarnSpy.mock.calls[0][0].message).toContain("Unexpected token");
@@ -116,8 +117,8 @@ describe("KeytarCredentialManager", () => {
         });
 
         it("should handle error loading invalid security module", () => {
-            jest.spyOn(fs, "existsSync").mockReturnValueOnce(true);
-            const readFileSyncSpy = jest.spyOn(fs, "readFileSync").mockReturnValue(
+            vi.spyOn(fs, "existsSync").mockReturnValueOnce(true);
+            const readFileSyncSpy = vi.spyOn(fs, "readFileSync").mockReturnValue(
                 JSON.stringify({
                     overrides: {
                         CredentialManager: scsPluginName,
@@ -136,7 +137,7 @@ describe("KeytarCredentialManager", () => {
         let loggerDebugSpy;
 
         beforeAll(() => {
-            loggerDebugSpy = jest.spyOn(imperative.Logger.prototype, "debug").mockImplementation();
+            loggerDebugSpy = vi.spyOn(imperative.Logger.prototype, "debug").mockImplementation((() => undefined) as any);
         });
 
         it("should delete credentials including preferred service", async () => {

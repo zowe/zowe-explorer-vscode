@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as globals from "../../../src/globals";
 import { AbstractFtpApi } from "../../../src/ZoweExplorerAbstractFtpApi";
@@ -15,8 +16,8 @@ import { FtpSession } from "../../../src/ftpSession";
 import { FTPConfig, IZosFTPProfile } from "@zowe/zos-ftp-for-zowe-cli";
 import { Gui, imperative } from "@zowe/zowe-explorer-api";
 
-jest.mock("zos-node-accessor");
-globals.LOGGER.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");
+vi.mock("zos-node-accessor");
+globals.LOGGER.getExtensionName = vi.fn().mockReturnValue("Zowe Explorer FTP Extension");
 
 class Dummy extends AbstractFtpApi {}
 
@@ -43,7 +44,7 @@ describe("AbstractFtpApi", () => {
         const session = new FtpSession(result.ISession);
         globals.SESSION_MAP.clear();
         globals.SESSION_MAP.set(profile, session);
-        session.releaseConnections = jest.fn();
+        session.releaseConnections = vi.fn();
 
         await instance.logout(session);
 
@@ -57,9 +58,9 @@ describe("AbstractFtpApi", () => {
     });
 
     it("should show a fatal message when trying to call getStatus with invalid credentials.", async () => {
-        Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
-        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
-            jest.fn((_val) => {
+        Object.defineProperty(Gui, "errorMessage", { value: vi.fn(), configurable: true });
+        vi.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
+            vi.fn((_val) => {
                 throw new Error("PASS command failed");
             })
         );
@@ -80,9 +81,9 @@ describe("AbstractFtpApi", () => {
     });
 
     it("should show a different fatal message when trying to call getStatus and an exception occurs", async () => {
-        Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
-        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
-            jest.fn((_prof) => {
+        Object.defineProperty(Gui, "errorMessage", { value: vi.fn(), configurable: true });
+        vi.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
+            vi.fn((_prof) => {
                 throw new Error("Something happened");
             })
         );
@@ -103,7 +104,7 @@ describe("AbstractFtpApi", () => {
     });
 
     it("should show a fatal message when using checkedProfile on an invalid profile", () => {
-        Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+        Object.defineProperty(Gui, "showMessage", { value: vi.fn(), configurable: true });
         const instance = new Dummy();
         instance.profile = {
             message: "",
@@ -124,10 +125,10 @@ describe("AbstractFtpApi", () => {
     });
 
     it("should return active from sessionStatus when getStatus is called w/ correct profile", async () => {
-        Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+        Object.defineProperty(Gui, "showMessage", { value: vi.fn(), configurable: true });
         const instance = new Dummy(profile);
-        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
-            jest.fn(((_prof) => Promise.resolve({ test: "Test successful object" })) as any)
+        vi.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(
+            vi.fn(((_prof) => Promise.resolve({ test: "Test successful object" })) as any)
         );
 
         const status = await instance.getStatus(profile, "zftp");
@@ -135,9 +136,9 @@ describe("AbstractFtpApi", () => {
     });
 
     it("should return inactive from sessionStatus when getStatus is called w/ correct profile", async () => {
-        Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
+        Object.defineProperty(Gui, "showMessage", { value: vi.fn(), configurable: true });
         const instance = new Dummy(profile);
-        jest.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(jest.fn(((_prof) => Promise.resolve(false)) as any));
+        vi.spyOn(FTPConfig, "connectFromArguments").mockImplementationOnce(vi.fn(((_prof) => Promise.resolve(false)) as any));
 
         const status = await instance.getStatus(profile, "zftp");
         expect(status).toStrictEqual("inactive");
@@ -161,7 +162,7 @@ describe("AbstractFtpApi", () => {
             rejectUnauthorized: false,
             serverName: "example2.com",
         };
-        const createConfigFromArgsSpy = jest.spyOn(FTPConfig, "createConfigFromArguments");
+        const createConfigFromArgsSpy = vi.spyOn(FTPConfig, "createConfigFromArguments");
         const instance = new Dummy();
 
         await instance.ftpClient({ ...profile, profile: ftpProfile });
@@ -171,7 +172,7 @@ describe("AbstractFtpApi", () => {
 
     it("should close the connection", () => {
         const instance = new Dummy(profile);
-        const connectionMock = jest.fn();
+        const connectionMock = vi.fn();
         instance.releaseConnection({
             close: connectionMock,
         });

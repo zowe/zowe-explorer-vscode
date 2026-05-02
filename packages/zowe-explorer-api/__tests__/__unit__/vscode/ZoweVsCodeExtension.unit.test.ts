@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-
+import { vi } from "vitest";
 import * as vscode from "vscode";
 import { Gui } from "../../../src/globals/Gui";
 import { PromptCredentialsOptions, ZoweVsCodeExtension, ProfilesCache, Types } from "../../../src";
@@ -16,24 +16,24 @@ import { Login, Logout } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
 
 describe("ZoweVsCodeExtension", () => {
-    const fakeLogger = { debug: jest.fn() };
+    const fakeLogger = { debug: vi.fn() };
     const fakeVsce = {
         exports: undefined,
         packageJSON: { version: "1.0.1" },
     } as vscode.Extension<unknown>;
 
     beforeEach(() => {
-        jest.restoreAllMocks();
-        jest.clearAllMocks();
+        vi.restoreAllMocks();
+        vi.clearAllMocks();
     });
 
     it("customLoggingPath should return value if defined in VS Code settings", () => {
-        const mockGetConfig = jest.fn().mockReturnValueOnce(__dirname);
+        const mockGetConfig = vi.fn().mockReturnValueOnce(__dirname);
         const vscodeMock = {
             get: mockGetConfig,
         } as unknown as vscode.WorkspaceConfiguration;
-        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce(vscodeMock);
-        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce(vscodeMock);
+        vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce(vscodeMock);
+        vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValueOnce(vscodeMock);
         expect(ZoweVsCodeExtension.customLoggingPath).toBe(__dirname);
         expect(ZoweVsCodeExtension.customLoggingPath).toBeUndefined();
         expect(mockGetConfig).toHaveBeenCalledTimes(2);
@@ -41,19 +41,19 @@ describe("ZoweVsCodeExtension", () => {
 
     describe("getZoweExplorerApi", () => {
         it("should return client API", () => {
-            jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(fakeVsce);
+            vi.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(fakeVsce);
             const zeApi = ZoweVsCodeExtension.getZoweExplorerApi();
             expect(zeApi).toBe(fakeVsce.exports);
         });
 
         it("should return API if required version matches", () => {
-            jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(fakeVsce);
+            vi.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(fakeVsce);
             const zeApi = ZoweVsCodeExtension.getZoweExplorerApi("1.0.0");
             expect(zeApi).toBe(fakeVsce.exports);
         });
 
         it("should return API if required version is invalid", () => {
-            jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(fakeVsce);
+            vi.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(fakeVsce);
             const zeApi = ZoweVsCodeExtension.getZoweExplorerApi("test");
             expect(zeApi).toBe(fakeVsce.exports);
         });
@@ -63,26 +63,26 @@ describe("ZoweVsCodeExtension", () => {
                 exports: fakeVsce.exports,
                 packageJSON: {},
             } as vscode.Extension<unknown>;
-            jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(vsceWithoutVersion);
+            vi.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(vsceWithoutVersion);
             const zeApi = ZoweVsCodeExtension.getZoweExplorerApi("1.0.0");
             expect(zeApi).toBe(fakeVsce.exports);
         });
 
         it("should not return API if extension is not installed", () => {
-            jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(undefined);
+            vi.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(undefined);
             const zeApi = ZoweVsCodeExtension.getZoweExplorerApi();
             expect(zeApi).toBeUndefined();
         });
 
         it("should not return API if there are no exports", () => {
             const vsceWithoutExports = { packageJSON: fakeVsce.packageJSON as object } as vscode.Extension<unknown>;
-            jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(vsceWithoutExports);
+            vi.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(vsceWithoutExports);
             const zeApi = ZoweVsCodeExtension.getZoweExplorerApi();
             expect(zeApi).toBeUndefined();
         });
 
         it("should not return API if required version does not match", () => {
-            jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(fakeVsce);
+            vi.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(fakeVsce);
             const zeApi = ZoweVsCodeExtension.getZoweExplorerApi("1.0.2");
             expect(zeApi).toBeUndefined();
         });
@@ -134,21 +134,21 @@ describe("ZoweVsCodeExtension", () => {
             const testConfig = new (imperative.Config as any)();
             Object.assign(testConfig, {
                 ...new (imperative.Config as any)(),
-                layerActive: jest.fn().mockReturnValue(configLayer),
-                layerMerge: jest.fn().mockReturnValue(configLayer.properties),
+                layerActive: vi.fn().mockReturnValue(configLayer),
+                layerMerge: vi.fn().mockReturnValue(configLayer.properties),
                 mLayers: [configLayer],
                 mActive: { user: configLayer.user, global: configLayer.global },
-                save: jest.fn(),
+                save: vi.fn(),
             });
             Object.assign(testProfInfo, {
-                getTeamConfig: jest.fn().mockReturnValue(testConfig),
-                loadSchema: jest.fn().mockReturnValue({}),
+                getTeamConfig: vi.fn().mockReturnValue(testConfig),
+                loadSchema: vi.fn().mockReturnValue({}),
                 mLoadedConfig: testConfig,
                 mProfileSchemaCache: new Map(),
-                readProfilesFromDisk: jest.fn(),
+                readProfilesFromDisk: vi.fn(),
             });
             testCache.allProfiles = [serviceProfile, baseProfile];
-            jest.spyOn(testCache, "getProfileInfo").mockResolvedValue(testProfInfo);
+            vi.spyOn(testCache, "getProfileInfo").mockResolvedValue(testProfInfo);
             const expectedSession = new imperative.Session({
                 hostname: "dummy",
                 password: "Password",
@@ -162,16 +162,16 @@ describe("ZoweVsCodeExtension", () => {
                 baseProfile,
                 serviceProfile,
                 testNode: {
-                    setProfileToChoice: jest.fn(),
-                    getProfile: jest.fn().mockReturnValue(serviceProfile),
-                    getSession: jest.fn().mockReturnValue(expectedSession),
+                    setProfileToChoice: vi.fn(),
+                    getProfile: vi.fn().mockReturnValue(serviceProfile),
+                    getSession: vi.fn().mockReturnValue(expectedSession),
                 },
                 expectedSession,
                 updProfile: { tokenType: "apimlAuthenticationToken", tokenValue: "tokenValue" },
                 testRegister: {
                     getCommonApi: () => ({
-                        login: jest.fn().mockReturnValue("tokenValue"),
-                        logout: jest.fn(),
+                        login: vi.fn().mockReturnValue("tokenValue"),
+                        logout: vi.fn(),
                         getTokenTypeName: () => "apimlAuthenticationToken",
                     }),
                 },
@@ -182,23 +182,23 @@ describe("ZoweVsCodeExtension", () => {
 
         beforeEach(() => {
             blockMocks = createBlockMocks();
-            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue(blockMocks.testCache);
-            jest.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(fakeVsce);
+            vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue(blockMocks.testCache);
+            vi.spyOn(vscode.extensions, "getExtension").mockReturnValueOnce(fakeVsce);
         });
 
         it("should not login if the base profile cannot be fetched", async () => {
-            const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
-            const fetchBaseProfileSpy = jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(undefined);
-            const updateBaseProfileFileLoginSpy = jest.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
+            const errorMessageSpy = vi.spyOn(Gui, "errorMessage");
+            const fetchBaseProfileSpy = vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(undefined);
+            const updateBaseProfileFileLoginSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
             await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" });
             expect(fetchBaseProfileSpy).toHaveBeenCalledTimes(1);
             expect(updateBaseProfileFileLoginSpy).not.toHaveBeenCalled();
             expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Login failed: No base profile found"));
         });
         it("should not logout if the base profile cannot be fetched", async () => {
-            const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
-            const fetchBaseProfileSpy = jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(undefined);
-            const updateBaseProfileFileLoginSpy = jest.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
+            const errorMessageSpy = vi.spyOn(Gui, "errorMessage");
+            const fetchBaseProfileSpy = vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(undefined);
+            const updateBaseProfileFileLoginSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
             await ZoweVsCodeExtension.ssoLogout({ serviceProfile: "service" });
             expect(fetchBaseProfileSpy).toHaveBeenCalledTimes(1);
             expect(updateBaseProfileFileLoginSpy).not.toHaveBeenCalled();
@@ -207,13 +207,13 @@ describe("ZoweVsCodeExtension", () => {
 
         describe("user and password chosen", () => {
             it("should login using the base profile given a simple profile name", async () => {
-                jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
-                const updateBaseProfileFileLoginSpy = jest.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
-                const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
-                jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
-                const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
+                vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
+                const updateBaseProfileFileLoginSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
+                const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+                vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+                const loginSpy = vi.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
 
-                const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" });
 
                 expect(loginSpy.mock.calls[0][0].ISession.type).toEqual(imperative.SessConstants.AUTH_TYPE_TOKEN);
@@ -222,13 +222,13 @@ describe("ZoweVsCodeExtension", () => {
                 expect(updateBaseProfileFileLoginSpy).toHaveBeenCalledWith(blockMocks.baseProfile, blockMocks.updProfile, false);
             });
             it("should logout using the base profile given a simple profile name", async () => {
-                jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
-                const updateBaseProfileFileLogoutSpy = jest.spyOn(blockMocks.testCache, "updateBaseProfileFileLogout");
-                const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+                vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
+                const updateBaseProfileFileLogoutSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogout");
+                const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
                 testSpy.mockResolvedValue({ ...blockMocks.serviceProfile, profile: { ...blockMocks.testProfile, ...blockMocks.updProfile } });
-                const logoutSpy = jest.spyOn(Logout, "apimlLogout").mockImplementation(jest.fn());
+                const logoutSpy = vi.spyOn(Logout, "apimlLogout").mockImplementation(vi.fn());
 
-                const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.ssoLogout({ serviceProfile: "service" });
 
                 expect(logoutSpy.mock.calls[0][0].ISession.type).toEqual(imperative.SessConstants.AUTH_TYPE_NONE);
@@ -239,18 +239,18 @@ describe("ZoweVsCodeExtension", () => {
             it("should login using the base profile if the base profile does not have a tokenType stored", async () => {
                 const tempBaseProfile = JSON.parse(JSON.stringify(blockMocks.baseProfile));
                 tempBaseProfile.profile.tokenType = undefined;
-                jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(tempBaseProfile);
-                const updateBaseProfileFileLoginSpy = jest.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
-                const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+                vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(tempBaseProfile);
+                const updateBaseProfileFileLoginSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
+                const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
                 const newServiceProfile = {
                     ...blockMocks.serviceProfile,
                     profile: { ...blockMocks.testProfile, tokenValue: "tokenValue", host: "service" },
                 };
                 testSpy.mockResolvedValue(newServiceProfile);
-                jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
-                const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
+                vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+                const loginSpy = vi.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
 
-                const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" });
 
                 expect(loginSpy.mock.calls[0][0].ISession.type).toEqual(imperative.SessConstants.AUTH_TYPE_TOKEN);
@@ -261,18 +261,18 @@ describe("ZoweVsCodeExtension", () => {
             it("should login using the service profile given a simple profile name", async () => {
                 const tempBaseProfile = JSON.parse(JSON.stringify(blockMocks.baseProfile));
                 tempBaseProfile.profile.tokenType = "some-dummy-token-type";
-                jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(tempBaseProfile);
-                const updateBaseProfileFileLoginSpy = jest.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
-                const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+                vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(tempBaseProfile);
+                const updateBaseProfileFileLoginSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
+                const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
                 const newServiceProfile = {
                     ...blockMocks.serviceProfile,
                     profile: { ...blockMocks.testProfile, tokenValue: "tokenValue", host: "service" },
                 };
                 testSpy.mockResolvedValue(newServiceProfile);
-                jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
-                const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
+                vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+                const loginSpy = vi.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
 
-                const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" });
 
                 expect(loginSpy.mock.calls[0][0].ISession.type).toEqual(imperative.SessConstants.AUTH_TYPE_TOKEN);
@@ -292,17 +292,17 @@ describe("ZoweVsCodeExtension", () => {
                 const tempBaseProfile = JSON.parse(JSON.stringify(blockMocks.baseProfile));
                 tempBaseProfile.name = "lpar";
                 tempBaseProfile.profile.tokenType = "some-dummy-token-type";
-                jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(tempBaseProfile);
-                const updateBaseProfileFileLoginSpy = jest.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
-                const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+                vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(tempBaseProfile);
+                const updateBaseProfileFileLoginSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
+                const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
                 const newServiceProfile = {
                     ...blockMocks.serviceProfile,
                     name: "lpar.service",
                     profile: { ...blockMocks.testProfile, tokenValue: "tokenValue", host: "dummy" },
                 };
                 testSpy.mockResolvedValue(newServiceProfile);
-                jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
-                const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
+                vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+                const loginSpy = vi.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
                 blockMocks.configLayer.properties.profiles = {
                     lpar: {
                         profiles: {
@@ -315,9 +315,9 @@ describe("ZoweVsCodeExtension", () => {
                     },
                 };
 
-                const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.profilesCache.refresh({
-                    registeredApiTypes: jest.fn().mockReturnValue(["service"]),
+                    registeredApiTypes: vi.fn().mockReturnValue(["service"]),
                 } as unknown as Types.IApiRegisterClient);
                 await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "lpar.service" });
 
@@ -341,17 +341,17 @@ describe("ZoweVsCodeExtension", () => {
                 quickPickMock.mockRestore();
             });
             it("should logout using the service profile given a simple profile name", async () => {
-                jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
-                const updateBaseProfileFileLogoutSpy = jest.spyOn(blockMocks.testCache, "updateBaseProfileFileLogout");
-                const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+                vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
+                const updateBaseProfileFileLogoutSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogout");
+                const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
                 const newServiceProfile = {
                     ...blockMocks.serviceProfile,
                     profile: { ...blockMocks.testProfile, ...blockMocks.updProfile, host: "service" },
                 };
                 testSpy.mockResolvedValue(newServiceProfile);
-                const logoutSpy = jest.spyOn(Logout, "apimlLogout").mockImplementation(jest.fn());
+                const logoutSpy = vi.spyOn(Logout, "apimlLogout").mockImplementation(vi.fn());
 
-                const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.ssoLogout({ serviceProfile: "service" });
 
                 expect(logoutSpy.mock.calls[0][0].ISession.type).toEqual(imperative.SessConstants.AUTH_TYPE_NONE);
@@ -360,13 +360,13 @@ describe("ZoweVsCodeExtension", () => {
                 quickPickMock.mockRestore();
             });
             it("should login using the base profile when provided with a node, register, and cache instance", async () => {
-                jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
-                const updateBaseProfileFileLoginSpy = jest.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
-                const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
-                jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
-                const loginSpy = jest.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
+                vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
+                const updateBaseProfileFileLoginSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
+                const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+                vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+                const loginSpy = vi.spyOn(Login, "apimlLogin").mockResolvedValue("tokenValue");
 
-                const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+                const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.ssoLogin({
                     serviceProfile: blockMocks.serviceProfile,
                     defaultTokenType: "apimlAuthenticationToken",
@@ -384,10 +384,10 @@ describe("ZoweVsCodeExtension", () => {
         });
 
         it("should logout using the base profile when provided with a node, register, and cache instance", async () => {
-            jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
-            const updateBaseProfileFileLogoutSpy = jest.spyOn(blockMocks.testCache, "updateBaseProfileFileLogout");
-            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
-            const logoutSpy = jest.spyOn(Logout, "apimlLogout").mockImplementation(jest.fn());
+            vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
+            const updateBaseProfileFileLogoutSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogout");
+            const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+            const logoutSpy = vi.spyOn(Logout, "apimlLogout").mockImplementation(vi.fn());
             const newServiceProfile = { ...blockMocks.serviceProfile, profile: { ...blockMocks.testProfile, ...blockMocks.updProfile } };
 
             await ZoweVsCodeExtension.ssoLogout({
@@ -402,22 +402,22 @@ describe("ZoweVsCodeExtension", () => {
         });
 
         it("calls promptCertificate if 'Certificate' was selected in quick pick", async () => {
-            jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
-            const updateBaseProfileFileLoginSpy = jest.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
-            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
-            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+            vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
+            const updateBaseProfileFileLoginSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
+            const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "getServiceProfileForAuthPurposes");
+            vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
             let sessionCopy;
-            const loginSpy = jest.spyOn(Login, "apimlLogin").mockImplementation((session: imperative.Session) => {
+            const loginSpy = vi.spyOn(Login, "apimlLogin").mockImplementation((session: imperative.Session) => {
                 sessionCopy = Object.assign(Object.create(Object.getPrototypeOf(session)), session);
                 return Promise.resolve("tokenValue");
             });
 
             // Assume user provides proper certificate and keyfile
-            const promptCertMock = jest.spyOn(ZoweVsCodeExtension as any, "promptCertificate").mockImplementation((opts: any) => {
+            const promptCertMock = vi.spyOn(ZoweVsCodeExtension as any, "promptCertificate").mockImplementation((opts: any) => {
                 opts.session.cert = "cert";
                 opts.session.certKey = "certKey";
             });
-            const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
+            const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
             await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" });
 
             expect(sessionCopy.ISession.type).toBe(imperative.SessConstants.AUTH_TYPE_CERT_PEM);
@@ -430,13 +430,13 @@ describe("ZoweVsCodeExtension", () => {
         });
 
         it("returns false if there's an error from promptCertificate", async () => {
-            jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
-            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+            vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
+            vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
 
             // case 1: User selects "user/password" for login quick pick
-            const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
+            const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
 
-            const promptCertMock = jest
+            const promptCertMock = vi
                 .spyOn(ZoweVsCodeExtension as any, "promptCertificate")
                 .mockRejectedValueOnce(new Error("invalid certificate"));
             await expect(ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" })).resolves.toBe(false);
@@ -445,8 +445,8 @@ describe("ZoweVsCodeExtension", () => {
         });
 
         it("should not login if the user cancels the operation when selecting the authentication method", async () => {
-            jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
-            const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation(() => undefined as any);
+            vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
+            const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation(() => undefined as any);
             const didLogin = await ZoweVsCodeExtension.ssoLogin({
                 serviceProfile: blockMocks.serviceProfile,
                 defaultTokenType: "apimlAuthenticationToken",
@@ -462,10 +462,10 @@ describe("ZoweVsCodeExtension", () => {
         it("should prefer base profile token type even if the user does not provide credentials to login with", async () => {
             const serviceProfileLoaded = { ...blockMocks.serviceProfile, profile: { ...blockMocks.serviceProfile.profile, tokenType: "SERVICE" } };
             const baseProfileLoaded = { ...blockMocks.baseProfile, profile: { ...blockMocks.baseProfile.profile, tokenType: "BASE" } };
-            jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(baseProfileLoaded);
+            vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(baseProfileLoaded);
 
-            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(undefined);
-            const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+            const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(undefined);
+            const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
             const didLogin = await ZoweVsCodeExtension.ssoLogin({
                 serviceProfile: serviceProfileLoaded,
                 defaultTokenType: "apimlAuthenticationToken",
@@ -483,11 +483,11 @@ describe("ZoweVsCodeExtension", () => {
         it("should update the cache when autoStore is false after a successful login operation", async () => {
             const serviceProfileLoaded = { ...blockMocks.serviceProfile, profile: { ...blockMocks.serviceProfile.profile, tokenType: "SERVICE" } };
             const baseProfileLoaded = { ...blockMocks.baseProfile, profile: { ...blockMocks.baseProfile.profile, tokenType: "BASE" } };
-            jest.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(baseProfileLoaded);
+            vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(baseProfileLoaded);
             blockMocks.configLayer.properties.autoStore = false;
 
-            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
-            const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+            vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["user", "pass"]);
+            const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
             const didLogin = await ZoweVsCodeExtension.ssoLogin({
                 serviceProfile: serviceProfileLoaded,
                 defaultTokenType: "apimlAuthenticationToken",
@@ -508,13 +508,13 @@ describe("ZoweVsCodeExtension", () => {
         it("should prefer base profile when it exists and has tokenType defined", async () => {
             const serviceProfileLoaded = { ...blockMocks.serviceProfile, profile: { ...blockMocks.serviceProfile.profile, tokenType: "SERVICE" } };
             const baseProfileLoaded = { ...blockMocks.baseProfile, profile: { ...blockMocks.baseProfile.profile, tokenType: "BASE" } };
-            const fetchBaseProfileSpy = jest.spyOn(blockMocks.testCache, "fetchBaseProfile");
+            const fetchBaseProfileSpy = vi.spyOn(blockMocks.testCache, "fetchBaseProfile");
             blockMocks.configLayer.properties.profiles.service.properties.tokenType = "SERVICE";
             blockMocks.configLayer.properties.profiles.base.properties.tokenType = "BASE";
             blockMocks.configLayer.properties.defaults.base = "base";
 
-            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["abc", "def"]);
-            const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+            const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["abc", "def"]);
+            const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
             const didLogin = await ZoweVsCodeExtension.ssoLogin({
                 serviceProfile: serviceProfileLoaded,
                 defaultTokenType: "apimlAuthenticationToken",
@@ -533,13 +533,13 @@ describe("ZoweVsCodeExtension", () => {
         it("should prefer base profile when it exists, does not have tokenType defined, and service profile is flat", async () => {
             const serviceProfileLoaded = { ...blockMocks.serviceProfile, profile: { ...blockMocks.serviceProfile.profile, tokenType: "SERVICE" } };
             const baseProfileLoaded = { ...blockMocks.baseProfile, profile: { ...blockMocks.baseProfile.profile } };
-            const fetchBaseProfileSpy = jest.spyOn(blockMocks.testCache, "fetchBaseProfile");
+            const fetchBaseProfileSpy = vi.spyOn(blockMocks.testCache, "fetchBaseProfile");
             blockMocks.configLayer.properties.profiles.service.properties.tokenType = "SERVICE";
             blockMocks.configLayer.properties.profiles.base.properties.tokenType = undefined;
             blockMocks.configLayer.properties.defaults.base = "base";
 
-            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["abc", "def"]);
-            const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+            const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["abc", "def"]);
+            const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
             const didLogin = await ZoweVsCodeExtension.ssoLogin({
                 serviceProfile: serviceProfileLoaded,
                 defaultTokenType: "apimlAuthenticationToken",
@@ -562,7 +562,7 @@ describe("ZoweVsCodeExtension", () => {
                 profile: { ...blockMocks.serviceProfile.profile, tokenType: "SERVICE" },
             };
             const baseProfileLoaded = { ...blockMocks.baseProfile, name: "lpar", profile: {} };
-            const fetchBaseProfileSpy = jest.spyOn(blockMocks.testCache, "fetchBaseProfile");
+            const fetchBaseProfileSpy = vi.spyOn(blockMocks.testCache, "fetchBaseProfile");
             blockMocks.configLayer.properties.profiles = {
                 lpar: {
                     profiles: {
@@ -575,10 +575,10 @@ describe("ZoweVsCodeExtension", () => {
                 },
             };
 
-            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["abc", "def"]);
-            const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
+            const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["abc", "def"]);
+            const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
             await ZoweVsCodeExtension.profilesCache.refresh({
-                registeredApiTypes: jest.fn().mockReturnValue(["service"]),
+                registeredApiTypes: vi.fn().mockReturnValue(["service"]),
             } as unknown as Types.IApiRegisterClient);
             const didLogin = await ZoweVsCodeExtension.ssoLogin({
                 serviceProfile: serviceProfileLoaded,
@@ -597,11 +597,11 @@ describe("ZoweVsCodeExtension", () => {
 
         it("should cancel the operation if the base profile does not exist and service profile is flat", async () => {
             const serviceProfileLoaded = { ...blockMocks.serviceProfile, profile: { ...blockMocks.serviceProfile.profile, tokenType: "SERVICE" } };
-            const fetchBaseProfileSpy = jest.spyOn(blockMocks.testCache, "fetchBaseProfile");
+            const fetchBaseProfileSpy = vi.spyOn(blockMocks.testCache, "fetchBaseProfile");
             delete blockMocks.configLayer.properties.profiles.base;
 
-            const testSpy = jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass");
-            const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+            const testSpy = vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass");
+            const errorMessageSpy = vi.spyOn(Gui, "errorMessage");
             const didLogin = await ZoweVsCodeExtension.ssoLogin({
                 serviceProfile: serviceProfileLoaded,
                 defaultTokenType: "apimlAuthenticationToken",
@@ -620,7 +620,7 @@ describe("ZoweVsCodeExtension", () => {
     describe("onProfileUpdated", () => {
         it("returns event defined on API register", () => {
             const eventEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
-            const apiMock = jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+            const apiMock = vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
                 onProfileUpdatedEmitter: eventEmitter,
                 onProfileUpdated: eventEmitter.event,
             } as any);
@@ -631,7 +631,7 @@ describe("ZoweVsCodeExtension", () => {
     describe("onProfileUpdatedEmitter", () => {
         it("returns instance of an EventEmitter", () => {
             const eventEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
-            const apiMock = jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+            const apiMock = vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
                 onProfileUpdatedEmitter: eventEmitter,
                 onProfileUpdated: eventEmitter.event,
             } as any);
@@ -646,24 +646,24 @@ describe("ZoweVsCodeExtension", () => {
         const onProfileUpdatedEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
 
         it("should not leak the password value in the input box placeholder", async () => {
-            const mockUpdateProperty = jest.fn();
-            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+            const mockUpdateProperty = vi.fn();
+            vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
                 onProfileUpdated: onProfileUpdatedEmitter.event,
                 onProfileUpdatedEmitter,
             } as any);
-            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                getLoadedProfConfig: jest.fn().mockReturnValue({
+            vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: vi.fn().mockReturnValue({
                     profile: {},
                 }),
-                getProfileInfo: jest.fn().mockReturnValue({
-                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
-                    isSecured: jest.fn().mockReturnValue(true),
+                getProfileInfo: vi.fn().mockReturnValue({
+                    getTeamConfig: vi.fn().mockReturnValue({ properties: { autoStore: true } }),
+                    isSecured: vi.fn().mockReturnValue(true),
                     updateProperty: mockUpdateProperty,
                 }),
-                refresh: jest.fn(),
-                updateCachedProfile: jest.fn(),
+                refresh: vi.fn(),
+                updateCachedProfile: vi.fn(),
             });
-            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
                 undefined as unknown as Types.IApiRegisterClient
@@ -675,26 +675,26 @@ describe("ZoweVsCodeExtension", () => {
         });
 
         it("should update user and password as secure fields", async () => {
-            const mockUpdateProperty = jest.fn();
-            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+            const mockUpdateProperty = vi.fn();
+            vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
                 onProfileUpdated: onProfileUpdatedEmitter.event,
                 onProfileUpdatedEmitter,
             } as any);
-            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                getLoadedProfConfig: jest.fn().mockReturnValue({
+            vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: vi.fn().mockReturnValue({
                     profile: {},
                 }),
-                getProfileInfo: jest.fn().mockReturnValue({
-                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
-                    isSecured: jest.fn().mockReturnValue(true),
+                getProfileInfo: vi.fn().mockReturnValue({
+                    getTeamConfig: vi.fn().mockReturnValue({ properties: { autoStore: true } }),
+                    isSecured: vi.fn().mockReturnValue(true),
                     updateProperty: mockUpdateProperty,
                 }),
-                refresh: jest.fn(),
-                updateCachedProfile: jest.fn(),
+                refresh: vi.fn(),
+                updateCachedProfile: vi.fn(),
             });
-            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
-            const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
-            const addCredsToSessionSpy = jest.spyOn(imperative.AuthOrder, "addCredsToSession");
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
+            const saveCredentialsSpy = vi.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const addCredsToSessionSpy = vi.spyOn(imperative.AuthOrder, "addCredsToSession");
 
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
@@ -713,26 +713,26 @@ describe("ZoweVsCodeExtension", () => {
         });
 
         it("should update user and password as secure fields with rePrompt", async () => {
-            const mockUpdateProperty = jest.fn();
-            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+            const mockUpdateProperty = vi.fn();
+            vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
                 onProfileUpdated: onProfileUpdatedEmitter.event,
                 onProfileUpdatedEmitter,
             } as any);
-            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                getLoadedProfConfig: jest.fn().mockReturnValue({
+            vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: vi.fn().mockReturnValue({
                     profile: { user: "badUser", password: "badPassword" },
                 }),
-                getProfileInfo: jest.fn().mockReturnValue({
-                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
-                    isSecured: jest.fn().mockReturnValue(true),
+                getProfileInfo: vi.fn().mockReturnValue({
+                    getTeamConfig: vi.fn().mockReturnValue({ properties: { autoStore: true } }),
+                    isSecured: vi.fn().mockReturnValue(true),
                     updateProperty: mockUpdateProperty,
                 }),
-                refresh: jest.fn(),
-                updateCachedProfile: jest.fn(),
+                refresh: vi.fn(),
+                updateCachedProfile: vi.fn(),
             });
-            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
-            const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
-            const addCredsToSessionSpy = jest.spyOn(imperative.AuthOrder, "addCredsToSession");
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
+            const saveCredentialsSpy = vi.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const addCredsToSessionSpy = vi.spyOn(imperative.AuthOrder, "addCredsToSession");
 
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 {
@@ -755,27 +755,27 @@ describe("ZoweVsCodeExtension", () => {
         });
 
         it("should update user and password as plain text if prompt accepted", async () => {
-            const mockUpdateProperty = jest.fn();
-            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+            const mockUpdateProperty = vi.fn();
+            vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
                 onProfileUpdated: onProfileUpdatedEmitter.event,
                 onProfileUpdatedEmitter,
             } as any);
-            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                getLoadedProfConfig: jest.fn().mockReturnValue({
+            vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: vi.fn().mockReturnValue({
                     profile: {},
                 }),
-                getProfileInfo: jest.fn().mockReturnValue({
-                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
-                    isSecured: jest.fn().mockReturnValue(false),
+                getProfileInfo: vi.fn().mockReturnValue({
+                    getTeamConfig: vi.fn().mockReturnValue({ properties: { autoStore: true } }),
+                    isSecured: vi.fn().mockReturnValue(false),
                     updateProperty: mockUpdateProperty,
                 }),
-                refresh: jest.fn(),
-                updateCachedProfile: jest.fn(),
+                refresh: vi.fn(),
+                updateCachedProfile: vi.fn(),
             });
-            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
-            jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("yes");
-            const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
-            const addCredsToSessionSpy = jest.spyOn(imperative.AuthOrder, "addCredsToSession");
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
+            vi.spyOn(Gui, "showMessage").mockResolvedValueOnce("yes");
+            const saveCredentialsSpy = vi.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const addCredsToSessionSpy = vi.spyOn(imperative.AuthOrder, "addCredsToSession");
 
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
@@ -794,26 +794,26 @@ describe("ZoweVsCodeExtension", () => {
         });
 
         it("should not update user and password as plain text if prompt cancelled", async () => {
-            const mockUpdateProperty = jest.fn();
-            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
+            const mockUpdateProperty = vi.fn();
+            vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValueOnce({
                 onProfileUpdated: onProfileUpdatedEmitter.event,
                 onProfileUpdatedEmitter,
             } as any);
-            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                getLoadedProfConfig: jest.fn().mockReturnValue({
+            vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: vi.fn().mockReturnValue({
                     profile: {},
                 }),
-                getProfileInfo: jest.fn().mockReturnValue({
-                    getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: true } }),
-                    isSecured: jest.fn().mockReturnValue(false),
+                getProfileInfo: vi.fn().mockReturnValue({
+                    getTeamConfig: vi.fn().mockReturnValue({ properties: { autoStore: true } }),
+                    isSecured: vi.fn().mockReturnValue(false),
                     updateProperty: mockUpdateProperty,
                 }),
-                refresh: jest.fn(),
-                updateCachedProfile: jest.fn(),
+                refresh: vi.fn(),
+                updateCachedProfile: vi.fn(),
             });
-            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
-            jest.spyOn(Gui, "showMessage").mockResolvedValueOnce(undefined);
-            const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
+            vi.spyOn(Gui, "showMessage").mockResolvedValueOnce(undefined);
+            const saveCredentialsSpy = vi.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
                 undefined as unknown as Types.IApiRegisterClient
@@ -827,18 +827,18 @@ describe("ZoweVsCodeExtension", () => {
 
         it("should do nothing if user input is cancelled", async () => {
             const fakeProfile = { user: "fakeUser", password: "fakePass" };
-            const mockUpdateProperty = jest.fn();
-            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                getLoadedProfConfig: jest.fn().mockReturnValue({
+            const mockUpdateProperty = vi.fn();
+            vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: vi.fn().mockReturnValue({
                     profile: fakeProfile,
                 }),
-                getProfileInfo: jest.fn().mockReturnValue({
-                    isSecured: jest.fn().mockReturnValue(true),
+                getProfileInfo: vi.fn().mockReturnValue({
+                    isSecured: vi.fn().mockReturnValue(true),
                     updateProperty: mockUpdateProperty,
                 }),
-                refresh: jest.fn(),
+                refresh: vi.fn(),
             });
-            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
             const profileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 { ...promptCredsOptions, rePrompt: true },
                 undefined as unknown as Types.IApiRegisterClient
@@ -852,18 +852,18 @@ describe("ZoweVsCodeExtension", () => {
 
         it("should do nothing if password input is cancelled", async () => {
             const fakeProfile = { user: "fakeUser", password: "fakePass" };
-            const mockUpdateProperty = jest.fn();
-            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                getLoadedProfConfig: jest.fn().mockReturnValue({
+            const mockUpdateProperty = vi.fn();
+            vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: vi.fn().mockReturnValue({
                     profile: fakeProfile,
                 }),
-                getProfileInfo: jest.fn().mockReturnValue({
-                    isSecured: jest.fn().mockReturnValue(true),
+                getProfileInfo: vi.fn().mockReturnValue({
+                    isSecured: vi.fn().mockReturnValue(true),
                     updateProperty: mockUpdateProperty,
                 }),
-                refresh: jest.fn(),
+                refresh: vi.fn(),
             });
-            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce(undefined);
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce(undefined);
             const profileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 { ...promptCredsOptions, rePrompt: true },
                 undefined as unknown as Types.IApiRegisterClient
@@ -876,18 +876,18 @@ describe("ZoweVsCodeExtension", () => {
         });
 
         it("should do nothing if profile and sessionName args are not provided", async () => {
-            const mockUpdateProperty = jest.fn();
-            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                getLoadedProfConfig: jest.fn().mockReturnValue({
+            const mockUpdateProperty = vi.fn();
+            vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: vi.fn().mockReturnValue({
                     profile: {},
                 }),
-                getProfileInfo: jest.fn().mockReturnValue({
-                    isSecured: jest.fn().mockReturnValue(true),
+                getProfileInfo: vi.fn().mockReturnValue({
+                    isSecured: vi.fn().mockReturnValue(true),
                     updateProperty: mockUpdateProperty,
                 }),
-                refresh: jest.fn(),
+                refresh: vi.fn(),
             });
-            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce(undefined);
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce(undefined);
             const profileLoaded = await ZoweVsCodeExtension.updateCredentials({}, undefined as unknown as Types.IApiRegisterClient);
             expect(profileLoaded).toBeUndefined();
             expect(showInputBoxSpy).not.toHaveBeenCalled();
@@ -895,9 +895,9 @@ describe("ZoweVsCodeExtension", () => {
         });
 
         it("should not call ProfilesCache.getLoadedProfConfig if profile object is provided", async () => {
-            const mockUpdateProperty = jest.fn();
-            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                getLoadedProfConfig: jest.fn().mockReturnValue({
+            const mockUpdateProperty = vi.fn();
+            vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: vi.fn().mockReturnValue({
                     profile: {
                         name: "someExampleProfile",
                         profile: {
@@ -906,14 +906,14 @@ describe("ZoweVsCodeExtension", () => {
                         } as imperative.IProfile,
                     } as imperative.IProfileLoaded,
                 }),
-                getProfileInfo: jest.fn().mockReturnValue({
-                    isSecured: jest.fn().mockReturnValue(true),
+                getProfileInfo: vi.fn().mockReturnValue({
+                    isSecured: vi.fn().mockReturnValue(true),
                     updateProperty: mockUpdateProperty,
                 }),
-                refresh: jest.fn(),
+                refresh: vi.fn(),
             });
-            const getLoadedProfConfigSpy = jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig");
-            const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce(undefined);
+            const getLoadedProfConfigSpy = vi.spyOn(ProfilesCache.prototype, "getLoadedProfConfig");
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce(undefined);
             const profileLoaded = await ZoweVsCodeExtension.updateCredentials({}, undefined as unknown as Types.IApiRegisterClient);
             expect(profileLoaded).toBeUndefined();
             expect(getLoadedProfConfigSpy).not.toHaveBeenCalled();
@@ -937,7 +937,7 @@ describe("ZoweVsCodeExtension", () => {
                 } as any,
             };
 
-            jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue({
+            vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue({
                 cert: options.profile?.profile?.cert,
                 certKey: options.profile?.profile?.certKey,
             });
@@ -970,21 +970,21 @@ describe("ZoweVsCodeExtension", () => {
                         port: 1234,
                     },
                 },
-                promptSpy: jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass"),
+                promptSpy: vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass"),
                 testNode: undefined,
                 testRegister: {
                     getCommonApi: () => ({
-                        login: jest.fn().mockReturnValue("tokenValue"),
-                        logout: jest.fn(),
-                        getSession: jest.fn().mockReturnValue(new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)))),
+                        login: vi.fn().mockReturnValue("tokenValue"),
+                        logout: vi.fn(),
+                        getSession: vi.fn().mockReturnValue(new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)))),
                     }),
                 },
             };
-            jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
-                updateCachedProfile: jest.fn(),
+            vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                updateCachedProfile: vi.fn(),
             });
             vals.testNode = {
-                getSession: jest.fn().mockReturnValue(new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)))),
+                getSession: vi.fn().mockReturnValue(new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)))),
             } as any;
             return vals;
         }

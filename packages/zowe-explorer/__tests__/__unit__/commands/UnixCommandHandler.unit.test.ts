@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { Mock, vi } from "vitest";
 
 import * as vscode from "vscode";
 import * as profileLoader from "../../../src/configuration/Profiles";
@@ -25,45 +26,45 @@ import { Constants } from "../../../src/configuration/Constants";
 import { Definitions } from "../../../src/configuration/Definitions";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 
-jest.mock("Session");
-jest.mock("@zowe/zos-uss-for-zowe-sdk", () => {
-    const actual = jest.requireActual("@zowe/zos-uss-for-zowe-sdk");
+vi.mock("Session");
+vi.mock("@zowe/zos-uss-for-zowe-sdk", async () => {
+    const actual = await vi.importActual<typeof import("@zowe/zos-uss-for-zowe-sdk")>("@zowe/zos-uss-for-zowe-sdk");
     return {
         ...actual,
         Shell: {
-            isConnectionValid: jest.fn(),
+            isConnectionValid: vi.fn(),
         },
     };
 });
 
 describe("UnixCommand Actions Unit Testing", () => {
-    const showErrorMessage = jest.fn();
-    const showInputBox = jest.fn();
-    const showInformationMessage = jest.fn();
-    const showQuickPick = jest.fn();
-    const createQuickPick = jest.fn();
-    const createTerminal = jest.fn();
-    const getConfiguration = jest.fn();
-    const createOutputChannel = jest.fn();
+    const showErrorMessage = vi.fn();
+    const showInputBox = vi.fn();
+    const showInformationMessage = vi.fn();
+    const showQuickPick = vi.fn();
+    const createQuickPick = vi.fn();
+    const createTerminal = vi.fn();
+    const getConfiguration = vi.fn();
+    const createOutputChannel = vi.fn();
 
-    const appendLine = jest.fn();
+    const appendLine = vi.fn();
     const outputChannel: vscode.OutputChannel = {
-        append: jest.fn(),
+        append: vi.fn(),
         name: "fakeChannel",
         appendLine,
-        clear: jest.fn(),
-        show: jest.fn(),
-        hide: jest.fn(),
-        dispose: jest.fn(),
-        replace: jest.fn(),
+        clear: vi.fn(),
+        show: vi.fn(),
+        hide: vi.fn(),
+        dispose: vi.fn(),
+        replace: vi.fn(),
     };
     createOutputChannel.mockReturnValue(outputChannel);
     const qpItem = new FilterDescriptor("Create a new filter");
     const qpItem2 = new FilterItem({ text: "/d iplinfo0" });
 
-    const mockLoadNamedProfile = jest.fn();
+    const mockLoadNamedProfile = vi.fn();
     Object.defineProperty(profileLoader.Profiles, "createInstance", {
-        value: jest.fn(() => {
+        value: vi.fn(() => {
             return {
                 allProfiles: [{ name: "firstProfile" }, { name: "secondProfile" }],
                 defaultProfile: { name: "firstProfile" },
@@ -74,7 +75,7 @@ describe("UnixCommand Actions Unit Testing", () => {
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
-            update: jest.fn(),
+            update: vi.fn(),
             keys: () => [],
         },
         configurable: true,
@@ -86,24 +87,24 @@ describe("UnixCommand Actions Unit Testing", () => {
         ignoreFocusOut: true,
         items: [qpItem, qpItem2],
         value: undefined,
-        show: jest.fn(() => {
+        show: vi.fn(() => {
             return {};
         }),
-        hide: jest.fn(() => {
+        hide: vi.fn(() => {
             return {};
         }),
-        onDidAccept: jest.fn(() => {
+        onDidAccept: vi.fn(() => {
             return {};
         }),
     });
 
-    const ProgressLocation = jest.fn().mockImplementation(() => {
+    const ProgressLocation = vi.fn().mockImplementation(() => {
         return {
             Notification: 15,
         };
     });
 
-    const withProgress = jest.fn().mockImplementation((progLocation, callback) => {
+    const withProgress = vi.fn().mockImplementation((progLocation, callback) => {
         return {
             success: true,
             commandResponse: callback(),
@@ -163,14 +164,14 @@ describe("UnixCommand Actions Unit Testing", () => {
     Object.defineProperty(vscode, "ProgressLocation", { value: ProgressLocation });
     Object.defineProperty(vscode.window, "withProgress", { value: withProgress });
     Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-        value: jest.fn().mockReturnValue(["firstProfile", "secondProfile"]),
+        value: vi.fn().mockReturnValue(["firstProfile", "secondProfile"]),
         configurable: true,
     });
 
     mockLoadNamedProfile.mockReturnValue({ profile: { name: "aProfile", type: "zosmf" } });
     getConfiguration.mockReturnValue({
         get: () => undefined,
-        update: jest.fn(() => {
+        update: vi.fn(() => {
             return {};
         }),
     });
@@ -183,53 +184,53 @@ describe("UnixCommand Actions Unit Testing", () => {
         configurable: true,
     });
 
-    SshSession.createSshSessCfgFromArgs = jest.fn(() => {
+    SshSession.createSshSessCfgFromArgs = vi.fn(() => {
         return { privateKey: undefined, keyPassphrase: undefined, handshakeTimeout: undefined };
     });
 
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: vi.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: vi.fn(), configurable: true });
 
     Object.defineProperty(profileLoader.Profiles, "getInstance", {
-        value: jest.fn(() => {
+        value: vi.fn(() => {
             return {
                 allProfiles: [{ name: "firstProfile", profile: { user: "testUser", password: "testPass" } }, { name: "secondProfile" }],
                 defaultProfile: { name: "firstProfile" },
                 zosmfProfile: mockLoadNamedProfile,
-                checkCurrentProfile: jest.fn(() => {
+                checkCurrentProfile: vi.fn(() => {
                     return profilesForValidation;
                 }),
-                profileValidationHelper: jest.fn().mockReturnValue("active"),
-                validateProfiles: jest.fn(),
-                getBaseProfile: jest.fn(),
+                profileValidationHelper: vi.fn().mockReturnValue("active"),
+                validateProfiles: vi.fn(),
+                getBaseProfile: vi.fn(),
                 validProfile: Validation.ValidationType.VALID,
-                fetchAllProfilesByType: jest.fn(() => {
+                fetchAllProfilesByType: vi.fn(() => {
                     return fetchSshProfiles;
                 }),
-                promptCredentials: jest.fn(() => {
+                promptCredentials: vi.fn(() => {
                     return ["entered"];
                 }),
-                getProfileFromConfig: jest.fn(() => {
+                getProfileFromConfig: vi.fn(() => {
                     return profileFromConfig;
                 }),
-                openConfigFile: jest.fn(),
+                openConfigFile: vi.fn(),
             };
         }),
     });
 
     let mockCommandApi;
     beforeEach(async () => {
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
         mockCommandApi = await apiRegisterInstance.getCommandApi(profileOne);
-        const getCommandApiMock = jest.fn();
+        const getCommandApiMock = vi.fn();
         getCommandApiMock.mockReturnValue(mockCommandApi);
-        mockCommandApi.sshProfileRequired = jest.fn().mockReturnValueOnce(true);
+        mockCommandApi.sshProfileRequired = vi.fn().mockReturnValueOnce(true);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
     });
 
     afterEach(() => {
         (UnixCommandHandler as any).instance = undefined;
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     afterAll(() => {
@@ -246,8 +247,8 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     it("issueUnixCommand should validate the nodeProfile if a separate ssh profile is not required", async () => {
         const actions = getUnixActions();
-        mockCommandApi.sshProfileRequired = jest.fn().mockReturnValueOnce(false);
-        jest.spyOn(actions.profileInstance, "checkCurrentProfile").mockResolvedValue({ status: "invalid", name: "fake" } as any);
+        mockCommandApi.sshProfileRequired = vi.fn().mockReturnValueOnce(false);
+        vi.spyOn(actions.profileInstance, "checkCurrentProfile").mockResolvedValue({ status: "invalid", name: "fake" } as any);
         actions.profileInstance.validProfile = Validation.ValidationType.INVALID;
 
         await actions.issueUnixCommand({ getProfile: () => profileOne } as any);
@@ -259,7 +260,7 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     it("issueUnixCommand should return early if profilestatus is not active", async () => {
         const actions = getUnixActions();
-        jest.spyOn(actions.profileInstance, "profileValidationHelper").mockResolvedValue("inactive");
+        vi.spyOn(actions.profileInstance, "profileValidationHelper").mockResolvedValue("inactive");
 
         await actions.issueUnixCommand({ getProfile: () => profileOne } as any);
 
@@ -271,10 +272,10 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     it("test the issueUnixCommand function", async () => {
         const mockUssApi = await apiRegisterInstance.getUssApi(profileOne);
-        const getUssApiMock = jest.fn();
+        const getUssApiMock = vi.fn();
         getUssApiMock.mockReturnValue(mockUssApi);
         apiRegisterInstance.getUssApi = getUssApiMock.bind(apiRegisterInstance);
-        jest.spyOn(mockUssApi, "getSession").mockReturnValue(session);
+        vi.spyOn(mockUssApi, "getSession").mockReturnValue(session);
 
         showQuickPick.mockReturnValueOnce("firstProfile");
 
@@ -282,13 +283,13 @@ describe("UnixCommand Actions Unit Testing", () => {
         showInputBox.mockReturnValueOnce("/d iplinfo1");
 
         Object.defineProperty(profInstance, "getDefaultProfile", {
-            value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
+            value: vi.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
 
-        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
-        jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo1" as any);
-        jest.spyOn(getUnixActions().profileInstance, "profileValidationHelper").mockResolvedValue("active");
+        vi.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
+        vi.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo1" as any);
+        vi.spyOn(getUnixActions().profileInstance, "profileValidationHelper").mockResolvedValue("active");
 
         const actions = getUnixActions();
         const sampleSshSession = { ISshSession: { hostname: "host.com" } };
@@ -296,7 +297,7 @@ describe("UnixCommand Actions Unit Testing", () => {
         actions.sshSession = sampleSshSession as any;
         actions.sshProfile = sampleSshProfile as any;
 
-        jest.spyOn(ZoweVsCodeExtension, "updateCredentials").mockReturnValue(Promise.resolve(sampleSshProfile as any));
+        vi.spyOn(ZoweVsCodeExtension, "updateCredentials").mockReturnValue(Promise.resolve(sampleSshProfile as any));
 
         await actions.issueUnixCommand();
 
@@ -333,22 +334,22 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     it("tests the issueUnixCommand function user selects a history item", async () => {
         const mockUssApi = await apiRegisterInstance.getUssApi(profileOne);
-        const getUssApiMock = jest.fn();
+        const getUssApiMock = vi.fn();
         getUssApiMock.mockReturnValue(mockUssApi);
         apiRegisterInstance.getUssApi = getUssApiMock.bind(apiRegisterInstance);
-        jest.spyOn(mockUssApi, "getSession").mockReturnValue(session);
+        vi.spyOn(mockUssApi, "getSession").mockReturnValue(session);
 
         showQuickPick.mockReturnValueOnce("firstProfile");
 
         Object.defineProperty(profInstance, "getDefaultProfile", {
-            value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
+            value: vi.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
 
         showInputBox.mockReturnValueOnce("/u/directorypath");
 
-        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem2));
-        jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo0" as any);
+        vi.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem2));
+        vi.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo0" as any);
 
         const actions = getUnixActions();
         (actions.history as any).mSearchHistory = [qpItem2.label];
@@ -374,11 +375,11 @@ describe("UnixCommand Actions Unit Testing", () => {
         showInputBox.mockReturnValueOnce("/u/directorypath");
 
         Object.defineProperty(profInstance, "getDefaultProfile", {
-            value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
+            value: vi.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
 
-        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(undefined));
+        vi.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(undefined));
 
         const actions = getUnixActions();
         (actions.history as any).mSearchHistory = [qpItem2.label];
@@ -402,11 +403,11 @@ describe("UnixCommand Actions Unit Testing", () => {
         showInputBox.mockReturnValueOnce(undefined);
 
         Object.defineProperty(profInstance, "getDefaultProfile", {
-            value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
+            value: vi.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
 
-        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
+        vi.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
         await getUnixActions().issueUnixCommand();
 
@@ -428,12 +429,12 @@ describe("UnixCommand Actions Unit Testing", () => {
         withProgress.mockRejectedValueOnce(Error("fake testError"));
 
         Object.defineProperty(profInstance, "getDefaultProfile", {
-            value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
+            value: vi.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
 
-        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
-        jest.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo3" as any);
+        vi.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
+        vi.spyOn(mockCommandApi, "issueUnixCommand").mockReturnValue("iplinfo3" as any);
 
         await getUnixActions().issueUnixCommand();
 
@@ -451,7 +452,7 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     it("If nothing is entered in the input box of path", async () => {
         Object.defineProperty(profInstance, "getDefaultProfile", {
-            value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
+            value: vi.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
         showQuickPick.mockReturnValueOnce("firstProfile");
@@ -466,7 +467,7 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     it("User escapes the inputBox of path being entered", async () => {
         Object.defineProperty(profInstance, "getDefaultProfile", {
-            value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
+            value: vi.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
         showQuickPick.mockReturnValueOnce("firstProfile");
@@ -484,13 +485,13 @@ describe("UnixCommand Actions Unit Testing", () => {
             ignoreFocusOut: true,
             items: [qpItem, qpItem2],
             value: "/d m=cpu",
-            show: jest.fn(() => {
+            show: vi.fn(() => {
                 return {};
             }),
-            hide: jest.fn(() => {
+            hide: vi.fn(() => {
                 return {};
             }),
-            onDidAccept: jest.fn(() => {
+            onDidAccept: vi.fn(() => {
                 return {};
             }),
         });
@@ -500,11 +501,11 @@ describe("UnixCommand Actions Unit Testing", () => {
         showInputBox.mockReturnValueOnce(undefined);
 
         Object.defineProperty(profInstance, "getDefaultProfile", {
-            value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
+            value: vi.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
 
-        jest.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
+        vi.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
         const actions = getUnixActions();
         (actions.history as any).mSearchHistory = [qpItem2.label];
@@ -523,11 +524,11 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     it("tests the issueUnixCommand function user does not select a profile", async () => {
         Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["firstProfile"]),
+            value: vi.fn().mockReturnValue(["firstProfile"]),
             configurable: true,
         });
         Object.defineProperty(profInstance, "getDefaultProfile", {
-            value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
+            value: vi.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
         showQuickPick.mockReturnValueOnce(undefined);
@@ -539,11 +540,11 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     it("tests the issueUnixCommand function no profiles error", async () => {
         Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue([]),
+            value: vi.fn().mockReturnValue([]),
             configurable: true,
         });
         Object.defineProperty(profInstance, "getDefaultProfile", {
-            value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
+            value: vi.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
         await getUnixActions().issueUnixCommand();
@@ -574,7 +575,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             } as imperative.IProfileLoaded,
         ];
         Object.defineProperty(profInstance, "getDefaultProfile", {
-            value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
+            value: vi.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
         ((await getUnixActions()) as any).getSshProfile();
@@ -622,7 +623,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             ] as any)
         ).resolves.toBe(undefined);
         Object.defineProperty(profInstance, "getDefaultProfile", {
-            value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
+            value: vi.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
         expect(showInformationMessage.mock.calls.length).toBe(0);
@@ -647,9 +648,9 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     it("getCommand API is not implemented", async () => {
         Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
-            value: jest.fn(() => {
+            value: vi.fn(() => {
                 return {
-                    getCommandApi: jest.fn(() => undefined),
+                    getCommandApi: vi.fn(() => undefined),
                 };
             }),
         });
@@ -659,11 +660,11 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     it("issueUnixCommand API is not yet implemented", async () => {
         Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
-            value: jest.fn(() => {
+            value: vi.fn(() => {
                 return {
-                    getCommandApi: jest.fn(() => ({
+                    getCommandApi: vi.fn(() => ({
                         return: {
-                            issueUnixCommand: jest.fn(),
+                            issueUnixCommand: vi.fn(),
                         },
                     })),
                 };
@@ -675,11 +676,11 @@ describe("UnixCommand Actions Unit Testing", () => {
 
     it("tests the issueUnixCommand function user does not select a profile - userSelectProfile", async () => {
         Object.defineProperty(ProfileManagement, "getRegisteredProfileNameList", {
-            value: jest.fn().mockReturnValue(["firstProfile"]),
+            value: vi.fn().mockReturnValue(["firstProfile"]),
             configurable: true,
         });
         Object.defineProperty(profInstance, "getDefaultProfile", {
-            value: jest.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
+            value: vi.fn().mockReturnValueOnce({ profile: { user: "testuser", password: "testpassword" } } as any),
             configurable: true,
         });
         showQuickPick.mockReturnValueOnce(undefined);
@@ -698,7 +699,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             actions.sshSession = sampleSshSession as any;
             actions.sshProfile = sampleSshProfile as any;
 
-            (Shell.isConnectionValid as jest.Mock).mockResolvedValue(false);
+            (Shell.isConnectionValid as Mock).mockResolvedValue(false);
 
             const result = await (actions as any).validateSshConnection(sampleSshProfile, "ssh");
 
@@ -714,7 +715,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             actions.sshSession = sampleSshSession as any;
             actions.sshProfile = sampleSshProfile as any;
 
-            (Shell.isConnectionValid as jest.Mock).mockResolvedValue(true);
+            (Shell.isConnectionValid as Mock).mockResolvedValue(true);
 
             const result = await (actions as any).validateSshConnection(sampleSshProfile, "ssh");
 
@@ -757,8 +758,8 @@ describe("UnixCommand Actions Unit Testing", () => {
             actions.sshSession = sampleSshSession as any;
             actions.sshProfile = sampleSshProfile as any;
 
-            jest.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValue(updatedProfile as any);
-            (Shell.isConnectionValid as jest.Mock).mockResolvedValue(true);
+            vi.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValue(updatedProfile as any);
+            (Shell.isConnectionValid as Mock).mockResolvedValue(true);
 
             const result = await (actions as any).validateSshConnection(sampleSshProfile, "ssh");
 
@@ -776,7 +777,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             actions.sshSession = sampleSshSession as any;
             actions.sshProfile = sampleSshProfile as any;
 
-            jest.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValue(undefined);
+            vi.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValue(undefined);
 
             const result = await (actions as any).validateSshConnection(sampleSshProfile, "ssh");
 
@@ -795,7 +796,7 @@ describe("UnixCommand Actions Unit Testing", () => {
             actions.sshSession = sampleSshSession as any;
             actions.sshProfile = sampleSshProfile as any;
 
-            (Shell.isConnectionValid as jest.Mock).mockResolvedValue(true);
+            (Shell.isConnectionValid as Mock).mockResolvedValue(true);
 
             const result = await (actions as any).validateSshConnection(sampleSshProfile, "ssh");
 

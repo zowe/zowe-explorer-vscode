@@ -119,7 +119,10 @@ describe("Table.View", () => {
                 data: tableData,
             });
             expect(emitterFireMock).toHaveBeenCalledWith(tableData);
-            postMessageMock.mockRestore();
+            // Note: Do not call `postMessageMock.mockRestore()` here. Vitest
+            // detaches the spy on restore, so subsequent `mockResolvedValueOnce`
+            // calls would no longer intercept `view.panel.webview.postMessage`.
+            postMessageMock.mockClear();
             emitterFireMock.mockClear();
 
             // case 2: Post message was successful; updateWebview was previously called

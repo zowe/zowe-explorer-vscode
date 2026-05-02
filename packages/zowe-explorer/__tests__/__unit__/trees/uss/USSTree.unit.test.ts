@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
@@ -51,27 +52,27 @@ import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 
 function createGlobalMocks() {
     const globalMocks = {
-        mockLoadNamedProfile: jest.fn(),
-        mockDefaultProfile: jest.fn(),
-        executeCommand: jest.fn(),
-        Utilities: jest.fn(),
-        showQuickPick: jest.fn(),
-        renameUSSFile: jest.fn(),
-        showInformationMessage: jest.fn(),
-        mockShowWarningMessage: jest.fn(),
-        showErrorMessage: jest.fn(),
-        showInputBox: jest.spyOn(Gui, "showInputBox").mockImplementation(),
-        filters: jest.fn(),
-        getFilters: jest.fn(),
-        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
-        createQuickPick: jest.fn(),
-        getConfiguration: jest.fn(),
-        ZosmfSession: jest.fn(),
-        createSessCfgFromArgs: jest.fn(),
-        mockValidationSetting: jest.fn(),
-        mockDisableValidationContext: jest.fn(),
-        mockEnableValidationContext: jest.fn(),
-        mockCheckCurrentProfile: jest.fn(),
+        mockLoadNamedProfile: vi.fn(),
+        mockDefaultProfile: vi.fn(),
+        executeCommand: vi.fn(),
+        Utilities: vi.fn(),
+        showQuickPick: vi.fn(),
+        renameUSSFile: vi.fn(),
+        showInformationMessage: vi.fn(),
+        mockShowWarningMessage: vi.fn(),
+        showErrorMessage: vi.fn(),
+        showInputBox: vi.spyOn(Gui, "showInputBox").mockImplementation((() => undefined) as any),
+        filters: vi.fn(),
+        getFilters: vi.fn(),
+        createTreeView: vi.fn().mockReturnValue({ onDidCollapseElement: vi.fn() }),
+        createQuickPick: vi.fn(),
+        getConfiguration: vi.fn(),
+        ZosmfSession: vi.fn(),
+        createSessCfgFromArgs: vi.fn(),
+        mockValidationSetting: vi.fn(),
+        mockDisableValidationContext: vi.fn(),
+        mockEnableValidationContext: vi.fn(),
+        mockCheckCurrentProfile: vi.fn(),
         mockTextDocumentDirty: {
             fileName: `/test/path/temp/_U_/sestest/test/node`,
             isDirty: true,
@@ -84,9 +85,9 @@ function createGlobalMocks() {
         },
         mockTextDocuments: [],
         mockProfilesInstance: null,
-        withProgress: jest.fn(),
-        closeOpenedTextFile: jest.fn(),
-        ProgressLocation: jest.fn().mockImplementation(() => {
+        withProgress: vi.fn(),
+        closeOpenedTextFile: vi.fn(),
+        ProgressLocation: vi.fn().mockImplementation(() => {
             return {
                 Notification: 15,
             };
@@ -102,16 +103,16 @@ function createGlobalMocks() {
         mockProfilesCache: new ProfilesCache(imperative.Logger.getAppLogger()),
         mockTreeProviders: createTreeProviders(),
         FileSystemProvider: {
-            createDirectory: jest.fn(),
-            rename: jest.fn(),
+            createDirectory: vi.fn(),
+            rename: vi.fn(),
         },
     };
-    jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+    vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
     globalMocks.createSessCfgFromArgs.mockReturnValue(globalMocks.testSession);
 
-    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
-    jest.spyOn(UssFSProvider.instance, "createEntry").mockImplementation();
-    jest.spyOn(vscode.workspace.fs, "rename").mockImplementation(globalMocks.FileSystemProvider.rename);
+    vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
+    vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+    vi.spyOn(vscode.workspace.fs, "rename").mockImplementation(globalMocks.FileSystemProvider.rename);
 
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentDirty);
     globalMocks.mockTextDocuments.push(globalMocks.mockTextDocumentClean);
@@ -124,8 +125,8 @@ function createGlobalMocks() {
     globalMocks.mockProfilesInstance.loadNamedProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfilesInstance.allProfiles = [globalMocks.testProfile, { name: "firstName" }, { name: "secondName" }];
     Object.defineProperty(Gui, "setStatusBarMessage", {
-        value: jest.fn().mockReturnValue({
-            dispose: jest.fn(),
+        value: vi.fn().mockReturnValue({
+            dispose: vi.fn(),
         }),
         configurable: true,
     });
@@ -153,7 +154,7 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "createQuickPick", { value: globalMocks.createQuickPick, configurable: true });
     Object.defineProperty(zosfiles, "Download", {
         value: {
-            ussFile: jest.fn().mockReturnValueOnce({
+            ussFile: vi.fn().mockReturnValueOnce({
                 apiResponse: {
                     etag: "ABC123",
                 },
@@ -163,7 +164,7 @@ function createGlobalMocks() {
     });
     Object.defineProperty(Constants, "PROFILES_CACHE", { value: globalMocks.mockProfilesInstance!, configurable: true });
     Object.defineProperty(zosfiles, "Utilities", { value: globalMocks.Utilities, configurable: true });
-    Object.defineProperty(zosfiles.Utilities, "isFileTagBinOrAscii", { value: jest.fn(), configurable: true });
+    Object.defineProperty(zosfiles.Utilities, "isFileTagBinOrAscii", { value: vi.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showErrorMessage", {
         value: globalMocks.showErrorMessage,
         configurable: true,
@@ -179,7 +180,7 @@ function createGlobalMocks() {
         value: globalMocks.mockTextDocuments,
         configurable: true,
     });
-    jest.spyOn(Profiles, "getInstance").mockReturnValue(globalMocks.mockProfilesInstance as unknown as any);
+    vi.spyOn(Profiles, "getInstance").mockReturnValue(globalMocks.mockProfilesInstance as unknown as any);
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({
@@ -190,7 +191,7 @@ function createGlobalMocks() {
                 searchHistory: [],
                 fileHistory: [],
             }),
-            update: jest.fn(),
+            update: vi.fn(),
             keys: () => [],
         },
         configurable: true,
@@ -202,7 +203,7 @@ function createGlobalMocks() {
     globalMocks.mockDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.getConfiguration.mockReturnValue({
         get: (_setting: string) => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}"],
-        update: jest.fn(() => {
+        update: vi.fn(() => {
             return {};
         }),
     });
@@ -214,36 +215,36 @@ function createGlobalMocks() {
     globalMocks.testTree.addSearchHistory("/u/myuser");
 
     Object.defineProperty(globalMocks.mockProfilesCache, "getProfileInfo", {
-        value: jest.fn().mockReturnValue({ usingTeamConfig: true }),
+        value: vi.fn().mockReturnValue({ usingTeamConfig: true }),
     });
 
     Object.defineProperty(ProfilesUtils, "usingTeamConfig", {
-        value: jest.fn().mockReturnValue(true),
+        value: vi.fn().mockReturnValue(true),
         configurable: true,
     });
     Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", {
-        value: jest.fn().mockReturnValue(globalMocks.testSession),
+        value: vi.fn().mockReturnValue(globalMocks.testSession),
         configurable: true,
     });
 
-    jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
+    vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
         ds: {
-            addSingleSession: jest.fn(),
+            addSingleSession: vi.fn(),
             mSessionNodes: [...globalMocks.testTree.mSessionNodes],
-            setStatusForSession: jest.fn(),
-            refresh: jest.fn(),
+            setStatusForSession: vi.fn(),
+            refresh: vi.fn(),
         } as any,
         uss: {
-            addSingleSession: jest.fn(),
+            addSingleSession: vi.fn(),
             mSessionNodes: [...globalMocks.testTree.mSessionNodes],
-            setStatusForSession: jest.fn(),
-            refresh: jest.fn(),
+            setStatusForSession: vi.fn(),
+            refresh: vi.fn(),
         } as any,
         jobs: {
-            addSingleSession: jest.fn(),
+            addSingleSession: vi.fn(),
             mSessionNodes: [...globalMocks.testTree.mSessionNodes],
-            setStatusForSession: jest.fn(),
-            refresh: jest.fn(),
+            setStatusForSession: vi.fn(),
+            refresh: vi.fn(),
         } as any,
     } as any);
 
@@ -252,7 +253,7 @@ function createGlobalMocks() {
 
 describe("USSTree Unit Tests - Function initializeFavorites", () => {
     beforeEach(() => {
-        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
+        vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
             if (key === "zowe.settings.maxRequestRetry") {
                 return 1;
             }
@@ -280,9 +281,9 @@ describe("USSTree Unit Tests - Function initializeFavorites", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
+        vi.spyOn(blockMocks.testTree as any, "mPersistence" as any, "get").mockReturnValue({
             readFavorites: () => ["[test]: /u/aDir{directory}", "[test]: /u/myFile.txt{textFile}", "/invalid"],
-        });
+        } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
@@ -294,9 +295,9 @@ describe("USSTree Unit Tests - Function initializeFavorites", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
+        vi.spyOn(blockMocks.testTree as any, "mPersistence" as any, "get").mockReturnValue({
             readFavorites: () => ["[test]: /u/aDir{directory}"],
-        });
+        } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
@@ -312,7 +313,7 @@ describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () =>
     it("Tests initializeFavChildNodeForProfile() for favorited search", async () => {
         const globalMocks = createGlobalMocks();
 
-        jest.spyOn(ZowePersistentFilters.prototype, "readFavorites").mockReturnValueOnce([
+        vi.spyOn(ZowePersistentFilters.prototype, "readFavorites").mockReturnValueOnce([
             "[test]: /u/aDir{directory}",
             "[test]: /u/myFile.txt{textFile}",
         ]);
@@ -375,7 +376,7 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
             parentNode: globalMocks.testTree.mFavoriteSession,
             profile: globalMocks.testProfile,
         });
-        const isGlobalProfNodeMock = jest.spyOn(globalMocks.testTree as unknown as any, "isGlobalProfileNode").mockResolvedValueOnce(true);
+        const isGlobalProfNodeMock = vi.spyOn(globalMocks.testTree as unknown as any, "isGlobalProfileNode").mockResolvedValueOnce(true);
         const icon = IconGenerator.getIconById(IconUtils.IconId.home);
         expectedFavProfileNode.iconPath = icon.path;
 
@@ -400,7 +401,7 @@ describe("USSTree Unit Tests - Function createProfileNodeForFavs", () => {
         expectedFavProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         expectedFavProfileNode.iconPath = Icon.folder.path;
 
-        jest.spyOn(IconGenerator, "getIconByNode").mockReturnValue(Icon.folder);
+        vi.spyOn(IconGenerator, "getIconByNode").mockReturnValue(Icon.folder);
         const createdFavProfileNode = await globalMocks.testTree.createProfileNodeForFavs("testProfile");
         expect(JSON.stringify(createdFavProfileNode, null, 2)).toEqual(JSON.stringify(expectedFavProfileNode, null, 2));
     });
@@ -460,7 +461,7 @@ describe("USSTree Unit Tests - Function removeFavorite", () => {
     it("Tests that removeFavorite() works properly when starting with more than one favorite for the profile", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const removeFavProfileSpy = jest.spyOn(globalMocks.testTree, "removeFavProfile");
+        const removeFavProfileSpy = vi.spyOn(globalMocks.testTree, "removeFavProfile");
         const profileNodeInFavs = globalMocks.testTree.mFavorites[0];
 
         // Add second favorite
@@ -485,7 +486,7 @@ describe("USSTree Unit Tests - Function removeFavorite", () => {
     it("Tests that removeFavorite() works properly when starting with only one favorite for the profile", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const removeFavProfileSpy = jest.spyOn(globalMocks.testTree, "removeFavProfile");
+        const removeFavProfileSpy = vi.spyOn(globalMocks.testTree, "removeFavProfile");
         const profileNodeInFavs = globalMocks.testTree.mFavorites[0];
 
         // Checking that favorites are set successfully before test
@@ -538,7 +539,7 @@ describe("USSTree Unit Tests - Function removeFavProfile", () => {
     it("Tests successful removal of profile node in Favorites when user confirms they want to Continue removing it", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const updateFavoritesSpy = jest.spyOn(globalMocks.testTree, "updateFavorites");
+        const updateFavoritesSpy = vi.spyOn(globalMocks.testTree, "updateFavorites");
         // Make sure favorite is added before the actual unit test
         expect(globalMocks.testTree.mFavorites.length).toEqual(1);
 
@@ -620,7 +621,7 @@ describe("USSTree Unit Tests - Function deleteSession", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
+        vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(globalMocks.mockTreeProviders);
         blockMocks.testTree2.mSessionNodes = globalMocks.mockTreeProviders.ds.mSessionNodes;
         expect(globalMocks.mockTreeProviders.ds.mSessionNodes.length).toEqual(2);
         expect(globalMocks.mockTreeProviders.uss.mSessionNodes.length).toEqual(2);
@@ -671,8 +672,8 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         const newMocks = {
             qpValue: "",
             qpItem: new FilterDescriptor("\uFF0B " + "Create a new filter"),
-            resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
-            checkJwtForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValue(JwtCheckResult.TokenUnusedOrUnsupported),
+            resolveQuickPickHelper: vi.spyOn(Gui, "resolveQuickPick"),
+            checkJwtForProfile: vi.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValue(JwtCheckResult.TokenUnusedOrUnsupported),
         };
         newMocks.resolveQuickPickHelper.mockImplementation(() => Promise.resolve(newMocks.qpItem));
         globalMocks.createQuickPick.mockReturnValue({
@@ -681,16 +682,16 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             ignoreFocusOut: true,
             items: [newMocks.qpItem],
             value: newMocks.qpValue,
-            show: jest.fn(() => {
+            show: vi.fn(() => {
                 return {};
             }),
-            hide: jest.fn(() => {
+            hide: vi.fn(() => {
                 return {};
             }),
-            onDidAccept: jest.fn(() => {
+            onDidAccept: vi.fn(() => {
                 return {};
             }),
-            onDidChangeValue: jest.fn(() => {
+            onDidChangeValue: vi.fn(() => {
                 return {};
             }),
         });
@@ -714,7 +715,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         const blockMocks = createBlockMocks(globalMocks);
         blockMocks.qpValue = "/U/HLQ";
         globalMocks.showInputBox.mockReturnValueOnce("/U/HLQ");
-        const syncSessionNodeSpy = jest.spyOn(AuthUtils, "syncSessionNode");
+        const syncSessionNodeSpy = vi.spyOn(AuthUtils, "syncSessionNode");
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
 
@@ -726,13 +727,13 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         const blockMocks = createBlockMocks(globalMocks);
 
         Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
+            value: vi.fn(() => {
                 return {
                     checkCurrentProfile: globalMocks.mockCheckCurrentProfile.mockReturnValueOnce({
                         name: globalMocks.testProfile.name,
                         status: "unverified",
                     }),
-                    showProfileInactiveMsg: jest.fn(),
+                    showProfileInactiveMsg: vi.fn(),
                     validProfile: Validation.ValidationType.UNVERIFIED,
                 };
             }),
@@ -838,10 +839,10 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             ignoreFocusOut: true,
             items: [],
             value: "",
-            show: jest.fn(),
-            hide: jest.fn(),
-            onDidAccept: jest.fn(),
-            onDidChangeValue: jest.fn(),
+            show: vi.fn(),
+            hide: vi.fn(),
+            onDidAccept: vi.fn(),
+            onDidChangeValue: vi.fn(),
         };
 
         globalMocks.createQuickPick.mockReturnValue(mockQuickPick);
@@ -886,10 +887,10 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             ignoreFocusOut: true,
             items: [],
             value: userTypedValue,
-            show: jest.fn(),
-            hide: jest.fn(),
-            onDidAccept: jest.fn(),
-            onDidChangeValue: jest.fn(),
+            show: vi.fn(),
+            hide: vi.fn(),
+            onDidAccept: vi.fn(),
+            onDidChangeValue: vi.fn(),
         };
 
         globalMocks.createQuickPick.mockReturnValue(mockQuickPick);
@@ -920,10 +921,10 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             ignoreFocusOut: true,
             items: [],
             value: "", // No user input
-            show: jest.fn(),
-            hide: jest.fn(),
-            onDidAccept: jest.fn(),
-            onDidChangeValue: jest.fn(),
+            show: vi.fn(),
+            hide: vi.fn(),
+            onDidAccept: vi.fn(),
+            onDidChangeValue: vi.fn(),
         };
 
         globalMocks.createQuickPick.mockReturnValue(mockQuickPick);
@@ -952,7 +953,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         createBlockMocks(globalMocks);
 
         // Clear search history
-        globalMocks.testTree.mPersistence.getSearchHistory = jest.fn().mockReturnValue([]);
+        globalMocks.testTree.mPersistence.getSearchHistory = vi.fn().mockReturnValue([]);
 
         const inputBoxResult = "/direct/input/path";
         globalMocks.showInputBox.mockResolvedValue(inputBoxResult);
@@ -985,10 +986,10 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             ignoreFocusOut: true,
             items: [],
             value: "", // No user input
-            show: jest.fn(),
-            hide: jest.fn(),
-            onDidAccept: jest.fn(),
-            onDidChangeValue: jest.fn(),
+            show: vi.fn(),
+            hide: vi.fn(),
+            onDidAccept: vi.fn(),
+            onDidChangeValue: vi.fn(),
         };
 
         globalMocks.createQuickPick.mockReturnValue(mockQuickPick);
@@ -1027,10 +1028,10 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             ignoreFocusOut: true,
             items: [],
             value: userTypedValueWithSpaces,
-            show: jest.fn(),
-            hide: jest.fn(),
-            onDidAccept: jest.fn(),
-            onDidChangeValue: jest.fn(),
+            show: vi.fn(),
+            hide: vi.fn(),
+            onDidAccept: vi.fn(),
+            onDidChangeValue: vi.fn(),
         };
 
         globalMocks.createQuickPick.mockReturnValue(mockQuickPick);
@@ -1058,10 +1059,10 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
             ignoreFocusOut: true,
             items: [],
             value: "/some/typed/value", // User typed something but selected history item
-            show: jest.fn(),
-            hide: jest.fn(),
-            onDidAccept: jest.fn(),
-            onDidChangeValue: jest.fn(),
+            show: vi.fn(),
+            hide: vi.fn(),
+            onDidAccept: vi.fn(),
+            onDidChangeValue: vi.fn(),
         };
 
         globalMocks.createQuickPick.mockReturnValue(mockQuickPick);
@@ -1095,7 +1096,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         // Mock the input box to return null (simulate user cancelling)
         globalMocks.showInputBox.mockResolvedValueOnce(undefined);
 
-        const updateTreeViewSpy = jest.spyOn(globalMocks.testTree as any, "updateTreeView").mockImplementation();
+        const updateTreeViewSpy = vi.spyOn(globalMocks.testTree as any, "updateTreeView").mockImplementation((() => undefined) as any);
 
         await globalMocks.testTree.filterPrompt(globalMocks.testTree.mSessionNodes[1]);
 
@@ -1111,7 +1112,7 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
 describe("USSTree Unit Tests - Function filterBy", () => {
     function createBlockMocks() {
         const newMocks = {
-            checkJwtForProfile: jest.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValueOnce(true),
+            checkJwtForProfile: vi.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValueOnce(true),
         };
 
         return newMocks;
@@ -1119,7 +1120,7 @@ describe("USSTree Unit Tests - Function filterBy", () => {
 
     it("Tests that filterBy() makes the call to get the combined session information", async () => {
         const globalMocks = createGlobalMocks();
-        const syncSessionNodeSpy = jest.spyOn(AuthUtils, "syncSessionNode").mockClear();
+        const syncSessionNodeSpy = vi.spyOn(AuthUtils, "syncSessionNode").mockClear();
 
         await globalMocks.testTree.filterBy(globalMocks.testTree.mSessionNodes[1], "/U/HLQ");
 
@@ -1153,7 +1154,7 @@ describe("USSTree Unit Tests - Function filterBy", () => {
     it("Tests that filterBy() works correctly for favorited search nodes with credentials", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = await createBlockMocks();
-        jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
 
         const sessionWithCred = createISession();
         const profile = createIProfile();
@@ -1223,8 +1224,8 @@ describe("USSTree Unit Tests - Function getAllLoadedItems", () => {
         globalMocks.testTree.mSessionNodes[1].children = [folder];
         folder.children.push(file);
 
-        jest.spyOn(globalMocks.testTree, "getChildren").mockImplementationOnce(() => Promise.resolve([globalMocks.testTree.mSessionNodes[1]]));
-        jest.spyOn(globalMocks.testTree.mSessionNodes[1], "getChildren").mockImplementationOnce(() =>
+        vi.spyOn(globalMocks.testTree, "getChildren").mockImplementationOnce(() => Promise.resolve([globalMocks.testTree.mSessionNodes[1]]));
+        vi.spyOn(globalMocks.testTree.mSessionNodes[1], "getChildren").mockImplementationOnce(() =>
             Promise.resolve(globalMocks.testTree.mSessionNodes[1].children)
         );
 
@@ -1326,7 +1327,7 @@ describe("USSTree Unit Tests - Function renameFavorite", () => {
         });
         ussFavNodeParent.children.push(ussFavNode);
         globalMocks.testTree.mFavorites.push(ussFavNodeParent);
-        const renameSpy = jest.spyOn(ussFavNode, "rename");
+        const renameSpy = vi.spyOn(ussFavNode, "rename");
 
         await globalMocks.testTree.renameFavorite(ussFavNode, "/u/myuser/renamed");
 
@@ -1345,7 +1346,7 @@ describe("USSTree Unit Tests - Function saveSearch", () => {
                 parentPath: "/",
             }),
             file: null,
-            resolveQuickPickHelper: jest.spyOn(Gui, "resolveQuickPick"),
+            resolveQuickPickHelper: vi.spyOn(Gui, "resolveQuickPick"),
         };
         globalMocks.testTree.mFavorites = [];
         newMocks.file = new ZoweUSSNode({
@@ -1421,16 +1422,16 @@ describe("USSTree Unit Tests - Function rename", () => {
         globalMocks.FileSystemProvider.rename.mockClear();
 
         const newMocks = {
-            errorForUnsavedResource: jest.spyOn(TreeViewUtils, "errorForUnsavedResource").mockResolvedValueOnce(false),
+            errorForUnsavedResource: vi.spyOn(TreeViewUtils, "errorForUnsavedResource").mockResolvedValueOnce(false),
             ussFavNode,
             ussFavNodeParent,
-            setAttributes: jest.spyOn(ZoweUSSNode.prototype, "setAttributes").mockImplementation(),
+            setAttributes: vi.spyOn(ZoweUSSNode.prototype, "setAttributes").mockImplementation((() => undefined) as any),
         };
 
         return newMocks;
     }
 
-    const getEncodingForFileMock = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValue({ kind: "text" });
+    const getEncodingForFileMock = vi.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValue({ kind: "text" });
 
     afterAll(() => {
         getEncodingForFileMock.mockRestore();
@@ -1448,7 +1449,7 @@ describe("USSTree Unit Tests - Function rename", () => {
             profile: globalMocks.testProfile,
             parentPath: "/",
         });
-        const isFolderMock = jest.spyOn(SharedContext, "isFolder");
+        const isFolderMock = vi.spyOn(SharedContext, "isFolder");
         await globalMocks.testTree.rename(testUSSDir);
         expect(isFolderMock).not.toHaveBeenCalled();
     });
@@ -1465,7 +1466,7 @@ describe("USSTree Unit Tests - Function rename", () => {
             profile: globalMocks.testProfile,
             parentPath: "/",
         });
-        const vscodeErrorMsgSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        const vscodeErrorMsgSpy = vi.spyOn(vscode.window, "showErrorMessage");
         await globalMocks.testTree.rename(testUSSDir);
 
         expect(vscodeErrorMsgSpy.mock.calls.length).toBe(0);
@@ -1483,7 +1484,7 @@ describe("USSTree Unit Tests - Function rename", () => {
             profile: globalMocks.testProfile,
             parentPath: "/",
         });
-        const vscodeErrorMsgSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        const vscodeErrorMsgSpy = vi.spyOn(vscode.window, "showErrorMessage");
 
         await globalMocks.testTree.rename(testUSSDir);
 
@@ -1496,11 +1497,11 @@ describe("USSTree Unit Tests - Function rename", () => {
         const ussFavNode = blockMocks.ussFavNode;
         globalMocks.testUSSNode.fullPath = (globalMocks.testUSSNode.fullPath as string) + "/usstest";
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
-        const renameNode = jest.spyOn(globalMocks.testUSSNode, "rename");
+        const renameNode = vi.spyOn(globalMocks.testUSSNode, "rename");
         renameNode.mockResolvedValue(false);
         globalMocks.showInputBox.mockReturnValueOnce("new name");
         Object.defineProperty(globalMocks.testTree, "findFavoritedNode", {
-            value: jest.fn(() => {
+            value: vi.fn(() => {
                 return ussFavNode;
             }),
         });
@@ -1517,7 +1518,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         globalMocks.testTree.mFavorites = [];
         globalMocks.testUSSNode.fullPath = (globalMocks.testUSSNode.fullPath as string) + "/usstest";
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
-        const renameNode = jest.spyOn(globalMocks.testUSSNode, "rename");
+        const renameNode = vi.spyOn(globalMocks.testUSSNode, "rename");
         renameNode.mockResolvedValue(false);
 
         globalMocks.showInputBox.mockReturnValueOnce("new name");
@@ -1531,7 +1532,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
-        jest.spyOn(UssFSProvider.instance, "rename").mockResolvedValue(undefined);
+        vi.spyOn(UssFSProvider.instance, "rename").mockResolvedValue(undefined);
         globalMocks.showInputBox.mockReturnValueOnce("new name");
         globalMocks.FileSystemProvider.rename.mockClear();
 
@@ -1544,7 +1545,7 @@ describe("USSTree Unit Tests - Function rename", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         globalMocks.showInputBox.mockReturnValueOnce("new name");
-        jest.spyOn(UssFSProvider.instance, "rename").mockResolvedValue(undefined);
+        vi.spyOn(UssFSProvider.instance, "rename").mockResolvedValue(undefined);
         await globalMocks.testTree.rename(blockMocks.ussFavNode);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(0);
     });
@@ -1552,7 +1553,7 @@ describe("USSTree Unit Tests - Function rename", () => {
     it("Tests that USSTree.rename() exits when blank input is provided", async () => {
         const globalMocks = createGlobalMocks();
         createBlockMocks(globalMocks);
-        const refreshSpy = jest.spyOn(globalMocks.testTree, "refreshElement");
+        const refreshSpy = vi.spyOn(globalMocks.testTree, "refreshElement");
         globalMocks.showInputBox.mockReturnValueOnce("");
 
         await globalMocks.testTree.rename(globalMocks.testUSSNode);
@@ -1567,17 +1568,17 @@ describe("USSTree Unit Tests - Function rename", () => {
         createBlockMocks(globalMocks);
         globalMocks.showInputBox.mockReturnValueOnce("new name");
 
-        jest.spyOn(globalMocks.testUSSNode as unknown as any, "rename").mockRejectedValueOnce(Error("testError"));
+        vi.spyOn(globalMocks.testUSSNode as unknown as any, "rename").mockRejectedValueOnce(Error("testError"));
         await expect(globalMocks.testTree.rename(globalMocks.testUSSNode)).rejects.toThrow("testError");
     });
 
     it("Tests that USSTree.rename() restores focus and shows confirmation message for file", async () => {
         const globalMocks = createGlobalMocks();
-        const showMessageSpy = jest.spyOn(Gui, "showMessage");
-        const revealSpy = jest.spyOn(globalMocks.testTree.getTreeView(), "reveal");
+        const showMessageSpy = vi.spyOn(Gui, "showMessage");
+        const revealSpy = vi.spyOn(globalMocks.testTree.getTreeView(), "reveal");
 
         globalMocks.testTree.mSessionNodes[1].children.push(globalMocks.testUSSNode);
-        const renameNode = jest.spyOn(globalMocks.testUSSNode, "rename");
+        const renameNode = vi.spyOn(globalMocks.testUSSNode, "rename");
         renameNode.mockResolvedValue(false);
         globalMocks.showInputBox.mockReturnValueOnce("newfile.txt");
 
@@ -1590,8 +1591,8 @@ describe("USSTree Unit Tests - Function rename", () => {
 
     it("Tests that USSTree.rename() restores focus and shows confirmation message for directory", async () => {
         const globalMocks = createGlobalMocks();
-        const showMessageSpy = jest.spyOn(Gui, "showMessage");
-        const revealSpy = jest.spyOn(globalMocks.testTree.getTreeView(), "reveal");
+        const showMessageSpy = vi.spyOn(Gui, "showMessage");
+        const revealSpy = vi.spyOn(globalMocks.testTree.getTreeView(), "reveal");
 
         const testUSSDir = new ZoweUSSNode({
             label: "testdir",
@@ -1601,7 +1602,7 @@ describe("USSTree Unit Tests - Function rename", () => {
             parentPath: "/",
         });
         globalMocks.testTree.mSessionNodes[1].children.push(testUSSDir);
-        const renameNode = jest.spyOn(testUSSDir, "rename");
+        const renameNode = vi.spyOn(testUSSDir, "rename");
         renameNode.mockResolvedValue(false);
         globalMocks.showInputBox.mockReturnValueOnce("newdir");
 
@@ -1676,8 +1677,8 @@ describe("USSTree Unit Tests - Function openItemFromPath", () => {
             parentNode: globalMocks.testTree.mSessionNodes[1],
             parentPath: "/a/b",
         });
-        jest.spyOn(globalMocks.testTree.mSessionNodes[1], "getChildren").mockResolvedValue([file]);
-        const openNodeSpy = jest.spyOn(file, "openUSS").mockImplementation();
+        vi.spyOn(globalMocks.testTree.mSessionNodes[1], "getChildren").mockResolvedValue([file]);
+        const openNodeSpy = vi.spyOn(file, "openUSS").mockImplementation((() => undefined) as any);
 
         await globalMocks.testTree.openItemFromPath("/a/b/c.txt", globalMocks.testTree.mSessionNodes[1]);
         expect(openNodeSpy).toHaveBeenCalledWith(false, true, globalMocks.testTree);
@@ -1687,8 +1688,8 @@ describe("USSTree Unit Tests - Function openItemFromPath", () => {
     it("Tests that openItemFromPath fails when the node no longer exists", async () => {
         const globalMocks = createGlobalMocks();
 
-        jest.spyOn(globalMocks.testTree.mSessionNodes[1], "getChildren").mockResolvedValue([]);
-        const fileHistorySpy = jest.spyOn(globalMocks.testTree, "removeFileHistory");
+        vi.spyOn(globalMocks.testTree.mSessionNodes[1], "getChildren").mockResolvedValue([]);
+        const fileHistorySpy = vi.spyOn(globalMocks.testTree, "removeFileHistory");
 
         await globalMocks.testTree.openItemFromPath("/d.txt", globalMocks.testTree.mSessionNodes[1]);
         expect(fileHistorySpy).toHaveBeenCalledWith("[sestest]: /d.txt");
@@ -1705,10 +1706,10 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
 
         // Mock the USS API so that getSession returns the correct value
         const mockUssApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
-        const getUssApiMock = jest.fn();
+        const getUssApiMock = vi.fn();
         getUssApiMock.mockReturnValue(mockUssApi);
         ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
-        jest.spyOn(mockUssApi, "getSession").mockReturnValue(globalMocks.testSession);
+        vi.spyOn(mockUssApi, "getSession").mockReturnValue(globalMocks.testSession);
 
         await globalMocks.testTree.addSingleSession(globalMocks.testProfile);
 
@@ -1727,11 +1728,11 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
         const globalMocks = createGlobalMocks();
 
         globalMocks.testTree.mSessionNodes.pop();
-        const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
+        const zoweLoggerWarnSpy = vi.spyOn(ZoweLogger, "warn");
 
         // Mock the API register so that registeredMvsApiTypes is empty
         const mockApiRegister = ZoweExplorerApiRegister.getInstance();
-        jest.spyOn(mockApiRegister, "registeredUssApiTypes").mockReturnValueOnce([]);
+        vi.spyOn(mockApiRegister, "registeredUssApiTypes").mockReturnValueOnce([]);
 
         await globalMocks.testTree.addSingleSession(globalMocks.testProfile);
 
@@ -1764,10 +1765,10 @@ describe("USSTree Unit Tests - Function addSingleSession", () => {
 
         // Mock the USS API so that getSession returns the correct value
         const mockUssApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
-        const getUssApiMock = jest.fn();
+        const getUssApiMock = vi.fn();
         getUssApiMock.mockReturnValue(mockUssApi);
         ZoweExplorerApiRegister.getUssApi = getUssApiMock.bind(ZoweExplorerApiRegister);
-        jest.spyOn(mockUssApi, "getSession").mockReturnValue(globalMocks.testSession);
+        vi.spyOn(mockUssApi, "getSession").mockReturnValue(globalMocks.testSession);
 
         await globalMocks.testTree.addSingleSession(globalMocks.testProfile);
 
@@ -1881,7 +1882,7 @@ describe("USSTree Unit Tests - Function getChildren", () => {
         const mockApiResponseWithItems = createFileResponse(mockApiResponseItems);
         globalMocks.withProgress.mockReturnValue(mockApiResponseWithItems);
 
-        jest.spyOn(zosfiles.List, "fileList").mockResolvedValueOnce({
+        vi.spyOn(zosfiles.List, "fileList").mockResolvedValueOnce({
             success: true,
             apiResponse: {
                 items: [
@@ -1917,7 +1918,7 @@ describe("USSTree Unit Tests - Function getChildren", () => {
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         globalMocks.testTree.mFavorites.push(favProfileNode);
-        const loadProfilesForFavoritesSpy = jest.spyOn(globalMocks.testTree, "loadProfilesForFavorites");
+        const loadProfilesForFavoritesSpy = vi.spyOn(globalMocks.testTree, "loadProfilesForFavorites");
 
         await globalMocks.testTree.getChildren(favProfileNode);
 
@@ -1946,12 +1947,12 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
             parentNode: globalMocks.testTree.mFavoriteSession,
         });
         globalMocks.testTree.mFavorites.push(favProfileNode);
-        const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage");
+        const showErrorMessageSpy = vi.spyOn(vscode.window, "showErrorMessage");
 
         Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
+            value: vi.fn(() => {
                 return {
-                    loadNamedProfile: jest.fn(() => {
+                    loadNamedProfile: vi.fn(() => {
                         throw new Error();
                     }),
                 };
@@ -2051,8 +2052,8 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         favProfileNode.children.push(favDirNode);
         globalMocks.testTree.mFavorites.push(favProfileNode);
 
-        jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
-        const createDirectorySpy = jest.spyOn(vscode.workspace.fs, "createDirectory");
+        vi.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
+        const createDirectorySpy = vi.spyOn(vscode.workspace.fs, "createDirectory");
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         expect(createDirectorySpy).toHaveBeenCalledWith(favDirNode.resourceUri);
     });
@@ -2076,9 +2077,9 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         favProfileNode.children.push(favFileNode);
         globalMocks.testTree.mFavorites.push(favProfileNode);
 
-        jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false).mockReturnValueOnce(false);
-        const createDirectorySpy = jest.spyOn(vscode.workspace.fs, "createDirectory").mockClear();
-        const writeFileSpy = jest.spyOn(vscode.workspace.fs, "writeFile");
+        vi.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false).mockReturnValueOnce(false);
+        const createDirectorySpy = vi.spyOn(vscode.workspace.fs, "createDirectory").mockClear();
+        const writeFileSpy = vi.spyOn(vscode.workspace.fs, "writeFile");
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         expect(createDirectorySpy).toHaveBeenCalled();
         expect(writeFileSpy).toHaveBeenCalledWith(favFileNode.resourceUri, new Uint8Array());
@@ -2109,17 +2110,17 @@ describe("USSTree Unit Tests - Function editSession", () => {
             session: globalMocks.testSession,
             profile: globalMocks.testProfile,
         });
-        const checkSession = jest.spyOn(globalMocks.testTree, "editSession");
+        const checkSession = vi.spyOn(globalMocks.testTree, "editSession");
         Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
+            value: vi.fn(() => {
                 return {
-                    editSession: jest.fn(() => {
+                    editSession: vi.fn(() => {
                         return profileLoad;
                     }),
-                    checkCurrentProfile: jest.fn(() => {
+                    checkCurrentProfile: vi.fn(() => {
                         return profilesForValidation;
                     }),
-                    validateProfiles: jest.fn(),
+                    validateProfiles: vi.fn(),
                 };
             }),
             configurable: true,
@@ -2137,18 +2138,18 @@ describe("USSTree Unit Tests - Function editSession", () => {
             session: globalMocks.testSession,
             profile: globalMocks.testProfile,
         });
-        const checkSession = jest.spyOn(globalMocks.testTree, "editSession");
+        const checkSession = vi.spyOn(globalMocks.testTree, "editSession");
         Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
+            value: vi.fn(() => {
                 return {
-                    editSession: jest.fn(() => {
+                    editSession: vi.fn(() => {
                         return profileLoad;
                     }),
-                    checkCurrentProfile: jest.fn(() => {
+                    checkCurrentProfile: vi.fn(() => {
                         return { status: "inactive", name: globalMocks.testProfile.name };
                     }),
                     profilesForValidation: [{ status: "inactive", name: globalMocks.testProfile.name }],
-                    validateProfiles: jest.fn(),
+                    validateProfiles: vi.fn(),
                 };
             }),
             configurable: true,
@@ -2197,7 +2198,7 @@ describe("USSTree Unit Tests - Function editSession", () => {
     describe("getFavorites", () => {
         it("gets all the favorites from persistent object", async () => {
             const globalMocks = createGlobalMocks();
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
                 favorites: ["test1", "test2", "test3"],
             });
             expect(globalMocks.testTree.getFavorites()).toEqual(["test1", "test2", "test3"]);
@@ -2207,22 +2208,22 @@ describe("USSTree Unit Tests - Function editSession", () => {
 
 describe("USSTree Unit Tests - Function openWithEncoding", () => {
     beforeEach(() => {
-        jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
-            getTag: jest.fn(),
+        vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+            getTag: vi.fn(),
         } as any);
     });
 
     it("sets binary encoding if selection was made", async () => {
         const globalMocks = await createGlobalMocks();
-        const setEncodingMock = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation();
+        const setEncodingMock = vi.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation((() => undefined) as any);
         const node = new ZoweUSSNode({
             label: "encodingTest",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             profile: globalMocks.testProfile,
         });
-        node.openUSS = jest.fn();
-        const setEncodingNodeMock = jest.spyOn(node, "setEncoding").mockImplementation();
-        jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "binary" });
+        node.openUSS = vi.fn();
+        const setEncodingNodeMock = vi.spyOn(node, "setEncoding").mockImplementation((() => undefined) as any);
+        vi.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "binary" });
         await USSTree.prototype.openWithEncoding(node);
         expect(setEncodingNodeMock).toHaveBeenCalledWith({ kind: "binary" });
         expect(node.openUSS).toHaveBeenCalledTimes(1);
@@ -2232,15 +2233,15 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
 
     it("sets text encoding if selection was made", async () => {
         const globalMocks = await createGlobalMocks();
-        const setEncodingMock = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation();
-        const getEncodingMock = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValueOnce(null as any);
+        const setEncodingMock = vi.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation((() => undefined) as any);
+        const getEncodingMock = vi.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValueOnce(null as any);
         const node = new ZoweUSSNode({
             label: "encodingTest",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             profile: globalMocks.testProfile,
         });
-        node.openUSS = jest.fn();
-        jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
+        node.openUSS = vi.fn();
+        vi.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce({ kind: "text" });
         await USSTree.prototype.openWithEncoding(node);
         expect(setEncodingMock).toHaveBeenCalledWith(node.resourceUri, { kind: "text" });
         expect(node.openUSS).toHaveBeenCalledTimes(1);
@@ -2249,15 +2250,15 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
 
     it("does not set encoding if prompt was cancelled", async () => {
         const globalMocks = await createGlobalMocks();
-        const setEncodingSpy = jest.spyOn(UssFSProvider.instance, "setEncodingForFile").mockClear();
-        const getEncodingMock = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValueOnce(null as any);
+        const setEncodingSpy = vi.spyOn(UssFSProvider.instance, "setEncodingForFile").mockClear();
+        const getEncodingMock = vi.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValueOnce(null as any);
         const node = new ZoweUSSNode({
             label: "encodingTest",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             profile: globalMocks.testProfile,
         });
-        node.openUSS = jest.fn();
-        jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce(undefined);
+        node.openUSS = vi.fn();
+        vi.spyOn(SharedUtils, "promptForEncoding").mockResolvedValueOnce(undefined);
         await USSTree.prototype.openWithEncoding(node);
         expect(setEncodingSpy).not.toHaveBeenCalled();
         expect(node.openUSS).toHaveBeenCalledTimes(0);
@@ -2269,7 +2270,7 @@ describe("USSTree Unit Tests - Function handleDrag", () => {
     it("adds a DataTransferItem containing info about the dragged USS node", async () => {
         const globalMocks = createGlobalMocks();
         const ussnode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
-        const dataTransferSetMock = jest.fn();
+        const dataTransferSetMock = vi.fn();
         globalMocks.testTree.handleDrag([ussnode], { set: dataTransferSetMock }, undefined);
         expect(dataTransferSetMock).toHaveBeenCalledWith(
             "application/vnd.code.tree.zowe.uss.explorer",
@@ -2286,8 +2287,8 @@ describe("USSTree Unit Tests - Function handleDrag", () => {
 describe("USSTree Unit Tests - Function handleDrop", () => {
     it("returns early if there are no items in the dataTransfer object", async () => {
         const globalMocks = createGlobalMocks();
-        const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
-        const getDataTransferMock = jest.spyOn(vscode.DataTransfer.prototype, "get").mockReturnValueOnce(undefined);
+        const statusBarMsgSpy = vi.spyOn(Gui, "setStatusBarMessage");
+        const getDataTransferMock = vi.spyOn(vscode.DataTransfer.prototype, "get").mockReturnValueOnce(undefined);
         await globalMocks.testTree.handleDrop(globalMocks.testUSSNode, new vscode.DataTransfer(), undefined);
         expect(statusBarMsgSpy).not.toHaveBeenCalled();
         getDataTransferMock.mockRestore();
@@ -2295,8 +2296,8 @@ describe("USSTree Unit Tests - Function handleDrop", () => {
 
     it("handles moving files and folders within the same profile", async () => {
         const globalMocks = createGlobalMocks();
-        const statusBarMsgSpy = jest.spyOn(Gui, "setStatusBarMessage");
-        const warningMsgSpy = jest.spyOn(Gui, "warningMessage").mockClear().mockResolvedValueOnce(undefined);
+        const statusBarMsgSpy = vi.spyOn(Gui, "setStatusBarMessage");
+        const warningMsgSpy = vi.spyOn(Gui, "warningMessage").mockClear().mockResolvedValueOnce(undefined);
         const ussSession = createUSSSessionNode(globalMocks.testSession, globalMocks.testProfile);
         const ussDirNode = new ZoweUSSNode({
             label: "folder",
@@ -2315,7 +2316,7 @@ describe("USSTree Unit Tests - Function handleDrop", () => {
         ussDirNode.children = [];
         ussSession.children = [ussDirNode, ussFileNode];
         const dataTransfer = new vscode.DataTransfer();
-        const getDataTransferMock = jest.spyOn(dataTransfer, "get").mockReturnValueOnce({
+        const getDataTransferMock = vi.spyOn(dataTransfer, "get").mockReturnValueOnce({
             value: [
                 {
                     label: ussFileNode.label as string,
@@ -2323,11 +2324,11 @@ describe("USSTree Unit Tests - Function handleDrop", () => {
                 },
             ],
         } as any);
-        const moveMock = jest.fn();
-        const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+        const moveMock = vi.fn();
+        const ussApiMock = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
             move: moveMock,
         } as any);
-        const fspMoveMock = jest.spyOn(UssFSProvider.instance, "move").mockResolvedValue(true);
+        const fspMoveMock = vi.spyOn(UssFSProvider.instance, "move").mockResolvedValue(true);
         const draggedNodeMock = new MockedProperty(globalMocks.testTree, "draggedNodes", undefined, {
             [ussFileNode.resourceUri.path]: ussFileNode,
         });
@@ -2347,14 +2348,14 @@ describe("USSTree.handleDrop - blocking behavior", () => {
     let gm: any;
 
     beforeEach(() => {
-        jest.resetAllMocks();
-        jest.clearAllMocks();
+        vi.resetAllMocks();
+        vi.clearAllMocks();
         gm = createGlobalMocks();
         ussTree = new USSTree();
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
     it("handles a DataTransfer-like object whose get() throws (defensive try/catch) and returns early without side effects", async () => {
         const session = createISession();
@@ -2377,7 +2378,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
 
         // Create a DataTransfer-like object whose get throws to simulate a malformed DT implementation
         const throwingDT = {
-            get: jest.fn().mockImplementation(() => {
+            get: vi.fn().mockImplementation(() => {
                 throw new Error("boom");
             }),
         } as any;
@@ -2390,7 +2391,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
             getParent: () => null,
         } as any;
 
-        const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
+        const errorSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
 
         // Call handleDrop with a DT whose get throws; the code should catch and set droppedItems = null, then return
         // @ts-ignore token intentionally undefined
@@ -2442,9 +2443,9 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
 
         const payload = { value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }] };
-        const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
+        const dataTransfer = { get: vi.fn().mockReturnValueOnce(payload) } as any;
 
-        const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
+        const errorSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP = "cannot drop into descendant";
 
         // @ts-ignore
@@ -2475,7 +2476,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
 
         // Build a DataTransfer-like object that will be passed in the targetNode slot (swapped args)
         const fakeDataTransfer = {
-            get: jest.fn().mockReturnValueOnce({
+            get: vi.fn().mockReturnValueOnce({
                 value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }],
             }),
         } as any;
@@ -2490,13 +2491,13 @@ describe("USSTree.handleDrop - blocking behavior", () => {
 
         // Make SharedUtils / SharedContext permissive for the rest of validation
         // @ts-ignore
-        jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
-        jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
-        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
-        jest.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
+        vi.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
+        vi.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
+        vi.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        vi.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
 
         // Spy on GUI error to assert it was invoked
-        const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
+        const errorSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
 
         // Act: call handleDrop with DataTransfer passed as first arg (normalized in implementation)
         // @ts-ignore token intentionally undefined
@@ -2534,7 +2535,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
 
         // item uri contains the suffix path without profile prefix
         const payload = { value: [{ label: srcNode.label as string, uri: { path: "/u/source/file.txt" } }] };
-        const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
+        const dataTransfer = { get: vi.fn().mockReturnValueOnce(payload) } as any;
 
         // Target node in same profile so UssFSProvider.move path is used
         const target = new ZoweUSSNode({
@@ -2547,14 +2548,14 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         target.fullPath = "/u/target";
 
         // Ensure helpers are permissive
-        jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
-        jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
-        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
-        jest.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
+        vi.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
+        vi.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
+        vi.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        vi.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
 
         // Mock ZoweExplorerApiRegister to advertise a move API
-        jest.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue({ move: jest.fn() } as any);
-        const moveSpy = jest.spyOn(UssFSProvider.instance as any, "move").mockResolvedValue(true);
+        vi.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue({ move: vi.fn() } as any);
+        const moveSpy = vi.spyOn(UssFSProvider.instance as any, "move").mockResolvedValue(true);
 
         // Call handleDrop - should find the node by endsWith logic and call UssFSProvider.move
         // @ts-ignore
@@ -2600,14 +2601,14 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         const payload = {
             value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }],
         };
-        const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
+        const dataTransfer = { get: vi.fn().mockReturnValueOnce(payload) } as any;
         expect(typeof dataTransfer.get).toBe("function"); // sanity
 
-        (SharedUtils as any).isLikelySameUssObjectByUris = jest.fn().mockResolvedValue(true);
+        (SharedUtils as any).isLikelySameUssObjectByUris = vi.fn().mockResolvedValue(true);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
             "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
 
-        const errorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
+        const errorSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined as any);
 
         // @ts-ignore
         await ussTree.handleDrop(dataTransfer as any, targetNode, undefined);
@@ -2646,9 +2647,9 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
 
         const payload = { value: [{ label: child.label as string, uri: child.resourceUri }] };
-        const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
+        const dataTransfer = { get: vi.fn().mockReturnValueOnce(payload) } as any;
 
-        const moveSpy = jest.spyOn(UssFSProvider.instance as any, "move").mockResolvedValue(true);
+        const moveSpy = vi.spyOn(UssFSProvider.instance as any, "move").mockResolvedValue(true);
 
         // child.getParent() === target, so should be skipped and move not called
         // @ts-ignore
@@ -2697,8 +2698,8 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         });
         existingChild.fullPath = "/u/foo/folderA";
 
-        jest.spyOn(targetFolder as any, "getChildren").mockResolvedValue([existingChild]);
-        jest.spyOn(SharedContext, "isUssDirectory").mockImplementation((node: any) => node === srcFolder);
+        vi.spyOn(targetFolder as any, "getChildren").mockResolvedValue([existingChild]);
+        vi.spyOn(SharedContext, "isUssDirectory").mockImplementation((node: any) => node === srcFolder);
 
         const payload = {
             value: [
@@ -2712,10 +2713,10 @@ describe("USSTree.handleDrop - blocking behavior", () => {
             [payload.value[0].uri.path]: srcFolder,
         });
         // Create a DataTransfer-like object using the fake payload
-        const dataTransfer = { get: jest.fn().mockReturnValueOnce(payload) } as any;
+        const dataTransfer = { get: vi.fn().mockReturnValueOnce(payload) } as any;
         expect(typeof (dataTransfer as any).get).toBe("function");
 
-        (SharedUtils as any).hasNameCollision = jest.fn().mockReturnValue(true);
+        (SharedUtils as any).hasNameCollision = vi.fn().mockReturnValue(true);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
             "Cannot move: The source and the target are the same. You are using a different profile to view the target. Refresh to view changes.";
 
@@ -2736,18 +2737,18 @@ describe("USSTree.handleDrop - blocking behavior", () => {
             ];
             ussDirNode.dirty = false;
 
-            const deleteMock = jest.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
-            const readFileMock = jest.spyOn(UssFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
-            const writeFileMock = jest.spyOn(UssFSProvider.instance, "writeFile").mockResolvedValue(undefined);
-            const existsMock = jest.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
+            const deleteMock = vi.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
+            const readFileMock = vi.spyOn(UssFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+            const writeFileMock = vi.spyOn(UssFSProvider.instance, "writeFile").mockResolvedValue(undefined);
+            const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
 
-            const createDirMock = jest.spyOn(UssFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
-            const createMock = jest.fn();
-            const ussApiMock = jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
+            const createDirMock = vi.spyOn(UssFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
+            const createMock = vi.fn();
+            const ussApiMock = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
                 create: createMock,
             } as any);
-            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValueOnce({
-                loadNamedProfile: jest.fn().mockResolvedValueOnce(globalMocks.testProfile),
+            const profilesMock = vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
+                loadNamedProfile: vi.fn().mockResolvedValueOnce(globalMocks.testProfile),
             } as any);
 
             await globalMocks.testTree.crossLparMove(
@@ -2778,15 +2779,15 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
     let ussTree: USSTree;
 
     beforeEach(() => {
-        jest.resetAllMocks();
-        jest.clearAllMocks();
+        vi.resetAllMocks();
+        vi.clearAllMocks();
         // ensure status bar message returns a disposable so handleDrop can call dispose()
-        jest.spyOn(Gui, "setStatusBarMessage").mockReturnValue({ dispose: jest.fn() } as any);
+        vi.spyOn(Gui, "setStatusBarMessage").mockReturnValue({ dispose: vi.fn() } as any);
         ussTree = new USSTree();
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("normalizes swapped args and completes move", async () => {
@@ -2819,7 +2820,7 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
 
         // Ensure target node exposes getProfile returning the profile
         if ((targetNodeArg as any).getProfile) {
-            jest.spyOn(targetNodeArg as any, "getProfile").mockReturnValue(profile);
+            vi.spyOn(targetNodeArg as any, "getProfile").mockReturnValue(profile);
         } else {
             (targetNodeArg as any).getProfile = () => profile;
         }
@@ -2827,17 +2828,17 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         const payload = { value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }] };
         const targetArgAsPayload = payload as any;
 
-        jest.spyOn(ProfilesUtils as any, "awaitExtenderType").mockResolvedValue(undefined);
-        jest.spyOn(Profiles as any, "getInstance").mockReturnValue({
-            loadNamedProfile: jest.fn().mockResolvedValue(profile),
+        vi.spyOn(ProfilesUtils as any, "awaitExtenderType").mockResolvedValue(undefined);
+        vi.spyOn(Profiles as any, "getInstance").mockReturnValue({
+            loadNamedProfile: vi.fn().mockResolvedValue(profile),
         } as any);
-        jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
-        jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
-        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
-        jest.spyOn(UssFSProvider.instance as any, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
-        jest.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue(undefined);
+        vi.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
+        vi.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
+        vi.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        vi.spyOn(UssFSProvider.instance as any, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        vi.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue(undefined);
 
-        const statusBarSpy = jest.spyOn(Gui, "setStatusBarMessage");
+        const statusBarSpy = vi.spyOn(Gui, "setStatusBarMessage");
 
         // @ts-ignore
         await ussTree.handleDrop(targetNodeArg as any, targetArgAsPayload as any, undefined);
@@ -2881,23 +2882,23 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         targetNode.fullPath = "/u/target2";
 
         if ((targetNode as any).getProfile) {
-            jest.spyOn(targetNode as any, "getProfile").mockReturnValue(profile);
+            vi.spyOn(targetNode as any, "getProfile").mockReturnValue(profile);
         } else {
             (targetNode as any).getProfile = () => profile;
         }
 
-        jest.spyOn(ProfilesUtils as any, "awaitExtenderType").mockResolvedValue(undefined);
-        jest.spyOn(Profiles as any, "getInstance").mockReturnValue({
-            loadNamedProfile: jest.fn().mockResolvedValue(profile),
+        vi.spyOn(ProfilesUtils as any, "awaitExtenderType").mockResolvedValue(undefined);
+        vi.spyOn(Profiles as any, "getInstance").mockReturnValue({
+            loadNamedProfile: vi.fn().mockResolvedValue(profile),
         } as any);
-        jest.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
-        jest.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
-        jest.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        vi.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
+        vi.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
+        vi.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
 
-        jest.spyOn(UssFSProvider.instance as any, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
-        jest.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue(undefined);
+        vi.spyOn(UssFSProvider.instance as any, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        vi.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue(undefined);
 
-        const statusBarSpy = jest.spyOn(Gui, "setStatusBarMessage");
+        const statusBarSpy = vi.spyOn(Gui, "setStatusBarMessage");
 
         // @ts-ignore
         await ussTree.handleDrop(dataTransferAsPayload as any, targetNode as any, undefined);

@@ -8,26 +8,27 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as imperative from "@zowe/imperative";
 import { MessageSeverity, IZoweLogger } from "../../../src/logger";
 import * as loggerConfig from "../../../src/log4jsconfig.json";
 
-jest.mock("fs");
+vi.mock("fs");
 
 describe("IZoweLogger", () => {
     const extensionName = "test";
     const loggingPath = __dirname;
 
     const expectLogWithSeverity = (logger: IZoweLogger, methodName: keyof imperative.Logger, severity: MessageSeverity): void => {
-        const loggerSpy = jest.spyOn(logger.getImperativeLogger() as any, methodName);
+        const loggerSpy = vi.spyOn(logger.getImperativeLogger() as any, methodName);
         const logMessage = methodName.split("").reverse().join("");
         logger.logImperativeMessage(logMessage, severity);
         expect(loggerSpy).toHaveBeenCalledWith(`[${extensionName}] ${logMessage}`);
     };
 
     it("should use extension name and logging path", () => {
-        const initLoggerSpy = jest.spyOn(imperative.Logger, "initLogger");
+        const initLoggerSpy = vi.spyOn(imperative.Logger, "initLogger");
         const testLogger = new IZoweLogger(extensionName, loggingPath);
         expect(testLogger.getExtensionName()).toBe(extensionName);
         expect(initLoggerSpy).toHaveBeenCalledWith(loggerConfig);
@@ -66,7 +67,7 @@ describe("IZoweLogger", () => {
 
     it("should log Imperative message with default severity", () => {
         const testLogger = new IZoweLogger(extensionName, loggingPath);
-        const loggerSpy = jest.spyOn(testLogger.getImperativeLogger(), "debug");
+        const loggerSpy = vi.spyOn(testLogger.getImperativeLogger(), "debug");
         const logMessage = "i haz error";
         testLogger.logImperativeMessage(logMessage);
         expect(loggerSpy).toHaveBeenCalledWith(`[${extensionName}] ${logMessage}`);

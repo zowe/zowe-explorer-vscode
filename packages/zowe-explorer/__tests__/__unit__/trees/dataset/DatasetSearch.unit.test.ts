@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-
+import { MockInstance, vi } from "vitest";
 import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { Gui, Table, TableBuilder, TableViewProvider, ZoweScheme } from "@zowe/zowe-explorer-api";
@@ -28,10 +28,10 @@ import { window } from "../../../__mocks__/vscode";
 import { Definitions } from "../../../../src/configuration/Definitions";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 
-jest.mock("fs");
-jest.mock("vscode");
-jest.mock("../../../../src/tools/ZoweLogger");
-jest.mock("../../../../src/tools/ZoweLocalStorage");
+vi.mock("fs");
+vi.mock("vscode");
+vi.mock("../../../../src/tools/ZoweLogger");
+vi.mock("../../../../src/tools/ZoweLocalStorage");
 
 describe("Dataset Search Unit Tests - function search", () => {
     beforeEach(() => {
@@ -42,10 +42,10 @@ describe("Dataset Search Unit Tests - function search", () => {
     });
 
     describe("Helper function - continueSearchPrompt", () => {
-        let infoMessageSpy: jest.SpyInstance;
+        let infoMessageSpy: MockInstance;
 
         beforeAll(() => {
-            infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+            infoMessageSpy = vi.spyOn(Gui, "infoMessage");
         });
 
         beforeEach(() => {
@@ -116,44 +116,44 @@ describe("Dataset Search Unit Tests - function search", () => {
         });
     });
     describe("Helper function - performSearch", () => {
-        const searchDataSetsMock = jest.fn();
-        let getMvsApiSpy: jest.SpyInstance;
-        let showMessageSpy: jest.SpyInstance;
-        let reportProgressSpy: jest.SpyInstance;
-        let continueSearchPromptSpy: jest.SpyInstance;
-        let authErrorHandlingSpy: jest.SpyInstance;
-        let loggerErrorSpy: jest.SpyInstance;
+        const searchDataSetsMock = vi.fn();
+        let getMvsApiSpy: MockInstance;
+        let showMessageSpy: MockInstance;
+        let reportProgressSpy: MockInstance;
+        let continueSearchPromptSpy: MockInstance;
+        let authErrorHandlingSpy: MockInstance;
+        let loggerErrorSpy: MockInstance;
 
         const fakeMvsApi = {
             searchDataSets: searchDataSetsMock,
         };
         const token: vscode.CancellationToken = {
             isCancellationRequested: false,
-            onCancellationRequested: jest.fn(),
+            onCancellationRequested: vi.fn(),
         };
 
         beforeAll(() => {
-            getMvsApiSpy = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(fakeMvsApi as any);
-            showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
-            reportProgressSpy = jest.spyOn(Gui, "reportProgress").mockImplementation();
-            continueSearchPromptSpy = jest.spyOn(DatasetSearch as any, "continueSearchPrompt");
-            authErrorHandlingSpy = jest.spyOn(AuthUtils, "errorHandling").mockImplementation();
-            loggerErrorSpy = jest.spyOn(ZoweLogger, "error").mockImplementation();
+            getMvsApiSpy = vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(fakeMvsApi as any);
+            showMessageSpy = vi.spyOn(Gui, "showMessage").mockImplementation((() => undefined) as any);
+            reportProgressSpy = vi.spyOn(Gui, "reportProgress").mockImplementation((() => undefined) as any);
+            continueSearchPromptSpy = vi.spyOn(DatasetSearch as any, "continueSearchPrompt");
+            authErrorHandlingSpy = vi.spyOn(AuthUtils, "errorHandling").mockImplementation((() => undefined) as any);
+            loggerErrorSpy = vi.spyOn(ZoweLogger, "error").mockImplementation((() => undefined) as any);
         });
 
         beforeEach(() => {
-            jest.clearAllMocks();
+            vi.clearAllMocks();
             searchDataSetsMock.mockReset();
         });
 
         afterAll(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should show a message if cancellation was requested 1", async () => {
             const tokenCancellation: vscode.CancellationToken = {
                 isCancellationRequested: true,
-                onCancellationRequested: jest.fn(),
+                onCancellationRequested: vi.fn(),
             };
             const myProgress = { test: "test" };
             const profile = createIProfile();
@@ -174,7 +174,7 @@ describe("Dataset Search Unit Tests - function search", () => {
         it("should show a message if cancellation was requested 2", async () => {
             const tokenCancellation: vscode.CancellationToken = {
                 isCancellationRequested: false,
-                onCancellationRequested: jest.fn(),
+                onCancellationRequested: vi.fn(),
             };
             const myProgress = { test: "test" };
             const profile = createIProfile();
@@ -413,19 +413,19 @@ describe("Dataset Search Unit Tests - function search", () => {
     });
     describe("Helper function - getSearchMatches", () => {
         const searchString = "test";
-        let getSessionNodeSpy: jest.SpyInstance;
-        let getExtensionSpy: jest.SpyInstance;
+        let getSessionNodeSpy: MockInstance;
+        let getExtensionSpy: MockInstance;
 
         beforeAll(() => {
-            getExtensionSpy = jest.spyOn(DatasetUtils, "getExtension");
+            getExtensionSpy = vi.spyOn(DatasetUtils, "getExtension");
         });
 
         afterEach(() => {
-            jest.clearAllMocks();
+            vi.clearAllMocks();
         });
 
         afterAll(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("Should return matches from a response object - generateFullUri (pattern)", () => {
@@ -512,7 +512,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 },
             ];
 
-            getSessionNodeSpy = jest.spyOn(node, "getSessionNode");
+            getSessionNodeSpy = vi.spyOn(node, "getSessionNode");
 
             const matches = (DatasetSearch as any).getSearchMatches(node, response, true, searchString);
 
@@ -613,7 +613,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 },
             ];
 
-            getSessionNodeSpy = jest.spyOn(node, "getSessionNode");
+            getSessionNodeSpy = vi.spyOn(node, "getSessionNode");
 
             const matches = (DatasetSearch as any).getSearchMatches(pdsNode, response, false, searchString);
 
@@ -714,7 +714,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 },
             ];
 
-            getSessionNodeSpy = jest.spyOn(node, "getSessionNode");
+            getSessionNodeSpy = vi.spyOn(node, "getSessionNode");
 
             const matches = (DatasetSearch as any).getSearchMatches(pdsNode, response, false, searchString);
 
@@ -727,24 +727,24 @@ describe("Dataset Search Unit Tests - function search", () => {
     });
     describe("Helper function - openSearchAtLocation", () => {
         let fakeEditor = { selection: undefined };
-        let dsFsProviderSpy: jest.SpyInstance;
-        let guiShowTextDocumentSpy: jest.SpyInstance;
-        let errorMessageSpy: jest.SpyInstance;
+        let dsFsProviderSpy: MockInstance;
+        let guiShowTextDocumentSpy: MockInstance;
+        let errorMessageSpy: MockInstance;
 
         beforeAll(() => {
-            dsFsProviderSpy = jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockImplementation();
-            guiShowTextDocumentSpy = jest.spyOn(Gui, "showTextDocument");
-            errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+            dsFsProviderSpy = vi.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockImplementation((() => undefined) as any);
+            guiShowTextDocumentSpy = vi.spyOn(Gui, "showTextDocument");
+            errorMessageSpy = vi.spyOn(Gui, "errorMessage");
         });
 
         beforeEach(() => {
-            jest.clearAllMocks();
+            vi.clearAllMocks();
             fakeEditor = { selection: undefined };
             guiShowTextDocumentSpy.mockResolvedValue(fakeEditor as any);
         });
 
         afterAll(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should try to open one text document", async () => {
@@ -856,11 +856,11 @@ describe("Dataset Search Unit Tests - function search", () => {
     });
 
     describe("Helper function - constructQuickPicks", () => {
-        let createQuickPickSpy: jest.SpyInstance;
-        let searchQuickPickResetSpy: jest.SpyInstance;
+        let createQuickPickSpy: MockInstance;
+        let searchQuickPickResetSpy: MockInstance;
         let quickPickArray: vscode.QuickPick<vscode.QuickPickItem>[] = [];
-        let historyGetSpy: jest.SpyInstance;
-        let historySetSpy: jest.SpyInstance;
+        let historyGetSpy: MockInstance;
+        let historySetSpy: MockInstance;
 
         function baseQuickPickImplemnentation() {
             const quickPick = window.createQuickPick();
@@ -870,19 +870,19 @@ describe("Dataset Search Unit Tests - function search", () => {
 
         beforeEach(() => {
             quickPickArray = [];
-            createQuickPickSpy = jest.spyOn(Gui, "createQuickPick").mockImplementation(() => {
+            createQuickPickSpy = vi.spyOn(Gui, "createQuickPick").mockImplementation(() => {
                 return baseQuickPickImplemnentation();
             });
-            searchQuickPickResetSpy = jest.spyOn(DatasetSearch as any, "searchQuickPickReset").mockReturnValue(undefined);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockImplementation((_key: string) => {
+            searchQuickPickResetSpy = vi.spyOn(DatasetSearch as any, "searchQuickPickReset").mockReturnValue(undefined);
+            vi.spyOn(ZoweLocalStorage, "getValue").mockImplementation((_key: string) => {
                 return {};
             });
-            jest.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
+            vi.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
 
-            historySetSpy = jest.fn().mockReturnValue(undefined);
-            historyGetSpy = jest.fn().mockReturnValue([]);
+            historySetSpy = vi.fn().mockReturnValue(undefined);
+            historyGetSpy = vi.fn().mockReturnValue([]);
 
-            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
                 getSearchedKeywordHistory: historyGetSpy,
                 setSearchedKeywordHistory: historySetSpy,
             } as any);
@@ -891,11 +891,11 @@ describe("Dataset Search Unit Tests - function search", () => {
         });
 
         afterEach(() => {
-            jest.clearAllMocks();
+            vi.clearAllMocks();
         });
 
         afterAll(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should construct the quick picks", () => {
@@ -927,7 +927,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             createQuickPickSpy.mockImplementationOnce(() => {
                 const qp = baseQuickPickImplemnentation();
                 qp.selectedItems = [{ label: "" }];
-                qp.onDidChangeValue = jest.fn().mockImplementation((listener) => {
+                qp.onDidChangeValue = vi.fn().mockImplementation((listener) => {
                     listener("test");
                 });
                 return qp;
@@ -965,7 +965,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             createQuickPickSpy.mockImplementationOnce(() => {
                 const qp = baseQuickPickImplemnentation();
                 qp.selectedItems = [{ label: "" }];
-                qp.onDidChangeValue = jest.fn().mockImplementation((listener) => {
+                qp.onDidChangeValue = vi.fn().mockImplementation((listener) => {
                     // Should handle switching the adding the user specified item, and then switching back
                     listener("test");
                     expect(qp.items).toEqual([
@@ -1043,7 +1043,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             createQuickPickSpy.mockImplementationOnce(() => {
                 const qp = baseQuickPickImplemnentation();
                 qp.selectedItems = [{ label: "" }];
-                qp.onDidChangeValue = jest.fn().mockImplementation((listener) => {
+                qp.onDidChangeValue = vi.fn().mockImplementation((listener) => {
                     listener("test");
                 });
                 return qp;
@@ -1089,7 +1089,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 .mockImplementationOnce(() => {
                     const qp = baseQuickPickImplemnentation();
                     qp.selectedItems = [{ label: vscode.l10n.t("Regex") }, { label: vscode.l10n.t("Case Sensitive") }];
-                    qp.onDidAccept = jest.fn().mockImplementation((listener) => {
+                    qp.onDidAccept = vi.fn().mockImplementation((listener) => {
                         listener();
                     });
                     return qp;
@@ -1130,7 +1130,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 .mockImplementationOnce(() => {
                     const qp = baseQuickPickImplemnentation();
                     qp.selectedItems = [];
-                    qp.onDidHide = jest.fn().mockImplementation((listener) => {
+                    qp.onDidHide = vi.fn().mockImplementation((listener) => {
                         listener();
                     });
                     return qp;
@@ -1165,21 +1165,21 @@ describe("Dataset Search Unit Tests - function search", () => {
     });
 
     describe("Helper function - searchQuickPickReset", () => {
-        let searchUpdateOptionsLabelSpy: jest.SpyInstance;
+        let searchUpdateOptionsLabelSpy: MockInstance;
         let searchQuickPick: vscode.QuickPick<vscode.QuickPickItem>;
 
         beforeEach(() => {
-            searchUpdateOptionsLabelSpy = jest.spyOn(DatasetSearch as any, "searchUpdateOptionsLabel").mockReturnValue(undefined);
+            searchUpdateOptionsLabelSpy = vi.spyOn(DatasetSearch as any, "searchUpdateOptionsLabel").mockReturnValue(undefined);
             (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, regex: false };
             (DatasetSearch as any).searchQuickPick = searchQuickPick = window.createQuickPick();
         });
 
         afterEach(() => {
-            jest.clearAllMocks();
+            vi.clearAllMocks();
         });
 
         afterAll(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should reset the search quick pick", () => {
@@ -1280,73 +1280,73 @@ describe("Dataset Search Unit Tests - function search", () => {
     });
 
     describe("Main function - search", () => {
-        let tableViewProviderSetTableViewMock = jest.fn();
-        let tableViewProviderSpy: jest.SpyInstance;
-        let openSearchAtLocationSpy: jest.SpyInstance;
-        let getSearchMatchesSpy: jest.SpyInstance;
-        let performSearchSpy: jest.SpyInstance;
-        let withProgressSpy: jest.SpyInstance;
-        let showMessageSpy: jest.SpyInstance;
-        let errorMessageSpy: jest.SpyInstance;
-        let tableBuilderOptionsSpy: jest.SpyInstance;
-        let tableBuilderTitleSpy: jest.SpyInstance;
-        let tableBuilderIsViewSpy: jest.SpyInstance;
-        let tableBuilderRowsSpy: jest.SpyInstance;
-        let tableBuilderColumnsSpy: jest.SpyInstance;
-        let tableBuilderAddRowActionSpy: jest.SpyInstance;
-        let tableBuilderBuildSpy: jest.SpyInstance;
-        let localStorageSetSpy: jest.SpyInstance;
-        let localStorageGetSpy: jest.SpyInstance;
-        let historyGetSpy: jest.SpyInstance;
-        let historySetSpy: jest.SpyInstance;
-        let constructQuickPicksSpy: jest.SpyInstance;
-        let searchQuickPickResetSpy: jest.SpyInstance;
-        let searchOptionsPromptSpy: jest.SpyInstance;
+        let tableViewProviderSetTableViewMock = vi.fn();
+        let tableViewProviderSpy: MockInstance;
+        let openSearchAtLocationSpy: MockInstance;
+        let getSearchMatchesSpy: MockInstance;
+        let performSearchSpy: MockInstance;
+        let withProgressSpy: MockInstance;
+        let showMessageSpy: MockInstance;
+        let errorMessageSpy: MockInstance;
+        let tableBuilderOptionsSpy: MockInstance;
+        let tableBuilderTitleSpy: MockInstance;
+        let tableBuilderIsViewSpy: MockInstance;
+        let tableBuilderRowsSpy: MockInstance;
+        let tableBuilderColumnsSpy: MockInstance;
+        let tableBuilderAddRowActionSpy: MockInstance;
+        let tableBuilderBuildSpy: MockInstance;
+        let localStorageSetSpy: MockInstance;
+        let localStorageGetSpy: MockInstance;
+        let historyGetSpy: MockInstance;
+        let historySetSpy: MockInstance;
+        let constructQuickPicksSpy: MockInstance;
+        let searchQuickPickResetSpy: MockInstance;
+        let searchOptionsPromptSpy: MockInstance;
         let localStorageValue: any = [];
 
         beforeAll(() => {
-            tableViewProviderSetTableViewMock = jest.fn();
-            tableViewProviderSpy = jest
+            tableViewProviderSetTableViewMock = vi.fn();
+            tableViewProviderSpy = vi
                 .spyOn(TableViewProvider, "getInstance")
                 .mockReturnValue({ setTableView: tableViewProviderSetTableViewMock } as any);
-            openSearchAtLocationSpy = jest.spyOn(DatasetSearch as any, "openSearchAtLocation");
-            getSearchMatchesSpy = jest.spyOn(DatasetSearch as any, "getSearchMatches");
-            performSearchSpy = jest.spyOn(DatasetSearch as any, "performSearch");
-            withProgressSpy = jest.spyOn(Gui, "withProgress");
-            showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
-            errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
-            tableBuilderOptionsSpy = jest.spyOn(TableBuilder.prototype, "options").mockReturnValue(TableBuilder.prototype);
-            tableBuilderTitleSpy = jest.spyOn(TableBuilder.prototype, "title").mockReturnValue(TableBuilder.prototype);
-            tableBuilderIsViewSpy = jest.spyOn(TableBuilder.prototype, "isView").mockReturnValue(TableBuilder.prototype);
-            tableBuilderRowsSpy = jest.spyOn(TableBuilder.prototype, "rows").mockReturnValue(TableBuilder.prototype);
-            tableBuilderColumnsSpy = jest.spyOn(TableBuilder.prototype, "columns").mockReturnValue(TableBuilder.prototype);
-            tableBuilderAddRowActionSpy = jest.spyOn(TableBuilder.prototype, "addRowAction").mockReturnValue(TableBuilder.prototype);
-            tableBuilderBuildSpy = jest.spyOn(TableBuilder.prototype, "build").mockImplementation();
-            constructQuickPicksSpy = jest.spyOn(DatasetSearch as any, "constructQuickPicks").mockReturnValue(undefined);
-            searchQuickPickResetSpy = jest.spyOn(DatasetSearch as any, "searchQuickPickReset").mockReturnValue(undefined);
-            searchOptionsPromptSpy = jest.spyOn(DatasetSearch as any, "searchOptionsPrompt").mockReturnValue(undefined);
+            openSearchAtLocationSpy = vi.spyOn(DatasetSearch as any, "openSearchAtLocation");
+            getSearchMatchesSpy = vi.spyOn(DatasetSearch as any, "getSearchMatches");
+            performSearchSpy = vi.spyOn(DatasetSearch as any, "performSearch");
+            withProgressSpy = vi.spyOn(Gui, "withProgress");
+            showMessageSpy = vi.spyOn(Gui, "showMessage").mockImplementation((() => undefined) as any);
+            errorMessageSpy = vi.spyOn(Gui, "errorMessage").mockImplementation((() => undefined) as any);
+            tableBuilderOptionsSpy = vi.spyOn(TableBuilder.prototype, "options").mockReturnValue(TableBuilder.prototype);
+            tableBuilderTitleSpy = vi.spyOn(TableBuilder.prototype, "title").mockReturnValue(TableBuilder.prototype);
+            tableBuilderIsViewSpy = vi.spyOn(TableBuilder.prototype, "isView").mockReturnValue(TableBuilder.prototype);
+            tableBuilderRowsSpy = vi.spyOn(TableBuilder.prototype, "rows").mockReturnValue(TableBuilder.prototype);
+            tableBuilderColumnsSpy = vi.spyOn(TableBuilder.prototype, "columns").mockReturnValue(TableBuilder.prototype);
+            tableBuilderAddRowActionSpy = vi.spyOn(TableBuilder.prototype, "addRowAction").mockReturnValue(TableBuilder.prototype);
+            tableBuilderBuildSpy = vi.spyOn(TableBuilder.prototype, "build").mockImplementation((() => undefined) as any);
+            constructQuickPicksSpy = vi.spyOn(DatasetSearch as any, "constructQuickPicks").mockReturnValue(undefined);
+            searchQuickPickResetSpy = vi.spyOn(DatasetSearch as any, "searchQuickPickReset").mockReturnValue(undefined);
+            searchOptionsPromptSpy = vi.spyOn(DatasetSearch as any, "searchOptionsPrompt").mockReturnValue(undefined);
         });
 
         beforeEach(() => {
-            jest.clearAllMocks();
-            tableViewProviderSetTableViewMock = jest.fn();
-            tableViewProviderSpy = jest
+            vi.clearAllMocks();
+            tableViewProviderSetTableViewMock = vi.fn();
+            tableViewProviderSpy = vi
                 .spyOn(TableViewProvider, "getInstance")
                 .mockReturnValue({ setTableView: tableViewProviderSetTableViewMock } as any);
             localStorageValue = [];
-            localStorageGetSpy = jest.spyOn(ZoweLocalStorage, "getValue").mockImplementation((_key: string) => {
+            localStorageGetSpy = vi.spyOn(ZoweLocalStorage, "getValue").mockImplementation((_key: string) => {
                 return {};
             });
-            localStorageSetSpy = jest.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
+            localStorageSetSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
             (DatasetSearch as any).savedSearchOptions = { caseSensitive: false, regex: false };
             (DatasetSearch as any).searchQuickPick = window.createQuickPick();
             (DatasetSearch as any).searchOptionsQuickPick = window.createQuickPick();
             (DatasetSearch as any).optionsQuickPickEntry = { label: "" };
 
-            historySetSpy = jest.fn().mockReturnValue(undefined);
-            historyGetSpy = jest.fn().mockReturnValue([]);
+            historySetSpy = vi.fn().mockReturnValue(undefined);
+            historyGetSpy = vi.fn().mockReturnValue([]);
 
-            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
                 getSearchedKeywordHistory: historyGetSpy,
                 addSearchedKeywordHistory: historySetSpy,
             } as any);
@@ -1363,7 +1363,7 @@ describe("Dataset Search Unit Tests - function search", () => {
         });
 
         afterAll(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should fail to perform a search (no pattern on session node)", async () => {
@@ -1393,7 +1393,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             const searchQP = (DatasetSearch as any).searchQuickPick;
             const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
 
-            searchQP.onDidHide = jest.fn().mockImplementation((listener) => {
+            searchQP.onDidHide = vi.fn().mockImplementation((listener) => {
                 listener();
             });
             localStorageGetSpy.mockReturnValue(undefined);
@@ -1445,14 +1445,14 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             searchQP.value = searchString;
             searchQP.selectedItems = [{ label: searchString }];
-            searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
+            searchQP.onDidAccept = vi.fn().mockImplementation((listener) => {
                 listener(searchString);
             });
 
             localStorageGetSpy.mockReturnValue(undefined);
             const tokenCancellation: vscode.CancellationToken = {
                 isCancellationRequested: false,
-                onCancellationRequested: jest.fn(),
+                onCancellationRequested: vi.fn(),
             };
             const myProgress = { test: "test" };
 
@@ -1543,7 +1543,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             ];
             const tokenCancellation: vscode.CancellationToken = {
                 isCancellationRequested: false,
-                onCancellationRequested: jest.fn(),
+                onCancellationRequested: vi.fn(),
             };
             const myProgress = { test: "test" };
 
@@ -1558,7 +1558,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             searchQP.value = searchString;
             searchQP.selectedItems = [{ label: searchString }];
-            searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
+            searchQP.onDidAccept = vi.fn().mockImplementation((listener) => {
                 listener();
             });
 
@@ -1723,7 +1723,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             const tokenCancellation: vscode.CancellationToken = {
                 isCancellationRequested: false,
-                onCancellationRequested: jest.fn(),
+                onCancellationRequested: vi.fn(),
             };
             const myProgress = { test: "test" };
 
@@ -1738,7 +1738,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             searchQP.value = searchString;
             searchQP.selectedItems = [{ label: searchString }];
-            searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
+            searchQP.onDidAccept = vi.fn().mockImplementation((listener) => {
                 listener();
             });
 
@@ -1877,7 +1877,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             const tokenCancellation: vscode.CancellationToken = {
                 isCancellationRequested: false,
-                onCancellationRequested: jest.fn(),
+                onCancellationRequested: vi.fn(),
             };
             const myProgress = { test: "test" };
 
@@ -1892,7 +1892,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             searchQP.value = searchString;
             searchQP.selectedItems = [{ label: searchString }];
-            searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
+            searchQP.onDidAccept = vi.fn().mockImplementation((listener) => {
                 listener();
             });
 
@@ -2057,7 +2057,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             const tokenCancellation: vscode.CancellationToken = {
                 isCancellationRequested: false,
-                onCancellationRequested: jest.fn(),
+                onCancellationRequested: vi.fn(),
             };
             const myProgress = { test: "test" };
 
@@ -2072,7 +2072,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             searchQP.value = searchString;
             searchQP.selectedItems = [{ label: searchString }];
-            searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
+            searchQP.onDidAccept = vi.fn().mockImplementation((listener) => {
                 listener();
             });
 
@@ -2208,7 +2208,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             ];
             const tokenCancellation: vscode.CancellationToken = {
                 isCancellationRequested: false,
-                onCancellationRequested: jest.fn(),
+                onCancellationRequested: vi.fn(),
             };
             const myProgress = { test: "test" };
 
@@ -2223,7 +2223,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             searchQP.value = searchString;
             searchQP.selectedItems = [{ label: searchString }];
-            searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
+            searchQP.onDidAccept = vi.fn().mockImplementation((listener) => {
                 listener();
             });
 
@@ -2362,7 +2362,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             ];
             const tokenCancellation: vscode.CancellationToken = {
                 isCancellationRequested: false,
-                onCancellationRequested: jest.fn(),
+                onCancellationRequested: vi.fn(),
             };
             const myProgress = { test: "test" };
 
@@ -2377,7 +2377,7 @@ describe("Dataset Search Unit Tests - function search", () => {
 
             searchQP.value = searchString;
             searchQP.selectedItems = [{ label: searchString }];
-            searchQP.onDidAccept = jest.fn().mockImplementation((listener) => {
+            searchQP.onDidAccept = vi.fn().mockImplementation((listener) => {
                 listener();
             });
 
@@ -2516,7 +2516,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             ];
             const tokenCancellation: vscode.CancellationToken = {
                 isCancellationRequested: false,
-                onCancellationRequested: jest.fn(),
+                onCancellationRequested: vi.fn(),
             };
             const myProgress = { test: "test" };
 
@@ -2529,7 +2529,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             const searchQP = (DatasetSearch as any).searchQuickPick;
             const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
 
-            searchQP.onDidAccept = jest.fn().mockImplementation(async (listener) => {
+            searchQP.onDidAccept = vi.fn().mockImplementation(async (listener) => {
                 searchQP.selectedItems = [{ label: (DatasetSearch as any).optionsQuickPickEntry.label }];
                 listener();
                 await new Promise((resolve) => process.nextTick(resolve));
@@ -2538,7 +2538,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 listener();
             });
 
-            searchQP.onDidHide = jest.fn().mockImplementation(async (listener) => {
+            searchQP.onDidHide = vi.fn().mockImplementation(async (listener) => {
                 await new Promise((resolve) => process.nextTick(resolve));
                 listener();
             });
@@ -2678,7 +2678,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             ];
             const tokenCancellation: vscode.CancellationToken = {
                 isCancellationRequested: false,
-                onCancellationRequested: jest.fn(),
+                onCancellationRequested: vi.fn(),
             };
             const myProgress = { test: "test" };
 
@@ -2691,7 +2691,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             const searchQP = (DatasetSearch as any).searchQuickPick;
             const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
 
-            searchQP.onDidAccept = jest.fn().mockImplementation(async (listener) => {
+            searchQP.onDidAccept = vi.fn().mockImplementation(async (listener) => {
                 searchQP.selectedItems = [{ label: (DatasetSearch as any).optionsQuickPickEntry.label }];
                 listener();
                 await new Promise((resolve) => process.nextTick(resolve));
@@ -2700,7 +2700,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 listener();
             });
 
-            searchQP.onDidHide = jest.fn().mockImplementation(async (listener) => {
+            searchQP.onDidHide = vi.fn().mockImplementation(async (listener) => {
                 await new Promise((resolve) => process.nextTick(resolve));
                 listener();
                 (DatasetSearch as any).savedSearchOptions.regex = true;
@@ -2842,7 +2842,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             ];
             const tokenCancellation: vscode.CancellationToken = {
                 isCancellationRequested: false,
-                onCancellationRequested: jest.fn(),
+                onCancellationRequested: vi.fn(),
             };
             const myProgress = { test: "test" };
 
@@ -2855,7 +2855,7 @@ describe("Dataset Search Unit Tests - function search", () => {
             const searchQP = (DatasetSearch as any).searchQuickPick;
             const optionsQP = (DatasetSearch as any).searchOptionsQuickPick;
 
-            searchQP.onDidAccept = jest.fn().mockImplementation(async (listener) => {
+            searchQP.onDidAccept = vi.fn().mockImplementation(async (listener) => {
                 expect(searchQP.value).toEqual("");
                 searchQP.selectedItems = [{ label: searchString }];
                 listener();
@@ -2864,7 +2864,7 @@ describe("Dataset Search Unit Tests - function search", () => {
                 listener();
             });
 
-            searchQP.onDidHide = jest.fn().mockImplementation(async (listener) => {
+            searchQP.onDidHide = vi.fn().mockImplementation(async (listener) => {
                 await new Promise((resolve) => process.nextTick(resolve));
                 listener();
             });

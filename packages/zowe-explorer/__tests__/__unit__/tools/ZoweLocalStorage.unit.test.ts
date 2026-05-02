@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import { LocalStorageAccess, StorageKeys, ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
@@ -16,7 +17,7 @@ import { Definitions } from "../../../src/configuration/Definitions";
 
 describe("ZoweLocalStorage Unit Tests", () => {
     it("should initialize successfully", () => {
-        const mockGlobalState = { get: jest.fn(), update: jest.fn(), keys: () => [] } as vscode.Memento;
+        const mockGlobalState = { get: vi.fn(), update: vi.fn(), keys: () => [] } as vscode.Memento;
         ZoweLocalStorage.initializeZoweLocalStorage(mockGlobalState);
         expect((ZoweLocalStorage as any).globalState).toEqual(mockGlobalState);
     });
@@ -24,8 +25,8 @@ describe("ZoweLocalStorage Unit Tests", () => {
     it("should get and set values successfully", () => {
         const localStorage = {};
         const mockGlobalState = {
-            get: jest.fn().mockImplementation((key, defaultValue) => localStorage[key] ?? defaultValue),
-            update: jest.fn().mockImplementation((key, value) => (localStorage[key] = value)),
+            get: vi.fn().mockImplementation((key, defaultValue) => localStorage[key] ?? defaultValue),
+            update: vi.fn().mockImplementation((key, value) => (localStorage[key] = value)),
             keys: () => [],
         };
         ZoweLocalStorage.initializeZoweLocalStorage(mockGlobalState);
@@ -37,13 +38,13 @@ describe("ZoweLocalStorage Unit Tests", () => {
         const globalStorage = {};
         const workspaceStorage = {};
         const mockGlobalState = {
-            get: jest.fn().mockImplementation((key, defaultValue) => globalStorage[key] ?? defaultValue),
-            update: jest.fn().mockImplementation((key, value) => (globalStorage[key] = value)),
+            get: vi.fn().mockImplementation((key, defaultValue) => globalStorage[key] ?? defaultValue),
+            update: vi.fn().mockImplementation((key, value) => (globalStorage[key] = value)),
             keys: () => [],
         };
         const mockWorkspaceState = {
-            get: jest.fn().mockImplementation((key, defaultValue) => workspaceStorage[key] ?? defaultValue),
-            update: jest.fn().mockImplementation((key, value) => (workspaceStorage[key] = value)),
+            get: vi.fn().mockImplementation((key, defaultValue) => workspaceStorage[key] ?? defaultValue),
+            update: vi.fn().mockImplementation((key, value) => (workspaceStorage[key] = value)),
             keys: () => [],
         };
         ZoweLocalStorage.initializeZoweLocalStorage(mockGlobalState, mockWorkspaceState);
@@ -61,8 +62,8 @@ describe("ZoweLocalStorage Unit Tests", () => {
     });
 
     it("should set workspace values successfully when setInWorkspace is true", () => {
-        const globalState = { get: jest.fn(), update: jest.fn(), keys: () => [] } as vscode.Memento;
-        const workspaceState = { get: jest.fn(), update: jest.fn(), keys: () => [] } as vscode.Memento;
+        const globalState = { get: vi.fn(), update: vi.fn(), keys: () => [] } as vscode.Memento;
+        const workspaceState = { get: vi.fn(), update: vi.fn(), keys: () => [] } as vscode.Memento;
         ZoweLocalStorage.initializeZoweLocalStorage(globalState, workspaceState);
         ZoweLocalStorage.setValue("fruit" as PersistenceSchemaEnum, "banana", true);
         expect(workspaceState.update).toHaveBeenCalled();
@@ -97,7 +98,7 @@ describe("LocalStorageAccess", () => {
 
     describe("getValue", () => {
         it("calls ZoweLocalStorage.getValue for all readable keys", () => {
-            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(123);
+            const getValueMock = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(123);
             for (const key of keysWithPerm(1)) {
                 expect(LocalStorageAccess.getValue(key)).toBe(123);
                 expect(getValueMock).toHaveBeenCalledWith(key);
@@ -113,8 +114,8 @@ describe("LocalStorageAccess", () => {
 
     describe("setValue", () => {
         it("calls ZoweLocalStorage.setValue for all writable keys", async () => {
-            const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
-            const expectWritableSpy = jest.spyOn(LocalStorageAccess as any, "expectWritable");
+            const setValueMock = vi.spyOn(ZoweLocalStorage, "setValue").mockImplementation((() => undefined) as any);
+            const expectWritableSpy = vi.spyOn(LocalStorageAccess as any, "expectWritable");
             for (const key of keysWithPerm(2)) {
                 await LocalStorageAccess.setValue(key, 123);
                 expect(setValueMock).toHaveBeenCalledWith(key, 123);

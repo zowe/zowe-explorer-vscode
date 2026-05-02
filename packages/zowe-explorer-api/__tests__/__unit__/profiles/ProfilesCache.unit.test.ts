@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as path from "path";
 import * as fs from "fs";
@@ -21,15 +22,34 @@ import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 
-jest.mock("crypto", () => ({
-    ...jest.requireActual("crypto"),
-    X509Certificate: jest.fn(() => ({
+vi.mock("crypto", async () => ({
+    ...(await vi.importActual<typeof import("crypto")>("crypto")),
+    X509Certificate: vi.fn(() => ({
         subject: "mockedSubject",
         fingerprint256: "mockedFingerprint",
     })),
 }));
 
-jest.mock("fs");
+// Explicitly request automocking. Under Vitest, `vi.mock("fs")` without a
+// factory does not consistently produce stand-in spies for every export, so
+// we hand-roll a mock that wraps the real `fs` module and replaces its
+// functions with `vi.fn()` versions. A few path-returning helpers must
+// echo their input to mirror the previous Jest behavior the suite relied on.
+vi.mock("fs", async () => {
+    const actual = await vi.importActual<typeof import("fs")>("fs");
+    const mocked: Record<string, unknown> = {};
+    for (const key of Object.keys(actual) as Array<keyof typeof actual>) {
+        const value = actual[key];
+        mocked[key as string] = typeof value === "function" ? vi.fn() : value;
+    }
+    // `FileManagement.getFullPath` calls `realpathSync` to canonicalize a
+    // path; tests pass `__dirname`-style values and expect them back as-is.
+    const echoFirstArg = (arg: unknown): unknown => arg;
+    const realpathSync = vi.fn(echoFirstArg) as unknown as typeof actual.realpathSync;
+    (realpathSync as any).native = vi.fn(echoFirstArg);
+    mocked.realpathSync = realpathSync;
+    return mocked;
+});
 
 const lpar1Profile: Required<Pick<imperative.IProfileLoaded, "name" | "type" | "profile">> = {
     name: "lpar1",
@@ -100,13 +120,13 @@ function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imp
     const teamConfigApi: Partial<imperative.Config> = {
         api: {
             profiles: {
-                get: jest.fn(),
-                getProfilePathFromName: jest.fn().mockImplementation((x) => x),
+                get: vi.fn(),
+                getProfilePathFromName: vi.fn().mockImplementation((x) => x),
             },
             secure: {
-                secureFields: jest.fn().mockReturnValue([]),
-                securePropsForProfile: jest.fn().mockReturnValue([]),
-                findSecure: jest.fn().mockReturnValue([]),
+                secureFields: vi.fn().mockReturnValue([]),
+                securePropsForProfile: vi.fn().mockReturnValue([]),
+                findSecure: vi.fn().mockReturnValue([]),
             },
         } as any,
         exists: true,
@@ -145,26 +165,26 @@ function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imp
             };
         },
         getTeamConfig: () => teamConfigApi,
-        updateProperty: jest.fn(),
-        updateKnownProperty: jest.fn(),
-        isSecured: jest.fn(),
-        getZoweDir: jest.fn().mockReturnValue("~/.zowe"),
+        updateProperty: vi.fn(),
+        updateKnownProperty: vi.fn(),
+        isSecured: vi.fn(),
+        getZoweDir: vi.fn().mockReturnValue("~/.zowe"),
     } as any;
 }
 
 describe("ProfilesCache", () => {
-    const fakeLogger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
+    const fakeLogger = { debug: vi.fn(), error: vi.fn(), warn: vi.fn() };
     const fakeZoweDir = "~/.zowe";
-    const readProfilesFromDiskSpy = jest.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk");
-    const defaultCredMgrWithKeytarSpy = jest.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar");
+    const readProfilesFromDiskSpy = vi.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk");
+    const defaultCredMgrWithKeytarSpy = vi.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar");
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it("getProfileInfo should initialize ProfileInfo API", async () => {
-        const existsSync = jest.spyOn(fs, "existsSync").mockImplementation();
-        jest.spyOn(FileManagement, "getZoweDir").mockReturnValue(fakeZoweDir);
+        const existsSync = vi.spyOn(fs, "existsSync").mockImplementation((() => undefined) as any);
+        vi.spyOn(FileManagement, "getZoweDir").mockReturnValue(fakeZoweDir);
         const profInfo = await new ProfilesCache(fakeLogger as unknown as imperative.Logger, __dirname).getProfileInfo();
         expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
         expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledTimes(1);
@@ -182,38 +202,38 @@ describe("ProfilesCache", () => {
 
     describe("getCredentialManagerOptions", () => {
         it("should return undefined if imperative.json does not exist", () => {
-            jest.spyOn(fs, "existsSync").mockReturnValue(false);
+            vi.spyOn(fs, "existsSync").mockReturnValue(false);
             const options = ProfilesCache.getCredentialManagerOptions();
             expect(options).toBeUndefined();
         });
 
         it("should return undefined if imperative.json does not contain credentialManagerOptions", () => {
-            jest.spyOn(fs, "existsSync").mockReturnValue(true);
-            jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({}));
+            vi.spyOn(fs, "existsSync").mockReturnValue(true);
+            vi.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({}));
             const options = ProfilesCache.getCredentialManagerOptions();
             expect(options).toBeUndefined();
         });
 
         it("should return credentialManagerOptions if they exist in imperative.json", () => {
             const mockOptions = { key: "value" };
-            jest.spyOn(fs, "existsSync").mockReturnValue(true);
-            jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({ credentialManagerOptions: mockOptions }));
+            vi.spyOn(fs, "existsSync").mockReturnValue(true);
+            vi.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({ credentialManagerOptions: mockOptions }));
             const options = ProfilesCache.getCredentialManagerOptions();
             expect(options).toEqual(mockOptions);
         });
 
         it("should return persistence value from imperative.json if it exists", () => {
             const mockOptions = { persist: "session" };
-            jest.spyOn(fs, "existsSync").mockReturnValue(true);
-            jest.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({ credentialManagerOptions: mockOptions }));
+            vi.spyOn(fs, "existsSync").mockReturnValue(true);
+            vi.spyOn(fs, "readFileSync").mockReturnValue(JSON.stringify({ credentialManagerOptions: mockOptions }));
             const persistence = ProfilesCache.getCredentialManagerOptions()?.persist;
             expect(persistence).toEqual("session");
         });
 
         it("should return undefined and log a warning if imperative.json is malformed", () => {
-            jest.spyOn(fs, "existsSync").mockReturnValue(true);
-            jest.spyOn(fs, "readFileSync").mockReturnValue("not json");
-            const loggerSpy = jest.spyOn(imperative.Logger.prototype, "warn");
+            vi.spyOn(fs, "existsSync").mockReturnValue(true);
+            vi.spyOn(fs, "readFileSync").mockReturnValue("not json");
+            const loggerSpy = vi.spyOn(imperative.Logger.prototype, "warn");
             const options = ProfilesCache.getCredentialManagerOptions();
             expect(options).toBeUndefined();
             expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to read credential manager options from imperative.json"));
@@ -234,8 +254,8 @@ describe("ProfilesCache", () => {
             failNotFound: true,
             message: "fake",
         };
-        const existsSync = jest.spyOn(fs, "existsSync").mockImplementation();
-        jest.spyOn(FileManagement, "getZoweDir").mockReturnValue(fakeZoweDir);
+        const existsSync = vi.spyOn(fs, "existsSync").mockImplementation((() => undefined) as any);
+        vi.spyOn(FileManagement, "getZoweDir").mockReturnValue(fakeZoweDir);
         const profilesCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger, __dirname);
         profilesCache.allProfiles = [profileMock];
         await profilesCache.getProfileInfo();
@@ -271,8 +291,8 @@ describe("ProfilesCache", () => {
             },
         ];
         process.env.ZOWE_USER = "fakeuser";
-        const existsSync = jest.spyOn(fs, "existsSync").mockImplementation();
-        jest.spyOn(FileManagement, "getZoweDir").mockReturnValue(fakeZoweDir);
+        const existsSync = vi.spyOn(fs, "existsSync").mockImplementation((() => undefined) as any);
+        vi.spyOn(FileManagement, "getZoweDir").mockReturnValue(fakeZoweDir);
         const profilesCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger, __dirname);
         profilesCache.allProfiles = profileMock;
         await profilesCache.getProfileInfo();
@@ -365,8 +385,8 @@ describe("ProfilesCache", () => {
         profCache.allProfiles = [lpar1Profile as imperative.IProfileLoaded];
         (profCache as any).defaultProfileByType = new Map([["zosmf", { ...profCache.allProfiles[0] }]]);
         expect(profCache.allProfiles[0].profile).toMatchObject(lpar1Profile.profile);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValueOnce({
-            getTeamConfig: jest.fn().mockReturnValue({ properties: { autoStore: false } }),
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValueOnce({
+            getTeamConfig: vi.fn().mockReturnValue({ properties: { autoStore: false } }),
         } as unknown as imperative.ProfileInfo);
         await profCache.updateCachedProfile({
             ...lpar1Profile,
@@ -404,15 +424,15 @@ describe("ProfilesCache", () => {
     describe("refresh", () => {
         const profileTypes = ["zosmf", "zftp"];
         const fakeApiRegister = {
-            registeredApiTypes: jest.fn().mockReturnValue(profileTypes),
+            registeredApiTypes: vi.fn().mockReturnValue(profileTypes),
         };
 
         it("should still try to refresh even if the team config doesn't exist", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            const getTeamConfigMock = jest.spyOn(imperative.ProfileInfo.prototype, "getTeamConfig").mockReturnValue({
+            const getTeamConfigMock = vi.spyOn(imperative.ProfileInfo.prototype, "getTeamConfig").mockReturnValue({
                 exists: false,
             } as any);
-            const getProfileInfoMock = jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([]));
+            const getProfileInfoMock = vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([]));
             await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
             expect(getTeamConfigMock).not.toHaveBeenCalled();
             expect(getProfileInfoMock).toHaveBeenCalled();
@@ -423,7 +443,7 @@ describe("ProfilesCache", () => {
 
         it("should refresh profile data for multiple profile types", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
             await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
             expect(profCache.allProfiles.length).toEqual(2);
             expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);
@@ -433,7 +453,7 @@ describe("ProfilesCache", () => {
 
         it("should refresh profile data for existing profile and keep object reference", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            const profInfoSpy = jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
+            const profInfoSpy = vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
             await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
             expect(profCache.allProfiles.length).toEqual(2);
             expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);
@@ -447,10 +467,10 @@ describe("ProfilesCache", () => {
         });
 
         it("should refresh profile data and add secure values to Censor utility", async () => {
-            const setCensoredOptionsSpy = jest.spyOn(imperative.Censor, "setCensoredOptions");
+            const setCensoredOptionsSpy = vi.spyOn(imperative.Censor, "setCensoredOptions");
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
             const profInfoMock1 = createProfInfoMock([lpar1Profile, zftpProfile]);
-            const profInfoSpy = jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock1);
+            const profInfoSpy = vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock1);
             await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
             expect(profCache.allProfiles.length).toEqual(2);
             expect(profCache.allProfiles[0]).toMatchObject(lpar1Profile);
@@ -476,7 +496,7 @@ describe("ProfilesCache", () => {
 
         it("should refresh profile data for and merge tokens with base profile", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(
                 createProfInfoMock([lpar1ProfileWithToken, lpar2ProfileWithToken, baseProfileWithToken])
             );
             await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
@@ -490,7 +510,7 @@ describe("ProfilesCache", () => {
         it("should handle error when refreshing profile data", async () => {
             const fakeError = "Profile IO Error";
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(profCache, "getProfileInfo").mockImplementation(() => {
+            vi.spyOn(profCache, "getProfileInfo").mockImplementation(() => {
                 throw fakeError;
             });
             await expect(profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient)).rejects.toBe(fakeError);
@@ -500,7 +520,7 @@ describe("ProfilesCache", () => {
 
         it("should remove old types from profilesByType and defaultProfileByType maps when reloading profiles", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([]));
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([]));
             (profCache as any).profilesByType.set("base", { name: "someProf" as any });
             (profCache as any).defaultProfileByType.set("base", { name: "someProf" as any });
             const promise = profCache.refresh();
@@ -515,8 +535,8 @@ describe("ProfilesCache", () => {
 
         it("should not create duplicate profile types by running profCache.refresh()", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValueOnce(createProfInfoMock([]));
-            jest.spyOn(profCache as any, "getAllProfileTypes").mockReturnValue(["ssh", "base"]);
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValueOnce(createProfInfoMock([]));
+            vi.spyOn(profCache as any, "getAllProfileTypes").mockReturnValue(["ssh", "base"]);
             await profCache.refresh();
             expect((profCache as any).allTypes).toEqual(["ssh", "base"]);
         });
@@ -559,7 +579,7 @@ describe("ProfilesCache", () => {
 
     it("getNamesForType should return array of profile names for given type", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, lpar2Profile]));
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, lpar2Profile]));
         const profileNames = await profCache.getNamesForType("zosmf");
         expect(profileNames).toEqual(["lpar1", "lpar2"]);
     });
@@ -570,7 +590,7 @@ describe("ProfilesCache", () => {
         it("should update the base profile on login", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
             const mockProfInfo = createProfInfoMock([lpar1Profile, lpar2Profile]);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(mockProfInfo);
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(mockProfInfo);
             await profCache.updateBaseProfileFileLogin(lpar1Profile as any, updProfile);
 
             expect(mockProfInfo.updateProperty).toHaveBeenCalledTimes(2);
@@ -578,7 +598,7 @@ describe("ProfilesCache", () => {
         it("should update the base profile on login", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
             const mockProfInfo = createProfInfoMock([lpar1Profile, lpar2Profile]);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(mockProfInfo);
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(mockProfInfo);
             await profCache.updateBaseProfileFileLogout(lpar1Profile as any);
 
             expect(mockProfInfo.updateKnownProperty).toHaveBeenCalledTimes(2);
@@ -588,7 +608,7 @@ describe("ProfilesCache", () => {
     describe("fetchAllProfilesByType", () => {
         it("should return array of profile objects for given type", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, lpar2Profile]));
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, lpar2Profile]));
             const profiles = await profCache.fetchAllProfilesByType("zosmf");
             expect(profiles.length).toBe(2);
             expect(profiles[0]).toMatchObject(lpar1Profile);
@@ -598,7 +618,7 @@ describe("ProfilesCache", () => {
         it("should not remove token from service profile if base profile overrides it", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
             (profCache as any).defaultProfileByType = new Map([["base", baseProfileWithToken]]);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1ProfileWithToken, lpar2ProfileWithToken]));
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1ProfileWithToken, lpar2ProfileWithToken]));
             const profiles = await profCache.fetchAllProfilesByType("zosmf");
             expect(profiles.length).toBe(2);
             expect(profiles[0].profile?.tokenType).toBe(lpar1ProfileWithToken.profile.tokenType);
@@ -609,7 +629,7 @@ describe("ProfilesCache", () => {
 
         it("should return empty array for unknown profile type", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
             const profiles = await profCache.fetchAllProfilesByType("zftp");
             expect(profiles.length).toBe(0);
         });
@@ -618,7 +638,7 @@ describe("ProfilesCache", () => {
     it("fetchAllProfiles should return array of profile objects for all types", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         (profCache as any).allTypes = ["zosmf", "zftp"];
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile, zftpProfile]));
         const profiles = await profCache.fetchAllProfiles();
         expect(profiles.length).toBe(2);
         expect(profiles[0]).toMatchObject(lpar1Profile);
@@ -628,21 +648,21 @@ describe("ProfilesCache", () => {
     describe("directLoad", () => {
         it("should return profile object if name and type match", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
             const profile = await profCache.directLoad("zosmf", "lpar1");
             expect(profile).toMatchObject(lpar1Profile);
         });
 
         it("should not return profile if type not found", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
             const profile = await profCache.directLoad("zftp", "lpar1");
             expect(profile).toBeUndefined();
         });
 
         it("should not return profile if name not found", async () => {
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-            jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
             const profile = await profCache.directLoad("zosmf", "lpar2");
             expect(profile).toBeUndefined();
         });
@@ -651,7 +671,7 @@ describe("ProfilesCache", () => {
     describe("convertV1ProfToConfig", () => {
         it("Should convert v1 profiles to config file", async () => {
             const profInfo = createProfInfoMock([lpar1Profile]);
-            jest.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
+            vi.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
                 return {
                     profilesConverted: { zosmf: ["profile1"] },
                     profilesFailed: {},
@@ -662,7 +682,7 @@ describe("ProfilesCache", () => {
         });
         it("Should convert v1 profiles to config file with profilesFailed", async () => {
             const profInfo = createProfInfoMock([lpar1Profile]);
-            jest.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
+            vi.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
                 return {
                     profilesConverted: {},
                     profilesFailed: [{ name: ["profile2"], types: "zosmf", error: "Error converting" }],
@@ -672,11 +692,11 @@ describe("ProfilesCache", () => {
             await expect(ProfilesCache.convertV1ProfToConfig(profInfo)).resolves.not.toThrow();
         });
         it("Should convert v1 profiles to config even if rename of profiles directory fails", async () => {
-            jest.spyOn(fs, "renameSync").mockImplementationOnce(() => {
+            vi.spyOn(fs, "renameSync").mockImplementationOnce(() => {
                 throw new Error("Error renaming file");
             });
             const profInfo = createProfInfoMock([lpar1Profile]);
-            jest.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
+            vi.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
                 return {
                     profilesConverted: {},
                     profilesFailed: [{ name: ["profile2"], types: "zosmf", error: "Error converting" }],
@@ -687,7 +707,7 @@ describe("ProfilesCache", () => {
         });
         it("Should reject if error thrown other than renaming profiles directory", async () => {
             const profInfo = createProfInfoMock([lpar1Profile]);
-            jest.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
+            vi.spyOn(imperative.ConvertV1Profiles, "convert").mockImplementationOnce(() => {
                 throw new Error("Error converting config");
             });
             await expect(ProfilesCache.convertV1ProfToConfig(profInfo)).rejects.toThrow("Error converting config");
@@ -697,7 +717,7 @@ describe("ProfilesCache", () => {
     describe("getProfileSessionWithVscProxy", () => {
         it("should return same session if no VSC proxy values", () => {
             const fakeSession = imperative.Session.createFromUrl(new URL("https://example.com"));
-            jest.spyOn(VscSettings, "getVsCodeProxySettings").mockReturnValue(undefined as any);
+            vi.spyOn(VscSettings, "getVsCodeProxySettings").mockReturnValue(undefined as any);
             expect(ProfilesCache.getProfileSessionWithVscProxy(fakeSession)).toEqual(fakeSession);
         });
         it("should return updated session if VSC proxy values", () => {
@@ -710,15 +730,15 @@ describe("ProfilesCache", () => {
                 proxy_strict_ssl: true,
             };
             fakeSession.ISession.proxy = proxyValues as any;
-            jest.spyOn(VscSettings, "getVsCodeProxySettings").mockReturnValue(proxyValues as any);
+            vi.spyOn(VscSettings, "getVsCodeProxySettings").mockReturnValue(proxyValues as any);
             expect(ProfilesCache.getProfileSessionWithVscProxy(fakeSession)).toEqual(fakeSession);
         });
     });
 
     describe("isCertFileValid", () => {
         it("should return true with valid certificate file", () => {
-            jest.spyOn(fs, "readFileSync");
-            jest.spyOn(crypto, "X509Certificate").mockImplementationOnce(() => ({
+            vi.spyOn(fs, "readFileSync");
+            vi.spyOn(crypto, "X509Certificate").mockImplementationOnce(() => ({
                 subject: "CN=Test",
                 fingerprint256: "mockedFingerprint",
                 validFrom: "2022-01-01",
@@ -729,8 +749,8 @@ describe("ProfilesCache", () => {
         });
         it("should log invalid cert message and return false with invalid certificate file", () => {
             const logger = fakeLogger as unknown as imperative.Logger;
-            jest.spyOn(fs, "readFileSync");
-            jest.spyOn(crypto, "X509Certificate").mockImplementationOnce(() => ({
+            vi.spyOn(fs, "readFileSync");
+            vi.spyOn(crypto, "X509Certificate").mockImplementationOnce(() => ({
                 subject: "CN=Test",
                 fingerprint256: "mockedFingerprint",
                 validFrom: "2022-01-01",
@@ -744,7 +764,7 @@ describe("ProfilesCache", () => {
         it("should log caught error and return false if error thrown in try", () => {
             const logger = fakeLogger as unknown as imperative.Logger;
             const error = new Error("mocked error");
-            jest.spyOn(fs, "readFileSync").mockImplementationOnce(() => {
+            vi.spyOn(fs, "readFileSync").mockImplementationOnce(() => {
                 throw error;
             });
             const profCache = new ProfilesCache(logger, __dirname);
@@ -756,42 +776,42 @@ describe("ProfilesCache", () => {
 
     it("getProfileFromConfig should return profile attributes for given name", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
         const profAttrs = await profCache.getProfileFromConfig("lpar1");
         expect(profAttrs).toMatchObject({ profName: "lpar1", profType: "zosmf" });
     });
 
     it("getProfileFromConfig not return profile if name not found", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
         const profAttrs = await profCache.getProfileFromConfig("lpar2");
         expect(profAttrs).toBeUndefined();
     });
 
     it("getProfileFromConfig not return profile if type not found", async () => {
         const profCache = new ProfilesCache(fakeLogger as any);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
         const profAttrs = await profCache.getProfileFromConfig("lpar1", "zftp");
         expect(profAttrs).toBeUndefined();
     });
 
     it("getLoadedProfConfig should return profile object for given name", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
         const profile = await profCache.getLoadedProfConfig("lpar1");
         expect(profile).toMatchObject(lpar1Profile);
     });
 
     it("getLoadedProfConfig should not return profile if name not found", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
         const profile = await profCache.getLoadedProfConfig("lpar2");
         expect(profile).toBeUndefined();
     });
 
     it("getLoadedProfConfig should not return profile if type not found", async () => {
         const profCache = new ProfilesCache(fakeLogger as any);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([{ name: "lpar1", type: "zosmf" }]));
         const profile = await profCache.getLoadedProfConfig("lpar1", "zftp");
         expect(profile).toBeUndefined();
     });
@@ -810,21 +830,21 @@ describe("ProfilesCache", () => {
 
     it("fetchBaseProfile should return base profile object", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([baseProfile]));
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([baseProfile]));
         const profile = await profCache.fetchBaseProfile();
         expect(profile).toMatchObject(baseProfile);
     });
 
     it("fetchBaseProfile should return typeless profile if base profile not found", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([]));
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([]));
         const profile = await profCache.fetchBaseProfile("lpar1.zosmf");
         expect(profile).toMatchObject({ name: "lpar1", type: "base" });
     });
 
     it("fetchBaseProfile should return typeless profile if base profile does not contain token value", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([baseProfile]));
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([baseProfile]));
         const profile = await profCache.fetchBaseProfile("lpar1.zosmf");
         expect(profile).toMatchObject({ name: "lpar1", type: "base" });
     });
@@ -832,7 +852,7 @@ describe("ProfilesCache", () => {
     it("fetchBaseProfile should return base profile if it contains token value", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         const profInfoMock = createProfInfoMock([baseProfile]);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock);
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock);
         mocked(profInfoMock.getTeamConfig().api.secure.securePropsForProfile).mockReturnValue(["tokenValue"]);
         const profile = await profCache.fetchBaseProfile("lpar1.zosmf");
         expect(profile).toMatchObject(baseProfile);
@@ -841,7 +861,7 @@ describe("ProfilesCache", () => {
     it("fetchBaseProfile should return typeless profile up one level if it contains token value", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
         const profInfoMock = createProfInfoMock([]);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock);
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock);
         mocked(profInfoMock.getTeamConfig().api.secure.secureFields).mockReturnValue(["sysplex1.properties.tokenValue"]);
         const profile = await profCache.fetchBaseProfile("sysplex1.lpar1.zosmf");
         expect(profile).toMatchObject({ name: "sysplex1", type: "base" });
@@ -849,22 +869,22 @@ describe("ProfilesCache", () => {
 
     it("fetchBaseProfile should return undefined if base profile not found", async () => {
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(createProfInfoMock([lpar1Profile]));
         const profile = await profCache.fetchBaseProfile();
         expect(profile).toBeUndefined();
     });
 
     it("isCredentialsSecured should invoke ProfileInfo API", async () => {
-        const isSecuredMock = jest.fn().mockReturnValue(false).mockReturnValueOnce(true);
+        const isSecuredMock = vi.fn().mockReturnValue(false).mockReturnValueOnce(true);
         const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue({ isSecured: isSecuredMock } as unknown as imperative.ProfileInfo);
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue({ isSecured: isSecuredMock } as unknown as imperative.ProfileInfo);
         expect(await profCache.isCredentialsSecured()).toBe(true);
         expect(await profCache.isCredentialsSecured()).toBe(false);
     });
 
     it("isCredentialsSecured should handle errors from ProfileInfo API", async () => {
-        const profCache = new ProfilesCache({ error: jest.fn() } as unknown as imperative.Logger);
-        jest.spyOn(profCache, "getProfileInfo").mockResolvedValue(undefined as unknown as imperative.ProfileInfo);
+        const profCache = new ProfilesCache({ error: vi.fn() } as unknown as imperative.Logger);
+        vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(undefined as unknown as imperative.ProfileInfo);
         expect(await profCache.isCredentialsSecured()).toBe(true);
         expect((profCache as any).log.error).toHaveBeenCalledTimes(1);
     });

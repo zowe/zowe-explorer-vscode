@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import { Gui, imperative, ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
@@ -21,7 +22,7 @@ import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { Constants } from "../../../src/configuration/Constants";
 
-jest.mock("../../../src/tools/ZoweLocalStorage");
+vi.mock("../../../src/tools/ZoweLocalStorage");
 
 const globalMocks = {
     testSession: createISession(),
@@ -34,7 +35,7 @@ describe("ZoweCommandProvider Unit Tests", () => {
             const testNode = new (ZoweTreeNode as any)("test", vscode.TreeItemCollapsibleState.None, undefined);
             Object.defineProperty(ZoweCommandProvider.prototype, "mOnDidChangeTreeData", {
                 value: {
-                    fire: jest.fn(),
+                    fire: vi.fn(),
                 },
                 configurable: true,
             });
@@ -51,50 +52,50 @@ describe("ZoweCommandProvider Unit Tests", () => {
         testNode.contextValue = "session server";
 
         beforeEach(async () => {
-            jest.spyOn(ProfilesCache.prototype, "refresh").mockImplementation();
+            vi.spyOn(ProfilesCache.prototype, "refresh").mockImplementation((() => undefined) as any);
             const profilesInstance = await Profiles.createInstance(undefined as any);
             Object.defineProperty(profilesInstance, "log", {
                 value: {
-                    error: jest.fn(),
+                    error: vi.fn(),
                 },
             });
-            jest.spyOn(ZoweCommandProvider.prototype, "refresh").mockImplementationOnce(() => {});
-            jest.spyOn(SharedContext, "isSessionNotFav").mockReturnValue(true);
+            vi.spyOn(ZoweCommandProvider.prototype, "refresh").mockImplementationOnce(() => {});
+            vi.spyOn(SharedContext, "isSessionNotFav").mockReturnValue(true);
         });
         it("should check current profile and perform the case when status is 'active'", async () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             const profileStatus = { name: "test", status: "active" };
-            jest.spyOn(Profiles, "getInstance").mockReturnValue({
-                checkCurrentProfile: jest.fn().mockResolvedValue(profileStatus),
-                loadNamedProfile: jest.fn().mockReturnValue(globalMocks.testProfile),
+            vi.spyOn(Profiles, "getInstance").mockReturnValue({
+                checkCurrentProfile: vi.fn().mockResolvedValue(profileStatus),
+                loadNamedProfile: vi.fn().mockReturnValue(globalMocks.testProfile),
             } as any);
             await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
         });
         it("should check current profile and perform the case when status is 'unverified'", async () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             const profileStatus = { name: "test", status: "unverified" };
-            jest.spyOn(Profiles, "getInstance").mockReturnValue({
-                checkCurrentProfile: jest.fn().mockResolvedValue(profileStatus),
-                loadNamedProfile: jest.fn().mockReturnValue(globalMocks.testProfile),
+            vi.spyOn(Profiles, "getInstance").mockReturnValue({
+                checkCurrentProfile: vi.fn().mockResolvedValue(profileStatus),
+                loadNamedProfile: vi.fn().mockReturnValue(globalMocks.testProfile),
             } as any);
 
             await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
         });
         it("should check current profile and perform the case when status is 'inactive'", async () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             Object.defineProperty(ZoweCommandProvider, "mOnDidChangeTreeData", {
                 value: {
-                    debug: jest.fn(),
+                    debug: vi.fn(),
                 },
                 configurable: true,
             });
             const profileStatus = { name: "test", status: "inactive" };
-            jest.spyOn(Profiles, "getInstance").mockReturnValue({
-                checkCurrentProfile: jest.fn().mockResolvedValue(profileStatus),
-                loadNamedProfile: jest.fn().mockReturnValue(globalMocks.testProfile),
-                showProfileInactiveMsg: jest.fn(),
+            vi.spyOn(Profiles, "getInstance").mockReturnValue({
+                checkCurrentProfile: vi.fn().mockResolvedValue(profileStatus),
+                loadNamedProfile: vi.fn().mockReturnValue(globalMocks.testProfile),
+                showProfileInactiveMsg: vi.fn(),
             } as any);
-            const profileInactive = jest.spyOn(Profiles.getInstance(), "showProfileInactiveMsg");
+            const profileInactive = vi.spyOn(Profiles.getInstance(), "showProfileInactiveMsg");
             await expect(ZoweCommandProvider.prototype.checkCurrentProfile(testNode)).resolves.toEqual(profileStatus);
             expect(profileInactive).toHaveBeenCalledWith(globalMocks.testProfile.name);
         });
@@ -103,7 +104,7 @@ describe("ZoweCommandProvider Unit Tests", () => {
     describe("integrated terminals", () => {
         beforeEach(() => {
             // Simulate that the setting is enabled : )
-            jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation(
+            vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation(
                 (setting) => setting === Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS
             );
         });
@@ -119,15 +120,15 @@ describe("ZoweCommandProvider Unit Tests", () => {
                 terminalName: "test-terminal",
                 pseudoTerminal: {},
                 formatCommandLine: (cmd: string) => "test-" + cmd,
-                history: { getSearchHistory: () => ["old-cmd-01", "old-cmd-02"], addSearchHistory: jest.fn() },
-                runCommand: jest.fn().mockRejectedValue(testError),
+                history: { getSearchHistory: () => ["old-cmd-01", "old-cmd-02"], addSearchHistory: vi.fn() },
+                runCommand: vi.fn().mockRejectedValue(testError),
             };
             const testProfile: any = { name: "test", profile: { user: "firstName", password: "12345" } };
-            const showInformationMessage = jest.fn();
+            const showInformationMessage = vi.fn();
             Object.defineProperty(vscode.window, "showInformationMessage", { value: showInformationMessage });
 
             it("should not create a terminal if the profile or the command is undefined", async () => {
-                const createTerminal = jest.fn().mockReturnValue({ show: jest.fn() });
+                const createTerminal = vi.fn().mockReturnValue({ show: vi.fn() });
                 Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal, configurable: true });
                 await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, null, "test");
                 await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, undefined, "test");
@@ -137,10 +138,10 @@ describe("ZoweCommandProvider Unit Tests", () => {
             });
 
             it("should not create a terminal if user escapes the input box and useIntegratedTerminals is false", async () => {
-                jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation(
+                vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation(
                     (setting) => setting !== Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS
                 );
-                const createTerminal = jest.fn().mockReturnValue({ show: jest.fn() });
+                const createTerminal = vi.fn().mockReturnValue({ show: vi.fn() });
                 Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal, configurable: true });
                 await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, "");
                 expect(createTerminal).not.toHaveBeenCalled();
@@ -148,7 +149,7 @@ describe("ZoweCommandProvider Unit Tests", () => {
             });
 
             it("should create an integrated terminal", async () => {
-                const createTerminal = jest.fn().mockReturnValue({ show: jest.fn() });
+                const createTerminal = vi.fn().mockReturnValue({ show: vi.fn() });
                 Object.defineProperty(vscode.window, "createTerminal", { value: createTerminal, configurable: true });
 
                 await ZoweCommandProvider.prototype.issueCommand.call(mockCmdProvider, testProfile, "test");
@@ -173,7 +174,7 @@ describe("ZoweCommandProvider Unit Tests", () => {
                     dialogs: { selectProfile: "select profile" },
                 };
 
-                jest.spyOn(Gui, "showQuickPick").mockResolvedValue("prof02" as any);
+                vi.spyOn(Gui, "showQuickPick").mockResolvedValue("prof02" as any);
                 const selected = await ZoweCommandProvider.prototype.selectServiceProfile.call(
                     mockCmdProvider,
                     [{ name: "prof01" }, { name: "prof02" }],
@@ -188,8 +189,8 @@ describe("ZoweCommandProvider Unit Tests", () => {
                     operationCancelled: "Operation cancelled",
                 };
 
-                jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
-                const spyMessage = jest.spyOn(ZoweLogger, "info").mockImplementation(jest.fn());
+                vi.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
+                const spyMessage = vi.spyOn(ZoweLogger, "info").mockImplementation(vi.fn());
                 const selected = await ZoweCommandProvider.prototype.selectServiceProfile.call(
                     mockCmdProvider,
                     [{ name: "prof01" }, { name: "prof02" }],

@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { Mock, vi } from "vitest";
 
 import * as vscode from "vscode";
 import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
@@ -21,7 +22,7 @@ import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { DatasetSearch } from "../../../../src/trees/dataset/DatasetSearch";
 import { DatasetTableView } from "../../../../src/trees/dataset/DatasetTableView";
 
-jest.mock("../../../../src/tools/ZoweLocalStorage");
+vi.mock("../../../../src/tools/ZoweLocalStorage");
 
 describe("Test src/dataset/extension", () => {
     describe("initDatasetProvider", () => {
@@ -33,220 +34,220 @@ describe("Test src/dataset/extension", () => {
             value: {
                 label: "test",
                 getParent: () => "test",
-                openDs: jest.fn(),
+                openDs: vi.fn(),
                 command: { command: "vscode.open", title: "", arguments: [vscode.Uri.from({ scheme: ZoweScheme.DS, path: "TEST.DS" })] },
             },
             _: { _: "_" },
         };
-        const dsProvider: { [key: string]: jest.Mock } = {
-            createZoweSchema: jest.fn(),
-            createZoweSession: jest.fn(),
-            filterPrompt: jest.fn(),
-            rename: jest.fn(),
-            onDidChangeConfiguration: jest.fn(),
-            getTreeView: jest.fn().mockReturnValue({
-                onDidChangeVisibility: jest.fn(),
+        const dsProvider: { [key: string]: Mock } = {
+            createZoweSchema: vi.fn(),
+            createZoweSession: vi.fn(),
+            filterPrompt: vi.fn(),
+            rename: vi.fn(),
+            onDidChangeConfiguration: vi.fn(),
+            getTreeView: vi.fn().mockReturnValue({
+                onDidChangeVisibility: vi.fn(),
             }),
-            sortPdsMembersDialog: jest.fn(),
-            filterPdsMembersDialog: jest.fn(),
-            openWithEncoding: jest.fn(),
+            sortPdsMembersDialog: vi.fn(),
+            filterPdsMembersDialog: vi.fn(),
+            openWithEncoding: vi.fn(),
         };
         const commands: IJestIt[] = [
             {
                 name: "zowe.all.config.init",
-                mock: [{ spy: jest.spyOn(dsProvider, "createZoweSchema"), arg: [dsProvider] }],
+                mock: [{ spy: vi.spyOn(dsProvider, "createZoweSchema"), arg: [dsProvider] }],
             },
             {
                 name: "zowe.ds.addSession",
-                mock: [{ spy: jest.spyOn(dsProvider, "createZoweSession"), arg: [dsProvider] }],
+                mock: [{ spy: vi.spyOn(dsProvider, "createZoweSession"), arg: [dsProvider] }],
             },
             {
                 name: "zowe.ds.refreshAll",
-                mock: [{ spy: jest.spyOn(SharedActions, "refreshAll"), arg: [] }],
+                mock: [{ spy: vi.spyOn(SharedActions, "refreshAll"), arg: [] }],
             },
             {
                 name: "zowe.ds.refresh",
-                mock: [{ spy: jest.spyOn(SharedActions, "refreshProvider"), arg: [dsProvider] }],
+                mock: [{ spy: vi.spyOn(SharedActions, "refreshProvider"), arg: [dsProvider] }],
             },
             {
                 name: "zowe.ds.refreshNode",
                 mock: [
-                    { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
-                    { spy: jest.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(DatasetActions, "refreshPS"), arg: [test.value] },
+                    { spy: vi.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
+                    { spy: vi.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
+                    { spy: vi.spyOn(DatasetActions, "refreshPS"), arg: [test.value] },
                 ],
             },
             {
                 name: "zowe.ds.refreshDataset",
                 mock: [
-                    { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
-                    { spy: jest.spyOn(SharedContext, "isPdsNotFav"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(DatasetActions, "refreshDataset"), arg: [test.value, dsProvider] },
+                    { spy: vi.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
+                    { spy: vi.spyOn(SharedContext, "isPdsNotFav"), arg: [test.value], ret: true },
+                    { spy: vi.spyOn(DatasetActions, "refreshDataset"), arg: [test.value, dsProvider] },
                 ],
             },
             {
                 name: "zowe.ds.pattern",
-                mock: [{ spy: jest.spyOn(dsProvider, "filterPrompt"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(dsProvider, "filterPrompt"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.createDataset",
-                mock: [{ spy: jest.spyOn(DatasetActions, "createFile"), arg: [test.value, dsProvider] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "createFile"), arg: [test.value, dsProvider] }],
             },
             {
                 name: "zowe.ds.createMember",
-                mock: [{ spy: jest.spyOn(DatasetActions, "createMember"), arg: [test.value, dsProvider] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "createMember"), arg: [test.value, dsProvider] }],
             },
             {
                 name: "zowe.ds.deleteDataset",
-                mock: [{ spy: jest.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value, undefined] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value, undefined] }],
             },
             {
                 name: "zowe.ds.allocateLike",
-                mock: [{ spy: jest.spyOn(DatasetActions, "allocateLike"), arg: [dsProvider, test.value] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "allocateLike"), arg: [dsProvider, test.value] }],
             },
             {
                 name: "zowe.ds.pdsSearchFor",
-                mock: [{ spy: jest.spyOn(DatasetSearch, "search"), arg: [test.context, test.value] }],
+                mock: [{ spy: vi.spyOn(DatasetSearch, "search"), arg: [test.context, test.value] }],
             },
             {
                 name: "zowe.ds.filteredDataSetsSearchFor",
-                mock: [{ spy: jest.spyOn(DatasetSearch, "search"), arg: [test.context, test.value] }],
+                mock: [{ spy: vi.spyOn(DatasetSearch, "search"), arg: [test.context, test.value] }],
             },
             {
                 name: "zowe.ds.uploadDialog",
-                mock: [{ spy: jest.spyOn(DatasetActions, "uploadDialog"), arg: [test.value, dsProvider] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "uploadDialog"), arg: [test.value, dsProvider] }],
             },
             {
                 name: "zowe.ds.uploadDialogWithEncoding",
-                mock: [{ spy: jest.spyOn(DatasetActions, "uploadDialogWithEncoding"), arg: [test.value, dsProvider] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "uploadDialogWithEncoding"), arg: [test.value, dsProvider] }],
             },
             {
                 name: "zowe.ds.downloadAllMembers",
-                mock: [{ spy: jest.spyOn(DatasetActions, "downloadAllMembers"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "downloadAllMembers"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.downloadMember",
-                mock: [{ spy: jest.spyOn(DatasetActions, "downloadMember"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "downloadMember"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.downloadDataSet",
-                mock: [{ spy: jest.spyOn(DatasetActions, "downloadDataSet"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "downloadDataSet"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.deleteMember",
-                mock: [{ spy: jest.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value, undefined] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "deleteDatasetPrompt"), arg: [dsProvider, test.value, undefined] }],
             },
             {
                 name: "zowe.ds.editDataSet",
                 mock: [
-                    { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
-                    { spy: jest.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
+                    { spy: vi.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
+                    { spy: vi.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
                 ],
             },
             {
                 name: "zowe.ds.editMember",
                 mock: [
-                    { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
-                    { spy: jest.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
+                    { spy: vi.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
+                    { spy: vi.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
                 ],
             },
             {
                 name: "zowe.ds.submitJcl",
-                mock: [{ spy: jest.spyOn(DatasetActions, "submitJcl"), arg: [dsProvider, test.value] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "submitJcl"), arg: [dsProvider, test.value] }],
             },
             {
                 name: "zowe.ds.zoom",
-                mock: [{ spy: jest.spyOn(DatasetActions, "zoom"), arg: [] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "zoom"), arg: [] }],
             },
             {
                 name: "zowe.ds.submitMember",
-                mock: [{ spy: jest.spyOn(DatasetActions, "submitMember"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "submitMember"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.showAttributes",
                 mock: [
-                    { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
-                    { spy: jest.spyOn(SharedContext, "isVsam"), arg: [test.value], ret: false },
-                    { spy: jest.spyOn(SharedContext, "isPds"), arg: [test.value], ret: false },
-                    { spy: jest.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(DatasetActions, "showAttributes"), arg: [test.value, dsProvider] },
+                    { spy: vi.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
+                    { spy: vi.spyOn(SharedContext, "isVsam"), arg: [test.value], ret: false },
+                    { spy: vi.spyOn(SharedContext, "isPds"), arg: [test.value], ret: false },
+                    { spy: vi.spyOn(SharedContext, "isDsMember"), arg: [test.value], ret: true },
+                    { spy: vi.spyOn(DatasetActions, "showAttributes"), arg: [test.value, dsProvider] },
                 ],
             },
             {
                 name: "zowe.ds.renameDataSet",
-                mock: [{ spy: jest.spyOn(dsProvider, "rename"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(dsProvider, "rename"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.copyDataSets",
-                mock: [{ spy: jest.spyOn(DatasetActions, "copyDataSets"), arg: [test.value, undefined, dsProvider] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "copyDataSets"), arg: [test.value, undefined, dsProvider] }],
             },
             {
                 name: "zowe.ds.pasteDataSets",
                 parm: [false],
                 mock: [
                     {
-                        spy: jest.spyOn(dsProvider, "getTreeView"),
+                        spy: vi.spyOn(dsProvider, "getTreeView"),
                         arg: [],
-                        ret: { reveal: jest.fn(), onDidChangeVisibility: jest.fn(), selection: [test.value] },
+                        ret: { reveal: vi.fn(), onDidChangeVisibility: vi.fn(), selection: [test.value] },
                     },
-                    { spy: jest.spyOn(DatasetActions, "pasteDataSet"), arg: [dsProvider, test.value] },
+                    { spy: vi.spyOn(DatasetActions, "pasteDataSet"), arg: [dsProvider, test.value] },
                 ],
             },
             {
                 name: "zowe.ds.renameDataSetMember",
-                mock: [{ spy: jest.spyOn(dsProvider, "rename"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(dsProvider, "rename"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.hMigrateDataSet",
                 mock: [
-                    { spy: jest.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
-                    { spy: jest.spyOn(SharedContext, "isPdsNotFav"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(DatasetActions, "hMigrateDataSet"), arg: [dsProvider, test.value] },
+                    { spy: vi.spyOn(SharedContext, "isDs"), arg: [test.value], ret: false },
+                    { spy: vi.spyOn(SharedContext, "isPdsNotFav"), arg: [test.value], ret: true },
+                    { spy: vi.spyOn(DatasetActions, "hMigrateDataSet"), arg: [dsProvider, test.value] },
                 ],
             },
             {
                 name: "zowe.ds.hRecallDataSet",
                 mock: [
-                    { spy: jest.spyOn(SharedContext, "isMigrated"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(DatasetActions, "hRecallDataSet"), arg: [dsProvider, test.value] },
+                    { spy: vi.spyOn(SharedContext, "isMigrated"), arg: [test.value], ret: true },
+                    { spy: vi.spyOn(DatasetActions, "hRecallDataSet"), arg: [dsProvider, test.value] },
                 ],
             },
             {
                 name: "zowe.ds.showFileErrorDetails",
                 mock: [
-                    { spy: jest.spyOn(SharedContext, "hasFileError"), arg: [test.value], ret: true },
-                    { spy: jest.spyOn(DatasetActions, "showFileErrorDetails"), arg: [test.value] },
+                    { spy: vi.spyOn(SharedContext, "hasFileError"), arg: [test.value], ret: true },
+                    { spy: vi.spyOn(DatasetActions, "showFileErrorDetails"), arg: [test.value] },
                 ],
             },
             {
                 name: "zowe.ds.sortBy",
-                mock: [{ spy: jest.spyOn(dsProvider, "sortPdsMembersDialog"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(dsProvider, "sortPdsMembersDialog"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.filterBy",
-                mock: [{ spy: jest.spyOn(dsProvider, "filterPdsMembersDialog"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(dsProvider, "filterPdsMembersDialog"), arg: [test.value] }],
             },
             {
                 name: "zowe.ds.tableView",
-                mock: [{ spy: jest.spyOn(DatasetTableView.getInstance(), "handleCommand"), arg: [test.context, test.value, undefined] }],
+                mock: [{ spy: vi.spyOn(DatasetTableView.getInstance(), "handleCommand"), arg: [test.context, test.value, undefined] }],
             },
             {
                 name: "zowe.ds.listDataSets",
-                mock: [{ spy: jest.spyOn(DatasetTableView.getInstance(), "handlePatternSearch"), arg: [test.context] }],
+                mock: [{ spy: vi.spyOn(DatasetTableView.getInstance(), "handlePatternSearch"), arg: [test.context] }],
             },
             {
                 name: "zowe.ds.setDataSetFilter",
                 parm: [undefined, undefined],
-                mock: [{ spy: jest.spyOn(DatasetActions, "filterDatasetTreePrompt"), arg: [dsProvider] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "filterDatasetTreePrompt"), arg: [dsProvider] }],
             },
             {
                 name: "zowe.ds.setDataSetFilter",
                 parm: ["testSession", "HLQ.DATASET"],
-                mock: [{ spy: jest.spyOn(DatasetActions, "filterDatasetTree"), arg: [dsProvider, "testSession", "HLQ.DATASET"] }],
+                mock: [{ spy: vi.spyOn(DatasetActions, "filterDatasetTree"), arg: [dsProvider, "testSession", "HLQ.DATASET"] }],
             },
             {
                 name: "onDidChangeConfiguration",
-                mock: [{ spy: jest.spyOn(dsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
+                mock: [{ spy: vi.spyOn(dsProvider, "onDidChangeConfiguration"), arg: [test.value] }],
             },
         ];
 
@@ -257,8 +258,8 @@ describe("Test src/dataset/extension", () => {
             onDidChangeConfiguration = (fun: () => void) => {
                 return { onDidChangeConfiguration: fun };
             };
-            spyCreateDatasetTree = jest.spyOn(DatasetInit, "createDatasetTree").mockResolvedValue(dsProvider as any);
-            jest.spyOn(SharedInit, "initSubscribers").mockImplementation(jest.fn());
+            spyCreateDatasetTree = vi.spyOn(DatasetInit, "createDatasetTree").mockResolvedValue(dsProvider as any);
+            vi.spyOn(SharedInit, "initSubscribers").mockImplementation(vi.fn());
             Object.defineProperty(vscode.commands, "registerCommand", { value: registerCommand });
             Object.defineProperty(vscode.workspace, "onDidChangeConfiguration", { value: onDidChangeConfiguration });
 
@@ -268,7 +269,7 @@ describe("Test src/dataset/extension", () => {
             spyCreateDatasetTree.mockResolvedValue(dsProvider as any);
         });
         afterAll(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         processSubscriptions(commands, test);
@@ -282,7 +283,7 @@ describe("Test src/dataset/extension", () => {
 
     describe("datasetTreeVisibilityChanged", () => {
         it("calls ProfilesUtils.promptUserWithNoConfigs if visible", async () => {
-            const promptUserWithNoConfigsMock = jest.spyOn(ProfilesUtils, "promptUserWithNoConfigs").mockImplementation();
+            const promptUserWithNoConfigsMock = vi.spyOn(ProfilesUtils, "promptUserWithNoConfigs").mockImplementation((() => undefined) as any);
             await DatasetInit.datasetTreeVisibilityChanged({ visible: true });
             expect(promptUserWithNoConfigsMock).toHaveBeenCalled();
         });

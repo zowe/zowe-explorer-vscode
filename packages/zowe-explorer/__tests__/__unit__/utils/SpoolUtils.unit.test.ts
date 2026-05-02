@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { Profiles } from "../../../src/configuration/Profiles";
@@ -36,27 +37,27 @@ describe("SpoolProvider Unit Tests", () => {
     const profilesForValidation = { status: "active", name: "fake" };
 
     Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => {
+        value: vi.fn(() => {
             return {
                 allProfiles: [{ name: "firstName" }, { name: "secondName" }],
                 defaultProfile: { name: "firstName" },
-                checkCurrentProfile: jest.fn(() => {
+                checkCurrentProfile: vi.fn(() => {
                     return profilesForValidation;
                 }),
                 profilesForValidation: [],
-                validateProfiles: jest.fn(),
+                validateProfiles: vi.fn(),
             };
         }),
     });
     Object.defineProperty(Profiles, "getDefaultProfile", {
-        value: jest.fn(() => {
+        value: vi.fn(() => {
             return {
                 name: "firstName",
             };
         }),
     });
     Object.defineProperty(Profiles, "loadNamedProfile", {
-        value: jest.fn(() => {
+        value: vi.fn(() => {
             return {
                 name: "firstName",
             };
@@ -64,7 +65,7 @@ describe("SpoolProvider Unit Tests", () => {
     });
 
     afterEach(() => {
-        jest.resetAllMocks();
+        vi.resetAllMocks();
     });
 
     describe("matchSpool", () => {
@@ -89,7 +90,7 @@ describe("SpoolProvider Unit Tests", () => {
 
     describe("getSpoolFiles", () => {
         afterEach(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should gather all spool files for a given job", async () => {
@@ -108,7 +109,7 @@ describe("SpoolProvider Unit Tests", () => {
 
             newJobSession.job = spoolOk as any;
 
-            const getSpoolFilesSpy = jest.spyOn(jesApi, "getSpoolFiles").mockResolvedValue([spoolOk, withoutIdDdStep] as any);
+            const getSpoolFilesSpy = vi.spyOn(jesApi, "getSpoolFiles").mockResolvedValue([spoolOk, withoutIdDdStep] as any);
 
             const spools = await SpoolUtils.getSpoolFiles(newJobSession);
 

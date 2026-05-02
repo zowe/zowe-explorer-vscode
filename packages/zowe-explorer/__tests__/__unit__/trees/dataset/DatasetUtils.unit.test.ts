@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import { Constants } from "../../../../src/configuration/Constants";
 import { DatasetUtils } from "../../../../src/trees/dataset/DatasetUtils";
@@ -135,7 +136,7 @@ describe("Dataset utils unit tests - function getExtensionMap", () => {
     function createMockNode(label: string, children: Array<{ label: string }>) {
         return {
             label,
-            getChildren: jest.fn().mockResolvedValue(children),
+            getChildren: vi.fn().mockResolvedValue(children),
         } as any;
     }
 

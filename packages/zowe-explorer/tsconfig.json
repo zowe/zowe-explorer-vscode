@@ -21,7 +21,7 @@
     "paths": {
       "@zowe/zowe-explorer-api": ["../zowe-explorer-api"]
     },
-    "types": ["node", "jest"]
+    "types": ["node"]
   },
   "exclude": ["node_modules", "src/webviews/**", ".vscode-test"],
   "include": [

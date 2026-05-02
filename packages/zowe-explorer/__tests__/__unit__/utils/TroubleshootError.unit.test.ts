@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import { env, ExtensionContext } from "vscode";
 import { TroubleshootError } from "../../../src/utils/TroubleshootError";
@@ -36,7 +37,7 @@ describe("TroubleshootError", () => {
     describe("onDidReceiveMessage", () => {
         it("handles copy command for error with stack trace", async () => {
             const { error, troubleshootError } = getGlobalMocks();
-            const writeTextMock = jest.spyOn(env.clipboard, "writeText").mockImplementation();
+            const writeTextMock = vi.spyOn(env.clipboard, "writeText").mockImplementation((() => undefined) as any);
             await troubleshootError.onDidReceiveMessage({ command: "copy" });
             expect(writeTextMock).toHaveBeenCalledWith(`Error details:\n${error.message}\nStack trace:\n${error.stack?.replace(/(.+?)\n/, "")}`);
         });
@@ -44,7 +45,7 @@ describe("TroubleshootError", () => {
         it("handles copy command for error without stack trace", async () => {
             const { error, troubleshootError } = getGlobalMocks();
             const errorProp = new MockedProperty(error, "stack", { value: undefined });
-            const writeTextMock = jest.spyOn(env.clipboard, "writeText").mockImplementation();
+            const writeTextMock = vi.spyOn(env.clipboard, "writeText").mockImplementation((() => undefined) as any);
             await troubleshootError.onDidReceiveMessage({ command: "copy" });
             expect(writeTextMock).toHaveBeenCalledWith(`Error details:\n${error.message}`);
             errorProp[Symbol.dispose]();
@@ -52,14 +53,14 @@ describe("TroubleshootError", () => {
 
         it("handles ready command", async () => {
             const { troubleshootError } = getGlobalMocks();
-            const sendErrorDataSpy = jest.spyOn(troubleshootError, "sendErrorData");
+            const sendErrorDataSpy = vi.spyOn(troubleshootError, "sendErrorData");
             await troubleshootError.onDidReceiveMessage({ command: "ready" });
             expect(sendErrorDataSpy).toHaveBeenCalledWith(troubleshootError.errorData);
         });
 
         it("handles an unrecognized command", async () => {
             const { troubleshootError } = getGlobalMocks();
-            const debugSpy = jest.spyOn(ZoweLogger, "debug");
+            const debugSpy = vi.spyOn(ZoweLogger, "debug");
             await troubleshootError.onDidReceiveMessage({ command: "unknown" });
             expect(debugSpy).toHaveBeenCalledWith("[TroubleshootError] Unknown command: unknown");
         });
@@ -68,7 +69,7 @@ describe("TroubleshootError", () => {
     describe("sendErrorData", () => {
         it("sends error data to the webview", async () => {
             const { correlatedError, troubleshootError } = getGlobalMocks();
-            const postMessageSpy = jest.spyOn(troubleshootError.panel.webview, "postMessage");
+            const postMessageSpy = vi.spyOn(troubleshootError.panel.webview, "postMessage");
             const data = { error: correlatedError, stackTrace: correlatedError.stack };
             await troubleshootError.sendErrorData(data);
             expect(postMessageSpy).toHaveBeenCalledWith(data);

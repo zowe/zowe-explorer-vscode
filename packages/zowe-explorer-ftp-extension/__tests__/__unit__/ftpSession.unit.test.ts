@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import { FtpSession } from "../../src/ftpSession";
 import { imperative } from "@zowe/zowe-explorer-api";
@@ -17,9 +18,9 @@ describe("FtpSession Unit Tests - function releaseConnections", () => {
         const testFtpSession = new FtpSession({
             hostname: "sample.com",
         } as imperative.ISession);
-        const ussListConnectionMock = jest.fn();
-        const mvsListConnectionMock = jest.fn();
-        const jesListConnectionMock = jest.fn();
+        const ussListConnectionMock = vi.fn();
+        const mvsListConnectionMock = vi.fn();
+        const jesListConnectionMock = vi.fn();
         Object.defineProperty(testFtpSession, "ussListConnection", {
             value: {
                 close: ussListConnectionMock,

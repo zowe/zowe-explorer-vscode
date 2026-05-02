@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../src/trees/dataset/ZoweDatasetNode";
@@ -88,6 +89,6 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
     }
 
     public get persistence(): ZowePersistentFilters {
-        return { getSortSetting: jest.fn() } as unknown as ZowePersistentFilters;
+        return { getSortSetting: vi.fn() } as unknown as ZowePersistentFilters;
     }
 }

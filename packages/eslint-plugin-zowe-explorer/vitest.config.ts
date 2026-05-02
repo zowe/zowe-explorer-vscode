@@ -18,24 +18,11 @@ import { defineProject } from "vitest/config";
 
 export default defineProject({
     test: {
-        name: "zowe-explorer-api",
+        name: "eslint-plugin-zowe-explorer",
         globals: true,
         environment: "node",
-        setupFiles: ["vitest.setup.ts"],
-        include: ["__tests__/**/*.(spec|test).ts"],
-        // Use forked processes (matches Jest's default worker model) so each
-        // test file gets its own Node process and module-level state cannot
-        // leak between files.
-        pool: "forks",
-        testTimeout: 10000,
-        hookTimeout: 10000,
-        // Mirror Jest's defaults so legacy tests retain the same lifecycle
-        // semantics (only `vi.spyOn`/manual cleanups restore mocks).
+        include: ["tests/**/*.js"],
         clearMocks: false,
         restoreMocks: false,
-        mockReset: false,
-    },
-    esbuild: {
-        target: "es2022",
     },
 });

@@ -8,17 +8,17 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-
+import { vi } from "vitest";
 import { createInstanceOfProfile, createIProfile } from "../../__mocks__/mockCreators/shared";
 import { ZosConsoleViewProvider } from "../../../src/zosconsole/ZosConsolePanel";
 import { Profiles } from "../../../src/configuration/Profiles";
 import * as vscode from "vscode";
 import * as fs from "fs";
 
-jest.mock("fs");
-jest.mock("@zowe/zowe-explorer-api", () => ({
-    ...jest.requireActual("@zowe/zowe-explorer-api"),
-    HTMLTemplate: jest.requireActual("../../../../zowe-explorer-api/src/vscode/ui/utils/HTMLTemplate"),
+vi.mock("fs");
+vi.mock("@zowe/zowe-explorer-api", async () => ({
+    ...(await vi.importActual<typeof import("@zowe/zowe-explorer-api")>("@zowe/zowe-explorer-api")),
+    HTMLTemplate: await vi.importActual("../../../../zowe-explorer-api/src/vscode/ui/utils/HTMLTemplate"),
 }));
 
 describe("ZosConsoleViewProvider", () => {
@@ -30,18 +30,18 @@ describe("ZosConsoleViewProvider", () => {
         };
         newMocks.testWebView = {
             webview: {
-                postMessage: jest.fn(),
-                asWebviewUri: jest.fn(),
-                onDidReceiveMessage: jest.fn(),
+                postMessage: vi.fn(),
+                asWebviewUri: vi.fn(),
+                onDidReceiveMessage: vi.fn(),
             },
         };
         newMocks.profileInstance = createInstanceOfProfile(newMocks.imperativeProfile);
         Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn().mockReturnValue(newMocks.profileInstance),
+            value: vi.fn().mockReturnValue(newMocks.profileInstance),
             configurable: true,
         });
-        Object.defineProperty(vscode.Uri, "joinPath", { value: jest.fn(), configurable: true });
-        const spyReadFile = jest.fn((path, encoding, callback) => {
+        Object.defineProperty(vscode.Uri, "joinPath", { value: vi.fn(), configurable: true });
+        const spyReadFile = vi.fn((path, encoding, callback) => {
             callback(null, "file contents");
         });
         Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
@@ -57,8 +57,8 @@ describe("ZosConsoleViewProvider", () => {
         it("handles the get_localization message", async () => {
             const globalMocks = createGlobalMocks();
             const myconsole = new ZosConsoleViewProvider({} as any);
-            const postMessageMock = jest.spyOn(globalMocks.testWebView.webview, "postMessage").mockImplementation();
-            const onDidReceiveMessageCallback = jest
+            const postMessageMock = vi.spyOn(globalMocks.testWebView.webview, "postMessage").mockImplementation((() => undefined) as any);
+            const onDidReceiveMessageCallback = vi
                 .spyOn(globalMocks.testWebView.webview, "onDidReceiveMessage")
                 .mockImplementation((callback: any) => {
                     callback({ command: "GET_LOCALIZATION" });
@@ -70,12 +70,12 @@ describe("ZosConsoleViewProvider", () => {
         });
         it("handles the get_localization message", async () => {
             const globalMocks = createGlobalMocks();
-            const spyReadFile = jest.fn((path, encoding, callback) => {
+            const spyReadFile = vi.fn((path, encoding, callback) => {
                 callback("error", "file contents");
             });
             Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
             const myconsole = new ZosConsoleViewProvider({} as any);
-            const onDidReceiveMessageCallback = jest
+            const onDidReceiveMessageCallback = vi
                 .spyOn(globalMocks.testWebView.webview, "onDidReceiveMessage")
                 .mockImplementation((callback: any) => {
                     callback({ command: "GET_LOCALIZATION" });

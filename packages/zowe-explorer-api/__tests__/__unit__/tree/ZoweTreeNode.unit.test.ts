@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import { ZoweTreeNode } from "../../../src/tree/ZoweTreeNode";
@@ -69,7 +70,7 @@ describe("ZoweTreeNode", () => {
 
     describe("getProfile with ProfilesCache dependency injection", () => {
         beforeEach(() => {
-            jest.clearAllMocks();
+            vi.clearAllMocks();
         });
 
         it("should return loaded profile when ProfilesCache.loadNamedProfile succeeds", () => {
@@ -78,7 +79,7 @@ describe("ZoweTreeNode", () => {
 
             const loadedProfile = { ...fakeProfile, profile: { ...fakeProfile.profile, user: "newUser" } };
             const mockProfilesCache = {
-                loadNamedProfile: jest.fn().mockReturnValue(loadedProfile),
+                loadNamedProfile: vi.fn().mockReturnValue(loadedProfile),
             } as unknown as ProfilesCache;
 
             const result = node.getProfile(mockProfilesCache);
@@ -93,15 +94,15 @@ describe("ZoweTreeNode", () => {
 
             const mockError = new Error("Profile not found");
             const mockProfilesCache = {
-                loadNamedProfile: jest.fn().mockImplementation(() => {
+                loadNamedProfile: vi.fn().mockImplementation(() => {
                     throw mockError;
                 }),
             } as unknown as ProfilesCache;
 
             const mockLogger = {
-                error: jest.fn(),
+                error: vi.fn(),
             };
-            jest.spyOn(imperative.Logger, "getAppLogger").mockReturnValue(mockLogger as any);
+            vi.spyOn(imperative.Logger, "getAppLogger").mockReturnValue(mockLogger as any);
 
             const result = node.getProfile(mockProfilesCache);
 
@@ -127,7 +128,7 @@ describe("ZoweTreeNode", () => {
             const node = makeNode("testNode", vscode.TreeItemCollapsibleState.None, parentNode);
 
             const mockProfilesCache = {
-                loadNamedProfile: jest.fn().mockImplementation(() => {
+                loadNamedProfile: vi.fn().mockImplementation(() => {
                     throw new Error("Profile not found");
                 }),
             } as unknown as ProfilesCache;

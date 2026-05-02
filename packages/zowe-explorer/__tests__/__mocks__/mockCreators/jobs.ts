@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
@@ -80,50 +81,50 @@ export function createJobsTree(session: imperative.Session, iJob: zosjobs.IJob, 
     });
     jobNode.contextValue = Constants.JOBS_SESSION_CONTEXT;
 
-    jest.spyOn(ZowePersistentFilters.prototype as any, "initialize").mockReturnValueOnce(undefined);
+    vi.spyOn(ZowePersistentFilters.prototype as any, "initialize").mockReturnValueOnce(undefined);
     const testJobsTree = new JobTree();
     Object.assign(testJobsTree, {
         mSessionNodes: [],
         mFavorites: [],
-        getChildren: jest.fn(),
-        addSession: jest.fn(),
-        refresh: jest.fn(),
-        getTreeView: jest.fn().mockImplementation(() => {
+        getChildren: vi.fn(),
+        addSession: vi.fn(),
+        refresh: vi.fn(),
+        getTreeView: vi.fn().mockImplementation(() => {
             return {
-                reveal: jest.fn(),
-                onDidExpandElement: jest.fn(),
-                onDidCollapseElement: jest.fn(),
+                reveal: vi.fn(),
+                onDidExpandElement: vi.fn(),
+                onDidCollapseElement: vi.fn(),
                 selection: [],
-                onDidChangeSelection: jest.fn(),
+                onDidChangeSelection: vi.fn(),
                 visible: true,
-                onDidChangeVisibility: jest.fn(),
-                dispose: jest.fn(),
+                onDidChangeVisibility: vi.fn(),
+                dispose: vi.fn(),
             };
         }),
-        getSessions: jest.fn().mockReturnValue([]),
-        getFavorites: jest.fn(),
-        getSearchHistory: jest.fn(),
-        removeSearchHistory: jest.fn(),
-        resetSearchHistory: jest.fn(),
-        resetFileHistory: jest.fn(),
-        deleteSession: jest.fn().mockImplementation((badSession) => removeNodeFromArray(badSession, testJobsTree.mSessionNodes)),
-        addFavorite: jest.fn().mockImplementation((newFavorite) => {
+        getSessions: vi.fn().mockReturnValue([]),
+        getFavorites: vi.fn(),
+        getSearchHistory: vi.fn(),
+        removeSearchHistory: vi.fn(),
+        resetSearchHistory: vi.fn(),
+        resetFileHistory: vi.fn(),
+        deleteSession: vi.fn().mockImplementation((badSession) => removeNodeFromArray(badSession, testJobsTree.mSessionNodes)),
+        addFavorite: vi.fn().mockImplementation((newFavorite) => {
             testJobsTree.mFavorites.push(newFavorite);
         }),
-        removeFavorite: jest.fn().mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testJobsTree.mFavorites)),
-        removeFavProfile: jest.fn().mockImplementation((badFavProfileName) => {
+        removeFavorite: vi.fn().mockImplementation((badFavorite) => removeNodeFromArray(badFavorite, testJobsTree.mFavorites)),
+        removeFavProfile: vi.fn().mockImplementation((badFavProfileName) => {
             const badFavProfileNode = testJobsTree.mFavorites.find((treeNode) => treeNode.label === badFavProfileName);
             removeNodeFromArray(badFavProfileNode, testJobsTree.mFavorites);
         }),
         treeView,
-        getTreeType: jest.fn().mockImplementation(() => PersistenceSchemaEnum.Job),
-        checkCurrentProfile: jest.fn(),
-        refreshElement: jest.fn(),
-        getProfiles: jest.fn(),
-        getProfileName: jest.fn(),
-        getSession: jest.fn(),
-        delete: jest.fn(),
-        setItem: jest.fn(),
+        getTreeType: vi.fn().mockImplementation(() => PersistenceSchemaEnum.Job),
+        checkCurrentProfile: vi.fn(),
+        refreshElement: vi.fn(),
+        getProfiles: vi.fn(),
+        getProfileName: vi.fn(),
+        getSession: vi.fn(),
+        delete: vi.fn(),
+        setItem: vi.fn(),
     });
     testJobsTree.mSessionNodes = [];
     testJobsTree.mSessionNodes.push(jobNode);

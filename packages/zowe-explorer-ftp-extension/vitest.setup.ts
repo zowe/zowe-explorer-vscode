@@ -9,6 +9,6 @@
  *
  */
 
-process.on("unhandledRejection", (reason) => {
-    fail(reason);
-});
+import { vi } from "vitest";
+
+vi.mock("vscode", () => import("./__mocks__/vscode.ts"));

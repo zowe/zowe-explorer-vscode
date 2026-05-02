@@ -8,17 +8,18 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { KeytarApi } from "../../../src/security/KeytarApi";
 
 describe("KeytarApi", () => {
-    const isCredsSecuredSpy = jest.spyOn(ProfilesCache.prototype, "isCredentialsSecured");
-    const credMgrInitializeSpy = jest.spyOn(imperative.CredentialManagerFactory, "initialize");
+    const isCredsSecuredSpy = vi.spyOn(ProfilesCache.prototype, "isCredentialsSecured");
+    const credMgrInitializeSpy = vi.spyOn(imperative.CredentialManagerFactory, "initialize");
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it("should initialize Imperative credential manager", async () => {
@@ -44,10 +45,18 @@ describe("KeytarApi", () => {
     });
 
     it("should do nothing if Keytar module is missing", async () => {
-        jest.mock("@zowe/secrets-for-zowe-sdk", () => {});
-        isCredsSecuredSpy.mockReturnValueOnce(true);
-        await new KeytarApi(undefined as unknown as imperative.Logger).activateKeytar(false);
-        expect(isCredsSecuredSpy).toHaveBeenCalledTimes(1);
-        expect(credMgrInitializeSpy).not.toHaveBeenCalled();
+        // `vi.mock` is hoisted to the top of the file by Vitest and would
+        // therefore affect every test in this suite. To preserve the legacy
+        // Jest semantics where the mock only applied to this test case, use
+        // `vi.doMock` (non-hoisted) and undo it after the assertion runs.
+        vi.doMock("@zowe/secrets-for-zowe-sdk", () => ({}));
+        try {
+            isCredsSecuredSpy.mockReturnValueOnce(true);
+            await new KeytarApi(undefined as unknown as imperative.Logger).activateKeytar(false);
+            expect(isCredsSecuredSpy).toHaveBeenCalledTimes(1);
+            expect(credMgrInitializeSpy).not.toHaveBeenCalled();
+        } finally {
+            vi.doUnmock("@zowe/secrets-for-zowe-sdk");
+        }
     });
 });

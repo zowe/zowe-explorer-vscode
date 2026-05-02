@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-
+import { vi } from "vitest";
 import { FileSystemError, FileType, Uri, window, workspace } from "vscode";
 import { FileManagement } from "../../../src/utils/FileManagement";
 import { IFileSystemEntry, ZoweScheme } from "../../../src";
@@ -51,14 +51,14 @@ describe("reloadActiveEditorForProfile", () => {
             size: 123,
         };
         const fileUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/exampleFolder/exampleFile.txt" });
-        const activeTextEditorMock = jest.replaceProperty(window, "activeTextEditor", {
+        const activeTextEditorMock = vi.spyOn(window, "activeTextEditor" as any, "get").mockReturnValue({
             document: {
                 fileName: "exampleFile.txt",
                 uri: fileUri,
             } as any,
-        } as any);
-        const statMock = jest.spyOn(workspace.fs, "stat").mockResolvedValueOnce(fakeFsEntry);
-        const readFileMock = jest.spyOn(workspace.fs, "readFile").mockImplementationOnce((): Promise<Uint8Array> => {
+        } as any as any);
+        const statMock = vi.spyOn(workspace.fs, "stat").mockResolvedValueOnce(fakeFsEntry);
+        const readFileMock = vi.spyOn(workspace.fs, "readFile").mockImplementationOnce((): Promise<Uint8Array> => {
             // wasAccessed flag should be false after reassigning in reloadActiveEditorForProfile
             expect(fakeFsEntry.wasAccessed).toBe(false);
             return Promise.resolve(new Uint8Array([1, 2, 3]));
@@ -68,44 +68,44 @@ describe("reloadActiveEditorForProfile", () => {
         expect(statMock).toHaveBeenCalledWith(fileUri);
         expect(readFileMock).toHaveBeenCalledTimes(1);
         expect(readFileMock).toHaveBeenCalledWith(fileUri);
-        activeTextEditorMock.restore();
+        activeTextEditorMock.mockRestore();
     });
 });
 
 describe("reloadWorkspacesForProfile", () => {
     it("calls workspace.fs.stat with fetch=true for each workspace folder", async () => {
         const folderUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/exampleFolder" });
-        const workspaceFoldersMock = jest.replaceProperty(workspace, "workspaceFolders", [
+        const workspaceFoldersMock = vi.spyOn(workspace, "workspaceFolders" as any, "get").mockReturnValue([
             {
                 uri: folderUri,
                 name: "exampleFolder",
                 index: 0,
             },
-        ]);
-        const statMock = jest
+        ] as any);
+        const statMock = vi
             .spyOn(workspace.fs, "stat")
             .mockClear()
             .mockResolvedValueOnce(undefined as any);
         await FileManagement.reloadWorkspacesForProfile("sestest");
         expect(statMock).toHaveBeenCalledTimes(1);
         expect(statMock).toHaveBeenCalledWith(folderUri.with({ query: "fetch=true" }));
-        workspaceFoldersMock.restore();
+        workspaceFoldersMock.mockRestore();
     });
     it("calls console.error in event of an error", async () => {
         const folderUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/exampleFolder" });
-        const workspaceFoldersMock = jest.replaceProperty(workspace, "workspaceFolders", [
+        const workspaceFoldersMock = vi.spyOn(workspace, "workspaceFolders" as any, "get").mockReturnValue([
             {
                 uri: folderUri,
                 name: "exampleFolder",
                 index: 0,
             },
-        ]);
-        const statMock = jest.spyOn(workspace.fs, "stat").mockClear().mockRejectedValueOnce(FileSystemError.FileNotFound(folderUri));
-        const consoleErrorMock = jest.spyOn(console, "error").mockImplementationOnce(() => {});
+        ] as any);
+        const statMock = vi.spyOn(workspace.fs, "stat").mockClear().mockRejectedValueOnce(FileSystemError.FileNotFound(folderUri));
+        const consoleErrorMock = vi.spyOn(console, "error").mockImplementationOnce(() => {});
         await FileManagement.reloadWorkspacesForProfile("sestest");
         expect(statMock).toHaveBeenCalledTimes(1);
         expect(statMock).toHaveBeenCalledWith(folderUri.with({ query: "fetch=true" }));
         expect(consoleErrorMock).toHaveBeenCalledWith("reloadWorkspacesForProfile:", "file not found");
-        workspaceFoldersMock.restore();
+        workspaceFoldersMock.mockRestore();
     });
 });

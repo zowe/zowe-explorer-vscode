@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import { ZoweTerminal } from "../../../src/tools/ZoweTerminal";
 
@@ -17,9 +18,9 @@ describe("ZoweTerminal Unit Tests", () => {
     });
 
     it("should handle ctrl_c to cancel a running command", async () => {
-        const spyCb = jest.fn().mockImplementation(async (cmd: string) => Promise.resolve("Command: " + cmd));
-        const signalSpy = jest.fn().mockImplementation((_event, cb) => cb());
-        const iTerm = new ZoweTerminal("test", spyCb, { abort: jest.fn(), signal: { addEventListener: signalSpy } } as any, { history: ["old"] });
+        const spyCb = vi.fn().mockImplementation(async (cmd: string) => Promise.resolve("Command: " + cmd));
+        const signalSpy = vi.fn().mockImplementation((_event, cb) => cb());
+        const iTerm = new ZoweTerminal("test", spyCb, { abort: vi.fn(), signal: { addEventListener: signalSpy } } as any, { history: ["old"] });
         (iTerm as any).command = "open";
         iTerm.open();
 
@@ -33,8 +34,8 @@ describe("ZoweTerminal Unit Tests", () => {
     });
 
     it("should handle special commands", async () => {
-        const spyCb = jest.fn().mockImplementation(async (cmd: string) => Promise.resolve("Command: " + cmd));
-        const iTerm = new ZoweTerminal("test", spyCb, { signal: { addEventListener: jest.fn() } } as any, { history: ["old"] });
+        const spyCb = vi.fn().mockImplementation(async (cmd: string) => Promise.resolve("Command: " + cmd));
+        const iTerm = new ZoweTerminal("test", spyCb, { signal: { addEventListener: vi.fn() } } as any, { history: ["old"] });
         iTerm.open();
 
         await iTerm.handleInput(":async Asynchronous");
@@ -56,8 +57,8 @@ describe("ZoweTerminal Unit Tests", () => {
     });
 
     it("should send the entered command to the callback function", async () => {
-        const spyCb = jest.fn().mockImplementation(async (cmd: string) => Promise.resolve("Command: " + cmd));
-        const iTerm = new ZoweTerminal("test", spyCb, { signal: { addEventListener: jest.fn() } } as any, { history: ["old"] });
+        const spyCb = vi.fn().mockImplementation(async (cmd: string) => Promise.resolve("Command: " + cmd));
+        const iTerm = new ZoweTerminal("test", spyCb, { signal: { addEventListener: vi.fn() } } as any, { history: ["old"] });
         iTerm.open({ columns: 20, rows: 10 });
 
         await iTerm.handleInput("testABC");

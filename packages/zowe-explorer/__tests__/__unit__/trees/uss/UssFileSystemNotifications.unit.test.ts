@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+import { vi } from "vitest";
 
 import { FileChangeType, Uri } from "vscode";
 import * as vscode from "vscode";
@@ -46,16 +47,16 @@ describe("UssFSProvider File System Notifications", () => {
     let mockedProperty: MockedProperty;
 
     beforeEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
         mockedProperty = new MockedProperty(Profiles, "getInstance", {
-            value: jest.fn().mockReturnValue({
-                loadNamedProfile: jest.fn().mockReturnValue(testProfile),
+            value: vi.fn().mockReturnValue({
+                loadNamedProfile: vi.fn().mockReturnValue(testProfile),
                 allProfiles: [],
-                getProfileFromConfig: jest.fn(),
+                getProfileFromConfig: vi.fn(),
             } as any),
         });
-        jest.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation();
-        jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+        vi.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation((() => undefined) as any);
+        vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
             isRoot: false,
             slashAfterProfilePos: testUris.file.path.indexOf("/", 1),
             profileName: "sestest",
@@ -79,8 +80,8 @@ describe("UssFSProvider File System Notifications", () => {
     describe("createDirectory", () => {
         it("should create directory entry in parent", () => {
             const fakeSessionEntry = { ...testEntries.session, entries: new Map() };
-            jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
-            jest.spyOn(UssFSProvider.instance as any, "fireSoon");
+            vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            vi.spyOn(UssFSProvider.instance as any, "fireSoon");
 
             UssFSProvider.instance.createDirectory(testUris.folder);
 
@@ -90,8 +91,8 @@ describe("UssFSProvider File System Notifications", () => {
         it("should not fire event if directory already exists", () => {
             const fakeSessionEntry = { ...testEntries.session, entries: new Map() };
             fakeSessionEntry.entries.set("folderName", testEntries.folder);
-            jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
-            const fireSoonSpy = jest.spyOn(UssFSProvider.instance as any, "fireSoon");
+            vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            const fireSoonSpy = vi.spyOn(UssFSProvider.instance as any, "fireSoon");
 
             UssFSProvider.instance.createDirectory(testUris.folder);
 
@@ -100,8 +101,8 @@ describe("UssFSProvider File System Notifications", () => {
 
         it("should update parent mtime and size when creating new directory", () => {
             const fakeSessionEntry = { ...testEntries.session, entries: new Map(), mtime: 0, size: 0 };
-            jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
-            jest.spyOn(UssFSProvider.instance as any, "fireSoon");
+            vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            vi.spyOn(UssFSProvider.instance as any, "fireSoon");
 
             const beforeCreate = Date.now();
             UssFSProvider.instance.createDirectory(testUris.folder);
@@ -116,11 +117,11 @@ describe("UssFSProvider File System Notifications", () => {
     describe("writeFile - New Entry Creation", () => {
         it("should fire Created event when creating a new file entry", async () => {
             const fakeFolderEntry = { ...testEntries.folder, entries: new Map() };
-            jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
-            jest.spyOn(UssFSProvider.instance as any, "uploadEntry").mockResolvedValue({
+            vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
+            vi.spyOn(UssFSProvider.instance as any, "uploadEntry").mockResolvedValue({
                 apiResponse: { etag: "NEWTAG" },
             });
-            const fireSoonSpy = jest.spyOn(UssFSProvider.instance as any, "fireSoon");
+            const fireSoonSpy = vi.spyOn(UssFSProvider.instance as any, "fireSoon");
 
             const content = new Uint8Array([1, 2, 3]);
             await UssFSProvider.instance.writeFile(testUris.file, content, { create: true, overwrite: false });
@@ -134,9 +135,9 @@ describe("UssFSProvider File System Notifications", () => {
 
         it("should not upload empty file on creation", async () => {
             const fakeFolderEntry = { ...testEntries.folder, entries: new Map() };
-            jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
-            const uploadEntrySpy = jest.spyOn(UssFSProvider.instance as any, "uploadEntry");
-            jest.spyOn(UssFSProvider.instance as any, "fireSoon");
+            vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
+            const uploadEntrySpy = vi.spyOn(UssFSProvider.instance as any, "uploadEntry");
+            vi.spyOn(UssFSProvider.instance as any, "fireSoon");
 
             const content = new Uint8Array(); // Empty
             await UssFSProvider.instance.writeFile(testUris.file, content, { create: true, overwrite: false });
@@ -156,11 +157,11 @@ describe("UssFSProvider File System Notifications", () => {
             existingEntry.wasAccessed = true;
 
             const fakeFolderEntry = { ...testEntries.folder, entries: new Map([["file.txt", existingEntry]]) };
-            jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
-            jest.spyOn(UssFSProvider.instance as any, "uploadEntry").mockResolvedValue({
+            vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
+            vi.spyOn(UssFSProvider.instance as any, "uploadEntry").mockResolvedValue({
                 apiResponse: { etag: "NEWTAG" },
             });
-            const fireSoonSpy = jest.spyOn(UssFSProvider.instance as any, "fireSoon");
+            const fireSoonSpy = vi.spyOn(UssFSProvider.instance as any, "fireSoon");
 
             const content = new Uint8Array([4, 5, 6]);
             await UssFSProvider.instance.writeFile(testUris.file, content, { create: false, overwrite: true });
@@ -184,11 +185,11 @@ describe("UssFSProvider File System Notifications", () => {
             existingEntry.wasAccessed = true;
 
             const fakeFolderEntry = { ...testEntries.folder, entries: new Map([["file.txt", existingEntry]]) };
-            jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
-            jest.spyOn(UssFSProvider.instance as any, "uploadEntry").mockResolvedValue({
+            vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
+            vi.spyOn(UssFSProvider.instance as any, "uploadEntry").mockResolvedValue({
                 apiResponse: { etag: "NEWTAG" },
             });
-            jest.spyOn(UssFSProvider.instance as any, "fireSoon");
+            vi.spyOn(UssFSProvider.instance as any, "fireSoon");
 
             const content = new Uint8Array([1, 2, 3, 4, 5]);
             await UssFSProvider.instance.writeFile(testUris.file, content, { create: false, overwrite: true });
@@ -211,9 +212,9 @@ describe("UssFSProvider File System Notifications", () => {
             existingEntry.wasAccessed = true;
 
             const fakeFolderEntry = { ...testEntries.folder, entries: new Map([["file.txt", existingEntry]]) };
-            jest.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
-            const uploadEntrySpy = jest.spyOn(UssFSProvider.instance as any, "uploadEntry");
-            jest.spyOn(UssFSProvider.instance as any, "fireSoon");
+            vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
+            const uploadEntrySpy = vi.spyOn(UssFSProvider.instance as any, "uploadEntry");
+            vi.spyOn(UssFSProvider.instance as any, "fireSoon");
 
             const diffUri = testUris.file.with({ query: "inDiff=true" });
             const content = new Uint8Array([1, 2, 3]);
