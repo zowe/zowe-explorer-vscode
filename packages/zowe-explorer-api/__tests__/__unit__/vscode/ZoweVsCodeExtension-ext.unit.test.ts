@@ -15,6 +15,7 @@ import * as imperative from "@zowe/imperative";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
 import { createConfigInstance, createConfigLoad, createTeamConfigMock } from "../../../__mocks__/mockCreators/shared";
 import { FileManagement, Gui, ProfilesCache, ZoweVsCodeExtension } from "../../../src";
+import { describe, it, expect, afterEach, vi } from "vitest";
 
 vi.mock("@zowe/imperative");
 

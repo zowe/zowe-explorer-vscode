@@ -11,7 +11,7 @@
 import { vi } from "vitest";
 
 import { Progress, ProgressOptions, QuickPick, QuickPickItem } from "vscode";
-
+import { vi } from "vitest";
 export class MarkdownString {
     public value: string;
     public constructor(value?: string) {

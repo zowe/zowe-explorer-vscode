@@ -12,6 +12,7 @@ import { vi } from "vitest";
 
 import * as imperative from "@zowe/imperative";
 import { IAttributesProvider, AttributeInfo } from "../../src/dataset/DatasetAttributesProvider";
+import { vi } from "vitest";
 
 export function createConfigInstance() {
     return {
