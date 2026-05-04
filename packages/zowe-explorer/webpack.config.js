@@ -34,6 +34,7 @@ const config = (mode) => ({
         extensions: [".ts", ".js"],
         alias: {
             "@zowe/zowe-explorer-api$": path.resolve(__dirname, "..", "zowe-explorer-api/src"),
+            "@zowe/zowex-for-zowe-explorer$": path.resolve(__dirname, "..", "zowex-for-zowe-explorer/src"),
         },
         conditionNames: ["@zowe:bundler", "..."],
     },
@@ -81,6 +82,12 @@ const config = (mode) => ({
             {
                 test: /\.node$/,
                 loader: "node-loader",
+            },
+            {
+                // Patch russh/lib/native.js to load .node binaries from prebuilds/
+                // using __non_webpack_require__ so webpack doesn't try to bundle them.
+                test: /russh[\\/]lib[\\/]native\.js$/,
+                loader: path.resolve(__dirname, "russh-native-loader.js"),
             },
         ],
     },

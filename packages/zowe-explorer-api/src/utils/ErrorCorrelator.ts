@@ -281,7 +281,7 @@ export class ErrorCorrelator {
         }
 
         for (const apiError of [
-            ...(opts?.profileType ? this.errorMatches.get(api)?.[opts.profileType] ?? [] : []),
+            ...(opts?.profileType ? (this.errorMatches.get(api)?.[opts.profileType] ?? []) : []),
             ...(this.errorMatches.get(api)?.any ?? []),
             ...this.errorMatches.get(ZoweExplorerApiType.All).any,
         ]) {

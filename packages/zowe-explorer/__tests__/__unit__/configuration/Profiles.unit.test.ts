@@ -2265,7 +2265,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
                     },
                 },
             ],
-            getDefaultProfile: () => ({ name: "base" } as any),
+            getDefaultProfile: () => ({ name: "base" }) as any,
             mergeArgsForProfile: jest.fn().mockReturnValue({
                 knownArgs: [
                     {

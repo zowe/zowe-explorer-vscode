@@ -40,7 +40,10 @@ export class ProfilesCache {
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected overrideWithEnv = false;
 
-    public constructor(protected log: imperative.Logger, protected cwd?: string) {
+    public constructor(
+        protected log: imperative.Logger,
+        protected cwd?: string
+    ) {
         this.cwd = cwd != null ? FileManagement.getFullPath(cwd) : undefined;
     }
 
