@@ -55,8 +55,6 @@ function createGlobalMocks() {
 
 function setupSpies(globalMocks: any) {
     globalMocks.spies.readdirSync = vi.spyOn(fs, "readdirSync").mockImplementation(globalMocks.readdirSync);
-    globalMocks.spies.dirname = vi.spyOn(path, "dirname").mockImplementation(globalMocks.dirname);
-    globalMocks.spies.basename = vi.spyOn(path, "basename").mockImplementation(globalMocks.basename);
     globalMocks.spies.getUssApi = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockImplementation(globalMocks.getUssApi);
     globalMocks.spies.isUssDirectory = vi.spyOn(SharedContext, "isUssDirectory").mockImplementation(globalMocks.isUssDirectory);
     globalMocks.vscodeMocks.push(new MockedProperty(vscode.env.clipboard, "writeText", undefined, globalMocks.writeText));
@@ -88,11 +86,6 @@ describe("USSUtils Unit Tests - fileExistsCaseSensitiveSync", () => {
     });
 
     it("should return true when at root directory", () => {
-        globalMocks.dirname.mockImplementation((filePath: any) => {
-            if (filePath === "/") return "/";
-            return "/parent";
-        });
-
         const result = USSUtils.fileExistsCaseSensitiveSync("/");
 
         expect(result).toBe(true);
@@ -100,43 +93,38 @@ describe("USSUtils Unit Tests - fileExistsCaseSensitiveSync", () => {
     });
 
     it("should return true when file exists with correct case", () => {
-        globalMocks.dirname.mockReturnValueOnce("/parent").mockReturnValueOnce("/");
-        globalMocks.basename.mockReturnValue("testFile.txt");
         globalMocks.readdirSync.mockReturnValue(["testFile.txt", "otherFile.txt"]);
 
         const result = USSUtils.fileExistsCaseSensitiveSync("/parent/testFile.txt");
 
         expect(result).toBe(true);
-        expect(globalMocks.readdirSync).toHaveBeenCalledWith("/parent");
-        expect(globalMocks.basename).toHaveBeenCalledWith("/parent/testFile.txt");
+        expect(globalMocks.readdirSync).toHaveBeenCalledWith(path.dirname("/parent/testFile.txt"));
     });
 
     it("should return false when file does not exist", () => {
-        globalMocks.dirname.mockReturnValueOnce("/parent").mockReturnValueOnce("/");
-        globalMocks.basename.mockReturnValue("missingFile.txt");
         globalMocks.readdirSync.mockReturnValue(["testFile.txt", "otherFile.txt"]);
 
         const result = USSUtils.fileExistsCaseSensitiveSync("/parent/missingFile.txt");
 
         expect(result).toBe(false);
-        expect(globalMocks.readdirSync).toHaveBeenCalledWith("/parent");
+        expect(globalMocks.readdirSync).toHaveBeenCalledWith(path.dirname("/parent/missingFile.txt"));
     });
 
     it("should return false when file exists with different case", () => {
-        globalMocks.dirname.mockReturnValueOnce("/parent").mockReturnValueOnce("/");
-        globalMocks.basename.mockReturnValue("TestFile.txt");
         globalMocks.readdirSync.mockReturnValue(["testFile.txt", "otherFile.txt"]);
 
         const result = USSUtils.fileExistsCaseSensitiveSync("/parent/TestFile.txt");
 
         expect(result).toBe(false);
-        expect(globalMocks.readdirSync).toHaveBeenCalledWith("/parent");
+        expect(globalMocks.readdirSync).toHaveBeenCalledWith(path.dirname("/parent/TestFile.txt"));
     });
 
     it("should recursively check parent directories", () => {
-        globalMocks.dirname.mockReturnValueOnce("/parent/subdir").mockReturnValueOnce("/parent").mockReturnValueOnce("/");
-        globalMocks.basename.mockReturnValueOnce("testFile.txt").mockReturnValueOnce("subdir");
-        globalMocks.readdirSync.mockReturnValueOnce(["testFile.txt"]).mockReturnValueOnce(["subdir"]);
+        globalMocks.readdirSync.mockImplementation((dir: string) => {
+            if (dir === path.dirname("/parent/subdir/testFile.txt")) return ["testFile.txt"];
+            if (dir === path.dirname("/parent/subdir")) return ["subdir"];
+            return [];
+        });
 
         const result = USSUtils.fileExistsCaseSensitiveSync("/parent/subdir/testFile.txt");
 

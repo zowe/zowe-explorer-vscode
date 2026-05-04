@@ -1,13 +1,13 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Zosmf API tests should test putContent method passes all options to Zowe api method 1`] = `
+exports[`Zosmf API tests > should test putContent method passes all options to Zowe api method 1`] = `
 {
   "encoding": "285",
   "responseTimeout": undefined,
 }
 `;
 
-exports[`Zosmf API tests should test that copy data set uses default options 1`] = `
+exports[`Zosmf API tests > should test that copy data set uses default options 1`] = `
 {
   "from-dataset": {
     "dsn": "IBM.FROM",
@@ -17,7 +17,7 @@ exports[`Zosmf API tests should test that copy data set uses default options 1`]
 }
 `;
 
-exports[`Zosmf API tests should test that copy data set uses enq 1`] = `
+exports[`Zosmf API tests > should test that copy data set uses enq 1`] = `
 {
   "enq": "SHR",
   "from-dataset": {
@@ -27,7 +27,7 @@ exports[`Zosmf API tests should test that copy data set uses enq 1`] = `
 }
 `;
 
-exports[`Zosmf API tests should test that copy data set uses enq only 1`] = `
+exports[`Zosmf API tests > should test that copy data set uses enq only 1`] = `
 {
   "enq": "SHR",
   "from-dataset": {
