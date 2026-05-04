@@ -8,10 +8,6 @@ The Zowe Remote SSH API for Zowe Explorer offers several features, enabling deve
 - **USS File Access**: Create, read, write, and delete files and directories in Unix System Services
 - **Job Management**: Submit, view, cancel, hold, and release jobs on z/OS
 
-## Minimum Requirements
-
-- VS Code 1.73.0 (or newer)
-
 ## Usage
 
 To deploy an instance of the Zowe Remote SSH server, run the `Zowe Explorer: Connect to zowex server on host...` command from the command palette. Select an SSH profile from the list of profiles to start the deployment and connection process. Once complete, the SSH profile is added to the Zowe Explorer tree views.
