@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+
 import { vi } from "vitest";
 
 import * as path from "path";
@@ -40,7 +41,16 @@ vi.mock("fs", async () => {
     const mocked: Record<string, unknown> = {};
     for (const key of Object.keys(actual) as Array<keyof typeof actual>) {
         const value = actual[key];
-        mocked[key as string] = typeof value === "function" ? vi.fn() : value;
+        if (key === "promises") {
+            const promisesMock: Record<string, unknown> = {};
+            for (const pKey of Object.keys(value as object)) {
+                const pValue = (value as any)[pKey];
+                promisesMock[pKey] = typeof pValue === "function" ? vi.fn() : pValue;
+            }
+            mocked.promises = promisesMock;
+        } else {
+            mocked[key as string] = typeof value === "function" ? vi.fn() : value;
+        }
     }
     // `FileManagement.getFullPath` calls `realpathSync` to canonicalize a
     // path; tests pass `__dirname`-style values and expect them back as-is.
@@ -48,6 +58,8 @@ vi.mock("fs", async () => {
     const realpathSync = vi.fn(echoFirstArg) as unknown as typeof actual.realpathSync;
     (realpathSync as any).native = vi.fn(echoFirstArg);
     mocked.realpathSync = realpathSync;
+    const realpathAsync = vi.fn(async (arg) => arg);
+    (mocked.promises as any).realpath = realpathAsync;
     return mocked;
 });
 
@@ -174,7 +186,7 @@ function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imp
 
 describe("ProfilesCache", () => {
     const fakeLogger = { debug: vi.fn(), error: vi.fn(), warn: vi.fn() };
-    const fakeZoweDir = "~/.zowe";
+    const fakeZoweDir = path.join(__dirname, "..");
     const readProfilesFromDiskSpy = vi.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk");
     const defaultCredMgrWithKeytarSpy = vi.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar");
 
