@@ -830,16 +830,16 @@ export class USSActions {
             {
                 location: vscode.ProgressLocation.Notification,
                 title: vscode.l10n.t("Downloading USS directory"),
-                cancellable: false, // TODO: Add cancellation support at SDK level and then enable cancellation here as well
+                cancellable: true,
             },
-            async (progress) => {
+            async (progress, token) => {
                 let realPercentComplete = 0;
                 const realTotalEntries = totalFileCount;
                 let numDownloaded = 0;
                 const task: imperative.ITaskWithStatus = {
                     set percentComplete(value: number) {
                         realPercentComplete = value;
-                        Gui.reportProgress(progress, realTotalEntries, ++numDownloaded, "");
+                        Gui.reportProgress(progress, realTotalEntries, numDownloaded++, "");
                     },
                     get percentComplete(): number {
                         return realPercentComplete;
@@ -862,6 +862,7 @@ export class USSActions {
                     maxConcurrentRequests: profile?.profile?.maxConcurrentRequests || 1,
                     task,
                     responseTimeout: profile?.profile?.responseTimeout,
+                    abortDownload: () => token?.isCancellationRequested ?? false,
                 };
 
                 // only set encoding/binary if user chose a specific encoding (not auto detect)
@@ -881,7 +882,7 @@ export class USSActions {
 
                 try {
                     const response = await ussApi.downloadDirectory(node.fullPath, options, listOptions);
-                    void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"), directoryPath);
+                    void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"), directoryPath, token?.isCancellationRequested);
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
                 }

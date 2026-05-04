@@ -41,6 +41,8 @@
   "{0} {1}": "{0} {1}",
   "{0} download completed with errors.": "{0} download completed with errors.",
   "{0} download completed.": "{0} download completed.",
+  "{0} download was cancelled.": "{0} download was cancelled.",
+  "{0} download was cancelled. {1} of {2} item(s) were downloaded.": "{0} download was cancelled. {1} of {2} item(s) were downloaded.",
   "{0} downloaded successfully.": "{0} downloaded successfully.",
   "{0} location/Node type": {
     "message": "{0} location",
