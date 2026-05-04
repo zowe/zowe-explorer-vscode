@@ -4,12 +4,14 @@ interface DatasetAttributesDefinition {
     description?: string;
 }
 
+const dsnameAttribute: DatasetAttributesDefinition = {
+    id: "dsname",
+    name: "Data Set Name",
+    description: "The name of the dataset",
+};
+
 export const DATASET_ATTR_DEFS: DatasetAttributesDefinition[] = [
-    {
-        id: "dsname",
-        name: "Data Set Name",
-        description: "The name of the dataset",
-    },
+    dsnameAttribute,
     {
         id: "alloc",
         name: "Allocated Units",
@@ -144,6 +146,7 @@ export const DATASET_ATTR_DEFS: DatasetAttributesDefinition[] = [
 ];
 
 export const MEMBER_ATTR_DEFS: DatasetAttributesDefinition[] = [
+    dsnameAttribute,
     {
         id: "member",
         name: "Member Name",

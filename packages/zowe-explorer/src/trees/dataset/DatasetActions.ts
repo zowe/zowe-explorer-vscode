@@ -1544,6 +1544,8 @@ export class DatasetActions {
                 // Format numbers with thousands separators
                 if (typeof value === "number") {
                     return value.toLocaleString();
+                } else if (typeof value === "boolean") {
+                    return value ? "YES" : "NO";
                 }
                 return String(value);
             };
@@ -1605,7 +1607,7 @@ export class DatasetActions {
                         return html;
                     }
                     const formattedValue = formatAttributeValue(key, info.value, title);
-                    const isNumeric = typeof info.value === "number";
+                    const isNumeric = typeof info.value === "number" || typeof info.value === "boolean";
                     return html.concat(`
                         <tr ${
                             info.displayName || info.description

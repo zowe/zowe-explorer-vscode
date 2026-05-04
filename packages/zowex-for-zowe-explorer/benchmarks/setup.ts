@@ -82,7 +82,7 @@ export async function setupTargets(): Promise<void> {
     targets[0].uss = new ZoweExplorerZosmf.UssApi(zosmfLoaded);
     targets[0].jes = new ZoweExplorerZosmf.JesApi(zosmfLoaded);
 
-    targets[1].mvs = new SshMvsApi(undefined, sshLoaded);
+    targets[1].mvs = new SshMvsApi(sshLoaded);
     targets[1].uss = new SshUssApi(sshLoaded);
     targets[1].jes = new SshJesApi(sshLoaded);
 }

@@ -12,68 +12,22 @@
 import { createReadStream, createWriteStream } from "node:fs";
 import * as path from "node:path";
 import type * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import {
-    type AttributeEntryInfo,
-    type AttributeInfo,
-    type DataSetAttributesProvider,
-    type DsInfo,
-    Gui,
-    type IAttributesProvider,
-    imperative,
-    type MainframeInteraction,
-} from "@zowe/zowe-explorer-api";
-import { B64String, type Dataset, type DatasetAttributes, type ds } from "@zowe/zowex-for-zowe-sdk";
+import { Gui, imperative, type MainframeInteraction } from "@zowe/zowe-explorer-api";
+import { B64String, type DatasetAttributes, type ds } from "@zowe/zowex-for-zowe-sdk";
 import { SshCommonApi } from "./SshCommonApi";
 import type Stream from "node:stream";
 
-class SshAttributesProvider implements IAttributesProvider {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    private readonly extensionName = require("../../package.json").displayName;
-
-    public constructor(public cachedAttrs?: Dataset) {}
-
-    public fetchAttributes(context: DsInfo): AttributeInfo {
-        if (context.profile.type !== "ssh") {
-            return [];
-        }
-
-        const keys = new Map<string, AttributeEntryInfo>();
-        const addAttribute = <K extends keyof Dataset>(prop: K, label: string, description?: string): void => {
-            const value = this.cachedAttrs?.[prop];
-            if (value != null) {
-                keys.set(label, {
-                    value: typeof value === "boolean" ? (value ? "YES" : "NO") : value.toLocaleString(),
-                    description,
-                });
-            }
-        };
-
-        const spacu = this.cachedAttrs?.spacu?.toLocaleLowerCase() ?? "bytes";
-        addAttribute("alloc", "Allocated Units", `Allocated units (${spacu})`);
-        addAttribute("allocx", "Allocated Extents");
-        addAttribute("dataclass", "Data Class");
-        addAttribute("encrypted", "Encryption");
-        addAttribute("mgmtclass", "Management Class");
-        addAttribute("primary", "Primary Space", `Primary space (${spacu})`);
-        addAttribute("secondary", "Secondary Space", `Secondary space (${spacu})`);
-        addAttribute("storclass", "Storage Class");
-        addAttribute("usedx", "Used Extents");
-        this.cachedAttrs = undefined;
-
-        return [{ title: this.extensionName, keys }];
-    }
-}
-
 export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs {
-    // private attrProvider = new SshAttributesProvider();
-
-    public constructor(
-        dsAttrProvider?: DataSetAttributesProvider,
-        public profile?: imperative.IProfileLoaded
-    ) {
-        super(profile);
-        // dsAttrProvider?.register(this.attrProvider);
-    }
+    private readonly dsAttrMapping: Record<string, string> = {
+        blksize: "blksz",
+        devtype: "dev",
+        dsntype: "dsntp",
+        migrated: "migr",
+        multivolume: "mvol",
+        usedp: "used",
+        volser: "vol",
+        volsers: "vols",
+    };
 
     public async dataSet(filter: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
         const response = await (
@@ -82,35 +36,15 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             pattern: filter,
             attributes: options?.attributes,
         });
-        // Cache attributes for first data set to work around ZE issue
-        // See https://github.com/zowe/zowe-explorer-vscode/issues/3927
-        // this.attrProvider.cachedAttrs = response.items[0];
+
         return this.buildZosFilesResponse({
             items: response.items.map((item) => {
                 const attrs: Record<string, unknown> = {};
                 if (options?.attributes) {
                     for (const [k, v] of Object.entries(item)) {
-                        let attr = k;
-                        let tempVal = v;
-                        if (k === "name") {
-                            continue;
-                        } else if (k === "blksize") {
-                            attr = "blksz";
-                        } else if (k === "usedp") {
-                            attr = "used";
-                            tempVal = tempVal != null ? `${tempVal}%` : undefined;
-                        } else if (k === "volsers") {
-                            attr = "vols";
-                            tempVal = tempVal.join(" ");
-                        } else if (k === "migrated") {
-                            attr = "migr";
-                        } else if (k === "multivolume") {
-                            attr = "mvol";
+                        if (k !== "name") {
+                            attrs[this.dsAttrMapping[k] ?? k] = Array.isArray(v) ? v.join(" ") : v;
                         }
-                        if (typeof tempVal === "boolean") {
-                            tempVal = tempVal ? "YES" : "NO";
-                        }
-                        attrs[attr] = tempVal;
                     }
                 }
                 return { dsname: item.name, ...attrs };
@@ -128,27 +62,17 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             pattern: options?.pattern,
         });
 
-        // this.attrProvider.cachedAttrs = undefined;
-
         return this.buildZosFilesResponse({
             items: response.items.map((item) => {
-                const entry: Record<string, unknown> = {
-                    member: item.name,
-                };
-
+                const attrs: Record<string, unknown> = {};
                 if (options?.attributes) {
-                    entry.vers = item.vers;
-                    entry.mod = item.mod;
-                    entry.c4date = item.c4date;
-                    entry.m4date = item.m4date;
-                    entry.mtime = item.mtime;
-                    entry.cnorc = item.cnorc;
-                    entry.inorc = item.inorc;
-                    entry.mnorc = item.mnorc;
-                    entry.user = item.user;
-                    entry.sclm = item.sclm;
+                    for (const [k, v] of Object.entries(item)) {
+                        if (k !== "name") {
+                            attrs[k] = v;
+                        }
+                    }
                 }
-                return entry;
+                return { member: item.name, ...attrs };
             }),
             returnedRows: response.returnedRows,
         });
