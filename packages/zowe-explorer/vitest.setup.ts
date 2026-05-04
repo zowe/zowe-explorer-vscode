@@ -11,10 +11,10 @@
 
 import { expect } from "vitest";
 
-vi.mock("vscode", () => import("../__mocks__/vscode.ts"));
-vi.mock("fs", () => import("../__mocks__/fs.ts"));
-vi.mock("fs-extra", () => import("../__mocks__/fs-extra.ts"));
-vi.mock("isbinaryfile", () => import("../__mocks__/isbinaryfile.ts"));
+vi.mock("vscode", () => import("./__tests__/__mocks__/vscode.ts"));
+vi.mock("fs", () => import("./__tests__/__mocks__/fs.ts"));
+vi.mock("fs-extra", () => import("./__tests__/__mocks__/fs-extra.ts"));
+vi.mock("isbinaryfile", () => import("./__tests__/__mocks__/isbinaryfile.ts"));
 
 // Provide a Jest-compatible `fail` global so that legacy test code that expects
 // `fail(reason)` continues to work under Vitest (which does not ship one).

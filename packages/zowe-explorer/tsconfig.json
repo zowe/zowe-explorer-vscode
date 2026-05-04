@@ -18,6 +18,7 @@
     "removeComments": true,
     "resolveJsonModule": true,
     "rootDir": ".",
+    "composite": true,
     "paths": {
       "@zowe/zowe-explorer-api": ["../zowe-explorer-api"]
     },
@@ -30,5 +31,5 @@
     "./node_modules/vscode/vscode.d.ts",
     "./node_modules/vscode/lib/*"
   ],
-  "references": [{ "path": "../zowe-explorer-api" }]
+  "references": [{ "path": "./tsconfig-tests.json" }, { "path": "../zowe-explorer-api" }]
 }

@@ -21,7 +21,7 @@ export default defineProject({
         name: "zowe-explorer",
         globals: true,
         environment: "node",
-        setupFiles: ["__tests__/__unit__/vitest.setup.ts"],
+        setupFiles: ["vitest.setup.ts"],
         include: ["__tests__/__unit__/**/*.(spec|test).ts"],
         exclude: ["**/node_modules/**", "**/__tests__/__integration__/**", "**/__tests__/__e2e__/**", "**/out/**"],
         testTimeout: 10000,

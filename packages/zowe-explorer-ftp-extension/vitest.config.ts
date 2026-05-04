@@ -14,6 +14,7 @@
  * https://vitest.dev/config/
  */
 
+import { fileURLToPath } from "url";
 import { defineProject } from "vitest/config";
 
 export default defineProject({
@@ -29,6 +30,12 @@ export default defineProject({
         clearMocks: false,
         restoreMocks: false,
         mockReset: false,
+    },
+    resolve: {
+        alias: {
+            vscode: fileURLToPath(new URL('./__mocks__/vscode.ts', import.meta.url)),
+            "@zowe/zowe-explorer-api": fileURLToPath(new URL('../zowe-explorer-api/src/index.ts', import.meta.url))
+        }
     },
     esbuild: {
         target: "es2022",

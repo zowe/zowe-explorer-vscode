@@ -16,6 +16,7 @@
 
 import { defineProject, mergeConfig } from "vitest/config";
 import rootConfig from "../../vitest.config";
+import { fileURLToPath } from "url";
 
 // Extract shared configuration without 'projects' property
 // to prevent recursive project resolution errors when running tests within package folder
@@ -42,6 +43,17 @@ export default mergeConfig(
             clearMocks: false,
             restoreMocks: false,
             mockReset: false,
+            deps: {
+                // Tell Vitest to inline this dependency so Vite processes it 
+                // and vi.mock('vscode') can be applied to its transient imports
+                inline: [/@zowe\/zowex-for-zowe-explorer/, /zowe-explorer-ftp-extension/]
+            }
+        },
+        resolve: {
+            alias: {
+                // Force all imports of 'vscode' to resolve to your mock file
+                vscode: fileURLToPath(new URL('./__mocks__/vscode.ts', import.meta.url))
+            }
         },
         esbuild: {
             target: "es2022",
