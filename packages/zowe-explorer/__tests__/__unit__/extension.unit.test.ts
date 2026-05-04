@@ -34,14 +34,54 @@ import { JobTree } from "../../src/trees/job/JobTree";
 import { MockedProperty } from "../__mocks__/mockUtils";
 import { ZoweExplorerApiRegister } from "../../src/extending/ZoweExplorerApiRegister";
 
+const hoistedMocks = vi.hoisted(() => {
+    const mockReadProfilesFromDisk = vi.fn().mockReturnValue(Promise.resolve());
+    return {
+        mockZosmfSession: vi.fn(),
+        mockCreateSessCfgFromArgs: vi.fn(),
+        mockUtilities: vi.fn(),
+        mockImperativeConfig: vi.fn(),
+        mockIcInstance: vi.fn(),
+        mockImperativeProfileInfo: vi.fn().mockImplementation(() => {
+            return {
+                mAppName: "",
+                mCredentials: {},
+                mUSingTeamConfig: true,
+                readProfilesFromDisk: mockReadProfilesFromDisk,
+                getZoweDir: vi.fn(),
+            };
+        })
+    };
+});
+
+vi.mock("@zowe/imperative", async (importOriginal) => {
+    const actual = await importOriginal<any>();
+    return {
+        ...actual,
+        ImperativeConfig: hoistedMocks.mockImperativeConfig,
+        ProfileInfo: hoistedMocks.mockImperativeProfileInfo
+    };
+});
+
+vi.mock("@zowe/zosmf-for-zowe-sdk", async (importOriginal) => {
+    const actual = await importOriginal<any>();
+    return {
+        ...actual,
+        ZosmfSession: hoistedMocks.mockZosmfSession
+    };
+});
+
+vi.mock("@zowe/zos-files-for-zowe-sdk", async (importOriginal) => {
+    const actual = await importOriginal<any>();
+    return {
+        ...actual,
+        Utilities: hoistedMocks.mockUtilities
+    };
+});
+
 vi.mock("../../src/utils/LoggerUtils");
 vi.mock("../../src/tools/ZoweLogger");
 vi.mock("../../src/utils/ReleaseNotes");
-vi.mock("vscode");
-vi.mock("fs");
-vi.mock("fs-extra");
-vi.mock("util");
-vi.mock("isbinaryfile");
 
 async function createGlobalMocks() {
     const mockReadProfilesFromDisk = vi.fn().mockReturnValue(Promise.resolve());
@@ -84,17 +124,9 @@ async function createGlobalMocks() {
         mockGetProfileName: vi.fn(),
         mockCliHome: vi.fn().mockReturnValue(path.join(os.homedir(), ".zowe")),
         mockIcInstance: vi.fn(),
-        mockImperativeConfig: vi.fn(),
+        mockImperativeConfig: hoistedMocks.mockImperativeConfig,
         mockReadProfilesFromDisk: mockReadProfilesFromDisk,
-        mockImperativeProfileInfo: vi.fn().mockImplementation(() => {
-            return {
-                mAppName: "",
-                mCredentials: {},
-                mUSingTeamConfig: true,
-                readProfilesFromDisk: mockReadProfilesFromDisk,
-                getZoweDir: vi.fn(),
-            };
-        }),
+        mockImperativeProfileInfo: hoistedMocks.mockImperativeProfileInfo,
         mockPromptUserWithNoConfigs: vi.fn(),
         mockUpdateCredMgrSetting: vi.fn(),
         mockWriteOverridesFile: vi.fn(),
@@ -343,7 +375,6 @@ async function createGlobalMocks() {
         value: globalMocks.mockShowWarningMessage,
         configurable: true,
     });
-    Object.defineProperty(zosmf, "ZosmfSession", { value: globalMocks.mockZosmfSession, configurable: true });
     Object.defineProperty(globalMocks.mockZosmfSession, "createSessCfgFromArgs", {
         value: globalMocks.mockCreateSessCfgFromArgs,
         configurable: true,
@@ -356,7 +387,6 @@ async function createGlobalMocks() {
         value: globalMocks.mockSetStatusBarMessage,
         configurable: true,
     });
-    Object.defineProperty(zosfiles, "Utilities", { value: globalMocks.mockUtilities, configurable: true });
     Object.defineProperty(vscode.workspace, "registerTextDocumentContentProvider", {
         value: globalMocks.mockRegisterTextDocumentContentProvider,
         configurable: true,
@@ -364,10 +394,6 @@ async function createGlobalMocks() {
     Object.defineProperty(vscode.Disposable, "from", { value: globalMocks.mockFrom, configurable: true });
     Object.defineProperty(ZoweDatasetNode, "getProfileName", {
         value: globalMocks.mockGetProfileName,
-        configurable: true,
-    });
-    Object.defineProperty(imperative, "ImperativeConfig", {
-        value: globalMocks.mockImperativeConfig,
         configurable: true,
     });
     Object.defineProperty(globalMocks.mockImperativeConfig, "instance", {
@@ -401,10 +427,6 @@ async function createGlobalMocks() {
         }),
     });
     Object.defineProperty(ZoweExplorerExtender, "showZoweConfigError", { value: vi.fn(), configurable: true });
-    Object.defineProperty(imperative, "ProfileInfo", {
-        get: globalMocks.mockImperativeProfileInfo,
-        configurable: true,
-    });
     Object.defineProperty(ProfilesUtils, "promptUserWithNoConfigs", {
         value: globalMocks.mockPromptUserWithNoConfigs,
         configurable: true,
@@ -470,10 +492,6 @@ describe("Extension Unit Tests", () => {
     beforeAll(async () => {
         globalMocks = await createGlobalMocks();
         vi.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
-        Object.defineProperty(imperative, "ProfileInfo", {
-            get: globalMocks.mockImperativeProfileInfo,
-            configurable: true,
-        });
         globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
@@ -517,11 +535,8 @@ describe("Extension Unit Tests", () => {
         // Mock the FileManagement.getZoweDir to avoid calling the static method: ProfileInfo.getZoweDir()
         vi.spyOn(FileManagement, "getZoweDir").mockImplementation((() => undefined) as any);
 
-        Object.defineProperty(imperative, "ProfileInfo", {
-            value: vi.fn().mockImplementation(() => {
-                throw new Error("Error in ProfileInfo to break activate function");
-            }),
-            configurable: true,
+        hoistedMocks.mockImperativeProfileInfo.mockImplementationOnce(() => {
+            throw new Error("Error in ProfileInfo to break activate function");
         });
         globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
         globalMocks.mockExistsSync.mockReturnValueOnce(false);

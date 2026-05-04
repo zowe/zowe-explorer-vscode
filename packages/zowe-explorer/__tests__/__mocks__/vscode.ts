@@ -1649,6 +1649,7 @@ export namespace workspace {
 // We need to do this since "delete" is a reserved keyword and cannot be defined as a function name.
 Object.defineProperty(workspace.fs, "delete", {
     value: vi.fn(),
+    configurable: true,
 });
 
 export interface InputBoxOptions {
