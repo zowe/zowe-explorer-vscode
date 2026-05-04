@@ -162,12 +162,10 @@ describe("AbstractFtpApi", () => {
             rejectUnauthorized: false,
             serverName: "example2.com",
         };
-        const createConfigFromArgsSpy = vi.spyOn(FTPConfig, "createConfigFromArguments");
+        vi.spyOn(FTPConfig, "connectFromArguments").mockResolvedValue({} as any);
         const instance = new Dummy();
-
         await instance.ftpClient({ ...profile, profile: ftpProfile });
-
-        expect(createConfigFromArgsSpy).toHaveBeenLastCalledWith(ftpProfile);
+        expect(FTPConfig.connectFromArguments).toHaveBeenLastCalledWith(ftpProfile);
     });
 
     it("should close the connection", () => {
