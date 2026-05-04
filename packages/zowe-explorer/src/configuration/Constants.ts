@@ -62,6 +62,7 @@ export class Constants {
     public static readonly JOBS_SPOOL_CONTEXT = "spool";
     public static readonly POLL_CONTEXT = Constants.CONTEXT_PREFIX + "polling";
     public static readonly VSAM_CONTEXT = "vsam";
+    public static readonly VSAM_FAV_CONTEXT = "vsam_fav";
     public static readonly INACTIVE_CONTEXT = Constants.CONTEXT_PREFIX + "Inactive";
     public static readonly ACTIVE_CONTEXT = Constants.CONTEXT_PREFIX + "Active";
     public static readonly UNVERIFIED_CONTEXT = Constants.CONTEXT_PREFIX + "Unverified";

@@ -1075,12 +1075,12 @@
           "group": "inline@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*_fav.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member|vsam).*_fav.*/",
           "command": "zowe.removeFavorite",
           "group": "inline"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds|vsam).*/",
           "command": "zowe.addFavorite",
           "group": "inline"
         },
@@ -1200,7 +1200,7 @@
           "group": "003_zowe_dsWorkspace@0"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds|vsam).*/",
           "command": "zowe.addFavorite",
           "group": "003_zowe_dsWorkspace@0"
         },
@@ -1210,7 +1210,7 @@
           "group": "003_zowe_dsWorkspace@1"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*_fav.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member|vsam).*_fav.*/",
           "command": "zowe.removeFavorite",
           "group": "003_zowe_dsWorkspace@1"
         },

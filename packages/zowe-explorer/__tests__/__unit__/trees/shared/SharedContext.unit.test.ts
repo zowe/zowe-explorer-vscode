@@ -23,6 +23,8 @@ describe("Context helper tests", () => {
     const DS_DS_CONTEXT = "ds";
     const DS_MEMBER_CONTEXT = "member";
     const DS_MIGRATED_FILE_CONTEXT = "migr";
+    const VSAM_CONTEXT = "vsam";
+    const VSAM_FAV_CONTEXT = "vsam_fav";
     const USS_SESSION_CONTEXT = "ussSession";
     const USS_DIR_CONTEXT = "directory";
     const USS_FAV_DIR_CONTEXT = "directory_fav";
@@ -481,6 +483,36 @@ describe("Context helper tests", () => {
             SharedContext.getSessionType(treeItem);
         } catch (err) {
             expect(err.message).toEqual("Session node passed in does not have a type");
+        }
+    });
+
+    it("Test Favorite VSAM", () => {
+        for (const ctx of testList) {
+            treeItem.contextValue = ctx;
+            switch (ctx) {
+                case VSAM_FAV_CONTEXT:
+                    expect(SharedContext.isFavoriteVsam(treeItem)).toBe(true);
+                    expect(SharedContext.isVsam(treeItem)).toBe(true);
+                    break;
+                default:
+                    expect(SharedContext.isFavoriteVsam(treeItem)).toBe(false);
+            }
+        }
+    });
+
+    it("Test Non Favorite VSAM", () => {
+        for (const ctx of testList) {
+            treeItem.contextValue = ctx;
+            switch (ctx) {
+                case VSAM_CONTEXT:
+                    expect(SharedContext.isVsam(treeItem)).toBe(true);
+                    expect(SharedContext.isFavoriteVsam(treeItem)).toBe(false);
+                    break;
+                default:
+                    if (ctx !== VSAM_FAV_CONTEXT) {
+                        expect(SharedContext.isVsam(treeItem)).toBe(false);
+                    }
+            }
         }
     });
 });

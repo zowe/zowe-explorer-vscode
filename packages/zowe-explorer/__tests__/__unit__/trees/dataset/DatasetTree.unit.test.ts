@@ -1611,6 +1611,28 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         expect(SharedContext.isFavorite(dsNode)).toBe(true);
         expect(dsNode.contextValue).toContain(Constants.FAV_SUFFIX);
     });
+    it("Checking addFavorite updates VSAM node context in search tree with _fav", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const vsamNode = new ZoweDatasetNode({
+            label: "MY.VSAM.CLUSTER",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        vsamNode.contextValue = Constants.VSAM_CONTEXT;
+        testTree.mSessionNodes[1].children = [vsamNode];
+
+        expect(SharedContext.isFavorite(vsamNode)).toBe(false);
+
+        await testTree.addFavorite(vsamNode);
+
+        expect(SharedContext.isFavorite(vsamNode)).toBe(true);
+        expect(vsamNode.contextValue).toContain(Constants.FAV_SUFFIX);
+    });
     it("Checking addFavorite updates session node context with _filterFav when saving search", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -1915,6 +1937,31 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         await testTree.removeFavorite(favDs);
 
         expect(SharedContext.isFavorite(dsNode)).toBe(false);
+    });
+
+    it("Checking removeFavorite removes _fav context from VSAM in search tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const vsamNode = new ZoweDatasetNode({
+            label: "MY.VSAM.CLUSTER",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        vsamNode.contextValue = Constants.VSAM_CONTEXT;
+        testTree.mSessionNodes[1].children = [vsamNode];
+
+        await testTree.addFavorite(vsamNode);
+
+        expect(SharedContext.isFavorite(vsamNode)).toBe(true);
+
+        const favVsam = testTree.mFavorites[0].children[0];
+        await testTree.removeFavorite(favVsam);
+
+        expect(SharedContext.isFavorite(vsamNode)).toBe(false);
     });
     it("Checking removeFavorite from search-tree session node removes matching saved search", async () => {
         createGlobalMocks();

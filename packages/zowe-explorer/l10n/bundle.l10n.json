@@ -242,6 +242,7 @@
   "Added Spool file attribute information to a hover over the Spool file's name. <a>#1832</a>": "Added Spool file attribute information to a hover over the Spool file's name. <a>#1832</a>",
   "Added Status bar to indicate that data is being pulled from mainframe. <a>#2484</a>": "Added Status bar to indicate that data is being pulled from mainframe. <a>#2484</a>",
   "Added support for adding a Zowe profile across all trees <a>#2603</a>": "Added support for adding a Zowe profile across all trees <a>#2603</a>",
+  "Added support for adding VSAM datasets to favorites.<a>#4103</a>": "Added support for adding VSAM datasets to favorites.<a>#4103</a>",
   "Added support for asynchronous operations when using integrated terminals. <a>#3640</a>": "Added support for asynchronous operations when using integrated terminals. <a>#3640</a>",
   "Added support for CLI home directory environment variable in Team Config file watcher, and support watching Team Config files named zowe.config.json and zowe.config.user.json at both locations. <a>#1913</a>": "Added support for CLI home directory environment variable in Team Config file watcher, and support watching Team Config files named zowe.config.json and zowe.config.user.json at both locations. <a>#1913</a>",
   "Added support for consoleName property in z/OSMF profiles when issuing MVS commands <a>#1667</a>": "Added support for consoleName property in z/OSMF profiles when issuing MVS commands <a>#1667</a>",
