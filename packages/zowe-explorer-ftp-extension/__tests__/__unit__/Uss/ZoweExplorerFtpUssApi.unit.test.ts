@@ -48,7 +48,7 @@ describe("FtpUssApi", () => {
         const profile: imperative.IProfileLoaded = { message: "", type: "zftp", failNotFound: false, profile: { host: "example.com", port: 22 } };
         UssApi = new FtpUssApi(profile);
         UssApi.checkedProfile = vi.fn().mockReturnValue({ message: "success", type: "zftp", failNotFound: false });
-        UssApi.ftpClient = vi.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
+        UssApi.ftpClient = vi.fn().mockResolvedValue({ host: "", user: "", password: "", port: "" });
         UssApi.releaseConnection = vi.fn();
         globals.SESSION_MAP.get = vi.fn().mockReturnValue({ ussListConnection: { isConnected: () => true } });
         globals.LOGGER.getExtensionName = vi.fn().mockReturnValue("Zowe Explorer FTP Extension");
@@ -77,7 +77,8 @@ describe("FtpUssApi", () => {
     it("should view uss files.", async () => {
         const localFile = createTempFileName();
         const response = TestUtils.getSingleLineStream();
-        UssUtils.downloadFile = vi.fn().mockReturnValue(response);
+        UssUtils.downloadFile = vi.fn().mockResolvedValue(response);
+        vi.spyOn(UssApi as any, "hashFile").mockResolvedValue("a".repeat(64)); // 64-char hash
 
         const mockParams = {
             ussFilePath: "/a/b/c.txt",
