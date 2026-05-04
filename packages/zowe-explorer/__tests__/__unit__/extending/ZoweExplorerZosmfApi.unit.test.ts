@@ -31,7 +31,10 @@ describe("Zosmf API tests", () => {
             return { api: "", commandResponse: "", success: true };
         });
 
-        (zosfiles as any).Copy = { dataSet };
+        Object.defineProperty(zosfiles, "Copy", {
+            value: { dataSet },
+            configurable: true,
+        });
 
         const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = vi.fn();
@@ -46,7 +49,10 @@ describe("Zosmf API tests", () => {
             return { api: "", commandResponse: "", success: true };
         });
 
-        (zosfiles as any).Copy = { dataSet };
+        Object.defineProperty(zosfiles, "Copy", {
+            value: { dataSet },
+            configurable: true,
+        });
 
         const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = vi.fn();
@@ -63,7 +69,10 @@ describe("Zosmf API tests", () => {
             return { api: "", commandResponse: "", success: true };
         });
 
-        (zosfiles as any).Copy = { dataSet };
+        Object.defineProperty(zosfiles, "Copy", {
+            value: { dataSet },
+            configurable: true,
+        });
 
         const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = vi.fn();
@@ -81,7 +90,10 @@ describe("Zosmf API tests", () => {
             }
         );
 
-        (zosfiles as any).Upload = { fileToUssFile };
+        Object.defineProperty(zosfiles, "Upload", {
+            value: { fileToUssFile },
+            configurable: true,
+        });
 
         const api = new ZoweExplorerZosmf.UssApi();
         api.getSession = vi.fn();

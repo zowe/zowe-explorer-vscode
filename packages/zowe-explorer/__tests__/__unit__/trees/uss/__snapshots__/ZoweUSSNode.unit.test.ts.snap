@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ZoweUSSNode Unit Tests - Initialization of class Checks that the ZoweUSSNode structure matches the snapshot 1`] = `
+exports[`ZoweUSSNode Unit Tests - Initialization of class > Checks that the ZoweUSSNode structure matches the snapshot 1`] = `
 ZoweUSSNode {
   "children": [],
   "collapsibleState": 0,

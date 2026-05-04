@@ -43,16 +43,19 @@ export default mergeConfig(
             clearMocks: false,
             restoreMocks: false,
             mockReset: false,
-            deps: {
-                // Tell Vitest to inline this dependency so Vite processes it 
-                // and vi.mock('vscode') can be applied to its transient imports
-                inline: [/@zowe\/zowex-for-zowe-explorer/, /zowe-explorer-ftp-extension/]
+            server: {
+                deps: {
+                    // Tell Vitest to inline this dependency so Vite processes it 
+                    // and vi.mock('vscode') can be applied to its transient imports
+                    inline: [/@zowe\/zowex-for-zowe-explorer/, /zowe-explorer-ftp-extension/]
+                }
             }
         },
         resolve: {
             alias: {
                 // Force all imports of 'vscode' to resolve to your mock file
-                vscode: fileURLToPath(new URL('./__mocks__/vscode.ts', import.meta.url))
+                vscode: fileURLToPath(new URL('./__mocks__/vscode.ts', import.meta.url)),
+                "@zowe/zowex-for-zowe-explorer": fileURLToPath(new URL('../zowex-for-zowe-explorer/src/index.ts', import.meta.url))
             }
         },
         esbuild: {

@@ -277,9 +277,7 @@ describe("ReleaseNotes Webview", () => {
 
         it("should return error message and logs error if changelog file cannot be read", async () => {
             const rn = new ReleaseNotes(context, "3.2");
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const fsMock = require("fs/promises");
-            fsMock.readFile.mockRejectedValueOnce(new Error("File not found"));
+            (fs.readFile as Mock).mockRejectedValueOnce(new Error("File not found"));
             const loggerSpy = vi.spyOn(ZoweLogger, "error").mockImplementation(() => {});
             const result = await rn.getChangelog();
             expect(result).toBe("No changelog entries found for this version.");

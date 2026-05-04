@@ -17,9 +17,6 @@ import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { FilterItem } from "../../../../src/management/FilterManagement";
 
-vi.mock("vscode");
-vi.mock("fs");
-
 describe("DataSetTemplates Class Unit Tests", () => {
     const templates: Types.DataSetAllocTemplate[] = [];
     const template1 = {
@@ -56,13 +53,16 @@ describe("DataSetTemplates Class Unit Tests", () => {
         },
     };
     templates.push(...[template1, template2]);
-    const setValueSpy = vi.spyOn(SettingsConfig, "setDirectValue");
+    const setValueSpy = vi.spyOn(SettingsConfig, "setDirectValue").mockResolvedValue(undefined);
     const getValueSpy = vi.spyOn(SettingsConfig, "getDirectValue");
     const traceLoggerSpy = vi.spyOn(ZoweLogger, "trace");
     const infoLoggerSpy = vi.spyOn(ZoweLogger, "info");
     Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [], configurable: true });
 
-    beforeEach(() => vi.resetAllMocks());
+    beforeEach(() => {
+        vi.resetAllMocks();
+        setValueSpy.mockResolvedValue(undefined);
+    });
 
     describe("getDsTemplates()", () => {
         it("should retrieve the available dataset templates", () => {

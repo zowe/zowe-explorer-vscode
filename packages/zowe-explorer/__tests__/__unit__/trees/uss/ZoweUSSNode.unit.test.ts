@@ -130,25 +130,15 @@ function createGlobalMocks() {
         value: globalMocks.mockShowWarningMessage,
         configurable: true,
     });
-    Object.defineProperty(globalMocks.Utilities, "isFileTagBinOrAscii", {
-        value: globalMocks.isFileTagBinOrAscii,
-        configurable: true,
-    });
     Object.defineProperty(vscode.window, "showInputBox", { value: globalMocks.showInputBox, configurable: true });
     Object.defineProperty(vscode.window, "createTreeView", {
         value: vi.fn().mockReturnValue({ onDidCollapseElement: vi.fn() }),
         configurable: true,
     });
-    Object.defineProperty(zosmf, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
-    Object.defineProperty(globalMocks.ZosmfSession, "createSessCfgFromArgs", {
-        value: globalMocks.createSessCfgFromArgs,
-        configurable: true,
-    });
-    Object.defineProperty(zosfiles, "Download", { value: globalMocks.Download, configurable: true });
-    Object.defineProperty(zosfiles, "Utilities", { value: globalMocks.Utilities, configurable: true });
-    Object.defineProperty(globalMocks.Download, "ussFile", { value: globalMocks.ussFile, configurable: true });
-    Object.defineProperty(zosfiles, "Delete", { value: globalMocks.Delete, configurable: true });
-    Object.defineProperty(globalMocks.Delete, "ussFile", { value: globalMocks.ussFile, configurable: true });
+    vi.spyOn(zosmf.ZosmfSession, "createSessCfgFromArgs").mockImplementation(globalMocks.createSessCfgFromArgs as any);
+    vi.spyOn(zosfiles.Download, "ussFile").mockImplementation(globalMocks.ussFile as any);
+    vi.spyOn(zosfiles.Delete, "ussFile").mockImplementation(globalMocks.ussFile as any);
+    vi.spyOn(zosfiles.Utilities, "isFileTagBinOrAscii").mockImplementation(globalMocks.isFileTagBinOrAscii as any);
     Object.defineProperty(Profiles, "createInstance", {
         value: vi.fn(() => globalMocks.profileOps),
         configurable: true,
@@ -344,10 +334,7 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
         });
 
         Object.defineProperty(newMocks.node, "openedDocumentInstance", { get: globalMocks.openedDocumentInstance });
-        Object.defineProperty(globalMocks.Utilities, "putUSSPayload", {
-            value: newMocks.putUSSPayload,
-            configurable: true,
-        });
+        vi.spyOn(zosfiles.Utilities, "putUSSPayload").mockImplementation(newMocks.putUSSPayload as any);
 
         return newMocks;
     }
@@ -391,10 +378,8 @@ describe("ZoweUSSNode Unit Tests - Function node.refreshUSS()", () => {
             parentNode: badContextValueParent,
             parentPath: "/",
         });
-        const showErrorMessageSpy = vi.spyOn(vscode.window, "showErrorMessage");
-
         await expect(childNode.refreshUSS()).rejects.toThrow();
-        expect(showErrorMessageSpy).toHaveBeenCalledTimes(1);
+        expect(globalMocks.showErrorMessage).toHaveBeenCalledTimes(1);
     });
     it("Tests that node.refreshUSS() works correctly for files under directories", async () => {
         const globalMocks = createGlobalMocks();
@@ -588,10 +573,11 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
         const unexpectedError = new Error("Unexpected failure");
 
         const renameMock = vi.spyOn(vscode.workspace.fs, "rename").mockRejectedValueOnce(unexpectedError);
+        renameMock.mockClear();
 
         await expect(blockMocks.ussDir.rename(newFullPath)).rejects.toThrow("Unexpected failure");
 
-        expect(renameMock).toHaveBeenCalledTimes(3);
+        expect(renameMock).toHaveBeenCalledTimes(1);
 
         renameMock.mockRestore();
     });
@@ -638,15 +624,17 @@ describe("ZoweUSSNode Unit Tests - Function node.reopen()", () => {
 });
 
 describe("ZoweUSSNode Unit Tests - node.setEncoding() and encoding behaviors", () => {
-    const setEncodingForFileMock = vi.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation((() => undefined) as any);
-    const getEncodingMock = vi.spyOn(UssFSProvider.instance as any, "getEncodingForFile");
+    let setEncodingForFileMock: any;
+    let getEncodingMock: any;
 
-    afterAll(() => {
-        setEncodingForFileMock.mockRestore();
+    beforeEach(() => {
+        setEncodingForFileMock = vi.spyOn(UssFSProvider.instance, "setEncodingForFile").mockImplementation((() => undefined) as any);
+        getEncodingMock = vi.spyOn(UssFSProvider.instance as any, "getEncodingForFile");
     });
 
     afterEach(() => {
-        getEncodingMock.mockReset();
+        setEncodingForFileMock.mockRestore();
+        getEncodingMock.mockRestore();
     });
 
     it("sets encoding to binary", () => {
@@ -1273,10 +1261,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                 };
             }),
         });
-        Object.defineProperty(globalMocks.Utilities, "putUSSPayload", {
-            value: newMocks.putUSSPayload,
-            configurable: true,
-        });
+        vi.spyOn(zosfiles.Utilities, "putUSSPayload").mockImplementation(newMocks.putUSSPayload as any);
 
         const mockUssApi = ZoweExplorerApiRegister.getUssApi(globalMocks.testProfile);
         const getUssApiMock = vi.fn();
@@ -1662,6 +1647,8 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         await blockMocks.testNode.pasteUssTree();
     });
     it("Tests util disposeClipboardContents function correctly free clipboardContents", async () => {
+        const globalMocks = createGlobalMocks();
+        globalMocks.readText.mockResolvedValue("");
         vscode.env.clipboard.writeText("test");
         USSUtils.disposeClipboardContents();
         await expect(vscode.env.clipboard.readText()).resolves.not.toThrow();
@@ -1960,6 +1947,10 @@ describe("ZoweUSSNode Unit Tests - Function getUssFiles() with showHidden settin
             mockListFiles: vi.fn(),
             mockFilterHiddenFiles: vi.fn(),
         };
+
+        vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
+            getSession: () => true,
+        } as any);
 
         return newMocks;
     }
