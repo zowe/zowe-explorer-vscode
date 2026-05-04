@@ -2070,3 +2070,24 @@ describe("ZoweUSSNode Unit Tests - Function getUssFiles() with showHidden settin
         getDirectValueSpy.mockRestore();
     });
 });
+
+describe("ZoweUSSNode Unit Tests - Function pasteUssTree", () => {
+    it("Should show error when pasting non-USS content into the USS view (cross-view paste)", async () => {
+        const globalMocks = createGlobalMocks();
+        const ussNode = new ZoweUSSNode({
+            label: "testDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        ussNode.fullPath = "/u/user";
+
+        // Simulate dataset content on clipboard (no ussPath property)
+        globalMocks.readText.mockResolvedValue(JSON.stringify({ dataSetName: "HLQ.TEST.DS" }));
+
+        await expect(ussNode.pasteUssTree()).resolves.not.toThrow();
+        expect(globalMocks.showErrorMessage).toHaveBeenCalledWith(
+            expect.stringContaining("Cross-view paste is not supported")
+        );
+    });
+});
