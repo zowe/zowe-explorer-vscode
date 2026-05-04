@@ -31,10 +31,7 @@ describe("Zosmf API tests", () => {
             return { api: "", commandResponse: "", success: true };
         });
 
-        Object.defineProperty(zosfiles, "Copy", {
-            value: { dataSet },
-            configurable: true,
-        });
+        vi.spyOn(zosfiles.Copy, "dataSet").mockImplementation(dataSet as any);
 
         const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = vi.fn();
@@ -49,10 +46,7 @@ describe("Zosmf API tests", () => {
             return { api: "", commandResponse: "", success: true };
         });
 
-        Object.defineProperty(zosfiles, "Copy", {
-            value: { dataSet },
-            configurable: true,
-        });
+        vi.spyOn(zosfiles.Copy, "dataSet").mockImplementation(dataSet as any);
 
         const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = vi.fn();
@@ -69,10 +63,7 @@ describe("Zosmf API tests", () => {
             return { api: "", commandResponse: "", success: true };
         });
 
-        Object.defineProperty(zosfiles, "Copy", {
-            value: { dataSet },
-            configurable: true,
-        });
+        vi.spyOn(zosfiles.Copy, "dataSet").mockImplementation(dataSet as any);
 
         const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = vi.fn();
@@ -90,10 +81,7 @@ describe("Zosmf API tests", () => {
             }
         );
 
-        Object.defineProperty(zosfiles, "Upload", {
-            value: { fileToUssFile },
-            configurable: true,
-        });
+        vi.spyOn(zosfiles.Upload, "fileToUssFile").mockImplementation(fileToUssFile as any);
 
         const api = new ZoweExplorerZosmf.UssApi();
         api.getSession = vi.fn();
@@ -109,12 +97,7 @@ describe("Zosmf API tests", () => {
         api.getSession = vi.fn();
         const response = { shouldMatch: true };
 
-        Object.defineProperty(zosfiles, "Download", {
-            value: {
-                ussFile: vi.fn().mockResolvedValue(response),
-            },
-            configurable: true,
-        });
+        vi.spyOn(zosfiles.Download, "ussFile").mockResolvedValue(response as any);
 
         await expect(api.getContents("/some/input/path", {})).resolves.toEqual(response);
     });
@@ -122,12 +105,7 @@ describe("Zosmf API tests", () => {
     it("should update the tag attribute of a USS file if a new change is made", async () => {
         const api = new ZoweExplorerZosmf.UssApi();
         const changeTagSpy = vi.fn();
-        Object.defineProperty(zosfiles, "Utilities", {
-            value: {
-                putUSSPayload: changeTagSpy,
-            },
-            configurable: true,
-        });
+        vi.spyOn(zosfiles.Utilities, "putUSSPayload").mockImplementation(changeTagSpy as any);
         await expect(api.updateAttributes("/test/path", { tag: "utf-8" })).resolves.not.toThrow();
         expect(changeTagSpy).toHaveBeenCalledTimes(1);
     });
@@ -137,12 +115,7 @@ describe("Zosmf API tests", () => {
         vi.spyOn(JSON, "parse").mockReturnValue({
             stdout: ["-t UTF-8 tesfile.txt"],
         });
-        Object.defineProperty(zosfiles, "Utilities", {
-            value: {
-                putUSSPayload: () => Buffer.from(""),
-            },
-            configurable: true,
-        });
+        vi.spyOn(zosfiles.Utilities, "putUSSPayload").mockImplementation((() => Buffer.from("")) as any);
         await expect(api.getTag("testfile.txt")).resolves.toEqual("UTF-8");
     });
 });

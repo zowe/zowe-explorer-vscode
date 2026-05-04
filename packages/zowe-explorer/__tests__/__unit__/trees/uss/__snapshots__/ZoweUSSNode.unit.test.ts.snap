@@ -47,7 +47,7 @@ ZoweUSSNode {
       "label": "sestest",
       "mParent": undefined,
       "onUpdateEmitter": EventEmitter {
-        "event": [MockFunction],
+        "event": [MockFunction spy],
         "subscribers": [],
       },
       "parentPath": undefined,
@@ -69,20 +69,35 @@ ZoweUSSNode {
         "scheme": "zowe-uss",
       },
       "session": Session {
-        "ISession": {
+        "mISession": {
+          "base64EncodedAuth": "ZmFrZTpmYWtl",
+          "basePath": "",
           "hostname": "fake",
           "password": "fake",
           "port": 1443,
           "protocol": "https",
+          "rejectUnauthorized": true,
+          "secureProtocol": "SSLv23_method",
+          "strictSSL": true,
           "type": "basic",
           "user": "fake",
+        },
+        "mLog": Logger {
+          "category": "imperative",
+          "initStatus": false,
+          "mJsLogger": Logger {
+            "callStackSkipIndex": 0,
+            "category": "imperative",
+            "context": {},
+            "parseCallStack": [Function],
+          },
         },
       },
       "tooltip": "Profile: sestest
 Profile Type: zosmf",
     },
     "onUpdateEmitter": EventEmitter {
-      "event": [MockFunction],
+      "event": [MockFunction spy],
       "subscribers": [],
     },
     "parentPath": "/",
@@ -107,7 +122,7 @@ Profile Type: zosmf",
     "tooltip": "/testDir",
   },
   "onUpdateEmitter": EventEmitter {
-    "event": [MockFunction],
+    "event": [MockFunction spy],
     "subscribers": [],
   },
   "parentPath": "/testDir",

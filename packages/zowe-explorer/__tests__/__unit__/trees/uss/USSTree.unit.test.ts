@@ -136,10 +136,7 @@ function createGlobalMocks() {
     });
     Object.defineProperty(vscode.window, "createTreeView", { value: globalMocks.createTreeView, configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: globalMocks.executeCommand, configurable: true });
-    Object.defineProperty(globalMocks.Utilities, "renameUSSFile", {
-        value: globalMocks.renameUSSFile,
-        configurable: true,
-    });
+    vi.spyOn(zosfiles.Utilities, "renameUSSFile").mockImplementation(globalMocks.renameUSSFile as any);
     Object.defineProperty(vscode.window, "showQuickPick", { value: globalMocks.showQuickPick, configurable: true });
     Object.defineProperty(vscode.window, "showInformationMessage", {
         value: globalMocks.showInformationMessage,
@@ -149,22 +146,15 @@ function createGlobalMocks() {
         value: globalMocks.createSessCfgFromArgs,
         configurable: true,
     });
-    Object.defineProperty(zosmf, "ZosmfSession", { value: globalMocks.ZosmfSession, configurable: true });
     Object.defineProperty(globalMocks.filters, "getFilters", { value: globalMocks.getFilters, configurable: true });
     Object.defineProperty(vscode.window, "createQuickPick", { value: globalMocks.createQuickPick, configurable: true });
-    Object.defineProperty(zosfiles, "Download", {
-        value: {
-            ussFile: vi.fn().mockReturnValueOnce({
-                apiResponse: {
-                    etag: "ABC123",
-                },
-            }),
+    vi.spyOn(zosfiles.Download, "ussFile").mockReturnValueOnce({
+        apiResponse: {
+            etag: "ABC123",
         },
-        configurable: true,
-    });
+    } as any);
     Object.defineProperty(Constants, "PROFILES_CACHE", { value: globalMocks.mockProfilesInstance!, configurable: true });
-    Object.defineProperty(zosfiles, "Utilities", { value: globalMocks.Utilities, configurable: true });
-    Object.defineProperty(zosfiles.Utilities, "isFileTagBinOrAscii", { value: vi.fn(), configurable: true });
+    vi.spyOn(zosfiles.Utilities, "isFileTagBinOrAscii").mockReturnValue(undefined as any);
     Object.defineProperty(vscode.window, "showErrorMessage", {
         value: globalMocks.showErrorMessage,
         configurable: true,
@@ -181,21 +171,18 @@ function createGlobalMocks() {
         configurable: true,
     });
     vi.spyOn(Profiles, "getInstance").mockReturnValue(globalMocks.mockProfilesInstance as unknown as any);
-    Object.defineProperty(ZoweLocalStorage, "globalState", {
-        value: {
-            get: () => ({
-                persistence: true,
-                favorites: [{ children: ["test", "test2"] }],
-                history: [],
-                sessions: ["zosmf"],
-                searchHistory: [],
-                fileHistory: [],
-            }),
-            update: vi.fn(),
-            keys: () => [],
-        },
-        configurable: true,
-    });
+    ZoweLocalStorage.initializeZoweLocalStorage({
+        get: () => ({
+            persistence: true,
+            favorites: [{ children: ["test", "test2"] }],
+            history: [],
+            sessions: ["zosmf"],
+            searchHistory: [],
+            fileHistory: [],
+        }),
+        update: vi.fn(),
+        keys: () => [],
+    } as any);
 
     globalMocks.withProgress.mockImplementation((progLocation, callback) => callback());
     globalMocks.withProgress.mockReturnValue(globalMocks.testResponse);
@@ -227,26 +214,36 @@ function createGlobalMocks() {
         configurable: true,
     });
 
-    vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
+    const mockProviders = {
         ds: {
             addSingleSession: vi.fn(),
             mSessionNodes: [...globalMocks.testTree.mSessionNodes],
             setStatusForSession: vi.fn(),
             refresh: vi.fn(),
+            refreshElement: vi.fn(),
+            flipState: vi.fn(),
         } as any,
         uss: {
             addSingleSession: vi.fn(),
             mSessionNodes: [...globalMocks.testTree.mSessionNodes],
             setStatusForSession: vi.fn(),
             refresh: vi.fn(),
+            refreshElement: vi.fn(),
+            flipState: vi.fn(),
         } as any,
-        jobs: {
+        job: {
             addSingleSession: vi.fn(),
             mSessionNodes: [...globalMocks.testTree.mSessionNodes],
             setStatusForSession: vi.fn(),
             refresh: vi.fn(),
+            refreshElement: vi.fn(),
+            flipState: vi.fn(),
         } as any,
-    } as any);
+    };
+    vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(mockProviders as any);
+    vi.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockProviders.uss as any);
+    vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockProviders.ds as any);
+    vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockProviders.job as any);
 
     return globalMocks;
 }
@@ -1422,7 +1419,8 @@ describe("USSTree Unit Tests - Function rename", () => {
         globalMocks.FileSystemProvider.rename.mockClear();
 
         const newMocks = {
-            errorForUnsavedResource: vi.spyOn(TreeViewUtils, "errorForUnsavedResource").mockResolvedValueOnce(false),
+            errorForUnsavedResource: vi.spyOn(TreeViewUtils, "errorForUnsavedResource").mockResolvedValue(false),
+            getAllLoadedItems: vi.spyOn(globalMocks.testTree, "getAllLoadedItems").mockResolvedValue([]),
             ussFavNode,
             ussFavNodeParent,
             setAttributes: vi.spyOn(ZoweUSSNode.prototype, "setAttributes").mockImplementation((() => undefined) as any),
@@ -1574,6 +1572,7 @@ describe("USSTree Unit Tests - Function rename", () => {
 
     it("Tests that USSTree.rename() restores focus and shows confirmation message for file", async () => {
         const globalMocks = createGlobalMocks();
+        createBlockMocks(globalMocks);
         const showMessageSpy = vi.spyOn(Gui, "showMessage");
         const revealSpy = vi.spyOn(globalMocks.testTree.getTreeView(), "reveal");
 
@@ -1591,6 +1590,7 @@ describe("USSTree Unit Tests - Function rename", () => {
 
     it("Tests that USSTree.rename() restores focus and shows confirmation message for directory", async () => {
         const globalMocks = createGlobalMocks();
+        createBlockMocks(globalMocks);
         const showMessageSpy = vi.spyOn(Gui, "showMessage");
         const revealSpy = vi.spyOn(globalMocks.testTree.getTreeView(), "reveal");
 
@@ -1826,6 +1826,7 @@ describe("USSTree Unit Tests - Function getChildren", () => {
             ],
         };
         const mockApiResponseWithItems = createFileResponse(mockApiResponseItems);
+        vi.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValue(mockApiResponseWithItems);
         globalMocks.withProgress.mockReturnValue(mockApiResponseWithItems);
         const sessChildren = await globalMocks.testTree.getChildren(globalMocks.testTree.mSessionNodes[1]);
         const sampleChildren: ZoweUSSNode[] = [testDir];
@@ -1880,6 +1881,7 @@ describe("USSTree Unit Tests - Function getChildren", () => {
             ],
         };
         const mockApiResponseWithItems = createFileResponse(mockApiResponseItems);
+        vi.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValue(mockApiResponseWithItems);
         globalMocks.withProgress.mockReturnValue(mockApiResponseWithItems);
 
         vi.spyOn(zosfiles.List, "fileList").mockResolvedValueOnce({

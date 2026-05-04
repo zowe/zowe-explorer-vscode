@@ -40,9 +40,11 @@ import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { DeferredPromise } from "@zowe/imperative";
 
-const dayjs = require("dayjs");
+import dayjsPkg from "dayjs";
+const dayjs = "default" in dayjsPkg ? dayjsPkg.default : dayjsPkg;
 
 const testProfile = createIProfile();
+testProfile.profile.password = "fake"; // Fix missing token errors when password is undefined. TODO(traeok): Investigate why this is needed
 const testEntries = {
     ps: {
         ...new DsEntry("USER.DATA.PS", false),
@@ -769,6 +771,7 @@ describe("DatasetFSProvider", () => {
 
             const shortTimeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), 100));
 
+            profilePromise.resolve();
             await DatasetFSProvider.instance.readFile(testUris.ps);
 
             await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
@@ -811,6 +814,7 @@ describe("DatasetFSProvider", () => {
 
             const shortTimeout = new Promise<void>((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for profile")), 100));
 
+            profilePromise.resolve();
             await DatasetFSProvider.instance.readFile(testUris.ps);
 
             await expect(Promise.race([profilePromise.promise, shortTimeout])).resolves.toBeUndefined();
@@ -1353,6 +1357,12 @@ describe("DatasetFSProvider", () => {
                 profileName: "sestest",
                 profile: testEntries.ps.metadata.profile,
             });
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                dataSet: vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: { items: [{ name: "USER.DATA.PS", dsorg: "PS" }] }
+                })
+            } as any);
             await DatasetFSProvider.instance.stat(testUris.ps);
             expect(lookupMock).toHaveBeenCalledWith(testUris.ps, expect.anything());
         });
@@ -1384,6 +1394,12 @@ describe("DatasetFSProvider", () => {
                 profileName: "sestest",
                 profile: testEntries.ps.metadata.profile,
             });
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                dataSet: vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: { items: [{ name: "USER.DATA.PS", dsorg: "PS" }] }
+                })
+            } as any);
             const uriWithFetchQuery = testUris.ps.with({ query: "fetch=true" });
             await DatasetFSProvider.instance.stat(uriWithFetchQuery);
             expect(remoteLookupForResourceMock).toHaveBeenCalledWith(uriWithFetchQuery);
@@ -1521,6 +1537,13 @@ describe("DatasetFSProvider", () => {
                     profile: testEntries.ps.metadata.profile,
                 });
                 statSpy = vi.spyOn(DatasetFSProvider.instance as any, "statImplementation");
+                vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    dataSet: vi.fn().mockResolvedValue({
+                        success: true,
+                        apiResponse: { items: [{ name: "USER.DATA.PS", dsorg: "PS" }] },
+                        commandResponse: ""
+                    })
+                } as any);
                 (DatasetFSProvider.instance as any).requestCache.clear();
             });
             it("should handle subsequent identical FS calls - should return the promise of the original request", async () => {
