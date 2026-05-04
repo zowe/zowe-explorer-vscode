@@ -10,10 +10,10 @@
  */
 
 import { Mutex } from "async-mutex";
-import { AuthHandler, AuthCancelledError, Gui, ZoweVsCodeExtension } from "../../../src";
-import { FileManagement } from "../../../src/utils/FileManagement";
+import { AuthHandler, AuthCancelledError, Gui, ZoweVsCodeExtension } from "../../../../src";
+import { FileManagement } from "../../../../src/utils/FileManagement";
 import { ImperativeError, IProfileLoaded, Session, SessConstants, RestConstants } from "@zowe/imperative";
-import { AuthPromptParams } from "../../../src/profiles/AuthHandler";
+import { AuthPromptParams } from "../../../../src/vscode/session/AuthHandler";
 import * as vscode from "vscode";
 
 const TEST_PROFILE_NAME = "lpar.zosmf";

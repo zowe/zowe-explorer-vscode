@@ -9,7 +9,4 @@
  *
  */
 
-export * from "./doc";
-export * from "./ZoweVsCodeExtension";
-export * from "./ui";
-export * from "./session";
+export * from "./AuthHandler";
