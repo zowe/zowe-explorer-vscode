@@ -23,6 +23,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
     test: {
         exclude: ["**/*.js"],
+        globals: true,
         projects: [
             "packages/zowe-explorer-api/vitest.config.ts",
             "packages/zowe-explorer/vitest.config.ts",

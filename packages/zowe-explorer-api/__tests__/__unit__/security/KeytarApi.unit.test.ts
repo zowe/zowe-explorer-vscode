@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import * as imperative from "@zowe/imperative";
 import { ProfilesCache } from "../../../src/profiles/ProfilesCache";

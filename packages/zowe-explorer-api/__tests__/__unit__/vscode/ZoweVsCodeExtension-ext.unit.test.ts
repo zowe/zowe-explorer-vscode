@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";

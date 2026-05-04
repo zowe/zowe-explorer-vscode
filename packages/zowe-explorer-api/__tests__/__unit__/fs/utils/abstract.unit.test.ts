@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import { DirEntry, FileEntry, FilterEntry, ProfilesCache, ZoweScheme, imperative } from "../../../../src";
 import { MockedProperty } from "../../../../__mocks__/mockUtils";

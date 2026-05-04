@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { Profiles } from "../../../src/configuration/Profiles";

@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import * as vscode from "vscode";
 import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum, Sorting, AuthHandler, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";

@@ -9,7 +9,7 @@
  *
  */
 
-import { vi } from "vitest";
+
 
 /**
  * A provider result represents the values a provider, like the [`HoverProvider`](#HoverProvider),

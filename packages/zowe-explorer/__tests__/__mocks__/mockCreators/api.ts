@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import { imperative, MainframeInteraction } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";

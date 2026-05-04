@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import { JobActions } from "../../../../src/trees/job/JobActions";
 import { JobTableView } from "../../../../src/trees/job/JobTableView";

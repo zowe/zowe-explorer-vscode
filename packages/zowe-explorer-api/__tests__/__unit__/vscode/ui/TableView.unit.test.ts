@@ -12,7 +12,7 @@
 import { join } from "path";
 import { diff } from "deep-object-diff";
 import * as fs from "fs";
-import { vi } from "vitest";
+
 import { Table, TableBuilder, WebView, Gui } from "../../../../src";
 import { ConfigurationTarget, env, EventEmitter, Uri, window, workspace } from "vscode";
 import * as crypto from "crypto";

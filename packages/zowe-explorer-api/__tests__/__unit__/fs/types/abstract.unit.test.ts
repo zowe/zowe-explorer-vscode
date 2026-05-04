@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import { FilePermission } from "vscode";
 import { BufferBuilder, FileEntry, FilterEntry } from "../../../../src";

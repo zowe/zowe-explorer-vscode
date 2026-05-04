@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import { commands, Uri } from "vscode";
 import { ZoweUriHandler } from "../../../src/utils/UriHandler";

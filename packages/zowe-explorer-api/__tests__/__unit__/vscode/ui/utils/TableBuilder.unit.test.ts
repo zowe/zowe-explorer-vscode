@@ -11,7 +11,7 @@
 
 import { window } from "vscode";
 import { Table, TableBuilder, TableMediator } from "../../../../../src";
-import { vi } from "vitest";
+
 
 // TableBuilder unit tests
 

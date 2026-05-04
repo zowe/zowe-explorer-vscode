@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 import { FileSystemError, FileType, Uri, window, workspace } from "vscode";
 import { FileManagement } from "../../../src/utils/FileManagement";
 import { IFileSystemEntry, ZoweScheme } from "../../../src";

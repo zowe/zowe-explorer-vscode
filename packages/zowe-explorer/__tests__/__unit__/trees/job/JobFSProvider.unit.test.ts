@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 import { Disposable, FilePermission, FileType, Uri, window } from "vscode";
 import {
     FsJobsUtils,

@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import * as imperative from "@zowe/imperative";
 import type { IListOptions } from "@zowe/zos-files-for-zowe-sdk";

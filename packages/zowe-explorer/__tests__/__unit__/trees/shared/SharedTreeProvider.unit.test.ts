@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import { createTreeView } from "../../../__mocks__/mockCreators/shared";
 import { Constants } from "../../../../src/configuration/Constants";
