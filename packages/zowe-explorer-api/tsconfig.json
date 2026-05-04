@@ -19,5 +19,8 @@
     "rootDir": "./src"
   },
   "include": ["src/**/*.ts", "src/log4jsconfig.json"],
-  "exclude": ["lib", "node_modules"]
+  "exclude": ["lib", "node_modules"],
+  "references": [
+    { "path": "./tsconfig-tests.json" }
+  ]
 }
