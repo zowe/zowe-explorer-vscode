@@ -22,6 +22,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
     test: {
+        exclude: ["**/*.js"],
         projects: [
             "packages/zowe-explorer-api/vitest.config.ts",
             "packages/zowe-explorer/vitest.config.ts",
@@ -31,6 +32,7 @@ export default defineConfig({
         coverage: {
             provider: "v8",
             reporter: ["text", "lcov", "html", "json", "cobertura"],
+            exclude: ["**/*.js", "**/lib/", "**/__mocks__/", "**/__tests__/", "**/vitest.config.ts"],
         },
     },
 });
