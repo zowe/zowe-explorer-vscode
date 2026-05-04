@@ -11,7 +11,7 @@
 
 import { Logger } from "@zowe/imperative";
 import { Table, TableActionProvider, TableProviderRegistry } from "../../../../../src";
-import { vi } from "vitest";
+
 describe("TableProviderRegistry", () => {
     let registry: TableProviderRegistry;
     let mockProvider: TableActionProvider;

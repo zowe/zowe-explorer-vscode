@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 import { ErrorCorrelator, Gui, CorrelatedError, ZoweExplorerApiType } from "../../../src/";
 import { ImperativeError } from "@zowe/imperative";
 import { commands } from "vscode";

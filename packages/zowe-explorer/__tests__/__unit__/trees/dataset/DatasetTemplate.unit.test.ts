@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import { Gui, Types } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";

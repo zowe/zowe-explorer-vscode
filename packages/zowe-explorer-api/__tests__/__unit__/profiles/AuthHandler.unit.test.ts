@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import { Mutex } from "async-mutex";
 import { AuthHandler, AuthCancelledError, Gui, ZoweVsCodeExtension } from "../../../src";

@@ -11,7 +11,7 @@
 
 import { commands, EventEmitter, ExtensionContext, WebviewView } from "vscode";
 import { TableBuilder, TableViewProvider } from "../../../../src/vscode/ui";
-import { vi } from "vitest";
+
 
 describe("TableViewProvider", () => {
     const fakeExtContext = {

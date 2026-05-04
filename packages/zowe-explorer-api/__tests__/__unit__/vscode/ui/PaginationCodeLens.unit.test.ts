@@ -10,7 +10,7 @@
  */
 
 import { PaginationCodeLens } from "../../../../src/vscode/ui/PaginationCodeLens";
-import { vi } from "vitest";
+
 
 vi.mock("vscode", () => {
     return {

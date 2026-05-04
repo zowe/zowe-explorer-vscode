@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import { AttributeEntryInfo, DataSetAttributesProvider } from "../../../src";
 import { ExtenderAttr, FailExtenderAttr } from "../../../__mocks__/mockCreators/shared";

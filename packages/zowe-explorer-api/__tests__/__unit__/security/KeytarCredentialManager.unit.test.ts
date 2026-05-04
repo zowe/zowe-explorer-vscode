@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import * as fs from "fs";
 import * as imperative from "@zowe/imperative";

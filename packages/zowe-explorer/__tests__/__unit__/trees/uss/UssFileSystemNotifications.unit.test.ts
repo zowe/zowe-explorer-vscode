@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 import { FileChangeType, Uri } from "vscode";
 import * as vscode from "vscode";

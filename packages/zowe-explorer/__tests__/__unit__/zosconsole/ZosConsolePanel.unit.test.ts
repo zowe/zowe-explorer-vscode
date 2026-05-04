@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 import { createInstanceOfProfile, createIProfile } from "../../__mocks__/mockCreators/shared";
 import { ZosConsoleViewProvider } from "../../../src/zosconsole/ZosConsolePanel";
 import { Profiles } from "../../../src/configuration/Profiles";

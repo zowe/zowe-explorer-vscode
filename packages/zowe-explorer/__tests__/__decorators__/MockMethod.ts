@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { vi } from "vitest";
+
 
 /**
  * This decorator can be applied to a class within a __mocks__ folder so that
