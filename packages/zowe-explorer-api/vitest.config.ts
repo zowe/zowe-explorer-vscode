@@ -14,28 +14,37 @@
  * https://vitest.dev/config/
  */
 
-import { defineProject } from "vitest/config";
+import { defineProject, mergeConfig } from "vitest/config";
+import rootConfig from "../../vitest.config";
 
-export default defineProject({
-    test: {
-        name: "zowe-explorer-api",
-        globals: true,
-        environment: "node",
-        setupFiles: ["vitest.setup.ts"],
-        include: ["__tests__/**/*.(spec|test).ts"],
-        // Use forked processes (matches Jest's default worker model) so each
-        // test file gets its own Node process and module-level state cannot
-        // leak between files.
-        pool: "forks",
-        testTimeout: 10000,
-        hookTimeout: 10000,
-        // Mirror Jest's defaults so legacy tests retain the same lifecycle
-        // semantics (only `vi.spyOn`/manual cleanups restore mocks).
-        clearMocks: false,
-        restoreMocks: false,
-        mockReset: false,
-    },
-    esbuild: {
-        target: "es2022",
-    },
-});
+// Extract shared configuration without 'projects' property
+// to prevent recursive project resolution errors when running tests within package folder
+const { projects, ...sharedTestConfig } = rootConfig.test || {};
+const sharedConfig = { ...rootConfig, test: sharedTestConfig };
+
+export default mergeConfig(
+    sharedConfig,
+    defineProject({
+        test: {
+            name: "zowe-explorer-api",
+            globals: true,
+            environment: "node",
+            setupFiles: ["vitest.setup.ts"],
+            include: ["__tests__/**/*.(spec|test).ts"],
+            // Use forked processes (matches Jest's default worker model) so each
+            // test file gets its own Node process and module-level state cannot
+            // leak between files.
+            pool: "forks",
+            testTimeout: 10000,
+            hookTimeout: 10000,
+            // Mirror Jest's defaults so legacy tests retain the same lifecycle
+            // semantics (only `vi.spyOn`/manual cleanups restore mocks).
+            clearMocks: false,
+            restoreMocks: false,
+            mockReset: false,
+        },
+        esbuild: {
+            target: "es2022",
+        },
+    })
+);
