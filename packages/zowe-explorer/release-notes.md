@@ -1,3 +1,9 @@
+## `3.5.0`
+
+**Warning:** This is the last release of Zowe Explorer that supports VS Code 1.90. Starting with the next minor release (Zowe v3.6), Zowe Explorer will require VS Code 1.101 or higher. This change ensures you are running on Node.js 22, as Node.js 20 reached its End of Life (EOL) on April 30, 2026, and is no longer receiving security fixes.
+
+TODO Add more release notes
+
 ## `3.4.0`
 
 ### VS Code engine support change
@@ -45,7 +51,6 @@ Release notes for Zowe Explorer are now available in VS Code. Release notes are 
 Data sets can now be viewed in a table format, similar to the jobs table. The data sets table allows for easier filtering, sorting, and bulk actions on data sets and members.
 
 - **Open the table:**
-
   - Right-click a filtered data sets profile, a data set, or a favorite, and select **Show as Table**.
   - Open the **Command Palette** and search for `Zowe Explorer: List Data Sets`, select a profile, and enter a search filter.
 
@@ -155,7 +160,6 @@ The jobs table is a panel that allows viewing filtered jobs more clearly and for
 Data sets can now be searched for a string, similar to ISPF's `SRCHFOR`.
 
 - **Search options:**
-
   - Right-click a profile: **Search filtered data sets**
   - Right-click a PDS: **Search PDS members**
   - Also available for a PDS in the Favorites tree
