@@ -49,7 +49,7 @@ import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetTree } from "./DatasetTree";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
-import { Workspace } from "../../configuration/Workspace";
+import { DATASET_ATTR_DEFS, MEMBER_ATTR_DEFS } from "./DatasetAttributes";
 
 type ClipboardItem = {
     profileName: string;
@@ -1487,51 +1487,15 @@ export class DatasetActions {
             }
 
             const attributeRecord: Record<string, unknown> = attributes[0];
-            const datasetAttributeDefinitions: Array<[string, string, string]> = [
-                ["dsname", "Data Set Name", "The name of the dataset"],
-                ["member", "Member Name", "The name of the member"],
-                ["blksz", "Block Size", "The block size of the dataset"],
-                ["catnm", "Catalog Name", "The catalog in which the dataset entry is stored"],
-                ["cdate", "Create Date", "The dataset creation date"],
-                ["dev", "Device Type", "The type of the device the dataset is stored on"],
-                ["dsntp", "Data Set Type", "LIBRARY, (LIBRARY,1), (LIBRARY,2), PDS, HFS, EXTREQ, EXTPREF, BASIC or LARGE"],
-                ["dsorg", "Data Set Organization", "PS, PO, or DA"],
-                ["edate", "Expiration Date", "The dataset expiration date"],
-                ["extx", "Extensions", "The number of extensions the dataset has"],
-                ["lrecl", "Logical Record Length", "The length in bytes of each record"],
-                ["migr", "Migration", "Indicates if automatic migration is active"],
-                ["mvol", "Multivolume", "Whether the dataset is on multiple volumes"],
-                ["ovf", "Space overflow", "Indicates if space overflow was encountered (YES or NO)"],
-                ["rdate", "Reference Date", "Last referenced date"],
-                ["recfm", "Record Format", "Valid values: A, B, D, F, M, S, T, U, V (combinable)"],
-                ["sizex", "Size", "Size of the first extent in tracks"],
-                ["spacu", "Space Unit", "Type of space units measurement"],
-                ["used", "Used Space", "Used space percentage"],
-                ["vol", "Volume", "Volume serial numbers for data set"],
-                ["vols", "Volumes", "Multiple volume serial numbers"],
-            ];
-            const memberAttributeDefinitions: Array<[string, string, string]> = [
-                ["vers", "Version", "Member version number"],
-                ["mod", "Modification Level", "Member modification level"],
-                ["c4date", "Created Date", "Creation date (4-character year format)"],
-                ["m4date", "Modified Date", "Last change date (4-character year format)"],
-                ["mtime", "Modified Time", "Last change time (in format hh:mm)"],
-                ["msec", "Modified Seconds", "Seconds value of the last change time"],
-                ["cnorc", "Current Records", "Current number of records"],
-                ["inorc", "Initial Records", "Initial number of records"],
-                ["mnorc", "Modified Records", "Number of changed records"],
-                ["user", "User", "User ID of last user to change the given member"],
-                ["sclm", "Modified by ISPF/SCLM", "Indicates whether the member was last modified by SCLM or ISPF"],
-            ];
-            const attributeDefinitions = isMemberNode ? [...datasetAttributeDefinitions, ...memberAttributeDefinitions] : datasetAttributeDefinitions;
+            const attributeDefinitions = isMemberNode ? MEMBER_ATTR_DEFS : DATASET_ATTR_DEFS;
 
             const getAttributeValue = (key: string): string | number | boolean | undefined => {
+                const value = attributeRecord[key] as string | number | boolean | undefined;
                 if (isMemberNode) {
-                    if (key === "dsname") {
-                        return (attributeRecord[key] as string | number | boolean | undefined) ?? parentDsName;
-                    }
-                    if (key === "member") {
-                        return (attributeRecord[key] as string | number | boolean | undefined) ?? label;
+                    if (key === "dsname" && value == null) {
+                        return parentDsName;
+                    } else if (key === "member" && value == null) {
+                        return label;
                     }
                 }
                 return attributeRecord[key] as string | number | boolean | undefined;
@@ -1542,12 +1506,12 @@ export class DatasetActions {
                     title: "Zowe Explorer",
                     reference: "https://docs.zowe.org/stable/typedoc/interfaces/_zowe_zos_files_for_zowe_sdk.izosmflistresponse",
                     keys: new Map(
-                        attributeDefinitions.map(([key, displayName, description]) => [
-                            key,
+                        attributeDefinitions.map(({ id, name, description }) => [
+                            id,
                             {
-                                displayName: vscode.l10n.t(displayName),
+                                displayName: vscode.l10n.t(name),
                                 description: description ? vscode.l10n.t(description) : undefined,
-                                value: getAttributeValue(key) as string | number | boolean,
+                                value: getAttributeValue(id) as string | number | boolean,
                             },
                         ])
                     ),

@@ -65,14 +65,14 @@ class SshAttributesProvider implements IAttributesProvider {
 }
 
 export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs {
-    private attrProvider = new SshAttributesProvider();
+    // private attrProvider = new SshAttributesProvider();
 
     public constructor(
         dsAttrProvider?: DataSetAttributesProvider,
         public profile?: imperative.IProfileLoaded
     ) {
         super(profile);
-        dsAttrProvider?.register(this.attrProvider);
+        // dsAttrProvider?.register(this.attrProvider);
     }
 
     public async dataSet(filter: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
@@ -84,28 +84,36 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         });
         // Cache attributes for first data set to work around ZE issue
         // See https://github.com/zowe/zowe-explorer-vscode/issues/3927
-        this.attrProvider.cachedAttrs = response.items[0];
+        // this.attrProvider.cachedAttrs = response.items[0];
         return this.buildZosFilesResponse({
             items: response.items.map((item) => {
-                const entry: Record<string, unknown> = { dsname: item.name };
+                const attrs: Record<string, unknown> = {};
                 if (options?.attributes) {
-                    entry.blksz = item.blksize;
-                    entry.cdate = item.cdate;
-                    entry.dev = item.devtype;
-                    entry.dsntp = item.dsntype;
-                    entry.dsorg = item.dsorg;
-                    entry.edate = item.edate;
-                    entry.lrecl = item.lrecl;
-                    entry.migr = item.migrated ? "YES" : "NO";
-                    entry.mvol = item.multivolume ? "YES" : "NO";
-                    entry.rdate = item.rdate;
-                    entry.recfm = item.recfm;
-                    entry.spacu = item.spacu;
-                    entry.used = item.usedp != null ? `${item.usedp}%` : undefined;
-                    entry.vol = item.volser;
-                    entry.vols = item.volsers?.join(" ");
+                    for (const [k, v] of Object.entries(item)) {
+                        let attr = k;
+                        let tempVal = v;
+                        if (k === "name") {
+                            continue;
+                        } else if (k === "blksize") {
+                            attr = "blksz";
+                        } else if (k === "usedp") {
+                            attr = "used";
+                            tempVal = tempVal != null ? `${tempVal}%` : undefined;
+                        } else if (k === "volsers") {
+                            attr = "vols";
+                            tempVal = tempVal.join(" ");
+                        } else if (k === "migrated") {
+                            attr = "migr";
+                        } else if (k === "multivolume") {
+                            attr = "mvol";
+                        }
+                        if (typeof tempVal === "boolean") {
+                            tempVal = tempVal ? "YES" : "NO";
+                        }
+                        attrs[attr] = tempVal;
+                    }
                 }
-                return entry;
+                return { dsname: item.name, ...attrs };
             }),
             returnedRows: response.returnedRows,
         });
@@ -120,7 +128,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             pattern: options?.pattern,
         });
 
-        this.attrProvider.cachedAttrs = undefined;
+        // this.attrProvider.cachedAttrs = undefined;
 
         return this.buildZosFilesResponse({
             items: response.items.map((item) => {
