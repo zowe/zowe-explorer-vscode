@@ -9,7 +9,7 @@
  *
  */
 
-import { expect, vi } from "vitest";
+import { expect } from "vitest";
 
 vi.mock("vscode", () => import("../__mocks__/vscode.ts"));
 vi.mock("fs", () => import("../__mocks__/fs.ts"));

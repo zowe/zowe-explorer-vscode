@@ -9,7 +9,7 @@
  *
  */
 
-import { MockInstance, vi } from "vitest";
+import { MockInstance } from "vitest";
 
 export interface ITestContext {
     context: { subscriptions: any[] } | any;

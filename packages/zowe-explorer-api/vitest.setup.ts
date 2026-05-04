@@ -9,7 +9,7 @@
  *
  */
 
-import { afterAll, beforeAll, vi } from "vitest";
+import { afterAll, beforeAll } from "vitest";
 
 vi.mock("vscode", () => import("./__mocks__/vscode.ts"));
 

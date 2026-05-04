@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { MockInstance, vi } from "vitest";
+import { MockInstance } from "vitest";
 
 import * as fs from "fs";
 import * as path from "path";

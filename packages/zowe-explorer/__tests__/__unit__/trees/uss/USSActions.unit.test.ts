@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { MockInstance, vi } from "vitest";
+import { MockInstance } from "vitest";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as isbinaryfile from "isbinaryfile";
 import * as fs from "fs";
