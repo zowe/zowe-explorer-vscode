@@ -9,6 +9,7 @@
  *
  */
 
-import { vi } from "vitest";
 
-vi.mock("vscode", () => import("./__mocks__/vscode.ts"));
+
+import * as vscodeMock from "../../packages/zowe-explorer-api/__mocks__/vscode.ts";
+vi.mock("vscode", () => vscodeMock);
