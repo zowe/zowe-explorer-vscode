@@ -81,6 +81,8 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
   const [selectionCount, setSelectionCount] = useState<number>(0);
   const gridRef = useRef<AgGridReact>();
   const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
+  // Holds either a MutationObserver (new) or a NodeJS.Timeout (legacy fallback)
+  const tooltipCleanupRef = useRef<MutationObserver | NodeJS.Timeout | null>(null);
 
   const contextMenu = useContextMenu({
     options: [
@@ -539,6 +541,21 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
     getLocalizationContents();
   }, [localization]);
 
+  // Cleanup tooltip observer and custom tooltip element on component unmount
+  useEffect(() => {
+    return () => {
+      if (tooltipCleanupRef.current) {
+        if (tooltipCleanupRef.current instanceof MutationObserver) {
+          tooltipCleanupRef.current.disconnect();
+        } else {
+          clearInterval(tooltipCleanupRef.current as NodeJS.Timeout);
+        }
+        tooltipCleanupRef.current = null;
+      }
+      document.getElementById("header-icon-tooltip")?.remove();
+    };
+  }, []);
+
   const localizationMap = [
     { key: "Page Size:", localized: l10n.t("Page Size:") },
     { key: "Page", localized: l10n.t("Page") },
@@ -572,6 +589,171 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
 
   const onGridReady = () => {
     messageHandler.send("api-ready");
+
+    // ---------------------------------------------------------------
+    // Tooltip setup for AG Grid header filter and sort icons
+    // ---------------------------------------------------------------
+
+    // Create a shared floating tooltip element
+    let tooltipEl = document.getElementById("header-icon-tooltip");
+    if (!tooltipEl) {
+      tooltipEl = document.createElement("div");
+      tooltipEl.id = "header-icon-tooltip";
+      document.body.appendChild(tooltipEl);
+    }
+    const tooltip = tooltipEl;
+
+    const listenerMap = new WeakMap<HTMLElement, { enter: (e: MouseEvent) => void; leave: () => void }>();
+
+    const attachTooltip = (el: HTMLElement, text: string) => {
+      // Remove previous listeners if this element was already processed
+      const prev = listenerMap.get(el);
+      if (prev) {
+        el.removeEventListener("mouseenter", prev.enter);
+        el.removeEventListener("mouseleave", prev.leave);
+      }
+
+      const enter = (e: MouseEvent) => {
+        const target = e.currentTarget as HTMLElement;
+        const rect = target.getBoundingClientRect();
+        tooltip.textContent = text;
+        tooltip.style.display = "block";
+
+        // Position tooltip directly below the icon, aligned to the icon's left edge
+        const tooltipWidth = tooltip.offsetWidth || 250;
+        let left = rect.left;
+        
+        // Ensure tooltip doesn't go off-screen to the right
+        if (left + tooltipWidth > window.innerWidth) {
+          left = window.innerWidth - tooltipWidth - 5;
+        }
+        // Ensure tooltip doesn't go off-screen to the left
+        if (left < 5) {
+          left = 5;
+        }
+
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${rect.bottom + 4}px`;
+      };
+
+      const leave = () => {
+        tooltip.style.display = "none";
+      };
+
+      el.addEventListener("mouseenter", enter);
+      el.addEventListener("mouseleave", leave);
+      listenerMap.set(el, { enter, leave });
+      el.style.pointerEvents = "auto";
+      el.style.cursor = "pointer";
+    };
+
+    const applyTooltips = () => {
+      // Filter icons - all .ag-header-icon elements with ag-header-cell-filter-button class
+      const filterIcons = document.querySelectorAll<HTMLElement>(".ag-header-icon.ag-header-cell-filter-button");
+      filterIcons.forEach((icon) => {
+        attachTooltip(icon, l10n.t("Filter"));
+      });
+
+      // Query for ascending and descending sort icons only (not unsorted columns)
+      const sortIconSelector = ".ag-icon.ag-icon-asc, .ag-icon.ag-icon-desc";
+      const sortIcons = document.querySelectorAll<HTMLElement>(sortIconSelector);
+
+      if (sortIcons.length > 0) {
+        sortIcons.forEach((icon) => {
+          // Determine sort state from the icon's class or parent cell
+          const parentCell = icon.closest(".ag-header-cell");
+          const ariaSort = parentCell?.getAttribute("aria-sort");
+          let tooltip_text = l10n.t("Sort");
+
+          if (ariaSort === "ascending" || icon.classList.contains("ag-sort-ascending-icon") || icon.classList.contains("ag-icon-asc")) {
+            tooltip_text = l10n.t("Sorted Ascending");
+          } else if (ariaSort === "descending" || icon.classList.contains("ag-sort-descending-icon") || icon.classList.contains("ag-icon-desc")) {
+            tooltip_text = l10n.t("Sorted Descending");
+          }
+
+          attachTooltip(icon, tooltip_text);
+        });
+      } else {
+        // Fallback: Look for sortable headers and attach to the entire header area
+        const headerCells = document.querySelectorAll<HTMLElement>(".ag-header-cell[col-id]:not([col-id='actions'])");
+
+        headerCells.forEach((cell) => {
+          // Check if this column is sortable (has sortable in class or is not explicitly non-sortable)
+          if (!cell.classList.contains("ag-header-cell-not-sortable")) {
+            const ariaSort = cell.getAttribute("aria-sort");
+            let tooltip_text = l10n.t("Sort");
+
+            if (ariaSort === "ascending") {
+              tooltip_text = l10n.t("Sorted Ascending");
+            } else if (ariaSort === "descending") {
+              tooltip_text = l10n.t("Sorted Descending");
+            }
+
+            // Attach to the header cell itself as a fallback
+            attachTooltip(cell, tooltip_text);
+          }
+        });
+      }
+
+      // Find action buttons by their appearance and content
+      const actionButtons = document.querySelectorAll<HTMLElement>('vscode-button[appearance="primary"], vscode-button[appearance="secondary"]');
+
+      actionButtons.forEach((button) => {
+        const buttonText = button.textContent?.trim();
+        if (buttonText && buttonText !== "") {
+          // Use the button text as the tooltip, but make it more descriptive
+          let tooltipText = buttonText;
+
+          // Add more descriptive tooltips based on common button text
+          if (buttonText.toLowerCase().includes("open")) {
+            tooltipText = l10n.t("Open selected items");
+          } else if (buttonText.toLowerCase().includes("back")) {
+            tooltipText = l10n.t("Go back");
+          } else if (buttonText.toLowerCase().includes("pin")) {
+            tooltipText = l10n.t("Pin selected rows");
+          } else if (buttonText.toLowerCase().includes("unpin")) {
+            tooltipText = l10n.t("Unpin selected rows");
+          }
+
+          attachTooltip(button, tooltipText);
+        }
+      });
+
+      // Settings button (gear icon) tooltip
+      const settingsButtons = document.querySelectorAll<HTMLElement>(".codicon-gear");
+
+      settingsButtons.forEach((button) => {
+        // The gear icon is inside a button, so find the parent button element
+        const parentButton = button.closest("vscode-button");
+        if (parentButton && parentButton instanceof HTMLElement) {
+          attachTooltip(parentButton, l10n.t("Column settings"));
+        }
+      });
+    };
+
+    const headerRoot = document.querySelector(".ag-header");
+    if (headerRoot) {
+      // Disconnect any previous observer stored in the ref
+      if (tooltipCleanupRef.current instanceof MutationObserver) {
+        tooltipCleanupRef.current.disconnect();
+      }
+
+      const observer = new MutationObserver(() => {
+        applyTooltips();
+      });
+
+      observer.observe(headerRoot, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+      tooltipCleanupRef.current = observer;
+    }
+
+    setTimeout(() => {
+      applyTooltips();
+    }, 100);
   };
 
   return (
