@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { Mock, vi } from "vitest";
+import { Mock } from "vitest";
 import * as vscode from "vscode";
 import * as fs from "fs/promises";
 import { ReleaseNotes } from "../../../src/utils/ReleaseNotes";

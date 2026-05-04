@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { Mock, vi } from "vitest";
+import { Mock } from "vitest";
 
 import { Paginator, FetchFn, IFetchResult, NavigationTreeItem } from "../../../src";
 import * as vscode from "vscode";

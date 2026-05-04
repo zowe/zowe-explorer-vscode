@@ -1,5 +1,5 @@
 /// <reference types="vitest/globals" />
-import { Mock, MockInstance, vi } from "vitest";
+import { Mock, MockInstance } from "vitest";
 
 /**
  * This program and the accompanying materials are made available under the terms of the

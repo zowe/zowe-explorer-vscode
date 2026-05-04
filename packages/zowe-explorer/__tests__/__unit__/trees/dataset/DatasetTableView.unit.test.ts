@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { Mock, MockInstance, Mocked, vi } from "vitest";
+import { Mock, MockInstance, Mocked } from "vitest";
 import { TreeItemCollapsibleState, commands, Uri, ExtensionContext } from "vscode";
 import {
     DatasetTableView,

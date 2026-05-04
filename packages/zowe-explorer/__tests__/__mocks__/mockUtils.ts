@@ -8,7 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import { Mock, vi } from "vitest";
+import { Mock } from "vitest";
 
 // Used for the MockedProperty class (polyfills for Symbol.{asyncDispose, dispose})
 require("disposablestack/auto");
