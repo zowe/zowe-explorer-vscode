@@ -285,7 +285,7 @@ describe("ProfilesCache", () => {
     it("requireKeyring returns keyring module from Secrets SDK", () => {
         const keyring = ProfilesCache.requireKeyring();
         expect(keyring).toBeDefined();
-        expect(Object.keys(keyring).length).toBe(5);
+        expect(Object.keys(keyring).length).toBe(6);
     });
 
     it("addToConfigArray should set the profileTypeConfigurations array (deprecated value test)", () => {
