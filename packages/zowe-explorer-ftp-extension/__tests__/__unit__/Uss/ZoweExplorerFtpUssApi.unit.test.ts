@@ -25,6 +25,7 @@ import * as os from "os";
 import * as crypto from "crypto";
 import { imperative } from "@zowe/zowe-explorer-api";
 import { mocked } from "../../../__mocks__/mockUtils";
+import * as fs from "fs";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 vi.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -33,10 +34,11 @@ vi.mock("../../../src/extension.ts");
 const stream = require("stream");
 
 const readableStream = stream.Readable.from([]);
-const fs = require("fs");
+vi.mock("fs", { spy: true });
 
-fs.createReadStream = vi.fn().mockReturnValue(readableStream);
-
+vi.mocked(fs.createReadStream).mockImplementation(() => {
+    return readableStream;
+});
 // Helper function to create temporary file names using Node.js built-ins
 function createTempFileName(): string {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "zowe-test-uss-"));
@@ -110,7 +112,9 @@ describe("FtpUssApi", () => {
     it("should upload uss files.", async () => {
         const localFile = createTempFileName();
         const response = TestUtils.getSingleLineStream();
-        UssUtils.uploadFile = vi.fn().mockReturnValue(response);
+        const uploadFileSpy = vi.spyOn(UssUtils, "uploadFile").mockImplementation(() => {
+            return response;
+        });
         const mkdtempSyncSpy = vi.spyOn(fs, "mkdtempSync");
         const rmSyncSpy = vi.spyOn(fs, "rmSync");
         vi.spyOn(UssApi, "getContents").mockResolvedValue({ apiResponse: { etag: "test" } } as any);
@@ -129,7 +133,7 @@ describe("FtpUssApi", () => {
         });
         vi.spyOn(UssApi as any, "getContentsTag").mockReturnValue("test");
         expect(result.commandResponse).toContain("File uploaded successfully.");
-        expect(UssUtils.downloadFile).toHaveBeenCalledTimes(1);
+        expect(uploadFileSpy).toHaveBeenCalledTimes(1);
         expect(UssUtils.uploadFile).toHaveBeenCalledTimes(1);
         expect(UssApi.releaseConnection).toHaveBeenCalled();
         // check that correct Node.js built-in functions are called

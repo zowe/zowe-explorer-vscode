@@ -21,6 +21,7 @@ import TestUtils from "../utils/TestUtils";
 import * as path from "path";
 import * as os from "os";
 import * as crypto from "crypto";
+import * as fs from "fs";
 import { Gui, imperative } from "@zowe/zowe-explorer-api";
 import * as globals from "../../../src/globals";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
@@ -30,15 +31,15 @@ import { ZosFilesUtils } from "@zowe/zos-files-for-zowe-sdk";
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 vi.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
 vi.mock("../../../src/extension.ts");
-vi.mock("vscode");
 
 const stream = require("stream");
 
 const readableStream = stream.Readable.from([]);
-const fs = require("fs");
+vi.mock("fs", { spy: true });
 
-fs.createReadStream = vi.fn().mockReturnValue(readableStream);
-
+vi.mocked(fs.createReadStream).mockImplementation(() => {
+    return readableStream;
+});
 // Helper function to create temporary file names using Node.js built-ins
 function createTempFileName(): string {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "zowe-test-mvs-"));
@@ -54,6 +55,13 @@ describe("FtpMvsApi", () => {
         MvsApi.ftpClient = vi.fn().mockReturnValue({ host: "", user: "", password: "", port: "" });
         MvsApi.releaseConnection = vi.fn();
         globals.SESSION_MAP.get = vi.fn().mockReturnValue({ mvsListConnection: { isConnected: () => true } });
+        vi.spyOn(DataSetUtils, "downloadDataSet").mockImplementationOnce(() => {
+            return new Promise((resolve) => {
+                resolve(new Buffer("Hello world"));
+            });
+        });
+        vi.spyOn(MvsApi as any, "hashFile").mockResolvedValue("a".repeat(64));
+
         globals.LOGGER.getExtensionName = vi.fn().mockReturnValue("Zowe Explorer FTP Extension");
     });
 
@@ -444,6 +452,8 @@ describe("FtpMvsApi", () => {
                 throw new Error("Upload dataset failed.");
             })
         );
+        const response2 = { success: true, commandResponse: "", apiResponse: { items: [{ dsname: "IBMUSER.PDS", dsorg: "PO", lrecl: 255 }] } };
+        const dataSetMock = vi.spyOn(MvsApi, "dataSet").mockResolvedValue(response2 as any);
         const localFile = createTempFileName();
         const mockParams = {
             inputFilePath: localFile,
