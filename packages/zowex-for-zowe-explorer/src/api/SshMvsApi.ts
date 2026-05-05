@@ -17,7 +17,6 @@ import {
     type AttributeInfo,
     type DataSetAttributesProvider,
     type DsInfo,
-    Gui,
     type IAttributesProvider,
     imperative,
     type MainframeInteraction,
@@ -282,39 +281,27 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             lrecl: 80,
             ...(options || {}),
         };
-        let response: ds.CreateDatasetResponse = { success: false };
         try {
-            response = await (
+            const response = await (
                 await this.client
             ).ds.createDataset({
                 dsname: dataSetName,
                 attributes: datasetAttributes,
             });
-        } catch (error) {
-            if (error instanceof imperative.ImperativeError) {
-                Gui.errorMessage(error.additionalDetails);
-            }
+            return this.buildZosFilesResponse(response);
+        } catch (err) {
+            throw this.buildRequestError(err);
         }
-        return this.buildZosFilesResponse(response, response.success);
     }
 
     public async createDataSetMember(dataSetName: string, _options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-        let response: ds.CreateMemberResponse = { success: false };
-        try {
-            response = await (
-                await this.client
-            ).ds.createMember({
-                dsname: dataSetName,
-                overwrite: true,
-            });
-            if (!response.success) {
-                Gui.errorMessage(`Failed to create data set member: ${dataSetName}`);
-            }
-        } catch (error) {
-            Gui.errorMessage(`Failed to create data set member: ${dataSetName}`);
-            Gui.errorMessage(`Error: ${(error as Error).message}`);
-        }
-        return this.buildZosFilesResponse(response, response.success);
+        const response = await (
+            await this.client
+        ).ds.createMember({
+            dsname: dataSetName,
+            overwrite: true, // Overwrite detection already handled on client side
+        });
+        return this.buildZosFilesResponse(response);
     }
 
     public allocateLikeDataSet(_dataSetName: string, _likeDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
@@ -336,9 +323,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             dsnameBefore: currentDataSetName,
             dsnameAfter: newDataSetName,
         });
-        return this.buildZosFilesResponse({
-            success: response.success,
-        });
+        return this.buildZosFilesResponse(response);
     }
 
     public async renameDataSetMember(dsname: string, memberBefore: string, memberAfter: string): Promise<zosfiles.IZosFilesResponse> {
@@ -349,9 +334,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             memberBefore,
             memberAfter,
         });
-        return this.buildZosFilesResponse({
-            success: response.success,
-        });
+        return this.buildZosFilesResponse(response);
     }
 
     public hMigrateDataSet(_dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
@@ -359,35 +342,28 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
     }
 
     public async hRecallDataSet(dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
-        let response: ds.RestoreDatasetResponse = { success: false };
-        try {
-            response = await (
-                await this.client
-            ).ds.restoreDataset({
-                dsname: dataSetName,
-            });
-            if (!response.success) {
-                Gui.errorMessage(`Failed to restore dataset ${dataSetName}`);
-            }
-        } catch (error) {
-            Gui.errorMessage(`Failed to restore dataset ${dataSetName}`);
-            Gui.errorMessage(`Error: ${(error as Error).message}`);
-        }
+        const response = await (
+            await this.client
+        ).ds.restoreDataset({
+            dsname: dataSetName,
+        });
         return this.buildZosFilesResponse(response);
     }
 
     public async deleteDataSet(dataSetName: string, _options?: zosfiles.IDeleteDatasetOptions): Promise<zosfiles.IZosFilesResponse> {
-        const response = await (
-            await this.client
-        ).ds.deleteDataset({
-            dsname: dataSetName,
-        });
-        return this.buildZosFilesResponse({
-            success: response.success,
-        });
+        try {
+            const response = await (
+                await this.client
+            ).ds.deleteDataset({
+                dsname: dataSetName,
+            });
+            return this.buildZosFilesResponse(response);
+        } catch (err) {
+            throw this.buildRequestError(err);
+        }
     }
 
     private buildZosFilesResponse(apiResponse: any, success = true, errorText?: string): zosfiles.IZosFilesResponse {
-        return { apiResponse, commandResponse: "", success, errorMessage: errorText };
+        return { apiResponse, commandResponse: "", success: apiResponse?.success ?? success, errorMessage: errorText };
     }
 }
