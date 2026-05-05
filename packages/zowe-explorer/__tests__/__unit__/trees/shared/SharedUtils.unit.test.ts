@@ -299,7 +299,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
         const localStorageGet = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
         const localStorageSet = vi.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined);
-        const getEncodingForFile = vi.spyOn((BaseProvider as any).prototype, "getEncodingForFile");
+        const getEncodingForFile = vi.spyOn((BaseProvider as any).prototype, "getEncodingForFile").mockReturnValue(undefined);
         const setEncodingForFile = vi.spyOn((BaseProvider as any).prototype, "setEncodingForFile").mockReturnValue(undefined);
         const fetchEncodingForUri = vi.spyOn(UssFSProvider.instance, "fetchEncodingForUri").mockResolvedValue(undefined as any);
         const createDirectorySpy = vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
@@ -682,10 +682,7 @@ describe("Shared utils unit tests - function promptForUploadEncoding", () => {
 
     it("returns binary when Binary is selected", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: vi.fn().mockReturnValue(undefined), update: vi.fn() },
-            configurable: true,
-        });
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
         const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Binary") } as any);
         const enc = await SharedUtils.promptForUploadEncoding(profile as any, "some/path");
         expect(showQuickPick).toHaveBeenCalled();
@@ -694,10 +691,7 @@ describe("Shared utils unit tests - function promptForUploadEncoding", () => {
 
     it("returns text when EBCDIC is selected", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: vi.fn().mockReturnValue(undefined), update: vi.fn() },
-            configurable: true,
-        });
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
         const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("EBCDIC") } as any);
         const enc = await SharedUtils.promptForUploadEncoding(profile as any, "some/path");
         expect(enc).toEqual({ kind: "text" });
@@ -706,10 +700,7 @@ describe("Shared utils unit tests - function promptForUploadEncoding", () => {
 
     it("prompts for codepage when Other is selected and stores it in history", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: vi.fn().mockReturnValue([]), update: vi.fn() },
-            configurable: true,
-        });
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue([]);
         vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
         vi.spyOn(Gui, "showInputBox").mockResolvedValue("IBM-1047");
         const setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockResolvedValueOnce(undefined);
@@ -728,10 +719,7 @@ describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
 
     it("returns binary when Binary is selected", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: vi.fn().mockReturnValue(undefined), update: vi.fn() },
-            configurable: true,
-        });
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
         const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Binary") } as any);
         const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
         expect(showQuickPick).toHaveBeenCalled();
@@ -740,10 +728,7 @@ describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
 
     it("returns text when EBCDIC is selected", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: vi.fn().mockReturnValue(undefined), update: vi.fn() },
-            configurable: true,
-        });
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
         const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("EBCDIC") } as any);
         const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
         expect(enc).toEqual({ kind: "text" });
@@ -752,10 +737,7 @@ describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
 
     it("prompts for codepage when Other is selected and stores it in history", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: vi.fn().mockReturnValue([]), update: vi.fn() },
-            configurable: true,
-        });
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue([]);
         vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
         vi.spyOn(Gui, "showInputBox").mockResolvedValue("ISO8859-1");
         const setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockResolvedValueOnce(undefined);
@@ -766,10 +748,7 @@ describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
 
     it("returns undefined when user cancels selection", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: vi.fn().mockReturnValue(undefined), update: vi.fn() },
-            configurable: true,
-        });
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
         vi.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
         const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
         expect(enc).toBeUndefined();
@@ -777,10 +756,7 @@ describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
 
     it("returns undefined when user cancels codepage input", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: vi.fn().mockReturnValue([]), update: vi.fn() },
-            configurable: true,
-        });
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue([]);
         vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
         vi.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
         vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
@@ -793,10 +769,7 @@ describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
         if (profile.profile) {
             profile.profile.encoding = "IBM-037";
         }
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: vi.fn().mockReturnValue([]), update: vi.fn() },
-            configurable: true,
-        });
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue([]);
         const mockShowQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: "IBM-037" } as any);
 
         const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
@@ -810,10 +783,7 @@ describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
 
     it("includes encoding history in options", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: vi.fn().mockReturnValue(["IBM-1047", "ISO8859-1"]), update: vi.fn() },
-            configurable: true,
-        });
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(["IBM-1047", "ISO8859-1"]);
         vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(["IBM-1047", "ISO8859-1"]);
         const mockShowQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: "IBM-1047" } as any);
 

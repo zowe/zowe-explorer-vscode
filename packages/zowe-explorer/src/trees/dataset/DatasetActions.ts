@@ -49,7 +49,6 @@ import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetTree } from "./DatasetTree";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
-import { Workspace } from "../../configuration/Workspace";
 
 type ClipboardItem = {
     profileName: string;
@@ -1219,7 +1218,7 @@ export class DatasetActions {
             const equivalentNode = datasetProvider.findEquivalentNode(nodeForMultiSelect, true) as IZoweDatasetTreeNode;
             nodeForMultiSelect =
                 equivalentNode ??
-                datasetProvider.mSessionNodes.find((ses) => ses.label?.toString() === nodes[0].getProfileName()) ??
+                datasetProvider.mSessionNodes.find((ses) => ses.label?.toString() === nodes[0].getProfileName()) as IZoweDatasetTreeNode ??
                 nodeForMultiSelect;
         }
         await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, nodeForMultiSelect);

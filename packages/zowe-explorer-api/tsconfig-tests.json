@@ -3,7 +3,7 @@
     "types": ["node", "vitest/globals"],
     "target": "es2015",
     "module": "commonjs",
-    "noEmit": true,
+    "noEmit": false,
     "declaration": true,
     "moduleResolution": "node",
     "noImplicitAny": false,
@@ -13,7 +13,8 @@
     "pretty": true,
     "sourceMap": true,
     "newLine": "lf",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "composite": true
   },
   "include": ["__tests__/**/*.ts", "__mocks__"],
   "exclude": ["lib", "node_modules"]

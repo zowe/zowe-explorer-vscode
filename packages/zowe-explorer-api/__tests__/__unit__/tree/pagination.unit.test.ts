@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+
 import { Mock } from "vitest";
 
 import { Paginator, FetchFn, IFetchResult, NavigationTreeItem } from "../../../src";
