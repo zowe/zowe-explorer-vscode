@@ -1733,6 +1733,63 @@ describe("DatasetFSProvider", () => {
                 expect(fakePs.wasAccessed).toBe(false);
             });
 
+            it("should not bump mtime when m4date is missing (regression: VS Code FILE_MODIFIED_SINCE)", async () => {
+                // Regression test for https://github.com/zowe/zowe-explorer-vscode/issues/4206:
+                // When the data set has no modification attributes, `stat()` previously updated
+                // `entry.mtime = Date.now()` on every call. This caused VS Code's built-in
+                // `FileService.validateWriteFile` to detect a stale write on save and trigger the
+                // "content of the file is newer" prompt. The provider must keep `mtime` stable
+                // across calls when the API has no time data.
+                const initialMtime = 1000;
+                const fakePs = Object.assign(Object.create(Object.getPrototypeOf(testEntries.ps)), testEntries.ps);
+                fakePs.mtime = initialMtime;
+                fakePs.wasAccessed = true;
+
+                jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePs);
+                jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(testEntries.session);
+                jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                    isRoot: false,
+                    slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                    profileName: "sestest",
+                    profile: testEntries.ps.metadata.profile,
+                });
+
+                const dataSetMock = jest.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                name: "USER.DATA.PS",
+                                dsorg: "PS",
+                                m4date: undefined,
+                            },
+                        ],
+                    },
+                    commandResponse: "",
+                });
+                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    dataSet: dataSetMock,
+                } as any);
+
+                const result1 = await DatasetFSProvider.instance.stat(testUris.ps);
+
+                expect(result1.mtime).toBe(initialMtime);
+                expect(fakePs.wasAccessed).toBe(false);
+
+                // Clear the request cache so the next stat actually re-runs and reset wasAccessed
+                // to simulate a subsequent read between save attempts.
+                DatasetFSProvider.instance.requestCache.clear();
+                fakePs.wasAccessed = true;
+
+                const result2 = await DatasetFSProvider.instance.stat(testUris.ps);
+
+                // The mtime returned must be stable across stat calls so VS Code does not
+                // mistakenly think the file has changed externally between the model's resolve
+                // time and the save time.
+                expect(result2.mtime).toBe(initialMtime);
+                expect(fakePs.wasAccessed).toBe(false);
+            });
+
             it("should not update entry when mtime matches the calculated new time", async () => {
                 const expectedTime = dayjs("2024-08-08 12:34:56:123").valueOf();
                 const fakePs = Object.assign(Object.create(Object.getPrototypeOf(testEntries.ps)), testEntries.ps);
@@ -1796,6 +1853,53 @@ describe("DatasetFSProvider", () => {
                 profile: testProfile,
             });
             expect(allMembersMock).toHaveBeenCalled();
+        });
+
+        it("does not bump member mtime when m4date is missing (regression: VS Code FILE_MODIFIED_SINCE)", async () => {
+            // Regression test for https://github.com/zowe/zowe-explorer-vscode/issues/4206:
+            // PDS members created without ISPF stats (e.g., from REXX automation) come back from
+            // `allMembers` without `m4date`. Before the fix, every directory listing reset
+            // `tempEntry.mtime = Date.now()`, which caused VS Code's stale-write detection to
+            // raise a "content of the file is newer" prompt on save.
+            const allMembersMock = jest.fn().mockResolvedValue({
+                success: true,
+                apiResponse: {
+                    items: [{ member: "MEM1" }],
+                },
+                commandResponse: "",
+            });
+            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                allMembers: allMembersMock,
+            } as any);
+
+            const fakePds = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pds)), testEntries.pds);
+            const initialMtime = 1000;
+            const existingMember = new DsEntry("MEM1", true);
+            existingMember.metadata = new DsEntryMetadata({ ...fakePds.metadata, path: path.posix.join(fakePds.metadata.path, "MEM1") });
+            existingMember.mtime = initialMtime;
+            existingMember.wasAccessed = true;
+            fakePds.entries = new Map([["MEM1", existingMember]]);
+
+            await (DatasetFSProvider.instance as any).fetchEntriesForDataset(fakePds, testUris.pds, {
+                isRoot: false,
+                slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testProfile,
+            });
+
+            const memberAfter = fakePds.entries.get("MEM1") as DsEntry;
+            expect(memberAfter.mtime).toBe(initialMtime);
+            expect(memberAfter.wasAccessed).toBe(false);
+
+            // A second listing must keep the mtime stable so VS Code's resolved-stat mtime
+            // matches the stat returned during validateWriteFile, avoiding the spurious conflict.
+            await (DatasetFSProvider.instance as any).fetchEntriesForDataset(fakePds, testUris.pds, {
+                isRoot: false,
+                slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testProfile,
+            });
+            expect((fakePds.entries.get("MEM1") as DsEntry).mtime).toBe(initialMtime);
         });
         it("calls handleProfileAuthOnError in the case of an API error", async () => {
             const allMembersMock = jest
