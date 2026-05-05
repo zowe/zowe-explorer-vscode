@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+
 import { Mock, MockInstance } from "vitest";
 import * as vscode from "vscode";
 import {

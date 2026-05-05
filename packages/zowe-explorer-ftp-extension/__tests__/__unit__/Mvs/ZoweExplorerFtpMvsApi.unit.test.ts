@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+
 import { MockInstance, vi } from "vitest";
 
 /* eslint-disable @typescript-eslint/unbound-method */

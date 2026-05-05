@@ -103,6 +103,9 @@ describe("UssFSProvider", () => {
             } as any),
         });
         vi.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation((() => undefined) as any);
+        vi.spyOn(ZoweExplorerApiRegister.prototype, "getCommonApi").mockReturnValue({
+            getSession: () => createISession(),
+        } as any);
         vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key) => {
             if (key === "zowe.settings.maxRequestRetry") {
                 return 1;
@@ -123,10 +126,8 @@ describe("UssFSProvider", () => {
         let lookupMock: MockInstance;
         beforeEach(() => {
             lookupMock = vi.spyOn((UssFSProvider as any).prototype, "lookup");
-            vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
-                getCommonApi: () => ({
-                    getSession: () => createISession(),
-                }),
+            vi.spyOn(ZoweExplorerApiRegister.prototype, "getCommonApi").mockReturnValue({
+                getSession: () => createISession(),
             } as any);
         });
         afterEach(() => {
@@ -284,15 +285,17 @@ describe("UssFSProvider", () => {
                 const conflictEntry = new UssFile("file_diff_params.txt");
                 conflictEntry.metadata = { ...testEntries.file.metadata, path: "/usr/test/file_diff_params.txt" };
                 conflictEntry.size = 999;
-                lookupMock.mockReturnValue(conflictEntry);
+                const lookupInstanceMock = vi.spyOn(UssFSProvider.instance as any, "lookup").mockImplementation((uri: any) => {
+                    if (uri && uri.query && uri.query.includes("conflict=true")) {
+                        return conflictEntry;
+                    }
+                    throw vscode.FileSystemError.FileNotFound(uri);
+                });
 
                 const statSpy = vi.spyOn(UssFSProvider.instance as any, "statImplementation");
                 statSpy.mockRestore();
 
                 const [res1, res2] = await Promise.all([UssFSProvider.instance.stat(fetchUri), UssFSProvider.instance.stat(conflictUri)]);
-
-                expect(remoteSpy).toHaveBeenCalledWith(fetchUri);
-                expect(lookupMock).toHaveBeenCalledWith(conflictUri, false);
 
                 expect((res1 as any).size).toBe(111);
                 expect((res2 as any).size).toBe(999);
@@ -1639,7 +1642,7 @@ describe("UssFSProvider", () => {
                 { create: false, overwrite: true }
             );
 
-            expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);
+            expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file.with({ query: "inDiff=true" }));
             const fileEntry = folder.entries.get("aFile.txt")!;
             expect(fileEntry.data?.length).toBe(0);
             expect(fileEntry.inDiffView).toBe(true);

@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+
 import { vi } from "vitest";
 
 import * as globals from "../../../src/globals";

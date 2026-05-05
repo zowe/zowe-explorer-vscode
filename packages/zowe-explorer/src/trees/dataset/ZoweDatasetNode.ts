@@ -30,7 +30,6 @@ import {
     Paginator,
     IFetchResult,
     NavigationTreeItem,
-    PersistenceSchemaEnum,
     IDataSetCount,
     DsType,
 } from "@zowe/zowe-explorer-api";
