@@ -1131,7 +1131,6 @@ describe("UssFSProvider", () => {
             );
             autoDetectEncodingMock.mockRestore();
         });
-
     });
 
     describe("fetchEncodingForUri", () => {
@@ -2781,13 +2780,15 @@ describe("UssFSProvider", () => {
                     fileList: jest.fn().mockResolvedValue({
                         success: true,
                         apiResponse: {
-                            items: [{
-                                name: "aFile.txt",
-                                mode: "-rw-r--r--"
-                                // No mtime field
-                            }]
-                        }
-                    })
+                            items: [
+                                {
+                                    name: "aFile.txt",
+                                    mode: "-rw-r--r--",
+                                    // No mtime field
+                                },
+                            ],
+                        },
+                    }),
                 };
                 jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
 
@@ -2816,13 +2817,15 @@ describe("UssFSProvider", () => {
                     fileList: jest.fn().mockResolvedValue({
                         success: true,
                         apiResponse: {
-                            items: [{
-                                name: "aFile.txt",
-                                mode: "-rw-r--r--",
-                                mtime: null // explicitly null mtime
-                            }]
-                        }
-                    })
+                            items: [
+                                {
+                                    name: "aFile.txt",
+                                    mode: "-rw-r--r--",
+                                    mtime: null, // explicitly null mtime
+                                },
+                            ],
+                        },
+                    }),
                 };
                 jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
 
@@ -2852,13 +2855,15 @@ describe("UssFSProvider", () => {
                     fileList: jest.fn().mockResolvedValue({
                         success: true,
                         apiResponse: {
-                            items: [{
-                                name: "aFile.txt",
-                                mode: "-rw-r--r--",
-                                mtime: validMtime
-                            }]
-                        }
-                    })
+                            items: [
+                                {
+                                    name: "aFile.txt",
+                                    mode: "-rw-r--r--",
+                                    mtime: validMtime,
+                                },
+                            ],
+                        },
+                    }),
                 };
                 jest.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
 
