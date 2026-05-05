@@ -48,7 +48,8 @@ describe("TableViewProvider", () => {
             const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
             await TableViewProvider.getInstance().setTableView(tableOne);
             expect((TableViewProvider.getInstance() as any).tableView).toBe(tableOne);
-            expect(executeCommandMock).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", true);
+            // Note: setContext is no longer called here - it's managed by TableViewUtils in zowe-explorer
+            expect(executeCommandMock).not.toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", true);
 
             const disposeSpy = jest.spyOn(tableOne, "dispose");
 
@@ -63,7 +64,20 @@ describe("TableViewProvider", () => {
             const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
             await TableViewProvider.getInstance().setTableView(null);
             expect((TableViewProvider.getInstance() as any).tableView).toBe(null);
-            expect(executeCommandMock).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", false);
+            // Note: setContext is no longer called here - it's managed by TableViewUtils in zowe-explorer
+            expect(executeCommandMock).not.toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", false);
+            executeCommandMock.mockRestore();
+        });
+        it("does not call setContext when setting a table view", async () => {
+            // Verify that the context management has been moved to TableViewUtils
+            const builder = new TableBuilder(fakeExtContext);
+            const table = builder.isView().build();
+            const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
+
+            await TableViewProvider.getInstance().setTableView(table);
+
+            // Ensure setContext was not called - this is now handled by TableViewUtils
+            expect(executeCommandMock).not.toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", expect.anything());
             executeCommandMock.mockRestore();
         });
     });
