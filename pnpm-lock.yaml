@@ -414,13 +414,13 @@ importers:
     dependencies:
       '@zowe/core-for-zowe-sdk':
         specifier: ^8.11.0
-        version: 8.31.0(@zowe/imperative@8.31.0)
+        version: 8.32.0(@zowe/imperative@8.32.0)
       '@zowe/zowe-explorer-api':
         specifier: 'workspace:* '
         version: link:../zowe-explorer-api
       '@zowe/zowex-for-zowe-sdk':
         specifier: ^0.5.0
-        version: 0.5.0(@zowe/imperative@8.31.0)(@zowe/zos-uss-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(rxjs@7.8.1)
+        version: 0.5.0(@zowe/imperative@8.32.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.32.0))(rxjs@7.8.1)
       ssh2:
         specifier: ^1.16.0
         version: 1.17.0
@@ -430,13 +430,13 @@ importers:
         version: 1.15.5
       '@zowe/zos-files-for-zowe-sdk':
         specifier: ^8.30.1
-        version: 8.31.0(@zowe/core-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(@zowe/imperative@8.31.0)
+        version: 8.32.0(@zowe/core-for-zowe-sdk@8.32.0(@zowe/imperative@8.32.0))(@zowe/imperative@8.32.0)
       '@zowe/zos-jobs-for-zowe-sdk':
         specifier: ^8.30.1
-        version: 8.31.0(@zowe/core-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(@zowe/imperative@8.31.0)
+        version: 8.32.0(@zowe/core-for-zowe-sdk@8.32.0(@zowe/imperative@8.32.0))(@zowe/imperative@8.32.0)
       '@zowe/zos-uss-for-zowe-sdk':
         specifier: ^8.30.1
-        version: 8.31.0(@zowe/imperative@8.31.0)
+        version: 8.32.0(@zowe/imperative@8.32.0)
 
 packages:
 
@@ -9863,10 +9863,10 @@ snapshots:
       '@zowe/core-for-zowe-sdk': 8.32.0(@zowe/imperative@8.32.0)
       '@zowe/imperative': 8.32.0
 
-  '@zowe/zowex-for-zowe-sdk@0.5.0(@zowe/imperative@8.31.0)(@zowe/zos-uss-for-zowe-sdk@8.31.0(@zowe/imperative@8.31.0))(rxjs@7.8.1)':
+  '@zowe/zowex-for-zowe-sdk@0.5.0(@zowe/imperative@8.32.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.32.0))(rxjs@7.8.1)':
     dependencies:
-      '@zowe/imperative': 8.31.0
-      '@zowe/zos-uss-for-zowe-sdk': 8.31.0(@zowe/imperative@8.31.0)
+      '@zowe/imperative': 8.32.0
+      '@zowe/zos-uss-for-zowe-sdk': 8.32.0(@zowe/imperative@8.32.0)
       base64-stream: 1.0.0
       es-toolkit: 1.45.1
       node-ssh: 13.2.1
