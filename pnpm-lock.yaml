@@ -419,8 +419,8 @@ importers:
         specifier: 'workspace:* '
         version: link:../zowe-explorer-api
       '@zowe/zowex-for-zowe-sdk':
-        specifier: ^0.5.0
-        version: 0.5.0(@zowe/imperative@8.32.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.32.0))(rxjs@7.8.1)
+        specifier: ^0.6.0
+        version: 0.6.0(@zowe/imperative@8.32.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.32.0))(rxjs@7.8.1)
       ssh2:
         specifier: ^1.16.0
         version: 1.17.0
@@ -2283,8 +2283,8 @@ packages:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zowex-for-zowe-sdk@0.5.0':
-    resolution: {integrity: sha512-xAibp8FR0XN/QpJbjhU03TiuuB6mWdxFXgpcMj3RRFP1qZ1mk024c1bGKL1VLcOzNT+bo5zs4Qzr+sSSX1I6Zw==}
+  '@zowe/zowex-for-zowe-sdk@0.6.0':
+    resolution: {integrity: sha512-v74nC0g58035j6Z2egmK0+2slw6BIy11MLxVbhlznk6RBSc7l83VFwcXk1tYOTpoCWgPi6QqUt4MWkvaDIaoEQ==}
     peerDependencies:
       '@zowe/imperative': ^8.11.0
       '@zowe/zos-uss-for-zowe-sdk': ^8.11.0
@@ -5893,7 +5893,6 @@ packages:
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
     deprecated: |-
       You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
-
       (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qs@6.15.0:
@@ -6165,8 +6164,8 @@ packages:
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
 
-  russh@0.1.36:
-    resolution: {integrity: sha512-JRhcQUxiMWZzVwr4fWEfEeKVOQ+VpRNOA+ADXJXw1Rf+RChOVOfnIhhmn72GTVN2u8dVJE58RmgK+ZzMG/tzPA==}
+  russh@0.1.37:
+    resolution: {integrity: sha512-t6DQyuht+kmG57FX09vPT6tBL8rL7g5UdBiOLc+JPZNE/CMRuZqEo5JE1WmNEUcI6kjwwhmL0nw/BfDKrwb+jg==}
     peerDependencies:
       rxjs: ^7
 
@@ -9863,7 +9862,7 @@ snapshots:
       '@zowe/core-for-zowe-sdk': 8.32.0(@zowe/imperative@8.32.0)
       '@zowe/imperative': 8.32.0
 
-  '@zowe/zowex-for-zowe-sdk@0.5.0(@zowe/imperative@8.32.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.32.0))(rxjs@7.8.1)':
+  '@zowe/zowex-for-zowe-sdk@0.6.0(@zowe/imperative@8.32.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.32.0))(rxjs@7.8.1)':
     dependencies:
       '@zowe/imperative': 8.32.0
       '@zowe/zos-uss-for-zowe-sdk': 8.32.0(@zowe/imperative@8.32.0)
@@ -9873,7 +9872,7 @@ snapshots:
       ssh-config: 5.1.0
       ssh2: 1.17.0
     optionalDependencies:
-      russh: 0.1.36(rxjs@7.8.1)
+      russh: 0.1.37(rxjs@7.8.1)
     transitivePeerDependencies:
       - rxjs
 
@@ -14478,7 +14477,7 @@ snapshots:
     dependencies:
       queue-microtask: 1.2.3
 
-  russh@0.1.36(rxjs@7.8.1):
+  russh@0.1.37(rxjs@7.8.1):
     dependencies:
       '@napi-rs/cli': 2.18.3
       rxjs: 7.8.1
