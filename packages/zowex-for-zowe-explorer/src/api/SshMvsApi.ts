@@ -305,6 +305,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
                 await this.client
             ).ds.createMember({
                 dsname: dataSetName,
+                overwrite: true,
             });
             if (!response.success) {
                 Gui.errorMessage(`Failed to create data set member: ${dataSetName}`);
