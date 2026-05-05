@@ -15,10 +15,12 @@ export const DATASET_ATTR_DEFS: DatasetAttributesDefinition[] = [
     {
         id: "alloc",
         name: "Allocated Units",
+        description: "The number of allocated units",
     },
     {
         id: "allocx",
         name: "Allocated Extents",
+        description: "The number of allocated extents",
     },
     {
         id: "blksz",
@@ -38,6 +40,7 @@ export const DATASET_ATTR_DEFS: DatasetAttributesDefinition[] = [
     {
         id: "dataclass",
         name: "Data Class",
+        description: "The data class of the dataset",
     },
     {
         id: "dev",
@@ -61,12 +64,13 @@ export const DATASET_ATTR_DEFS: DatasetAttributesDefinition[] = [
     },
     {
         id: "encrypted",
-        name: "Encryption",
+        name: "Encrypted",
+        description: "Indicates if the dataset is encrypted (YES or NO)",
     },
     {
         id: "extx",
-        name: "Extensions",
-        description: "The number of extensions the dataset has",
+        name: "Extents",
+        description: "The number of allocated extents the dataset has",
     },
     {
         id: "lrecl",
@@ -75,26 +79,28 @@ export const DATASET_ATTR_DEFS: DatasetAttributesDefinition[] = [
     },
     {
         id: "migr",
-        name: "Migration",
-        description: "Indicates if automatic migration is active",
+        name: "Migrated",
+        description: "Indicates if the dataset is migrated (YES or NO)",
     },
     {
         id: "mgmtclass",
         name: "Management Class",
+        description: "The management class of the dataset",
     },
     {
         id: "mvol",
         name: "Multivolume",
-        description: "Whether the dataset is on multiple volumes",
+        description: "Indicates if the dataset is on multiple volumes (YES or NO)",
     },
     {
         id: "ovf",
-        name: "Space overflow",
+        name: "Space Overflow",
         description: "Indicates if space overflow was encountered (YES or NO)",
     },
     {
         id: "primary",
         name: "Primary Space",
+        description: "The primary space allocation of the dataset",
     },
     {
         id: "rdate",
@@ -109,6 +115,7 @@ export const DATASET_ATTR_DEFS: DatasetAttributesDefinition[] = [
     {
         id: "secondary",
         name: "Secondary Space",
+        description: "The secondary space allocation of the dataset",
     },
     {
         id: "sizex",
@@ -123,6 +130,7 @@ export const DATASET_ATTR_DEFS: DatasetAttributesDefinition[] = [
     {
         id: "storclass",
         name: "Storage Class",
+        description: "The storage class of the dataset",
     },
     {
         id: "used",
@@ -132,11 +140,12 @@ export const DATASET_ATTR_DEFS: DatasetAttributesDefinition[] = [
     {
         id: "usedx",
         name: "Used Extents",
+        description: "The number of used extents",
     },
     {
         id: "vol",
         name: "Volume",
-        description: "Volume serial numbers for data set",
+        description: "Volume serial number of the dataset",
     },
     {
         id: "vols",

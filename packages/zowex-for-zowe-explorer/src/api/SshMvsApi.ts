@@ -36,6 +36,14 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             pattern: filter,
             attributes: options?.attributes,
         });
+        const formatAttributeValue = (value: unknown): unknown => {
+            if (typeof value === "boolean") {
+                return value ? "YES" : "NO"; // e.g. migrated
+            } else if (Array.isArray(value)) {
+                return value.join(" "); // e.g. volsers
+            }
+            return value;
+        };
 
         return this.buildZosFilesResponse({
             items: response.items.map((item) => {
@@ -43,7 +51,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
                 if (options?.attributes) {
                     for (const [k, v] of Object.entries(item)) {
                         if (k !== "name") {
-                            attrs[this.dsAttrMapping[k] ?? k] = Array.isArray(v) ? v.join(" ") : v;
+                            attrs[this.dsAttrMapping[k] ?? k] = formatAttributeValue(v);
                         }
                     }
                 }
