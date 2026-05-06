@@ -12,7 +12,6 @@
 import { commands, EventEmitter, ExtensionContext, WebviewView } from "vscode";
 import { TableBuilder, TableViewProvider } from "../../../../src/vscode/ui";
 
-
 describe("TableViewProvider", () => {
     const fakeExtContext = {
         extensionPath: "/a/b/c/zowe-explorer",

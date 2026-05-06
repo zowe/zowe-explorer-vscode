@@ -9,10 +9,8 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import { VscSettings } from "../../../../src/vscode/doc/VscSettings";
-
 
 function createGlobalMocks() {
     const globalMocks = {

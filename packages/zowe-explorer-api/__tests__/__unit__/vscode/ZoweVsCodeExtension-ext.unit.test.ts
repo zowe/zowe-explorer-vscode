@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";

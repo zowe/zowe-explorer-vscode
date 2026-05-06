@@ -11,7 +11,6 @@
 
 import { PaginationCodeLens } from "../../../../src/vscode/ui/PaginationCodeLens";
 
-
 vi.mock("vscode", () => {
     return {
         Range: class {

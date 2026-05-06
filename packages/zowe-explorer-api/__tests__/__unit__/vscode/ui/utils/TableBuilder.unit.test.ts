@@ -12,7 +12,6 @@
 import { window } from "vscode";
 import { Table, TableBuilder, TableMediator } from "../../../../../src";
 
-
 // TableBuilder unit tests
 
 function createGlobalMocks() {

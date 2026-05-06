@@ -9,7 +9,6 @@
  *
  */
 
-
 import { Mutex } from "async-mutex";
 import { AuthHandler, AuthCancelledError, Gui, ZoweVsCodeExtension } from "../../../src";
 import { FileManagement } from "../../../src/utils/FileManagement";

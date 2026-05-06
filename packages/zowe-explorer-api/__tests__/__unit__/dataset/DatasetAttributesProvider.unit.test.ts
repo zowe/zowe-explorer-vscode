@@ -9,7 +9,6 @@
  *
  */
 
-
 import { AttributeEntryInfo, DataSetAttributesProvider } from "../../../src";
 import { ExtenderAttr, FailExtenderAttr } from "../../../__mocks__/mockCreators/shared";
 import { IProfileLoaded, Logger } from "@zowe/imperative";
