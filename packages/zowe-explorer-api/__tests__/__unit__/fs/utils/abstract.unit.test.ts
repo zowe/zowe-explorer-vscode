@@ -9,7 +9,6 @@
  *
  */
 
-
 import { DirEntry, FileEntry, FilterEntry, ProfilesCache, ZoweScheme, imperative } from "../../../../src";
 import { MockedProperty } from "../../../../__mocks__/mockUtils";
 import * as vscode from "vscode";

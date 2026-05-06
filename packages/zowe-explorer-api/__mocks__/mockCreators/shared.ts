@@ -9,10 +9,8 @@
  *
  */
 
-
 import * as imperative from "@zowe/imperative";
 import { IAttributesProvider, AttributeInfo } from "../../src/dataset/DatasetAttributesProvider";
-
 
 export function createConfigInstance() {
     return {

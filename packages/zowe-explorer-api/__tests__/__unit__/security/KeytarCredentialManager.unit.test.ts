@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as fs from "fs";
 import * as imperative from "@zowe/imperative";
 import { Constants } from "../../../src/globals";

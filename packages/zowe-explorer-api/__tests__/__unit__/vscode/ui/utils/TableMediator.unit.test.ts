@@ -12,7 +12,6 @@
 import { TableBuilder, TableMediator } from "../../../../../src/";
 import * as vscode from "vscode";
 
-
 // TableMediator unit tests
 
 // Global mocks for building a table view and using it within test cases.

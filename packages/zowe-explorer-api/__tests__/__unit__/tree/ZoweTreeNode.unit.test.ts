@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import { ZoweTreeNode } from "../../../src/tree/ZoweTreeNode";
 import { IZoweTreeNode } from "../../../src/tree/IZoweTreeNode";

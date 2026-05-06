@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as imperative from "@zowe/imperative";
 import { MessageSeverity, IZoweLogger } from "../../../src/logger";
 import * as loggerConfig from "../../../src/log4jsconfig.json";

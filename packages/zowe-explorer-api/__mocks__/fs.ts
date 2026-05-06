@@ -9,8 +9,6 @@
  *
  */
 
-
-
 const actualFs = await vi.importActual<typeof import("fs")>("fs");
 const autoMockedFs = await vi.importMock<typeof import("fs")>("fs");
 

@@ -9,7 +9,6 @@
  *
  */
 
-
 import { FilePermission } from "vscode";
 import { BufferBuilder, FileEntry, FilterEntry } from "../../../../src";
 
