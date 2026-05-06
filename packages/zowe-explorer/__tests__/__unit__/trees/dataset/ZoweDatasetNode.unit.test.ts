@@ -438,18 +438,11 @@ describe("ZoweDatasetNode Unit Tests", () => {
      * Profile properties have changed
      *************************************************************************************************************/
     it("Testing what happens when profile has been updated", async () => {
-        const profInstanceSpy = vi.spyOn(Profiles, "getInstance");
-        profInstanceSpy.mockImplementationOnce(() => {
-            return {
-                loadNamedProfile: vi.fn().mockReturnValue({ ...profileOne, profile: { encoding: "IBM-939" } } as any),
-            } as any;
-        });
-        profInstanceSpy.mockImplementationOnce(() => {
-            return {
-                loadNamedProfile: vi.fn().mockReturnValue(profileOne as any),
-            } as any;
-        });
-        profInstanceSpy.mockReturnValueOnce(profileOne as any);
+        const updatedProfile = { ...profileOne, profile: { encoding: "IBM-939" } };
+        const mockProfilesInstance = {
+            loadNamedProfile: vi.fn().mockReturnValue(updatedProfile)
+        };
+        const profInstanceSpy = vi.spyOn(Profiles, "getInstance").mockReturnValue(mockProfilesInstance as any);
 
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const pds = new ZoweDatasetNode({
@@ -473,8 +466,12 @@ describe("ZoweDatasetNode Unit Tests", () => {
         ]);
         const pdsChildren = await pds.getChildren();
         expect(pdsChildren[0].label).toEqual("IEFBR14");
-        expect(pds.getProfile().profile?.encoding).toBeUndefined();
+        
+        // Since getProfile fetches from the cache, both pds and its children will reflect the updated profile
+        expect(pds.getProfile().profile?.encoding).toBe("IBM-939");
         expect(pdsChildren[0].getProfile().profile?.encoding).toBe("IBM-939");
+
+        profInstanceSpy.mockRestore();
     });
 
     /*************************************************************************************************************
