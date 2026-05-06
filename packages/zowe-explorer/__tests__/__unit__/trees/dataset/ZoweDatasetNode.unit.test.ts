@@ -461,6 +461,8 @@ describe("ZoweDatasetNode Unit Tests", () => {
         });
         pds.dirty = true;
         pds.contextValue = Constants.DS_PDS_CONTEXT;
+        vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
         vi.spyOn(pds as any, "getDatasets").mockReturnValueOnce([
             {
                 success: true,
@@ -516,6 +518,9 @@ describe("ZoweDatasetNode Unit Tests", () => {
 
         (pdsNode as any).paginator = mockPaginator as any; // Assign mock paginator
         (pdsNode as any).paginatorData = { totalItems }; // Ensure totalItems is set
+
+        vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
 
         const getDatasetsSpy = vi.spyOn(pdsNode as any, "getDatasets").mockResolvedValue([
             {

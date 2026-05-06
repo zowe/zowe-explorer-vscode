@@ -1491,6 +1491,21 @@ describe("DatasetTableView", () => {
 
             vi.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
             vi.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
+
+            const mvsApiMock = {
+                dataSetsMatchingPattern: vi.fn().mockResolvedValue({
+                    apiResponse: {
+                        items: [
+                            { dsname: "TEST.A", dsorg: "PO", migr: "no" },
+                        ],
+                    },
+                }),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mvsApiMock as any);
+        });
+
+        afterEach(() => {
+            vi.restoreAllMocks();
         });
 
         it("should handle pattern search successfully", async () => {
