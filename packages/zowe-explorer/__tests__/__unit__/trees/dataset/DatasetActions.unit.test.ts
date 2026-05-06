@@ -62,7 +62,7 @@ import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 import { DatasetUtils } from "../../../../src/trees/dataset/DatasetUtils";
 import { ProfileManagement } from "../../../../src/management/ProfileManagement";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
-import { DataSetAttributesProvider } from "../../../../../zowe-explorer-api/lib/dataset/DatasetAttributesProvider";
+import { DataSetAttributesProvider } from "../../../../../zowe-explorer-api/src/dataset/DatasetAttributesProvider";
 import { DatasetTree } from "../../../../src/trees/dataset/DatasetTree";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
