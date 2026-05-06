@@ -125,7 +125,7 @@ describe("UssFSProvider", () => {
     describe("stat", () => {
         let lookupMock: MockInstance;
         beforeEach(() => {
-            lookupMock = vi.spyOn((UssFSProvider as any).prototype, "lookup");
+            lookupMock = vi.spyOn(UssFSProvider.instance as any, "lookup");
             vi.spyOn(ZoweExplorerApiRegister.prototype, "getCommonApi").mockReturnValue({
                 getSession: () => createISession(),
             } as any);
@@ -197,7 +197,7 @@ describe("UssFSProvider", () => {
         });
 
         it("looks up the resource before loading profile which may fail", async () => {
-            const lookupMock = vi.spyOn((UssFSProvider as any).prototype, "lookup").mockReturnValueOnce(testEntries.file);
+            const lookupMock = vi.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValueOnce(testEntries.file);
             vi.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementationOnce(() => {
                 throw new Error("invalid profile");
             });
@@ -574,7 +574,7 @@ describe("UssFSProvider", () => {
 
     describe("move", () => {
         it("returns true if it successfully moved a valid, old URI to the new URI", async () => {
-            const getInfoFromUriMock = vi.spyOn((UssFSProvider as any).prototype, "_getInfoFromUri");
+            const getInfoFromUriMock = vi.spyOn(UssFSProvider.instance as any, "_getInfoFromUri");
             const newUri = testUris.file.with({ path: "/sestest/aFile2.txt" });
             getInfoFromUriMock
                 .mockReturnValueOnce({
@@ -591,14 +591,14 @@ describe("UssFSProvider", () => {
             vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
                 move: moveStub,
             } as any);
-            const relocateEntryMock = vi.spyOn((UssFSProvider as any).prototype, "_relocateEntry").mockResolvedValueOnce(undefined);
+            const relocateEntryMock = vi.spyOn(UssFSProvider.instance as any, "_relocateEntry").mockResolvedValueOnce(undefined);
             expect(await UssFSProvider.instance.move(testUris.file, newUri)).toBe(true);
             expect(getInfoFromUriMock).toHaveBeenCalledTimes(2);
             expect(moveStub).toHaveBeenCalledWith("/aFile.txt", "/aFile2.txt");
             expect(relocateEntryMock).toHaveBeenCalledWith(testUris.file, newUri, "/aFile2.txt");
         });
         it("returns false if the 'move' API is not implemented", async () => {
-            const getInfoFromUriMock = vi.spyOn((UssFSProvider as any).prototype, "_getInfoFromUri");
+            const getInfoFromUriMock = vi.spyOn(UssFSProvider.instance as any, "_getInfoFromUri");
             const newUri = testUris.file.with({ path: "/sestest/aFile2.txt" });
             getInfoFromUriMock.mockReturnValueOnce({
                 // info for new URI
@@ -611,7 +611,7 @@ describe("UssFSProvider", () => {
             expect(errorMsgMock).toHaveBeenCalledWith("The 'move' function is not implemented for this USS API.");
         });
         it("throws an error if the API request failed", async () => {
-            const getInfoFromUriMock = vi.spyOn((UssFSProvider as any).prototype, "_getInfoFromUri");
+            const getInfoFromUriMock = vi.spyOn(UssFSProvider.instance as any, "_getInfoFromUri");
             const newUri = testUris.file.with({ path: "/sestest/aFile2.txt" });
             getInfoFromUriMock.mockReturnValueOnce({
                 // info for new URI
@@ -959,7 +959,7 @@ describe("UssFSProvider", () => {
 
     describe("readDirectory", () => {
         it("returns the correct list of entries inside a folder", async () => {
-            const lookupAsDirMock = vi.spyOn((UssFSProvider as any).prototype, "_lookupAsDirectory").mockImplementation(() => {
+            const lookupAsDirMock = vi.spyOn(UssFSProvider.instance as any, "_lookupAsDirectory").mockImplementation(() => {
                 throw vscode.FileSystemError.FileNotFound();
             });
             const remoteLookupForResourceMock = vi.spyOn(UssFSProvider.instance, "remoteLookupForResource").mockImplementation(async () => {
@@ -997,7 +997,7 @@ describe("UssFSProvider", () => {
         });
         it("calls getContents to get the data for a file entry", async () => {
             const fileEntry = { ...testEntries.file };
-            const lookupAsFileMock = vi.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+            const lookupAsFileMock = vi.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fileEntry);
             const exampleData = "hello world!";
             const autoDetectEncodingMock = vi.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation((() => undefined) as any);
             vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
@@ -1022,8 +1022,8 @@ describe("UssFSProvider", () => {
         });
         it("returns early if it failed to fetch contents", async () => {
             const fileEntry = { ...testEntries.file };
-            const fireSoonSpy = vi.spyOn((UssFSProvider as any).prototype, "fireSoon");
-            const lookupAsFileMock = vi.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+            const fireSoonSpy = vi.spyOn(UssFSProvider.instance as any, "fireSoon");
+            const lookupAsFileMock = vi.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fileEntry);
             const autoDetectEncodingMock = vi.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValueOnce(undefined);
             vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
                 getContents: vi.fn().mockRejectedValue(new Error("error retrieving contents")),
@@ -1037,7 +1037,7 @@ describe("UssFSProvider", () => {
         });
         it("calls getContents to get the data for a file entry with encoding", async () => {
             const fileEntry = { ...testEntries.file };
-            const lookupAsFileMock = vi.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+            const lookupAsFileMock = vi.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fileEntry);
             const exampleData = "hello world!";
             const getContentsMock = vi.fn().mockImplementationOnce((filePath, opts) => {
                 opts.stream.write(exampleData);
@@ -1062,7 +1062,7 @@ describe("UssFSProvider", () => {
         });
         it("assigns conflictData if the 'isConflict' option is specified", async () => {
             const fileEntry = { ...testEntries.file };
-            const lookupAsFileMock = vi.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+            const lookupAsFileMock = vi.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fileEntry);
             const exampleData = "<remote data>";
             const autoDetectEncodingMock = vi.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation((() => undefined) as any);
             vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
@@ -1087,7 +1087,7 @@ describe("UssFSProvider", () => {
         });
         it("calls '_updateResourceInEditor' if the 'editor' option is specified", async () => {
             const fileEntry = { ...testEntries.file };
-            const lookupAsFileMock = vi.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+            const lookupAsFileMock = vi.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fileEntry);
             const autoDetectEncodingMock = vi.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation((() => undefined) as any);
             const exampleData = "hello world!";
             vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
@@ -1102,7 +1102,7 @@ describe("UssFSProvider", () => {
             } as any);
 
             const _updateResourceInEditorMock = vi
-                .spyOn((UssFSProvider as any).prototype, "_updateResourceInEditor")
+                .spyOn(UssFSProvider.instance as any, "_updateResourceInEditor")
                 .mockResolvedValueOnce(undefined);
             await UssFSProvider.instance.fetchFileAtUri(testUris.file, { editor: {} as TextEditor });
 
@@ -1116,7 +1116,7 @@ describe("UssFSProvider", () => {
         });
         it("returns null when an error that is not 401 is encountered", async () => {
             const fileEntry = { ...testEntries.file };
-            vi.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+            vi.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fileEntry);
             const autoDetectEncodingMock = vi.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation((() => undefined) as any);
             const error404 = new imperative.ImperativeError({
                 msg: "Username or password are not valid or expired",
@@ -1141,7 +1141,7 @@ describe("UssFSProvider", () => {
     describe("fetchEncodingForUri", () => {
         it("returns the correct encoding for a URI", async () => {
             const fileEntry = { ...testEntries.file };
-            const lookupAsFileMock = vi.spyOn((UssFSProvider as any).prototype, "_lookupAsFile").mockReturnValueOnce(fileEntry);
+            const lookupAsFileMock = vi.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(fileEntry);
             const autoDetectEncodingMock = vi.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockImplementation((entry) => {
                 entry.encoding = { kind: "text" };
                 return Promise.resolve();
@@ -1952,7 +1952,7 @@ describe("UssFSProvider", () => {
         it("successfully deletes an entry", async () => {
             testEntries.session.entries.set("aFile.txt", testEntries.file);
             testEntries.session.size = 1;
-            const getDelInfoMock = vi.spyOn((BaseProvider as any).prototype, "_getDeleteInfo").mockReturnValueOnce({
+            const getDelInfoMock = vi.spyOn(UssFSProvider.instance as any, "_getDeleteInfo").mockReturnValueOnce({
                 entryToDelete: testEntries.file,
                 parent: testEntries.session,
                 parentUri: Uri.from({ scheme: ZoweScheme.USS, path: "/sestest" }),
@@ -1971,7 +1971,7 @@ describe("UssFSProvider", () => {
             const sesEntry = { ...testEntries.session };
             sesEntry.entries.set("aFile.txt", testEntries.file);
             sesEntry.size = 1;
-            const getDelInfoMock = vi.spyOn((BaseProvider as any).prototype, "_getDeleteInfo").mockReturnValueOnce({
+            const getDelInfoMock = vi.spyOn(UssFSProvider.instance as any, "_getDeleteInfo").mockReturnValueOnce({
                 entryToDelete: testEntries.file,
                 parent: sesEntry,
                 parentUri: Uri.from({ scheme: ZoweScheme.USS, path: "/sestest" }),
@@ -1981,7 +1981,7 @@ describe("UssFSProvider", () => {
             vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
                 delete: deleteMock,
             } as any);
-            const handleErrorMock = vi.spyOn((BaseProvider as any).prototype, "_handleError");
+            const handleErrorMock = vi.spyOn(UssFSProvider.instance as any, "_handleError");
             await expect(UssFSProvider.instance.delete(testUris.file, { recursive: false })).rejects.toThrow();
             expect(getDelInfoMock).toHaveBeenCalledWith(testUris.file);
             expect(deleteMock).toHaveBeenCalledWith(testEntries.file.metadata.path, false);
@@ -2000,7 +2000,7 @@ describe("UssFSProvider", () => {
 
     describe("copy", () => {
         it("returns early if the source URI does not have a file tree in its query", async () => {
-            const copyTreeMock = vi.spyOn((UssFSProvider as any).prototype, "copyTree");
+            const copyTreeMock = vi.spyOn(UssFSProvider.instance as any, "copyTree");
             await UssFSProvider.instance.copy(
                 testUris.file,
                 testUris.file.with({
@@ -2012,7 +2012,7 @@ describe("UssFSProvider", () => {
         });
 
         it("calls copyTree with the given URIs and options", async () => {
-            const copyTreeMock = vi.spyOn((UssFSProvider as any).prototype, "copyTree");
+            const copyTreeMock = vi.spyOn(UssFSProvider.instance as any, "copyTree");
             copyTreeMock.mockResolvedValueOnce(undefined);
             const fileTree = {
                 localUri: testUris.file,
@@ -2034,7 +2034,7 @@ describe("UssFSProvider", () => {
         });
 
         afterAll(() => {
-            const copyTreeMock = vi.spyOn((UssFSProvider as any).prototype, "copyTree");
+            const copyTreeMock = vi.spyOn(UssFSProvider.instance as any, "copyTree");
             copyTreeMock.mockRestore();
         });
     });
@@ -2418,7 +2418,7 @@ describe("UssFSProvider", () => {
             const root = (UssFSProvider.instance as any).root;
             root.entries.clear();
             const oldSize: number = root.size;
-            const getInfoFromUri = vi.spyOn((UssFSProvider as any).prototype, "_getInfoFromUri").mockReturnValueOnce({
+            const getInfoFromUri = vi.spyOn(UssFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce({
                 profile: testProfile,
                 path: "/",
             });
