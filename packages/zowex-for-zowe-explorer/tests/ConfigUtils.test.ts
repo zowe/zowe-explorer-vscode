@@ -15,8 +15,9 @@ import { Gui, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import * as vscode from "vscode";
 import { type AbstractConfigManager, MESSAGE_TYPE, type PrivateKeyWarningOptions, ZSshClient } from "@zowe/zowex-for-zowe-sdk";
-import { ConfigUtils, VscePromptApi } from "../src/ConfigUtils";
-import { getVsceConfig } from "../src/Utilities";
+import { ConfigUtils } from "../src/ConfigUtils";
+import { VscePromptApi } from "../src/VscePromptApi";
+import { SshClientCache } from "../src/SshClientCache";
 
 vi.mock("vscode", () => ({
     Disposable: vi.fn(),
@@ -62,13 +63,6 @@ vi.mock("@zowe/zowe-explorer-api", () => ({
         },
     },
 }));
-vi.mock("../src/Utilities", async (importOriginal) => {
-    const actual = await importOriginal<typeof import("../src/Utilities")>();
-    return {
-        ...actual,
-        getVsceConfig: vi.fn(),
-    };
-});
 
 describe("SshConfigUtils", () => {
     const defaultPath = "~/.zowe-server";
@@ -86,16 +80,18 @@ describe("SshConfigUtils", () => {
         });
         it("returns path from VS Code config when host is mapped", () => {
             const profile: IProfile = { host: "testHost" } as IProfile;
-            (getVsceConfig as Mock).mockReturnValue({
+            vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
                 get: vi.fn().mockReturnValue({ testHost: "/mapped/path" }),
-            });
+            } as any);
 
             const result = ConfigUtils.getServerPath(profile);
             expect(result).toBe("/mapped/path");
         });
         it("falls back to env var if no config", () => {
             const profile: IProfile = { host: "testHost" } as IProfile;
-            (getVsceConfig as Mock).mockReturnValue({ get: vi.fn().mockReturnValue({}) });
+            vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
+                get: vi.fn().mockReturnValue({}),
+            } as any);
             process.env.ZOWE_OPT_SERVER_PATH = "/env/path";
 
             const result = ConfigUtils.getServerPath(profile);
@@ -103,14 +99,18 @@ describe("SshConfigUtils", () => {
         });
         it("returns default path if nothing else is set", () => {
             const profile: IProfile = { host: "testHost" } as IProfile;
-            (getVsceConfig as Mock).mockReturnValue({ get: vi.fn().mockReturnValue({}) });
+            vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
+                get: vi.fn().mockReturnValue({}),
+            } as any);
 
             const result = ConfigUtils.getServerPath(profile);
             expect(result).toBe(defaultPath);
         });
         it("returns profile.serverPath if set and no mapping/env", () => {
             const profile: IProfile = { host: "testHost", serverPath: "/profile/path" } as IProfile;
-            (getVsceConfig as Mock).mockReturnValue({ get: vi.fn().mockReturnValue({}) });
+            vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
+                get: vi.fn().mockReturnValue({}),
+            } as any);
 
             const result = ConfigUtils.getServerPath(profile);
             expect(result).toBe("/profile/path");
@@ -118,7 +118,9 @@ describe("SshConfigUtils", () => {
 
         it("returns default path if serverPathMap is undefined", () => {
             const profile: IProfile = { host: "testHost" } as IProfile;
-            (getVsceConfig as Mock).mockReturnValue({ get: vi.fn().mockReturnValue(undefined) });
+            vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
+                get: vi.fn().mockReturnValue(undefined),
+            } as any);
             delete process.env.ZOWE_OPT_SERVER_PATH;
 
             const result = ConfigUtils.getServerPath(profile);
@@ -156,7 +158,7 @@ describe("SshConfigUtils", () => {
             vi.restoreAllMocks();
         });
         it("should add a session when visible is true and session is not present", async () => {
-            await ConfigUtils.showSessionInTree("testProfile", true);
+            await ConfigUtils.showSessionInTree("testProfile", true, mockApi);
 
             expect(mockProvider.addSession).toHaveBeenCalledWith(expect.objectContaining({ sessionName: "testProfile", profileType: "ssh" }));
             expect(mockLocalStorage.setValue).toHaveBeenCalledWith("datasetProvider", expect.objectContaining({ sessions: ["testProfile"] }));
@@ -165,7 +167,7 @@ describe("SshConfigUtils", () => {
             const fakeNode = { getProfileName: () => "testProfile" };
             mockProvider.mSessionNodes = [fakeNode];
 
-            await ConfigUtils.showSessionInTree("testProfile", false);
+            await ConfigUtils.showSessionInTree("testProfile", false, mockApi);
 
             expect(mockProvider.deleteSession).toHaveBeenCalledWith(fakeNode);
             expect(mockLocalStorage.setValue).toHaveBeenCalledWith("datasetProvider", expect.objectContaining({ sessions: [] }));
@@ -353,20 +355,16 @@ describe("SshConfigUtils", () => {
         });
         describe("getProfileSchema", () => {
             let mockGetProfilesCache: any;
-            let mockExplorerApi: any;
             beforeEach(() => {
                 mockGetProfilesCache = {
                     getCoreProfileTypes: vi.fn().mockReturnValue([{ type: "core1" }]),
                     getConfigArray: vi.fn().mockReturnValue([{ type: "config1" }]),
                 };
 
-                mockExplorerApi = {
-                    getExplorerExtenderApi: vi.fn().mockReturnValue({
-                        getProfilesCache: vi.fn().mockReturnValue(mockGetProfilesCache),
-                    }),
-                };
-
-                vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue(mockExplorerApi as any);
+                // Mock SshClientCache.inst.profilesCache
+                vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+                    profilesCache: mockGetProfilesCache,
+                } as any);
             });
             afterEach(() => {
                 vi.restoreAllMocks();
@@ -375,8 +373,6 @@ describe("SshConfigUtils", () => {
             it("returns combined profile schemas including core, config, and base profile", () => {
                 const result = (instance as any).getProfileSchemas();
 
-                expect(ZoweVsCodeExtension.getZoweExplorerApi).toHaveBeenCalled();
-                expect(mockExplorerApi.getExplorerExtenderApi).toHaveBeenCalled();
                 expect(mockGetProfilesCache.getCoreProfileTypes).toHaveBeenCalled();
                 expect(mockGetProfilesCache.getConfigArray).toHaveBeenCalled();
 
@@ -468,7 +464,10 @@ describe("SshConfigUtils", () => {
             beforeEach(() => {
                 mockGet = vi.fn();
                 mockUpdate = vi.fn();
-                (getVsceConfig as Mock).mockReturnValue({ get: mockGet, update: mockUpdate });
+                vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
+                    get: mockGet,
+                    update: mockUpdate,
+                } as any);
             });
             afterEach(() => {
                 vi.resetAllMocks();
@@ -477,7 +476,7 @@ describe("SshConfigUtils", () => {
                 mockGet.mockReturnValue({ oldHost: "/old/path" });
                 (instance as any).storeServerPath("newHost", "/new/path");
                 expect(mockUpdate).toHaveBeenCalledWith(
-                    "serverInstallPath",
+                    "zowex.serverInstallPath",
                     {
                         oldHost: "/old/path",
                         newHost: "/new/path",
@@ -488,7 +487,7 @@ describe("SshConfigUtils", () => {
             it("adds a new host and path entry when serverPathMap is empty", () => {
                 mockGet.mockReturnValue(undefined);
                 (instance as any).storeServerPath("newHost", "/new/path");
-                expect(mockUpdate).toHaveBeenCalledWith("serverInstallPath", { newHost: "/new/path" }, vscode.ConfigurationTarget.Global);
+                expect(mockUpdate).toHaveBeenCalledWith("zowex.serverInstallPath", { newHost: "/new/path" }, vscode.ConfigurationTarget.Global);
             });
         });
 
@@ -496,7 +495,9 @@ describe("SshConfigUtils", () => {
             let mockGet: any;
             beforeEach(() => {
                 mockGet = vi.fn();
-                (getVsceConfig as Mock).mockReturnValue({ get: mockGet });
+                vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
+                    get: mockGet,
+                } as any);
             });
             afterEach(() => {
                 vi.resetAllMocks();
@@ -504,7 +505,7 @@ describe("SshConfigUtils", () => {
             it("returns the value from vscode config for the given setting", () => {
                 mockGet.mockReturnValue("testValue");
                 const result = (instance as any).getClientSetting("handshakeTimeout");
-                expect(mockGet).toHaveBeenCalledWith("defaultHandshakeTimeout");
+                expect(mockGet).toHaveBeenCalledWith("zowex.defaultHandshakeTimeout");
                 expect(result).toBe("testValue");
             });
         });

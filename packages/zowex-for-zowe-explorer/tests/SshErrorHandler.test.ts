@@ -9,60 +9,43 @@
  *
  */
 
-import { type ErrorCorrelator, type Types, ZoweExplorerApiType, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { ImperativeError } from "@zowe/imperative";
+import { ErrorCorrelator, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { afterEach, beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
-import * as vscode from "vscode";
 import { SshErrorHandler } from "../src/SshErrorHandler";
 
-// Mock vscode module
-vi.mock("vscode", () => ({
-    window: {
-        showErrorMessage: vi.fn(),
-        createOutputChannel: vi.fn(),
-    },
-}));
-
-// Mock Zowe Explorer API (shared structure with SshErrorCorrelations.test.ts)
+// Mock Zowe Explorer API
 vi.mock("@zowe/zowe-explorer-api", () => ({
     ZoweExplorerApiType: {
         All: "all",
         Mvs: "mvs",
         Uss: "uss",
-        Jobs: "jobs",
-        Command: "command",
+        Jes: "jes",
+        Command: "cmd",
     },
-    ZoweVsCodeExtension: {
-        getZoweExplorerApi: vi.fn(),
+    ErrorCorrelator: {
+        getInstance: vi.fn(),
     },
 }));
 
 describe("SshErrorHandler", () => {
     let errorHandler: SshErrorHandler;
-    let mockShowErrorMessage: MockedFunction<typeof vscode.window.showErrorMessage>;
-    let mockCreateOutputChannel: MockedFunction<typeof vscode.window.createOutputChannel>;
-    let mockGetZoweExplorerApi: MockedFunction<typeof ZoweVsCodeExtension.getZoweExplorerApi>;
-    let mockErrorCorrelator: ErrorCorrelator;
-    let mockOutputChannel: vscode.LogOutputChannel;
+    let mockGetInstance: MockedFunction<typeof ErrorCorrelator.getInstance>;
+    let mockErrorCorrelator: {
+        displayError: MockedFunction<any>;
+    };
 
     beforeEach(() => {
         // Reset singleton instance
         errorHandler = SshErrorHandler.getInstance();
 
         // Setup mocks
-        mockShowErrorMessage = vi.mocked(vscode.window.showErrorMessage);
-        mockCreateOutputChannel = vi.mocked(vscode.window.createOutputChannel);
-        mockGetZoweExplorerApi = vi.mocked(ZoweVsCodeExtension.getZoweExplorerApi);
-
-        mockOutputChannel = {
-            appendLine: vi.fn(),
-            show: vi.fn(),
-        } as unknown as vscode.LogOutputChannel;
-
+        mockGetInstance = vi.mocked(ErrorCorrelator.getInstance);
         mockErrorCorrelator = {
             displayError: vi.fn(),
-        } as unknown as ErrorCorrelator;
+        };
 
-        mockCreateOutputChannel.mockReturnValue(mockOutputChannel);
+        mockGetInstance.mockReturnValue(mockErrorCorrelator as any);
     });
 
     afterEach(() => {
@@ -78,16 +61,8 @@ describe("SshErrorHandler", () => {
         });
     });
 
-    describe("handleError with error correlator", () => {
-        beforeEach(() => {
-            mockGetZoweExplorerApi.mockReturnValue({
-                getExplorerExtenderApi: () => ({
-                    getErrorCorrelator: () => mockErrorCorrelator,
-                }),
-            } as unknown as Types.IApiRegisterClient);
-        });
-
-        it("should use error correlator when available", async () => {
+    describe("handleError", () => {
+        it("should use error correlator for Error objects", async () => {
             const testError = new Error("FOTS4241 Authentication failed");
             const expectedResult = { userResponse: "Retry" };
 
@@ -101,7 +76,6 @@ describe("SshErrorHandler", () => {
                 allowRetry: true,
             });
             expect(result).toBe("Retry");
-            expect(mockShowErrorMessage).not.toHaveBeenCalled();
         });
 
         it("should handle string errors with correlator", async () => {
@@ -130,68 +104,39 @@ describe("SshErrorHandler", () => {
 
             expect(result).toBe("Show Details");
         });
-    });
 
-    describe("handleError fallback behavior", () => {
-        beforeEach(() => {
-            // Mock no error correlator available
-            mockGetZoweExplorerApi.mockReturnValue(null);
-        });
+        it("should handle correlator response without user response", async () => {
+            const testError = new Error("Network error");
+            const expectedResult = {}; // No userResponse property
 
-        it("should show error message without retry when not allowed", async () => {
-            const testError = new Error("Connection failed");
-            mockShowErrorMessage.mockResolvedValue("Show Details");
+            mockErrorCorrelator.displayError.mockResolvedValue(expectedResult);
 
-            const result = await errorHandler.handleError(testError, ZoweExplorerApiType.All, "Testing operation");
+            const result = await errorHandler.handleError(testError, ZoweExplorerApiType.Uss);
 
-            expect(mockShowErrorMessage).toHaveBeenCalledWith("Testing operation: Connection failed", "Show Details");
-            expect(result).toBe("Show Details");
-        });
-
-        it("should show error message with retry when allowed", async () => {
-            const testError = new Error("Temporary failure");
-            mockShowErrorMessage.mockResolvedValue("Retry");
-
-            const result = await errorHandler.handleError(testError, ZoweExplorerApiType.Uss, "File upload", true);
-
-            expect(mockShowErrorMessage).toHaveBeenCalledWith("File upload: Temporary failure", "Retry", "Show Details");
-            expect(result).toBe("Retry");
-        });
-
-        it("should handle string errors in fallback", async () => {
-            const testError = "FSUM6260 write error on file";
-            mockShowErrorMessage.mockResolvedValue(undefined);
-
-            const result = await errorHandler.handleError(testError, ZoweExplorerApiType.Command);
-
-            expect(mockShowErrorMessage).toHaveBeenCalledWith("FSUM6260 write error on file", "Show Details");
+            expect(mockErrorCorrelator.displayError).toHaveBeenCalledWith(ZoweExplorerApiType.Uss, testError, {
+                profileType: "ssh",
+                additionalContext: undefined,
+                allowRetry: false,
+            });
             expect(result).toBeUndefined();
         });
 
-        it("should handle 'Show Details' response by creating output channel", async () => {
-            const testError = new Error("Detailed error");
-            testError.stack = "Error: Detailed error\n    at test.js:1:1";
-            mockShowErrorMessage.mockResolvedValue("Show Details");
+        it("should use default allowRetry value of false", async () => {
+            const testError = new Error("Default retry test");
+            const expectedResult = { userResponse: "OK" };
 
-            await errorHandler.handleError(testError, ZoweExplorerApiType.All, "Operation");
+            mockErrorCorrelator.displayError.mockResolvedValue(expectedResult);
 
-            expect(mockCreateOutputChannel).toHaveBeenCalledWith("Zowe Remote SSH");
-            expect(mockOutputChannel.appendLine).toHaveBeenCalledWith("Error: Detailed error");
-            expect(mockOutputChannel.appendLine).toHaveBeenCalledWith("Stack: Error: Detailed error\n    at test.js:1:1");
-            expect(mockOutputChannel.show).toHaveBeenCalled();
-        });
+            await errorHandler.handleError(testError, ZoweExplorerApiType.Command, "Test context");
 
-        it("should handle error without stack trace", async () => {
-            const testError = new Error("Simple error");
-            delete testError.stack;
-            mockShowErrorMessage.mockResolvedValue("Show Details");
-
-            await errorHandler.handleError(testError, ZoweExplorerApiType.All);
-
-            expect(mockOutputChannel.appendLine).toHaveBeenCalledWith("Error: Simple error");
-            expect(mockOutputChannel.appendLine).toHaveBeenCalledTimes(1);
+            expect(mockErrorCorrelator.displayError).toHaveBeenCalledWith(ZoweExplorerApiType.Command, testError, {
+                profileType: "ssh",
+                additionalContext: "Test context",
+                allowRetry: false,
+            });
         });
     });
+
 
     describe("isFatalError", () => {
         it("should identify fatal OpenSSH error codes", () => {
@@ -271,11 +216,6 @@ describe("SshErrorHandler", () => {
     describe("createErrorCallback", () => {
         it("should create callback that handles errors and returns retry decision", async () => {
             const testError = new Error("Test error");
-            mockGetZoweExplorerApi.mockReturnValue({
-                getExplorerExtenderApi: () => ({
-                    getErrorCorrelator: () => mockErrorCorrelator,
-                }),
-            } as unknown as Types.IApiRegisterClient);
             mockErrorCorrelator.displayError.mockResolvedValue({ userResponse: "Retry" });
 
             const callback = errorHandler.createErrorCallback(ZoweExplorerApiType.All, "Upload operation");
@@ -291,8 +231,7 @@ describe("SshErrorHandler", () => {
         });
 
         it("should return false when user chooses not to retry", async () => {
-            mockGetZoweExplorerApi.mockReturnValue(null);
-            mockShowErrorMessage.mockResolvedValue("Show Details");
+            mockErrorCorrelator.displayError.mockResolvedValue({ userResponse: "Show Details" });
 
             const callback = errorHandler.createErrorCallback(ZoweExplorerApiType.Jes);
             const shouldRetry = await callback(new Error("Job failed"), "job submission");
@@ -301,8 +240,7 @@ describe("SshErrorHandler", () => {
         });
 
         it("should return false when user response is undefined", async () => {
-            mockGetZoweExplorerApi.mockReturnValue(null);
-            mockShowErrorMessage.mockResolvedValue(undefined);
+            mockErrorCorrelator.displayError.mockResolvedValue({});
 
             const callback = errorHandler.createErrorCallback(ZoweExplorerApiType.Mvs);
             const shouldRetry = await callback(new Error("Dataset error"), "dataset operation");
@@ -311,11 +249,6 @@ describe("SshErrorHandler", () => {
         });
 
         it("should combine context strings correctly", async () => {
-            mockGetZoweExplorerApi.mockReturnValue({
-                getExplorerExtenderApi: () => ({
-                    getErrorCorrelator: () => mockErrorCorrelator,
-                }),
-            } as unknown as Types.IApiRegisterClient);
             mockErrorCorrelator.displayError.mockResolvedValue({ userResponse: "Cancel" });
 
             const callback = errorHandler.createErrorCallback(ZoweExplorerApiType.Uss, "File operations");
@@ -332,11 +265,6 @@ describe("SshErrorHandler", () => {
         });
 
         it("should handle callback without base context", async () => {
-            mockGetZoweExplorerApi.mockReturnValue({
-                getExplorerExtenderApi: () => ({
-                    getErrorCorrelator: () => mockErrorCorrelator,
-                }),
-            } as unknown as Types.IApiRegisterClient);
             mockErrorCorrelator.displayError.mockResolvedValue({ userResponse: "Retry" });
 
             const callback = errorHandler.createErrorCallback(ZoweExplorerApiType.Command);
@@ -352,36 +280,9 @@ describe("SshErrorHandler", () => {
         });
     });
 
-    describe("edge cases and error scenarios", () => {
-        it("should handle missing extender API gracefully", async () => {
-            mockGetZoweExplorerApi.mockReturnValue({
-                getExplorerExtenderApi: () => null,
-            } as unknown as Types.IApiRegisterClient);
-            mockShowErrorMessage.mockResolvedValue("OK");
-
-            const result = await errorHandler.handleError(new Error("Test"), ZoweExplorerApiType.All);
-
-            expect(result).toBe("OK");
-            expect(mockShowErrorMessage).toHaveBeenCalled();
-        });
-
-        it("should handle missing error correlator gracefully", async () => {
-            mockGetZoweExplorerApi.mockReturnValue({
-                getExplorerExtenderApi: () => ({
-                    getErrorCorrelator: () => null,
-                }),
-            } as unknown as Types.IApiRegisterClient);
-            mockShowErrorMessage.mockResolvedValue("OK");
-
-            const result = await errorHandler.handleError(new Error("Test"), ZoweExplorerApiType.All);
-
-            expect(result).toBe("OK");
-            expect(mockShowErrorMessage).toHaveBeenCalled();
-        });
-    });
 
     describe("isTimeoutError", () => {
-        it("should return true for timeout errors", async () => {
+        it("should return true for timeout errors", () => {
             expect(errorHandler.isTimeoutError("Request timed out after")).toBe(true);
             expect(errorHandler.isTimeoutError(new Error("Request timed out after 200 ms"))).toBe(true);
         });
@@ -389,6 +290,24 @@ describe("SshErrorHandler", () => {
         it("should return false for non-timeout errors", () => {
             expect(errorHandler.isTimeoutError("Authentication failed")).toBe(false);
             expect(errorHandler.isTimeoutError(new Error("Authentication failed"))).toBe(false);
+        });
+
+        it("should handle ImperativeError with ETIMEDOUT code", () => {
+            const imperativeError = new ImperativeError({
+                msg: "Timeout",
+                errorCode: "ETIMEDOUT",
+            });
+
+            expect(errorHandler.isTimeoutError(imperativeError)).toBe(true);
+        });
+
+        it("should handle ImperativeError with RPC timeout code", () => {
+            const imperativeError = new ImperativeError({
+                msg: "RPC Timeout",
+                errorCode: "-32001", // RpcErrorCode.REQUEST_TIMEOUT
+            });
+
+            expect(errorHandler.isTimeoutError(imperativeError)).toBe(true);
         });
     });
 });
