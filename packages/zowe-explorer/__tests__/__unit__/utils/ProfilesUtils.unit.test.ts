@@ -41,7 +41,6 @@ import { IProfAttrs, SessConstants } from "@zowe/imperative";
 vi.mock("../../../src/tools/ZoweLogger");
 vi.mock("../../../src/tools/ZoweLocalStorage");
 vi.mock("fs");
-vi.mock("vscode");
 vi.mock("@zowe/imperative");
 
 describe("ProfilesUtils unit tests", () => {

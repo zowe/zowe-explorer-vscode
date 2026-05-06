@@ -70,7 +70,6 @@ import { LocalFileManagement } from "../../../../src/management/LocalFileManagem
 
 // Missing the definition of path module, because I need the original logic for tests
 vi.mock("fs");
-vi.mock("vscode");
 vi.mock("../../../../src/tools/ZoweLogger");
 vi.mock("../../../../src/tools/ZoweLocalStorage");
 

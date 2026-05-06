@@ -44,7 +44,6 @@ import { JobInit } from "../../../../src/trees/job/JobInit";
 import { Definitions } from "../../../../src/configuration/Definitions";
 
 vi.mock("@zowe/zos-jobs-for-zowe-sdk");
-vi.mock("vscode");
 
 const showMock = vi.fn();
 const onDidChangeValueMock = {

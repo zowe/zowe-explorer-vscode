@@ -29,7 +29,6 @@ import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { Definitions } from "../../../src/configuration/Definitions";
 
 vi.mock("fs");
-vi.mock("vscode");
 vi.mock("../../../src/tools/ZoweLocalStorage");
 
 describe("ProfileManagement unit tests", () => {

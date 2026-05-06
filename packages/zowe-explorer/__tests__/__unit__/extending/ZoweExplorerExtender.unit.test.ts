@@ -32,7 +32,6 @@ import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweTreeProvider } from "../../../src/trees/ZoweTreeProvider";
 
 vi.mock("fs");
-vi.mock("vscode");
 
 describe("ZoweExplorerExtender unit tests", () => {
     function createBlockMocks() {
