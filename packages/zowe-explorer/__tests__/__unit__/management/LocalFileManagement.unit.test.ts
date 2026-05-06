@@ -22,7 +22,6 @@ import { createUSSNode, createUSSSessionNode } from "../../__mocks__/mockCreator
 import { LocalFileManagement } from "../../../src/management/LocalFileManagement";
 import { createISession, createIProfile } from "../../__mocks__/mockCreators/shared";
 
-vi.mock("vscode");
 vi.mock("../../../src/tools/ZoweLocalStorage");
 
 describe("LocalFileManagement unit tests", () => {

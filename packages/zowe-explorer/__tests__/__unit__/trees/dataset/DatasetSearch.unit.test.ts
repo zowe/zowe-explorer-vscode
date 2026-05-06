@@ -30,7 +30,6 @@ import { Definitions } from "../../../../src/configuration/Definitions";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
 
 vi.mock("fs");
-vi.mock("vscode");
 vi.mock("../../../../src/tools/ZoweLogger");
 vi.mock("../../../../src/tools/ZoweLocalStorage");
 

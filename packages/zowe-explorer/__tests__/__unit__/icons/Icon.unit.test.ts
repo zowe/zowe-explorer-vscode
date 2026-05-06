@@ -10,7 +10,6 @@
  */
 
 
-vi.mock("vscode");
 
 import * as vscode from "vscode";
 import { imperative } from "@zowe/zowe-explorer-api";

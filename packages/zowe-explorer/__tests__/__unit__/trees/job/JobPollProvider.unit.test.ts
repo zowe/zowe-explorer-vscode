@@ -14,7 +14,6 @@ import * as vscode from "vscode";
 import { Poller } from "@zowe/zowe-explorer-api";
 import { PollProvider } from "../../../../src/trees/job/JobPollProvider";
 
-vi.mock("vscode");
 
 describe("PollProvider - unit tests", () => {
     it("disposes the provider without errors", () => {

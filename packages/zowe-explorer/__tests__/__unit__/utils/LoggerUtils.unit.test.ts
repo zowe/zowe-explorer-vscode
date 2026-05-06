@@ -57,7 +57,11 @@ function createGlobalMocks(): { [key: string]: any } {
     });
     vi.spyOn(ZoweLogger as any, "getDate").mockReturnValue("2023/1/1");
     vi.spyOn(ZoweLogger as any, "getTime").mockReturnValue("08:00:00");
-    Object.defineProperty(core, "padLeft", { value: vi.fn(), configurable: true });
+    try {
+        Object.defineProperty(core, "padLeft", { value: vi.fn(), configurable: true });
+    } catch {
+        // ESM namespace properties are non-configurable under Vitest; mock is unused in this package.
+    }
     Object.defineProperty(SettingsConfig, "setDirectValue", { value: newMocks.mockSetDirectValue, configurable: true });
 
     return newMocks;

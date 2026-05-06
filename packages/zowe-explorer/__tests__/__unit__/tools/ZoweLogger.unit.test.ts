@@ -12,7 +12,7 @@
 import { MockInstance } from "vitest";
 
 import * as vscode from "vscode";
-import * as loggerConfig from "../../log4jsconfig.json";
+import * as loggerConfig from "../../../log4jsconfig.json";
 import * as path from "path";
 import { Gui, imperative, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
