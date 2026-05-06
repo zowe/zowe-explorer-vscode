@@ -1530,6 +1530,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
         vi.resetAllMocks();
         const datasetTree = createDatasetTree(createDatasetSessionNode(session, profileOne), createTreeView());
         vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(datasetTree);
+        vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
     });
 
     it("filters children to only favorited members when favoritedMemberNames is set", async () => {

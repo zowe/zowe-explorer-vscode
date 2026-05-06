@@ -41,7 +41,6 @@ import { IProfAttrs, SessConstants } from "@zowe/imperative";
 vi.mock("../../../src/tools/ZoweLogger");
 vi.mock("../../../src/tools/ZoweLocalStorage");
 vi.mock("fs");
-vi.mock("@zowe/imperative");
 
 describe("ProfilesUtils unit tests", () => {
     beforeAll(() => {
@@ -776,11 +775,12 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("should update the credential manager setting if secure value is true", () => {
+            ProfilesUtils.PROFILE_SECURITY = false;
             vi.spyOn(SettingsConfig, "isConfigSettingSetByUser").mockReturnValue(false);
             vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             vi.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
             const loggerInfoSpy = vi.spyOn(ZoweLogger, "info");
-            const recordCredMgrInConfigSpy = vi.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig");
+            const recordCredMgrInConfigSpy = vi.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig").mockImplementation(() => {});
             ProfilesUtils.updateCredentialManagerSetting();
             expect(ProfilesUtils.PROFILE_SECURITY).toBe(Constants.ZOWE_CLI_SCM);
             expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
@@ -788,10 +788,11 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("should update the credential manager setting if specific credential manager is passed", () => {
+            ProfilesUtils.PROFILE_SECURITY = false;
             vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             vi.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
             const loggerInfoSpy = vi.spyOn(ZoweLogger, "info");
-            const recordCredMgrInConfigSpy = vi.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig");
+            const recordCredMgrInConfigSpy = vi.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig").mockImplementation(() => {});
             ProfilesUtils.updateCredentialManagerSetting("customCredentialManager");
             expect(ProfilesUtils.PROFILE_SECURITY).toBe("customCredentialManager");
             expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
@@ -799,13 +800,16 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("if setting is not enabled and default credential manager not found", () => {
+            ProfilesUtils.PROFILE_SECURITY = Constants.ZOWE_CLI_SCM;
             vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
             vi.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(false);
             const loggerInfoSpy = vi.spyOn(ZoweLogger, "info");
+            const recordCredMgrInConfigSpy = vi.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig").mockImplementation(() => {});
             ProfilesUtils.updateCredentialManagerSetting();
             expect(ProfilesUtils.PROFILE_SECURITY).toBe(false);
             expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
             expect(loggerInfoSpy.mock.calls[0][0]).toEqual("Zowe Explorer profiles are being set as unsecured.");
+            expect(recordCredMgrInConfigSpy).toHaveBeenCalledWith(false);
         });
     });
 
