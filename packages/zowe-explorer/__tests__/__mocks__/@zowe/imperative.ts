@@ -393,6 +393,7 @@ export class SessConstants {
     public static readonly AUTH_TYPE_BASIC = "basic";
     public static readonly AUTH_TYPE_BEARER = "bearer";
     public static readonly AUTH_TYPE_CERT_PEM = "cert-pem";
+    public static readonly AUTH_TYPE_NONE = "none";
 }
 
 export const apiErrorHeader = {
