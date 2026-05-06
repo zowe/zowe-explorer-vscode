@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import * as path from "path";
 import * as os from "os";
@@ -50,7 +49,7 @@ const hoistedMocks = vi.hoisted(() => {
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 getZoweDir: vi.fn(),
             };
-        })
+        }),
     };
 });
 
@@ -59,7 +58,7 @@ vi.mock("@zowe/imperative", async (importOriginal) => {
     return {
         ...actual,
         ImperativeConfig: hoistedMocks.mockImperativeConfig,
-        ProfileInfo: hoistedMocks.mockImperativeProfileInfo
+        ProfileInfo: hoistedMocks.mockImperativeProfileInfo,
     };
 });
 
@@ -67,7 +66,7 @@ vi.mock("@zowe/zosmf-for-zowe-sdk", async (importOriginal) => {
     const actual = await importOriginal<any>();
     return {
         ...actual,
-        ZosmfSession: hoistedMocks.mockZosmfSession
+        ZosmfSession: hoistedMocks.mockZosmfSession,
     };
 });
 
@@ -75,7 +74,7 @@ vi.mock("@zowe/zos-files-for-zowe-sdk", async (importOriginal) => {
     const actual = await importOriginal<any>();
     return {
         ...actual,
-        Utilities: hoistedMocks.mockUtilities
+        Utilities: hoistedMocks.mockUtilities,
     };
 });
 

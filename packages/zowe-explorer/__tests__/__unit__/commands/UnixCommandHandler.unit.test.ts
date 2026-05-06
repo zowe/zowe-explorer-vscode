@@ -130,7 +130,7 @@ describe("UnixCommand Actions Unit Testing", () => {
     };
 
     const testNode = new ZoweDatasetNode({
-        label: "BRTVS99.DDIR",
+        label: "IBMUSER.DDIR",
         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         session,
         profile: profileOne,

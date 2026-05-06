@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import { createIProfile, createISession, createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";

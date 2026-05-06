@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";

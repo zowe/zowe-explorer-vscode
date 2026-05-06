@@ -219,7 +219,7 @@ describe("Dataset Tree Unit Tests - Function getTreeItem", () => {
         const blockMocks = createBlockMocks();
 
         const node = new ZoweDatasetNode({
-            label: "BRTVS99",
+            label: "IBMUSER",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.datasetSessionNode,
             session: blockMocks.session,
@@ -254,7 +254,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         const node = new ZoweDatasetNode({
-            label: "BRTVS99.PUBLIC",
+            label: "IBMUSER.PUBLIC",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: favProfileNode,
             contextOverride: Constants.PDS_FAV_CONTEXT,
@@ -263,7 +263,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             path: `/${blockMocks.datasetSessionNode.label as string}/${node.label as string}`,
         });
 
-        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("BRTVS99.PUBLIC", Constants.DS_PDS_CONTEXT, favProfileNode);
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("IBMUSER.PUBLIC", Constants.DS_PDS_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile).toEqual(node);
     });
@@ -273,7 +273,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         const node = new ZoweDatasetNode({
-            label: "BRTVS99.PS",
+            label: "IBMUSER.PS",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.datasetSessionNode,
             profile: blockMocks.imperativeProfile,
@@ -286,7 +286,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         node.command = { command: "vscode.open", title: "", arguments: [node.resourceUri] };
 
         const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile(
-            "BRTVS99.PS",
+            "IBMUSER.PS",
             Constants.DS_DS_CONTEXT,
             blockMocks.datasetSessionNode
         );
@@ -304,7 +304,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         const showErrorMessageSpy = vi.spyOn(Gui, "errorMessage");
-        testTree.initializeFavChildNodeForProfile("BRTVS99.BAD", "badContextValue", favProfileNode);
+        testTree.initializeFavChildNodeForProfile("IBMUSER.BAD", "badContextValue", favProfileNode);
 
         expect(showErrorMessageSpy).toHaveBeenCalledTimes(1);
         showErrorMessageSpy.mockClear();
@@ -356,38 +356,51 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profile);
         mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
         const writeFileMock = vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+        const spyOnDataSetsMatchingPattern = vi.spyOn(zosfiles.List, "dataSetsMatchingPattern").mockResolvedValue({
+            success: true,
+            commandResponse: null,
+            apiResponse: [
+                { dsname: "IBMUSER", dsorg: "PS" },
+                { dsname: "IBMUSER.CA10", migr: "YES" },
+                { dsname: "IBMUSER.CA11.SPFTEMP0.CNTL", dsorg: "PO" },
+                { dsname: "IBMUSER.DDIR", dsorg: "PO" },
+                { dsname: "IBMUSER.VS1", dsorg: "VS" },
+                { dsname: "IBMUSER.VS1.INDEX", dsorg: "VS" },
+                { dsname: "IBMUSER.VS1.DATA", dsorg: "VS" },
+            ],
+        });
         const testTree = new DatasetTree();
         blockMocks.datasetSessionNode.pattern = "test";
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         testTree.mSessionNodes[1].dirty = true;
         const sampleChildren: ZoweDatasetNode[] = [
             new ZoweDatasetNode({
-                label: "BRTVS99",
+                label: "IBMUSER",
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: testTree.mSessionNodes[1],
                 profile: blockMocks.imperativeProfile,
             }),
             new ZoweDatasetNode({
-                label: "BRTVS99.CA10",
+                label: "IBMUSER.CA10",
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: testTree.mSessionNodes[1],
                 profile: blockMocks.imperativeProfile,
                 contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
             }),
             new ZoweDatasetNode({
-                label: "BRTVS99.CA11.SPFTEMP0.CNTL",
+                label: "IBMUSER.CA11.SPFTEMP0.CNTL",
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode: testTree.mSessionNodes[1],
                 profile: blockMocks.imperativeProfile,
             }),
             new ZoweDatasetNode({
-                label: "BRTVS99.DDIR",
+                label: "IBMUSER.DDIR",
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode: testTree.mSessionNodes[1],
                 profile: blockMocks.imperativeProfile,
             }),
             new ZoweDatasetNode({
-                label: "BRTVS99.VS1",
+                label: "IBMUSER.VS1",
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: testTree.mSessionNodes[1],
                 profile: blockMocks.imperativeProfile,
@@ -400,6 +413,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         expect(writeFileMock).toHaveBeenCalledWith(sampleChildren[0].resourceUri, DsType.Ps);
         expect(children.map((c) => c.label)).toEqual(sampleChildren.map((c) => c.label));
         expect(children).toEqual(sampleChildren);
+        spyOnDataSetsMatchingPattern.mockRestore();
     });
     it("Checking function for session node with an imperative error", async () => {
         createGlobalMocks();
@@ -892,7 +906,7 @@ describe("Dataset Tree Unit Tests - Function getParent", () => {
         const testTree = new DatasetTree();
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         const node = new ZoweDatasetNode({
-            label: "BRTVS99",
+            label: "IBMUSER",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.datasetSessionNode,
             session: blockMocks.session,
@@ -1257,7 +1271,7 @@ describe("Dataset Tree Unit Tests - Function addSingleSession", () => {
 
         // Mock the USS API so that getSession returns the correct value
         const mockMvsApi = {
-            getSession: vi.fn().mockReturnValue(blockMocks.testSession)
+            getSession: vi.fn().mockReturnValue(blockMocks.testSession),
         } as any;
         vi.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockReturnValue(mockMvsApi);
 
@@ -1273,7 +1287,7 @@ describe("Dataset Tree Unit Tests - Function addSingleSession", () => {
         const mockMvsApi = {
             getSession: vi.fn().mockImplementationOnce(() => {
                 throw new Error("test error hostname:sample.com");
-            })
+            }),
         } as any;
         vi.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockReturnValue(mockMvsApi);
         vi.spyOn(ZoweExplorerApiRegister.getInstance(), "registeredMvsApiTypes").mockReturnValueOnce([undefined]);
@@ -1288,7 +1302,7 @@ describe("Dataset Tree Unit Tests - Function addSingleSession", () => {
         const mockMvsApi = {
             getSession: vi.fn().mockImplementationOnce(() => {
                 throw new Error("test error");
-            })
+            }),
         } as any;
         vi.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockReturnValue(mockMvsApi);
         vi.spyOn(ZoweExplorerApiRegister.getInstance(), "registeredMvsApiTypes").mockReturnValueOnce([undefined]);
@@ -7228,9 +7242,16 @@ describe("DataSetTree Unit Tests - Function handleDrop", () => {
             [blockMocks.memberNode.resourceUri.path]: blockMocks.memberNode,
         });
         vi.spyOn(Gui, "errorMessage").mockResolvedValueOnce(null as any);
+        // Vitest does not auto-load the manual mock at
+        // `__tests__/__mocks__/@zowe/zos-files-for-zowe-sdk.ts` the way Jest
+        // did, so the real `mvsApi.dataSet` calls inside
+        // `SharedUtils.isSamePhysicalDataset` would fail. Stub the comparison
+        // to return true so the same-object-drop branch is exercised.
+        const isSamePhysicalDatasetSpy = vi.spyOn(SharedUtils, "isSamePhysicalDataset").mockResolvedValueOnce(true);
         await testTree.handleDrop(blockMocks.datasetPdsNode, dataTransfer, undefined);
         expect(Gui.errorMessage).toHaveBeenCalledWith(SharedUtils.ERROR_SAME_OBJECT_DROP);
         draggedNodeMock[Symbol.dispose]();
+        isSamePhysicalDatasetSpy.mockRestore();
     });
 
     it("Member being dropped on another pds should show overwrite warning", async () => {

@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import { LocalStorageAccess, StorageKeys, ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";

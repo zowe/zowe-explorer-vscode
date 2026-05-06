@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { createIProfile, createISessionWithoutCredentials } from "../../__mocks__/mockCreators/shared";

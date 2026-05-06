@@ -9,7 +9,6 @@
  *
  */
 
-
 import { ZoweTerminal } from "../../../src/tools/ZoweTerminal";
 
 describe("ZoweTerminal Unit Tests", () => {

@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { imperative, Validation, IZoweTreeNode } from "@zowe/zowe-explorer-api";

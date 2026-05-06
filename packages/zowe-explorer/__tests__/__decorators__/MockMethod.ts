@@ -9,7 +9,6 @@
  *
  */
 
-
 /**
  * This decorator can be applied to a class within a __mocks__ folder so that
  * a typescript class can be more easily mocked.

@@ -9,7 +9,6 @@
  *
  */
 
-
 import { env, ExtensionContext } from "vscode";
 import { TroubleshootError } from "../../../src/utils/TroubleshootError";
 import { CorrelatedError } from "@zowe/zowe-explorer-api";

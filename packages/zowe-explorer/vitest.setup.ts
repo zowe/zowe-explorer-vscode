@@ -40,11 +40,7 @@ const __spyRegistry = new WeakMap<object, Map<PropertyKey, any>>();
 const __spyPrevValues = new WeakMap<any, { target: any; method: PropertyKey; prev: any }>();
 const __trackedSpies = new Set<any>();
 (vi as any).spyOn = function spyOn(target: any, method: any, accessType?: any): any {
-    if (
-        target == null ||
-        (typeof target !== "object" && typeof target !== "function") ||
-        accessType !== undefined
-    ) {
+    if (target == null || (typeof target !== "object" && typeof target !== "function") || accessType !== undefined) {
         const spy = __originalSpyOn(target, method, accessType);
         __trackedSpies.add(spy);
         return spy;

@@ -9,7 +9,6 @@
  *
  */
 
-
 import { Progress, ProgressOptions, QuickPick, QuickPickItem } from "vscode";
 
 export class MarkdownString {

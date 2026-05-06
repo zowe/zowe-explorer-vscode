@@ -14,10 +14,14 @@
  * https://vitest.dev/config/
  */
 
-import { defineProject } from "vitest/config";
+import { coverageConfigDefaults, defineConfig } from "vitest/config";
 import { fileURLToPath } from "url";
 
-export default defineProject({
+// Use `defineConfig` (rather than `defineProject`) so that the project's
+// `test.coverage` block is type-checked. `defineProject` is intentionally
+// strict about not allowing workspace-level options on a project config, but
+// at runtime vitest honors per-project coverage settings.
+export default defineConfig({
     test: {
         name: "zowe-explorer",
         globals: true,
@@ -34,16 +38,44 @@ export default defineProject({
         mockReset: false,
         server: {
             deps: {
-                inline: [/@zowe\//]
-            }
-        }
+                inline: [/@zowe\//],
+            },
+        },
+        coverage: {
+            // Restrict coverage to first-party TypeScript sources. Otherwise the
+            // v8 provider also reports on every JS file loaded during the run
+            // (node_modules, webpack runtime stubs, webview bundles, etc.),
+            // which on Windows triggers EINVAL inside the istanbul HTML
+            // reporter when it tries to mirror absolute paths containing a
+            // drive letter (e.g. `coverage/root/E:/...`).
+            include: ["src/**"],
+            // Apply `exclude` again after source-map remapping so synthetic
+            // sources injected by upstream bundles (e.g.
+            // `webpack:///external...`, `webpack/bootstrap`) are filtered out
+            // of the final report.
+            excludeAfterRemap: true,
+            exclude: [
+                ...coverageConfigDefaults.exclude,
+                "**/*.js",
+                "**/lib/**",
+                "**/__mocks__/**",
+                "**/__tests__/**",
+                "**/scripts/**",
+                "**/resources/**",
+                "**/results/**",
+                "**/webviews/**",
+                "**/web/**",
+                "vitest.config.ts",
+                "vitest.setup.ts",
+            ],
+        },
     },
     resolve: {
         alias: {
-            vscode: fileURLToPath(new URL('./__tests__/__mocks__/vscode.ts', import.meta.url)),
-            "@zowe/zowe-explorer-api": fileURLToPath(new URL('../zowe-explorer-api/src/index.ts', import.meta.url)),
-            "@zowe/zowex-for-zowe-explorer": fileURLToPath(new URL('../zowex-for-zowe-explorer/src/index.ts', import.meta.url))
-        }
+            vscode: fileURLToPath(new URL("./__tests__/__mocks__/vscode.ts", import.meta.url)),
+            "@zowe/zowe-explorer-api": fileURLToPath(new URL("../zowe-explorer-api/src/index.ts", import.meta.url)),
+            "@zowe/zowex-for-zowe-explorer": fileURLToPath(new URL("../zowex-for-zowe-explorer/src/index.ts", import.meta.url)),
+        },
     },
     esbuild: {
         target: "es2022",

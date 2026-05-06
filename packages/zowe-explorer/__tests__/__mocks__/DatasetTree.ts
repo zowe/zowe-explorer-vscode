@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import { ZoweDatasetNode } from "../../src/trees/dataset/ZoweDatasetNode";
 import { MockMethod } from "../__decorators__/MockMethod";

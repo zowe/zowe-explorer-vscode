@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { imperative, MainframeInteraction, ZoweExplorerZosmf, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";

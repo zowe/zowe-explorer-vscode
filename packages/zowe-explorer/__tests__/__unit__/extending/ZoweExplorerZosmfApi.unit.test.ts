@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { imperative, ProfilesCache, ZoweExplorerZosmf } from "@zowe/zowe-explorer-api";
 

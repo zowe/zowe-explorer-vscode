@@ -9,7 +9,6 @@
  *
  */
 
-
 import { Gui, Types } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { DataSetTemplates } from "../../../../src/trees/dataset/DatasetTemplates";

@@ -9,7 +9,6 @@
  *
  */
 
-
 import { commands, Uri } from "vscode";
 import { ZoweUriHandler } from "../../../src/utils/UriHandler";
 import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";

@@ -815,9 +815,7 @@ describe("delete", () => {
             path: testEntries.job.metadata.path,
         };
         const lookupMock = vi.spyOn(JobFSProvider.instance as any, "lookup").mockReturnValueOnce(fakeJob);
-        const lookupParentDirMock = vi
-            .spyOn(JobFSProvider.instance as any, "lookupParentDirectory")
-            .mockReturnValueOnce({ ...testEntries.session });
+        const lookupParentDirMock = vi.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce({ ...testEntries.session });
         const getInfoForUriMock = vi
             .spyOn(FsAbstractUtils, "getInfoForUri")
             .mockClear()
@@ -855,9 +853,7 @@ describe("delete", () => {
             path: testEntries.job.metadata.path,
         };
         const lookupMock = vi.spyOn(JobFSProvider.instance as any, "lookup").mockReturnValueOnce(fakeJob);
-        const lookupParentDirMock = vi
-            .spyOn(JobFSProvider.instance as any, "lookupParentDirectory")
-            .mockReturnValueOnce({ ...testEntries.session });
+        const lookupParentDirMock = vi.spyOn(JobFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce({ ...testEntries.session });
         const getInfoForUriMock = vi
             .spyOn(FsAbstractUtils, "getInfoForUri")
             .mockClear()

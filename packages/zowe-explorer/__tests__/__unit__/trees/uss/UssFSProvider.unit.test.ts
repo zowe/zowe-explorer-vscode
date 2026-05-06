@@ -667,7 +667,9 @@ describe("UssFSProvider", () => {
                 }),
             } as any);
             const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
-            const createRecursiveSpy = vi.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation((() => undefined) as any);
+            const createRecursiveSpy = vi
+                .spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive")
+                .mockImplementation((() => undefined) as any);
 
             expect(await UssFSProvider.instance.listFiles(testProfile, testUris.folder)).toStrictEqual({
                 success: true,
@@ -698,7 +700,9 @@ describe("UssFSProvider", () => {
                 }),
             } as any);
             const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
-            const createRecursiveSpy = vi.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation((() => undefined) as any);
+            const createRecursiveSpy = vi
+                .spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive")
+                .mockImplementation((() => undefined) as any);
 
             await UssFSProvider.instance.listFiles(testProfile, testUris.folder);
 
@@ -718,7 +722,9 @@ describe("UssFSProvider", () => {
                 }),
             } as any);
             const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
-            const createRecursiveSpy = vi.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation((() => undefined) as any);
+            const createRecursiveSpy = vi
+                .spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive")
+                .mockImplementation((() => undefined) as any);
 
             expect(await UssFSProvider.instance.listFiles(testProfile, testUris.file)).toStrictEqual({
                 success: true,
@@ -747,7 +753,9 @@ describe("UssFSProvider", () => {
                 }),
             } as any);
             const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
-            const createRecursiveSpy = vi.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation((() => undefined) as any);
+            const createRecursiveSpy = vi
+                .spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive")
+                .mockImplementation((() => undefined) as any);
 
             expect(await UssFSProvider.instance.listFiles(testProfile, testUris.folder, true)).toStrictEqual({
                 success: true,
@@ -781,7 +789,9 @@ describe("UssFSProvider", () => {
                 }),
             } as any);
             const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
-            const createRecursiveSpy = vi.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation((() => undefined) as any);
+            const createRecursiveSpy = vi
+                .spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive")
+                .mockImplementation((() => undefined) as any);
 
             await UssFSProvider.instance.listFiles(testProfile, tempDirUri);
 
@@ -846,7 +856,9 @@ describe("UssFSProvider", () => {
                     },
                     commandResponse: "",
                 });
-                const createRecursiveSpy = vi.spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive").mockImplementation((() => undefined) as any);
+                const createRecursiveSpy = vi
+                    .spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive")
+                    .mockImplementation((() => undefined) as any);
                 const lookupParentDirMock = vi
                     .spyOn(UssFSProvider.instance as any, "lookupParentDirectory")
                     .mockReturnValue({ ...testEntries.folder, entries: new Map() });
@@ -1101,9 +1113,7 @@ describe("UssFSProvider", () => {
                 }),
             } as any);
 
-            const _updateResourceInEditorMock = vi
-                .spyOn(UssFSProvider.instance as any, "_updateResourceInEditor")
-                .mockResolvedValueOnce(undefined);
+            const _updateResourceInEditorMock = vi.spyOn(UssFSProvider.instance as any, "_updateResourceInEditor").mockResolvedValueOnce(undefined);
             await UssFSProvider.instance.fetchFileAtUri(testUris.file, { editor: {} as TextEditor });
 
             expect(lookupAsFileMock).toHaveBeenCalledWith(testUris.file);
@@ -1520,9 +1530,7 @@ describe("UssFSProvider", () => {
             const lookupParentDirMock = vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const autoDetectEncodingMock = vi.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
             const newContents = new Uint8Array([3, 6, 9]);
-            const handleConflictMock = vi
-                .spyOn(UssFSProvider.instance as any, "_handleConflict")
-                .mockResolvedValue(ConflictViewSelection.Overwrite);
+            const handleConflictMock = vi.spyOn(UssFSProvider.instance as any, "_handleConflict").mockResolvedValue(ConflictViewSelection.Overwrite);
             const _handleErrorMock = vi.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation((() => undefined) as any);
             await expect(UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true })).rejects.toThrow();
 
@@ -1555,9 +1563,7 @@ describe("UssFSProvider", () => {
             const lookupParentDirMock = vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
             const autoDetectEncodingMock = vi.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValue(undefined);
             const newContents = new Uint8Array([3, 6, 9]);
-            const handleConflictMock = vi
-                .spyOn(UssFSProvider.instance as any, "_handleConflict")
-                .mockResolvedValue(ConflictViewSelection.Overwrite);
+            const handleConflictMock = vi.spyOn(UssFSProvider.instance as any, "_handleConflict").mockResolvedValue(ConflictViewSelection.Overwrite);
             await UssFSProvider.instance.writeFile(testUris.file, newContents, { create: false, overwrite: true });
 
             expect(lookupParentDirMock).toHaveBeenCalledWith(testUris.file);

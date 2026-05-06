@@ -247,6 +247,9 @@ afterEach(() => {
 describe("Profiles Unit Tests - Function getProfileInfo", () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const zoweDir = (require("@zowe/imperative") as typeof import("@zowe/imperative")).ConfigUtils.getZoweDir();
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const realFs = require("fs") as typeof import("fs");
+    let fsSpies: ReturnType<typeof vi.spyOn>[] = [];
 
     beforeAll(() => {
         // Disable Imperative mock to use real Config API
@@ -258,9 +261,22 @@ describe("Profiles Unit Tests - Function getProfileInfo", () => {
         // below. This ensures that the tests cover static properties defined
         // at import time in the zowe-explorer-api package.
         vi.resetModules();
+        vi.doMock("fs", () => import("../../__mocks__/fs"));
+        fsSpies = [
+            vi.spyOn(realFs, "existsSync").mockImplementation((p) => Boolean(p)),
+            vi.spyOn(realFs, "readFileSync").mockImplementation(() => "{}" as any),
+        ];
+    });
+
+    afterEach(() => {
+        for (const spy of fsSpies) {
+            spy.mockRestore();
+        }
+        fsSpies = [];
     });
 
     afterAll(() => {
+        vi.doUnmock("fs");
         vi.restoreAllMocks();
     });
 

@@ -14,7 +14,7 @@
  * https://vitest.dev/config/
  */
 
-import { defineProject, mergeConfig } from "vitest/config";
+import { defineConfig, mergeConfig } from "vitest/config";
 import rootConfig from "../../vitest.config";
 import { fileURLToPath } from "url";
 
@@ -23,9 +23,11 @@ import { fileURLToPath } from "url";
 const { projects, ...sharedTestConfig } = rootConfig.test || {};
 const sharedConfig = { ...rootConfig, test: sharedTestConfig };
 
+// `defineConfig` (not `defineProject`) so the `coverage.include` override
+// type-checks; see `packages/zowe-explorer/vitest.config.ts` for rationale.
 export default mergeConfig(
     sharedConfig,
-    defineProject({
+    defineConfig({
         test: {
             name: "zowe-explorer-api",
             globals: true,
@@ -49,6 +51,13 @@ export default mergeConfig(
                     // and vi.mock('vscode') can be applied to its transient imports
                     inline: [/@zowe\/zowex-for-zowe-explorer/, /zowe-explorer-ftp-extension/],
                 },
+            },
+            // Override the root config's package-relative `coverage.include`
+            // (`packages/*/src/**`) so that, when this project is run standalone
+            // from inside the package directory, coverage still picks up the
+            // local `src/**` sources.
+            coverage: {
+                include: ["src/**"],
             },
         },
         resolve: {

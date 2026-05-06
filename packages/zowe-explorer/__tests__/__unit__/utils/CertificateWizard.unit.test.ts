@@ -9,7 +9,6 @@
  *
  */
 
-
 import { Gui } from "@zowe/zowe-explorer-api";
 import * as fs from "fs";
 import { CertificateWizard } from "../../../src/utils/CertificateWizard";

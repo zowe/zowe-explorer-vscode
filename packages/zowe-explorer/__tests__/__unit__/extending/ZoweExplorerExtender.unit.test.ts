@@ -389,7 +389,9 @@ describe("ZoweExplorerExtender unit tests", () => {
             const tableId = "test-table";
 
             const mockRegistry = blockMocks.instTest.getTableProviderRegistry();
-            vi.spyOn(mockRegistry, "registerProvider").mockClear().mockImplementation((() => undefined) as any);
+            vi.spyOn(mockRegistry, "registerProvider")
+                .mockClear()
+                .mockImplementation((() => undefined) as any);
             vi.spyOn(mockRegistry, "unregisterProvider").mockImplementation((() => undefined) as any);
 
             const disposable = blockMocks.instTest.registerTableActionProvider(tableId, mockProvider);
