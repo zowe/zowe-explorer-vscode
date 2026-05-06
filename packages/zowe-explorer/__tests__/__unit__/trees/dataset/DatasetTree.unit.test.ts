@@ -1256,11 +1256,10 @@ describe("Dataset Tree Unit Tests - Function addSingleSession", () => {
         blockMocks.testSession.ISession.tokenValue = blockMocks.testBaseProfile.profile.tokenValue;
 
         // Mock the USS API so that getSession returns the correct value
-        const mockMvsApi = await ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile);
-        const getMvsApiMock = vi.fn();
-        getMvsApiMock.mockReturnValue(mockMvsApi);
-        ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
-        vi.spyOn(mockMvsApi, "getSession").mockReturnValue(blockMocks.testSession);
+        const mockMvsApi = {
+            getSession: vi.fn().mockReturnValue(blockMocks.testSession)
+        } as any;
+        vi.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockReturnValue(mockMvsApi);
 
         await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
 
@@ -1271,9 +1270,12 @@ describe("Dataset Tree Unit Tests - Function addSingleSession", () => {
     it("should log the error if the error includes the hostname", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        vi.spyOn(ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile), "getSession").mockImplementationOnce(() => {
-            throw new Error("test error hostname:sample.com");
-        });
+        const mockMvsApi = {
+            getSession: vi.fn().mockImplementationOnce(() => {
+                throw new Error("test error hostname:sample.com");
+            })
+        } as any;
+        vi.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockReturnValue(mockMvsApi);
         vi.spyOn(ZoweExplorerApiRegister.getInstance(), "registeredMvsApiTypes").mockReturnValueOnce([undefined]);
         const zoweLoggerErrorSpy = vi.spyOn(ZoweLogger, "error");
         expect(blockMocks.testTree.addSingleSession({ name: "test1234" }));
@@ -1283,9 +1285,12 @@ describe("Dataset Tree Unit Tests - Function addSingleSession", () => {
     it("should call 'errorHandling()' if the error does not include the hostname", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
-        vi.spyOn(ZoweExplorerApiRegister.getMvsApi(blockMocks.testProfile), "getSession").mockImplementationOnce(() => {
-            throw new Error("test error");
-        });
+        const mockMvsApi = {
+            getSession: vi.fn().mockImplementationOnce(() => {
+                throw new Error("test error");
+            })
+        } as any;
+        vi.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockReturnValue(mockMvsApi);
         vi.spyOn(ZoweExplorerApiRegister.getInstance(), "registeredMvsApiTypes").mockReturnValueOnce([undefined]);
         const errorHandlingSpy = vi.spyOn(AuthUtils, "errorHandling");
         expect(blockMocks.testTree.addSingleSession({ name: "test1234" }));

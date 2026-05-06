@@ -125,9 +125,8 @@ function createGlobalMocks() {
         fetchAll: newMocks.fetchAllMock,
     } as Partial<DataSetAttributesProvider> as any);
 
-    Object.defineProperty(zosfiles, "Upload", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles.Upload, "bufferToDataSet", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles.Upload, "pathToDataSet", { value: vi.fn(), configurable: true });
+    vi.spyOn(zosfiles.Upload, "bufferToDataSet").mockImplementation();
+    vi.spyOn(zosfiles.Upload, "pathToDataSet").mockImplementation();
     vi.spyOn(zosfiles.Copy as any, "generateDatasetOptions").mockImplementation(vi.fn((_defaults, attrs) => attrs));
     Object.defineProperty(Gui, "errorMessage", { value: vi.fn(), configurable: true });
     Object.defineProperty(Gui, "showMessage", { value: vi.fn(), configurable: true });
@@ -145,21 +144,18 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "createQuickPick", { value: vi.fn(), configurable: true });
     Object.defineProperty(vscode.commands, "executeCommand", { value: vi.fn(), configurable: true });
     Object.defineProperty(vscode.workspace, "applyEdit", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles, "Download", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles.Download, "dataSet", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles, "Delete", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles.Delete, "dataSet", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles, "Create", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles.Create, "dataSet", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles.Create, "dataSetLike", { value: vi.fn(), configurable: true });
+    vi.spyOn(zosfiles.Download, "dataSet").mockImplementation();
+    vi.spyOn(zosfiles.Delete, "dataSet").mockImplementation();
+    vi.spyOn(zosfiles.Create, "dataSet").mockImplementation();
+    vi.spyOn(zosfiles.Create, "dataSetLike").mockImplementation();
     Object.defineProperty(SharedUtils, "concatChildNodes", { value: vi.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles, "List", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles.List, "dataSet", { value: vi.fn(), configurable: true });
+    vi.spyOn(zosfiles.List, "dataSet").mockImplementation();
     Object.defineProperty(vscode, "ProgressLocation", { value: vi.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: vi.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
     mocked(Profiles.getInstance).mockReturnValue(newMocks.profileInstance);
+    Object.defineProperty(Constants, "PROFILES_CACHE", { value: newMocks.profileInstance, configurable: true });
 
     return newMocks;
 }
@@ -223,6 +219,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         });
         vi.spyOn(blockMocks.mvsApi, "allMembers").mockImplementation(vi.fn());
         vi.spyOn(parent as any, "getChildren").mockImplementationOnce(async () => (parent.children = [newMember]));
+        const createMemberSpy = vi.spyOn(blockMocks.mvsApi, "createDataSetMember").mockResolvedValue({ success: true } as any);
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
@@ -234,9 +231,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             placeHolder: "Name of member",
             validateInput: expect.any(Function),
         });
-        expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
-            blockMocks.zosmfSession,
-            Buffer.from(""),
+        expect(createMemberSpy).toHaveBeenCalledWith(
             (parent.label as string) + "(TESTMEMBER)",
             {
                 responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
@@ -254,7 +249,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         });
 
         mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
-        mocked(zosfiles.Upload.bufferToDataSet).mockRejectedValueOnce(Error("Error when uploading to data set"));
+        const createMemberSpy = vi.spyOn(blockMocks.mvsApi, "createDataSetMember").mockRejectedValueOnce(Error("Error when uploading to data set"));
 
         try {
             await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
@@ -263,7 +258,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         }
 
         expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error when uploading to data set", { items: ["Show log", "Troubleshoot"] });
-        mocked(zosfiles.Upload.bufferToDataSet).mockReset();
+        createMemberSpy.mockReset();
     });
     it("Checking of attempt to create member without name", async () => {
         const blockMocks = createBlockMocksShared();
@@ -275,9 +270,10 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         });
 
         mocked(vscode.window.showInputBox).mockResolvedValue("");
+        const createMemberSpy = vi.spyOn(blockMocks.mvsApi, "createDataSetMember");
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
-        expect(mocked(zosfiles.Upload.bufferToDataSet)).not.toHaveBeenCalled();
+        expect(createMemberSpy).not.toHaveBeenCalled();
     });
     it("Checking of member creation for favorite dataset", async () => {
         const blockMocks = createBlockMocksShared();
@@ -307,14 +303,13 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             },
         });
         vi.spyOn(parent as any, "getChildren").mockImplementationOnce(async () => (parent.children = [newMember]));
+        const createMemberSpy = vi.spyOn(blockMocks.mvsApi, "createDataSetMember").mockResolvedValue({ success: true } as any);
 
         await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
 
         expect(parent.children.find((node) => node.label === "TESTMEMBER")).toBeDefined();
         expect(mySpy).toHaveBeenCalledWith({ placeHolder: "Name of member", validateInput: expect.any(Function) });
-        expect(mocked(zosfiles.Upload.bufferToDataSet)).toHaveBeenCalledWith(
-            blockMocks.zosmfSession,
-            Buffer.from(""),
+        expect(createMemberSpy).toHaveBeenCalledWith(
             nonFavoriteLabel + "(TESTMEMBER)",
             {
                 responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
@@ -979,7 +974,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
 
         mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
         vi.spyOn(vscode.workspace.fs, "delete").mockRejectedValueOnce(Error("Deletion error"));
-        await expect(DatasetActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toThrow("");
+        await expect(DatasetActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toThrow("Deletion error");
         expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Deletion error", { items: ["Show log", "Troubleshoot"] });
     });
 
@@ -1868,10 +1863,13 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             commandResponse: "myRes",
             apiResponse: {},
         });
+        vi.spyOn(blockMocks.mvsApi, "allMembers").mockResolvedValue({ success: true, apiResponse: { items: [ { member: "MEMBER1" }, { member: "MEMBER2" } ] } } as any);
         mocked(vscode.window.withProgress).mockImplementation((prm, fnc) => {
             fnc();
             return Promise.resolve(prm);
         });
+        vi.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockResolvedValue({ success: true } as any);
+        vi.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
         vi.spyOn(DatasetFSProvider.instance, "stat").mockReturnValue({ etag: "123ABC" } as any);
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, dsNode)).resolves.not.toThrow();
     });
@@ -1927,10 +1925,13 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             commandResponse: "myRes",
             apiResponse: {},
         });
+        vi.spyOn(blockMocks.mvsApi, "allMembers").mockResolvedValue({ success: true, apiResponse: { items: [ { member: "MEMBER1" }, { member: "MEMBER2" } ] } } as any);
         mocked(vscode.window.withProgress).mockImplementation((prm, fnc) => {
             fnc();
             return Promise.resolve(prm);
         });
+        vi.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockResolvedValue({ success: true } as any);
+        vi.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
         vi.spyOn(DatasetFSProvider.instance, "stat").mockReturnValue({ etag: "123ABC" } as any);
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, dsNode)).resolves.not.toThrow();
         expect(copySpy).toHaveBeenCalledTimes(2);
@@ -2775,6 +2776,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         });
         mocked(vscode.window.showInputBox).mockResolvedValue("HLQ.TEST.DATASET");
         const spyAction = vi.fn();
+        const errSpy = vi.spyOn(AuthUtils, "errorHandling");
 
         // SEQUENTIAL
         mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
@@ -2794,6 +2796,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         spyAction.mockClear();
         mocked(Gui.showMessage).mockClear();
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
+        expect(errSpy).not.toHaveBeenCalled();
         expect(spyAction).toHaveBeenCalled();
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
 
@@ -2815,6 +2818,7 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         spyAction.mockClear();
         mocked(Gui.showMessage).mockClear();
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
+        expect(errSpy).not.toHaveBeenCalled();
         expect(spyAction).toHaveBeenCalled();
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
 
@@ -3292,7 +3296,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = vi.spyOn(blockMocks.mvsApi, "createDataSet");
-        createDataSetSpy.mockReset();
+        createDataSetSpy.mockReset().mockResolvedValue({ success: true } as any);
         const getChildrenSpy = vi.spyOn(blockMocks.datasetSessionNode, "getChildren");
         getChildrenSpy.mockResolvedValue([]);
 
@@ -3336,7 +3340,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = vi.spyOn(blockMocks.mvsApi, "createDataSet");
-        createDataSetSpy.mockReset();
+        createDataSetSpy.mockReset().mockResolvedValue({ success: true } as any);
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.TO.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -3387,7 +3391,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = vi.spyOn(blockMocks.mvsApi, "createDataSet");
-        createDataSetSpy.mockReset();
+        createDataSetSpy.mockReset().mockResolvedValue({ success: true } as any);
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.TO.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -3441,7 +3445,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         });
         mocked(vscode.window.showQuickPick).mockResolvedValue("Allocate Data Set" as any);
         const createDataSetSpy = vi.spyOn(blockMocks.mvsApi, "createDataSet");
-        createDataSetSpy.mockReset();
+        createDataSetSpy.mockReset().mockResolvedValue({ success: true } as any);
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.TO.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -3487,7 +3491,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         mocked(vscode.window.showQuickPick).mockResolvedValue("Allocate Data Set" as any);
         const createDataSetSpy = vi.spyOn(blockMocks.mvsApi, "createDataSet");
-        createDataSetSpy.mockReset();
+        createDataSetSpy.mockReset().mockResolvedValue({ success: true } as any);
         createDataSetSpy.mockRejectedValueOnce(Error("Generic Error"));
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.TO.NODE",
@@ -3524,7 +3528,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         mocked(vscode.window.showInputBox).mockResolvedValue("test");
         const createDataSetSpy = vi.spyOn(blockMocks.mvsApi, "createDataSet");
-        createDataSetSpy.mockReset();
+        createDataSetSpy.mockReset().mockResolvedValue({ success: true } as any);
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.TO.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -3546,7 +3550,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         blockMocks.testDatasetTree.getSearchHistory.mockReturnValue([null]);
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const createDataSetSpy = vi.spyOn(blockMocks.mvsApi, "createDataSet");
-        createDataSetSpy.mockReset();
+        createDataSetSpy.mockReset().mockResolvedValue({ success: true } as any);
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.TO.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -3595,7 +3599,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const createDataSetSpy = vi.spyOn(blockMocks.mvsApi, "createDataSet");
-        createDataSetSpy.mockReset();
+        createDataSetSpy.mockReset().mockResolvedValue({ success: true } as any);
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.TO.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -3650,7 +3654,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const createDataSetSpy = vi.spyOn(blockMocks.mvsApi, "createDataSet");
-        createDataSetSpy.mockReset();
+        createDataSetSpy.mockReset().mockResolvedValue({ success: true } as any);
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.TO.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -3769,7 +3773,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
         });
         mocked(vscode.window.showQuickPick).mockResolvedValue("Allocate Data Set" as any);
         const createDataSetSpy = vi.spyOn(blockMocks.mvsApi, "createDataSet");
-        createDataSetSpy.mockReset();
+        createDataSetSpy.mockReset().mockResolvedValue({ success: true } as any);
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.TO.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -3894,7 +3898,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
 
         mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
         const createDataSetSpy = vi.spyOn(blockMocks.mvsApi, "createDataSet");
-        createDataSetSpy.mockReset();
+        createDataSetSpy.mockReset().mockResolvedValue({ success: true } as any);
         const node = new ZoweDatasetNode({
             label: "HLQ.TEST.TO.NODE",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -3992,6 +3996,7 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         const blockMocks = createBlockMocks();
 
         const errorHandlingSpy = vi.spyOn(AuthUtils, "errorHandling");
+        vi.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockResolvedValue({ success: true } as any);
 
         await DatasetActions.allocateLike(blockMocks.testDatasetTree);
 
@@ -4003,6 +4008,7 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         const blockMocks = createBlockMocks();
 
         const errorHandlingSpy = vi.spyOn(AuthUtils, "errorHandling");
+        vi.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockResolvedValue({ success: true } as any);
 
         await DatasetActions.allocateLike(blockMocks.testDatasetTree, blockMocks.testNode);
 
