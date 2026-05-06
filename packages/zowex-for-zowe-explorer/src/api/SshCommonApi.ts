@@ -161,4 +161,15 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
         // All attempts failed
         return undefined;
     }
+
+    /**
+     * Converts an `ImperativeError` to a plain JS error to avoid losing additional details
+     * @param maybeError The thrown error to convert
+     */
+    protected buildRequestError(maybeError: unknown): Error | unknown {
+        if (!(maybeError instanceof ImperativeError)) {
+            return maybeError;
+        }
+        return new Error(`${maybeError.message}\n${maybeError.additionalDetails}`);
+    }
 }

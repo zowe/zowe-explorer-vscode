@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import * as imperative from "@zowe/imperative";
 import { DirEntry, FileEntry, IFileSystemEntry, FS_PROVIDER_DELAY, ConflictViewSelection, DeleteMetadata, HandleErrorOpts } from "./types";
 import * as path from "path";
 import { FsAbstractUtils } from "./utils";
@@ -171,6 +172,30 @@ export class BaseProvider {
         entry.entries.clear();
         this.lookupParentDirectory(uri).entries.delete(entry.name);
         return true;
+    }
+
+    /**
+     * Updates the profile reference for all cached entries matching the profile name and type.
+     * Called when a profile is updated (reactivated, credentials changed, etc.)
+     * @param updatedProfile The updated profile object
+     */
+    public updateProfile(updatedProfile: imperative.IProfileLoaded): void {
+        this._updateProfileRecursive(this.root, updatedProfile);
+    }
+
+    private _updateProfileRecursive(entry: IFileSystemEntry, updatedProfile: imperative.IProfileLoaded): void {
+        if (!entry) return;
+
+        if (entry.metadata?.profile?.name === updatedProfile.name && entry.metadata?.profile?.type === updatedProfile.type) {
+            entry.metadata.profile = updatedProfile;
+        }
+
+        if ("entries" in entry && entry.entries) {
+            const dirEntry = entry as DirEntry;
+            for (const child of dirEntry.entries.values()) {
+                this._updateProfileRecursive(child, updatedProfile);
+            }
+        }
     }
 
     /**

@@ -788,6 +788,105 @@ describe("getQueryKey", () => {
     });
 });
 
+describe("updateProfile", () => {
+    let prov: any;
+
+    beforeEach(() => {
+        prov = new (BaseProvider as any)();
+    });
+
+    it("should update the profile for entries matching the profile name", () => {
+        prov.root = new DirEntry("");
+        const oldProfile = { name: "testProfile", type: "zowe" };
+        const newProfile = { name: "testProfile", type: "zowe", updated: true };
+
+        prov.root.entries.set("file.txt", {
+            name: "file.txt",
+            type: vscode.FileType.File,
+            metadata: {
+                path: "/file.txt",
+                profile: oldProfile,
+            },
+        });
+
+        prov.updateProfile(newProfile);
+
+        const entry = prov.root.entries.get("file.txt");
+        expect(entry.metadata.profile).toEqual(newProfile);
+    });
+
+    it("should update profiles recursively in nested directories", () => {
+        prov.root = new DirEntry("");
+        const oldProfile = { name: "testProfile", type: "zowe" };
+        const newProfile = { name: "testProfile", type: "zowe", updated: true };
+
+        const subDir = new DirEntry("subdir");
+        subDir.metadata = { path: "/subdir", profile: oldProfile };
+        subDir.entries.set("nested.txt", {
+            name: "nested.txt",
+            type: vscode.FileType.File,
+            metadata: {
+                path: "/subdir/nested.txt",
+                profile: oldProfile,
+            },
+        });
+        prov.root.entries.set("subdir", subDir);
+
+        prov.updateProfile(newProfile);
+
+        expect(subDir.metadata.profile).toEqual(newProfile);
+        const nestedEntry = subDir.entries.get("nested.txt");
+        expect(nestedEntry.metadata.profile).toEqual(newProfile);
+    });
+
+    it("should not update entries with different profile names", () => {
+        prov.root = new DirEntry("");
+        const otherProfile = { name: "otherProfile", type: "zowe" };
+        const newProfile = { name: "testProfile", type: "zowe", updated: true };
+
+        prov.root.entries.set("file.txt", {
+            name: "file.txt",
+            type: vscode.FileType.File,
+            metadata: {
+                path: "/file.txt",
+                profile: otherProfile,
+            },
+        });
+
+        prov.updateProfile(newProfile);
+
+        const entry = prov.root.entries.get("file.txt");
+        expect(entry.metadata.profile).toEqual(otherProfile);
+    });
+
+    it("should not update entries with same profile name but different type", () => {
+        prov.root = new DirEntry("");
+        const otherProfile = { name: "testProfile", type: "ssh" };
+        const newProfile = { name: "testProfile", type: "zosmf", updated: true };
+
+        prov.root.entries.set("file.txt", {
+            name: "file.txt",
+            type: vscode.FileType.File,
+            metadata: {
+                path: "/file.txt",
+                profile: otherProfile,
+            },
+        });
+
+        prov.updateProfile(newProfile);
+
+        const entry = prov.root.entries.get("file.txt");
+        expect(entry.metadata.profile).toEqual(otherProfile);
+    });
+
+    it("should handle null or undefined entries gracefully", () => {
+        prov.root = new DirEntry("");
+        const newProfile = { name: "testProfile", type: "zowe" };
+
+        expect(() => prov.updateProfile(newProfile)).not.toThrow();
+    });
+});
+
 describe("executeWithReuse", () => {
     let prov: any;
     let keyGenSpy: jest.Mock;
