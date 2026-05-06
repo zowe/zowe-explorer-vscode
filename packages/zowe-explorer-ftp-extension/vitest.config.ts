@@ -30,12 +30,23 @@ export default defineProject({
         clearMocks: false,
         restoreMocks: false,
         mockReset: false,
+        coverage: {
+            exclude: [
+                "**/*.js",
+                "**/lib/**",
+                "vitest.config.ts",
+                "vitest.setup.ts",
+                "__mocks__/@zowe/zowe-explorer-api.ts",
+                "results/unit/coverage/lcov-report/**",
+                "results/unit/jest-stare/js/**",
+            ],
+        },
     },
     resolve: {
         alias: {
-            vscode: fileURLToPath(new URL('./__mocks__/vscode.ts', import.meta.url)),
-            "@zowe/zowe-explorer-api": fileURLToPath(new URL('../zowe-explorer-api/src/index.ts', import.meta.url))
-        }
+            vscode: fileURLToPath(new URL("./__mocks__/vscode.ts", import.meta.url)),
+            "@zowe/zowe-explorer-api": fileURLToPath(new URL("../zowe-explorer-api/src/index.ts", import.meta.url)),
+        },
     },
     esbuild: {
         target: "es2022",

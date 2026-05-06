@@ -27,6 +27,9 @@ export default defineProject({
         hookTimeout: 10000,
         clearMocks: true,
         restoreMocks: true,
+        coverage: {
+            exclude: ["**/*.js", "**/lib/**", "**/benchmarks/**", "vitest.config.ts"],
+        },
     },
     esbuild: {
         target: "es2022",
