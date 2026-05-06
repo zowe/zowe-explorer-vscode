@@ -319,7 +319,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
         mockWorkspaceFolders.mockClear().mockReturnValue([]);
 
         /* eslint-disable-next-line @typescript-eslint/no-var-requires */
-        const { Profiles: testProfiles } = require("../../../src/configuration/Profiles");
+        const { Profiles: testProfiles } = await import("../../../src/configuration/Profiles");
         vi.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
         expect(mockWorkspaceFolders).toHaveBeenCalledTimes(1);
@@ -330,7 +330,7 @@ describe("Profiles Unit Test - Function createInstance", () => {
         mockWorkspaceFolders.mockClear().mockReturnValue([]);
 
         /* eslint-disable-next-line @typescript-eslint/no-var-requires */
-        const { Profiles: testProfiles } = require("../../../src/configuration/Profiles");
+        const { Profiles: testProfiles } = await import("../../../src/configuration/Profiles");
         vi.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
         expect(mockWorkspaceFolders).toHaveBeenCalledTimes(1);
@@ -345,7 +345,9 @@ describe("Profiles Unit Test - Function createInstance", () => {
         ]);
 
         /* eslint-disable-next-line @typescript-eslint/no-var-requires */
-        const { Profiles: testProfiles } = require("../../../src/configuration/Profiles");
+        const { Profiles: testProfiles } = await import("../../../src/configuration/Profiles");
+        const { FileManagement } = await import("@zowe/zowe-explorer-api");
+        vi.spyOn(FileManagement, "getFullPath").mockImplementation((p) => p);
         vi.spyOn(testProfiles.prototype, "refresh").mockResolvedValueOnce(undefined);
         const profilesInstance = await testProfiles.createInstance(undefined);
         expect(mockWorkspaceFolders).toHaveBeenCalledTimes(1);
@@ -1161,6 +1163,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
                 autoStore,
             }),
             isSecured: () => true,
+            getAllProfiles: () => [],
         } as any);
         vi.spyOn(Profiles.getInstance(), "getLoadedProfConfig").mockResolvedValue(globalMocks.testProfile);
         vi.spyOn(Profiles.getInstance(), "getPropsForProfile").mockResolvedValue([]);
@@ -1195,6 +1198,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
+        vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         const ssoLoginSpy = vi.spyOn(Profiles.getInstance(), "ssoLogin").mockResolvedValueOnce(true);
         vi.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(globalMocks.testProfile);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
@@ -2478,7 +2482,7 @@ describe("Profiles Unit Tests - function getPropsForProfile", () => {
             }),
             getAllProfiles: () => [],
             getTeamConfig: () => ({
-                api: { secure: { securePropsForProfile: vi.fn() } },
+                api: { secure: { securePropsForProfile: vi.fn().mockReturnValue([]) } },
             }),
         } as any);
         await expect(Profiles.getInstance().getPropsForProfile(globalMocks.testProfile.name ?? "")).resolves.toEqual(["tokenValue", "password"]);
@@ -2498,7 +2502,7 @@ describe("Profiles Unit Tests - function getPropsForProfile", () => {
             }),
             getAllProfiles: () => [],
             getTeamConfig: () => ({
-                api: { secure: { securePropsForProfile: vi.fn() } },
+                api: { secure: { securePropsForProfile: vi.fn().mockReturnValue([]) } },
             }),
         } as any);
         await expect(Profiles.getInstance().getPropsForProfile("")).resolves.toEqual([]);
@@ -2518,7 +2522,7 @@ describe("Profiles Unit Tests - function getPropsForProfile", () => {
             }),
             getAllProfiles: () => [],
             getTeamConfig: () => ({
-                api: { secure: { securePropsForProfile: vi.fn() } },
+                api: { secure: { securePropsForProfile: vi.fn().mockReturnValue([]) } },
             }),
         } as any);
         await expect(Profiles.getInstance().getPropsForProfile("dummyProfile", false)).resolves.toEqual(["tokenValue"]);

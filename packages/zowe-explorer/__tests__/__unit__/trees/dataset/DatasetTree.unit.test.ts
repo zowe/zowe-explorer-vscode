@@ -108,10 +108,8 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "createQuickPick", { value: vi.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: vi.fn(), configurable: true });
     vi.spyOn(Gui, "showInputBox").mockImplementation((() => undefined) as any);
-    Object.defineProperty(zosfiles, "Rename", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles.Rename, "dataSet", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles.Rename, "dataSetMember", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles, "Download", { value: vi.fn(), configurable: true });
+    vi.spyOn(zosfiles.Rename, "dataSet").mockImplementation(() => {});
+    vi.spyOn(zosfiles.Rename, "dataSetMember").mockImplementation(() => {});
     Object.defineProperty(ZoweLogger, "log", { value: vi.fn(), configurable: true });
     Object.defineProperty(ZoweLogger.log, "debug", { value: vi.fn(), configurable: true });
     Object.defineProperty(ZoweLogger.log, "error", { value: vi.fn(), configurable: true });
@@ -153,27 +151,12 @@ function createGlobalMocks() {
             return { value: globalMocks.mockProfileInfo, configurable: true };
         }),
     });
-    Object.defineProperty(zosfiles.Download, "dataSet", {
-        value: vi.fn().mockResolvedValue({
-            success: true,
-            commandResponse: null,
-            apiResponse: {
-                etag: "123",
-            },
-        }),
-        configurable: true,
-    });
-    Object.defineProperty(zosfiles.Download, "dataSetMember", {
-        value: vi.fn(() => {
-            return {
-                success: true,
-                commandResponse: null,
-                apiResponse: {
-                    etag: "123",
-                },
-            };
-        }),
-        configurable: true,
+    vi.spyOn(zosfiles.Download, "dataSet").mockResolvedValue({
+        success: true,
+        commandResponse: null,
+        apiResponse: {
+            etag: "123",
+        },
     });
     Object.defineProperty(Gui, "warningMessage", {
         value: globalMocks.mockShowWarningMessage,

@@ -101,8 +101,7 @@ function createGlobalMocks() {
     Object.defineProperty(Gui, "showOpenDialog", { value: vi.fn(), configurable: true });
     Object.defineProperty(LocalFileManagement, "getDefaultUri", { value: vi.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showWarningMessage", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosconsole, "IssueCommand", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosconsole.IssueCommand, "issue", { value: vi.fn(), configurable: true });
+    vi.spyOn(zosconsole.IssueCommand, "issue").mockImplementation(() => {});
     Object.defineProperty(vscode.window, "showOpenDialog", { value: vi.fn(), configurable: true });
     Object.defineProperty(zosjobs.CancelJobs, "cancelJobForJob", { value: vi.fn(), configurable: true });
     Object.defineProperty(zosjobs.GetJobs, "getJclCommon", { value: vi.fn(), configurable: true });

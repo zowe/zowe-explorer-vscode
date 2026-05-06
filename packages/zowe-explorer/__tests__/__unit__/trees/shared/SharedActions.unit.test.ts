@@ -110,18 +110,13 @@ function createGlobalMocks() {
         }),
         configurable: true,
     });
-    Object.defineProperty(zosfiles, "Download", {
-        value: {
-            ussFile: vi.fn().mockReturnValue({
-                apiResponse: {
-                    etag: "ABC123",
-                },
-            }),
+    vi.spyOn(zosfiles.Download, "ussFile").mockResolvedValue({
+        success: true,
+        apiResponse: {
+            etag: "ABC123",
         },
-        configurable: true,
     });
-    Object.defineProperty(zosfiles, "Utilities", { value: vi.fn(), configurable: true });
-    Object.defineProperty(zosfiles.Utilities, "isFileTagBinOrAscii", { value: vi.fn(), configurable: true });
+    vi.spyOn(zosfiles.Utilities, "isFileTagBinOrAscii").mockResolvedValueOnce(undefined as any);
     Object.defineProperty(ZoweLogger, "log", { value: vi.fn(), configurable: true });
     Object.defineProperty(ZoweLogger.log, "debug", { value: vi.fn(), configurable: true });
     Object.defineProperty(ZoweLogger.log, "error", { value: vi.fn(), configurable: true });

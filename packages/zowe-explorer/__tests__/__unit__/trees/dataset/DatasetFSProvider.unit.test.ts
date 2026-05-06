@@ -44,49 +44,13 @@ import { DeferredPromise } from "@zowe/imperative";
 import dayjsPkg from "dayjs";
 const dayjs = "default" in dayjsPkg ? dayjsPkg.default : dayjsPkg;
 
-const testProfile = createIProfile();
-testProfile.profile.password = "fake"; // Fix missing token errors when password is undefined. TODO(traeok): Investigate why this is needed
-const testEntries = {
-    ps: {
-        ...new DsEntry("USER.DATA.PS", false),
-        metadata: new DsEntryMetadata({
-            profile: testProfile,
-            path: "/USER.DATA.PS",
-        }),
-        etag: "OLDETAG",
-        isMember: false,
-    } as DsEntry,
-    pds: {
-        ...new PdsEntry("USER.DATA.PDS"),
-        metadata: new DsEntryMetadata({
-            profile: testProfile,
-            path: "/USER.DATA.PDS",
-        }),
-    } as PdsEntry,
-    pdsMember: {
-        ...new DsEntry("MEMBER1", true),
-        metadata: new DsEntryMetadata({
-            profile: testProfile,
-            path: "/USER.DATA.PDS/MEMBER1",
-        }),
-        isMember: true,
-    } as DsEntry,
-    vsam: {
-        ...new DsEntry("USER.DATA.PS", false),
-        metadata: new DsEntryMetadata({
-            profile: testProfile,
-            path: "/USER.DATA.PS",
-        }),
-        isMember: false,
-        stats: { vol: "*VSAM*" } as unknown as Types.DatasetStats,
-    } as DsEntry,
-    session: {
-        ...new FilterEntry("sestest"),
-        metadata: {
-            profile: testProfile,
-            path: "/",
-        },
-    },
+let testProfile: ReturnType<typeof createIProfile>;
+let testEntries: {
+    ps: DsEntry;
+    pds: PdsEntry;
+    pdsMember: DsEntry;
+    vsam: DsEntry;
+    session: FilterEntry;
 };
 
 type TestUris = Record<string, Readonly<Uri>>;
@@ -100,6 +64,51 @@ const testUris: TestUris = {
 describe("DatasetFSProvider", () => {
     let mockedProperty: MockedProperty;
     beforeEach(() => {
+        testProfile = createIProfile();
+        testProfile.profile.password = "fake";
+        testEntries = {
+            ps: {
+                ...new DsEntry("USER.DATA.PS", false),
+                metadata: new DsEntryMetadata({
+                    profile: testProfile,
+                    path: "/USER.DATA.PS",
+                }),
+                etag: "OLDETAG",
+                isMember: false,
+            } as DsEntry,
+            pds: {
+                ...new PdsEntry("USER.DATA.PDS"),
+                metadata: new DsEntryMetadata({
+                    profile: testProfile,
+                    path: "/USER.DATA.PDS",
+                }),
+            } as PdsEntry,
+            pdsMember: {
+                ...new DsEntry("MEMBER1", true),
+                metadata: new DsEntryMetadata({
+                    profile: testProfile,
+                    path: "/USER.DATA.PDS/MEMBER1",
+                }),
+                isMember: true,
+            } as DsEntry,
+            vsam: {
+                ...new DsEntry("USER.DATA.PS", false),
+                metadata: new DsEntryMetadata({
+                    profile: testProfile,
+                    path: "/USER.DATA.PS",
+                }),
+                isMember: false,
+                stats: { vol: "*VSAM*" } as unknown as Types.DatasetStats,
+            } as DsEntry,
+            session: {
+                ...new FilterEntry("sestest"),
+                metadata: {
+                    profile: testProfile,
+                    path: "/",
+                },
+            },
+        };
+
         vi.restoreAllMocks();
         mockedProperty = new MockedProperty(Profiles, "getInstance", {
             value: vi.fn().mockReturnValue({
@@ -1058,14 +1067,14 @@ describe("DatasetFSProvider", () => {
         });
 
         describe("may call _handleError when there are lines longer than the LRECL", () => {
-            let mockMvsApi;
-            const psEntry = { ...testEntries.ps, metadata: testEntries.ps.metadata } as DsEntry;
-            const pdsMemberEntry = { ...testEntries.pdsMember, metadata: testEntries.pdsMember.metadata } as DsEntry;
+            let mockMvsApi: any;
+            let psEntry: DsEntry;
+            let pdsMemberEntry: DsEntry;
             const newContents = new Uint8Array(Array(lrecl + 1).fill(0));
             const okContents = new Uint8Array(Array(lrecl - 1).fill(0));
             const lineAt = (i: number) => ({ text: i === 1 ? okContents : newContents });
             const createOptions = { create: false, overwrite: true };
-            let handleErrorMock;
+            let handleErrorMock: any;
             const expectInvalidLines = (msg: string, multiple?: boolean) => {
                 expect(msg).toContain("This upload operation may result in data loss.");
                 expect(msg).toContain("Please review the following lines:");
@@ -1080,6 +1089,8 @@ describe("DatasetFSProvider", () => {
             };
 
             beforeEach(() => {
+                psEntry = { ...testEntries.ps, metadata: testEntries.ps.metadata } as DsEntry;
+                pdsMemberEntry = { ...testEntries.pdsMember, metadata: testEntries.pdsMember.metadata } as DsEntry;
                 mockMvsApi = {
                     uploadFromBuffer: vi.fn(),
                     dataSet: vi.fn().mockResolvedValue(dsResponseMock),
@@ -1473,7 +1484,7 @@ describe("DatasetFSProvider", () => {
         });
 
         it("looks up the resource before loading profile which may fail", async () => {
-            const lookupMock = vi.spyOn((DatasetFSProvider as any).prototype, "lookup").mockReturnValue(testEntries.ps);
+            const lookupMock = vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(testEntries.ps);
             vi.spyOn(FsAbstractUtils, "getInfoForUri").mockImplementation(() => {
                 throw new Error("invalid profile");
             });

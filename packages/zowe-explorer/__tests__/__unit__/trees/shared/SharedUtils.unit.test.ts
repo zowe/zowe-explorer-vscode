@@ -336,7 +336,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[0]);
-        blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce(undefined);
         const encoding = await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(encoding).toEqual(textEncoding);
@@ -436,7 +436,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             profile: blockMocks.profile,
             parentPath: "/root",
         });
-        blockMocks.getEncodingForFile.mockReturnValueOnce({ kind: "text" });
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce({ kind: "text" });
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({
@@ -456,7 +456,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             profile: blockMocks.profile,
             parentPath: "/root",
         });
-        blockMocks.getEncodingForFile.mockReturnValueOnce({ kind: "text" });
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce({ kind: "text" });
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({
@@ -476,7 +476,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         node.setEncoding(otherEncoding);
-        blockMocks.getEncodingForFile.mockReturnValueOnce(otherEncoding);
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce(otherEncoding);
         const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
         blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
         blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[4]);
@@ -497,7 +497,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         node.setEncoding(binaryEncoding);
-        blockMocks.getEncodingForFile.mockReturnValueOnce(binaryEncoding);
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce(binaryEncoding);
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is Binary" }));
