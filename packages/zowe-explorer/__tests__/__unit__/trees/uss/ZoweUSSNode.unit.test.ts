@@ -1142,7 +1142,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         setAttrsMock.mockRestore();
     });
 
-    it("Tests that error is thrown when node label is blank", () => {
+    it("Tests that error is thrown when node label is blank", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
@@ -1150,7 +1150,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         blockMocks.rootNode.dirty = true;
 
         // eslint-disable-next-line zowe-explorer/no-floating-promises
-        expect(blockMocks.rootNode.getChildren()).rejects.toEqual(Error("Invalid node"));
+        await expect(blockMocks.rootNode.getChildren()).rejects.toEqual(Error("Invalid node"));
     });
 
     it("Tests that when List.fileList throws an error, node.getChildren() throws an error and the catch block is reached", async () => {
