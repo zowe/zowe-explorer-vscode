@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import * as profileLoader from "../../../src/configuration/Profiles";
 import { Gui, imperative, Validation } from "@zowe/zowe-explorer-api";
@@ -111,7 +110,7 @@ describe("TsoCommandHandler unit testing", () => {
     };
 
     const testNode = new ZoweDatasetNode({
-        label: "BRTVS99.DDIR",
+        label: "IBMUSER.DDIR",
         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         session,
         profile: profileOne,

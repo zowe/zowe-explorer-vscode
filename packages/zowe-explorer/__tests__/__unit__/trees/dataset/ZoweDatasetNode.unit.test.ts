@@ -137,7 +137,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
      * Creates an ZoweDatasetNode and checks that its members are all initialized by the constructor
      *************************************************************************************************************/
     it("Testing that the ZoweDatasetNode is defined", () => {
-        const testNode = new ZoweDatasetNode({ label: "BRTVS99", collapsibleState: vscode.TreeItemCollapsibleState.None, session });
+        const testNode = new ZoweDatasetNode({ label: "IBMUSER", collapsibleState: vscode.TreeItemCollapsibleState.None, session });
         testNode.contextValue = Constants.DS_SESSION_CONTEXT;
 
         expect(testNode.label).toBeDefined();
@@ -152,7 +152,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
         const makeEmptyDsWithEncodingMock = vi.spyOn(DatasetFSProvider.instance, "makeEmptyDsWithEncoding").mockImplementationOnce(() => {});
         const setEncodingSpy = vi.spyOn(ZoweDatasetNode.prototype, "setEncoding");
         const testNode = new ZoweDatasetNode({
-            label: "BRTVS99",
+            label: "IBMUSER",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             contextOverride: Constants.DS_DS_CONTEXT,
             encoding: { kind: "binary" },
@@ -160,7 +160,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
             parentNode: createDatasetSessionNode(createISession(), createIProfile()),
         });
 
-        expect(testNode.label).toBe("BRTVS99");
+        expect(testNode.label).toBe("IBMUSER");
         expect(testNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
         expect(setEncodingSpy).toHaveBeenCalled();
         expect(makeEmptyDsWithEncodingMock).toHaveBeenCalled();
@@ -440,7 +440,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
     it("Testing what happens when profile has been updated", async () => {
         const updatedProfile = { ...profileOne, profile: { encoding: "IBM-939" } };
         const mockProfilesInstance = {
-            loadNamedProfile: vi.fn().mockReturnValue(updatedProfile)
+            loadNamedProfile: vi.fn().mockReturnValue(updatedProfile),
         };
         const profInstanceSpy = vi.spyOn(Profiles, "getInstance").mockReturnValue(mockProfilesInstance as any);
 
@@ -466,7 +466,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
         ]);
         const pdsChildren = await pds.getChildren();
         expect(pdsChildren[0].label).toEqual("IEFBR14");
-        
+
         // Since getProfile fetches from the cache, both pds and its children will reflect the updated profile
         expect(pds.getProfile().profile?.encoding).toBe("IBM-939");
         expect(pdsChildren[0].getProfile().profile?.encoding).toBe("IBM-939");

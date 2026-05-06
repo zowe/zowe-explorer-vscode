@@ -184,7 +184,9 @@ describe("SettingsConfig Unit Tests", () => {
                     workspaceValue: "",
                 }),
             });
-            const standardizeWorkspaceSettingsSpy = vi.spyOn(SettingsConfig as any, "standardizeWorkspaceSettings").mockImplementation((() => undefined) as any);
+            const standardizeWorkspaceSettingsSpy = vi
+                .spyOn(SettingsConfig as any, "standardizeWorkspaceSettings")
+                .mockImplementation((() => undefined) as any);
             await expect(SettingsConfig.standardizeSettings()).resolves.not.toThrow();
             expect(standardizeWorkspaceSettingsSpy).toHaveBeenCalledTimes(1);
         });
@@ -198,7 +200,9 @@ describe("SettingsConfig Unit Tests", () => {
             });
             vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValueOnce(true);
             vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValueOnce(false);
-            const standardizeGlobalSettingsSpy = vi.spyOn(SettingsConfig as any, "standardizeGlobalSettings").mockImplementation((() => undefined) as any);
+            const standardizeGlobalSettingsSpy = vi
+                .spyOn(SettingsConfig as any, "standardizeGlobalSettings")
+                .mockImplementation((() => undefined) as any);
             await expect(SettingsConfig.standardizeSettings()).resolves.not.toThrow();
             expect(standardizeGlobalSettingsSpy).toHaveBeenCalledTimes(1);
         });

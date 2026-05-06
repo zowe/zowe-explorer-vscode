@@ -98,98 +98,138 @@ function createGlobalMocks() {
 
     vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
     vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
-    
-    if (!Gui.setStatusBarMessage) { (Gui as any).setStatusBarMessage = vi.fn(); }
+
+    if (!Gui.setStatusBarMessage) {
+        (Gui as any).setStatusBarMessage = vi.fn();
+    }
     vi.spyOn(Gui, "setStatusBarMessage").mockImplementation(globalMocks.setStatusBarMessage);
-    
-    if (!vscode.window.showInformationMessage) { (vscode.window as any).showInformationMessage = vi.fn(); }
+
+    if (!vscode.window.showInformationMessage) {
+        (vscode.window as any).showInformationMessage = vi.fn();
+    }
     vi.spyOn(vscode.window, "showInformationMessage").mockImplementation(globalMocks.showInformationMessage);
-    
-    if (!vscode.window.showInputBox) { (vscode.window as any).showInputBox = vi.fn(); }
+
+    if (!vscode.window.showInputBox) {
+        (vscode.window as any).showInputBox = vi.fn();
+    }
     vi.spyOn(vscode.window, "showInputBox").mockImplementation(globalMocks.mockShowInputBox);
-    
-    if (!vscode.window.showQuickPick) { (vscode.window as any).showQuickPick = vi.fn(); }
+
+    if (!vscode.window.showQuickPick) {
+        (vscode.window as any).showQuickPick = vi.fn();
+    }
     vi.spyOn(vscode.window, "showQuickPick").mockImplementation(globalMocks.showQuickPick);
-    
-    if (!vscode.commands.executeCommand) { (vscode.commands as any).executeCommand = vi.fn(); }
+
+    if (!vscode.commands.executeCommand) {
+        (vscode.commands as any).executeCommand = vi.fn();
+    }
     vi.spyOn(vscode.commands, "executeCommand").mockImplementation(globalMocks.executeCommand);
-    
-    if (!vscode.window.showWarningMessage) { (vscode.window as any).showWarningMessage = vi.fn(); }
+
+    if (!vscode.window.showWarningMessage) {
+        (vscode.window as any).showWarningMessage = vi.fn();
+    }
     vi.spyOn(vscode.window, "showWarningMessage").mockImplementation(globalMocks.showWarningMessage);
-    
-    if (!vscode.window.withProgress) { (vscode.window as any).withProgress = vi.fn(); }
+
+    if (!vscode.window.withProgress) {
+        (vscode.window as any).withProgress = vi.fn();
+    }
     vi.spyOn(vscode.window, "withProgress").mockImplementation(globalMocks.withProgress);
-    
-    if (!SharedUtils.concatChildNodes) { (SharedUtils as any).concatChildNodes = vi.fn(); }
+
+    if (!SharedUtils.concatChildNodes) {
+        (SharedUtils as any).concatChildNodes = vi.fn();
+    }
     vi.spyOn(SharedUtils, "concatChildNodes").mockImplementation(globalMocks.concatChildNodes);
-    
+
     globalMocks.Create.uss = globalMocks.uss;
-    
-    if (!vscode.window.showOpenDialog) { (vscode.window as any).showOpenDialog = vi.fn(); }
+
+    if (!vscode.window.showOpenDialog) {
+        (vscode.window as any).showOpenDialog = vi.fn();
+    }
     vi.spyOn(vscode.window, "showOpenDialog").mockImplementation(globalMocks.showOpenDialog);
-    
-    if (!vscode.workspace.openTextDocument) { (vscode.workspace as any).openTextDocument = vi.fn(); }
+
+    if (!vscode.workspace.openTextDocument) {
+        (vscode.workspace as any).openTextDocument = vi.fn();
+    }
     vi.spyOn(vscode.workspace, "openTextDocument").mockImplementation(globalMocks.openTextDocument);
-    
+
     globalMocks.Upload.fileToUSSFile = globalMocks.fileToUSSFile;
-    
-    if (!vscode.window.showTextDocument) { (vscode.window as any).showTextDocument = vi.fn(); }
+
+    if (!vscode.window.showTextDocument) {
+        (vscode.window as any).showTextDocument = vi.fn();
+    }
     vi.spyOn(vscode.window, "showTextDocument").mockImplementation(globalMocks.showTextDocument);
     vi.spyOn(zosfiles.Download, "ussFile").mockImplementation(globalMocks.ussFile);
     vi.spyOn(zosfiles.Utilities, "renameUSSFile").mockImplementation(globalMocks.renameUSSFile);
-    
-    if (!vscode.window.createTreeView) { (vscode.window as any).createTreeView = vi.fn(); }
+
+    if (!vscode.window.createTreeView) {
+        (vscode.window as any).createTreeView = vi.fn();
+    }
     vi.spyOn(vscode.window, "createTreeView").mockImplementation(globalMocks.createTreeView);
-    
+
     globalMocks.Utilities.isFileTagBinOrAscii = globalMocks.isFileTagBinOrAscii;
-    
-    if (!vscode.window.showErrorMessage) { (vscode.window as any).showErrorMessage = vi.fn(); }
+
+    if (!vscode.window.showErrorMessage) {
+        (vscode.window as any).showErrorMessage = vi.fn();
+    }
     vi.spyOn(vscode.window, "showErrorMessage").mockImplementation(globalMocks.showErrorMessage);
-    
+
     globalMocks.List.fileList = globalMocks.fileList;
-    
-    if (!zosfiles.Upload.fileToUSSFile) { (zosfiles.Upload as any).fileToUSSFile = vi.fn(); }
+
+    if (!zosfiles.Upload.fileToUSSFile) {
+        (zosfiles.Upload as any).fileToUSSFile = vi.fn();
+    }
     vi.spyOn(zosfiles.Upload, "fileToUSSFile").mockImplementation(globalMocks.fileToUSSFile);
-    
-    if (!isbinaryfile.isBinaryFileSync) { (isbinaryfile as any).isBinaryFileSync = vi.fn(); }
+
+    if (!isbinaryfile.isBinaryFileSync) {
+        (isbinaryfile as any).isBinaryFileSync = vi.fn();
+    }
     vi.spyOn(isbinaryfile, "isBinaryFileSync").mockImplementation(globalMocks.isBinaryFileSync);
-    
-    if (!Gui.showMessage) { (Gui as any).showMessage = vi.fn(); }
+
+    if (!Gui.showMessage) {
+        (Gui as any).showMessage = vi.fn();
+    }
     vi.spyOn(Gui, "showMessage").mockImplementation(globalMocks.showMessage);
-    
-    if (!Gui.infoMessage) { (Gui as any).infoMessage = vi.fn(); }
+
+    if (!Gui.infoMessage) {
+        (Gui as any).infoMessage = vi.fn();
+    }
     vi.spyOn(Gui, "infoMessage").mockImplementation(globalMocks.infoMessage);
-    
+
     globalMocks.Download.ussDir = vi.fn();
-    
-    if (!vscode.env.clipboard.writeText) { (vscode.env.clipboard as any).writeText = vi.fn(); }
+
+    if (!vscode.env.clipboard.writeText) {
+        (vscode.env.clipboard as any).writeText = vi.fn();
+    }
     vi.spyOn(vscode.env.clipboard, "writeText").mockImplementation(globalMocks.writeText);
-    
+
     Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
-    
-    if (!vscode.workspace.applyEdit) { (vscode.workspace as any).applyEdit = vi.fn(); }
+
+    if (!vscode.workspace.applyEdit) {
+        (vscode.workspace as any).applyEdit = vi.fn();
+    }
     vi.spyOn(vscode.workspace, "applyEdit").mockImplementation(vi.fn());
-    vi.spyOn(Profiles, "getInstance").mockImplementation(vi.fn(() => {
-        return {
-            allProfiles: [{ name: "firstName" }, { name: "secondName" }],
-            defaultProfile: { name: "firstName" },
-            type: "zosmf",
-            validProfile: Validation.ValidationType.VALID,
-            checkCurrentProfile: vi.fn(() => {
-                return profilesForValidation;
-            }),
-            profilesForValidation: [],
-            validateProfiles: vi.fn(),
-            loadNamedProfile: globalMocks.mockLoadNamedProfile,
-            getProfileInfo: vi.fn().mockResolvedValue({
-                getAllProfiles: vi.fn().mockReturnValue([{ profName: "firstName", profLoc: { osLoc: ["path"] } }])
-            }),
-            openConfigFile: vi.fn()
-        } as any;
-    }));
-    
+    vi.spyOn(Profiles, "getInstance").mockImplementation(
+        vi.fn(() => {
+            return {
+                allProfiles: [{ name: "firstName" }, { name: "secondName" }],
+                defaultProfile: { name: "firstName" },
+                type: "zosmf",
+                validProfile: Validation.ValidationType.VALID,
+                checkCurrentProfile: vi.fn(() => {
+                    return profilesForValidation;
+                }),
+                profilesForValidation: [],
+                validateProfiles: vi.fn(),
+                loadNamedProfile: globalMocks.mockLoadNamedProfile,
+                getProfileInfo: vi.fn().mockResolvedValue({
+                    getAllProfiles: vi.fn().mockReturnValue([{ profName: "firstName", profLoc: { osLoc: ["path"] } }]),
+                }),
+                openConfigFile: vi.fn(),
+            } as any;
+        })
+    );
+
     (Constants as any).PROFILES_CACHE = Profiles.getInstance();
-    
+
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
@@ -1290,9 +1330,7 @@ describe("USS Action Unit Tests - function filterUssTreePrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const getRegisteredProfileNameListSpy = vi
-            .spyOn(ProfileManagement, "getRegisteredProfileNameList")
-            .mockReturnValue(["profile1", "profile2"]);
+        const getRegisteredProfileNameListSpy = vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["profile1", "profile2"]);
         const createQuickPickSpy = vi.spyOn(vscode.window, "createQuickPick").mockReturnValue(blockMocks.quickPick as any);
 
         blockMocks.quickPick.onDidAccept.mockImplementation((callback) => {
@@ -1319,9 +1357,7 @@ describe("USS Action Unit Tests - function filterUssTreePrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const getRegisteredProfileNameListSpy = vi
-            .spyOn(ProfileManagement, "getRegisteredProfileNameList")
-            .mockReturnValue([]);
+        const getRegisteredProfileNameListSpy = vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue([]);
 
         const errorMessageSpy = vi.spyOn(Gui, "errorMessage");
 
@@ -1337,9 +1373,7 @@ describe("USS Action Unit Tests - function filterUssTreePrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const getRegisteredProfileNameListSpy = vi
-            .spyOn(ProfileManagement, "getRegisteredProfileNameList")
-            .mockReturnValue(["profile1"]);
+        const getRegisteredProfileNameListSpy = vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["profile1"]);
 
         const createQuickPickSpy = vi.spyOn(vscode.window, "createQuickPick").mockReturnValue(blockMocks.quickPick as any);
 
@@ -1360,9 +1394,7 @@ describe("USS Action Unit Tests - function filterUssTreePrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const getRegisteredProfileNameListSpy = vi
-            .spyOn(ProfileManagement, "getRegisteredProfileNameList")
-            .mockReturnValue(["profile1"]);
+        const getRegisteredProfileNameListSpy = vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["profile1"]);
 
         const createQuickPickSpy = vi.spyOn(vscode.window, "createQuickPick").mockReturnValue(blockMocks.quickPick as any);
 
@@ -1387,9 +1419,7 @@ describe("USS Action Unit Tests - function filterUssTreePrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const getRegisteredProfileNameListSpy = vi
-            .spyOn(ProfileManagement, "getRegisteredProfileNameList")
-            .mockReturnValue(["profile1"]);
+        const getRegisteredProfileNameListSpy = vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["profile1"]);
 
         const createQuickPickSpy = vi.spyOn(vscode.window, "createQuickPick").mockReturnValue(blockMocks.quickPick as any);
 
@@ -1418,9 +1448,7 @@ describe("USS Action Unit Tests - function filterUssTreePrompt", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        const getRegisteredProfileNameListSpy = vi
-            .spyOn(ProfileManagement, "getRegisteredProfileNameList")
-            .mockReturnValue(["profile1"]);
+        const getRegisteredProfileNameListSpy = vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["profile1"]);
 
         const createQuickPickSpy = vi.spyOn(vscode.window, "createQuickPick").mockReturnValue(blockMocks.quickPick as any);
 

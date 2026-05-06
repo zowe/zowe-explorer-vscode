@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as sharedMock from "../../__mocks__/mockCreators/shared";
 import * as dsMock from "../../__mocks__/mockCreators/datasets";
 import * as unixMock from "../../__mocks__/mockCreators/uss";

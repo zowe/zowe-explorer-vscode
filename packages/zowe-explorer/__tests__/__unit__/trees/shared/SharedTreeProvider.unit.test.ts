@@ -9,7 +9,6 @@
  *
  */
 
-
 import { createTreeView } from "../../../__mocks__/mockCreators/shared";
 import { Constants } from "../../../../src/configuration/Constants";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";

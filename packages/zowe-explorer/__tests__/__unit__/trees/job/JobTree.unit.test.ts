@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { Gui, imperative, IZoweJobTreeNode, ProfilesCache, Validation, Poller, ZosEncoding, Sorting } from "@zowe/zowe-explorer-api";

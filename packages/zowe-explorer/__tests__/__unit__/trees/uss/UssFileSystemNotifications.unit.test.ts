@@ -9,7 +9,6 @@
  *
  */
 
-
 import { FileChangeType, Uri } from "vscode";
 import * as vscode from "vscode";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";

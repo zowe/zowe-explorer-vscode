@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import { DatasetActions } from "../../../../src/trees/dataset/DatasetActions";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";

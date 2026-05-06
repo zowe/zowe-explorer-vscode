@@ -828,9 +828,7 @@ describe("ZoweJobNode unit tests - Function updateEncodingInMap", () => {
 describe("ZoweJobNode unit tests - Function getEncoding", () => {
     it("should update the encoding of the node", () => {
         const testNode = createJobNode(createJobSessionNode(createISession(), createIProfile()), createIProfile());
-        const getEncodingForFileSpy = vi
-            .spyOn(JobFSProvider.instance, "getEncodingForFile")
-            .mockReturnValue({ kind: "other", codepage: "IBM-1147" });
+        const getEncodingForFileSpy = vi.spyOn(JobFSProvider.instance, "getEncodingForFile").mockReturnValue({ kind: "other", codepage: "IBM-1147" });
         const encoding = testNode.getEncoding();
         expect(getEncodingForFileSpy).toHaveBeenCalledTimes(1);
         expect(getEncodingForFileSpy).toHaveBeenCalledWith(testNode.resourceUri);

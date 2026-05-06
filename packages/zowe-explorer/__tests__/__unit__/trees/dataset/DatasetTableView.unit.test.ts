@@ -1495,9 +1495,7 @@ describe("DatasetTableView", () => {
             const mvsApiMock = {
                 dataSetsMatchingPattern: vi.fn().mockResolvedValue({
                     apiResponse: {
-                        items: [
-                            { dsname: "TEST.A", dsorg: "PO", migr: "no" },
-                        ],
+                        items: [{ dsname: "TEST.A", dsorg: "PO", migr: "no" }],
                     },
                 }),
             };

@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import { Gui, imperative, ProfilesCache, ZoweTreeNode } from "@zowe/zowe-explorer-api";
 import { createIProfile, createISession } from "../../__mocks__/mockCreators/shared";
@@ -104,9 +103,7 @@ describe("ZoweCommandProvider Unit Tests", () => {
     describe("integrated terminals", () => {
         beforeEach(() => {
             // Simulate that the setting is enabled : )
-            vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation(
-                (setting) => setting === Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS
-            );
+            vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation((setting) => setting === Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS);
         });
 
         describe("function issueCommand", () => {

@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import { Constants } from "../../../src/configuration/Constants";
 import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";

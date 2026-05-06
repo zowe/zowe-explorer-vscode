@@ -231,12 +231,9 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             placeHolder: "Name of member",
             validateInput: expect.any(Function),
         });
-        expect(createMemberSpy).toHaveBeenCalledWith(
-            (parent.label as string) + "(TESTMEMBER)",
-            {
-                responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
-            }
-        );
+        expect(createMemberSpy).toHaveBeenCalledWith((parent.label as string) + "(TESTMEMBER)", {
+            responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
+        });
     });
     it("Checking failed attempt to create dataset member", async () => {
         const blockMocks = createBlockMocksShared();
@@ -309,12 +306,9 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
 
         expect(parent.children.find((node) => node.label === "TESTMEMBER")).toBeDefined();
         expect(mySpy).toHaveBeenCalledWith({ placeHolder: "Name of member", validateInput: expect.any(Function) });
-        expect(createMemberSpy).toHaveBeenCalledWith(
-            nonFavoriteLabel + "(TESTMEMBER)",
-            {
-                responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
-            }
-        );
+        expect(createMemberSpy).toHaveBeenCalledWith(nonFavoriteLabel + "(TESTMEMBER)", {
+            responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
+        });
     });
 
     it("should not replace existing member when user cancels the replacement prompt", async () => {
@@ -1863,7 +1857,10 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             commandResponse: "myRes",
             apiResponse: {},
         });
-        vi.spyOn(blockMocks.mvsApi, "allMembers").mockResolvedValue({ success: true, apiResponse: { items: [ { member: "MEMBER1" }, { member: "MEMBER2" } ] } } as any);
+        vi.spyOn(blockMocks.mvsApi, "allMembers").mockResolvedValue({
+            success: true,
+            apiResponse: { items: [{ member: "MEMBER1" }, { member: "MEMBER2" }] },
+        } as any);
         mocked(vscode.window.withProgress).mockImplementation((prm, fnc) => {
             fnc();
             return Promise.resolve(prm);
@@ -1925,7 +1922,10 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             commandResponse: "myRes",
             apiResponse: {},
         });
-        vi.spyOn(blockMocks.mvsApi, "allMembers").mockResolvedValue({ success: true, apiResponse: { items: [ { member: "MEMBER1" }, { member: "MEMBER2" } ] } } as any);
+        vi.spyOn(blockMocks.mvsApi, "allMembers").mockResolvedValue({
+            success: true,
+            apiResponse: { items: [{ member: "MEMBER1" }, { member: "MEMBER2" }] },
+        } as any);
         mocked(vscode.window.withProgress).mockImplementation((prm, fnc) => {
             fnc();
             return Promise.resolve(prm);

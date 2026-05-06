@@ -9,7 +9,6 @@
  *
  */
 
-
 import { JobActions } from "../../../../src/trees/job/JobActions";
 import { JobTableView } from "../../../../src/trees/job/JobTableView";
 import { createJobNode, createJobSessionNode } from "../../../__mocks__/mockCreators/jobs";

@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import { imperative, ProfilesCache, Validation, PersistenceSchemaEnum, Sorting, AuthHandler, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
@@ -849,7 +848,10 @@ describe("Tree Provider Unit Tests - function setStatusInSession", () => {
     });
     it("returns early when a falsy node is provided", () => {
         const { treeProvider } = getBlockMocks();
-        const getIconByIdMock = vi.spyOn(IconGenerator, "getIconById").mockClear().mockImplementation((() => undefined) as any);
+        const getIconByIdMock = vi
+            .spyOn(IconGenerator, "getIconById")
+            .mockClear()
+            .mockImplementation((() => undefined) as any);
         (treeProvider as any).setStatusForSession(null, Validation.ValidationType.VALID);
         expect(getIconByIdMock).not.toHaveBeenCalled();
     });

@@ -558,7 +558,9 @@ describe("DatasetFSProvider", () => {
                 }),
             };
             const fakePo = { ...testEntries.ps };
-            const _updateResourceInEditorMock = vi.spyOn(DatasetFSProvider.instance as any, "_updateResourceInEditor").mockImplementation((() => undefined) as any);
+            const _updateResourceInEditorMock = vi
+                .spyOn(DatasetFSProvider.instance as any, "_updateResourceInEditor")
+                .mockImplementation((() => undefined) as any);
             vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue(fakePo);
             vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
             await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { editor: {} as TextEditor, isConflict: false });
@@ -1372,8 +1374,8 @@ describe("DatasetFSProvider", () => {
             vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                 dataSet: vi.fn().mockResolvedValue({
                     success: true,
-                    apiResponse: { items: [{ name: "USER.DATA.PS", dsorg: "PS" }] }
-                })
+                    apiResponse: { items: [{ name: "USER.DATA.PS", dsorg: "PS" }] },
+                }),
             } as any);
             await DatasetFSProvider.instance.stat(testUris.ps);
             expect(lookupMock).toHaveBeenCalledWith(testUris.ps, expect.anything());
@@ -1409,8 +1411,8 @@ describe("DatasetFSProvider", () => {
             vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                 dataSet: vi.fn().mockResolvedValue({
                     success: true,
-                    apiResponse: { items: [{ name: "USER.DATA.PS", dsorg: "PS" }] }
-                })
+                    apiResponse: { items: [{ name: "USER.DATA.PS", dsorg: "PS" }] },
+                }),
             } as any);
             const uriWithFetchQuery = testUris.ps.with({ query: "fetch=true" });
             await DatasetFSProvider.instance.stat(uriWithFetchQuery);
@@ -1553,8 +1555,8 @@ describe("DatasetFSProvider", () => {
                     dataSet: vi.fn().mockResolvedValue({
                         success: true,
                         apiResponse: { items: [{ name: "USER.DATA.PS", dsorg: "PS" }] },
-                        commandResponse: ""
-                    })
+                        commandResponse: "",
+                    }),
                 } as any);
                 (DatasetFSProvider.instance as any).requestCache.clear();
             });
@@ -1997,7 +1999,9 @@ describe("DatasetFSProvider", () => {
                     });
                     const createDirMock = vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
                     const lookupDirMock = vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(testEntries.pds);
-                    const fetchEntriesForDatasetMock = vi.spyOn(DatasetFSProvider.instance as any, "fetchEntriesForDataset").mockImplementation((() => undefined) as any);
+                    const fetchEntriesForDatasetMock = vi
+                        .spyOn(DatasetFSProvider.instance as any, "fetchEntriesForDataset")
+                        .mockImplementation((() => undefined) as any);
                     await (DatasetFSProvider.instance as any).fetchDataset(testUris.pds, {
                         isRoot: false,
                         slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),

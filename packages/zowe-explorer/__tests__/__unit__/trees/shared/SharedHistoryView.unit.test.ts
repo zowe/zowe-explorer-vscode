@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import { createDatasetSessionNode, createDatasetTree } from "../../../__mocks__/mockCreators/datasets";
 import { createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";

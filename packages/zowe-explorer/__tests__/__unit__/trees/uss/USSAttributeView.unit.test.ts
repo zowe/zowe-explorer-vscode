@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { USSAttributeView } from "../../../../src/trees/uss/USSAttributeView";

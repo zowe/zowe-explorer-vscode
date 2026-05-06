@@ -14,9 +14,11 @@
  * https://vitest.dev/config/
  */
 
-import { defineProject } from "vitest/config";
+import { coverageConfigDefaults, defineConfig } from "vitest/config";
 
-export default defineProject({
+// `defineConfig` (not `defineProject`) so the per-package `coverage` block
+// type-checks; see `packages/zowe-explorer/vitest.config.ts` for rationale.
+export default defineConfig({
     test: {
         name: "zowex-for-zowe-explorer",
         globals: true,
@@ -28,7 +30,15 @@ export default defineProject({
         clearMocks: true,
         restoreMocks: true,
         coverage: {
-            exclude: ["**/*.js", "**/lib/**", "**/benchmarks/**", "vitest.config.ts"],
+            include: ["src/**"],
+            excludeAfterRemap: true,
+            exclude: [
+                ...coverageConfigDefaults.exclude,
+                "**/*.js",
+                "**/lib/**",
+                "**/benchmarks/**",
+                "vitest.config.ts",
+            ],
         },
     },
     esbuild: {

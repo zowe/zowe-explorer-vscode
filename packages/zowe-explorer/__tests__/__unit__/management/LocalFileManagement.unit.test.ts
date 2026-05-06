@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import * as sharedMock from "../../__mocks__/mockCreators/shared";
 import * as dsMock from "../../__mocks__/mockCreators/datasets";

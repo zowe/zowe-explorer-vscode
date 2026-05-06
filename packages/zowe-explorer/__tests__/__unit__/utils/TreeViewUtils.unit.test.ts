@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import { Gui, PersistenceSchemaEnum, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { createDatasetSessionNode, createDatasetTree } from "../../__mocks__/mockCreators/datasets";

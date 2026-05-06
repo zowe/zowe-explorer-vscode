@@ -15,9 +15,11 @@
  */
 
 import { fileURLToPath } from "url";
-import { defineProject } from "vitest/config";
+import { coverageConfigDefaults, defineConfig } from "vitest/config";
 
-export default defineProject({
+// `defineConfig` (not `defineProject`) so the per-package `coverage` block
+// type-checks; see `packages/zowe-explorer/vitest.config.ts` for rationale.
+export default defineConfig({
     test: {
         name: "zowe-explorer-ftp-extension",
         globals: true,
@@ -31,7 +33,10 @@ export default defineProject({
         restoreMocks: false,
         mockReset: false,
         coverage: {
+            include: ["src/**"],
+            excludeAfterRemap: true,
             exclude: [
+                ...coverageConfigDefaults.exclude,
                 "**/*.js",
                 "**/lib/**",
                 "vitest.config.ts",

@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
 import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";

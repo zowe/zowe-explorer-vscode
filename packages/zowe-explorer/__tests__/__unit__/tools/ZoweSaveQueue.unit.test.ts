@@ -9,7 +9,6 @@
  *
  */
 
-
 import * as vscode from "vscode";
 import { createUSSTree } from "../../__mocks__/mockCreators/uss";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
