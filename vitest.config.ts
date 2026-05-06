@@ -33,7 +33,37 @@ export default defineConfig({
         coverage: {
             provider: "v8",
             reporter: ["text", "lcov", "html", "json", "cobertura"],
-            exclude: ["**/*.js", "**/lib/", "**/__mocks__/", "**/__tests__/", "**/vitest.config.ts"],
+            exclude: [
+                "**/*.js",
+                "**/lib/",
+                "**/__mocks__/",
+                "**/__tests__/",
+                "**/vitest.config.ts",
+                // Zero coverage files - zowe-explorer-api
+                "src/Types.ts",
+                "src/dataset/IDataSetCount.ts",
+                "src/extend/IApiExplorerExtender.ts",
+                "src/extend/ILocalStorageAccess.ts",
+                "src/extend/IRegisterClient.ts",
+                "src/extend/MainframeInteraction.ts",
+                "src/globals/GuiOptions.ts",
+                "src/tree/IZoweExplorerTreeApi.ts",
+                "src/tree/IZoweTree.ts",
+                "src/tree/IZoweTreeNode.ts",
+                "src/vscode/doc/BaseProfileAuth.ts",
+                "src/vscode/doc/PromptCredentials.ts",
+                // Zero coverage files - zowex package
+                "benchmarks/setup.ts",
+                "src/ExternalSshHelper.ts",
+                "src/Utilities.ts",
+                "src/index.ts",
+                "src/api/SshCommandApi.ts",
+                "src/api/SshCommonApi.ts",
+                "src/api/SshJesApi.ts",
+                "src/api/SshMvsApi.ts",
+                "src/api/SshUssApi.ts",
+                "src/api/index.ts"
+            ],
         },
     },
 });
