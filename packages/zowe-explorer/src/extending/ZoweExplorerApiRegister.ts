@@ -130,7 +130,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
         this.registerJesApi(new ZoweExplorerZosmf.JesApi());
         this.registerCommandApi(new ZoweExplorerZosmf.CommandApi());
 
-        this.registerMvsApi(new zowex.SshMvsApi(this.getDataSetAttrProvider?.()));
+        this.registerMvsApi(new zowex.SshMvsApi());
         this.registerUssApi(new zowex.SshUssApi());
         this.registerJesApi(new zowex.SshJesApi());
         this.registerCommandApi(new zowex.SshCommandApi());
