@@ -7,7 +7,6 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## Recent Changes
 
 - Updated `vscePromptApi.promptForProfile` function implementations to deprioritize project level configurations and disable profile creation for the install. [#4224](https://github.com/zowe/zowe-explorer-vscode/pull/4224)
-- **Breaking:** Renamed contributed setting IDs from `zowe-native-proto` to `zowex`. All references to `zowe-native-proto` should be replaced with `zowex` in VS Code `settings.json` files. [#831](https://github.com/zowe/zowex/issues/831)
 - **Breaking:** Refactored the code to be directly integrated into Zowe Explorer. [#4210](https://github.com/zowe/zowe-explorer-vscode/pull/4210)
 - **Breaking:** Changed the settings to align with Zowe Explorer. [#4210](https://github.com/zowe/zowe-explorer-vscode/pull/4210)
   - `zowex-vsce.requestTimeout` -> `zowe.settings.requestTimeout`
