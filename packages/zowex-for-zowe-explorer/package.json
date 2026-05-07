@@ -1,5 +1,5 @@
 {
-  "name": "@zowe/zowex-for-zowe-explorer",
+  "name": "zowex-for-zowe-explorer",
   "displayName": "Zowe Remote SSH",
   "description": "Zowe Remote SSH VS Code APIs for Zowe Explorer",
   "version": "0.4.0",
@@ -31,7 +31,7 @@
     "lint:src": "eslint --format stylish src/**/*.ts",
     "lint:test": "eslint --format stylish tests/**/*.ts",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
-    "package": "vsce package --out ../../dist",
+    "package": "echo 'zowex: nothing to package.'",
     "oldtest": "vitest run --coverage",
     "oldtest:ui": "vitest --ui --coverage",
     "oldtest:watch": "vitest --watch",
