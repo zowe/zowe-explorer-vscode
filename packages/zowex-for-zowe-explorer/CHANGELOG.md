@@ -6,6 +6,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Recent Changes
 
+- Updated the `promptForProfile` function to deprioritize project-level configurations and disable profile creation during zowex server uninstall and restart operations. [#4224](https://github.com/zowe/zowe-explorer-vscode/pull/4224)
 - **Breaking:** Refactored the code to be directly integrated into Zowe Explorer. [#4210](https://github.com/zowe/zowe-explorer-vscode/pull/4210)
 - **Breaking:** Changed the settings to align with Zowe Explorer. [#4210](https://github.com/zowe/zowe-explorer-vscode/pull/4210)
   - `zowex-vsce.requestTimeout` -> `zowe.settings.requestTimeout`
