@@ -127,7 +127,6 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:1",
                 mock: [
-                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: true },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
@@ -138,7 +137,6 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:2",
                 mock: [
-                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: true },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -150,7 +148,6 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:3",
                 mock: [
-                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: true },
@@ -164,7 +161,6 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:4",
                 mock: [
-                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -176,7 +172,6 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:5",
                 mock: [
-                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -189,7 +184,6 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:6",
                 mock: [
-                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -207,7 +201,6 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:7",
                 mock: [
-                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -1066,6 +1059,8 @@ describe("Test src/shared/extension", () => {
     });
 
     describe("isDocumentASpool", () => {
+        vi.spyOn(JobFSProvider.instance, "lookup").mockReturnValue(undefined);
+        vi.spyOn(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated").mockImplementation(vi.fn());
         beforeEach(() => {
             vi.clearAllMocks();
         });
