@@ -159,11 +159,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         entry.wasAccessed = false;
                     }
                 } else {
-                    // The data set has no modification attributes available. Invalidate the cache to
+                    // The data set has no timestamp attributes available. Invalidate the cache to
                     // force a re-fetch on the next read, but leave `mtime` untouched. Bumping `mtime`
-                    // here would cause VS Code's built-in stale-write detection (see
-                    // FileService.validateWriteFile) to compare the stored model mtime against an
-                    // ever-advancing stat mtime, falsely raising a "content of the file is newer"
+                    // here triggers VS Code's built-in stale-write detection (see
+                    // `FileService.validateWriteFile`) to compare the stored model mtime against an
+                    // always-advancing stat mtime, falsely raising a "content of the file is newer"
                     // conflict on save. Etag-based conflict detection still runs in `writeFile` via
                     // the 412 response from the mainframe.
                     entry.wasAccessed = false;
@@ -328,11 +328,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 }
             } else if (ds.member) {
                 // The member has no modification attributes available (e.g., created without ISPF
-                // stats). Invalidate the cache to force a re-fetch on the next read, but leave
-                // `mtime` alone. Bumping `mtime` on every stat would trigger VS Code's built-in
-                // FILE_MODIFIED_SINCE detection on save (see FileService.validateWriteFile), even
-                // though the content hasn't actually changed. Etag-based conflict detection still
-                // runs in `writeFile` via the 412 response from the mainframe.
+                // stats). Invalidate the cache to force a re-fetch on the next read request, but leave
+                // `mtime` alone. Bumping `mtime` here triggers VS Code's built-in stale-write detection (see
+                // `FileService.validateWriteFile`) to compare the stored model mtime against an
+                // always-advancing stat mtime, falsely raising a "content of the file is newer"
+                // conflict on save. Etag-based conflict detection still runs in `writeFile` via
+                // the 412 response from the mainframe.
                 tempEntry.wasAccessed = false;
             }
 

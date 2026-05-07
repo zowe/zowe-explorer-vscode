@@ -1892,7 +1892,7 @@ describe("DatasetFSProvider", () => {
             expect(memberAfter.wasAccessed).toBe(false);
 
             // A second listing must keep the mtime stable so VS Code's resolved-stat mtime
-            // matches the stat returned during validateWriteFile, avoiding the spurious conflict.
+            // matches the stat returned during VS Code's `validateWriteFile`, avoiding the spurious conflict.
             await (DatasetFSProvider.instance as any).fetchEntriesForDataset(fakePds, testUris.pds, {
                 isRoot: false,
                 slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
