@@ -196,9 +196,6 @@ importers:
       '@zowe/zowe-explorer-api':
         specifier: workspace:*
         version: link:../zowe-explorer-api
-      '@zowe/zowex-for-zowe-explorer':
-        specifier: workspace:*
-        version: link:../zowex-for-zowe-explorer
       dayjs:
         specifier: ^1.11.10
         version: 1.11.11
@@ -208,6 +205,9 @@ importers:
       promise-queue:
         specifier: 2.2.5
         version: 2.2.5
+      zowex-for-zowe-explorer:
+        specifier: workspace:*
+        version: link:../zowex-for-zowe-explorer
     devDependencies:
       '@cucumber/cucumber':
         specifier: ^10.0.0
