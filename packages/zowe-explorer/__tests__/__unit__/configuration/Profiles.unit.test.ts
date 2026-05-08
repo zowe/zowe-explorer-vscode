@@ -256,7 +256,7 @@ describe("Profiles Unit Tests - Function getProfileInfo", () => {
         vi.doUnmock("@zowe/imperative");
     });
 
-    beforeEach(() => {
+    beforeEach(async () => {
         // Reset module cache and re-require the Profiles API in each test
         // below. This ensures that the tests cover static properties defined
         // at import time in the zowe-explorer-api package.
@@ -266,6 +266,8 @@ describe("Profiles Unit Tests - Function getProfileInfo", () => {
             vi.spyOn(realFs, "existsSync").mockImplementation((p) => Boolean(p)),
             vi.spyOn(realFs, "readFileSync").mockImplementation(() => "{}" as any),
         ];
+        const imperativeModule = await import("@zowe/imperative");
+        vi.spyOn(imperativeModule.ConfigUtils, "readExtendersJson").mockReturnValue({ profileTypes: {} });
     });
 
     afterEach(() => {

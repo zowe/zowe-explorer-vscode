@@ -429,6 +429,7 @@ describe("FtpMvsApi", () => {
     });
 
     it("should throw error when get contents failed", async () => {
+        vi.mocked(DataSetUtils.downloadDataSet).mockReset();
         vi.spyOn(DataSetUtils, "downloadDataSet").mockImplementationOnce(
             vi.fn((_val) => {
                 throw new Error("Download dataset failed.");
@@ -437,7 +438,7 @@ describe("FtpMvsApi", () => {
         const mockParams = {
             dataSetName: "IBMUSER.DS2",
             options: {
-                file: "/a/b/c",
+                file: createTempFileName(),
                 encoding: "",
             },
         };

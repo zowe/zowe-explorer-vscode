@@ -2835,7 +2835,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                "/test/download/path/u/test/directory",
+                path.normalize("/test/download/path/u/test/directory"),
                 false,
             );
         });
