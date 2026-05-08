@@ -57,7 +57,7 @@ describe("FtpMvsApi", () => {
         globals.SESSION_MAP.get = vi.fn().mockReturnValue({ mvsListConnection: { isConnected: () => true } });
         vi.spyOn(DataSetUtils, "downloadDataSet").mockImplementationOnce(() => {
             return new Promise((resolve) => {
-                resolve(new Buffer("Hello world"));
+                resolve(Buffer.from("Hello world"));
             });
         });
         vi.spyOn(MvsApi as any, "hashFile").mockResolvedValue("a".repeat(64));

@@ -31,6 +31,7 @@ beforeAll(async () => {
                 if (config?.exists && (config.mProperties == null || config.mProperties.profiles == null)) {
                     return data;
                 }
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 return originalCensorRawData ? originalCensorRawData(data, category) : data;
             };
             Censor.censorObject = function (data: unknown): unknown {
@@ -38,6 +39,7 @@ beforeAll(async () => {
                 if (config?.exists && (config.mProperties == null || config.mProperties.profiles == null)) {
                     return data;
                 }
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 return originalCensorObject ? originalCensorObject(data) : data;
             };
             Censor.__zeTestPatched = true;

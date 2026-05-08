@@ -90,7 +90,6 @@
     "fresh-clone": "pnpm -r --parallel fresh-clone && (rimraf node_modules || true)",
     "prepare": "husky install",
     "lint": "pnpm -r lint",
-    "lint:html": "pnpm -r lint:html",
     "madge": "pnpm -r madge",
     "pretty": "prettier --write .",
     "build": "pnpm -r --sequential --color --reporter append-only build",
