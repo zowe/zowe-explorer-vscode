@@ -11,10 +11,12 @@
 
 import * as fs from "fs";
 import * as fsPromises from "fs/promises";
+import * as vscode from "vscode";
 import { FeatureFlags, FeatureFlagsAccess, FlagAccessLevel } from "../../../src";
 
 const FLAGS_FILE = "feature-flags.json";
 jest.mock("fs");
+jest.mock("vscode");
 
 describe("FeatureFlags", () => {
     let readFileSpy: jest.SpyInstance;
@@ -159,5 +161,122 @@ describe("FeatureFlagsAccess (ACL)", () => {
     it("should list correct writable keys", () => {
         const writableKeys = FeatureFlagsAccess.getWritableKeys();
         expect(writableKeys).toContain("goodTestKey");
+    });
+
+    it("should allow reading tableView with Read permissions", () => {
+        (FeatureFlagsAccess as any).accessControl = {
+            tableView: FlagAccessLevel.Read | FlagAccessLevel.Write,
+        };
+        (FeatureFlags as any).flags["tableView"] = true;
+        expect(FeatureFlagsAccess.get("tableView")).toBe(true);
+    });
+
+    it("should allow writing tableView with Write permissions", async () => {
+        (FeatureFlagsAccess as any).accessControl = {
+            tableView: FlagAccessLevel.Read | FlagAccessLevel.Write,
+        };
+        await FeatureFlagsAccess.set("tableView", false);
+        expect(FeatureFlags.get("tableView")).toBe(false);
+    });
+});
+
+describe("FeatureFlags.isEnabledInSettings", () => {
+    let mockGetConfiguration: jest.Mock;
+    let mockGet: jest.Mock;
+
+    beforeEach(() => {
+        mockGet = jest.fn();
+        mockGetConfiguration = jest.fn().mockReturnValue({ get: mockGet });
+        (vscode.workspace as any).getConfiguration = mockGetConfiguration;
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it("should return true when setting is true", () => {
+        mockGet.mockReturnValue(true);
+
+        const result = FeatureFlags.isEnabledInSettings("tableView");
+
+        expect(mockGetConfiguration).toHaveBeenCalledWith("zowe.featureEnablement");
+        expect(mockGet).toHaveBeenCalledWith("tableView");
+        expect(result).toBe(true);
+    });
+
+    it("should return false when setting is false", () => {
+        mockGet.mockReturnValue(false);
+
+        const result = FeatureFlags.isEnabledInSettings("tableView");
+
+        expect(result).toBe(false);
+    });
+
+    it("should return default value when setting is undefined", () => {
+        mockGet.mockReturnValue(undefined);
+
+        const result = FeatureFlags.isEnabledInSettings("tableView", true);
+
+        expect(result).toBe(true);
+    });
+
+    it("should return false as default when no default provided and setting is undefined", () => {
+        mockGet.mockReturnValue(undefined);
+
+        const result = FeatureFlags.isEnabledInSettings("tableView");
+
+        expect(result).toBe(false);
+    });
+
+    it("should convert truthy values to boolean true", () => {
+        mockGet.mockReturnValue("yes");
+
+        const result = FeatureFlags.isEnabledInSettings("tableView");
+
+        expect(result).toBe(true);
+    });
+
+    it("should convert falsy values to boolean false", () => {
+        mockGet.mockReturnValue(0);
+
+        const result = FeatureFlags.isEnabledInSettings("tableView");
+
+        expect(result).toBe(false);
+    });
+
+    it("should handle errors and return default value", () => {
+        mockGetConfiguration.mockImplementation(() => {
+            throw new Error("VS Code not available");
+        });
+
+        const result = FeatureFlags.isEnabledInSettings("tableView", true);
+
+        expect(result).toBe(true);
+    });
+
+    it("should work with different feature IDs", () => {
+        mockGet.mockReturnValue(true);
+
+        FeatureFlags.isEnabledInSettings("experimentalMode");
+
+        expect(mockGetConfiguration).toHaveBeenCalledWith("zowe.featureEnablement");
+        expect(mockGet).toHaveBeenCalledWith("experimentalMode");
+    });
+
+    it("should handle null values by converting to boolean", () => {
+        mockGet.mockReturnValue(null);
+
+        const result = FeatureFlags.isEnabledInSettings("tableView", true);
+
+        // null is falsy, so Boolean(null) = false, but since it's not undefined, we don't use default
+        expect(result).toBe(false);
+    });
+
+    it("should handle empty string as false", () => {
+        mockGet.mockReturnValue("");
+
+        const result = FeatureFlags.isEnabledInSettings("tableView");
+
+        expect(result).toBe(false);
     });
 });
