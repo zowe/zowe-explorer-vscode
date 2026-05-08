@@ -453,7 +453,7 @@ describe("FtpMvsApi", () => {
             })
         );
         const response2 = { success: true, commandResponse: "", apiResponse: { items: [{ dsname: "IBMUSER.PDS", dsorg: "PO", lrecl: 255 }] } };
-        const dataSetMock = vi.spyOn(MvsApi, "dataSet").mockResolvedValue(response2 as any);
+        vi.spyOn(MvsApi, "dataSet").mockResolvedValue(response2 as any);
         const localFile = createTempFileName();
         const mockParams = {
             inputFilePath: localFile,

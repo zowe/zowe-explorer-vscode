@@ -301,7 +301,7 @@ describe("TreeDataSource", () => {
                 parentNode: pdsNode,
             });
             const newChildren = [pdsMember];
-            const getStatsMock = vi.spyOn(pdsMember, "getStats").mockReturnValue({
+            vi.spyOn(pdsMember, "getStats").mockReturnValue({
                 migr: "NO",
                 user: "USER1",
                 createdDate: new Date(),
@@ -1299,7 +1299,7 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle case when profile not found in session nodes or favorites", async () => {
-            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
+            vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
 
             // Mock empty favorites
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
