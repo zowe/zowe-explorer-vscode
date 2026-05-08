@@ -36,7 +36,7 @@ vi.mock("crypto", async () => ({
 // echo their input to mirror the previous Jest behavior the suite relied on.
 vi.mock("fs", async () => {
     const actual = await vi.importActual<typeof import("fs")>("fs");
-    const mocked: Record<string, unknown> = {};
+    const mockedRec: Record<string, unknown> = {};
     for (const key of Object.keys(actual) as Array<keyof typeof actual>) {
         const value = actual[key];
         if (key === "promises") {
@@ -45,9 +45,9 @@ vi.mock("fs", async () => {
                 const pValue = (value as any)[pKey];
                 promisesMock[pKey] = typeof pValue === "function" ? vi.fn() : pValue;
             }
-            mocked.promises = promisesMock;
+            mockedRec.promises = promisesMock;
         } else {
-            mocked[key as string] = typeof value === "function" ? vi.fn() : value;
+            mockedRec[key as string] = typeof value === "function" ? vi.fn() : value;
         }
     }
     // `FileManagement.getFullPath` calls `realpathSync` to canonicalize a
@@ -55,10 +55,10 @@ vi.mock("fs", async () => {
     const echoFirstArg = (arg: unknown): unknown => arg;
     const realpathSync = vi.fn(echoFirstArg) as unknown as typeof actual.realpathSync;
     (realpathSync as any).native = vi.fn(echoFirstArg);
-    mocked.realpathSync = realpathSync;
+    mockedRec.realpathSync = realpathSync;
     const realpathAsync = vi.fn(async (arg) => arg);
-    (mocked.promises as any).realpath = realpathAsync;
-    return mocked;
+    (mockedRec.promises as any).realpath = realpathAsync;
+    return mockedRec;
 });
 
 const lpar1Profile: Required<Pick<imperative.IProfileLoaded, "name" | "type" | "profile">> = {
