@@ -946,7 +946,7 @@ describe("USS Action Unit Tests - upload with encoding", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const putContent = vi.fn();
-        ZoweExplorerApiRegister.getUssApi = vi.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(() => ({ putContent }) as any);
+        ZoweExplorerApiRegister.getUssApi = vi.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(() => ({ putContent } as any));
         const doc = createTextDocument(path.normalize("/tmp/bar.txt"));
 
         await USSActions.uploadFileWithEncoding(blockMocks.ussNode, doc, { kind: "text" } as any);
@@ -962,7 +962,7 @@ describe("USS Action Unit Tests - upload with encoding", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const putContent = vi.fn();
-        ZoweExplorerApiRegister.getUssApi = vi.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(() => ({ putContent }) as any);
+        ZoweExplorerApiRegister.getUssApi = vi.fn<any, Parameters<typeof ZoweExplorerApiRegister.getUssApi>>(() => ({ putContent } as any));
         const doc = createTextDocument(path.normalize("/tmp/bar.txt"));
 
         await USSActions.uploadFileWithEncoding(blockMocks.ussNode, doc, { kind: "other", codepage: "ISO8859-1" } as any);
@@ -2795,7 +2795,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
                 expectedDir,
-                false,
+                false
             );
         });
 
@@ -2836,7 +2836,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
                 path.normalize("/test/download/path/u/test/directory"),
-                false,
+                false
             );
         });
 

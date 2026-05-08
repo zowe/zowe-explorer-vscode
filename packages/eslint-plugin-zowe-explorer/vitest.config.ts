@@ -24,5 +24,8 @@ export default defineProject({
         include: ["tests/**/*.js"],
         clearMocks: false,
         restoreMocks: false,
+        coverage: {
+            reportsDirectory: "results/unit/coverage",
+        },
     },
 });

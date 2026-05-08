@@ -2282,7 +2282,7 @@ describe("Profiles Unit Tests - function handleSwitchAuthentication", () => {
                     },
                 },
             ],
-            getDefaultProfile: () => ({ name: "base" }) as any,
+            getDefaultProfile: () => ({ name: "base" } as any),
             mergeArgsForProfile: vi.fn().mockReturnValue({
                 knownArgs: [
                     {

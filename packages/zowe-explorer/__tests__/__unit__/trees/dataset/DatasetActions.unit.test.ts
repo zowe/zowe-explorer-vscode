@@ -4079,7 +4079,7 @@ describe("Dataset Actions Unit Tests - Function confirmJobSubmission", () => {
             () =>
                 ({
                     get: () => Constants.JOB_SUBMIT_DIALOG_OPTS[1],
-                }) as any
+                } as any)
         );
         vi.spyOn(Gui, "warningMessage").mockResolvedValue({
             title: "Submit",

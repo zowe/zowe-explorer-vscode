@@ -33,6 +33,7 @@ export default defineConfig({
         restoreMocks: false,
         mockReset: false,
         coverage: {
+            reportsDirectory: "results/unit/coverage",
             include: ["src/**"],
             excludeAfterRemap: true,
             exclude: [

@@ -57,6 +57,7 @@ export default mergeConfig(
             // from inside the package directory, coverage still picks up the
             // local `src/**` sources.
             coverage: {
+                reportsDirectory: "results/unit/coverage",
                 include: ["src/**"],
             },
         },
