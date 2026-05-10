@@ -15,7 +15,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for downloading data sets, data set members, USS files, and USS directories. [#3843](https://github.com/zowe/zowe-explorer-vscode/pull/3843)
 - Added comprehensive tooltip support for Zowe Resources Table including filter icons, sort icons, and action buttons (Open, Back, Pin, Settings) to improve user experience and accessibility. [#4201](https://github.com/zowe/zowe-explorer-vscode/pull/4201)
 - Added support for adding VSAM datasets to favorites.[#4103](https://github.com/zowe/zowe-explorer-vscode/issues/4103)
-- Added new vs code toggle setting for enabling various features within zowe explorer.[#4242](https://github.com/zowe/zowe-explorer-vscode/issues/4242)
 
 ### Bug fixes
 
