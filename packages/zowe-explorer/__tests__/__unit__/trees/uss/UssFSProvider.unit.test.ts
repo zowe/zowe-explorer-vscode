@@ -195,7 +195,7 @@ describe("UssFSProvider", () => {
             fakeFile.wasAccessed = true;
 
             lookupMock.mockReturnValue(fakeFile);
-            const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValue({
+            const listFilesMock = vi.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValue({
                 success: true,
                 apiResponse: {
                     items: [{ name: fakeFile.name }],

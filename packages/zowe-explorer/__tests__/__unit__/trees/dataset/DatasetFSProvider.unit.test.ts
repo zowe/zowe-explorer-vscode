@@ -1782,16 +1782,16 @@ describe("DatasetFSProvider", () => {
                 fakePs.mtime = initialMtime;
                 fakePs.wasAccessed = true;
 
-                jest.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePs);
-                jest.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(testEntries.session);
-                jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(fakePs);
+                vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(testEntries.session);
+                vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
                     isRoot: false,
                     slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
                     profileName: "sestest",
                     profile: testEntries.ps.metadata.profile,
                 });
 
-                const dataSetMock = jest.fn().mockResolvedValue({
+                const dataSetMock = vi.fn().mockResolvedValue({
                     success: true,
                     apiResponse: {
                         items: [
@@ -1804,7 +1804,7 @@ describe("DatasetFSProvider", () => {
                     },
                     commandResponse: "",
                 });
-                jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                     dataSet: dataSetMock,
                 } as any);
 
@@ -1898,14 +1898,14 @@ describe("DatasetFSProvider", () => {
             // `allMembers` without `m4date`. Before the fix, every directory listing reset
             // `tempEntry.mtime = Date.now()`, which caused VS Code's stale-write detection to
             // raise a "content of the file is newer" prompt on save.
-            const allMembersMock = jest.fn().mockResolvedValue({
+            const allMembersMock = vi.fn().mockResolvedValue({
                 success: true,
                 apiResponse: {
                     items: [{ member: "MEM1" }],
                 },
                 commandResponse: "",
             });
-            jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                 allMembers: allMembersMock,
             } as any);
 
