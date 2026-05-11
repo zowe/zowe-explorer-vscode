@@ -138,8 +138,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 const apiMtime = (fileResp.apiResponse?.items ?? [])?.[0]?.mtime;
 
                 if (apiMtime == null) {
+                    // No modification time was returned by the API. Invalidate the cache to force a
+                    // re-fetch on the next read, but leave `entry.mtime` untouched. Bumping `mtime`
+                    // here triggers VS Code's built-in stale-write detection (see
+                    // `FileService.validateWriteFile`) to compare the stored model mtime against an
+                    // always-advancing stat mtime, falsely raising a "content of the file is newer"
+                    // conflict on save. Etag-based conflict detection still runs in `writeFile` via
+                    // the 412 response from the mainframe.
                     entry.wasAccessed = false;
-                    entry.mtime = Date.now();
                 } else {
                     const newTime = dayjs(apiMtime).valueOf();
                     if (entry.mtime != newTime) {
