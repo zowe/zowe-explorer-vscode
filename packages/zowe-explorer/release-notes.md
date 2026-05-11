@@ -35,7 +35,7 @@ Note that the filter only applies on the client side, so if pagination is enable
 
 VSAM data sets can now be favorited.
 
-**Warning:** VSAM favorites are not backwards compatible with previous versions of Zowe Explorer. If you wish to downgrade to a version before 3.5.0, please make sure you remove all VSAM favorites first, otherwise Zowe Explorer will fail to start. 
+**Warning:** VSAM favorites are not backwards compatible with previous versions of Zowe Explorer. If you wish to downgrade to a version before 3.5.0, please make sure you remove all VSAM favorites first, otherwise Zowe Explorer will fail to start.
 
 #### Favorite individual PDS members
 
