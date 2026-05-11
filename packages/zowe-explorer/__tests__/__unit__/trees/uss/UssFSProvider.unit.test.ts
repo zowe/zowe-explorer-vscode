@@ -181,6 +181,44 @@ describe("UssFSProvider", () => {
             listFilesMock.mockRestore();
         });
 
+        it("does not bump mtime when listFiles returns no mtime (regression: VS Code FILE_MODIFIED_SINCE)", async () => {
+            // Sibling regression test for https://github.com/zowe/zowe-explorer-vscode/issues/4206:
+            // when the API does not return an `mtime`, `statImplementation` previously set
+            // `entry.mtime = Date.now()` on every call. VS Code's `FileService.validateWriteFile`
+            // would then see `options.mtime < stat.mtime` on save and raise a stale-write
+            // conflict prompt. The provider must keep `mtime` stable across stat calls when no
+            // modification time is available from the API.
+            const initialMtime = 1234;
+            const fakeFile = new UssFile(testEntries.file.name);
+            Object.assign(fakeFile, testEntries.file);
+            fakeFile.mtime = initialMtime;
+            fakeFile.wasAccessed = true;
+
+            lookupMock.mockReturnValue(fakeFile);
+            const listFilesMock = jest.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValue({
+                success: true,
+                apiResponse: {
+                    items: [{ name: fakeFile.name }],
+                },
+                commandResponse: "",
+            });
+
+            const statUri = testUris.file.with({ query: "fetch=true" });
+            await UssFSProvider.instance.stat(statUri);
+
+            expect(fakeFile.mtime).toBe(initialMtime);
+            expect(fakeFile.wasAccessed).toBe(false);
+
+            // Subsequent stat must continue to report the same mtime so that VS Code does not
+            // think the file has been modified externally between resolve and save.
+            fakeFile.wasAccessed = true;
+            await UssFSProvider.instance.stat(statUri);
+            expect(fakeFile.mtime).toBe(initialMtime);
+            expect(fakeFile.wasAccessed).toBe(false);
+
+            listFilesMock.mockRestore();
+        });
+
         it("returns a file as 'read-only' when query has conflict parameter", async () => {
             lookupMock.mockReturnValueOnce(testEntries.file);
             await expect(UssFSProvider.instance.stat(testUris.conflictFile)).resolves.toStrictEqual({
