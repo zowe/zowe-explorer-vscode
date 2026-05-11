@@ -11,10 +11,10 @@
 
 import * as vscode from "vscode";
 import { TableViewUtils } from "../../../src/utils/TableViewUtils";
-import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
+import { FeatureFlags } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 
-jest.mock("../../../src/configuration/SettingsConfig");
+jest.mock("@zowe/zowe-explorer-api");
 jest.mock("../../../src/tools/ZoweLogger");
 
 describe("TableViewUtils Unit Tests", () => {
@@ -59,7 +59,7 @@ describe("TableViewUtils Unit Tests", () => {
     describe("initialize", () => {
         it("should set initial context value and register configuration listener", async () => {
             // Mock setting value as true
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(true);
 
             await TableViewUtils.initialize(mockContext);
 
@@ -74,7 +74,7 @@ describe("TableViewUtils Unit Tests", () => {
 
         it("should set initial context value to false when setting is false", async () => {
             // Mock setting value as false
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(false);
 
             await TableViewUtils.initialize(mockContext);
 
@@ -86,8 +86,8 @@ describe("TableViewUtils Unit Tests", () => {
         });
 
         it("should set initial context value to false when setting is undefined", async () => {
-            // Mock setting value as undefined (default)
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(undefined);
+            // Mock setting value as false (default behavior of isEnabledInSettings)
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(false);
 
             await TableViewUtils.initialize(mockContext);
 
@@ -98,29 +98,29 @@ describe("TableViewUtils Unit Tests", () => {
 
     describe("updateShowZoweResourcesContext", () => {
         it("should set showZoweResources to true when setting is true", async () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(true);
 
             await TableViewUtils.updateShowZoweResourcesContext();
 
-            expect(SettingsConfig.getDirectValue).toHaveBeenCalledWith("zowe.featureEnablement.tableView", false);
+            expect(FeatureFlags.isEnabledInSettings).toHaveBeenCalledWith("tableView");
             expect(mockExecuteCommand).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", true);
             expect(ZoweLogger.debug).toHaveBeenCalledWith("[updateShowZoweResourcesContext] featureEnablement.tableView: true");
             expect(ZoweLogger.debug).toHaveBeenCalledWith("[updateShowZoweResourcesContext] showZoweResources (set to): true");
         });
 
         it("should set showZoweResources to false when setting is false", async () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(false);
 
             await TableViewUtils.updateShowZoweResourcesContext();
 
-            expect(SettingsConfig.getDirectValue).toHaveBeenCalledWith("zowe.featureEnablement.tableView", false);
+            expect(FeatureFlags.isEnabledInSettings).toHaveBeenCalledWith("tableView");
             expect(mockExecuteCommand).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", false);
             expect(ZoweLogger.debug).toHaveBeenCalledWith("[updateShowZoweResourcesContext] featureEnablement.tableView: false");
             expect(ZoweLogger.debug).toHaveBeenCalledWith("[updateShowZoweResourcesContext] showZoweResources (set to): false");
         });
 
         it("should set showZoweResources to false when setting is undefined", async () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(undefined);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(false);
 
             await TableViewUtils.updateShowZoweResourcesContext();
 
@@ -128,7 +128,7 @@ describe("TableViewUtils Unit Tests", () => {
         });
 
         it("should log debug messages with correct values", async () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(true);
 
             await TableViewUtils.updateShowZoweResourcesContext();
 
@@ -140,7 +140,7 @@ describe("TableViewUtils Unit Tests", () => {
 
     describe("configuration change listener", () => {
         it("should update context when zowe.featureEnablement.tableView setting changes", async () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(false);
 
             await TableViewUtils.initialize(mockContext);
 
@@ -149,7 +149,7 @@ describe("TableViewUtils Unit Tests", () => {
 
             // Reset mocks to test the listener in isolation
             mockExecuteCommand.mockClear();
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(true);
 
             // Create a mock configuration change event
             const mockConfigChangeEvent = {
@@ -172,7 +172,7 @@ describe("TableViewUtils Unit Tests", () => {
         });
 
         it("should not update context when unrelated setting changes", async () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(false);
 
             await TableViewUtils.initialize(mockContext);
 
@@ -205,7 +205,7 @@ describe("TableViewUtils Unit Tests", () => {
 
         it("should handle configuration changes from false to true", async () => {
             // Start with false
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(false);
 
             await TableViewUtils.initialize(mockContext);
 
@@ -213,7 +213,7 @@ describe("TableViewUtils Unit Tests", () => {
 
             // Change to true
             mockExecuteCommand.mockClear();
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(true);
 
             const mockConfigChangeEvent = {
                 affectsConfiguration: jest.fn().mockReturnValue(true),
@@ -226,7 +226,7 @@ describe("TableViewUtils Unit Tests", () => {
 
         it("should handle configuration changes from true to false", async () => {
             // Start with true
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(true);
 
             await TableViewUtils.initialize(mockContext);
 
@@ -234,7 +234,7 @@ describe("TableViewUtils Unit Tests", () => {
 
             // Change to false
             mockExecuteCommand.mockClear();
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(false);
 
             const mockConfigChangeEvent = {
                 affectsConfiguration: jest.fn().mockReturnValue(true),
@@ -250,15 +250,15 @@ describe("TableViewUtils Unit Tests", () => {
         it("should handle executeCommand errors gracefully", async () => {
             const mockError = new Error("Command execution failed");
             mockExecuteCommand.mockRejectedValue(mockError);
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockReturnValue(true);
 
             // Should not throw
             await expect(TableViewUtils.updateShowZoweResourcesContext()).rejects.toThrow("Command execution failed");
         });
 
-        it("should handle SettingsConfig.getDirectValue errors gracefully", async () => {
+        it("should handle FeatureFlags.isEnabledInSettings errors gracefully", async () => {
             const mockError = new Error("Settings retrieval failed");
-            jest.spyOn(SettingsConfig, "getDirectValue").mockImplementation(() => {
+            jest.spyOn(FeatureFlags, "isEnabledInSettings").mockImplementation(() => {
                 throw mockError;
             });
 

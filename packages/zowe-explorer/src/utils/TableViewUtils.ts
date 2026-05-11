@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { SettingsConfig } from "../configuration/SettingsConfig";
+import { FeatureFlags } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../tools/ZoweLogger";
 
 export class TableViewUtils {
@@ -31,8 +31,8 @@ export class TableViewUtils {
      *
      */
     public static async updateShowZoweResourcesContext(): Promise<void> {
-        // Get the user setting from Feature Enablement category
-        const tableViewEnabled = SettingsConfig.getDirectValue<boolean>("zowe.featureEnablement.tableView", false);
+        // Get the user setting from Feature Enablement category using FeatureFlags helper
+        const tableViewEnabled = FeatureFlags.isEnabledInSettings("tableView");
 
         // Update showZoweResources based on setting
         // When true: override to true (user wants table)
