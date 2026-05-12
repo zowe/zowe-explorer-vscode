@@ -67,7 +67,6 @@ html {
     border-bottom-right-radius: var(--ag-wrapper-border-radius);
 }
 
-
 #header-icon-tooltip {
     position: fixed;
     background-color: var(--vscode-editorHoverWidget-background, #252526);
