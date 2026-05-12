@@ -56,7 +56,7 @@ vi.mock("fs", async () => {
     const realpathSync = vi.fn(echoFirstArg) as unknown as typeof actual.realpathSync;
     (realpathSync as any).native = vi.fn(echoFirstArg);
     mockedRec.realpathSync = realpathSync;
-    const realpathAsync = vi.fn(async (arg) => arg);
+    const realpathAsync = vi.fn((arg) => Promise.resolve(arg));
     (mockedRec.promises as any).realpath = realpathAsync;
     return mockedRec;
 });

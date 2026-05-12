@@ -9,7 +9,7 @@
  *
  */
 
-import { vi, describe, it, expect, afterEach, beforeEach } from "vitest";
+import { vi, describe, it, expect, afterEach } from "vitest";
 
 vi.mock("node:module", async (importOriginal) => {
     const original: any = await importOriginal();
@@ -24,7 +24,7 @@ vi.mock("node:module", async (importOriginal) => {
                 }
                 return req(path);
             };
-        }
+        },
     };
 });
 
@@ -40,7 +40,7 @@ describe("profiles/AuthHandler compatibility shim", () => {
     });
 
     it("does not load the moved implementation until the facade is used", async () => {
-        let loadCount = 0;
+        const loadCount = 0;
 
         _mockAuthHandler({
             __esModule: true,
@@ -174,7 +174,7 @@ describe("profiles/AuthHandler compatibility shim", () => {
         AuthHandler.disableSequentialRequests("p");
         expect(impl.disableSequentialRequests).toHaveBeenCalledWith("p");
         expect(AuthHandler.areSequentialRequestsEnabled("p")).toBe(false);
-        await expect(AuthHandler.runSequentialIfEnabled("p", async () => "fallback")).resolves.toBe("done");
+        await expect(AuthHandler.runSequentialIfEnabled("p", () => Promise.resolve("fallback"))).resolves.toBe("done");
         await expect(AuthHandler.waitForUnlock("p")).resolves.toBeUndefined();
         AuthHandler.unlockAllProfiles();
         expect(impl.unlockAllProfiles).toHaveBeenCalled();
@@ -204,10 +204,12 @@ describe("profiles/AuthHandler compatibility shim", () => {
 
         const { AuthHandler } = await import("../../../src/profiles/AuthHandler");
 
+        /* eslint-disable */
         expect(AuthHandler.isUsingTokenAuth(["tokenValue"])).toBe(true);
         expect(AuthHandler.isUsingTokenAuth(["tokenValue", "user", "password"])).toBe(false);
         expect(AuthHandler.isUsingTokenAuth(["user", "password"], ["tokenValue"])).toBe(false);
         expect(AuthHandler.isUsingTokenAuth([], ["tokenValue"])).toBe(true);
         expect(AuthHandler.isUsingTokenAuth([])).toBe(true);
+        /* eslint-enable */
     });
 });
