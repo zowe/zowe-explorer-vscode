@@ -626,7 +626,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 } else {
                     dsEntry.data = data;
                     if (dsEntry.etag !== resp.apiResponse.etag) {
-                        dsEntry.mtime = Date.now();
                         if (dsEntry.etag) {
                             this.fireSoon({ type: vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
                         }
