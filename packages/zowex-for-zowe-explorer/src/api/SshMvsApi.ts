@@ -12,8 +12,8 @@
 import { createReadStream, createWriteStream } from "node:fs";
 import * as path from "node:path";
 import type * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { imperative, type MainframeInteraction } from "@zowe/zowe-explorer-api";
-import { B64String, type DatasetAttributes, type ds } from "@zowe/zowex-for-zowe-sdk";
+import { imperative, Gui, type MainframeInteraction } from "@zowe/zowe-explorer-api";
+import { B64String, type Dataset, type DatasetAttributes, type ds } from "@zowe/zowex-for-zowe-sdk";
 import { SshCommonApi } from "./SshCommonApi";
 import type Stream from "node:stream";
 
@@ -245,16 +245,263 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         return this.buildZosFilesResponse(response);
     }
 
-    public allocateLikeDataSet(_dataSetName: string, _likeDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
-        throw new Error("Not yet implemented");
+    public async allocateLikeDataSet(
+        dataSetName: string,
+        likeDataSetName: string,
+    ): Promise<zosfiles.IZosFilesResponse> {
+        const listResponse = await (await this.client).ds.listDatasets({
+            pattern: likeDataSetName,
+            maxItems: 1,
+            attributes: true,
+        });
+
+        if (listResponse.items.length === 0) {
+            return this.buildZosFilesResponse(
+                { success: false },
+                false,
+                `Source data set "${likeDataSetName}" not found`,
+            );
+        }
+
+        const sourceDs: Dataset = listResponse.items[0];
+
+        const attributes: DatasetAttributes = {
+            dsname: dataSetName,
+            recfm: sourceDs.recfm,
+            lrecl: sourceDs.lrecl ?? 80,
+            blksize: sourceDs.blksize,
+            dsorg: sourceDs.dsorg,
+            dsntype: sourceDs.dsntype,
+            vol: sourceDs.volser,
+            alcunit: sourceDs.spacu?.toUpperCase().startsWith("CYL") ? "CYLINDERS" : "TRACKS",
+            primary: sourceDs.alloc || 1,
+            secondary: 1,
+        };
+
+        if (["PDS", "PDSE", "LIBRARY"].includes(sourceDs.dsntype ?? "")) {
+            attributes.dirblk = 25;
+        }
+
+        try {
+            const response = await (await this.client).ds.createDataset({
+                dsname: dataSetName,
+                attributes: attributes,
+            });
+
+            if (response.success) {
+                Gui.infoMessage(`Successfully allocated dataset "${dataSetName}" like "${likeDataSetName}"`);
+            }
+
+            return this.buildZosFilesResponse(response, response.success);
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            Gui.errorMessage(`Failed to allocate dataset: ${errorMsg}`);
+            return this.buildZosFilesResponse({ success: false }, false, errorMsg);
+        }
     }
 
-    public copyDataSetMember(
-        { dsn: _fromDataSetName, member: _fromMemberName }: zosfiles.IDataSet,
-        { dsn: _toDataSetName, member: _toMemberName }: zosfiles.IDataSet,
-        _options?: { replace?: boolean }
+    public async copyDataSet(
+        fromDataSetName: string,
+        toDataSetName: string,
+        _enq?: string,
+        replace?: boolean,
     ): Promise<zosfiles.IZosFilesResponse> {
-        throw new Error("Not yet implemented");
+        try {
+            const response = await (await this.client).ds.copyDatasetOrMember({
+                source: fromDataSetName,
+                target: toDataSetName,
+                replace: replace ?? false,
+                overwrite: false,
+            });
+
+            if (!response.success) {
+                const errorMsg = `Failed to copy ${fromDataSetName} to ${toDataSetName}.`;
+                Gui.errorMessage(errorMsg);
+                return this.buildZosFilesResponse(response, false, errorMsg);
+            }
+            return this.buildZosFilesResponse(response, true);
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            Gui.errorMessage(`Error while copying ${fromDataSetName} to ${toDataSetName}: ${errorMsg}`);
+            return this.buildZosFilesResponse({ success: false }, false, errorMsg);
+        }
+    }
+
+    public async copyDataSetCrossLpar(
+        toDataSetName: string,
+        toMemberName: string,
+        options: zosfiles.ICrossLparCopyDatasetOptions,
+        sourceProfile: imperative.IProfileLoaded,
+    ): Promise<zosfiles.IZosFilesResponse> {
+        const fromDataset = options["from-dataset"];
+
+        if (!fromDataset?.dsn?.trim()) {
+            const errorMessage = "fromDataSetName must be defined and non-blank";
+            Gui.errorMessage(errorMessage);
+            return this.buildZosFilesResponse({ success: false }, false, errorMessage);
+        }
+        if (!toDataSetName?.trim()) {
+            const errorMessage = "toDataSetName must be defined and non-blank";
+            Gui.errorMessage(errorMessage);
+            return this.buildZosFilesResponse({ success: false }, false, errorMessage);
+        }
+
+        try {
+            const sourceDsn = fromDataset.dsn;
+            const sourceMember = fromDataset.member;
+            const targetDsn = toDataSetName;
+            const targetMember = toMemberName || undefined;
+            let overwriteTarget = options.replace;
+            let targetFound = false;
+            let targetMemberFound = false;
+
+            const sourceClient = await SshClientCache.inst.connect(sourceProfile);
+            const targetClient = await this.client;
+
+            // Verify source dataset exists
+            const sourceList = await sourceClient.ds.listDatasets({
+                pattern: sourceDsn,
+                attributes: true,
+                maxItems: 1,
+            });
+            const sourceItem = sourceList.items.find((item) => item.name.toUpperCase() === sourceDsn.toUpperCase());
+            if (sourceItem == null) {
+                const errorMessage = `Data set copy aborted. The source data set was not found.`;
+                Gui.errorMessage(errorMessage);
+                return this.buildZosFilesResponse({ success: false }, false, errorMessage);
+            }
+
+            // Abort if source is a PDS and no member was specified
+            if (sourceItem.dsorg?.startsWith("PO") && sourceMember == null) {
+                const errorMessage = `Copying from a PDS to PDS is not supported across LPARs.`;
+                Gui.errorMessage(errorMessage);
+                return this.buildZosFilesResponse({ success: false }, false, errorMessage);
+            }
+
+            // Download in binary to preserve exact mainframe bytes without conversion
+            let fromDsname = sourceDsn;
+            if (sourceMember != null) {
+                fromDsname = `${sourceDsn}(${sourceMember})`;
+            }
+            const readResponse = await sourceClient.ds.readDataset({ dsname: fromDsname, encoding: "binary" });
+
+            // Check whether the target dataset exists
+            const targetList = await targetClient.ds.listDatasets({
+                pattern: targetDsn,
+                attributes: true,
+                maxItems: 1,
+            });
+            const targetItem = targetList.items.find((item) => item.name.toUpperCase() === targetDsn.toUpperCase());
+            if (targetItem != null) {
+                targetFound = true;
+
+                // Abort if target is a PDS and no member name was given
+                if (targetItem.dsorg?.startsWith("PO") && targetMember == null) {
+                    const errorMessage = `Data set copy aborted. Copying to a PDS without a member name is not supported when copying across LPARs.`;
+                    Gui.errorMessage(errorMessage);
+                    return this.buildZosFilesResponse({ success: false }, false, errorMessage);
+                }
+            }
+
+            // When a member is specified and the target PDS exists, check whether the member already exists
+            if (targetMember != null && targetFound) {
+                const memberList = await targetClient.ds.listDsMembers({ dsname: targetDsn, pattern: targetMember });
+                targetMemberFound = memberList.items.some(
+                    (item) => item.name.toUpperCase() === targetMember.toUpperCase(),
+                );
+            }
+
+            if (!targetFound) {
+                // Create the target dataset modelled on the source attributes
+                const createAttributes: DatasetAttributes = {
+                    dsname: targetDsn,
+                    recfm: sourceItem.recfm,
+                    lrecl: sourceItem.lrecl ?? 80,
+                    blksize: sourceItem.blksize,
+                    dsorg: sourceItem.dsorg,
+                    dsntype: sourceItem.dsntype,
+                    vol: sourceItem.volser,
+                    alcunit: sourceItem.spacu?.toUpperCase().startsWith("CYL") ? "CYLINDERS" : "TRACKS",
+                    primary: sourceItem.alloc ?? 1,
+                    secondary: 1,
+                };
+
+                // Copying a PDS to a sequential target: strip PDS organisation
+                if (createAttributes.dsorg?.startsWith("PO") && targetMember == null) {
+                    createAttributes.dsorg = "PS";
+                }
+                // Copying a sequential source into a PDS member: promote the new dataset to PDS
+                else if (targetMember != null && !createAttributes.dsorg?.startsWith("PO")) {
+                    createAttributes.dsorg = "PO";
+                }
+
+                await targetClient.ds.createDataset({ dsname: targetDsn, attributes: createAttributes });
+            } else {
+                // Target dataset exists — ask whether to overwrite if no explicit flag was provided
+                if (overwriteTarget == null) {
+                    if (targetMember == null) {
+                        if (options.promptFn != null) {
+                            overwriteTarget = await options.promptFn(targetDsn);
+                        }
+                    } else if (targetMemberFound) {
+                        if (options.promptFn != null) {
+                            overwriteTarget = await options.promptFn(`${targetDsn}(${targetMember})`);
+                        }
+                    }
+                }
+            }
+
+            // Upload only when the target did not exist, the member slot is free, or overwrite was confirmed
+            if (overwriteTarget || !targetFound || (targetMember != null && !targetMemberFound)) {
+                let toDsname = targetDsn;
+                if (targetMember != null) {
+                    toDsname = `${targetDsn}(${targetMember})`;
+                }
+                const writeResponse = await targetClient.ds.writeDataset({
+                    dsname: toDsname,
+                    data: readResponse.data,
+                    encoding: "binary",
+                });
+                return this.buildZosFilesResponse(writeResponse, true);
+            }
+
+            const errorMessage = `Data set copy aborted. The existing target data set was not overwritten.`;
+            Gui.errorMessage(errorMessage);
+            return this.buildZosFilesResponse({ success: false }, false, errorMessage);
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            Gui.errorMessage(`Error during copy operation: ${errorMsg}`);
+            return this.buildZosFilesResponse({ success: false }, false, errorMsg);
+        }
+    }
+
+    public async copyDataSetMember(
+        { dsn: fromDataSetName, member: fromMemberName }: zosfiles.IDataSet,
+        { dsn: toDataSetName, member: toMemberName }: zosfiles.IDataSet,
+        options?: { replace?: boolean; overwrite?: boolean },
+    ): Promise<zosfiles.IZosFilesResponse> {
+        const source = fromMemberName ? `${fromDataSetName}(${fromMemberName})` : fromDataSetName;
+        const target = toMemberName ? `${toDataSetName}(${toMemberName})` : toDataSetName;
+
+        try {
+            const response = await (await this.client).ds.copyDatasetOrMember({
+                source,
+                target,
+                replace: options?.replace ?? false,
+                overwrite: options?.overwrite ?? false,
+            });
+
+            if (!response.success) {
+                const errorMsg = `Failed to copy ${source} to ${target}.`;
+                Gui.errorMessage(errorMsg);
+                return this.buildZosFilesResponse(response, false, errorMsg);
+            }
+            return this.buildZosFilesResponse(response, true);
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            Gui.errorMessage(`Error during copy operation: ${errorMsg}`);
+            return this.buildZosFilesResponse({ success: false }, false, errorMsg);
+        }
     }
 
     public async renameDataSet(currentDataSetName: string, newDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
