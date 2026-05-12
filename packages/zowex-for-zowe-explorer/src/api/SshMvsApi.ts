@@ -16,6 +16,7 @@ import { imperative, Gui, type MainframeInteraction } from "@zowe/zowe-explorer-
 import { B64String, type Dataset, type DatasetAttributes, type ds } from "@zowe/zowex-for-zowe-sdk";
 import { SshCommonApi } from "./SshCommonApi";
 import type Stream from "node:stream";
+import { SshClientCache } from "../SshClientCache";
 
 export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs {
     private readonly dsAttrMapping: Record<string, string> = {
