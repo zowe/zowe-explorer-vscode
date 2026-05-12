@@ -555,10 +555,9 @@ describe("DatasetFSProvider", () => {
             expect(_updateResourceInEditorMock).toHaveBeenCalledWith(testUris.ps);
         });
 
-        it("updates mtime if the fetched e-tag differs from the existing e-tag", async () => {
+        it("should not update mtime as part of e-tag check & sync", async () => {
             const contents = "dataset contents";
             const oldMtime = 1000;
-            const newMtime = 2000;
 
             const mockMvsApi = {
                 getContents: jest.fn((dsn, opts) => {
@@ -575,14 +574,11 @@ describe("DatasetFSProvider", () => {
             jest.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue(fakePo);
             jest.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
 
-            const dateNowSpy = jest.spyOn(Date, "now").mockReturnValue(newMtime);
-
             await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
 
             expect(fakePo.etag).toBe("NEW_ETAG");
-            expect(fakePo.mtime).toBe(newMtime);
-
-            dateNowSpy.mockRestore();
+            expect(fakePo.mtime).toBe(oldMtime); // We don't have an mtime to work with here, keep it as-is to prevent false positive conflicts
+            // Ideally we would have an mtime to work with here, but we can't enforce this due to loose API response spec
         });
 
         it("does not update mtime if the fetched e-tag matches the existing e-tag", async () => {
