@@ -560,7 +560,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         } else {
             file.data = data;
             if (file.etag !== resp.apiResponse.etag) {
-                file.mtime = Date.now();
                 if (file.etag) {
                     this.fireSoon({ type: vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
                 }
