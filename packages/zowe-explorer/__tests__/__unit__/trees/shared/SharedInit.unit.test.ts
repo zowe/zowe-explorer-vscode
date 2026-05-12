@@ -49,6 +49,14 @@ jest.mock("../../../../src/tools/ZoweLocalStorage", () => ({
 }));
 jest.mock("../../../../src/utils/ConfigEditor");
 
+jest.mock("../../../../src/trees/job/JobFSProvider", () => ({
+    JobFSProvider: {
+        instance: {
+            lookup: jest.fn(),
+        },
+    },
+}));
+
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
         const executeCommand = { fun: jest.fn() };
@@ -1281,11 +1289,22 @@ describe("Test src/shared/extension", () => {
     });
 
     describe("isDocumentASpool", () => {
+        let onProfileUpdated: jest.Mock;
+
+        beforeAll(() => {
+            onProfileUpdated = jest.fn().mockReturnValue(new vscode.Disposable(jest.fn()));
+            Object.defineProperty(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated", {
+                value: onProfileUpdated,
+                configurable: true,
+            });
+        });
+
         beforeEach(() => {
             jest.clearAllMocks();
         });
 
         afterAll(() => {
+            delete (ZoweExplorerApiRegister.getInstance() as any).onProfileUpdated;
             jest.restoreAllMocks();
         });
 

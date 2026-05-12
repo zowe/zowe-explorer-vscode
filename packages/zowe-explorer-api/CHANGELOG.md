@@ -10,11 +10,15 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Introduced a `FeatureFlag` class to manage experimental features via toggleable flags. [#3963](https://github.com/zowe/zowe-explorer-vscode/pull/3963)
 - Enhanced `DataSetAttributesProvider` to pass raw API response attributes to extenders via the `DsInfo` context object. Extenders can now access the `attributes` field in the context to retrieve data set information without making additional API calls. [#3927](https://github.com/zowe/zowe-explorer-vscode/issues/3927)
 - Added `Name` and `DateCreated` to `Sorting.DatasetFilterOpts`. [#4075](https://github.com/zowe/zowe-explorer-vscode/pull/4075)
+- Moved the `AuthHandler` implementation from `profiles/AuthHandler` to `vscode/session/AuthHandler` and added a compatibility shim at the original path to preserve existing imports and API behavior for extenders. [4149](https://github.com/zowe/zowe-explorer-vscode/issues/4149)
 
 ### Bug fixes
 
+- Fixed an issue in the `BaseProvider._handleConflict` function where the editor would incorrectly close during file conflict resolution. [#4162](https://github.com/zowe/zowe-explorer-vscode/pull/4162)
 - Fixed an issue where `Gui.openFileDialog` method could fail if default URL with `vscode-remote` scheme is provided. [#4127](https://github.com/zowe/zowe-explorer-vscode/pull/4127)
-- Updated Zowe SDKs to `8.31.0` for technical currency. [#4117](https://github.com/zowe/zowe-explorer-vscode/pull/4117)
+- Fixed JSDocs on `IZoweTree` to match parameter names proporly. [4077](https://github.com/zowe/zowe-explorer-vscode/pull/4077)
+- Updated Zowe SDKs to `8.32.0` for technical currency. [#4209](https://github.com/zowe/zowe-explorer-vscode/pull/4209)
+- Updated BaseProvider to fix an issue where cached file system entries would not reflect profile updates (reactivations, credential changes, etc.) in the Data Sets, Jobs, and USS trees. [#4141](https://github.com/zowe/zowe-explorer-vscode/issues/4141)
 
 ## `3.4.2`
 

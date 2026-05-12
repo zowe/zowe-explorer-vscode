@@ -140,6 +140,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             // Only mark as dirty when the node is collapsing to avoid a duplicate refresh
             // This prepares the node for a refresh once it is expanded again
             element.dirty = true;
+            element.description = undefined;
         }
     }
 

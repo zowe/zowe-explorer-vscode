@@ -1090,12 +1090,12 @@
           "group": "inline@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member|vsam).*_fav.*/",
           "command": "zowe.removeFavorite",
           "group": "inline"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds|vsam).*/",
           "command": "zowe.addFavorite",
           "group": "inline"
         },
@@ -1210,22 +1210,22 @@
           "group": "002_zowe_dsTransfer@7"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*(_fav|_filterFav).*)session.*/ && !listMultiSelection",
           "command": "zowe.saveSearch",
           "group": "003_zowe_dsWorkspace@0"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds|vsam).*/",
           "command": "zowe.addFavorite",
           "group": "003_zowe_dsWorkspace@0"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*_fav.*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^session.*(_fav|_filterFav).*/ && !listMultiSelection",
           "command": "zowe.removeFavorite",
           "group": "003_zowe_dsWorkspace@1"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr).*_fav.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member|vsam).*_fav.*/",
           "command": "zowe.removeFavorite",
           "group": "003_zowe_dsWorkspace@1"
         },
@@ -2341,11 +2341,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.31.0",
-    "@zowe/secrets-for-zowe-sdk": "^8.29.4",
-    "@zowe/zos-files-for-zowe-sdk": "^8.31.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.31.0",
-    "@zowe/zosmf-for-zowe-sdk": "^8.31.0",
+    "@zowe/core-for-zowe-sdk": "^8.32.0",
+    "@zowe/secrets-for-zowe-sdk": "^8.32.0",
+    "@zowe/zos-files-for-zowe-sdk": "^8.32.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.32.0",
+    "@zowe/zosmf-for-zowe-sdk": "^8.32.0",
     "@zowe/zowe-explorer-api": "workspace:*",
     "dayjs": "^1.11.10",
     "isbinaryfile": "4.0.4",

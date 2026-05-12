@@ -284,7 +284,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             } else {
                 // Create an entry for the USS file if it doesn't exist.
                 if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
-                    await vscode.workspace.fs.writeFile(ussNode.resourceUri, new Uint8Array());
+                    UssFSProvider.instance.createEntry(ussNode.resourceUri, "file");
                 }
             }
             ussNode.setAttributes({
@@ -496,6 +496,20 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (parentEquivNode != null) {
             // Refresh the correct node (parent of node to delete) to reflect changes
             ussFileProvider.refreshElement(parentEquivNode);
+        }
+
+        if (this.resourceUri) {
+            const nodePath = this.resourceUri.path;
+            const tabsToClose = vscode.window.tabGroups.all
+                .flatMap((group) => group.tabs)
+                .filter((tab) => {
+                    const uri = (tab.input as any)?.uri;
+                    if (!uri) return false;
+                    return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
+                });
+            if (tabsToClose.length > 0) {
+                await vscode.window.tabGroups.close(tabsToClose);
+            }
         }
     }
 

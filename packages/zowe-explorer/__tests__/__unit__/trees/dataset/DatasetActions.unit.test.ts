@@ -22,6 +22,7 @@ import {
     PdsEntry,
     DirEntry,
     MainframeInteraction,
+    DsType,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { Workspace } from "../../../../src/configuration/Workspace";
@@ -45,6 +46,7 @@ import {
     createDSMemberAttributes,
 } from "../../../__mocks__/mockCreators/datasets";
 import { Constants } from "../../../../src/configuration/Constants";
+import { Definitions } from "../../../../src/configuration/Definitions";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { FilterDescriptor } from "../../../../src/management/FilterManagement";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
@@ -702,6 +704,41 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         );
     });
 
+    it("Should not refresh removed favorite PDS when deleting its last member", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testFavMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        const refreshElementSpy = jest.spyOn(blockMocks.testDatasetTree, "refreshElement");
+
+        await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        expect(refreshElementSpy).not.toHaveBeenCalledWith(blockMocks.testFavoritedNode);
+    });
+
+    it("Should use stable node for fixVsCodeMultiSelect when deleting last member from favorite PDS", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const selectedNodes = [blockMocks.testFavMemberNode];
+        const treeView = createTreeView(selectedNodes);
+        blockMocks.testDatasetTree.getTreeView.mockReturnValueOnce(treeView);
+        globalMocks.mockShowWarningMessage.mockResolvedValueOnce("Delete");
+
+        await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree);
+
+        const lastCall = blockMocks.fixMultiSelectMock.mock.calls[blockMocks.fixMultiSelectMock.mock.calls.length - 1];
+        const refreshedNode = lastCall?.[1] as any;
+
+        expect(refreshedNode?.label).toBe(globalMocks.datasetSessionNode.label);
+        expect((refreshedNode?.contextValue as string) ?? "").toContain(Constants.DS_SESSION_CONTEXT);
+        expect(refreshedNode?.label).not.toBe(blockMocks.testFavoritedNode.label);
+    });
+
     it("Should not consider a session for deletion", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
@@ -820,10 +857,53 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
             profile: blockMocks.imperativeProfile,
         });
 
+        const matchingTab = { input: { uri: node.resourceUri } };
+        (vscode.window.tabGroups as any).all = [{ tabs: [matchingTab] }];
+        (vscode.window.tabGroups.close as jest.Mock).mockResolvedValue(undefined);
+
         await DatasetActions.deleteDataset(node, blockMocks.testDatasetTree);
         expect(globalMocks.fspDelete).toHaveBeenCalledWith(node.resourceUri, { recursive: false });
-        expect(closeTextFileSpy).toHaveBeenCalledWith(node.resourceUri.path);
+        expect(vscode.window.tabGroups.close).toHaveBeenCalledWith([matchingTab]);
     });
+    it("Checking PDS deletion closes all open member editors", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+
+        const pdsNode = new ZoweDatasetNode({
+            label: "PDS.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            profile: blockMocks.imperativeProfile,
+        });
+        pdsNode.contextValue = "pds";
+
+        const memberTab1 = { input: { uri: { path: pdsNode.resourceUri.path + "/MEMBER1" } } };
+        const memberTab2 = { input: { uri: { path: pdsNode.resourceUri.path + "/MEMBER2" } } };
+        const unrelatedTab = { input: { uri: { path: "/other/UNRELATED.DS" } } };
+        (vscode.window.tabGroups as any).all = [{ tabs: [memberTab1, memberTab2, unrelatedTab] }];
+        (vscode.window.tabGroups.close as jest.Mock).mockResolvedValue(undefined);
+
+        await DatasetActions.deleteDataset(pdsNode, blockMocks.testDatasetTree);
+        expect(globalMocks.fspDelete).toHaveBeenCalledWith(pdsNode.resourceUri, { recursive: false });
+        expect(vscode.window.tabGroups.close).toHaveBeenCalledWith([memberTab1, memberTab2]);
+    });
+    it("Checking deletion does not close tabs when no resourceUri", async () => {
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            profile: blockMocks.imperativeProfile,
+        });
+        node.resourceUri = undefined;
+        (vscode.window.tabGroups.close as jest.Mock).mockClear();
+
+        await DatasetActions.deleteDataset(node, blockMocks.testDatasetTree);
+        expect(vscode.window.tabGroups.close).not.toHaveBeenCalled();
+    });
+
     it("Checking common PS dataset deletion with Unverified profile", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -851,6 +931,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         await DatasetActions.deleteDataset(node, blockMocks.testDatasetTree);
         expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri, { recursive: false });
     });
+
     it("Checking common PS dataset deletion with not existing local file", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -867,6 +948,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         await DatasetActions.deleteDataset(node, blockMocks.testDatasetTree);
         expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri, { recursive: false });
     });
+
     it("Checking common PS dataset failed deletion attempt due to absence on remote", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -883,6 +965,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         await expect(DatasetActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toThrow("not found");
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("Unable to find file " + node.label?.toString());
     });
+
     it("Checking common PS dataset failed deletion attempt", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -899,6 +982,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         await expect(DatasetActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toThrow("");
         expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Deletion error", { items: ["Show log", "Troubleshoot"] });
     });
+
     it("Checking Favorite PDS dataset deletion", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -925,6 +1009,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         expect(deleteSpy).toHaveBeenCalledWith(node.resourceUri, { recursive: false });
         expect(blockMocks.testDatasetTree.removeFavorite).toHaveBeenCalledWith(node);
     });
+
     it("Checking Favorite PDS Member deletion", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -944,6 +1029,94 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         expect(deleteSpy).toHaveBeenCalledWith(child.resourceUri, { recursive: false });
         expect(blockMocks.testDatasetTree.removeFavorite).toHaveBeenCalledWith(child);
     });
+
+    it("Checking Favorite PDS Member deletion does not call removeFavorite when whole PDS favorite has other members", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+
+        const parent = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        parent.contextValue = Constants.DS_PDS_CONTEXT;
+        const child = new ZoweDatasetNode({ label: "MEM1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        child.contextValue = Constants.DS_MEMBER_CONTEXT;
+        const sibling = new ZoweDatasetNode({ label: "MEM2", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        sibling.contextValue = Constants.DS_MEMBER_CONTEXT;
+        parent.children = [child, sibling];
+
+        const favProfile = new ZoweDatasetNode({
+            label: blockMocks.datasetSessionNode.label as string,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        favProfile.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        const favPds = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfile,
+        });
+        favPds.contextValue = Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX;
+        favPds.pdsFavoriteState = Definitions.PdsFavoriteState.EntirePds;
+        favProfile.children = [favPds];
+        blockMocks.testDatasetTree.mFavorites.push(favProfile);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
+        const deleteSpy = jest.spyOn(vscode.workspace.fs, "delete").mockImplementation();
+        const removeFavoriteSpy = jest.spyOn(blockMocks.testDatasetTree, "removeFavorite");
+
+        await DatasetActions.deleteDataset(child, blockMocks.testDatasetTree);
+
+        expect(deleteSpy).toHaveBeenCalledWith(child.resourceUri, { recursive: false });
+        expect(removeFavoriteSpy).not.toHaveBeenCalled();
+    });
+
+    it("Checking Favorite PDS Member deletion calls removeFavorite when favorite is not EntirePds", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+
+        const parent = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        parent.contextValue = Constants.DS_PDS_CONTEXT;
+        const child = new ZoweDatasetNode({ label: "MEM1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        child.contextValue = Constants.DS_MEMBER_CONTEXT;
+        const sibling = new ZoweDatasetNode({ label: "MEM2", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        sibling.contextValue = Constants.DS_MEMBER_CONTEXT;
+        parent.children = [child, sibling];
+
+        const favProfile = new ZoweDatasetNode({
+            label: blockMocks.datasetSessionNode.label as string,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        favProfile.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        const favPds = new ZoweDatasetNode({
+            label: "MY.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfile,
+        });
+        favPds.contextValue = Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX;
+        favPds.pdsFavoriteState = Definitions.PdsFavoriteState.SpecificMembers;
+        favPds.favoritedMemberNames = ["MEM1", "MEM2"];
+        favProfile.children = [favPds];
+        blockMocks.testDatasetTree.mFavorites.push(favProfile);
+
+        mocked(vscode.window.showQuickPick).mockResolvedValueOnce("Delete" as any);
+        const deleteSpy = jest.spyOn(vscode.workspace.fs, "delete").mockImplementation();
+        const removeFavoriteSpy = jest.spyOn(blockMocks.testDatasetTree, "removeFavorite");
+
+        await DatasetActions.deleteDataset(child, blockMocks.testDatasetTree);
+
+        expect(deleteSpy).toHaveBeenCalledWith(child.resourceUri, { recursive: false });
+        expect(removeFavoriteSpy).toHaveBeenCalledWith(child);
+    });
+
     it("Checking Favorite PS dataset deletion", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -972,6 +1145,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         expect(deleteSpy).toHaveBeenCalledWith(child.resourceUri, { recursive: false });
         expect(blockMocks.testDatasetTree.removeFavorite).toHaveBeenCalledWith(child);
     });
+
     it("Checking incorrect dataset failed deletion attempt", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -4425,6 +4599,191 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
 
         dataSetSpy.mockRestore();
     });
+
+    it("Should create entry and fire change event when URI is provided and member exists but FSProvider entry doesn't exist", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const testUri = vscode.Uri.parse("zowe-ds://sestest/HLQ.PDS(MEMBER1)");
+
+        const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ member: "MEMBER1" }],
+            },
+        });
+
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
+        const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "_fireSoon").mockImplementation();
+
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "HLQ.PDS(MEMBER1)", "mem", testUri);
+
+        expect(result).toBe("replace");
+        expect(allMembersSpy).toHaveBeenCalledWith("HLQ.PDS", { responseTimeout: undefined });
+        expect(existsSpy).toHaveBeenCalledWith(testUri);
+        expect(createEntrySpy).toHaveBeenCalledWith(testUri, DsType.PdsMember);
+        expect(fireSoonSpy).toHaveBeenCalledWith({
+            type: vscode.FileChangeType.Created,
+            uri: testUri.with({ query: "" }),
+        });
+
+        allMembersSpy.mockRestore();
+        existsSpy.mockRestore();
+        createEntrySpy.mockRestore();
+        fireSoonSpy.mockRestore();
+    });
+
+    it("Should create entry and fire change event during replacement when URI exists and FSProvider entry doesn't exist", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const testUri = vscode.Uri.parse("zowe-ds://sestest/HLQ.PDS(MEMBER1)");
+
+        const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ member: "MEMBER1" }],
+            },
+        });
+
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false).mockReturnValueOnce(false);
+        const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
+        const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation();
+
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "HLQ.PDS(MEMBER1)", "mem", testUri);
+
+        expect(result).toBe("replace");
+        expect(allMembersSpy).toHaveBeenCalledWith("HLQ.PDS", { responseTimeout: undefined });
+        expect(existsSpy).toHaveBeenCalledTimes(2);
+        expect(createEntrySpy).toHaveBeenCalledTimes(2);
+        expect(fireSoonSpy).toHaveBeenCalledWith({
+            type: vscode.FileChangeType.Created,
+            uri: testUri.with({ query: "" }),
+        });
+
+        allMembersSpy.mockRestore();
+        existsSpy.mockRestore();
+        createEntrySpy.mockRestore();
+        fireSoonSpy.mockRestore();
+    });
+
+    it("Should create entry and fire change event when URI is provided and dataset exists but FSProvider entry doesn't exist", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const testUri = vscode.Uri.parse("zowe-ds://sestest/HLQ.PDS");
+
+        const dataSetSpy = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ dsname: "HLQ.PDS" }],
+            },
+        });
+
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
+        const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "_fireSoon").mockImplementation();
+
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "HLQ.PDS", "po", testUri);
+
+        expect(result).toBe("replace");
+        expect(dataSetSpy).toHaveBeenCalledWith("HLQ.PDS", { responseTimeout: undefined });
+        expect(existsSpy).toHaveBeenCalledWith(testUri);
+        expect(createEntrySpy).toHaveBeenCalledWith(testUri, DsType.Pds);
+        expect(fireSoonSpy).toHaveBeenCalledWith({
+            type: vscode.FileChangeType.Created,
+            uri: testUri.with({ query: "" }),
+        });
+
+        dataSetSpy.mockRestore();
+        existsSpy.mockRestore();
+        createEntrySpy.mockRestore();
+        fireSoonSpy.mockRestore();
+    });
+
+    it("Should create entry and fire change event when replacing existing member and URI doesn't exist in FSProvider", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const testUri = vscode.Uri.parse("zowe-ds://sestest/HLQ.PDS(MEMBER1)");
+
+        const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ member: "MEMBER1" }],
+            },
+        });
+
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false).mockReturnValueOnce(false);
+        const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
+        const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation();
+
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "HLQ.PDS(MEMBER1)", "mem", testUri);
+
+        expect(result).toBe("replace");
+        expect(allMembersSpy).toHaveBeenCalledWith("HLQ.PDS", { responseTimeout: undefined });
+        expect(existsSpy).toHaveBeenCalledTimes(2);
+        expect(createEntrySpy).toHaveBeenCalledTimes(2);
+        expect(fireSoonSpy).toHaveBeenCalledWith({
+            type: vscode.FileChangeType.Created,
+            uri: testUri.with({ query: "" }),
+        });
+
+        allMembersSpy.mockRestore();
+        existsSpy.mockRestore();
+        createEntrySpy.mockRestore();
+        fireSoonSpy.mockRestore();
+    });
+
+    it("Should create entry and fire change event when replacing existing dataset and URI doesn't exist in FSProvider", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        const testUri = vscode.Uri.parse("zowe-ds://sestest/HLQ.PS");
+
+        const dataSetSpy = jest.spyOn(blockMocks.mvsApi, "dataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ dsname: "HLQ.PS" }],
+            },
+        });
+
+        const existsSpy = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false).mockReturnValueOnce(false);
+        const createEntrySpy = jest.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation();
+        const fireSoonSpy = jest.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation();
+
+        mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
+
+        const result = await DatasetActions.determineReplacement(blockMocks.imperativeProfile, "HLQ.PS", "ps", testUri);
+
+        expect(result).toBe("replace");
+        expect(dataSetSpy).toHaveBeenCalledWith("HLQ.PS", { responseTimeout: undefined });
+        expect(existsSpy).toHaveBeenCalledTimes(2);
+        expect(createEntrySpy).toHaveBeenCalledTimes(2);
+        expect(fireSoonSpy).toHaveBeenCalledWith({
+            type: vscode.FileChangeType.Created,
+            uri: testUri.with({ query: "" }),
+        });
+
+        dataSetSpy.mockRestore();
+        existsSpy.mockRestore();
+        createEntrySpy.mockRestore();
+        fireSoonSpy.mockRestore();
+    });
 });
 
 describe("Dataset Actions Unit Tests - upload with encoding", () => {
@@ -5234,9 +5593,9 @@ describe("DatasetActions - filterDatasetTree", () => {
             expect(result).toBe(INVALID_PATTERN_ERROR);
         });
 
-        it("should return error message for pattern with invalid character (space)", () => {
+        it("should return undefined for pattern with space (used in multi-pattern input)", () => {
             const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATA SET");
-            expect(result).toBe(INVALID_PATTERN_ERROR);
+            expect(result).toBeUndefined();
         });
 
         it("should return error message for pattern with invalid character (slash)", () => {
@@ -5249,9 +5608,9 @@ describe("DatasetActions - filterDatasetTree", () => {
             expect(result).toBe(INVALID_PATTERN_ERROR);
         });
 
-        it("should return error message for pattern with invalid character (comma)", () => {
+        it("should return undefined for pattern with comma (used as dataset separator)", () => {
             const result = (DatasetActions as any).validateDatasetPattern("HLQ,DATASET");
-            expect(result).toBe(INVALID_PATTERN_ERROR);
+            expect(result).toBeUndefined();
         });
 
         it("should return error message for pattern with invalid character (semicolon)", () => {
@@ -5339,9 +5698,9 @@ describe("DatasetActions - filterDatasetTree", () => {
             expect(result).toBeUndefined();
         });
 
-        it("should trim whitespace and return error for invalid pattern", () => {
+        it("should trim whitespace and validate correctly for pattern with space separator", () => {
             const result = (DatasetActions as any).validateDatasetPattern("  HLQ DATASET  ");
-            expect(result).toBe(INVALID_PATTERN_ERROR);
+            expect(result).toBeUndefined();
         });
 
         it("should handle complex valid pattern with multiple members notation", () => {
@@ -5384,6 +5743,26 @@ describe("DatasetActions - filterDatasetTree", () => {
             const result = (DatasetActions as any).validateDatasetPattern(longPattern);
             expect(result).toBeUndefined();
         });
+
+        it("should return undefined for pattern with multiple comma-separated member filters", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.DATASET(A*,B*)");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for multi-qualifier dataset with multiple member filters", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.MID.DATASET(A*,B*)");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for multiple dataset patterns separated by comma and space", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("HLQ.PDS(A*,B*), HLQ.OTHER(C*)");
+            expect(result).toBeUndefined();
+        });
+
+        it("should return undefined for dataset pattern with single member filter", () => {
+            const result = (DatasetActions as any).validateDatasetPattern("dataset.name(a*)");
+            expect(result).toBeUndefined();
+        });
     });
 });
 
@@ -5422,6 +5801,11 @@ describe("DatasetActions - downloading functions", () => {
         const testDatasetTree = createDatasetTree(datasetSessionNode, treeView);
 
         const mvsApi = {
+            allMembers: jest.fn().mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            }),
             downloadAllMembers: jest.fn().mockResolvedValue({
                 success: true,
                 commandResponse: "",
@@ -5951,12 +6335,12 @@ describe("DatasetActions - downloading functions", () => {
         let testMocks: ReturnType<typeof createDownloadTestMocks>;
         let mockGetDataSetDownloadOptions: MockedProperty;
         let mockExecuteDownloadWithProgress: MockedProperty;
-        let mockGetChildren: jest.Mock;
         let mockShowMessage: MockedProperty;
         let mockErrorMessage: MockedProperty;
         let mockTrace: MockedProperty;
         let mockGetValue: MockedProperty;
         let mockHandleDownloadResponse: MockedProperty;
+        let mockAuthErrorHandling: MockedProperty;
 
         beforeEach(() => {
             testMocks = createDownloadTestMocks();
@@ -5976,13 +6360,12 @@ describe("DatasetActions - downloading functions", () => {
                 })
             );
 
-            mockGetChildren = jest.fn();
-
             mockShowMessage = new MockedProperty(Gui, "showMessage", undefined, jest.fn());
             mockErrorMessage = new MockedProperty(Gui, "errorMessage", undefined, jest.fn());
             mockTrace = new MockedProperty(ZoweLogger, "trace", undefined, jest.fn());
             mockGetValue = new MockedProperty(ZoweLocalStorage, "getValue", undefined, jest.fn());
             mockHandleDownloadResponse = new MockedProperty(SharedUtils, "handleDownloadResponse", undefined, jest.fn().mockResolvedValue(undefined));
+            mockAuthErrorHandling = new MockedProperty(AuthUtils, "errorHandling", undefined, jest.fn().mockResolvedValue(undefined));
         });
 
         afterEach(() => {
@@ -5993,6 +6376,7 @@ describe("DatasetActions - downloading functions", () => {
             mockTrace[Symbol.dispose]();
             mockGetValue[Symbol.dispose]();
             mockHandleDownloadResponse[Symbol.dispose]();
+            mockAuthErrorHandling[Symbol.dispose]();
         });
 
         it("should successfully download all members of a PDS", async () => {
@@ -6003,13 +6387,13 @@ describe("DatasetActions - downloading functions", () => {
                 profile: defaultTestProfile,
             });
 
-            const memberNodes = [
-                new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pdsNode }),
-                new ZoweDatasetNode({ label: "MEMBER2", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pdsNode }),
-            ];
-
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue(memberNodes);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }, { member: "MEMBER2" }] },
+            });
 
             jest.spyOn(testMocks.mvsApi, "downloadAllMembers").mockResolvedValue({
                 success: true,
@@ -6024,8 +6408,39 @@ describe("DatasetActions - downloading functions", () => {
                 "Downloading all members",
                 expect.any(Function),
                 "Data set members",
-                pdsNode
+                pdsNode,
+                true
             );
+        });
+
+        it("should handle non-success response from allMembers API", async () => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.FAIL.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: false,
+                commandResponse: "allMembers failed",
+                apiResponse: undefined,
+            });
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(AuthUtils.errorHandling).toHaveBeenCalledWith(
+                "allMembers failed",
+                expect.objectContaining({
+                    apiType: ZoweExplorerApiType.Mvs,
+                    profile: defaultTestProfile,
+                    dsName: "TEST.FAIL.PDS",
+                })
+            );
+            expect(mockGetDataSetDownloadOptions.mock).not.toHaveBeenCalled();
+            expect(mockExecuteDownloadWithProgress.mock).not.toHaveBeenCalled();
         });
 
         it("should handle invalid profile", async () => {
@@ -6053,8 +6468,13 @@ describe("DatasetActions - downloading functions", () => {
                 profile: defaultTestProfile,
             });
 
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue([]);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [] },
+            });
 
             await DatasetActions.downloadAllMembers(pdsNode);
 
@@ -6070,12 +6490,17 @@ describe("DatasetActions - downloading functions", () => {
                 profile: defaultTestProfile,
             });
 
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue(null);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
 
-            await DatasetActions.downloadAllMembers(pdsNode);
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: null },
+            });
 
+            await DatasetActions.downloadAllMembers(pdsNode);
             expect(Gui.showMessage).toHaveBeenCalledWith("The selected data set has no members to download.");
+            expect(mockGetDataSetDownloadOptions.mock).not.toHaveBeenCalled();
         });
 
         it("should warn user when downloading many members", async () => {
@@ -6087,13 +6512,15 @@ describe("DatasetActions - downloading functions", () => {
             });
 
             // Create more than MIN_WARN_DOWNLOAD_FILES members
-            const memberNodes = Array.from(
-                { length: Constants.MIN_WARN_DOWNLOAD_FILES + 10 },
-                (_, i) => new ZoweDatasetNode({ label: `MEMBER${i}`, collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pdsNode })
-            );
+            const memberNodes = Array.from({ length: Constants.MIN_WARN_DOWNLOAD_FILES + 10 }, (_, i) => ({ member: `MEMBER${i}` }));
 
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue(memberNodes);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: memberNodes },
+            });
 
             const localMockShowMessage = new MockedProperty(Gui, "showMessage", undefined, jest.fn().mockResolvedValue("No"));
 
@@ -6119,13 +6546,15 @@ describe("DatasetActions - downloading functions", () => {
                 profile: defaultTestProfile,
             });
 
-            const memberNodes = Array.from(
-                { length: Constants.MIN_WARN_DOWNLOAD_FILES + 1 },
-                (_, i) => new ZoweDatasetNode({ label: `MEMBER${i}`, collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pdsNode })
-            );
+            const memberItems = Array.from({ length: Constants.MIN_WARN_DOWNLOAD_FILES + 1 }, (_, i) => ({ member: `MEMBER${i}` }));
 
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue(memberNodes);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: memberItems },
+            });
 
             const localMockShowMessage = new MockedProperty(Gui, "showMessage", undefined, jest.fn().mockResolvedValue("Yes"));
 
@@ -6145,12 +6574,13 @@ describe("DatasetActions - downloading functions", () => {
                 profile: defaultTestProfile,
             });
 
-            const memberNodes = [
-                new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pdsNode }),
-            ];
-
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue(memberNodes);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            });
 
             mockGetDataSetDownloadOptions.mock.mockResolvedValue(undefined);
 
@@ -6173,13 +6603,14 @@ describe("DatasetActions - downloading functions", () => {
                 profile: defaultTestProfile,
             });
 
-            const memberNodes = [
-                new ZoweDatasetNode({ label: "MEMBER1", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: pdsNode }),
-            ];
-
-            pdsNode.getChildren = mockGetChildren.mockResolvedValue(memberNodes);
             pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
             pdsNode.getLabel = jest.fn().mockReturnValue("TEST.PDS");
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            });
 
             const downloadAllMembersSpy = jest.spyOn(testMocks.mvsApi, "downloadAllMembers").mockResolvedValue({
                 success: true,
@@ -6201,6 +6632,137 @@ describe("DatasetActions - downloading functions", () => {
                     binary: false,
                 })
             );
+        });
+
+        it("should report progress correctly", async () => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "M1" }, { member: "M2" }, { member: "M3" }] },
+            });
+
+            const mockProgress = { report: jest.fn() };
+            const reportProgressSpy = jest.spyOn(Gui, "reportProgress").mockImplementation();
+
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockExecuteDownloadWithProgress = new MockedProperty(
+                DatasetActions,
+                "executeDownloadWithProgress" as any,
+                undefined,
+                jest.fn().mockImplementation(async (_title, downloadFn, _downloadType, _node) => {
+                    return await downloadFn(mockProgress);
+                })
+            );
+
+            let capturedTask: any;
+            jest.spyOn(testMocks.mvsApi, "downloadAllMembers").mockImplementation(async (_dsName, opts: any) => {
+                capturedTask = opts.task;
+                capturedTask.percentComplete = 33;
+                capturedTask.percentComplete = 66;
+                capturedTask.percentComplete = 100;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(capturedTask.percentComplete).toBe(100);
+            expect(reportProgressSpy).toHaveBeenCalledTimes(3);
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(1, mockProgress, 3, 0, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(2, mockProgress, 3, 1, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(3, mockProgress, 3, 2, "");
+
+            reportProgressSpy.mockRestore();
+        });
+
+        it("should pass abortDownload callback wired to CancellationToken", async () => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            });
+
+            const mockToken = { isCancellationRequested: false, onCancellationRequested: jest.fn() };
+            let capturedOptions: any;
+
+            jest.spyOn(testMocks.mvsApi, "downloadAllMembers").mockImplementation(async (_dsName, opts: any) => {
+                capturedOptions = opts;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockExecuteDownloadWithProgress = new MockedProperty(
+                DatasetActions,
+                "executeDownloadWithProgress" as any,
+                undefined,
+                jest.fn().mockImplementation(async (_title, downloadFn, _downloadType, _node, _cancellable) => {
+                    return await downloadFn(undefined, mockToken);
+                })
+            );
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(capturedOptions.abortDownload).toBeDefined();
+            expect(typeof capturedOptions.abortDownload).toBe("function");
+            expect(capturedOptions.abortDownload()).toBe(false);
+
+            mockToken.isCancellationRequested = true;
+            expect(capturedOptions.abortDownload()).toBe(true);
+        });
+
+        it("should pass abortDownload that returns false when token is undefined", async () => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            pdsNode.getProfile = jest.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            });
+
+            let capturedOptions: any;
+
+            jest.spyOn(testMocks.mvsApi, "downloadAllMembers").mockImplementation(async (_dsName, opts: any) => {
+                capturedOptions = opts;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockExecuteDownloadWithProgress = new MockedProperty(
+                DatasetActions,
+                "executeDownloadWithProgress" as any,
+                undefined,
+                jest.fn().mockImplementation(async (_title, downloadFn, _downloadType, _node, _cancellable) => {
+                    return await downloadFn(undefined, undefined);
+                })
+            );
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(capturedOptions.abortDownload()).toBe(false);
         });
     });
 
@@ -6697,298 +7259,374 @@ describe("DatasetActions - downloading functions", () => {
                 })
             );
         });
-
-        describe("Dataset Actions Unit Tests - Function submitJcl", () => {
-            function createBlockMocks() {
-                const newMocks = {
-                    testDatasetTree: createDatasetTree(
-                        createDatasetSessionNode(createISession(), createIProfile()),
-                        createTreeView(),
-                        createDatasetFavoritesNode()
-                    ),
-                };
-                return newMocks;
-            }
-
-            it("should capture button response for accessibility when job is submitted", async () => {
-                const blockMocks = createBlockMocks();
-
-                const testUri = vscode.Uri.file("/test/path/test.jcl");
-                const mockDocument = {
-                    getText: jest.fn().mockReturnValue("//TESTJOB JOB"),
-                    uri: testUri,
-                    fileName: "/test/path/test.jcl",
-                };
-
-                // Mock activeTextEditor to be set after showTextDocument
-                Object.defineProperty(vscode.window, "activeTextEditor", {
-                    value: { document: mockDocument },
-                    configurable: true,
-                });
-
-                // Mock the dataset tree to have getChildren method
-                const mockProfile = createIProfile();
-                blockMocks.testDatasetTree.getChildren = jest.fn().mockResolvedValue([
-                    {
-                        label: mockProfile.name,
-                        getProfile: jest.fn().mockReturnValue(mockProfile),
-                    },
-                ]);
-
-                // Mock ProfileManagement to return the correct profile name
-                jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue([mockProfile.name!]);
-
-                const mockJob = {
-                    jobid: "JOB12345",
-                    jobname: "TESTJOB",
-                    retcode: "CC 0000",
-                };
-
-                jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
-                    submitJcl: jest.fn().mockResolvedValue(mockJob),
-                } as any);
-
-                // Mock the confirmation dialog
-                jest.spyOn(Gui, "warningMessage").mockResolvedValue("Submit");
-
-                const openJobButton = "Open Job";
-                const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
-                const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue(openJobButton);
-
-                await DatasetActions.submitJcl(blockMocks.testDatasetTree, testUri);
-
-                // Verify showMessage was called with both buttons
-                expect(showMessageSpy).toHaveBeenCalledWith(
-                    expect.stringContaining("Job submitted: TESTJOB(JOB12345)"),
-                    expect.objectContaining({
-                        items: [expect.stringContaining("Open Job"), expect.stringContaining("Poll For Job Completion")],
-                    })
-                );
-
-                // Verify the command was executed when Open Job was selected
-                expect(executeCommandSpy).toHaveBeenCalledWith("zowe.jobs.setJobSpool", mockProfile.name, "JOB12345");
-            });
-
-            it("should handle Poll For Job Completion button selection", async () => {
-                const blockMocks = createBlockMocks();
-
-                const testUri = vscode.Uri.file("/test/path/test.jcl");
-                const mockDocument = {
-                    getText: jest.fn().mockReturnValue("//TESTJOB JOB"),
-                    uri: testUri,
-                    fileName: "/test/path/test.jcl",
-                };
-
-                // Mock activeTextEditor to be set after showTextDocument
-                Object.defineProperty(vscode.window, "activeTextEditor", {
-                    value: { document: mockDocument },
-                    configurable: true,
-                });
-
-                // Mock the dataset tree to have getChildren method
-                const mockProfile = createIProfile();
-                blockMocks.testDatasetTree.getChildren = jest.fn().mockResolvedValue([
-                    {
-                        label: mockProfile.name,
-                        getProfile: jest.fn().mockReturnValue(mockProfile),
-                    },
-                ]);
-
-                // Mock ProfileManagement to return the correct profile name
-                jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue([mockProfile.name!]);
-
-                const mockJob = {
-                    jobid: "JOB12345",
-                    jobname: "TESTJOB",
-                    retcode: "CC 0000",
-                };
-
-                jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
-                    submitJcl: jest.fn().mockResolvedValue(mockJob),
-                } as any);
-
-                // Mock the confirmation dialog
-                jest.spyOn(Gui, "warningMessage").mockResolvedValue("Submit");
-
-                const notifyButton = "Poll For Job Completion";
-                const pollSubmittedJobSpy = jest.spyOn(DatasetActions, "pollSubmittedJob").mockImplementation();
-                jest.spyOn(Gui, "showMessage").mockResolvedValue(notifyButton);
-
-                await DatasetActions.submitJcl(blockMocks.testDatasetTree, testUri);
-
-                // Verify pollSubmittedJob was called when Poll For Job Completion was selected
-                expect(pollSubmittedJobSpy).toHaveBeenCalledWith(expect.anything(), mockProfile.name, "JOB12345", "TESTJOB");
-            });
-
-            it("should handle user dismissing the notification", async () => {
-                const blockMocks = createBlockMocks();
-
-                const testUri = vscode.Uri.file("/test/path/test.jcl");
-                const mockDocument = {
-                    getText: jest.fn().mockReturnValue("//TESTJOB JOB"),
-                    uri: testUri,
-                    fileName: "/test/path/test.jcl",
-                };
-
-                // Mock activeTextEditor to be set after showTextDocument
-                Object.defineProperty(vscode.window, "activeTextEditor", {
-                    value: { document: mockDocument },
-                    configurable: true,
-                });
-
-                // Mock the dataset tree to have getChildren method
-                const mockProfile = createIProfile();
-                blockMocks.testDatasetTree.getChildren = jest.fn().mockResolvedValue([
-                    {
-                        label: mockProfile.name,
-                        getProfile: jest.fn().mockReturnValue(mockProfile),
-                    },
-                ]);
-
-                // Mock ProfileManagement to return the correct profile name
-                jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue([mockProfile.name!]);
-
-                const mockJob = {
-                    jobid: "JOB12345",
-                    jobname: "TESTJOB",
-                    retcode: "CC 0000",
-                };
-
-                jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
-                    submitJcl: jest.fn().mockResolvedValue(mockJob),
-                } as any);
-
-                // Mock the confirmation dialog
-                jest.spyOn(Gui, "warningMessage").mockResolvedValue("Submit");
-
-                const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand").mockClear();
-                const pollSubmittedJobSpy = jest.spyOn(DatasetActions, "pollSubmittedJob").mockClear();
-                jest.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
-
-                await DatasetActions.submitJcl(blockMocks.testDatasetTree, testUri);
-
-                // Verify neither command was executed when user dismissed
-                expect(executeCommandSpy).not.toHaveBeenCalledWith("zowe.jobs.setJobSpool", expect.anything(), expect.anything());
-                expect(pollSubmittedJobSpy).not.toHaveBeenCalled();
-            });
-        });
     });
 
-    describe("Dataset Actions Unit Tests - Function submitMember", () => {
-        function createBlockMocks() {
-            const session = createISession();
-            const imperativeProfile = createIProfile();
-            const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
-            const newMocks = {
-                session,
-                imperativeProfile,
-                datasetSessionNode,
-            };
-            return newMocks;
-        }
+    describe("executeDownloadWithProgress", () => {
+        const executeDownloadWithProgress = (DatasetActions as any).executeDownloadWithProgress;
 
-        it("should capture button response for accessibility when job is submitted", async () => {
-            const blockMocks = createBlockMocks();
+        let mockHandleDownloadResponse: MockedProperty;
+        let mockAuthErrorHandling: MockedProperty;
+        let mockNode: any;
+        const mockProfile = { name: "testProfile" };
+        const mockProgress = { report: jest.fn() };
+        const mockToken = { isCancellationRequested: false };
 
-            const memberNode = new ZoweDatasetNode({
-                label: "TESTMEM",
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                parentNode: blockMocks.datasetSessionNode,
-                profile: blockMocks.imperativeProfile,
+        beforeEach(() => {
+            mockNode = { getProfile: jest.fn().mockReturnValue(mockProfile) };
+            Object.defineProperty(DatasetActions, "executeDownloadWithProgress", {
+                value: executeDownloadWithProgress,
+                configurable: true,
+                writable: true,
             });
-            memberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+            (vscode.window.withProgress as jest.Mock).mockImplementation((_options: any, callback: any) => callback(mockProgress, mockToken));
+            mockHandleDownloadResponse = new MockedProperty(SharedUtils, "handleDownloadResponse", undefined, jest.fn().mockResolvedValue(undefined));
+            mockAuthErrorHandling = new MockedProperty(AuthUtils, "errorHandling", undefined, jest.fn().mockResolvedValue(undefined));
+        });
 
-            const mockJob = {
-                jobid: "JOB12345",
-                jobname: "TESTJOB",
-                retcode: "CC 0000",
-            };
+        afterEach(() => {
+            (vscode.window.withProgress as jest.Mock).mockReset();
+            mockHandleDownloadResponse[Symbol.dispose]();
+            mockAuthErrorHandling[Symbol.dispose]();
+        });
 
-            jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
-                submitJob: jest.fn().mockResolvedValue(mockJob),
-            } as any);
+        it("should call vscode.window.withProgress with the correct title, location, and cancellable flag", async () => {
+            const downloadFn = jest.fn().mockResolvedValue({ response: { success: true }, downloadedPath: "/path/file" });
 
-            const openJobButton = "Open Job";
-            const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
-            const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue(openJobButton);
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "DS", mockNode, true);
 
-            await DatasetActions.submitMember(memberNode);
-
-            // Verify showMessage was called with both buttons
-            expect(showMessageSpy).toHaveBeenCalledWith(
-                expect.stringContaining("Job submitted: TESTJOB(JOB12345)"),
+            expect(vscode.window.withProgress).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    items: [expect.stringContaining("Open Job"), expect.stringContaining("Poll For Job Completion")],
-                })
+                    title: "test download",
+                    cancellable: true,
+                }),
+                expect.any(Function)
             );
-
-            // Verify the command was executed when Open Job was selected
-            expect(executeCommandSpy).toHaveBeenCalledWith("zowe.jobs.setJobSpool", "sestest", "JOB12345");
         });
 
-        it("should handle Poll For Job Completion button selection", async () => {
-            const blockMocks = createBlockMocks();
+        it("should default cancellable to false when not provided", async () => {
+            const downloadFn = jest.fn().mockResolvedValue({ response: { success: true }, downloadedPath: "/path/file" });
 
-            const memberNode = new ZoweDatasetNode({
-                label: "TESTMEM",
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                parentNode: blockMocks.datasetSessionNode,
-                profile: blockMocks.imperativeProfile,
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "DS", mockNode);
+
+            expect(vscode.window.withProgress).toHaveBeenCalledWith(expect.objectContaining({ cancellable: false }), expect.any(Function));
+        });
+
+        it("should invoke downloadFn with progress and token, then call handleDownloadResponse on success", async () => {
+            const mockResponse = { success: true, commandResponse: "ok" };
+            const mockDownloadedPath = "/test/path/file.txt";
+            const downloadFn = jest.fn().mockResolvedValue({ response: mockResponse, downloadedPath: mockDownloadedPath });
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "MEMBER", mockNode, false);
+
+            expect(downloadFn).toHaveBeenCalledWith(mockProgress, mockToken);
+            expect(mockHandleDownloadResponse.mock).toHaveBeenCalledWith(mockResponse, "MEMBER", mockDownloadedPath, false);
+            expect(mockAuthErrorHandling.mock).not.toHaveBeenCalled();
+        });
+
+        it("should call AuthUtils.errorHandling when downloadFn throws, and not call handleDownloadResponse", async () => {
+            const error = new Error("Download failed");
+            const downloadFn = jest.fn().mockRejectedValue(error);
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "DS", mockNode, false);
+
+            expect(mockAuthErrorHandling.mock).toHaveBeenCalledWith(error, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile: mockProfile,
             });
-            memberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+            expect(mockHandleDownloadResponse.mock).not.toHaveBeenCalled();
+        });
+    });
+});
 
-            const mockJob = {
-                jobid: "JOB12345",
-                jobname: "TESTJOB",
-                retcode: "CC 0000",
-            };
+describe("Dataset Actions Unit Tests - Function submitJcl", () => {
+    function createBlockMocks() {
+        const newMocks = {
+            testDatasetTree: createDatasetTree(
+                createDatasetSessionNode(createISession(), createIProfile()),
+                createTreeView(),
+                createDatasetFavoritesNode()
+            ),
+        };
+        return newMocks;
+    }
 
-            jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
-                submitJob: jest.fn().mockResolvedValue(mockJob),
-            } as any);
+    it("should capture button response for accessibility when job is submitted", async () => {
+        const blockMocks = createBlockMocks();
 
-            const notifyButton = "Poll For Job Completion";
-            const pollSubmittedJobSpy = jest.spyOn(DatasetActions, "pollSubmittedJob").mockImplementation();
-            jest.spyOn(Gui, "showMessage").mockResolvedValue(notifyButton);
+        const testUri = vscode.Uri.file("/test/path/test.jcl");
+        const mockDocument = {
+            getText: jest.fn().mockReturnValue("//TESTJOB JOB"),
+            uri: testUri,
+            fileName: "/test/path/test.jcl",
+        };
 
-            await DatasetActions.submitMember(memberNode);
-
-            // Verify pollSubmittedJob was called when Poll For Job Completion was selected
-            expect(pollSubmittedJobSpy).toHaveBeenCalledWith(expect.anything(), "sestest", "JOB12345", "TESTJOB");
+        // Mock activeTextEditor to be set after showTextDocument
+        Object.defineProperty(vscode.window, "activeTextEditor", {
+            value: { document: mockDocument },
+            configurable: true,
         });
 
-        it("should handle user dismissing the notification", async () => {
-            const blockMocks = createBlockMocks();
+        // Mock the dataset tree to have getChildren method
+        const mockProfile = createIProfile();
+        blockMocks.testDatasetTree.getChildren = jest.fn().mockResolvedValue([
+            {
+                label: mockProfile.name,
+                getProfile: jest.fn().mockReturnValue(mockProfile),
+            },
+        ]);
 
-            const memberNode = new ZoweDatasetNode({
-                label: "TESTMEM",
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                parentNode: blockMocks.datasetSessionNode,
-                profile: blockMocks.imperativeProfile,
-            });
-            memberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+        // Mock ProfileManagement to return the correct profile name
+        jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue([mockProfile.name!]);
 
-            const mockJob = {
-                jobid: "JOB12345",
-                jobname: "TESTJOB",
-                retcode: "CC 0000",
-            };
+        const mockJob = {
+            jobid: "JOB12345",
+            jobname: "TESTJOB",
+            retcode: "CC 0000",
+        };
 
-            jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
-                submitJob: jest.fn().mockResolvedValue(mockJob),
-            } as any);
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            submitJcl: jest.fn().mockResolvedValue(mockJob),
+        } as any);
 
-            // Create fresh spies to avoid interference from other tests
-            const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand").mockClear().mockResolvedValue(undefined);
-            const pollSubmittedJobSpy = jest.spyOn(DatasetActions, "pollSubmittedJob").mockClear();
-            jest.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
+        // Mock the confirmation dialog
+        jest.spyOn(Gui, "warningMessage").mockResolvedValue("Submit");
 
-            await DatasetActions.submitMember(memberNode);
+        const openJobButton = "Open Job";
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue(openJobButton);
 
-            // Verify neither command was executed when user dismissed (selection is undefined)
-            // When user dismisses, neither button action should execute
-            expect(executeCommandSpy).not.toHaveBeenCalled();
-            expect(pollSubmittedJobSpy).not.toHaveBeenCalled();
+        await DatasetActions.submitJcl(blockMocks.testDatasetTree, testUri);
+
+        // Verify showMessage was called with both buttons
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job submitted: [TESTJOB(JOB12345)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB12345%22%5D)"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job"), expect.stringContaining("Poll For Job Completion")],
+            })
+        );
+
+        // Verify the command was executed when Open Job was selected
+        expect(executeCommandSpy).toHaveBeenCalledWith("zowe.jobs.setJobSpool", mockProfile.name, "JOB12345");
+    });
+
+    it("should handle Poll For Job Completion button selection", async () => {
+        const blockMocks = createBlockMocks();
+
+        const testUri = vscode.Uri.file("/test/path/test.jcl");
+        const mockDocument = {
+            getText: jest.fn().mockReturnValue("//TESTJOB JOB"),
+            uri: testUri,
+            fileName: "/test/path/test.jcl",
+        };
+
+        // Mock activeTextEditor to be set after showTextDocument
+        Object.defineProperty(vscode.window, "activeTextEditor", {
+            value: { document: mockDocument },
+            configurable: true,
         });
+
+        // Mock the dataset tree to have getChildren method
+        const mockProfile = createIProfile();
+        blockMocks.testDatasetTree.getChildren = jest.fn().mockResolvedValue([
+            {
+                label: mockProfile.name,
+                getProfile: jest.fn().mockReturnValue(mockProfile),
+            },
+        ]);
+
+        // Mock ProfileManagement to return the correct profile name
+        jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue([mockProfile.name!]);
+
+        const mockJob = {
+            jobid: "JOB12345",
+            jobname: "TESTJOB",
+            retcode: "CC 0000",
+        };
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            submitJcl: jest.fn().mockResolvedValue(mockJob),
+        } as any);
+
+        // Mock the confirmation dialog
+        jest.spyOn(Gui, "warningMessage").mockResolvedValue("Submit");
+
+        const notifyButton = "Poll For Job Completion";
+        const pollSubmittedJobSpy = jest.spyOn(DatasetActions, "pollSubmittedJob").mockImplementation();
+        jest.spyOn(Gui, "showMessage").mockResolvedValue(notifyButton);
+
+        await DatasetActions.submitJcl(blockMocks.testDatasetTree, testUri);
+
+        // Verify pollSubmittedJob was called when Poll For Job Completion was selected
+        expect(pollSubmittedJobSpy).toHaveBeenCalledWith(expect.anything(), mockProfile.name, "JOB12345", "TESTJOB");
+    });
+
+    it("should handle user dismissing the notification", async () => {
+        const blockMocks = createBlockMocks();
+
+        const testUri = vscode.Uri.file("/test/path/test.jcl");
+        const mockDocument = {
+            getText: jest.fn().mockReturnValue("//TESTJOB JOB"),
+            uri: testUri,
+            fileName: "/test/path/test.jcl",
+        };
+
+        // Mock activeTextEditor to be set after showTextDocument
+        Object.defineProperty(vscode.window, "activeTextEditor", {
+            value: { document: mockDocument },
+            configurable: true,
+        });
+
+        // Mock the dataset tree to have getChildren method
+        const mockProfile = createIProfile();
+        blockMocks.testDatasetTree.getChildren = jest.fn().mockResolvedValue([
+            {
+                label: mockProfile.name,
+                getProfile: jest.fn().mockReturnValue(mockProfile),
+            },
+        ]);
+
+        // Mock ProfileManagement to return the correct profile name
+        jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue([mockProfile.name!]);
+
+        const mockJob = {
+            jobid: "JOB12345",
+            jobname: "TESTJOB",
+            retcode: "CC 0000",
+        };
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            submitJcl: jest.fn().mockResolvedValue(mockJob),
+        } as any);
+
+        // Mock the confirmation dialog
+        jest.spyOn(Gui, "warningMessage").mockResolvedValue("Submit");
+
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand").mockClear();
+        const pollSubmittedJobSpy = jest.spyOn(DatasetActions, "pollSubmittedJob").mockClear();
+        jest.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
+
+        await DatasetActions.submitJcl(blockMocks.testDatasetTree, testUri);
+
+        // Verify neither command was executed when user dismissed
+        expect(executeCommandSpy).not.toHaveBeenCalledWith("zowe.jobs.setJobSpool", expect.anything(), expect.anything());
+        expect(pollSubmittedJobSpy).not.toHaveBeenCalled();
+    });
+});
+
+describe("Dataset Actions Unit Tests - Function submitMember", () => {
+    function createBlockMocks() {
+        const session = createISession();
+        const imperativeProfile = createIProfile();
+        const datasetSessionNode = createDatasetSessionNode(session, imperativeProfile);
+        const newMocks = {
+            session,
+            imperativeProfile,
+            datasetSessionNode,
+        };
+        return newMocks;
+    }
+
+    it("should capture button response for accessibility when job is submitted", async () => {
+        const blockMocks = createBlockMocks();
+
+        const memberNode = new ZoweDatasetNode({
+            label: "TESTMEM",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            profile: blockMocks.imperativeProfile,
+        });
+        memberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        const mockJob = {
+            jobid: "JOB12345",
+            jobname: "TESTJOB",
+            retcode: "CC 0000",
+        };
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            submitJob: jest.fn().mockResolvedValue(mockJob),
+        } as any);
+
+        const openJobButton = "Open Job";
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue(openJobButton);
+
+        await DatasetActions.submitMember(memberNode);
+
+        // Verify showMessage was called with both buttons
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job submitted: [TESTJOB(JOB12345)](command:zowe.jobs.setJobSpool?%5B%22sestest%22%2C%22JOB12345%22%5D)"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job"), expect.stringContaining("Poll For Job Completion")],
+            })
+        );
+
+        // Verify the command was executed when Open Job was selected
+        expect(executeCommandSpy).toHaveBeenCalledWith("zowe.jobs.setJobSpool", "sestest", "JOB12345");
+    });
+
+    it("should handle Poll For Job Completion button selection", async () => {
+        const blockMocks = createBlockMocks();
+
+        const memberNode = new ZoweDatasetNode({
+            label: "TESTMEM",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            profile: blockMocks.imperativeProfile,
+        });
+        memberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        const mockJob = {
+            jobid: "JOB12345",
+            jobname: "TESTJOB",
+            retcode: "CC 0000",
+        };
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            submitJob: jest.fn().mockResolvedValue(mockJob),
+        } as any);
+
+        const notifyButton = "Poll For Job Completion";
+        const pollSubmittedJobSpy = jest.spyOn(DatasetActions, "pollSubmittedJob").mockImplementation();
+        jest.spyOn(Gui, "showMessage").mockResolvedValue(notifyButton);
+
+        await DatasetActions.submitMember(memberNode);
+
+        // Verify pollSubmittedJob was called when Poll For Job Completion was selected
+        expect(pollSubmittedJobSpy).toHaveBeenCalledWith(expect.anything(), "sestest", "JOB12345", "TESTJOB");
+    });
+
+    it("should handle user dismissing the notification", async () => {
+        const blockMocks = createBlockMocks();
+
+        const memberNode = new ZoweDatasetNode({
+            label: "TESTMEM",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+            profile: blockMocks.imperativeProfile,
+        });
+        memberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+        const mockJob = {
+            jobid: "JOB12345",
+            jobname: "TESTJOB",
+            retcode: "CC 0000",
+        };
+
+        jest.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            submitJob: jest.fn().mockResolvedValue(mockJob),
+        } as any);
+
+        // Create fresh spies to avoid interference from other tests
+        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand").mockClear().mockResolvedValue(undefined);
+        const pollSubmittedJobSpy = jest.spyOn(DatasetActions, "pollSubmittedJob").mockClear();
+        jest.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
+
+        await DatasetActions.submitMember(memberNode);
+
+        // Verify neither command was executed when user dismissed (selection is undefined)
+        // When user dismisses, neither button action should execute
+        expect(executeCommandSpy).not.toHaveBeenCalled();
+        expect(pollSubmittedJobSpy).not.toHaveBeenCalled();
     });
 });
