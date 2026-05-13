@@ -813,22 +813,38 @@ export const RenderConfig = ({
                   if (isSecureProperty || isLocalSecureProperty || isSecureForSorting) {
                     const storedInKeyring = !isFromMergedProps && displayKey && mergedProps?.[displayKey] !== undefined;
                     const secureDisplayValue = isFromMergedProps && !isDeletedMergedProperty ? "••••••••" : stringifyValueByType(pendingValue);
+                    const isCredentialDisabled = !secureValuesAllowed && (isSecureProperty || isLocalSecureProperty);
+                    const isMergedDisabled = isFromMergedProps && !isDeletedMergedProperty;
+                    const credentialDisabledTitle = l10n.t(
+                      "A credential manager is not available. Click to open VS Code settings to enable secure credentials."
+                    );
                     return (
                       <input
                         className={`config-input${inheritedInputClass}`}
                         type="password"
                         placeholder={storedInKeyring || secureDisplayValue || isUntypedProfile ? "••••••••" : ""}
                         value={secureDisplayValue}
-                        onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
-                        disabled={isFromMergedProps && !isDeletedMergedProperty}
+                        readOnly={isCredentialDisabled}
+                        onChange={isCredentialDisabled ? undefined : (e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
+                        onClick={
+                          isCredentialDisabled
+                            ? () =>
+                                vscodeApi.postMessage({
+                                  command: "OPEN_VSCODE_SETTINGS",
+                                  searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
+                                })
+                            : undefined
+                        }
+                        disabled={isMergedDisabled}
+                        title={isCredentialDisabled ? credentialDisabledTitle : undefined}
                         style={
-                          isFromMergedProps && !isDeletedMergedProperty
+                          isMergedDisabled || isCredentialDisabled
                             ? {
                                 backgroundColor: "var(--vscode-input-disabledBackground)",
                                 color: "var(--vscode-descriptionForeground)",
-                                cursor: "pointer",
+                                cursor: isCredentialDisabled ? "pointer" : "default",
                                 fontFamily: "monospace",
-                                pointerEvents: "none",
+                                pointerEvents: isMergedDisabled ? "none" : undefined,
                               }
                             : {
                                 fontFamily: "monospace",
