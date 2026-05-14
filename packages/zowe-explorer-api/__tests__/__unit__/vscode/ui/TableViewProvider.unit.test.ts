@@ -48,8 +48,8 @@ describe("TableViewProvider", () => {
             const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
             await TableViewProvider.getInstance().setTableView(tableOne);
             expect((TableViewProvider.getInstance() as any).tableView).toBe(tableOne);
-            // Note: setContext is no longer called here - it's managed by TableViewUtils in zowe-explorer
-            expect(executeCommandMock).not.toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", true);
+            // Verify setContext is called to show the panel
+            expect(executeCommandMock).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", true);
 
             const disposeSpy = jest.spyOn(tableOne, "dispose");
 
@@ -60,24 +60,24 @@ describe("TableViewProvider", () => {
             expect(disposeSpy).toHaveBeenCalled();
             executeCommandMock.mockRestore();
         });
-        it("sets the table to null", async () => {
+        it("sets the table to null and hides the panel", async () => {
             const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
             await TableViewProvider.getInstance().setTableView(null);
             expect((TableViewProvider.getInstance() as any).tableView).toBe(null);
-            // Note: setContext is no longer called here - it's managed by TableViewUtils in zowe-explorer
-            expect(executeCommandMock).not.toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", false);
+            // Verify setContext is called to hide the panel
+            expect(executeCommandMock).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", false);
             executeCommandMock.mockRestore();
         });
-        it("does not call setContext when setting a table view", async () => {
-            // Verify that the context management has been moved to TableViewUtils
+        it("calls setContext when setting a table view", async () => {
+            // Verify that the context management is handled by setTableView
             const builder = new TableBuilder(fakeExtContext);
             const table = builder.isView().build();
             const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
 
             await TableViewProvider.getInstance().setTableView(table);
 
-            // Ensure setContext was not called - this is now handled by TableViewUtils
-            expect(executeCommandMock).not.toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", expect.anything());
+            // Ensure setContext was called to show the panel
+            expect(executeCommandMock).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", true);
             executeCommandMock.mockRestore();
         });
     });
