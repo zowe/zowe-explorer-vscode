@@ -87,6 +87,7 @@ export namespace Definitions {
     export type ZowePersistentFilter = {
         persistence: boolean;
         favorites: string[];
+        vsamFavorites?: string[];
         history: string[];
         sessions: string[];
         searchHistory: string[];

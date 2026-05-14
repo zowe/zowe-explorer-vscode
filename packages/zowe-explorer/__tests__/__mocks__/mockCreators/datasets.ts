@@ -93,6 +93,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         openItemFromPath: jest.fn(),
         renameFavorite: jest.fn(),
         updateFavorites: jest.fn(),
+        readVsamFavorites: jest.fn().mockReturnValue([]),
         renameNode: jest.fn(),
         findFavoritedNode: jest.fn(),
         findNonFavoritedNode: jest.fn(),
