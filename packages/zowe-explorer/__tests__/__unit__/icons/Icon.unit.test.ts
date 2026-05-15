@@ -9,8 +9,6 @@
  *
  */
 
-jest.mock("vscode");
-
 import * as vscode from "vscode";
 import { imperative } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
@@ -20,19 +18,19 @@ import { IconUtils } from "../../../src/icons/IconUtils";
 
 describe("Checking icon generator's basics", () => {
     const setGlobalMocks = () => {
-        const createTreeView = jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() });
+        const createTreeView = vi.fn().mockReturnValue({ onDidCollapseElement: vi.fn() });
 
         Object.defineProperty(vscode.window, "createTreeView", { value: createTreeView });
         Object.defineProperty(ZoweLocalStorage, "globalState", {
             value: {
                 get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
-                update: jest.fn(),
+                update: vi.fn(),
                 keys: () => [],
             },
             configurable: true,
         });
-        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-            get: jest.fn(),
+        vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            get: vi.fn(),
         } as any);
     };
     const generateTestSessionNode = () => {

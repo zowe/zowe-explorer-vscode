@@ -1,6 +1,6 @@
 ---
 name: testing
-description: Write and maintain Jest unit tests and WDIO/Cucumber end-to-end tests in the Zowe Explorer monorepo. Use when adding, updating, debugging, or reviewing tests, when working with `*.unit.test.ts` files, `__tests__/__unit__/` or `__tests__/__e2e__/` directories, `.feature` files, step definitions, page objects, mock factories (`mockCreators/`), `MockedProperty`, `jest-mock-vscode`, `jest.config`, `wdio.conf`, or running `pnpm test` / `pnpm test:e2e` in `packages/zowe-explorer/`, `packages/zowe-explorer-api/`, or `packages/zowe-explorer-ftp-extension/`.
+description: Write and maintain Vitest unit tests and WDIO/Cucumber end-to-end tests in the Zowe Explorer monorepo. Use when adding, updating, debugging, or reviewing tests, when working with `*.unit.test.ts` files, `__tests__/__unit__/` or `__tests__/__e2e__/` directories, `.feature` files, step definitions, page objects, mock factories (`mockCreators/`), `MockedProperty`, `jest-mock-vscode`, `vitest.config`, `wdio.conf`, or running `pnpm test` / `pnpm test:e2e` in `packages/zowe-explorer/`, `packages/zowe-explorer-api/`, or `packages/zowe-explorer-ftp-extension/`.
 metadata:
   version: "1.0"
 ---
@@ -13,20 +13,20 @@ Guidance for writing and maintaining tests in the Zowe Explorer monorepo. This s
 
 Read these before writing or modifying tests.
 
-- **The `vscode` mock is mostly hand-rolled, not `jest-mock-vscode` wholesale.** `__tests__/__mocks__/vscode.ts` defines `MarkdownString`, `ProgressLocation`, `Uri`, `Range`, `WorkspaceEdit`, etc., by hand. Only a small subset (`FileSystemError`, `Selection`, `Position`, `ThemeIcon`, `CodeLensProvider`) is destructured from `require("jest-mock-vscode").createVSCodeMock(jest)`. If a needed VS Code class/value isn't exported, extend `__mocks__/vscode.ts` (either via manual definition or pulling more from `createVSCodeMock(jest)`) before using it.
-- **`jest.mock("fs")` activates a fixed manual mock with surprising defaults.**
+- **The `vscode` mock is mostly hand-rolled, not `jest-mock-vscode` wholesale.** `__tests__/__mocks__/vscode.ts` defines `MarkdownString`, `ProgressLocation`, `Uri`, `Range`, `WorkspaceEdit`, etc., by hand. Only a small subset (`FileSystemError`, `Selection`, `Position`, `ThemeIcon`, `CodeLensProvider`) is destructured from `require("jest-mock-vscode").createVSCodeMock(vi)`. If a needed VS Code class/value isn't exported, extend `__mocks__/vscode.ts` (either via manual definition or pulling more from `createVSCodeMock(vi)`) before using it.
+- **`vi.mock("fs")` activates a fixed manual mock with surprising defaults.**
   - `existsSync(path)` returns `true` for non-empty paths.
   - `FakeStats.isFile()` returns `true` only for `.txt` files.
   - `access`, `writeFileSync`, etc. are silent no-ops.
   - Same applies to `fs-extra`, `isbinaryfile`, and `Session`.
-- **Avoid raw `Object.defineProperty(vscode.X, ...)`**. Properties redefined this way persist across `it()` blocks and files within the same Jest worker: the single worst pattern in the test suite. Always use `MockedProperty` (which auto-restores via `Symbol.dispose`). When modifying legacy code that uses it, restore the original descriptor in `afterEach`. Never add new tests that mutate `vscode.window`, `vscode.workspace`, `vscode.commands`, etc. with bare `Object.defineProperty`.
+- **Avoid raw `Object.defineProperty(vscode.X, ...)`**. Properties redefined this way persist across `it()` blocks and files within the same Vitest worker: the single worst pattern in the test suite. Always use `MockedProperty` (which auto-restores via `Symbol.dispose`). When modifying legacy code that uses it, restore the original descriptor in `afterEach`. Never add new tests that mutate `vscode.window`, `vscode.workspace`, `vscode.commands`, etc. with bare `Object.defineProperty`.
 
 ## Test Types
 
-- **Unit tests (Jest)**: Default. Use for `Actions`, tree nodes, FS providers, utils, etc.
+- **Unit tests (Vitest)**: Default. Use for `Actions`, tree nodes, FS providers, utils, etc.
 - **End-to-end tests (WDIO + Cucumber)**: Use when behavior must be verified through the real VS Code UI against a real mainframe. **No mocks/stubs.**
 
-## Unit tests (Jest + ts-jest)
+## Unit tests (Vitest)
 
 ### Layout & Naming
 
@@ -37,7 +37,7 @@ Read these before writing or modifying tests.
 ### Run Tests
 
 ```bash
-cd packages/zowe-explorer && pnpm exec jest <file-name-fragment>
+cd packages/zowe-explorer && pnpm exec vitest <file-name-fragment>
 ```
 
 ### Mock Factories
@@ -53,23 +53,21 @@ Reuse helpers in `packages/zowe-explorer/__tests__/__mocks__/mockCreators/`:
 If a fixture is missing, **add it to the matching file** instead of creating a one-off.
 
 ### `MockedProperty` over `Object.defineProperty`
-
-When you need to stub a property that Jest can't easily mock (statics, getters, readonly fields), use the `MockedProperty` helper from `__mocks__/mockUtils.ts`. It restores the original value automatically.
+When you need to stub a property that Vitest can't easily mock (statics, getters, readonly fields), use the `MockedProperty` helper from `__mocks__/mockUtils.ts`. It restores the original value automatically.
 
 ```typescript
 import { MockedProperty } from "../../__mocks__/mockUtils";
 
 const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
-  value: { ssoLogin: jest.fn(), promptCredentials: jest.fn() } as any,
-  configurable: true,
+    value: { ssoLogin: vi.fn(), promptCredentials: vi.fn() } as any,
+    configurable: true,
 });
 ```
 
 ### Spying & Resetting
-
-- Prefer `jest.spyOn(...)` over `jest.mock(...)` for single methods—it leaves the rest of the module intact.
-- Reserve module-level `jest.mock("...")` for modules that must be fully replaced.
-- Call `jest.restoreAllMocks()` in `beforeEach` to prevent spy leaks across tests.
+- Prefer `vi.spyOn(...)` over `vi.mock(...)` for single methods—it leaves the rest of the module intact.
+- Reserve module-level `vi.mock("...")` for modules that must be fully replaced.
+- Call `vi.restoreAllMocks()` in `beforeEach` to prevent spy leaks across tests.
 - For one-off return values, prefer `mockReturnValueOnce` / `mockResolvedValueOnce`.
 
 ### Anti-patterns

@@ -21,34 +21,34 @@ export declare enum TaskStage {
 
 describe("Zosmf API tests", () => {
     Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", {
-        value: jest.fn(),
+        value: vi.fn(),
         configurable: true,
     });
     it("should test that copy data set uses default options", async () => {
-        const dataSet = jest.fn((_session, _toDataSet, options) => {
+        const dataSet = vi.fn((_session, _toDataSet, options) => {
             expect(options).toMatchSnapshot();
             return { api: "", commandResponse: "", success: true };
         });
 
-        (zosfiles as any).Copy = { dataSet };
+        vi.spyOn(zosfiles.Copy, "dataSet").mockImplementation(dataSet as any);
 
         const api = new ZoweExplorerZosmf.MvsApi();
-        api.getSession = jest.fn();
+        api.getSession = vi.fn();
         await api.copyDataSetMember({ dsn: "IBM.FROM", member: "IEFBR14" }, { dsn: "IBM.TO", member: "IEFBR15" }, {
             responseTimeout: undefined,
         } as any);
     });
 
     it("should test that copy data set uses enq", async () => {
-        const dataSet = jest.fn((_session, _toDataSet, options) => {
+        const dataSet = vi.fn((_session, _toDataSet, options) => {
             expect(options).toMatchSnapshot();
             return { api: "", commandResponse: "", success: true };
         });
 
-        (zosfiles as any).Copy = { dataSet };
+        vi.spyOn(zosfiles.Copy, "dataSet").mockImplementation(dataSet as any);
 
         const api = new ZoweExplorerZosmf.MvsApi();
-        api.getSession = jest.fn();
+        api.getSession = vi.fn();
         await api.copyDataSetMember(
             { dsn: "IBM.FROM", member: "IEFBR14" },
             { dsn: "IBM.TO", member: "IEFBR15" },
@@ -57,15 +57,15 @@ describe("Zosmf API tests", () => {
     });
 
     it("should test that copy data set uses enq only", async () => {
-        const dataSet = jest.fn((_session, _toDataSet, options) => {
+        const dataSet = vi.fn((_session, _toDataSet, options) => {
             expect(options).toMatchSnapshot();
             return { api: "", commandResponse: "", success: true };
         });
 
-        (zosfiles as any).Copy = { dataSet };
+        vi.spyOn(zosfiles.Copy, "dataSet").mockImplementation(dataSet as any);
 
         const api = new ZoweExplorerZosmf.MvsApi();
-        api.getSession = jest.fn();
+        api.getSession = vi.fn();
         await api.copyDataSetMember({ dsn: "IBM.FROM", member: "IEFBR14" }, { dsn: "IBM.TO", member: "IEFBR15" }, {
             enq: "SHR",
             responseTimeout: undefined,
@@ -73,17 +73,17 @@ describe("Zosmf API tests", () => {
     });
 
     it("should test putContent method passes all options to Zowe api method", async () => {
-        const fileToUssFile = jest.fn(
+        const fileToUssFile = vi.fn(
             (_session: imperative.AbstractSession, _inputFile: string, _ussname: string, options?: zosfiles.IUploadOptions) => {
                 expect(options).toMatchSnapshot();
                 return { api: "", commandResponse: "", success: true };
             }
         );
 
-        (zosfiles as any).Upload = { fileToUssFile };
+        vi.spyOn(zosfiles.Upload, "fileToUssFile").mockImplementation(fileToUssFile as any);
 
         const api = new ZoweExplorerZosmf.UssApi();
-        api.getSession = jest.fn();
+        api.getSession = vi.fn();
 
         await api.putContent("someLocalFile.txt", "/some/remote", {
             encoding: "285",
@@ -93,43 +93,28 @@ describe("Zosmf API tests", () => {
 
     it("should test that getContents calls zowe.Download.ussFile", async () => {
         const api = new ZoweExplorerZosmf.UssApi();
-        api.getSession = jest.fn();
+        api.getSession = vi.fn();
         const response = { shouldMatch: true };
 
-        Object.defineProperty(zosfiles, "Download", {
-            value: {
-                ussFile: jest.fn().mockResolvedValue(response),
-            },
-            configurable: true,
-        });
+        vi.spyOn(zosfiles.Download, "ussFile").mockResolvedValue(response as any);
 
         await expect(api.getContents("/some/input/path", {})).resolves.toEqual(response);
     });
 
     it("should update the tag attribute of a USS file if a new change is made", async () => {
         const api = new ZoweExplorerZosmf.UssApi();
-        const changeTagSpy = jest.fn();
-        Object.defineProperty(zosfiles, "Utilities", {
-            value: {
-                putUSSPayload: changeTagSpy,
-            },
-            configurable: true,
-        });
+        const changeTagSpy = vi.fn();
+        vi.spyOn(zosfiles.Utilities, "putUSSPayload").mockImplementation(changeTagSpy as any);
         await expect(api.updateAttributes("/test/path", { tag: "utf-8" })).resolves.not.toThrow();
         expect(changeTagSpy).toHaveBeenCalledTimes(1);
     });
 
     it("should get the tag of a file successfully", async () => {
         const api = new ZoweExplorerZosmf.UssApi();
-        jest.spyOn(JSON, "parse").mockReturnValue({
+        vi.spyOn(JSON, "parse").mockReturnValue({
             stdout: ["-t UTF-8 tesfile.txt"],
         });
-        Object.defineProperty(zosfiles, "Utilities", {
-            value: {
-                putUSSPayload: () => Buffer.from(""),
-            },
-            configurable: true,
-        });
+        vi.spyOn(zosfiles.Utilities, "putUSSPayload").mockImplementation((() => Buffer.from("")) as any);
         await expect(api.getTag("testfile.txt")).resolves.toEqual("UTF-8");
     });
 });

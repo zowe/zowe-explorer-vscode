@@ -10,7 +10,7 @@ This repository includes custom agent skills located in `.agents/skills/` to hel
 - **`code-quality`**: Refactor, deduplicate, and improve TypeScript code quality using Zowe Explorer specific patterns.
 - **`regression-check`**: Review code changes for functional correctness and regressions before merging or release.
 - **`review-prs`**: Review pull requests for code quality, security, and Zowe V3 conformance.
-- **`testing`**: Write and maintain Jest unit tests and WDIO/Cucumber end-to-end tests using project-specific helpers and conventions.
+- **`testing`**: Write and maintain Vitest unit tests and WDIO/Cucumber end-to-end tests using project-specific helpers and conventions.
 - **`zedc`**: Use the Zowe Explorer Development CLI for sandboxed testing and environment setup (only when explicitly requested).
 
 ## Commands you can use
@@ -20,7 +20,7 @@ This repository includes custom agent skills located in `.agents/skills/` to hel
 - **Build Parallel:** `pnpm build:parallel`
 - **Test (All):** `pnpm test`
 - **Test (Package):** `cd packages/<package-name> && pnpm test`
-- **Test (Single File):** `cd packages/<package-name> && pnpm exec jest <test-file-name>`
+- **Test (Single File):** `cd packages/<package-name> && pnpm exec vitest <test-file-name>`
 - **E2E Tests:** `cd packages/zowe-explorer && pnpm test:e2e` (runs WebDriver-automated tests in VS Code)
 - **Lint & Format:** `pnpm lint` and `pnpm pretty`
 - **Check Dependencies:** `pnpm madge` (detects circular dependencies)
@@ -33,7 +33,7 @@ This repository includes custom agent skills located in `.agents/skills/` to hel
 
 Zowe Explorer (ZE) is an extension for Visual Studio Code that offers access to z/OS mainframe resources.
 
-**Tech Stack:** TypeScript, VS Code Extension API, Node.js, Webpack, Jest, pnpm.
+**Tech Stack:** TypeScript, VS Code Extension API, Node.js, Webpack, Vitest, pnpm.
 
 ## Project structure
 
@@ -78,7 +78,7 @@ ZoweLogger.error(`Operation failed for ${profile}: ${error.message}`);
 
 ## Testing practices
 
-- **Unit Tests**: Standardized with `jest` and `ts-jest`. Located in `__tests__` directories within each package.
+- **Unit Tests**: Standardized with `vitest`. Located in `__tests__` directories within each package.
 - **End-to-End Tests**: BDD-style tests using `wdio` and Cucumber in `packages/zowe-explorer/__tests__/__e2e__/` (require a real Zowe team config and `.env`).
 - **Mocks**: Use `jest-mock-vscode` for VS Code API mocking and follow established mock patterns.
 - **Coverage**: Maintain or improve coverage when adding new logic. `pnpm test` generates coverage reports.
