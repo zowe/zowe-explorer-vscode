@@ -135,7 +135,7 @@ describe("Dataset utils unit tests - function getExtensionMap", () => {
     function createMockNode(label: string, children: Array<{ label: string }>) {
         return {
             label,
-            getChildren: jest.fn().mockResolvedValue(children),
+            getChildren: vi.fn().mockResolvedValue(children),
         } as any;
     }
 

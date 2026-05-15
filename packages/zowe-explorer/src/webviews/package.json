@@ -14,7 +14,6 @@
     "package": "node -e \"fs.accessSync(path.join(__dirname, 'dist'))\" && echo \"webviews: nothing to package.\" || pnpm build",
     "test": "echo \"webviews: nothing to test\"",
     "lint": "echo \"webviews: nothing to lint.\"",
-    "lint:html": "echo \"webviews: nothing to lint.\"",
     "pretty": "echo \"webviews: nothing to pretty.\"",
     "madge": "echo \"webviews: nothing to madge.\""
   },

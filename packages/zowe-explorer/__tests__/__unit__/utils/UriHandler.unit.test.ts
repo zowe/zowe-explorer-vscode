@@ -16,7 +16,7 @@ import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider"
 describe("ZoweUriHandler", () => {
     function getBlockMocks() {
         return {
-            remoteLookupForResource: jest.spyOn(DatasetFSProvider.instance, "remoteLookupForResource"),
+            remoteLookupForResource: vi.spyOn(DatasetFSProvider.instance, "remoteLookupForResource"),
         };
     }
 
@@ -37,7 +37,7 @@ describe("ZoweUriHandler", () => {
     it("calls remoteLookupForResource with the parsed URI if a Zowe resource URI was provided", async () => {
         const blockMocks = getBlockMocks();
         blockMocks.remoteLookupForResource.mockResolvedValue({ name: "exampleEntry" } as any);
-        const executeCommandSpy = jest.spyOn(commands, "executeCommand");
+        const executeCommandSpy = vi.spyOn(commands, "executeCommand");
         const uri = Uri.parse("vscode://Zowe.vscode-extension-for-zowe?zowe-ds:/lpar.zosmf/TEST.PS");
         await ZoweUriHandler.getInstance().handleUri(uri);
         const zoweUri = Uri.parse(uri.query);
