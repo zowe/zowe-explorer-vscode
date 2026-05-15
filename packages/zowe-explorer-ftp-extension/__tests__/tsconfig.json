@@ -1,0 +1,7 @@
+{
+  // Sibling `tsconfig.json` so TypeScript language services
+  // can locate test compiler options when editing files under
+  // `__tests__/`. Tests are still built/run via `../tsconfig-tests.json`
+  // (which this file extends), so this only affects in-editor hints and error checking.
+  "extends": "../tsconfig-tests.json"
+}

@@ -15,7 +15,7 @@ import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { ZowePersistentFilters } from "../../../src/tools/ZowePersistentFilters";
 
 describe("PersistentFilters Unit Test", () => {
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: vi.fn(), configurable: true });
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({
@@ -39,7 +39,7 @@ describe("PersistentFilters Unit Test", () => {
                     },
                 ],
             }),
-            update: jest.fn(),
+            update: vi.fn(),
             keys: () => [],
         },
         configurable: true,
@@ -91,7 +91,7 @@ describe("PersistentFilters Unit Test", () => {
     describe("readVsamFavorites", () => {
         it("should return vsam favorites from local storage", () => {
             const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset, 1, 1);
-            const spy = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+            const spy = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
                 persistence: true,
                 vsamFavorites: ["vsamFav1", "vsamFav2"]
             } as any);
@@ -101,7 +101,7 @@ describe("PersistentFilters Unit Test", () => {
 
         it("should return empty array if vsamFavorites is undefined", () => {
             const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset, 1, 1);
-            const spy = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+            const spy = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
                 persistence: true
             } as any);
             expect(pf.readVsamFavorites()).toEqual([]);
@@ -112,10 +112,10 @@ describe("PersistentFilters Unit Test", () => {
     describe("updateFavorites", () => {
         it("should update regular and vsam favorites", () => {
             const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset, 1, 1);
-            const getSpy = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+            const getSpy = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
                 persistence: true
             } as any);
-            const setSpy = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
+            const setSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
             
             pf.updateFavorites({ favorites: ["fav1"], vsamFavorites: ["vsamFav1"] });
             

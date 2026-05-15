@@ -622,7 +622,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         // Position tooltip directly below the icon, aligned to the icon's left edge
         const tooltipWidth = tooltip.offsetWidth || 250;
         let left = rect.left;
-        
+
         // Ensure tooltip doesn't go off-screen to the right
         if (left + tooltipWidth > window.innerWidth) {
           left = window.innerWidth - tooltipWidth - 5;
