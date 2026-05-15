@@ -578,7 +578,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public async refreshFavorites(profileType?: string): Promise<void> {
         const lines: string[] = this.mPersistence.readFavorites();
         const vsamLines: string[] = this.mPersistence.readVsamFavorites();
-        const combinedLines = [...lines, ...vsamLines];
+        const memberLines: string[] = this.mPersistence.readMemberFavorites();
+        const combinedLines = [...lines, ...vsamLines, ...memberLines];
         if (combinedLines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No data set favorites found."));
             return;
@@ -1466,6 +1467,7 @@ Would you like to do this now?`,
         ZoweLogger.trace("DatasetTree.updateFavorites called.");
         const favoritesArray: string[] = [];
         const vsamFavoritesArray: string[] = [];
+        const memberFavoritesArray: string[] = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((favorite) => {
                 const pdsNode = favorite as ZoweDatasetNode;
@@ -1482,7 +1484,7 @@ Would you like to do this now?`,
                             "){" +
                             SharedContext.getBaseContext(favorite) +
                             "}";
-                        favoritesArray.push(favoriteEntry);
+                        memberFavoritesArray.push(favoriteEntry);
                     }
                 } else {
                     const favoriteEntry =
@@ -1495,7 +1497,11 @@ Would you like to do this now?`,
                 }
             });
         });
-        this.mPersistence.updateFavorites(favoritesArray, vsamFavoritesArray);
+        this.mPersistence.updateFavorites({
+            favorites: favoritesArray,
+            vsamFavorites: vsamFavoritesArray,
+            memberFavorites: memberFavoritesArray
+        });
     }
 
     /**
