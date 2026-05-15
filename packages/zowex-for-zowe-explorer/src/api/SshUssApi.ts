@@ -85,7 +85,7 @@ export class SshUssApi extends SshCommonApi implements MainframeInteraction.IUss
             await this.client
         ).uss.writeFile({
             fspath: ussFilePath,
-            encoding: options?.encoding,
+            encoding: options?.binary ? "binary" : options?.encoding,
             stream: () => createReadStream(inputFilePath),
             etag: options?.etag,
         });
