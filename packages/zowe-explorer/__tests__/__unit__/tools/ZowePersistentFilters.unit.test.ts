@@ -117,7 +117,7 @@ describe("PersistentFilters Unit Test", () => {
             } as any);
             const setSpy = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
             
-            pf.updateFavorites(["fav1"], ["vsamFav1"]);
+            pf.updateFavorites({ favorites: ["fav1"], vsamFavorites: ["vsamFav1"] });
             
             expect(setSpy).toHaveBeenCalledWith(PersistenceSchemaEnum.Dataset, {
                 persistence: true,
