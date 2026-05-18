@@ -11,6 +11,7 @@
 
 import { ErrorCorrelator, Gui, CorrelatedError, ZoweExplorerApiType } from "../../../src/";
 import { ImperativeError } from "@zowe/imperative";
+import { vi } from "vitest";
 import { commands } from "vscode";
 
 describe("addCorrelation", () => {
@@ -75,36 +76,36 @@ describe("correlateError", () => {
 
 describe("displayError", () => {
     it("calls correlateError to get an error correlation", async () => {
-        const correlateErrorMock = jest
+        const correlateErrorMock = vi
             .spyOn(ErrorCorrelator.prototype, "correlateError")
             .mockReturnValueOnce(
                 new CorrelatedError({ correlation: { summary: "Summary of network error" }, initialError: "This is the full error message" })
             );
-        const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce(undefined);
+        const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockResolvedValueOnce(undefined);
         await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(errorMessageMock).toHaveBeenCalledWith("Summary of network error", { items: ["More info"] });
     });
     it("presents an additional dialog when the user selects 'More info'", async () => {
-        const correlateErrorMock = jest
+        const correlateErrorMock = vi
             .spyOn(ErrorCorrelator.prototype, "correlateError")
             .mockReturnValueOnce(
                 new CorrelatedError({ correlation: { summary: "Summary of network error" }, initialError: "This is the full error message" })
             );
-        const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("More info").mockResolvedValueOnce(undefined);
+        const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockResolvedValueOnce("More info").mockResolvedValueOnce(undefined);
         await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(errorMessageMock).toHaveBeenCalledWith("Summary of network error", { items: ["More info"] });
         expect(errorMessageMock).toHaveBeenCalledWith("This is the full error message", { items: ["Show log", "Troubleshoot"] });
     });
     it("opens the Zowe Explorer output channel when the user selects 'Show log'", async () => {
-        const correlateErrorMock = jest
+        const correlateErrorMock = vi
             .spyOn(ErrorCorrelator.prototype, "correlateError")
             .mockReturnValueOnce(
                 new CorrelatedError({ correlation: { summary: "Summary of network error" }, initialError: "This is the full error message" })
             );
-        const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("More info").mockResolvedValueOnce("Show log");
-        const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
+        const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockResolvedValueOnce("More info").mockResolvedValueOnce("Show log");
+        const executeCommandMock = vi.spyOn(commands, "executeCommand").mockImplementation();
         await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(errorMessageMock).toHaveBeenCalledWith("Summary of network error", { items: ["More info"] });
@@ -117,9 +118,9 @@ describe("displayError", () => {
             correlation: { summary: "Summary of network error" },
             initialError: "This is the full error message",
         });
-        const correlateErrorMock = jest.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValueOnce(error);
-        const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("More info").mockResolvedValueOnce("Troubleshoot");
-        const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
+        const correlateErrorMock = vi.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValueOnce(error);
+        const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockResolvedValueOnce("More info").mockResolvedValueOnce("Troubleshoot");
+        const executeCommandMock = vi.spyOn(commands, "executeCommand").mockImplementation();
         await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.Mvs, "This is the full error message", { profileType: "zosmf" });
         expect(errorMessageMock).toHaveBeenCalledWith("Summary of network error", { items: ["More info"] });
@@ -131,15 +132,15 @@ describe("displayError", () => {
 
 describe("displayCorrelatedError", () => {
     beforeEach(() => {
-        jest.resetAllMocks();
+        vi.resetAllMocks();
     });
     it("returns 'Retry' for the userResponse whenever the user selects 'Retry'", async () => {
         const error = new CorrelatedError({
             correlation: { summary: "Summary of network error" },
             initialError: "This is the full error message",
         });
-        const correlateErrorMock = jest.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValueOnce(error);
-        const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Retry");
+        const correlateErrorMock = vi.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValueOnce(error);
+        const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Retry");
         const handledErrorInfo = await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.Mvs, "This is the full error message", {
             additionalContext: "Some additional context",
             allowRetry: true,
@@ -155,8 +156,8 @@ describe("displayCorrelatedError", () => {
             correlation: undefined,
             initialError: initialError,
         });
-        const correlateErrorMock = jest.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValueOnce(error);
-        const errorMessageMock = jest.spyOn(Gui, "errorMessage");
+        const correlateErrorMock = vi.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValueOnce(error);
+        const errorMessageMock = vi.spyOn(Gui, "errorMessage");
         await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.All, initialError, {
             profileType: "zosmf",
         });
@@ -170,8 +171,8 @@ describe("displayCorrelatedError", () => {
             correlation: { summary: "Network Error." },
             initialError: initialError,
         });
-        const correlateErrorMock = jest.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValueOnce(error);
-        const errorMessageMock = jest.spyOn(Gui, "errorMessage");
+        const correlateErrorMock = vi.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValueOnce(error);
+        const errorMessageMock = vi.spyOn(Gui, "errorMessage");
         await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.All, initialError, {
             profileType: "zosmf",
         });

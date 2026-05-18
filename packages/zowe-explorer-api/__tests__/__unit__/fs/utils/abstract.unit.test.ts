@@ -42,7 +42,7 @@ describe("getInfoForUri", () => {
             type: "zosmf",
             profile: { port: 443 },
         };
-        jest.spyOn(profilesCache, "loadNamedProfile").mockReturnValue(fakeProfile as imperative.IProfileLoaded);
+        vi.spyOn(profilesCache, "loadNamedProfile").mockReturnValue(fakeProfile as imperative.IProfileLoaded);
         expect(FsAbstractUtils.getInfoForUri(fakeUri, profilesCache)).toStrictEqual({
             isRoot: false,
             slashAfterProfilePos: fakeUri.path.indexOf("/", 1),

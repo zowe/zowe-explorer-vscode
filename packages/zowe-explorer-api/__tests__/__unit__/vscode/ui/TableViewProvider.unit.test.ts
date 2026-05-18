@@ -45,13 +45,13 @@ describe("TableViewProvider", () => {
                     { apple: 9, banana: 10, orange: 11 },
                 ])
                 .build();
-            const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
+            const executeCommandMock = vi.spyOn(commands, "executeCommand").mockImplementation(() => Promise.resolve());
             await TableViewProvider.getInstance().setTableView(tableOne);
             expect((TableViewProvider.getInstance() as any).tableView).toBe(tableOne);
             // Verify setContext is called to show the panel
             expect(executeCommandMock).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", true);
 
-            const disposeSpy = jest.spyOn(tableOne, "dispose");
+            const disposeSpy = vi.spyOn(tableOne, "dispose");
 
             // case 2: table previously existed, dispose called on old table
             const tableTwo = builder.options({ pagination: false }).build();
@@ -60,8 +60,9 @@ describe("TableViewProvider", () => {
             expect(disposeSpy).toHaveBeenCalled();
             executeCommandMock.mockRestore();
         });
-        it("sets the table to null and hides the panel", async () => {
-            const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
+
+        it("sets the table to null", async () => {
+            const executeCommandMock = vi.spyOn(commands, "executeCommand").mockImplementation(() => Promise.resolve());
             await TableViewProvider.getInstance().setTableView(null);
             expect((TableViewProvider.getInstance() as any).tableView).toBe(null);
             // Verify setContext is called to hide the panel
@@ -114,13 +115,13 @@ describe("TableViewProvider", () => {
         it("correctly resolves the view and calls resolveForView on the table", async () => {
             const table = new TableBuilder(fakeExtContext).isView().build();
             await TableViewProvider.getInstance().setTableView(table);
-            const resolveForViewSpy = jest.spyOn(table, "resolveForView");
+            const resolveForViewSpy = vi.spyOn(table, "resolveForView");
             const fakeView = {
-                onDidDispose: jest.fn(),
-                show: jest.fn(),
+                onDidDispose: vi.fn(),
+                show: vi.fn(),
                 viewType: "zowe.panel",
                 title: "SomeWebviewView",
-                webview: { asWebviewUri: jest.fn(), onDidReceiveMessage: jest.fn(), options: {} },
+                webview: { asWebviewUri: vi.fn(), onDidReceiveMessage: vi.fn(), options: {} },
             } as unknown as WebviewView;
             const fakeEventEmitter = new EventEmitter<any>();
             await TableViewProvider.getInstance().resolveWebviewView(

@@ -30,18 +30,18 @@ import { createIJobFile, createJobSessionNode } from "../../../__mocks__/mockCre
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 
-jest.mock("../../../../src/tools/ZoweLocalStorage");
+vi.mock("../../../../src/tools/ZoweLocalStorage");
 
 function createGlobalMocks() {
     const newMocks = {
         session: createISession(),
         profileOne: createIProfile(),
-        mockGetInstance: jest.fn(),
+        mockGetInstance: vi.fn(),
         mockProfileInstance: null,
         mockProfilesCache: null,
-        createDirectory: jest.fn(),
+        createDirectory: vi.fn(),
     };
-    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.createDirectory);
+    vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.createDirectory);
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
     Object.defineProperty(Constants, "PROFILES_CACHE", {
@@ -50,7 +50,7 @@ function createGlobalMocks() {
     });
 
     Object.defineProperty(newMocks.mockProfilesCache, "getConfigInstance", {
-        value: jest.fn(() => {
+        value: vi.fn(() => {
             return {
                 usingTeamConfig: false,
             };
@@ -62,15 +62,15 @@ function createGlobalMocks() {
 
 function makeFakeMvsApi(items: any[] = []) {
     return {
-        dataSet: jest.fn().mockResolvedValue({ apiResponse: { items } }),
-        allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
+        dataSet: vi.fn().mockResolvedValue({ apiResponse: { items } }),
+        allMembers: vi.fn().mockResolvedValue({ apiResponse: { items: [] } }),
     };
 }
 
 beforeEach(() => {
-    jest.resetAllMocks();
-    jest.clearAllMocks();
-    jest.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockImplementation(() => makeFakeMvsApi());
+    vi.resetAllMocks();
+    vi.clearAllMocks();
+    vi.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockImplementation(() => makeFakeMvsApi());
 });
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
@@ -294,15 +294,15 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
     const otherEncoding: ZosEncoding = { kind: "other", codepage: "IBM-1047" };
 
     function createBlockMocks() {
-        const showInputBox = jest.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
-        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
-        const localStorageGet = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
-        const localStorageSet = jest.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined);
-        const getEncodingForFile = jest.spyOn((BaseProvider as any).prototype, "getEncodingForFile");
-        const setEncodingForFile = jest.spyOn((BaseProvider as any).prototype, "setEncodingForFile").mockReturnValue(undefined);
-        const fetchEncodingForUri = jest.spyOn(UssFSProvider.instance, "fetchEncodingForUri").mockResolvedValue(undefined as any);
-        const createDirectorySpy = jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation();
-        const getEncodingForFileSpy = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValue({ kind: "binary" });
+        const showInputBox = vi.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
+        const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
+        const localStorageGet = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const localStorageSet = vi.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined);
+        const getEncodingForFile = vi.spyOn((BaseProvider as any).prototype, "getEncodingForFile").mockReturnValue(undefined);
+        const setEncodingForFile = vi.spyOn((BaseProvider as any).prototype, "setEncodingForFile").mockReturnValue(undefined);
+        const fetchEncodingForUri = vi.spyOn(UssFSProvider.instance, "fetchEncodingForUri").mockResolvedValue(undefined as any);
+        const createDirectorySpy = vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+        const getEncodingForFileSpy = vi.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValue({ kind: "binary" });
 
         return {
             profile: createIProfile(),
@@ -320,9 +320,9 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
     }
 
     beforeEach(() => {
-        jest.resetAllMocks();
-        jest.clearAllMocks();
-        jest.restoreAllMocks();
+        vi.resetAllMocks();
+        vi.clearAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("prompts for text encoding for USS file", async () => {
@@ -335,7 +335,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[0]);
-        blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce(undefined);
         const encoding = await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(encoding).toEqual(textEncoding);
@@ -435,7 +435,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             profile: blockMocks.profile,
             parentPath: "/root",
         });
-        blockMocks.getEncodingForFile.mockReturnValueOnce({ kind: "text" });
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce({ kind: "text" });
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({
@@ -455,7 +455,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             profile: blockMocks.profile,
             parentPath: "/root",
         });
-        blockMocks.getEncodingForFile.mockReturnValueOnce({ kind: "text" });
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce({ kind: "text" });
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({
@@ -475,7 +475,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         node.setEncoding(otherEncoding);
-        blockMocks.getEncodingForFile.mockReturnValueOnce(otherEncoding);
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce(otherEncoding);
         const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
         blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
         blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[4]);
@@ -496,7 +496,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         node.setEncoding(binaryEncoding);
-        blockMocks.getEncodingForFile.mockReturnValueOnce(binaryEncoding);
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce(binaryEncoding);
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is Binary" }));
@@ -533,7 +533,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentNode,
             contextOverride: Constants.DS_MEMBER_CONTEXT,
         });
-        const existsMock = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(true);
+        const existsMock = vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(true);
         node.setEncoding(otherEncoding);
         expect(existsMock).toHaveBeenCalled();
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
@@ -674,18 +674,15 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
 
 describe("Shared utils unit tests - function promptForUploadEncoding", () => {
     beforeEach(() => {
-        jest.resetAllMocks();
-        jest.clearAllMocks();
-        jest.restoreAllMocks();
+        vi.resetAllMocks();
+        vi.clearAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("returns binary when Binary is selected", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: jest.fn().mockReturnValue(undefined), update: jest.fn() },
-            configurable: true,
-        });
-        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Binary") } as any);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Binary") } as any);
         const enc = await SharedUtils.promptForUploadEncoding(profile as any, "some/path");
         expect(showQuickPick).toHaveBeenCalled();
         expect(enc).toEqual({ kind: "binary" });
@@ -693,11 +690,8 @@ describe("Shared utils unit tests - function promptForUploadEncoding", () => {
 
     it("returns text when EBCDIC is selected", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: jest.fn().mockReturnValue(undefined), update: jest.fn() },
-            configurable: true,
-        });
-        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("EBCDIC") } as any);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("EBCDIC") } as any);
         const enc = await SharedUtils.promptForUploadEncoding(profile as any, "some/path");
         expect(enc).toEqual({ kind: "text" });
         expect(showQuickPick).toHaveBeenCalled();
@@ -705,13 +699,10 @@ describe("Shared utils unit tests - function promptForUploadEncoding", () => {
 
     it("prompts for codepage when Other is selected and stores it in history", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: jest.fn().mockReturnValue([]), update: jest.fn() },
-            configurable: true,
-        });
-        jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
-        jest.spyOn(Gui, "showInputBox").mockResolvedValue("IBM-1047");
-        const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue").mockResolvedValueOnce(undefined);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue([]);
+        vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
+        vi.spyOn(Gui, "showInputBox").mockResolvedValue("IBM-1047");
+        const setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockResolvedValueOnce(undefined);
         const enc = await SharedUtils.promptForUploadEncoding(profile as any, "some/path");
         expect(enc).toEqual({ kind: "other", codepage: "IBM-1047" });
         expect(setValueSpy).toHaveBeenCalled();
@@ -720,18 +711,15 @@ describe("Shared utils unit tests - function promptForUploadEncoding", () => {
 
 describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
     beforeEach(() => {
-        jest.resetAllMocks();
-        jest.clearAllMocks();
-        jest.restoreAllMocks();
+        vi.resetAllMocks();
+        vi.clearAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("returns binary when Binary is selected", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: jest.fn().mockReturnValue(undefined), update: jest.fn() },
-            configurable: true,
-        });
-        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Binary") } as any);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Binary") } as any);
         const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
         expect(showQuickPick).toHaveBeenCalled();
         expect(enc).toEqual({ kind: "binary" });
@@ -739,11 +727,8 @@ describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
 
     it("returns text when EBCDIC is selected", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: jest.fn().mockReturnValue(undefined), update: jest.fn() },
-            configurable: true,
-        });
-        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("EBCDIC") } as any);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("EBCDIC") } as any);
         const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
         expect(enc).toEqual({ kind: "text" });
         expect(showQuickPick).toHaveBeenCalled();
@@ -751,13 +736,10 @@ describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
 
     it("prompts for codepage when Other is selected and stores it in history", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: jest.fn().mockReturnValue([]), update: jest.fn() },
-            configurable: true,
-        });
-        jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
-        jest.spyOn(Gui, "showInputBox").mockResolvedValue("ISO8859-1");
-        const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue").mockResolvedValueOnce(undefined);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue([]);
+        vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
+        vi.spyOn(Gui, "showInputBox").mockResolvedValue("ISO8859-1");
+        const setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockResolvedValueOnce(undefined);
         const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
         expect(enc).toEqual({ kind: "other", codepage: "ISO8859-1" });
         expect(setValueSpy).toHaveBeenCalled();
@@ -765,24 +747,18 @@ describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
 
     it("returns undefined when user cancels selection", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: jest.fn().mockReturnValue(undefined), update: jest.fn() },
-            configurable: true,
-        });
-        jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        vi.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
         const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
         expect(enc).toBeUndefined();
     });
 
     it("returns undefined when user cancels codepage input", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: jest.fn().mockReturnValue([]), update: jest.fn() },
-            configurable: true,
-        });
-        jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
-        jest.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
-        jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue([]);
+        vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
+        vi.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
+        vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
         const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
         expect(enc).toBeUndefined();
     });
@@ -792,11 +768,8 @@ describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
         if (profile.profile) {
             profile.profile.encoding = "IBM-037";
         }
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: jest.fn().mockReturnValue([]), update: jest.fn() },
-            configurable: true,
-        });
-        const mockShowQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: "IBM-037" } as any);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue([]);
+        const mockShowQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: "IBM-037" } as any);
 
         const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
 
@@ -809,12 +782,9 @@ describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
 
     it("includes encoding history in options", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: jest.fn().mockReturnValue(["IBM-1047", "ISO8859-1"]), update: jest.fn() },
-            configurable: true,
-        });
-        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(["IBM-1047", "ISO8859-1"]);
-        const mockShowQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: "IBM-1047" } as any);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(["IBM-1047", "ISO8859-1"]);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(["IBM-1047", "ISO8859-1"]);
+        const mockShowQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: "IBM-1047" } as any);
 
         await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
 
@@ -847,7 +817,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = { kind: "binary" };
 
-            const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri?.path);
@@ -873,7 +843,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = { kind: "text" };
 
-            const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri?.path);
@@ -899,7 +869,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = { kind: "other", codepage: "IBM-1147" };
 
-            const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri?.path);
@@ -925,7 +895,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = undefined;
 
-            const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri?.path);
@@ -946,7 +916,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = { kind: "binary" };
 
-            const encodingMapSpy = jest.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(ussNode);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.resourceUri?.path);
@@ -965,7 +935,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = { kind: "text" };
 
-            const encodingMapSpy = jest.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(ussNode);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.resourceUri?.path);
@@ -984,7 +954,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = { kind: "other", codepage: "IBM-1147" };
 
-            const encodingMapSpy = jest.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(ussNode);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.resourceUri?.path);
@@ -1003,7 +973,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = undefined;
 
-            const encodingMapSpy = jest.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(ussNode);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.resourceUri?.path);
@@ -1025,7 +995,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = { kind: "binary" };
 
-                const encodingMapSpy = jest.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(dsNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.resourceUri?.path);
@@ -1044,7 +1014,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = { kind: "test" };
 
-                const encodingMapSpy = jest.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(dsNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.resourceUri?.path);
@@ -1063,7 +1033,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = { kind: "other", codepage: "IBM-1147" };
 
-                const encodingMapSpy = jest.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(dsNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.resourceUri?.path);
@@ -1082,7 +1052,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = undefined;
 
-                const encodingMapSpy = jest.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(dsNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.resourceUri?.path);
@@ -1111,7 +1081,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = { kind: "binary" };
 
-                const encodingMapSpy = jest.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(memNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(memNode.resourceUri?.path);
@@ -1138,7 +1108,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = { kind: "text" };
 
-                const encodingMapSpy = jest.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(memNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(memNode.resourceUri?.path);
@@ -1165,7 +1135,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = { kind: "other", codepage: "IBM-1147" };
 
-                const encodingMapSpy = jest.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(memNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(memNode.resourceUri?.path);
@@ -1192,7 +1162,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = undefined;
 
-                const encodingMapSpy = jest.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(memNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(memNode.resourceUri?.path);
@@ -1213,7 +1183,7 @@ describe("Shared utils unit tests - function parseFavorites", () => {
     });
 
     it("filters out an incomplete favorite entry (missing label and context)", () => {
-        const warnSpy = jest.spyOn(ZoweLogger, "warn");
+        const warnSpy = vi.spyOn(ZoweLogger, "warn");
         const favData = SharedUtils.parseFavorites(["[testProfile]: "]);
         expect(favData.length).toBe(0);
         expect(warnSpy).toHaveBeenCalledWith("Failed to parse a saved favorite. Attempted to parse: [testProfile]: ");
@@ -1228,7 +1198,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
             contextOverride: Constants.DS_PDS_CONTEXT,
             profile: createIProfile(),
         });
-        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        const updateWorkspaceFoldersMock = vi.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation((() => undefined) as any);
         SharedUtils.addToWorkspace(datasetNode, null as any);
         expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, {
             uri: datasetNode.resourceUri,
@@ -1242,7 +1212,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
             contextOverride: Constants.USS_TEXT_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        const updateWorkspaceFoldersMock = vi.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation((() => undefined) as any);
         SharedUtils.addToWorkspace(ussNode, null as any);
         expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, { uri: ussNode.resourceUri, name: `[sestest] ${ussNode.fullPath}` });
     });
@@ -1259,7 +1229,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
             contextOverride: Constants.DS_PDS_CONTEXT,
             profile: createIProfile(),
         });
-        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        const updateWorkspaceFoldersMock = vi.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation((() => undefined) as any);
         SharedUtils.addToWorkspace(null as any, [datasetNode1, datasetNode2]);
         expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(
             0,
@@ -1283,7 +1253,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
             session: createISession(),
         });
         ussNode.fullPath = "/u/users/smpluser";
-        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        const updateWorkspaceFoldersMock = vi.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation((() => undefined) as any);
         SharedUtils.addToWorkspace(ussNode, null as any);
         expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, {
             uri: ussNode.resourceUri?.with({ path: `/sestest${ussNode.fullPath}` }),
@@ -1299,8 +1269,8 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
             session: createISession(),
         });
         ussNode.fullPath = "";
-        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
-        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+        const updateWorkspaceFoldersMock = vi.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation((() => undefined) as any);
+        const infoMessageSpy = vi.spyOn(Gui, "infoMessage");
         updateWorkspaceFoldersMock.mockClear();
         SharedUtils.addToWorkspace(ussNode, null as any);
         expect(updateWorkspaceFoldersMock).not.toHaveBeenCalledWith(0, null, {
@@ -1319,7 +1289,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
         const workspaceFolders = new MockedProperty(vscode.workspace, "workspaceFolders", {
             value: [{ uri: ussNode.resourceUri, name: ussNode.label }],
         });
-        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        const updateWorkspaceFoldersMock = vi.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation((() => undefined) as any);
         updateWorkspaceFoldersMock.mockClear();
         SharedUtils.addToWorkspace(ussNode, null as any);
         expect(updateWorkspaceFoldersMock).not.toHaveBeenCalledWith(0, null, {
@@ -1332,7 +1302,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
 
 describe("Shared utils unit tests - function copyExternalLink", () => {
     it("does nothing for an invalid node or one without a resource URI", async () => {
-        const copyClipboardMock = jest.spyOn(vscode.env.clipboard, "writeText");
+        const copyClipboardMock = vi.spyOn(vscode.env.clipboard, "writeText");
         const ussNode = createUSSNode(createISession(), createIProfile());
         ussNode.resourceUri = undefined;
         await SharedUtils.copyExternalLink({ extension: { id: "Zowe.vscode-extension-for-zowe" } } as any, ussNode);
@@ -1340,7 +1310,7 @@ describe("Shared utils unit tests - function copyExternalLink", () => {
     });
 
     it("copies a link for a node with a resource URI", async () => {
-        const copyClipboardMock = jest.spyOn(vscode.env.clipboard, "writeText");
+        const copyClipboardMock = vi.spyOn(vscode.env.clipboard, "writeText");
         const ussNode = createUSSNode(createISession(), createIProfile());
         await SharedUtils.copyExternalLink({ extension: { id: "Zowe.vscode-extension-for-zowe" } } as any, ussNode);
         expect(copyClipboardMock).toHaveBeenCalledWith(`vscode://Zowe.vscode-extension-for-zowe?${ussNode.resourceUri?.toString()}`);
@@ -1349,30 +1319,30 @@ describe("Shared utils unit tests - function copyExternalLink", () => {
 
 describe("Shared utils unit tests - function debounce", () => {
     beforeAll(() => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
     });
 
     afterAll(() => {
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     it("executes a function twice when time between calls is long", () => {
-        const mockEventHandler = jest.fn();
+        const mockEventHandler = vi.fn();
         const debouncedFn = SharedUtils.debounce(mockEventHandler, 100);
         debouncedFn();
-        jest.runAllTimers();
+        vi.runAllTimers();
         debouncedFn();
-        jest.runAllTimers();
+        vi.runAllTimers();
         expect(mockEventHandler).toHaveBeenCalledTimes(2);
     });
 
     it("executes a function only once when time between calls is short", () => {
-        const mockEventHandler = jest.fn();
+        const mockEventHandler = vi.fn();
         const debouncedFn = SharedUtils.debounce(mockEventHandler, 100);
         debouncedFn();
-        jest.advanceTimersByTime(10);
+        vi.advanceTimersByTime(10);
         debouncedFn();
-        jest.runAllTimers();
+        vi.runAllTimers();
         expect(mockEventHandler).toHaveBeenCalledTimes(1);
     });
 });
@@ -1435,7 +1405,7 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
             UserId: 3,
         };
 
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(undefined);
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(undefined);
 
         const result = SharedUtils.getDefaultSortOptions(sortOptions, settingsKey, sortMethod);
 
@@ -1455,7 +1425,7 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
             UserId: 3,
         };
 
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
             method: "DateModified",
             direction: "Descending",
         });
@@ -1479,7 +1449,7 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
             UserId: 3,
         };
 
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
             method: "UserId",
             direction: "Ascending",
         });
@@ -1503,7 +1473,7 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
             UserId: 3,
         };
 
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
             method: "InvalidMethod",
             direction: "InvalidDirection",
         });
@@ -1527,7 +1497,7 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
             UserId: 3,
         };
 
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
             method: undefined,
             direction: undefined,
         });
@@ -1544,30 +1514,30 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
 
 describe("Shared utils unit tests - function debounceAsync", () => {
     beforeAll(() => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
     });
 
     afterAll(() => {
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     it("executes a function twice when time between calls is long", async () => {
-        const mockEventHandler = jest.fn().mockResolvedValue(undefined);
+        const mockEventHandler = vi.fn().mockResolvedValue(undefined);
         const debouncedFn = SharedUtils.debounceAsync(mockEventHandler, 100);
         void debouncedFn();
-        jest.runAllTimers();
+        vi.runAllTimers();
         void debouncedFn();
-        jest.runAllTimers();
+        vi.runAllTimers();
         expect(mockEventHandler).toHaveBeenCalledTimes(2);
     });
 
     it("executes a function only once when time between calls is short", async () => {
-        const mockEventHandler = jest.fn().mockResolvedValue(undefined);
+        const mockEventHandler = vi.fn().mockResolvedValue(undefined);
         const debouncedFn = SharedUtils.debounceAsync(mockEventHandler, 100);
         void debouncedFn();
-        jest.advanceTimersByTime(10);
+        vi.advanceTimersByTime(10);
         void debouncedFn();
-        jest.runAllTimers();
+        vi.runAllTimers();
         expect(mockEventHandler).toHaveBeenCalledTimes(1);
     });
 });
@@ -1617,7 +1587,7 @@ describe("SharedUtils.handleProfileChange", () => {
             contextOverride: Constants.DS_SESSION_CONTEXT,
             profile,
         });
-        jest.spyOn(dsSession, "setProfileToChoice").mockImplementation(() => {
+        vi.spyOn(dsSession, "setProfileToChoice").mockImplementation(() => {
             throw new Error("error while updating profile on node");
         });
         const providers = {
@@ -1625,7 +1595,7 @@ describe("SharedUtils.handleProfileChange", () => {
             uss: { getChildren: () => [] } as any,
             job: { getChildren: () => [] } as any,
         };
-        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        const errorSpy = vi.spyOn(ZoweLogger, "error");
         await SharedUtils.handleProfileChange(providers, newProfile);
         // verify that nodes still have the old data as the `setProfileToChoice` function failed
         expect(dsSession.getProfile().profile?.user).toBe(profile.profile?.user);
@@ -1641,11 +1611,11 @@ describe("Shared utils unit tests - function promptForDirectoryEncoding", () => 
     const otherEncoding: ZosEncoding = { kind: "other", codepage: "IBM-1047" };
 
     function createBlockMocks() {
-        const showInputBox = jest.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
-        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
-        const localStorageGet = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
-        const localStorageSet = jest.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
-        const infoMessage = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+        const showInputBox = vi.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
+        const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
+        const localStorageGet = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const localStorageSet = vi.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
+        const infoMessage = vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
 
         return {
             profile: createIProfile(),
@@ -1658,9 +1628,9 @@ describe("Shared utils unit tests - function promptForDirectoryEncoding", () => 
     }
 
     beforeEach(() => {
-        jest.resetAllMocks();
-        jest.clearAllMocks();
-        jest.restoreAllMocks();
+        vi.resetAllMocks();
+        vi.clearAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("returns auto-detect when Auto-detect option is selected", async () => {
@@ -1813,13 +1783,13 @@ describe("Shared utils unit tests - function promptForDirectoryEncoding", () => 
 
 describe("Shared utils unit tests - function handleDownloadResponse", () => {
     function createBlockMocks() {
-        const showMessage = jest.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
-        const errorMessage = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
-        const warningMessage = jest.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
-        const loggerTrace = jest.spyOn(ZoweLogger, "trace").mockReturnValue(undefined);
-        const loggerInfo = jest.spyOn(ZoweLogger, "info").mockReturnValue(undefined);
-        const loggerWarn = jest.spyOn(ZoweLogger, "warn").mockReturnValue(undefined);
-        const executeCommand = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+        const showMessage = vi.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
+        const errorMessage = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+        const warningMessage = vi.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+        const loggerTrace = vi.spyOn(ZoweLogger, "trace").mockReturnValue(undefined);
+        const loggerInfo = vi.spyOn(ZoweLogger, "info").mockReturnValue(undefined);
+        const loggerWarn = vi.spyOn(ZoweLogger, "warn").mockReturnValue(undefined);
+        const executeCommand = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
 
         return {
             showMessage,
@@ -1833,9 +1803,9 @@ describe("Shared utils unit tests - function handleDownloadResponse", () => {
     }
 
     beforeEach(() => {
-        jest.resetAllMocks();
-        jest.clearAllMocks();
-        jest.restoreAllMocks();
+        vi.resetAllMocks();
+        vi.clearAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("shows simple success message when response is falsy", async () => {
@@ -2092,12 +2062,12 @@ describe("Shared utils unit tests - function handleDownloadResponse", () => {
 });
 
 describe("SharedUtils helpers", () => {
-    const mockGetMvsApi = jest.fn();
+    const mockGetMvsApi = vi.fn();
     let originalGetMvsApi: any;
 
     beforeEach(() => {
-        jest.resetAllMocks();
-        jest.clearAllMocks();
+        vi.resetAllMocks();
+        vi.clearAllMocks();
 
         originalGetMvsApi = (ZoweExplorerApiRegister as any).getMvsApi;
         (ZoweExplorerApiRegister as any).getMvsApi = mockGetMvsApi;
@@ -2105,7 +2075,7 @@ describe("SharedUtils helpers", () => {
 
     afterEach(() => {
         (ZoweExplorerApiRegister as any).getMvsApi = originalGetMvsApi;
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("isSamePhysicalDataset returns true when dsname and vols match", async () => {
@@ -2124,8 +2094,8 @@ describe("SharedUtils helpers", () => {
             },
         };
 
-        const srcApi = { dataSet: jest.fn().mockResolvedValue(srcResp) };
-        const dstApi = { dataSet: jest.fn().mockResolvedValue(dstResp) };
+        const srcApi = { dataSet: vi.fn().mockResolvedValue(srcResp) };
+        const dstApi = { dataSet: vi.fn().mockResolvedValue(dstResp) };
 
         mockGetMvsApi.mockImplementationOnce(() => srcApi);
         mockGetMvsApi.mockImplementationOnce(() => dstApi);
@@ -2143,8 +2113,8 @@ describe("SharedUtils helpers", () => {
         const dstProfile = { name: "DST" } as any;
         const dsn = "NON.EXISTENT";
 
-        const srcApi = { dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [{ dsname: dsn, vols: "VOL01" }] } }) };
-        const dstApi = { dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
+        const srcApi = { dataSet: vi.fn().mockResolvedValue({ apiResponse: { items: [{ dsname: dsn, vols: "VOL01" }] } }) };
+        const dstApi = { dataSet: vi.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
 
         mockGetMvsApi.mockImplementationOnce(() => srcApi);
         mockGetMvsApi.mockImplementationOnce(() => dstApi);
@@ -2196,17 +2166,17 @@ describe("SharedUtils helpers", () => {
                 canSelectMany: false,
                 items: [],
                 selectedItems: [],
-                onDidAccept: jest.fn(),
-                onDidHide: jest.fn(),
-                show: jest.fn(),
-                hide: jest.fn(),
-                dispose: jest.fn(),
+                onDidAccept: vi.fn(),
+                onDidHide: vi.fn(),
+                show: vi.fn(),
+                hide: vi.fn(),
+                dispose: vi.fn(),
             };
-            jest.spyOn(Gui, "createQuickPick").mockReturnValue(mockQuickPick as any);
+            vi.spyOn(Gui, "createQuickPick").mockReturnValue(mockQuickPick as any);
         });
 
         afterEach(() => {
-            jest.restoreAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("returns selected items when the user accepts", async () => {
