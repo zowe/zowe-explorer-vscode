@@ -11,6 +11,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Enhanced `DataSetAttributesProvider` to pass raw API response attributes to extenders via the `DsInfo` context object. Extenders can now access the `attributes` field in the context to retrieve data set information without making additional API calls. [#3927](https://github.com/zowe/zowe-explorer-vscode/issues/3927)
 - Added `Name` and `DateCreated` to `Sorting.DatasetFilterOpts`. [#4075](https://github.com/zowe/zowe-explorer-vscode/pull/4075)
 - Moved the `AuthHandler` implementation from `profiles/AuthHandler` to `vscode/session/AuthHandler` and added a compatibility shim at the original path to preserve existing imports and API behavior for extenders. [4149](https://github.com/zowe/zowe-explorer-vscode/issues/4149)
+- Added a function `isEnabledInSettings` to the `FeatureFlags` class, which checks VS Code settings to see if a given Zowe Explorer feature ID is enabled. [#4242](https://github.com/zowe/zowe-explorer-vscode/issues/4242)
 
 ### Bug fixes
 
