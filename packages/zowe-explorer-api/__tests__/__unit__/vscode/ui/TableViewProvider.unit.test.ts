@@ -9,6 +9,7 @@
  *
  */
 
+import { vi, describe, beforeEach, afterEach, it, expect } from "vitest";
 import { commands, EventEmitter, ExtensionContext, WebviewView } from "vscode";
 import { TableBuilder, TableViewProvider } from "../../../../src/vscode/ui";
 
@@ -73,7 +74,7 @@ describe("TableViewProvider", () => {
             // Verify that the context management is handled by setTableView
             const builder = new TableBuilder(fakeExtContext);
             const table = builder.isView().build();
-            const executeCommandMock = jest.spyOn(commands, "executeCommand").mockImplementation();
+            const executeCommandMock = vi.spyOn(commands, "executeCommand").mockImplementation(() => Promise.resolve());
 
             await TableViewProvider.getInstance().setTableView(table);
 

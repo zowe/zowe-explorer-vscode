@@ -529,14 +529,14 @@ describe("Extension Unit Tests", () => {
     });
 
     it("Tests that TableViewUtils.initialize is called during activation", async () => {
-        const initializeSpy = jest.spyOn(TableViewUtils, "initialize");
+        const initializeSpy = vi.spyOn(TableViewUtils, "initialize");
 
         globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
         globalMocks.mockExistsSync.mockReturnValueOnce(false);
         globalMocks.mockGetConfiguration.mockReturnValue({
             persistence: true,
             get: (_setting: string) => "",
-            update: jest.fn(),
+            update: vi.fn(),
             inspect: (_configuration: string) => {
                 return {
                     workspaceValue: undefined,

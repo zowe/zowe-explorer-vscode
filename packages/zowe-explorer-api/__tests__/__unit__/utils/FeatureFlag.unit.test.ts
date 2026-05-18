@@ -27,9 +27,6 @@ import { FeatureFlags, FeatureFlagsAccess, FlagAccessLevel } from "../../../src"
 
 const FLAGS_FILE = "feature-flags.json";
 
-jest.mock("fs");
-jest.mock("vscode");
-
 describe("FeatureFlags", () => {
     let readFileSpy: any;
     let writeFileSpy: any;
@@ -192,17 +189,17 @@ describe("FeatureFlagsAccess (ACL)", () => {
 });
 
 describe("FeatureFlags.isEnabledInSettings", () => {
-    let mockGetConfiguration: jest.Mock;
-    let mockGet: jest.Mock;
+    let mockGetConfiguration: any;
+    let mockGet: any;
 
     beforeEach(() => {
-        mockGet = jest.fn();
-        mockGetConfiguration = jest.fn().mockReturnValue({ get: mockGet });
+        mockGet = vi.fn();
+        mockGetConfiguration = vi.fn().mockReturnValue({ get: mockGet });
         (vscode.workspace as any).getConfiguration = mockGetConfiguration;
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it("should return true when setting is true", () => {
