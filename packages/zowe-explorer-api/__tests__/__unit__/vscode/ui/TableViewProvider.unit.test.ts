@@ -9,7 +9,7 @@
  *
  */
 
-import { vi, describe, beforeEach, afterEach, it, expect } from "vitest";
+import { vi, describe, beforeEach, it, expect } from "vitest";
 import { commands, EventEmitter, ExtensionContext, WebviewView } from "vscode";
 import { TableBuilder, TableViewProvider } from "../../../../src/vscode/ui";
 
