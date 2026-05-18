@@ -577,12 +577,15 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
     public async refreshFavorites(profileType?: string): Promise<void> {
         const lines: string[] = this.mPersistence.readFavorites();
-        if (lines.length === 0) {
+        const vsamLines: string[] = this.mPersistence.readVsamFavorites();
+        const memberLines: string[] = this.mPersistence.readMemberFavorites();
+        const combinedLines = [...lines, ...vsamLines, ...memberLines];
+        if (combinedLines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No data set favorites found."));
             return;
         }
 
-        const favorites = SharedUtils.parseFavorites(lines);
+        const favorites = SharedUtils.parseFavorites(combinedLines);
         for (const fav of favorites) {
             // The profile node used for grouping respective favorited items.
             // Create a node if it does not already exist in the Favorites array
@@ -1462,7 +1465,9 @@ Would you like to do this now?`,
      */
     public updateFavorites(): void {
         ZoweLogger.trace("DatasetTree.updateFavorites called.");
-        const favoritesArray = [];
+        const favoritesArray: string[] = [];
+        const vsamFavoritesArray: string[] = [];
+        const memberFavoritesArray: string[] = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((favorite) => {
                 const pdsNode = favorite as ZoweDatasetNode;
@@ -1479,16 +1484,24 @@ Would you like to do this now?`,
                             "){" +
                             SharedContext.getBaseContext(favorite) +
                             "}";
-                        favoritesArray.push(favoriteEntry);
+                        memberFavoritesArray.push(favoriteEntry);
                     }
                 } else {
                     const favoriteEntry =
                         "[" + profileNode.label.toString() + "]: " + favorite.label.toString() + "{" + SharedContext.getBaseContext(favorite) + "}";
-                    favoritesArray.push(favoriteEntry);
+                    if (favorite.contextValue?.includes(Constants.VSAM_CONTEXT)) {
+                        vsamFavoritesArray.push(favoriteEntry);
+                    } else {
+                        favoritesArray.push(favoriteEntry);
+                    }
                 }
             });
         });
-        this.mPersistence.updateFavorites(favoritesArray);
+        this.mPersistence.updateFavorites({
+            favorites: favoritesArray,
+            vsamFavorites: vsamFavoritesArray,
+            memberFavorites: memberFavoritesArray
+        });
     }
 
     /**
@@ -1543,6 +1556,7 @@ Would you like to do this now?`,
             };
             if (!setting.persistence) {
                 setting.favorites = [];
+                setting.vsamFavorites = [];
                 setting.history = [];
                 await SettingsConfig.setDirectValue(DatasetTree.persistenceSchema, setting);
             }
