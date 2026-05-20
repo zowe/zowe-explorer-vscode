@@ -12,7 +12,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
   - `zowex-vsce.requestTimeout` -> `zowe.settings.requestTimeout`
   - All others, replace the setting prefix `zowex-vsce` with `zowe.zowex`
 - Fixed error handling of methods in `SshMvsApi` class so that errors are thrown and propagated to extenders. [#917](https://github.com/zowe/zowex/issues/917)
-- Fixed error where the encoding was not being passed when attempting to open spool files with an encoding. []()
+- Fixed error where the encoding was not being passed when attempting to open spool files with an encoding. [#983](https://github.com/zowe/zowex/issues/983)
 
 ## `0.5.0`
 
