@@ -29,17 +29,21 @@ Read these before writing or modifying tests.
 ## Unit tests (Jest + ts-jest)
 
 ### Layout & Naming
+
 - `packages/<pkg>/__tests__/__unit__/`
 - File naming: `<SourceFile>.unit.test.ts`.
 - One top-level `describe` per source class/module; nested `describe`s per method or logical group.
 
 ### Run Tests
+
 ```bash
 cd packages/zowe-explorer && pnpm exec jest <file-name-fragment>
 ```
 
 ### Mock Factories
+
 Reuse helpers in `packages/zowe-explorer/__tests__/__mocks__/mockCreators/`:
+
 - `shared.ts`: `createIProfile`, `createISession`, `createInstanceOfProfile`, `createValidIProfile`
 - `datasets.ts`: `createDatasetSessionNode`, `createDatasetTree`, `createDatasetFavoritesNode`
 - `uss.ts`: `createUSSSessionNode`, `createUSSTree`, `createUSSNode`
@@ -49,24 +53,27 @@ Reuse helpers in `packages/zowe-explorer/__tests__/__mocks__/mockCreators/`:
 If a fixture is missing, **add it to the matching file** instead of creating a one-off.
 
 ### `MockedProperty` over `Object.defineProperty`
+
 When you need to stub a property that Jest can't easily mock (statics, getters, readonly fields), use the `MockedProperty` helper from `__mocks__/mockUtils.ts`. It restores the original value automatically.
 
 ```typescript
 import { MockedProperty } from "../../__mocks__/mockUtils";
 
 const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
-    value: { ssoLogin: jest.fn(), promptCredentials: jest.fn() } as any,
-    configurable: true,
+  value: { ssoLogin: jest.fn(), promptCredentials: jest.fn() } as any,
+  configurable: true,
 });
 ```
 
 ### Spying & Resetting
+
 - Prefer `jest.spyOn(...)` over `jest.mock(...)` for single methods—it leaves the rest of the module intact.
 - Reserve module-level `jest.mock("...")` for modules that must be fully replaced.
 - Call `jest.restoreAllMocks()` in `beforeEach` to prevent spy leaks across tests.
 - For one-off return values, prefer `mockReturnValueOnce` / `mockResolvedValueOnce`.
 
 ### Anti-patterns
+
 - **No snapshot tests** for UI objects.
 - **Avoid `any` casts**. Use API types.
 - **No reaching into `src/` for private functions.**
@@ -74,38 +81,44 @@ const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
 - **No raw `fs`/`path`**. Mock at the provider boundary.
 
 ## End-to-end tests (WDIO + Cucumber)
+
 Located in `packages/zowe-explorer/__tests__/__e2e__/`.
 
 ### Layout & Naming
+
 - `features/<area>/<Name>.feature` - Gherkin scenarios
 - `step_definitions/<area>/<Name>.steps.ts` - Step implementations
 - `__pageobjects__/` - Reusable page objects (e.g., `ProfileNode`, `QuickPick`). Add new page objects rather than ad-hoc selectors.
 - `__common__/` - Shared WDIO config and helpers.
 
 ### Required environment
+
 E2E tests require a valid Zowe team config and a `.env` file defining all `ZE_TEST_*` variables:
 
-| Variable | Purpose |
-| --- | --- |
-| `ZE_TEST_PROFILE_NAME` | Profile name as it appears in the tree |
-| `ZE_TEST_DS_FILTER` | Data set filter pattern |
-| `ZE_TEST_DS_PATTERN` | Data set pattern used by table view tests |
-| `ZE_TEST_PDS` | Existing PDS name |
-| `ZE_TEST_PDS_MEMBER` | Existing PDS member name |
-| `ZE_TEST_PS` | Existing sequential dataset name |
-| `ZE_TEST_USS_FILTER` | USS filter path |
-| `ZE_TEST_USS_DIR` | USS directory under the filter |
-| `ZE_TEST_USS_FILE` | USS file under the directory |
+| Variable               | Purpose                                   |
+| ---------------------- | ----------------------------------------- |
+| `ZE_TEST_PROFILE_NAME` | Profile name as it appears in the tree    |
+| `ZE_TEST_DS_FILTER`    | Data set filter pattern                   |
+| `ZE_TEST_DS_PATTERN`   | Data set pattern used by table view tests |
+| `ZE_TEST_PDS`          | Existing PDS name                         |
+| `ZE_TEST_PDS_MEMBER`   | Existing PDS member name                  |
+| `ZE_TEST_PS`           | Existing sequential dataset name          |
+| `ZE_TEST_USS_FILTER`   | USS filter path                           |
+| `ZE_TEST_USS_DIR`      | USS directory under the filter            |
+| `ZE_TEST_USS_FILE`     | USS file under the directory              |
 
 Missing variables typically surface as cryptic step failures.
 
 ### Run
+
 ```bash
 cd packages/zowe-explorer && pnpm test:e2e
 ```
+
 E2E is **not** part of `pnpm test`. Only run it locally when configured.
 
 ### Authoring Conventions
+
 - **No mocks, no stubs, ever.** If you need them, write a unit test instead.
 - **Wait, don't sleep.** Use `browser.waitUntil(...)` or `waitForClickable()`.
 - **Prefer page objects** for any selector you'd otherwise repeat.
@@ -114,11 +127,13 @@ E2E is **not** part of `pnpm test`. Only run it locally when configured.
 - **Clean up after yourself.** Teardown steps should remove remote artifacts (datasets, jobs).
 
 ### Debugging a failing e2e
+
 - Re-run single feature: `pnpm test:e2e -- --spec __tests__/__e2e__/features/<area>/<Name>.feature`
 - Check `wdio` screenshots/logs (configured in `__common__/base.wdio.conf.ts`).
 - Verify env vars for "element not found" failures.
 
 ## Pre-submit Checklist
+
 - New/modified tests pass.
 - Coverage maintained or improved.
 - Lint (`pnpm lint`) and format (`pnpm pretty`) pass.

@@ -68,7 +68,9 @@ describe("correlateError", () => {
     });
     it("returns a generic CorrelatedError with the full error details if no matches are found", () => {
         expect(
-            ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.Mvs, "A cryptic error with no available match", { profileType: "zosmf" })
+            ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.Mvs, "A cryptic error with no available match", {
+                profileType: "zosmf",
+            })
         ).toStrictEqual(new CorrelatedError({ initialError: "A cryptic error with no available match" }));
     });
 });

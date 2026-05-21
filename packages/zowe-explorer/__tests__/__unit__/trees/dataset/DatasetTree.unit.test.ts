@@ -1611,6 +1611,28 @@ describe("Dataset Tree Unit Tests - Function addFavorite", () => {
         expect(SharedContext.isFavorite(dsNode)).toBe(true);
         expect(dsNode.contextValue).toContain(Constants.FAV_SUFFIX);
     });
+    it("Checking addFavorite updates VSAM node context in search tree with _fav", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const vsamNode = new ZoweDatasetNode({
+            label: "MY.VSAM.CLUSTER",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        vsamNode.contextValue = Constants.VSAM_CONTEXT;
+        testTree.mSessionNodes[1].children = [vsamNode];
+
+        expect(SharedContext.isFavorite(vsamNode)).toBe(false);
+
+        await testTree.addFavorite(vsamNode);
+
+        expect(SharedContext.isFavorite(vsamNode)).toBe(true);
+        expect(vsamNode.contextValue).toContain(Constants.FAV_SUFFIX);
+    });
     it("Checking addFavorite updates session node context with _filterFav when saving search", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -1915,6 +1937,31 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         await testTree.removeFavorite(favDs);
 
         expect(SharedContext.isFavorite(dsNode)).toBe(false);
+    });
+
+    it("Checking removeFavorite removes _fav context from VSAM in search tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const vsamNode = new ZoweDatasetNode({
+            label: "MY.VSAM.CLUSTER",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        vsamNode.contextValue = Constants.VSAM_CONTEXT;
+        testTree.mSessionNodes[1].children = [vsamNode];
+
+        await testTree.addFavorite(vsamNode);
+
+        expect(SharedContext.isFavorite(vsamNode)).toBe(true);
+
+        const favVsam = testTree.mFavorites[0].children[0];
+        await testTree.removeFavorite(favVsam);
+
+        expect(SharedContext.isFavorite(vsamNode)).toBe(false);
     });
     it("Checking removeFavorite from search-tree session node removes matching saved search", async () => {
         createGlobalMocks();
@@ -4921,7 +4968,9 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
 
         jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
             readFavorites: () => ["[test]: SAMPLE.PO.DS{pds}", "[test]: SAMPLE.PS.DS{ds}", "INVALID*"],
-        });
+            readVsamFavorites: () => [],
+            readMemberFavorites: () => [],
+        } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
@@ -4934,7 +4983,9 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
 
         jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
             readFavorites: () => ["[test]: SAMPLE.DS{ds}"],
-        });
+            readVsamFavorites: () => [],
+            readMemberFavorites: () => [],
+        } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
@@ -4951,7 +5002,9 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
 
         jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
             readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}", "[test]: SAMPLE.PS.DS{ds}"],
-        });
+            readVsamFavorites: () => [],
+            readMemberFavorites: () => [],
+        } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
@@ -4971,7 +5024,9 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
 
         jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
             readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}"],
-        });
+            readVsamFavorites: () => [],
+            readMemberFavorites: () => [],
+        } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
         const profileNode = blockMocks.testTree.mFavorites[0];
@@ -5032,7 +5087,11 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
         testTree.updateFavorites();
 
         const profileLabel = blockMocks.datasetSessionNode.label?.toString();
-        expect(updateFavSpy).toHaveBeenCalledWith([`[${profileLabel}]: MY.PDS(MEM1){pds}`, `[${profileLabel}]: MY.PDS(MEM2){pds}`]);
+        expect(updateFavSpy).toHaveBeenCalledWith({
+            favorites: [],
+            vsamFavorites: [],
+            memberFavorites: [`[${profileLabel}]: MY.PDS(MEM1){pds}`, `[${profileLabel}]: MY.PDS(MEM2){pds}`]
+        });
     });
 
     it("persists full PDS favorite as single entry without member names", async () => {
@@ -5056,7 +5115,11 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
         testTree.updateFavorites();
 
         const profileLabel = blockMocks.datasetSessionNode.label?.toString();
-        expect(updateFavSpy).toHaveBeenCalledWith([`[${profileLabel}]: MY.PDS{pds}`]);
+        expect(updateFavSpy).toHaveBeenCalledWith({
+            favorites: [`[${profileLabel}]: MY.PDS{pds}`],
+            vsamFavorites: [],
+            memberFavorites: []
+        });
     });
 
     it("persists mix of full PDS and member-specific PDS favorites correctly", async () => {
@@ -5091,7 +5154,11 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
         testTree.updateFavorites();
 
         const profileLabel = blockMocks.datasetSessionNode.label?.toString();
-        expect(updateFavSpy).toHaveBeenCalledWith([`[${profileLabel}]: FULL.PDS{pds}`, `[${profileLabel}]: MEMBER.PDS(MYMEM){pds}`]);
+        expect(updateFavSpy).toHaveBeenCalledWith({
+            favorites: [`[${profileLabel}]: FULL.PDS{pds}`],
+            vsamFavorites: [],
+            memberFavorites: [`[${profileLabel}]: MEMBER.PDS(MYMEM){pds}`]
+        });
     });
 });
 

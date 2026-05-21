@@ -159,9 +159,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         entry.wasAccessed = false;
                     }
                 } else {
-                    // For profiles that don't provide mtime data, always invalidate to force refresh
+                    // The data set has no timestamp attributes available. Invalidate the cache to
+                    // force a re-fetch on the next read, but leave `mtime` untouched. Bumping `mtime`
+                    // here triggers VS Code's built-in stale-write detection (see
+                    // `FileService.validateWriteFile`) to compare the stored model mtime against an
+                    // always-advancing stat mtime, falsely raising a "content of the file is newer"
+                    // conflict on save. Etag-based conflict detection still runs in `writeFile` via
+                    // the 412 response from the mainframe.
                     entry.wasAccessed = false;
-                    entry.mtime = Date.now();
                 }
             }
             return entry;
@@ -322,9 +327,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     tempEntry.wasAccessed = false;
                 }
             } else if (ds.member) {
-                // For profiles that don't provide mtime data, always invalidate to force refresh
+                // The member has no modification attributes available (e.g., created without ISPF
+                // stats). Invalidate the cache to force a re-fetch on the next read request, but leave
+                // `mtime` alone. Bumping `mtime` here triggers VS Code's built-in stale-write detection (see
+                // `FileService.validateWriteFile`) to compare the stored model mtime against an
+                // always-advancing stat mtime, falsely raising a "content of the file is newer"
+                // conflict on save. Etag-based conflict detection still runs in `writeFile` via
+                // the 412 response from the mainframe.
                 tempEntry.wasAccessed = false;
-                tempEntry.mtime = Date.now();
             }
 
             entry.entries.set(fullMemberName, tempEntry);
@@ -616,7 +626,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 } else {
                     dsEntry.data = data;
                     if (dsEntry.etag !== resp.apiResponse.etag) {
-                        dsEntry.mtime = Date.now();
                         if (dsEntry.etag) {
                             this.fireSoon({ type: vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
                         }
