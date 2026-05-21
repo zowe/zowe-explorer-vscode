@@ -59,12 +59,13 @@ export class SshJesApi extends SshCommonApi implements MainframeInteraction.IJes
         throw new Error("Not yet implemented");
     }
 
-    public async getSpoolContentById(_jobname: string, jobid: string, spoolId: number): Promise<string> {
+    public async getSpoolContentById(_jobname: string, jobid: string, spoolId: number, encoding?: string): Promise<string> {
         const response = await (
             await this.client
         ).jobs.readSpool({
             spoolId,
             jobId: jobid.toUpperCase(),
+            encoding,
         });
         return B64String.decode(response.data);
     }
