@@ -69,7 +69,7 @@ Use various services to communicate with system resources and extract system dat
 - z/OSMF
   - See [z/OSMF documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=guide-using-zosmf-rest-services) for more information.
 - SSH
-  - This connection option is integrated natively, powered by [Zowe Remote SSH](https://github.com/zowe/zowex).
+  - This connection option is integrated out-of-the-box, powered by [Zowe Remote SSH](https://github.com/zowe/zowex).
   - See [SSH documentation](https://docs.zowe.org/stable/user-guide/ze-profiles) for more information.
 - FTP
 
