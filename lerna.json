@@ -4,6 +4,7 @@
     "version": {
       "forcePublish": true,
       "private": true
-    }
+    },
+    "npmClient": "pnpm"
   }
 }
