@@ -1084,7 +1084,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                         }
                     }
                 } else {
-                    const fileEntry = this.lookup(source) as UssFile;
+                    const fileEntry = this._lookupAsFile(source) as UssFile;
                     if (!fileEntry.wasAccessed) {
                         // must fetch contents of file first before pasting in new path
                         await this.readFile(source);
