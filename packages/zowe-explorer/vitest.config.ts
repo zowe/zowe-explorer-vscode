@@ -38,7 +38,7 @@ export default defineConfig({
         mockReset: false,
         server: {
             deps: {
-                inline: [/@zowe\//],
+                inline: [/@zowe\/zowex-for-zowe-explorer/],
             },
         },
         coverage: {
