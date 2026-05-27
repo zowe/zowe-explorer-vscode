@@ -2389,9 +2389,10 @@ describe("UssFSProvider", () => {
                 });
                 expect(lookupMock).toHaveBeenCalledWith(sourceUri);
                 expect(readFileMock).toHaveBeenCalledWith(sourceUri);
-                expect(blockMocks.apiFuncs.uploadFromBuffer).toHaveBeenCalledWith(
-                    Buffer.from(fileData), "/folderB/file (1)", { binary: false, encoding: undefined }
-                );
+                expect(blockMocks.apiFuncs.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(fileData), "/folderB/file (1)", {
+                    binary: false,
+                    encoding: undefined,
+                });
                 lookupMock.mockRestore();
                 readFileMock.mockRestore();
             });
@@ -2474,19 +2475,30 @@ describe("UssFSProvider", () => {
                 } as any);
                 const fileData = new Uint8Array([0xa3, 0x62, 0x63]); // £bc in ISO-8859-1
                 const lookupMock = vi.spyOn(UssFSProvider.instance, "_lookupAsFile" as any).mockReturnValue({
-                    name: "file", type: FileType.File,
+                    name: "file",
+                    type: FileType.File,
                     metadata: { path: "/sestest/folderA/file", profile: blockMocks.profile },
-                    wasAccessed: true, data: fileData, ctime: 0, mtime: 0, size: 0,
+                    wasAccessed: true,
+                    data: fileData,
+                    ctime: 0,
+                    mtime: 0,
+                    size: 0,
                     encoding: undefined,
                 });
                 await (UssFSProvider.instance as any).copyTree(sourceUri, destUri, {
                     overwrite: true,
-                    tree: { localUri: sourceUri, ussPath: "/folderA/file", baseName: "file",
-                            sessionName: "sestest", type: USSFileStructure.UssFileType.File },
+                    tree: {
+                        localUri: sourceUri,
+                        ussPath: "/folderA/file",
+                        baseName: "file",
+                        sessionName: "sestest",
+                        type: USSFileStructure.UssFileType.File,
+                    },
                 });
-                expect(blockMocks.apiFuncs.uploadFromBuffer).toHaveBeenCalledWith(
-                    Buffer.from(fileData), "/folderB/file", { binary: false, encoding: "1146" }
-                );
+                expect(blockMocks.apiFuncs.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(fileData), "/folderB/file", {
+                    binary: false,
+                    encoding: "1146",
+                });
                 lookupMock.mockRestore();
             });
             it("copies a tagged file cross-profile using the file's own codepage", async () => {
@@ -2499,19 +2511,30 @@ describe("UssFSProvider", () => {
                 blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [] } });
                 const fileData = new Uint8Array([0xa3, 0x62, 0x63]);
                 const lookupMock = vi.spyOn(UssFSProvider.instance, "_lookupAsFile" as any).mockReturnValue({
-                    name: "file", type: FileType.File,
+                    name: "file",
+                    type: FileType.File,
                     metadata: { path: "/sestest/folderA/file", profile: blockMocks.profile },
-                    wasAccessed: true, data: fileData, ctime: 0, mtime: 0, size: 0,
+                    wasAccessed: true,
+                    data: fileData,
+                    ctime: 0,
+                    mtime: 0,
+                    size: 0,
                     encoding: { kind: "other", codepage: "1146" },
                 });
                 await (UssFSProvider.instance as any).copyTree(sourceUri, destUri, {
                     overwrite: true,
-                    tree: { localUri: sourceUri, ussPath: "/folderA/file", baseName: "file",
-                            sessionName: "sestest", type: USSFileStructure.UssFileType.File },
+                    tree: {
+                        localUri: sourceUri,
+                        ussPath: "/folderA/file",
+                        baseName: "file",
+                        sessionName: "sestest",
+                        type: USSFileStructure.UssFileType.File,
+                    },
                 });
-                expect(blockMocks.apiFuncs.uploadFromBuffer).toHaveBeenCalledWith(
-                    Buffer.from(fileData), "/folderB/file", { binary: false, encoding: "1146" }
-                );
+                expect(blockMocks.apiFuncs.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(fileData), "/folderB/file", {
+                    binary: false,
+                    encoding: "1146",
+                });
                 lookupMock.mockRestore();
             });
             it("copies a binary file cross-profile without encoding", async () => {
@@ -2524,19 +2547,30 @@ describe("UssFSProvider", () => {
                 blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [] } });
                 const fileData = new Uint8Array([0xff, 0xfe, 0x00]);
                 const lookupMock = vi.spyOn(UssFSProvider.instance, "_lookupAsFile" as any).mockReturnValue({
-                    name: "file.bin", type: FileType.File,
+                    name: "file.bin",
+                    type: FileType.File,
                     metadata: { path: "/sestest/folderA/file.bin", profile: blockMocks.profile },
-                    wasAccessed: true, data: fileData, ctime: 0, mtime: 0, size: 0,
+                    wasAccessed: true,
+                    data: fileData,
+                    ctime: 0,
+                    mtime: 0,
+                    size: 0,
                     encoding: { kind: "binary" },
                 });
                 await (UssFSProvider.instance as any).copyTree(sourceUri, destUri, {
                     overwrite: true,
-                    tree: { localUri: sourceUri, ussPath: "/folderA/file.bin", baseName: "file.bin",
-                            sessionName: "sestest", type: USSFileStructure.UssFileType.File },
+                    tree: {
+                        localUri: sourceUri,
+                        ussPath: "/folderA/file.bin",
+                        baseName: "file.bin",
+                        sessionName: "sestest",
+                        type: USSFileStructure.UssFileType.File,
+                    },
                 });
-                expect(blockMocks.apiFuncs.uploadFromBuffer).toHaveBeenCalledWith(
-                    Buffer.from(fileData), "/folderB/file.bin", { binary: true, encoding: undefined }
-                );
+                expect(blockMocks.apiFuncs.uploadFromBuffer).toHaveBeenCalledWith(Buffer.from(fileData), "/folderB/file.bin", {
+                    binary: true,
+                    encoding: undefined,
+                });
                 lookupMock.mockRestore();
             });
         });
