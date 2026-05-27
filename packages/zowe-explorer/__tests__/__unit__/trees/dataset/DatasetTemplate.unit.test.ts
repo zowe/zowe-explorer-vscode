@@ -9,7 +9,7 @@
  *
  */
 
-import { Gui, Types } from "@zowe/zowe-explorer-api";
+import { Gui, Types, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { DataSetTemplates } from "../../../../src/trees/dataset/DatasetTemplates";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
@@ -63,6 +63,10 @@ describe("DataSetTemplates Class Unit Tests", () => {
         setValueSpy.mockResolvedValue(undefined);
     });
 
+    afterEach(() => {
+        ZoweVsCodeExtension.resetWorkspaceRootCache();
+    });
+
     describe("getDsTemplates()", () => {
         it("should retrieve the available dataset templates", () => {
             getValueSpy.mockReturnValue(templates);
@@ -99,6 +103,11 @@ describe("DataSetTemplates Class Unit Tests", () => {
             Object.defineProperty(vscode.workspace, "workspaceFolders", {
                 value: newMocks.mockWsFolder,
                 configurable: true,
+            });
+            vi.spyOn(ZoweVsCodeExtension, "workspaceRoot", "get").mockReturnValue({
+                uri: { fsPath: "test" } as any,
+                name: "test",
+                index: 0,
             });
 
             vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({

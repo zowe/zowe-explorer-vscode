@@ -11,12 +11,18 @@
 
 import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
+import * as fs from "fs";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
 import { createConfigInstance, createConfigLoad, createTeamConfigMock } from "../../../__mocks__/mockCreators/shared";
 import { FileManagement, Gui, ProfilesCache, ZoweVsCodeExtension } from "../../../src";
 import { describe, it, expect, afterEach } from "vitest";
 
 vi.mock("@zowe/imperative");
+vi.mock("fs", () => {
+    return {
+        existsSync: vi.fn().mockReturnValue(true),
+    };
+});
 
 describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
     function createGlobalMocks() {
@@ -111,11 +117,20 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
             configurable: true,
         });
 
+        (fs.existsSync as any).mockImplementation((p: string) => {
+            if (p === "fakePath" || p === "/test/workspace/path" || p === "projectPath/zowe.config.user.json") {
+                return true;
+            }
+            return false;
+        });
+
         return newMocks;
     }
 
     afterEach(() => {
+        vi.restoreAllMocks();
         vi.clearAllMocks();
+        ZoweVsCodeExtension.resetWorkspaceRootCache();
     });
 
     describe("createTeamConfiguration", () => {
@@ -313,6 +328,68 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
             expect(result).toBe(mockProfilesCache);
 
             apiMock.mockRestore();
+        });
+    });
+
+    describe("workspaceRoot caching & invalid paths", () => {
+        it("should return valid workspace folder and cache it", () => {
+            const mockFolders = [
+                { uri: { fsPath: "/valid/path", scheme: "file" } },
+                { uri: { fsPath: "/invalid/path", scheme: "file" } },
+            ] as vscode.WorkspaceFolder[];
+
+            const spyFolders = vi.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue(mockFolders);
+            const spyExists = (fs.existsSync as any).mockImplementation((p: string) => p === "/valid/path");
+
+            // Access first time: should find valid folder and initialize cache
+            const root1 = ZoweVsCodeExtension.workspaceRoot;
+            expect(root1).toBeDefined();
+            expect(root1?.uri.fsPath).toBe("/valid/path");
+
+            // Access second time: should return cached, without calling existsSync or workspaceFolders again
+            const root2 = ZoweVsCodeExtension.workspaceRoot;
+            expect(root2).toBe(root1);
+            expect(spyFolders).toHaveBeenCalledTimes(1);
+
+            spyFolders.mockRestore();
+        });
+
+        it("should handle event-driven cache invalidation on onDidChangeWorkspaceFolders", () => {
+            const mockFolders = [{ uri: { fsPath: "/valid/path1", scheme: "file" } }] as vscode.WorkspaceFolder[];
+
+            // Set up mock onDidChangeWorkspaceFolders if not present
+            if (!vscode.workspace.onDidChangeWorkspaceFolders) {
+                Object.defineProperty(vscode.workspace, "onDidChangeWorkspaceFolders", {
+                    value: vi.fn(),
+                    configurable: true,
+                    writable: true,
+                });
+            }
+
+            let eventListener: () => void = () => {};
+            const spyOnDidChange = vi.spyOn(vscode.workspace, "onDidChangeWorkspaceFolders").mockImplementation((listener) => {
+                eventListener = listener;
+                return { dispose: vi.fn() } as any;
+            });
+
+            const spyFolders = vi.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue(mockFolders);
+            (fs.existsSync as any).mockReturnValue(true);
+
+            // Access first time: registers the listener
+            let root = ZoweVsCodeExtension.workspaceRoot;
+            expect(root?.uri.fsPath).toBe("/valid/path1");
+            expect(spyOnDidChange).toHaveBeenCalled();
+
+            // Change folders mock and trigger event
+            mockFolders[0] = { uri: { fsPath: "/valid/path2", scheme: "file" } } as vscode.WorkspaceFolder;
+            eventListener();
+
+            // Access again: should return updated workspace root
+            root = ZoweVsCodeExtension.workspaceRoot;
+            expect(root?.uri.fsPath).toBe("/valid/path2");
+
+            spyFolders.mockRestore();
+            spyOnDidChange.mockRestore();
         });
     });
 });
