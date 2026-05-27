@@ -12,68 +12,22 @@
 import { createReadStream, createWriteStream } from "node:fs";
 import * as path from "node:path";
 import type * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import {
-    type AttributeEntryInfo,
-    type AttributeInfo,
-    type DataSetAttributesProvider,
-    type DsInfo,
-    Gui,
-    type IAttributesProvider,
-    imperative,
-    type MainframeInteraction,
-} from "@zowe/zowe-explorer-api";
-import { B64String, type Dataset, type DatasetAttributes, type ds } from "@zowe/zowex-for-zowe-sdk";
+import { imperative, type MainframeInteraction } from "@zowe/zowe-explorer-api";
+import { B64String, type DatasetAttributes, type ds } from "@zowe/zowex-for-zowe-sdk";
 import { SshCommonApi } from "./SshCommonApi";
 import type Stream from "node:stream";
 
-class SshAttributesProvider implements IAttributesProvider {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    private readonly extensionName = require("../../package.json").displayName;
-
-    public constructor(public cachedAttrs?: Dataset) {}
-
-    public fetchAttributes(context: DsInfo): AttributeInfo {
-        if (context.profile.type !== "ssh") {
-            return [];
-        }
-
-        const keys = new Map<string, AttributeEntryInfo>();
-        const addAttribute = <K extends keyof Dataset>(prop: K, label: string, description?: string): void => {
-            const value = this.cachedAttrs?.[prop];
-            if (value != null) {
-                keys.set(label, {
-                    value: typeof value === "boolean" ? (value ? "YES" : "NO") : value.toLocaleString(),
-                    description,
-                });
-            }
-        };
-
-        const spacu = this.cachedAttrs?.spacu?.toLocaleLowerCase() ?? "bytes";
-        addAttribute("alloc", "Allocated Units", `Allocated units (${spacu})`);
-        addAttribute("allocx", "Allocated Extents");
-        addAttribute("dataclass", "Data Class");
-        addAttribute("encrypted", "Encryption");
-        addAttribute("mgmtclass", "Management Class");
-        addAttribute("primary", "Primary Space", `Primary space (${spacu})`);
-        addAttribute("secondary", "Secondary Space", `Secondary space (${spacu})`);
-        addAttribute("storclass", "Storage Class");
-        addAttribute("usedx", "Used Extents");
-        this.cachedAttrs = undefined;
-
-        return [{ title: this.extensionName, keys }];
-    }
-}
-
 export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs {
-    private attrProvider = new SshAttributesProvider();
-
-    public constructor(
-        dsAttrProvider?: DataSetAttributesProvider,
-        public profile?: imperative.IProfileLoaded
-    ) {
-        super(profile);
-        dsAttrProvider?.register(this.attrProvider);
-    }
+    private readonly dsAttrMapping: Record<string, string> = {
+        blksize: "blksz",
+        devtype: "dev",
+        dsntype: "dsntp",
+        migrated: "migr",
+        multivolume: "mvol",
+        usedp: "used",
+        volser: "vol",
+        volsers: "vols",
+    };
 
     public async dataSet(filter: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
         const response = await (
@@ -82,30 +36,26 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             pattern: filter,
             attributes: options?.attributes,
         });
-        // Cache attributes for first data set to work around ZE issue
-        // See https://github.com/zowe/zowe-explorer-vscode/issues/3927
-        this.attrProvider.cachedAttrs = response.items[0];
+        const formatAttributeValue = (value: unknown): unknown => {
+            if (typeof value === "boolean") {
+                return value ? "YES" : "NO"; // e.g. migrated
+            } else if (Array.isArray(value)) {
+                return value.join(" "); // e.g. volsers
+            }
+            return value;
+        };
+
         return this.buildZosFilesResponse({
             items: response.items.map((item) => {
-                const entry: Record<string, unknown> = { dsname: item.name };
+                const attrs: Record<string, unknown> = {};
                 if (options?.attributes) {
-                    entry.blksz = item.blksize;
-                    entry.cdate = item.cdate;
-                    entry.dev = item.devtype;
-                    entry.dsntp = item.dsntype;
-                    entry.dsorg = item.dsorg;
-                    entry.edate = item.edate;
-                    entry.lrecl = item.lrecl;
-                    entry.migr = item.migrated ? "YES" : "NO";
-                    entry.mvol = item.multivolume ? "YES" : "NO";
-                    entry.rdate = item.rdate;
-                    entry.recfm = item.recfm;
-                    entry.spacu = item.spacu;
-                    entry.used = item.usedp != null ? `${item.usedp}%` : undefined;
-                    entry.vol = item.volser;
-                    entry.vols = item.volsers?.join(" ");
+                    for (const [k, v] of Object.entries(item)) {
+                        if (k !== "name") {
+                            attrs[this.dsAttrMapping[k] ?? k] = formatAttributeValue(v);
+                        }
+                    }
                 }
-                return entry;
+                return { dsname: item.name, ...attrs };
             }),
             returnedRows: response.returnedRows,
         });
@@ -120,27 +70,17 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             pattern: options?.pattern,
         });
 
-        this.attrProvider.cachedAttrs = undefined;
-
         return this.buildZosFilesResponse({
             items: response.items.map((item) => {
-                const entry: Record<string, unknown> = {
-                    member: item.name,
-                };
-
+                const attrs: Record<string, unknown> = {};
                 if (options?.attributes) {
-                    entry.vers = item.vers;
-                    entry.mod = item.mod;
-                    entry.c4date = item.c4date;
-                    entry.m4date = item.m4date;
-                    entry.mtime = item.mtime;
-                    entry.cnorc = item.cnorc;
-                    entry.inorc = item.inorc;
-                    entry.mnorc = item.mnorc;
-                    entry.user = item.user;
-                    entry.sclm = item.sclm;
+                    for (const [k, v] of Object.entries(item)) {
+                        if (k !== "name") {
+                            attrs[k] = v;
+                        }
+                    }
                 }
-                return entry;
+                return { member: item.name, ...attrs };
             }),
             returnedRows: response.returnedRows,
         });
@@ -282,38 +222,27 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             lrecl: 80,
             ...(options || {}),
         };
-        let response: ds.CreateDatasetResponse = { success: false };
         try {
-            response = await (
+            const response = await (
                 await this.client
             ).ds.createDataset({
                 dsname: dataSetName,
                 attributes: datasetAttributes,
             });
-        } catch (error) {
-            if (error instanceof imperative.ImperativeError) {
-                Gui.errorMessage(error.additionalDetails);
-            }
+            return this.buildZosFilesResponse(response);
+        } catch (err) {
+            throw this.buildRequestError(err);
         }
-        return this.buildZosFilesResponse(response, response.success);
     }
 
     public async createDataSetMember(dataSetName: string, _options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
-        let response: ds.CreateMemberResponse = { success: false };
-        try {
-            response = await (
-                await this.client
-            ).ds.createMember({
-                dsname: dataSetName,
-            });
-            if (!response.success) {
-                Gui.errorMessage(`Failed to create data set member: ${dataSetName}`);
-            }
-        } catch (error) {
-            Gui.errorMessage(`Failed to create data set member: ${dataSetName}`);
-            Gui.errorMessage(`Error: ${(error as Error).message}`);
-        }
-        return this.buildZosFilesResponse(response, response.success);
+        const response = await (
+            await this.client
+        ).ds.createMember({
+            dsname: dataSetName,
+            overwrite: true, // Overwrite detection already handled on client side
+        });
+        return this.buildZosFilesResponse(response);
     }
 
     public allocateLikeDataSet(_dataSetName: string, _likeDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
@@ -335,9 +264,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             dsnameBefore: currentDataSetName,
             dsnameAfter: newDataSetName,
         });
-        return this.buildZosFilesResponse({
-            success: response.success,
-        });
+        return this.buildZosFilesResponse(response);
     }
 
     public async renameDataSetMember(dsname: string, memberBefore: string, memberAfter: string): Promise<zosfiles.IZosFilesResponse> {
@@ -348,9 +275,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             memberBefore,
             memberAfter,
         });
-        return this.buildZosFilesResponse({
-            success: response.success,
-        });
+        return this.buildZosFilesResponse(response);
     }
 
     public hMigrateDataSet(_dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
@@ -358,35 +283,28 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
     }
 
     public async hRecallDataSet(dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
-        let response: ds.RestoreDatasetResponse = { success: false };
-        try {
-            response = await (
-                await this.client
-            ).ds.restoreDataset({
-                dsname: dataSetName,
-            });
-            if (!response.success) {
-                Gui.errorMessage(`Failed to restore dataset ${dataSetName}`);
-            }
-        } catch (error) {
-            Gui.errorMessage(`Failed to restore dataset ${dataSetName}`);
-            Gui.errorMessage(`Error: ${(error as Error).message}`);
-        }
+        const response = await (
+            await this.client
+        ).ds.restoreDataset({
+            dsname: dataSetName,
+        });
         return this.buildZosFilesResponse(response);
     }
 
     public async deleteDataSet(dataSetName: string, _options?: zosfiles.IDeleteDatasetOptions): Promise<zosfiles.IZosFilesResponse> {
-        const response = await (
-            await this.client
-        ).ds.deleteDataset({
-            dsname: dataSetName,
-        });
-        return this.buildZosFilesResponse({
-            success: response.success,
-        });
+        try {
+            const response = await (
+                await this.client
+            ).ds.deleteDataset({
+                dsname: dataSetName,
+            });
+            return this.buildZosFilesResponse(response);
+        } catch (err) {
+            throw this.buildRequestError(err);
+        }
     }
 
     private buildZosFilesResponse(apiResponse: any, success = true, errorText?: string): zosfiles.IZosFilesResponse {
-        return { apiResponse, commandResponse: "", success, errorMessage: errorText };
+        return { apiResponse, commandResponse: "", success: apiResponse?.success ?? success, errorMessage: errorText };
     }
 }

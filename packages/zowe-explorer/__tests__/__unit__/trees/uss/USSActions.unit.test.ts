@@ -2794,7 +2794,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                expectedDir
+                expectedDir,
+                false
             );
         });
 
@@ -2834,7 +2835,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                expect.stringMatching(/u.test.directory$/)
+                expect.stringMatching(/u.test.directory$/),
+                false
             );
         });
 
@@ -2897,7 +2899,8 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                path.join("/test/download/path", "file.txt")
+                path.join("/test/download/path", "file.txt"),
+                false
             );
         });
 
@@ -3002,10 +3005,10 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             expect(capturedTask.percentComplete).toBe(100);
             expect(reportProgressSpy).toHaveBeenCalledTimes(4);
-            expect(reportProgressSpy).toHaveBeenNthCalledWith(1, mockProgress, 4, 1, "");
-            expect(reportProgressSpy).toHaveBeenNthCalledWith(2, mockProgress, 4, 2, "");
-            expect(reportProgressSpy).toHaveBeenNthCalledWith(3, mockProgress, 4, 3, "");
-            expect(reportProgressSpy).toHaveBeenNthCalledWith(4, mockProgress, 4, 4, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(1, mockProgress, 4, 0, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(2, mockProgress, 4, 1, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(3, mockProgress, 4, 2, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(4, mockProgress, 4, 3, "");
 
             reportProgressSpy.mockRestore();
         });
@@ -3052,8 +3055,78 @@ describe("USS Action Unit Tests - downloading functions", () => {
             expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
                 { success: true, commandResponse: "", apiResponse: {} },
                 "USS directory",
-                path.join("/test/download/path", "file.txt")
+                path.join("/test/download/path", "file.txt"),
+                false
             );
+        });
+
+        it("should pass abortDownload callback wired to CancellationToken", async () => {
+            const mockNode = createMockNode();
+            mockNode.fullPath = "/u/test/directory";
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                overwrite: true,
+                dirOptions: { followSymlinks: true, chooseFilterOptions: false },
+                dirFilterOptions: { includeHidden: false, filesys: false },
+                encoding: undefined,
+            };
+
+            vi.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [{}, {}] } });
+
+            const mockToken = { isCancellationRequested: false, onCancellationRequested: vi.fn() };
+            let capturedOptions: any;
+
+            globalMocks.ussApi.downloadDirectory.mockImplementation(async (_path: any, opts: any) => {
+                capturedOptions = opts;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                expect(options.cancellable).toBe(true);
+                return await callback({ report: vi.fn() }, mockToken);
+            });
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(capturedOptions.abortDownload).toBeDefined();
+            expect(typeof capturedOptions.abortDownload).toBe("function");
+            expect(capturedOptions.abortDownload()).toBe(false);
+
+            mockToken.isCancellationRequested = true;
+            expect(capturedOptions.abortDownload()).toBe(true);
+        });
+
+        it("should pass abortDownload that returns false when token is undefined", async () => {
+            const mockNode = createMockNode();
+            mockNode.fullPath = "/u/test/directory";
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: false,
+                overwrite: true,
+                dirOptions: { followSymlinks: true, chooseFilterOptions: false },
+                dirFilterOptions: { includeHidden: false, filesys: false },
+                encoding: undefined,
+            };
+
+            vi.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [{}, {}] } });
+
+            let capturedOptions: any;
+
+            globalMocks.ussApi.downloadDirectory.mockImplementation(async (_path: any, opts: any) => {
+                capturedOptions = opts;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback({ report: vi.fn() }, undefined);
+            });
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(capturedOptions.abortDownload()).toBe(false);
         });
     });
 });

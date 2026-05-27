@@ -85,7 +85,7 @@ export class SshUssApi extends SshCommonApi implements MainframeInteraction.IUss
             await this.client
         ).uss.writeFile({
             fspath: ussFilePath,
-            encoding: options?.encoding,
+            encoding: options?.binary ? "binary" : options?.encoding,
             stream: () => createReadStream(inputFilePath),
             etag: options?.etag,
         });
@@ -130,7 +130,7 @@ export class SshUssApi extends SshCommonApi implements MainframeInteraction.IUss
             force: force,
         });
 
-        return Buffer.from(JSON.stringify(this.buildZosFilesResponse(response, response.success)));
+        return Buffer.from(JSON.stringify(this.buildZosFilesResponse(response)));
     }
 
     public async create(ussPath: string, type: string, mode?: string | undefined): Promise<zosfiles.IZosFilesResponse> {
@@ -141,7 +141,7 @@ export class SshUssApi extends SshCommonApi implements MainframeInteraction.IUss
             isDir: type === "directory",
             permissions: mode,
         });
-        return this.buildZosFilesResponse(response, response.success);
+        return this.buildZosFilesResponse(response);
     }
 
     public async delete(ussPath: string, recursive?: boolean | undefined): Promise<zosfiles.IZosFilesResponse> {
@@ -151,7 +151,7 @@ export class SshUssApi extends SshCommonApi implements MainframeInteraction.IUss
             fspath: ussPath,
             recursive: recursive,
         });
-        return this.buildZosFilesResponse(response, response.success);
+        return this.buildZosFilesResponse(response);
     }
 
     public async move(oldPath: string, newPath: string): Promise<void> {
@@ -170,7 +170,7 @@ export class SshUssApi extends SshCommonApi implements MainframeInteraction.IUss
             source: currentUssPath,
             target: newUssPath,
         });
-        return this.buildZosFilesResponse(response, response.success);
+        return this.buildZosFilesResponse(response);
     }
 
     public async getTag(ussPath: string): Promise<string> {
@@ -229,6 +229,6 @@ export class SshUssApi extends SshCommonApi implements MainframeInteraction.IUss
     }
 
     private buildZosFilesResponse(apiResponse: any, success = true): zosfiles.IZosFilesResponse {
-        return { apiResponse, commandResponse: "", success };
+        return { apiResponse, commandResponse: "", success: apiResponse?.success ?? success };
     }
 }

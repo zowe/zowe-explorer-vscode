@@ -15,6 +15,7 @@
  */
 
 import { coverageConfigDefaults, defineConfig } from "vitest/config";
+import { fileURLToPath } from "url";
 
 // `defineConfig` (not `defineProject`) so the per-package `coverage` block
 // type-checks; see `packages/zowe-explorer/vitest.config.ts` for rationale.
@@ -29,16 +30,18 @@ export default defineConfig({
         hookTimeout: 10000,
         clearMocks: true,
         restoreMocks: true,
+        setupFiles: ["vitest.setup.ts"],
         coverage: {
             include: ["src/**"],
             excludeAfterRemap: true,
-            exclude: [
-                ...coverageConfigDefaults.exclude,
-                "**/*.js",
-                "**/lib/**",
-                "**/benchmarks/**",
-                "vitest.config.ts",
-            ],
+            exclude: [...coverageConfigDefaults.exclude, "**/*.js", "**/lib/**", "**/benchmarks/**", "vitest.config.ts"],
+        },
+    },
+    resolve: {
+        alias: {
+            // Force all imports of 'vscode' to resolve to your mock file
+            vscode: fileURLToPath(new URL("./__mocks__/vscode.ts", import.meta.url)),
+            "@zowe/zowe-explorer-api": fileURLToPath(new URL("../zowe-explorer-api/src/index.ts", import.meta.url)),
         },
     },
     esbuild: {

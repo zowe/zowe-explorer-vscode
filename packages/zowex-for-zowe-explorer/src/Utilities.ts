@@ -24,7 +24,7 @@ export function registerCommands(context: vscode.ExtensionContext, zoweExplorerA
         vscode.commands.registerCommand(`zowe.zowex.connect`, async (profName?: string) => {
             imperative.Logger.getAppLogger().trace("Running connect command for profile %s", profName);
             const vscePromptApi = new VscePromptApi(await profCache.getProfileInfo());
-            const profile = await vscePromptApi.promptForProfile(profName);
+            const profile = await vscePromptApi.promptForProfile(profName, { prioritizeProjectLevelConfig: false });
             if (!profile?.profile) {
                 return;
             }
@@ -48,7 +48,7 @@ export function registerCommands(context: vscode.ExtensionContext, zoweExplorerA
         vscode.commands.registerCommand(`zowe.zowex.restart`, async (profName?: string) => {
             imperative.Logger.getAppLogger().trace("Running restart command for profile %s", profName);
             const vscePromptApi = new VscePromptApi(await profCache.getProfileInfo());
-            const profile = await vscePromptApi.promptForProfile(profName);
+            const profile = await vscePromptApi.promptForProfile(profName, { prioritizeProjectLevelConfig: false, disableCreateNewProfile: true });
             if (!profile?.profile) {
                 return;
             }
@@ -65,7 +65,7 @@ export function registerCommands(context: vscode.ExtensionContext, zoweExplorerA
         vscode.commands.registerCommand(`zowe.zowex.uninstall`, async (profName?: string) => {
             imperative.Logger.getAppLogger().trace("Running uninstall command for profile %s", profName);
             const vscePromptApi = new VscePromptApi(await profCache.getProfileInfo());
-            const profile = await vscePromptApi.promptForProfile(profName);
+            const profile = await vscePromptApi.promptForProfile(profName, { prioritizeProjectLevelConfig: false, disableCreateNewProfile: true });
             if (!profile?.profile) {
                 return;
             }

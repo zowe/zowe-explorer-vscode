@@ -14,7 +14,7 @@ import * as vscode from "vscode";
 import * as core from "@zowe/core-for-zowe-sdk";
 import * as profUtils from "../../../../src/utils/ProfilesUtils";
 import * as SharedHistoryView from "../../../../src/trees/shared/SharedHistoryView";
-import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
+import { IviIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
 import { Constants } from "../../../../src/configuration/Constants";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
@@ -45,6 +45,14 @@ vi.mock("../../../../src/tools/ZoweLocalStorage", () => ({
         workspaceState: { get: vi.fn(), update: vi.fn() },
         getValue: vi.fn(),
         setValue: vi.fn(),
+    },
+}));
+
+vi.mock("../../../../src/trees/job/JobFSProvider", () => ({
+    JobFSProvider: {
+        instance: {
+            lookup: vi.fn(),
+        },
     },
 }));
 
@@ -80,7 +88,7 @@ describe("Test src/shared/extension", () => {
         const onProfileUpdated = vi.fn().mockReturnValue(new vscode.Disposable(vi.fn()));
         const mockOnProfileUpdated = new MockedProperty(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated", undefined, onProfileUpdated);
 
-        const commands: IJestIt[] = [
+        const commands: IviIt[] = [
             {
                 name: "zowe.updateSecureCredentials",
                 parm: ["@zowe/cli"],
@@ -1066,6 +1074,16 @@ describe("Test src/shared/extension", () => {
     });
 
     describe("isDocumentASpool", () => {
+        let onProfileUpdated: vi.Mock;
+
+        beforeAll(() => {
+            onProfileUpdated = vi.fn().mockReturnValue(new vscode.Disposable(vi.fn()));
+            Object.defineProperty(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated", {
+                value: onProfileUpdated,
+                configurable: true,
+            });
+        });
+
         beforeEach(() => {
             vi.clearAllMocks();
         });

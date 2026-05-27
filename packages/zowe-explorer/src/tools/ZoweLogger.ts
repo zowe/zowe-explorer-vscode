@@ -15,6 +15,7 @@ import * as vscode from "vscode";
 import * as loggerConfig from "../../log4jsconfig.json";
 import * as path from "path";
 import { Gui, imperative, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import type { Config, LayoutFunction, LayoutsParam, LoggingEvent } from "log4js";
 
 export class ZoweLogger {
     public static zeOutputChannel: vscode.OutputChannel;
@@ -52,6 +53,11 @@ export class ZoweLogger {
             );
             loggerConfigCopy.log4jsConfig.categories[appenderName].level = zeLogLevel;
         }
+        loggerConfigCopy.log4jsConfig.appenders.vscodeOutputChannel = {
+            type: { configure: this.zoweOutputChannelAppenderConfigurer.bind(this) },
+            layout: loggerConfigCopy.log4jsConfig.appenders.app.layout,
+        };
+        loggerConfigCopy.log4jsConfig.categories.app.appenders.push("vscodeOutputChannel");
         imperative.Logger.initLogger(loggerConfigCopy);
         this.impLogger = imperative.Logger.getAppLogger();
     }
@@ -102,26 +108,16 @@ export class ZoweLogger {
         if (+MessageSeverity[this.getLogSetting()] <= +severity) {
             const severityName = MessageSeverity[severity];
             this.imperativeLogger[severityName?.toLowerCase()](message);
-            this.zeOutputChannel?.appendLine(this.createMessage(imperative.Censor.censorRawData(message), severityName));
         }
     }
 
-    private static createMessage(msg: string, level: string): string {
-        return `[${this.getDate()} ${this.getTime()}] [${level}] ${msg}`;
+    private static vscodeOutputChannelAppender(layout: LayoutFunction): (loggingEvent: LoggingEvent) => void {
+        return (loggingEvent: LoggingEvent) => {
+            ZoweLogger.zeOutputChannel?.appendLine(layout(loggingEvent));
+        };
     }
 
-    private static getDate(): string {
-        const dateObj = new Date(Date.now());
-        const day = ("0" + dateObj?.getDate()).slice(-2);
-        const month = ("0" + (dateObj?.getMonth() + 1)).slice(-2);
-        return `${dateObj.getFullYear()}/${month}/${day}`;
-    }
-
-    private static getTime(): string {
-        const dateObj = new Date(Date.now());
-        const hours = dateObj?.getHours().toString().padStart(2, "0");
-        const minutes = dateObj?.getMinutes().toString().padStart(2, "0");
-        const seconds = dateObj?.getSeconds().toString().padStart(2, "0");
-        return `${hours}:${minutes}:${seconds}`;
+    private static zoweOutputChannelAppenderConfigurer(config: Config, layouts: LayoutsParam): (LoggingEvent: LoggingEvent) => void {
+        return ZoweLogger.vscodeOutputChannelAppender(layouts.layout(config.layout.type, config.layout));
     }
 }

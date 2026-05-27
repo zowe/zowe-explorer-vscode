@@ -56,7 +56,7 @@ import { TroubleshootError } from "../../utils/TroubleshootError";
 import { ReleaseNotes } from "../../utils/ReleaseNotes";
 import { JobFSProvider } from "../job/JobFSProvider";
 import { ZosmfRestClient } from "@zowe/core-for-zowe-sdk";
-import * as zowex from "@zowe/zowex-for-zowe-explorer";
+import * as zowex from "zowex-for-zowe-explorer";
 
 export class SharedInit {
     public static lastFocusedNode: { provider: IZoweTree<IZoweTreeNode>; node: IZoweTreeNode };
