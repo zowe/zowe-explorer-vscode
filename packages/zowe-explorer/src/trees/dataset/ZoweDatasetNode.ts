@@ -11,7 +11,7 @@
 
 import { IZosmfListResponse, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import * as vscode from "vscode";
-import * as dayjs from "dayjs";
+import dayjs from "dayjs";
 import {
     Sorting,
     Types,

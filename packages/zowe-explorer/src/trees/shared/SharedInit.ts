@@ -59,6 +59,7 @@ import { JobFSProvider } from "../job/JobFSProvider";
 import { ZosmfRestClient } from "@zowe/core-for-zowe-sdk";
 
 export class SharedInit {
+    public static lastFocusedNode: { provider: IZoweTree<IZoweTreeNode>; node: IZoweTreeNode };
     public static onDidActivateExtensionEmitter = new vscode.EventEmitter<void>();
     public static onDidActivateExtension = SharedInit.onDidActivateExtensionEmitter.event;
 

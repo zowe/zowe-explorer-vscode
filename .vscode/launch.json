@@ -30,46 +30,55 @@
     },
     {
       "type": "node",
-      "name": "Unit Tests (Jest)",
+      "name": "Unit Tests (Vitest)",
       "request": "launch",
-      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/jest/bin/jest", "-i"],
+      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/vitest/vitest.mjs", "run"],
       "cwd": "${workspaceFolder}/packages/zowe-explorer",
       "console": "integratedTerminal",
       "sourceMaps": true
     },
     {
       "type": "node",
-      "name": "Current Unit Tests (Jest)",
+      "name": "Current Unit Tests (Vitest)",
       "request": "launch",
-      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/jest/bin/jest", "-i", "${fileBasenameNoExtension}"],
+      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/vitest/vitest.mjs", "run", "${fileBasenameNoExtension}"],
       "cwd": "${workspaceFolder}/packages/zowe-explorer",
       "console": "integratedTerminal",
       "sourceMaps": true
     },
     {
       "type": "node",
-      "name": "API Unit Tests (Jest)",
+      "name": "API Unit Tests (Vitest)",
       "request": "launch",
-      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/jest/bin/jest", "-i"],
+      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/vitest/vitest.mjs", "run"],
       "cwd": "${workspaceFolder}/packages/zowe-explorer-api",
       "console": "integratedTerminal",
       "sourceMaps": true
     },
     {
       "type": "node",
-      "name": "Current API Unit Tests (Jest)",
+      "name": "Current API Unit Tests (Vitest)",
       "request": "launch",
-      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/jest/bin/jest", "-i", "${fileBasenameNoExtension}"],
+      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/vitest/vitest.mjs", "run", "${fileBasenameNoExtension}"],
       "cwd": "${workspaceFolder}/packages/zowe-explorer-api",
       "console": "integratedTerminal",
       "sourceMaps": true
     },
     {
       "type": "node",
-      "name": "FTP Unit Tests (Jest)",
+      "name": "FTP Unit Tests (Vitest)",
       "request": "launch",
-      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/jest/bin/jest", "-i"],
+      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/vitest/vitest.mjs", "run"],
       "cwd": "${workspaceFolder}/packages/zowe-explorer-ftp-extension",
+      "console": "integratedTerminal",
+      "sourceMaps": true
+    },
+    {
+      "type": "node",
+      "name": "Zowex Unit Tests (Vitest)",
+      "request": "launch",
+      "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/vitest/vitest.mjs", "run"],
+      "cwd": "${workspaceFolder}/packages/zowex-for-zowe-explorer",
       "console": "integratedTerminal",
       "sourceMaps": true
     },
