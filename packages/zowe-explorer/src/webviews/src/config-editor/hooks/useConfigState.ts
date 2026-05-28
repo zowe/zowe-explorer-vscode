@@ -74,15 +74,7 @@ export function useConfigState(vscodeApi: ConfigEditorWebviewApi) {
         autostoreChangesRef.current = autostoreChanges;
         renamesRef.current = renames;
         selectedProfileKeyRef.current = selectedProfileKey;
-    }, [
-        pendingChanges,
-        deletions,
-        pendingDefaults,
-        defaultsDeletions,
-        autostoreChanges,
-        renames,
-        selectedProfileKey,
-    ]);
+    }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, autostoreChanges, renames, selectedProfileKey]);
 
     const getLocalStorageValue = useCallback(
         <T>(key: string, defaultValue: T): T => {

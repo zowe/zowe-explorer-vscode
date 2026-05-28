@@ -13,149 +13,150 @@ import { ExtensionContext } from "vscode";
 import { ConfigEditor } from "../../../../src/utils/ConfigEditor";
 import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { ProfileInfo } from "@zowe/imperative";
+import { vi } from "vitest";
 
-// Global require statements for mocked modules
-const fs = require("fs");
-const path = require("path");
-const vscode = require("vscode");
-const ConfigSchemaHelpers = require("../../../../src/utils/ConfigSchemaHelpers").ConfigSchemaHelpers;
-const ConfigUtils = require("../../../../src/utils/ConfigUtils").ConfigUtils;
-const ConfigChangeHandlers = require("../../../../src/utils/ConfigChangeHandlers");
-const ConfigEditorPathUtils = require("../../../../src/utils/ConfigEditorPathUtils");
-const MoveUtils = require("../../../../src/webviews/src/config-editor/utils/MoveUtils");
+// Global import statements for mocked modules
+import * as fs from "fs";
+import * as path from "path";
+import * as vscode from "vscode";
+import { ConfigSchemaHelpers } from "../../../../src/utils/ConfigSchemaHelpers";
+import { ConfigUtils } from "../../../../src/utils/ConfigUtils";
+import { ConfigChangeHandlers } from "../../../../src/utils/ConfigChangeHandlers";
+import { ConfigEditorPathUtils } from "../../../../src/utils/ConfigEditorPathUtils";
+import * as MoveUtils from "../../../../src/webviews/src/config-editor/utils/MoveUtils";
 
-jest.mock("../../../../src/configuration/Profiles", () => ({
+vi.mock("../../../../src/configuration/Profiles", () => ({
     Profiles: {
-        getInstance: jest.fn(() => ({
-            overrideWithEnv: jest.fn(),
+        getInstance: vi.fn(() => ({
+            overrideWithEnv: vi.fn(),
         })),
     },
 }));
 
-jest.mock("@zowe/imperative", () => ({
-    ProfileInfo: jest.fn().mockImplementation(() => ({
-        readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-        getTeamConfig: jest.fn(() => ({
+vi.mock("@zowe/imperative", () => ({
+    ProfileInfo: vi.fn().mockImplementation(() => ({
+        readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
+        getTeamConfig: vi.fn(() => ({
             layers: [],
         })),
     })),
     ProfileCredentials: {
-        defaultCredMgrWithKeytar: jest.fn(),
+        defaultCredMgrWithKeytar: vi.fn(),
     },
     AbstractCredentialManager: class AbstractCredentialManager {
         constructor() {}
     },
     Logger: {
-        getAppLogger: jest.fn(() => ({
-            debug: jest.fn(),
-            info: jest.fn(),
-            warn: jest.fn(),
-            error: jest.fn(),
+        getAppLogger: vi.fn(() => ({
+            debug: vi.fn(),
+            info: vi.fn(),
+            warn: vi.fn(),
+            error: vi.fn(),
         })),
     },
 }));
 
-jest.mock("@zowe/zos-jobs-for-zowe-sdk", () => ({}));
-jest.mock("@zowe/zos-files-for-zowe-sdk", () => ({}));
-jest.mock("@zowe/zos-console-for-zowe-sdk", () => ({}));
-jest.mock("@zowe/zos-tso-for-zowe-sdk", () => ({}));
-jest.mock("@zowe/zos-uss-for-zowe-sdk", () => ({}));
-jest.mock("@zowe/zosmf-for-zowe-sdk", () => ({}));
+vi.mock("@zowe/zos-jobs-for-zowe-sdk", () => ({}));
+vi.mock("@zowe/zos-files-for-zowe-sdk", () => ({}));
+vi.mock("@zowe/zos-console-for-zowe-sdk", () => ({}));
+vi.mock("@zowe/zos-tso-for-zowe-sdk", () => ({}));
+vi.mock("@zowe/zos-uss-for-zowe-sdk", () => ({}));
+vi.mock("@zowe/zosmf-for-zowe-sdk", () => ({}));
 
-jest.mock("fs", () => ({
-    readFileSync: jest.fn(),
-    existsSync: jest.fn(),
-    realpathSync: jest.fn((path) => path),
+vi.mock("fs", () => ({
+    readFileSync: vi.fn(),
+    existsSync: vi.fn(),
+    realpathSync: vi.fn((path) => path),
 }));
 
-jest.mock("path", () => ({
-    resolve: jest.fn(),
-    join: jest.fn(),
-    dirname: jest.fn(),
-    normalize: jest.fn(),
+vi.mock("path", () => ({
+    resolve: vi.fn(),
+    join: vi.fn(),
+    dirname: vi.fn(),
+    normalize: vi.fn(),
 }));
 
-jest.mock("../../../../src/utils/ConfigSchemaHelpers", () => ({
+vi.mock("../../../../src/utils/ConfigSchemaHelpers", () => ({
     ConfigSchemaHelpers: {
-        generateSchemaValidation: jest.fn(),
+        generateSchemaValidation: vi.fn(),
     },
 }));
 
 const createDefaultMockProfileInfo = () => ({
-    readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-    getTeamConfig: jest.fn(() => ({
+    readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
+    getTeamConfig: vi.fn(() => ({
         layers: [],
         api: {
-            layers: { activate: jest.fn(), get: jest.fn(() => ({ path: "/test/config/path" })) },
-            secure: { secureFields: jest.fn().mockReturnValue([]) },
-            set: jest.fn(),
-            delete: jest.fn(),
+            layers: { activate: vi.fn(), get: vi.fn(() => ({ path: "/test/config/path" })) },
+            secure: { secureFields: vi.fn().mockReturnValue([]) },
+            set: vi.fn(),
+            delete: vi.fn(),
         },
     })),
-    getAllProfiles: jest.fn(() => []),
-    mergeArgsForProfile: jest.fn(() => ({ knownArgs: [] })),
+    getAllProfiles: vi.fn(() => []),
+    mergeArgsForProfile: vi.fn(() => ({ knownArgs: [] })),
 });
 
-jest.mock("../../../../src/utils/ConfigUtils", () => ({
+vi.mock("../../../../src/utils/ConfigUtils", () => ({
     ConfigUtils: {
-        processProfilesRecursively: jest.fn(),
-        parseConfigChanges: jest.fn(),
-        createProfileInfoAndLoad: jest.fn(),
+        processProfilesRecursively: vi.fn(),
+        parseConfigChanges: vi.fn(),
+        createProfileInfoAndLoad: vi.fn(),
     },
 }));
 
-jest.mock("../../../../src/utils/ConfigChangeHandlers", () => ({
+vi.mock("../../../../src/utils/ConfigChangeHandlers", () => ({
     ConfigChangeHandlers: {
-        handleDefaultChanges: jest.fn(),
-        handleProfileChanges: jest.fn(),
-        simulateDefaultChanges: jest.fn(),
-        simulateProfileChanges: jest.fn(),
+        handleDefaultChanges: vi.fn(),
+        handleProfileChanges: vi.fn(),
+        simulateDefaultChanges: vi.fn(),
+        simulateProfileChanges: vi.fn(),
     },
 }));
 
-jest.mock("../../../../src/utils/ConfigEditorPathUtils", () => ({
+vi.mock("../../../../src/utils/ConfigEditorPathUtils", () => ({
     ConfigEditorPathUtils: {
-        constructNestedProfilePath: jest.fn(),
-        getNewProfilePath: jest.fn(),
-        updateChangeKey: jest.fn(),
-        updateChangePath: jest.fn(),
+        constructNestedProfilePath: vi.fn(),
+        getNewProfilePath: vi.fn(),
+        updateChangeKey: vi.fn(),
+        updateChangePath: vi.fn(),
     },
 }));
 
-jest.mock("../../../../src/webviews/src/config-editor/utils/MoveUtils", () => ({
-    moveProfile: jest.fn(),
-    updateDefaultsAfterRename: jest.fn(),
-    simulateDefaultsUpdateAfterRename: jest.fn(),
+vi.mock("../../../../src/webviews/src/config-editor/utils/MoveUtils", () => ({
+    moveProfile: vi.fn(),
+    updateDefaultsAfterRename: vi.fn(),
+    simulateDefaultsUpdateAfterRename: vi.fn(),
 }));
 
 // Mock the WebView panel to include the reveal method
 const mockWebviewPanel = {
-    reveal: jest.fn(),
+    reveal: vi.fn(),
     webview: {
-        postMessage: jest.fn(),
-        onDidReceiveMessage: jest.fn(),
-        asWebviewUri: jest.fn(),
+        postMessage: vi.fn(),
+        onDidReceiveMessage: vi.fn(),
+        asWebviewUri: vi.fn(),
         cspSource: "test-csp-source",
     },
-    onDidDispose: jest.fn(),
-    dispose: jest.fn(),
+    onDidDispose: vi.fn(),
+    dispose: vi.fn(),
 };
 
 // Mock the specific vscode methods we need
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
     window: {
-        createWebviewPanel: jest.fn(() => mockWebviewPanel),
-        showErrorMessage: jest.fn(),
-        showTextDocument: jest.fn(),
+        createWebviewPanel: vi.fn(() => mockWebviewPanel),
+        showErrorMessage: vi.fn(),
+        showTextDocument: vi.fn(),
     },
     commands: {
-        executeCommand: jest.fn(),
+        executeCommand: vi.fn(),
     },
     ViewColumn: {
         One: 1,
     },
     l10n: {
-        t: jest.fn((text) => text),
+        t: vi.fn((text) => text),
     },
     FileSystemError: class FileSystemError extends Error {
         constructor(message?: string) {
@@ -180,7 +181,7 @@ jest.mock("vscode", () => ({
     },
     EventEmitter: class EventEmitter<T> {
         private subscribers: Function[] = [];
-        event = jest.fn().mockImplementation((listener) => {
+        event = vi.fn().mockImplementation((listener) => {
             this.subscribers.push(listener);
             return { dispose: () => {} };
         });
@@ -193,39 +194,39 @@ jest.mock("vscode", () => ({
         }
     },
     Uri: {
-        file: jest.fn((path: string) => ({ fsPath: path, path, scheme: "file" })),
+        file: vi.fn((path: string) => ({ fsPath: path, path, scheme: "file" })),
     },
     extensions: {
-        getExtension: jest.fn(() => ({
+        getExtension: vi.fn(() => ({
             packageJSON: { version: "2.0.0" },
         })),
     },
     workspace: {
         workspaceFolders: [],
-        openTextDocument: jest.fn(),
-        onDidSaveTextDocument: jest.fn(() => ({ dispose: jest.fn() })),
+        openTextDocument: vi.fn(),
+        onDidSaveTextDocument: vi.fn(() => ({ dispose: vi.fn() })),
     },
 }));
 
 // Helper functions for creating reusable mocks
 const createMockProfileInfo = (overrides: any = {}) => ({
-    readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-    getTeamConfig: jest.fn(() => ({
+    readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
+    getTeamConfig: vi.fn(() => ({
         layers: [],
         api: {
             layers: {
-                activate: jest.fn(),
-                get: jest.fn(() => ({ path: "/test/config/path" })),
+                activate: vi.fn(),
+                get: vi.fn(() => ({ path: "/test/config/path" })),
             },
             secure: {
-                secureFields: jest.fn().mockReturnValue([]),
+                secureFields: vi.fn().mockReturnValue([]),
             },
-            set: jest.fn().mockResolvedValue(undefined),
-            delete: jest.fn().mockResolvedValue(undefined),
+            set: vi.fn().mockResolvedValue(undefined),
+            delete: vi.fn().mockResolvedValue(undefined),
         },
     })),
-    getAllProfiles: jest.fn(() => []),
-    mergeArgsForProfile: jest.fn(() => ({ knownArgs: [] })),
+    getAllProfiles: vi.fn(() => []),
+    mergeArgsForProfile: vi.fn(() => ({ knownArgs: [] })),
     ...overrides,
 });
 
@@ -249,14 +250,14 @@ const createMockTeamConfig = (overrides: any = {}) => ({
     ],
     api: {
         layers: {
-            activate: jest.fn(),
-            get: jest.fn(() => ({ path: "/test/config/path" })),
+            activate: vi.fn(),
+            get: vi.fn(() => ({ path: "/test/config/path" })),
         },
         secure: {
-            secureFields: jest.fn().mockReturnValue([]),
+            secureFields: vi.fn().mockReturnValue([]),
         },
-        set: jest.fn().mockResolvedValue(undefined),
-        delete: jest.fn().mockResolvedValue(undefined),
+        set: vi.fn().mockResolvedValue(undefined),
+        delete: vi.fn().mockResolvedValue(undefined),
     },
     ...overrides,
 });
@@ -279,13 +280,13 @@ const createMockRename = (originalKey: string = "profiles.oldProfile", newKey: s
 const createGlobalMocks = () => ({
     // Common mock functions
     mockFn: {
-        resolved: jest.fn().mockResolvedValue(undefined),
-        rejected: jest.fn().mockRejectedValue(new Error("Mock error")),
-        returnValue: jest.fn().mockReturnValue("mock value"),
-        returnTrue: jest.fn().mockReturnValue(true),
-        returnFalse: jest.fn().mockReturnValue(false),
-        returnEmptyArray: jest.fn().mockReturnValue([]),
-        returnEmptyObject: jest.fn().mockReturnValue({}),
+        resolved: vi.fn().mockResolvedValue(undefined),
+        rejected: vi.fn().mockRejectedValue(new Error("Mock error")),
+        returnValue: vi.fn().mockReturnValue("mock value"),
+        returnTrue: vi.fn().mockReturnValue(true),
+        returnFalse: vi.fn().mockReturnValue(false),
+        returnEmptyArray: vi.fn().mockReturnValue([]),
+        returnEmptyObject: vi.fn().mockReturnValue({}),
     },
 
     // Common mock objects
@@ -296,94 +297,94 @@ const createGlobalMocks = () => ({
         properties: { profiles: { testProfile: { type: "zosmf", properties: { host: "test.host.com" } } } },
     },
 
-    mockLayerActive: jest.fn(() => ({ path: "/test/config/path" })),
+    mockLayerActive: vi.fn(() => ({ path: "/test/config/path" })),
 
     mockConfigMoveAPI: {
-        get: jest.fn().mockReturnValue({ type: "zosmf", properties: { host: "test.host.com" } }),
-        set: jest.fn().mockResolvedValue(undefined),
-        delete: jest.fn().mockResolvedValue(undefined),
+        get: vi.fn().mockReturnValue({ type: "zosmf", properties: { host: "test.host.com" } }),
+        set: vi.fn().mockResolvedValue(undefined),
+        delete: vi.fn().mockResolvedValue(undefined),
     },
 
     mockProfileOperations: {
-        updateRenameKeysForParentChanges: jest.fn().mockReturnValue([]),
-        removeDuplicateRenames: jest.fn().mockReturnValue([]),
-        wouldCreateCircularReference: jest.fn().mockReturnValue(false),
-        isCriticalMoveError: jest.fn().mockReturnValue(false),
-        handleMoveUtilsError: jest.fn().mockReturnValue("Mock error message"),
-        validateConfigMoveAPI: jest.fn().mockReturnValue(true),
-        isNestedProfileCreation: jest.fn().mockReturnValue(false),
-        createNestedProfileStructure: jest.fn().mockImplementation(() => {}),
-        redactSecureValues: jest.fn().mockReturnValue([]),
+        updateRenameKeysForParentChanges: vi.fn().mockReturnValue([]),
+        removeDuplicateRenames: vi.fn().mockReturnValue([]),
+        wouldCreateCircularReference: vi.fn().mockReturnValue(false),
+        isCriticalMoveError: vi.fn().mockReturnValue(false),
+        handleMoveUtilsError: vi.fn().mockReturnValue("Mock error message"),
+        validateConfigMoveAPI: vi.fn().mockReturnValue(true),
+        isNestedProfileCreation: vi.fn().mockReturnValue(false),
+        createNestedProfileStructure: vi.fn().mockImplementation(() => {}),
+        redactSecureValues: vi.fn().mockReturnValue([]),
     },
 
     mockMessageHandlers: {
-        handleOpenConfigFile: jest.fn().mockResolvedValue(undefined),
-        handleRevealInFinder: jest.fn().mockResolvedValue(undefined),
-        handleOpenSchemaFile: jest.fn().mockResolvedValue(undefined),
-        handleGetEnvInformation: jest.fn().mockResolvedValue(undefined),
-        handleGetEnvVars: jest.fn().mockResolvedValue(undefined),
-        handleInitialSelection: jest.fn().mockResolvedValue(undefined),
-        handleConfigurationsReady: jest.fn().mockResolvedValue(undefined),
-        handleOpenConfigFileWithProfile: jest.fn().mockResolvedValue(undefined),
-        handleGetMergedProperties: jest.fn().mockResolvedValue(undefined),
-        handleGetWizardMergedProperties: jest.fn().mockResolvedValue(undefined),
-        handleSelectFile: jest.fn().mockResolvedValue(undefined),
-        handleCreateNewConfig: jest.fn().mockResolvedValue(undefined),
-        handleGetLocalStorageValue: jest.fn().mockResolvedValue(undefined),
-        handleOpenVscodeSettings: jest.fn().mockResolvedValue(undefined),
-        handleSetLocalStorageValue: jest.fn().mockResolvedValue(undefined),
-        handleShowErrorMessage: jest.fn().mockResolvedValue(undefined),
-        handleSaveChanges: jest.fn().mockResolvedValue(undefined),
-        handleGetProfiles: jest.fn().mockResolvedValue(undefined),
-        handleAutostoreToggle: jest.fn().mockResolvedValue(undefined),
+        handleOpenConfigFile: vi.fn().mockResolvedValue(undefined),
+        handleRevealInFinder: vi.fn().mockResolvedValue(undefined),
+        handleOpenSchemaFile: vi.fn().mockResolvedValue(undefined),
+        handleGetEnvInformation: vi.fn().mockResolvedValue(undefined),
+        handleGetEnvVars: vi.fn().mockResolvedValue(undefined),
+        handleInitialSelection: vi.fn().mockResolvedValue(undefined),
+        handleConfigurationsReady: vi.fn().mockResolvedValue(undefined),
+        handleOpenConfigFileWithProfile: vi.fn().mockResolvedValue(undefined),
+        handleGetMergedProperties: vi.fn().mockResolvedValue(undefined),
+        handleGetWizardMergedProperties: vi.fn().mockResolvedValue(undefined),
+        handleSelectFile: vi.fn().mockResolvedValue(undefined),
+        handleCreateNewConfig: vi.fn().mockResolvedValue(undefined),
+        handleGetLocalStorageValue: vi.fn().mockResolvedValue(undefined),
+        handleOpenVscodeSettings: vi.fn().mockResolvedValue(undefined),
+        handleSetLocalStorageValue: vi.fn().mockResolvedValue(undefined),
+        handleShowErrorMessage: vi.fn().mockResolvedValue(undefined),
+        handleSaveChanges: vi.fn().mockResolvedValue(undefined),
+        handleGetProfiles: vi.fn().mockResolvedValue(undefined),
+        handleAutostoreToggle: vi.fn().mockResolvedValue(undefined),
     },
 
     mockFileOperations: {
-        createNewConfig: jest.fn().mockResolvedValue({ configs: [], parseErrors: [] }),
+        createNewConfig: vi.fn().mockResolvedValue({ configs: [], parseErrors: [] }),
     },
 
     // Common mock modules
     mockModules: {
         fs: {
-            readFileSync: jest.fn().mockReturnValue('{"type": "object"}'),
-            existsSync: jest.fn().mockReturnValue(true),
-            realpathSync: jest.fn((path) => path),
+            readFileSync: vi.fn().mockReturnValue('{"type": "object"}'),
+            existsSync: vi.fn().mockReturnValue(true),
+            realpathSync: vi.fn((path) => path),
         },
         path: {
-            resolve: jest.fn().mockReturnValue("/test/config/path"),
-            join: jest.fn().mockReturnValue("/test/config/zowe.schema.json"),
-            dirname: jest.fn().mockReturnValue("/test/config"),
+            resolve: vi.fn().mockReturnValue("/test/config/path"),
+            join: vi.fn().mockReturnValue("/test/config/zowe.schema.json"),
+            dirname: vi.fn().mockReturnValue("/test/config"),
         },
         ConfigSchemaHelpers: {
-            generateSchemaValidation: jest.fn().mockReturnValue({ validate: jest.fn() }),
+            generateSchemaValidation: vi.fn().mockReturnValue({ validate: vi.fn() }),
         },
         ConfigUtils: {
-            processProfilesRecursively: jest.fn().mockImplementation(() => {}),
+            processProfilesRecursively: vi.fn().mockImplementation(() => {}),
         },
         MoveUtils: {
-            moveProfile: jest.fn().mockImplementation(() => {}),
-            moveProfileInPlace: jest.fn().mockImplementation(() => {}),
-            simulateDefaultsUpdateAfterRename: jest.fn().mockImplementation(() => {}),
-            updateDefaultsAfterRename: jest.fn().mockImplementation(() => {}),
+            moveProfile: vi.fn().mockImplementation(() => {}),
+            moveProfileInPlace: vi.fn().mockImplementation(() => {}),
+            simulateDefaultsUpdateAfterRename: vi.fn().mockImplementation(() => {}),
+            updateDefaultsAfterRename: vi.fn().mockImplementation(() => {}),
         },
         ConfigEditorPathUtils: {
-            constructNestedProfilePath: jest.fn().mockReturnValue("profiles.testProfile"),
-            getNewProfilePath: jest.fn().mockReturnValue("profiles.newProfile"),
-            updateChangeKey: jest.fn().mockReturnValue({}),
-            updateChangePath: jest.fn().mockReturnValue({}),
+            constructNestedProfilePath: vi.fn().mockReturnValue("profiles.testProfile"),
+            getNewProfilePath: vi.fn().mockReturnValue("profiles.newProfile"),
+            updateChangeKey: vi.fn().mockReturnValue({}),
+            updateChangePath: vi.fn().mockReturnValue({}),
         },
     },
 
     // Common mock spies
     mockSpies: {
         vscode: {
-            showErrorMessage: jest.fn().mockResolvedValue(undefined),
-            openTextDocument: jest.fn().mockResolvedValue({}),
-            showTextDocument: jest.fn().mockResolvedValue({ selection: {}, revealRange: jest.fn() }),
+            showErrorMessage: vi.fn().mockResolvedValue(undefined),
+            openTextDocument: vi.fn().mockResolvedValue({}),
+            showTextDocument: vi.fn().mockResolvedValue({ selection: {}, revealRange: vi.fn() }),
         },
         console: {
-            warn: jest.fn().mockImplementation(() => {}),
-            error: jest.fn().mockImplementation(() => {}),
+            warn: vi.fn().mockImplementation(() => {}),
+            error: vi.fn().mockImplementation(() => {}),
         },
     },
 });
@@ -404,7 +405,7 @@ describe("configEditor", () => {
 
     describe("areSecureValuesAllowed", () => {
         it("should return false when profiles cache is undefined", async () => {
-            const profilesCacheSpy = jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue(undefined);
+            const profilesCacheSpy = vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue(undefined);
 
             const result = await configEditor.areSecureValuesAllowed();
             expect(result).toBe(false);
@@ -414,14 +415,14 @@ describe("configEditor", () => {
 
         it("should return true when credential manager is in app settings", async () => {
             const mockProfilesCache = {
-                getProfileInfo: jest.fn().mockResolvedValue({
+                getProfileInfo: vi.fn().mockResolvedValue({
                     mCredentials: {
-                        isCredentialManagerInAppSettings: jest.fn().mockReturnValue(true),
+                        isCredentialManagerInAppSettings: vi.fn().mockReturnValue(true),
                     },
                 }),
             };
 
-            const profilesCacheSpy = jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue(mockProfilesCache);
+            const profilesCacheSpy = vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue(mockProfilesCache);
 
             const result = await configEditor.areSecureValuesAllowed();
             expect(result).toBe(true);
@@ -432,10 +433,10 @@ describe("configEditor", () => {
 
         it("should return false when credential manager check throws error", async () => {
             const mockProfilesCache = {
-                getProfileInfo: jest.fn().mockRejectedValue(new Error("Test error")),
+                getProfileInfo: vi.fn().mockRejectedValue(new Error("Test error")),
             };
 
-            const profilesCacheSpy = jest.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue(mockProfilesCache);
+            const profilesCacheSpy = vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue(mockProfilesCache);
 
             const result = await configEditor.areSecureValuesAllowed();
             expect(result).toBe(false);
@@ -447,7 +448,7 @@ describe("configEditor", () => {
         it("should return configurations when profiles are successfully read", async () => {
             const mocks = createGlobalMocks();
             const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: jest.fn(() => ({
+                getTeamConfig: vi.fn(() => ({
                     layers: [
                         {
                             exists: true,
@@ -499,11 +500,11 @@ describe("configEditor", () => {
         it("should handle error when reading profiles from disk and return empty array", async () => {
             ConfigUtils.createProfileInfoAndLoad.mockRejectedValue(new Error("Error reading file '/test/config.json' Line 5 Column 10"));
 
-            const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
-            const openTextDocumentSpy = jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({} as any);
-            const showTextDocumentSpy = jest.spyOn(vscode.window, "showTextDocument").mockResolvedValue({
+            const showErrorMessageSpy = vi.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
+            const openTextDocumentSpy = vi.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({} as any);
+            const showTextDocumentSpy = vi.spyOn(vscode.window, "showTextDocument").mockResolvedValue({
                 selection: {},
-                revealRange: jest.fn(),
+                revealRange: vi.fn(),
             } as any);
 
             const result = await configEditor.getLocalConfigs();
@@ -528,7 +529,7 @@ describe("configEditor", () => {
         it("should handle error when reading profiles from disk with non-Error object (lines 125-126)", async () => {
             ConfigUtils.createProfileInfoAndLoad.mockRejectedValue("String error message");
 
-            const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
+            const showErrorMessageSpy = vi.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
 
             const result = await (configEditor as any).getLocalConfigs();
 
@@ -541,7 +542,7 @@ describe("configEditor", () => {
 
         it("should handle layers that do not exist (layer.exists = false)", async () => {
             const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: jest.fn(() => ({
+                getTeamConfig: vi.fn(() => ({
                     layers: [
                         {
                             exists: false,
@@ -575,7 +576,7 @@ describe("configEditor", () => {
 
         it("should handle error when reading or parsing file and return partial results", async () => {
             const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: jest.fn(() => ({
+                getTeamConfig: vi.fn(() => ({
                     layers: [
                         {
                             exists: true,
@@ -631,11 +632,11 @@ describe("configEditor", () => {
             ConfigSchemaHelpers.generateSchemaValidation.mockReturnValue({});
             ConfigUtils.processProfilesRecursively.mockImplementation(() => {});
 
-            const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
-            const openTextDocumentSpy = jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({} as any);
-            const showTextDocumentSpy = jest.spyOn(vscode.window, "showTextDocument").mockResolvedValue({
+            const showErrorMessageSpy = vi.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
+            const openTextDocumentSpy = vi.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({} as any);
+            const showTextDocumentSpy = vi.spyOn(vscode.window, "showTextDocument").mockResolvedValue({
                 selection: {},
-                revealRange: jest.fn(),
+                revealRange: vi.fn(),
             } as any);
 
             const result = await configEditor.getLocalConfigs();
@@ -668,7 +669,7 @@ describe("configEditor", () => {
 
         it("should handle schema validation with existing schema file (lines 170-184)", async () => {
             const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: jest.fn(() => ({
+                getTeamConfig: vi.fn(() => ({
                     layers: [
                         {
                             exists: true,
@@ -714,7 +715,7 @@ describe("configEditor", () => {
             path.join.mockReturnValue("/test/config/zowe.schema.json");
             path.dirname.mockReturnValue("/test/config");
 
-            const mockSchemaValidation = { validate: jest.fn() };
+            const mockSchemaValidation = { validate: vi.fn() };
             ConfigSchemaHelpers.generateSchemaValidation.mockReturnValue(mockSchemaValidation);
             ConfigUtils.processProfilesRecursively.mockImplementation(() => {});
 
@@ -730,7 +731,7 @@ describe("configEditor", () => {
 
         it("should handle schema validation when schema file does not exist (lines 170-184)", async () => {
             const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: jest.fn(() => ({
+                getTeamConfig: vi.fn(() => ({
                     layers: [
                         {
                             exists: true,
@@ -777,7 +778,7 @@ describe("configEditor", () => {
 
         it("should handle schema validation when schema file is invalid (lines 170-184)", async () => {
             const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: jest.fn(() => ({
+                getTeamConfig: vi.fn(() => ({
                     layers: [
                         {
                             exists: true,
@@ -825,7 +826,7 @@ describe("configEditor", () => {
 
         it("should handle getLocalConfigs with schema validation and layer processing (lines 175, 207-208)", async () => {
             const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: jest.fn(() => ({
+                getTeamConfig: vi.fn(() => ({
                     layers: [
                         {
                             exists: true,
@@ -869,7 +870,7 @@ describe("configEditor", () => {
             path.join.mockReturnValue("/test/config/zowe.schema.json");
             path.dirname.mockReturnValue("/test/config");
 
-            const mockSchemaValidation = { validate: jest.fn() };
+            const mockSchemaValidation = { validate: vi.fn() };
             ConfigSchemaHelpers.generateSchemaValidation.mockReturnValue(mockSchemaValidation);
             ConfigUtils.processProfilesRecursively.mockImplementation(() => {});
 
@@ -900,7 +901,7 @@ describe("configEditor", () => {
             };
 
             // Mock the messageHandlers.handleGetProfiles method
-            const handleGetProfilesSpy = jest.spyOn((configEditor as any).messageHandlers, "handleGetProfiles").mockResolvedValue(undefined);
+            const handleGetProfilesSpy = vi.spyOn((configEditor as any).messageHandlers, "handleGetProfiles").mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -915,18 +916,18 @@ describe("configEditor", () => {
             };
 
             // Mock the required methods
-            const handleProfileRenamesSpy = jest.spyOn(configEditor as any, "handleProfileRenames").mockResolvedValue(undefined);
-            const handleAutostoreToggleSpy = jest.spyOn(configEditor as any, "handleAutostoreToggle").mockResolvedValue(undefined);
-            const getLocalConfigsSpy = jest.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
-            const areSecureValuesAllowedSpy = jest.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
-            const postMessageSpy = jest.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
+            const handleProfileRenamesSpy = vi.spyOn(configEditor as any, "handleProfileRenames").mockResolvedValue(undefined);
+            const handleAutostoreToggleSpy = vi.spyOn(configEditor as any, "handleAutostoreToggle").mockResolvedValue(undefined);
+            const getLocalConfigsSpy = vi.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
+            const areSecureValuesAllowedSpy = vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
+            const postMessageSpy = vi.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
 
             // Mock ConfigUtils.parseConfigChanges
             ConfigUtils.parseConfigChanges.mockReturnValue([]);
 
             // Mock ConfigChangeHandlers
-            ConfigChangeHandlers.handleDefaultChanges = jest.fn().mockResolvedValue(undefined);
-            ConfigChangeHandlers.handleProfileChanges = jest.fn().mockResolvedValue(undefined);
+            ConfigChangeHandlers.handleDefaultChanges = vi.fn().mockResolvedValue(undefined);
+            ConfigChangeHandlers.handleProfileChanges = vi.fn().mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -952,7 +953,7 @@ describe("configEditor", () => {
             };
 
             // Mock the messageHandlers.handleOpenConfigFile method
-            const handleOpenConfigFileSpy = jest.spyOn((configEditor as any).messageHandlers, "handleOpenConfigFile").mockResolvedValue(undefined);
+            const handleOpenConfigFileSpy = vi.spyOn((configEditor as any).messageHandlers, "handleOpenConfigFile").mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -1050,14 +1051,14 @@ describe("configEditor", () => {
                 profiles: mockProfiles,
             };
 
-            const mockTeamConfigLayersGet = jest.fn(() => ({
+            const mockTeamConfigLayersGet = vi.fn(() => ({
                 path: "/test/config/path",
                 properties: mockLayerProperties,
             }));
 
             const mockProfileInfo = {
-                readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-                getTeamConfig: jest.fn(() => ({
+                readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
+                getTeamConfig: vi.fn(() => ({
                     layers: [
                         {
                             path: "/test/config/path",
@@ -1077,14 +1078,14 @@ describe("configEditor", () => {
                     ],
                     api: {
                         layers: {
-                            activate: jest.fn(),
+                            activate: vi.fn(),
                             get: mockTeamConfigLayersGet,
-                            set: jest.fn(),
-                            delete: jest.fn(),
+                            set: vi.fn(),
+                            delete: vi.fn(),
                         },
                     },
-                    set: jest.fn(),
-                    delete: jest.fn(),
+                    set: vi.fn(),
+                    delete: vi.fn(),
                 })),
             };
 
@@ -1092,15 +1093,15 @@ describe("configEditor", () => {
 
             // Mock profileOperations methods
             const mockProfileOperations = {
-                updateRenameKeysForParentChanges: jest.fn().mockReturnValue(mockRenames),
-                removeDuplicateRenames: jest.fn().mockReturnValue(mockRenames),
-                wouldCreateCircularReference: jest.fn().mockReturnValue(false),
-                isCriticalMoveError: jest.fn().mockReturnValue(false),
+                updateRenameKeysForParentChanges: vi.fn().mockReturnValue(mockRenames),
+                removeDuplicateRenames: vi.fn().mockReturnValue(mockRenames),
+                wouldCreateCircularReference: vi.fn().mockReturnValue(false),
+                isCriticalMoveError: vi.fn().mockReturnValue(false),
             };
             (configEditor as any).profileOperations = mockProfileOperations as any;
 
             // Mock ConfigEditorPathUtils - return a path based on the input key
-            ConfigEditorPathUtils.constructNestedProfilePath = jest.fn().mockImplementation((key: string) => {
+            ConfigEditorPathUtils.constructNestedProfilePath = vi.fn().mockImplementation((key: string) => {
                 // Handle undefined or empty keys
                 if (!key) {
                     return "profiles.unknown";
@@ -1156,7 +1157,7 @@ describe("configEditor", () => {
             const mockRenames = [createMockRename("profiles.testProfile", "profiles.renamedProfile")];
 
             const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: jest.fn(() => ({
+                getTeamConfig: vi.fn(() => ({
                     layers: [mocks.mockLayer],
                     api: {
                         layers: {
@@ -1172,9 +1173,9 @@ describe("configEditor", () => {
 
             const mockProfileOperations = {
                 ...mocks.mockProfileOperations,
-                updateRenameKeysForParentChanges: jest.fn().mockReturnValue(mockRenames),
-                removeDuplicateRenames: jest.fn().mockReturnValue(mockRenames),
-                handleMoveUtilsError: jest.fn().mockReturnValue("Test error message"),
+                updateRenameKeysForParentChanges: vi.fn().mockReturnValue(mockRenames),
+                removeDuplicateRenames: vi.fn().mockReturnValue(mockRenames),
+                handleMoveUtilsError: vi.fn().mockReturnValue("Test error message"),
             };
             (configEditor as any).profileOperations = mockProfileOperations as any;
 
@@ -1184,7 +1185,7 @@ describe("configEditor", () => {
             // Mock MoveUtils using global mocks
             Object.assign(MoveUtils, mocks.mockModules.MoveUtils);
 
-            const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
+            const showErrorMessageSpy = vi.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
 
             await (configEditor as any).handleProfileRenames(mockRenames);
 
@@ -1204,8 +1205,8 @@ describe("configEditor", () => {
 
             // Mock ProfileInfo
             const mockProfileInfo = {
-                readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-                getTeamConfig: jest.fn(() => ({
+                readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
+                getTeamConfig: vi.fn(() => ({
                     layers: [
                         {
                             path: configPath,
@@ -1215,14 +1216,14 @@ describe("configEditor", () => {
                     ],
                     api: {
                         layers: {
-                            activate: jest.fn(),
+                            activate: vi.fn(),
                         },
                         secure: {
-                            secureFields: jest.fn().mockReturnValue([]),
+                            secureFields: vi.fn().mockReturnValue([]),
                         },
                     },
                 })),
-                getAllProfiles: jest.fn(() => [
+                getAllProfiles: vi.fn(() => [
                     {
                         profName: profPath,
                         profType: "zosmf",
@@ -1231,7 +1232,7 @@ describe("configEditor", () => {
                         },
                     },
                 ]),
-                mergeArgsForProfile: jest.fn(() => ({
+                mergeArgsForProfile: vi.fn(() => ({
                     knownArgs: [
                         {
                             argLoc: {
@@ -1247,7 +1248,7 @@ describe("configEditor", () => {
             ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             // Mock simulateProfileRenames
-            const simulateProfileRenamesSpy = jest.spyOn(configEditor as any, "simulateProfileRenames").mockImplementation(() => {});
+            const simulateProfileRenamesSpy = vi.spyOn(configEditor as any, "simulateProfileRenames").mockImplementation(() => {});
 
             // Mock ConfigUtils.parseConfigChanges
             ConfigUtils.parseConfigChanges.mockReturnValue([
@@ -1261,8 +1262,8 @@ describe("configEditor", () => {
             ]);
 
             // Mock ConfigChangeHandlers
-            ConfigChangeHandlers.simulateDefaultChanges = jest.fn();
-            ConfigChangeHandlers.simulateProfileChanges = jest.fn();
+            ConfigChangeHandlers.simulateDefaultChanges = vi.fn();
+            ConfigChangeHandlers.simulateProfileChanges = vi.fn();
 
             // Mock path.normalize
             path.normalize.mockReturnValue(configPath);
@@ -1294,16 +1295,16 @@ describe("configEditor", () => {
 
             // Mock ProfileInfo
             const mockProfileInfo = {
-                readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-                getTeamConfig: jest.fn(() => ({
+                readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
+                getTeamConfig: vi.fn(() => ({
                     layers: [],
                     api: {
                         layers: {
-                            activate: jest.fn(),
+                            activate: vi.fn(),
                         },
                     },
                 })),
-                getAllProfiles: jest.fn(() => []),
+                getAllProfiles: vi.fn(() => []),
             };
 
             ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
@@ -1396,8 +1397,8 @@ describe("configEditor", () => {
 
             // Mock ProfileInfo
             const mockProfileInfo = {
-                readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-                getTeamConfig: jest.fn(() => ({
+                readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
+                getTeamConfig: vi.fn(() => ({
                     layers: [
                         {
                             path: configPath,
@@ -1407,17 +1408,17 @@ describe("configEditor", () => {
                     ],
                     api: {
                         layers: {
-                            get: jest.fn(() => ({ path: configPath })),
-                            activate: jest.fn(),
-                            set: jest.fn(),
+                            get: vi.fn(() => ({ path: configPath })),
+                            activate: vi.fn(),
+                            set: vi.fn(),
                         },
                         secure: {
-                            secureFields: jest.fn().mockReturnValue([]),
+                            secureFields: vi.fn().mockReturnValue([]),
                         },
                     },
-                    set: jest.fn(),
+                    set: vi.fn(),
                 })),
-                getAllProfiles: jest.fn(() => [
+                getAllProfiles: vi.fn(() => [
                     {
                         profName: profileName,
                         profType: profileType,
@@ -1426,7 +1427,7 @@ describe("configEditor", () => {
                         },
                     },
                 ]),
-                mergeArgsForProfile: jest.fn(() => ({
+                mergeArgsForProfile: vi.fn(() => ({
                     knownArgs: [
                         {
                             argLoc: {
@@ -1442,7 +1443,7 @@ describe("configEditor", () => {
             ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             // Mock simulateProfileRenames
-            const simulateProfileRenamesSpy = jest.spyOn(configEditor as any, "simulateProfileRenames").mockImplementation(() => {});
+            const simulateProfileRenamesSpy = vi.spyOn(configEditor as any, "simulateProfileRenames").mockImplementation(() => {});
 
             // Mock ConfigUtils.parseConfigChanges
             ConfigUtils.parseConfigChanges.mockReturnValue([]);
@@ -1473,9 +1474,9 @@ describe("configEditor", () => {
         it("should handle profile not found in wizard", async () => {
             const mocks = createGlobalMocks();
             const mockProfileInfo = createMockProfileInfo({
-                getAllProfiles: jest.fn(() => []), // No profiles found
-                mergeArgsForProfile: jest.fn(),
-                getTeamConfig: jest.fn(() => ({
+                getAllProfiles: vi.fn(() => []), // No profiles found
+                mergeArgsForProfile: vi.fn(),
+                getTeamConfig: vi.fn(() => ({
                     layers: [mocks.mockLayer],
                     api: {
                         layers: { activate: mocks.mockFn.resolved, get: mocks.mockFn.returnValue },
@@ -1504,8 +1505,8 @@ describe("configEditor", () => {
 
             // Mock profileOperations methods
             const mockProfileOperations = {
-                updateRenameKeysForParentChanges: jest.fn().mockReturnValue(renames),
-                removeDuplicateRenames: jest.fn().mockReturnValue(renames),
+                updateRenameKeysForParentChanges: vi.fn().mockReturnValue(renames),
+                removeDuplicateRenames: vi.fn().mockReturnValue(renames),
             };
             (configEditor as any).profileOperations = mockProfileOperations as any;
 
@@ -1526,8 +1527,8 @@ describe("configEditor", () => {
 
             // Mock profileOperations methods
             const mockProfileOperations = {
-                updateRenameKeysForParentChanges: jest.fn(),
-                removeDuplicateRenames: jest.fn(),
+                updateRenameKeysForParentChanges: vi.fn(),
+                removeDuplicateRenames: vi.fn(),
             };
             (configEditor as any).profileOperations = mockProfileOperations as any;
 
@@ -1544,12 +1545,12 @@ describe("configEditor", () => {
 
             const mockProfileOperations = {
                 ...mocks.mockProfileOperations,
-                updateRenameKeysForParentChanges: jest.fn(),
-                removeDuplicateRenames: jest.fn(),
+                updateRenameKeysForParentChanges: vi.fn(),
+                removeDuplicateRenames: vi.fn(),
             };
             (configEditor as any).profileOperations = mockProfileOperations as any;
 
-            const consoleSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+            const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
             (configEditor as any).simulateProfileRenames(renames, teamConfig);
 
@@ -1588,8 +1589,8 @@ describe("configEditor", () => {
                 ],
                 api: {
                     layers: {
-                        activate: jest.fn(),
-                        get: jest.fn(() => ({
+                        activate: vi.fn(),
+                        get: vi.fn(() => ({
                             properties: {
                                 profiles: {
                                     tso: {
@@ -1602,23 +1603,23 @@ describe("configEditor", () => {
                             },
                         })),
                     },
-                    set: jest.fn(),
-                    delete: jest.fn(),
+                    set: vi.fn(),
+                    delete: vi.fn(),
                 },
             };
 
             // Mock profileOperations methods
             const mockProfileOperations = {
-                updateRenameKeysForParentChanges: jest.fn().mockReturnValue(renames),
-                removeDuplicateRenames: jest.fn().mockReturnValue(renames),
-                validateConfigMoveAPI: jest.fn(),
-                isNestedProfileCreation: jest.fn().mockReturnValue(true),
-                createNestedProfileStructure: jest.fn(),
+                updateRenameKeysForParentChanges: vi.fn().mockReturnValue(renames),
+                removeDuplicateRenames: vi.fn().mockReturnValue(renames),
+                validateConfigMoveAPI: vi.fn(),
+                isNestedProfileCreation: vi.fn().mockReturnValue(true),
+                createNestedProfileStructure: vi.fn(),
             };
             (configEditor as any).profileOperations = mockProfileOperations as any;
 
             // Mock ConfigEditorPathUtils
-            ConfigEditorPathUtils.constructNestedProfilePath = jest.fn().mockReturnValueOnce("profiles.tso").mockReturnValueOnce("profiles.tso.asdf");
+            ConfigEditorPathUtils.constructNestedProfilePath = vi.fn().mockReturnValueOnce("profiles.tso").mockReturnValueOnce("profiles.tso.asdf");
 
             // Mock simulateDefaultsUpdateAfterRename
             const simulateDefaultsUpdateAfterRename = MoveUtils.simulateDefaultsUpdateAfterRename;
@@ -1682,14 +1683,14 @@ describe("configEditor", () => {
             ];
 
             // Create mock functions
-            const mockActivate = jest.fn();
-            const mockSet = jest.fn();
-            const mockSave = jest.fn().mockResolvedValue(undefined);
+            const mockActivate = vi.fn();
+            const mockSet = vi.fn();
+            const mockSave = vi.fn().mockResolvedValue(undefined);
 
             // Mock ProfileInfo
             const mockProfileInfo = {
-                readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-                getTeamConfig: jest.fn(() => ({
+                readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
+                getTeamConfig: vi.fn(() => ({
                     layers: [
                         {
                             path: "/test/config/path",
@@ -1733,14 +1734,14 @@ describe("configEditor", () => {
             ];
 
             // Create mock functions
-            const mockActivate = jest.fn();
-            const mockSet = jest.fn();
-            const mockSave = jest.fn().mockResolvedValue(undefined);
+            const mockActivate = vi.fn();
+            const mockSet = vi.fn();
+            const mockSave = vi.fn().mockResolvedValue(undefined);
 
             // Mock ProfileInfo
             const mockProfileInfo = {
-                readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-                getTeamConfig: jest.fn(() => ({
+                readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
+                getTeamConfig: vi.fn(() => ({
                     layers: [
                         {
                             path: "/test/config/path1",
@@ -1802,7 +1803,7 @@ describe("configEditor", () => {
 
             ConfigUtils.createProfileInfoAndLoad.mockRejectedValue(new Error("Test error"));
 
-            const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
+            const showErrorMessageSpy = vi.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
 
             await (configEditor as any).handleAutostoreToggle(otherChanges);
 
@@ -1821,8 +1822,8 @@ describe("configEditor", () => {
 
             // Mock ProfileInfo with no matching layer
             const mockProfileInfo = {
-                readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-                getTeamConfig: jest.fn(() => ({
+                readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
+                getTeamConfig: vi.fn(() => ({
                     layers: [
                         {
                             path: "/different/config/path",
@@ -1832,11 +1833,11 @@ describe("configEditor", () => {
                     ],
                     api: {
                         layers: {
-                            activate: jest.fn(),
+                            activate: vi.fn(),
                         },
                     },
-                    set: jest.fn(),
-                    save: jest.fn().mockResolvedValue(undefined),
+                    set: vi.fn(),
+                    save: vi.fn().mockResolvedValue(undefined),
                 })),
             };
 
@@ -1859,7 +1860,7 @@ describe("configEditor", () => {
                 configPath: "/test/config/path",
             };
 
-            const handleRevealInFinderSpy = jest.spyOn((configEditor as any).messageHandlers, "handleRevealInFinder").mockResolvedValue(undefined);
+            const handleRevealInFinderSpy = vi.spyOn((configEditor as any).messageHandlers, "handleRevealInFinder").mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -1872,7 +1873,7 @@ describe("configEditor", () => {
                 schemaPath: "/test/schema/path",
             };
 
-            const handleOpenSchemaFileSpy = jest.spyOn((configEditor as any).messageHandlers, "handleOpenSchemaFile").mockResolvedValue(undefined);
+            const handleOpenSchemaFileSpy = vi.spyOn((configEditor as any).messageHandlers, "handleOpenSchemaFile").mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -1884,7 +1885,7 @@ describe("configEditor", () => {
                 command: "GET_ENV_INFORMATION",
             };
 
-            const handleGetEnvInformationSpy = jest
+            const handleGetEnvInformationSpy = vi
                 .spyOn((configEditor as any).messageHandlers, "handleGetEnvInformation")
                 .mockResolvedValue(undefined);
 
@@ -1899,7 +1900,7 @@ describe("configEditor", () => {
                 profileName: "testProfile",
             };
 
-            const handleGetEnvVarsSpy = jest.spyOn((configEditor as any).messageHandlers, "handleGetEnvVars").mockResolvedValue(undefined);
+            const handleGetEnvVarsSpy = vi.spyOn((configEditor as any).messageHandlers, "handleGetEnvVars").mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -1914,9 +1915,7 @@ describe("configEditor", () => {
                 profileType: "zosmf",
             };
 
-            const handleInitialSelectionSpy = jest
-                .spyOn((configEditor as any).messageHandlers, "handleInitialSelection")
-                .mockImplementation(() => {});
+            const handleInitialSelectionSpy = vi.spyOn((configEditor as any).messageHandlers, "handleInitialSelection").mockImplementation(() => {});
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -1928,7 +1927,7 @@ describe("configEditor", () => {
                 command: "CONFIGURATIONS_READY",
             };
 
-            const handleConfigurationsReadySpy = jest
+            const handleConfigurationsReadySpy = vi
                 .spyOn((configEditor as any).messageHandlers, "handleConfigurationsReady")
                 .mockResolvedValue(undefined);
 
@@ -1944,7 +1943,7 @@ describe("configEditor", () => {
                 profileKey: "testProfile",
             };
 
-            const openConfigFileWithProfileSpy = jest.spyOn(ZoweVsCodeExtension, "openConfigFileWithProfile").mockResolvedValue(undefined);
+            const openConfigFileWithProfileSpy = vi.spyOn(ZoweVsCodeExtension, "openConfigFileWithProfile").mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -1960,13 +1959,13 @@ describe("configEditor", () => {
                 renames: [],
             };
 
-            const getPendingMergedArgsForProfileSpy = jest.spyOn(configEditor as any, "getPendingMergedArgsForProfile").mockResolvedValue([
+            const getPendingMergedArgsForProfileSpy = vi.spyOn(configEditor as any, "getPendingMergedArgsForProfile").mockResolvedValue([
                 {
                     argLoc: { osLoc: "/test/config/path", jsonLoc: "profiles.testProfile.properties.host" },
                     argValue: "test.host.com",
                 },
             ]);
-            const postMessageSpy = jest.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
+            const postMessageSpy = vi.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -1996,13 +1995,13 @@ describe("configEditor", () => {
                 renames: [],
             };
 
-            const getWizardMergedPropertiesSpy = jest.spyOn(configEditor as any, "getWizardMergedProperties").mockResolvedValue([
+            const getWizardMergedPropertiesSpy = vi.spyOn(configEditor as any, "getWizardMergedProperties").mockResolvedValue([
                 {
                     argLoc: { osLoc: "/test/config/path", jsonLoc: "profiles.testProfile.properties.host" },
                     argValue: "test.host.com",
                 },
             ]);
-            const postMessageSpy = jest.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
+            const postMessageSpy = vi.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -2026,7 +2025,7 @@ describe("configEditor", () => {
                 fileType: "config",
             };
 
-            const handleSelectFileSpy = jest.spyOn((configEditor as any).messageHandlers, "handleSelectFile").mockResolvedValue(undefined);
+            const handleSelectFileSpy = vi.spyOn((configEditor as any).messageHandlers, "handleSelectFile").mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -2039,7 +2038,7 @@ describe("configEditor", () => {
                 configPath: "/test/new/config/path",
             };
 
-            const createNewConfigSpy = jest.spyOn((configEditor as any).fileOperations, "createNewConfig").mockResolvedValue({
+            const createNewConfigSpy = vi.spyOn((configEditor as any).fileOperations, "createNewConfig").mockResolvedValue({
                 configs: [
                     {
                         configPath: "/test/new/config/path",
@@ -2050,8 +2049,8 @@ describe("configEditor", () => {
                 ],
                 parseErrors: [],
             });
-            const areSecureValuesAllowedSpy = jest.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
-            const postMessageSpy = jest.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
+            const areSecureValuesAllowedSpy = vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
+            const postMessageSpy = vi.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -2071,7 +2070,7 @@ describe("configEditor", () => {
                 key: "testKey",
             };
 
-            const handleGetLocalStorageValueSpy = jest
+            const handleGetLocalStorageValueSpy = vi
                 .spyOn((configEditor as any).messageHandlers, "handleGetLocalStorageValue")
                 .mockResolvedValue(undefined);
 
@@ -2086,7 +2085,7 @@ describe("configEditor", () => {
                 setting: "zowe.logger",
             };
 
-            const handleOpenVscodeSettingsSpy = jest
+            const handleOpenVscodeSettingsSpy = vi
                 .spyOn((configEditor as any).messageHandlers, "handleOpenVscodeSettings")
                 .mockResolvedValue(undefined);
 
@@ -2102,7 +2101,7 @@ describe("configEditor", () => {
                 value: "testValue",
             };
 
-            const handleSetLocalStorageValueSpy = jest
+            const handleSetLocalStorageValueSpy = vi
                 .spyOn((configEditor as any).messageHandlers, "handleSetLocalStorageValue")
                 .mockResolvedValue(undefined);
 
@@ -2117,7 +2116,7 @@ describe("configEditor", () => {
                 message: "Test error message",
             };
 
-            const showErrorMessageSpy = jest.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
+            const showErrorMessageSpy = vi.spyOn(vscode.window, "showErrorMessage").mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -2131,19 +2130,19 @@ describe("configEditor", () => {
                 otherChanges: [],
             };
 
-            const getLocalConfigsSpy = jest.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
-            const areSecureValuesAllowedSpy = jest.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
-            const postMessageSpy = jest.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
+            const getLocalConfigsSpy = vi.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
+            const areSecureValuesAllowedSpy = vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
+            const postMessageSpy = vi.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
 
             const mockProfileInfo = {
-                readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
+                readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
             };
             ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
             ConfigUtils.parseConfigChanges.mockReturnValue([]);
 
-            ConfigChangeHandlers.handleDefaultChanges = jest.fn().mockRejectedValue(new Error("Test error"));
-            ConfigChangeHandlers.handleProfileChanges = jest.fn().mockResolvedValue(undefined);
+            ConfigChangeHandlers.handleDefaultChanges = vi.fn().mockRejectedValue(new Error("Test error"));
+            ConfigChangeHandlers.handleProfileChanges = vi.fn().mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -2176,19 +2175,17 @@ describe("configEditor", () => {
                 ],
             };
 
-            const handleProfileRenamesSpy = jest.spyOn(configEditor as any, "handleProfileRenames").mockResolvedValue(undefined);
-            const updateProfileChangesForRenamesSpy = jest
-                .spyOn(configEditor as any, "updateProfileChangesForRenames")
-                .mockResolvedValue(mockMessage);
+            const handleProfileRenamesSpy = vi.spyOn(configEditor as any, "handleProfileRenames").mockResolvedValue(undefined);
+            const updateProfileChangesForRenamesSpy = vi.spyOn(configEditor as any, "updateProfileChangesForRenames").mockResolvedValue(mockMessage);
 
             ConfigUtils.parseConfigChanges.mockReturnValue([]);
 
-            ConfigChangeHandlers.handleDefaultChanges = jest.fn().mockResolvedValue(undefined);
-            ConfigChangeHandlers.handleProfileChanges = jest.fn().mockResolvedValue(undefined);
+            ConfigChangeHandlers.handleDefaultChanges = vi.fn().mockResolvedValue(undefined);
+            ConfigChangeHandlers.handleProfileChanges = vi.fn().mockResolvedValue(undefined);
 
             const mockProfileInfo = {
-                readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-                getTeamConfig: jest.fn(() => ({
+                readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
+                getTeamConfig: vi.fn(() => ({
                     layers: [],
                 })),
             };
@@ -2224,7 +2221,7 @@ describe("configEditor", () => {
 
             ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
-            const parseConfigChangesSpy = jest.spyOn(ConfigUtils, "parseConfigChanges").mockReturnValue([
+            const parseConfigChangesSpy = vi.spyOn(ConfigUtils, "parseConfigChanges").mockReturnValue([
                 {
                     changes: [{ key: "host", value: "new.host.com" }],
                     deletions: [],
@@ -2233,17 +2230,17 @@ describe("configEditor", () => {
             ]);
 
             // Use the mocked modules directly
-            const mockedConfigChangeHandlers = require("../../../../src/utils/ConfigChangeHandlers");
-            const handleDefaultChangesSpy = jest
+            const mockedConfigChangeHandlers = { ConfigChangeHandlers };
+            const handleDefaultChangesSpy = vi
                 .spyOn(mockedConfigChangeHandlers.ConfigChangeHandlers, "handleDefaultChanges")
                 .mockResolvedValue(undefined);
-            const handleProfileChangesSpy = jest
+            const handleProfileChangesSpy = vi
                 .spyOn(mockedConfigChangeHandlers.ConfigChangeHandlers, "handleProfileChanges")
                 .mockResolvedValue(undefined);
 
-            const getLocalConfigsSpy = jest.spyOn(configEditor as any, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
-            const areSecureValuesAllowedSpy = jest.spyOn(configEditor as any, "areSecureValuesAllowed").mockResolvedValue(true);
-            const postMessageSpy = jest.spyOn((configEditor as any).panel.webview, "postMessage").mockResolvedValue(undefined);
+            const getLocalConfigsSpy = vi.spyOn(configEditor as any, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
+            const areSecureValuesAllowedSpy = vi.spyOn(configEditor as any, "areSecureValuesAllowed").mockResolvedValue(true);
+            const postMessageSpy = vi.spyOn((configEditor as any).panel.webview, "postMessage").mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -2269,24 +2266,24 @@ describe("configEditor", () => {
             const mocks = createGlobalMocks();
 
             // Mock ZoweVsCodeExtension.workspaceRoot
-            const workspaceRootSpy = jest.spyOn(ZoweVsCodeExtension, "workspaceRoot", "get").mockReturnValue({
+            const workspaceRootSpy = vi.spyOn(ZoweVsCodeExtension, "workspaceRoot", "get").mockReturnValue({
                 uri: { fsPath: "/test/workspace", scheme: "file", authority: "", path: "/test/workspace", query: "", fragment: "" } as any,
                 name: "test-workspace",
                 index: 0,
             } as any);
 
             // Mock console.error to track error logging
-            const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+            const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
             // Mock ConfigUtils.parseConfigChanges to throw an error
             const originalParseConfigChanges = ConfigUtils.parseConfigChanges;
-            ConfigUtils.parseConfigChanges = jest.fn().mockImplementation(() => {
+            ConfigUtils.parseConfigChanges = vi.fn().mockImplementation(() => {
                 throw new Error("Parse config changes failed");
             });
 
-            const getLocalConfigsSpy = jest.spyOn(configEditor as any, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
-            const areSecureValuesAllowedSpy = jest.spyOn(configEditor as any, "areSecureValuesAllowed").mockResolvedValue(true);
-            const postMessageSpy = jest.spyOn((configEditor as any).panel.webview, "postMessage").mockResolvedValue(undefined);
+            const getLocalConfigsSpy = vi.spyOn(configEditor as any, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
+            const areSecureValuesAllowedSpy = vi.spyOn(configEditor as any, "areSecureValuesAllowed").mockResolvedValue(true);
+            const postMessageSpy = vi.spyOn((configEditor as any).panel.webview, "postMessage").mockResolvedValue(undefined);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
@@ -2337,12 +2334,12 @@ describe("configEditor", () => {
             ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(createMockProfileInfo());
 
             // Mock ConfigEditorPathUtils methods
-            ConfigEditorPathUtils.getNewProfilePath = jest
+            ConfigEditorPathUtils.getNewProfilePath = vi
                 .fn()
                 .mockReturnValueOnce("profiles.newProfile")
                 .mockReturnValueOnce("profiles.anotherNewProfile")
                 .mockReturnValueOnce("profiles.newProfile");
-            ConfigEditorPathUtils.updateChangeKey = jest
+            ConfigEditorPathUtils.updateChangeKey = vi
                 .fn()
                 .mockReturnValueOnce({
                     configPath: "/test/config/path",
@@ -2362,7 +2359,7 @@ describe("configEditor", () => {
                     key: "profiles.newProfile.secure",
                     path: ["profiles", "newProfile", "secure"],
                 });
-            ConfigEditorPathUtils.updateChangePath = jest
+            ConfigEditorPathUtils.updateChangePath = vi
                 .fn()
                 .mockReturnValueOnce({
                     configPath: "/test/config/path",
@@ -2448,9 +2445,9 @@ describe("configEditor", () => {
     it("should handle createNestedProfileStructureDirectly", () => {
         const teamConfig = {
             api: {
-                layers: { get: jest.fn(() => ({ properties: { profiles: { tso: { type: "tso", properties: { host: "test.host.com" } } } } })) },
+                layers: { get: vi.fn(() => ({ properties: { profiles: { tso: { type: "tso", properties: { host: "test.host.com" } } } } })) },
             },
-            set: jest.fn().mockResolvedValue(undefined),
+            set: vi.fn().mockResolvedValue(undefined),
         };
 
         (configEditor as any).createNestedProfileStructureDirectly(
@@ -2466,9 +2463,9 @@ describe("configEditor", () => {
 
     it("should handle moveProfileDirectly with error scenarios", () => {
         const teamConfig = {
-            api: { layers: { get: jest.fn(() => ({ properties: { profiles: {} } })) } },
-            set: jest.fn().mockResolvedValue(undefined),
-            delete: jest.fn().mockResolvedValue(undefined),
+            api: { layers: { get: vi.fn(() => ({ properties: { profiles: {} } })) } },
+            set: vi.fn().mockResolvedValue(undefined),
+            delete: vi.fn().mockResolvedValue(undefined),
         };
 
         const layerActive = () => ({ properties: { profiles: {} } });
@@ -2482,11 +2479,11 @@ describe("configEditor", () => {
         const teamConfig = {
             api: {
                 layers: {
-                    get: jest.fn(() => ({ properties: { profiles: { sourceProfile: { type: "zosmf" }, targetProfile: { type: "zosmf" } } } })),
+                    get: vi.fn(() => ({ properties: { profiles: { sourceProfile: { type: "zosmf" }, targetProfile: { type: "zosmf" } } } })),
                 },
             },
-            set: jest.fn().mockResolvedValue(undefined),
-            delete: jest.fn().mockResolvedValue(undefined),
+            set: vi.fn().mockResolvedValue(undefined),
+            delete: vi.fn().mockResolvedValue(undefined),
         };
 
         const layerActive = () => ({ properties: { profiles: { sourceProfile: { type: "zosmf" }, targetProfile: { type: "zosmf" } } } });
@@ -2498,9 +2495,9 @@ describe("configEditor", () => {
 
     it("should handle moveProfileDirectly successful move (lines 540-541)", () => {
         const teamConfig = {
-            api: { layers: { get: jest.fn(() => ({ properties: { profiles: { sourceProfile: { type: "zosmf" } } } })) } },
-            set: jest.fn().mockResolvedValue(undefined),
-            delete: jest.fn().mockResolvedValue(undefined),
+            api: { layers: { get: vi.fn(() => ({ properties: { profiles: { sourceProfile: { type: "zosmf" } } } })) } },
+            set: vi.fn().mockResolvedValue(undefined),
+            delete: vi.fn().mockResolvedValue(undefined),
         };
 
         const layerActive = () => ({ properties: { profiles: { sourceProfile: { type: "zosmf" } } } });
@@ -2513,11 +2510,11 @@ describe("configEditor", () => {
 
     it("should handle processSingleRename with nested profile creation path (lines 507-508)", () => {
         const mockProfileOperations = {
-            isNestedProfileCreation: jest.fn().mockReturnValue(true),
+            isNestedProfileCreation: vi.fn().mockReturnValue(true),
         };
         (configEditor as any).profileOperations = mockProfileOperations;
 
-        const createNestedProfileStructureDirectlyMock = jest.fn();
+        const createNestedProfileStructureDirectlyMock = vi.fn();
 
         const originalKey = "profiles.tso";
         const newKey = "profiles.tso.nested";
@@ -2532,11 +2529,11 @@ describe("configEditor", () => {
 
     it("should handle processSingleRename with regular move path (lines 509-511)", () => {
         const mockProfileOperations = {
-            isNestedProfileCreation: jest.fn().mockReturnValue(false),
+            isNestedProfileCreation: vi.fn().mockReturnValue(false),
         };
         (configEditor as any).profileOperations = mockProfileOperations;
 
-        const moveProfileDirectlyMock = jest.fn();
+        const moveProfileDirectlyMock = vi.fn();
 
         const originalKey = "profiles.testProfile";
         const newKey = "profiles.renamedProfile";
@@ -2557,15 +2554,15 @@ describe("configEditor", () => {
     it("should handle getWizardMergedProperties with secure field detection", async () => {
         const mocks = createGlobalMocks();
         const mockProfileInfo = createMockProfileInfo({
-            getAllProfiles: jest.fn(() => [{ profName: "testProfile", profType: "zosmf", profLoc: { osLoc: "/test/config/path" } }]),
-            mergeArgsForProfile: jest.fn(() => ({
+            getAllProfiles: vi.fn(() => [{ profName: "testProfile", profType: "zosmf", profLoc: { osLoc: "/test/config/path" } }]),
+            mergeArgsForProfile: vi.fn(() => ({
                 knownArgs: [{ argLoc: { osLoc: "/test/config/path", jsonLoc: "profiles.testProfile.properties.password" }, argValue: "secret" }],
             })),
-            getTeamConfig: jest.fn(() => ({
+            getTeamConfig: vi.fn(() => ({
                 layers: [{ path: "/test/config/path", user: true, global: false }],
                 api: {
                     layers: { activate: mocks.mockFn.resolved, get: mocks.mockFn.returnValue },
-                    secure: { secureFields: jest.fn().mockReturnValue(["profiles.testProfile.properties.password"]) },
+                    secure: { secureFields: vi.fn().mockReturnValue(["profiles.testProfile.properties.password"]) },
                     set: mocks.mockFn.resolved,
                 },
                 set: mocks.mockFn.resolved,
@@ -2575,7 +2572,7 @@ describe("configEditor", () => {
         ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
         const mockProfileOperations = {
-            redactSecureValues: jest.fn().mockReturnValue([
+            redactSecureValues: vi.fn().mockReturnValue([
                 {
                     argLoc: { osLoc: "/test/config/path", jsonLoc: "profiles.testProfile.properties.password" },
                     argValue: "secret",
@@ -2585,10 +2582,10 @@ describe("configEditor", () => {
         };
         (configEditor as any).profileOperations = mockProfileOperations;
 
-        const layerHasFieldSpy = jest.spyOn(configEditor as any, "layerHasField").mockReturnValue(true);
+        const layerHasFieldSpy = vi.spyOn(configEditor as any, "layerHasField").mockReturnValue(true);
 
         // Mock ConfigUtils.parseConfigChanges to return an empty array
-        const parseConfigChangesSpy = jest.spyOn(ConfigUtils, "parseConfigChanges").mockReturnValue([]);
+        const parseConfigChangesSpy = vi.spyOn(ConfigUtils, "parseConfigChanges").mockReturnValue([]);
 
         const result = await (configEditor as any).getWizardMergedProperties("root", "zosmf", "/test/config/path", "testProfile", {}, []);
 
@@ -2604,11 +2601,11 @@ describe("configEditor", () => {
     it("should handle getWizardMergedProperties with profile renames and complex paths", async () => {
         const mocks = createGlobalMocks();
         const mockProfileInfo = createMockProfileInfo({
-            getAllProfiles: jest.fn(() => [
+            getAllProfiles: vi.fn(() => [
                 { profName: "parent.child.grandchild.testProfile", profType: "zosmf", profLoc: { osLoc: "/test/config/path" } },
             ]),
-            mergeArgsForProfile: jest.fn(() => ({ knownArgs: [] })),
-            getTeamConfig: jest.fn(() => ({
+            mergeArgsForProfile: vi.fn(() => ({ knownArgs: [] })),
+            getTeamConfig: vi.fn(() => ({
                 layers: [{ path: "/test/config/path", user: true, global: false }],
                 api: { layers: { activate: mocks.mockFn.resolved, get: mocks.mockFn.returnValue }, set: mocks.mockFn.resolved },
                 set: mocks.mockFn.resolved,
@@ -2617,7 +2614,7 @@ describe("configEditor", () => {
 
         ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
-        ConfigUtils.parseConfigChanges = jest.fn().mockReturnValue([]);
+        ConfigUtils.parseConfigChanges = vi.fn().mockReturnValue([]);
 
         const result = await (configEditor as any).getWizardMergedProperties("oldParent.child", "zosmf", "/test/config/path", "testProfile", {}, [
             { originalKey: "profiles.oldParent", newKey: "profiles.newParent", configPath: "/test/config/path" },
@@ -2629,18 +2626,18 @@ describe("configEditor", () => {
     it("should handle getWizardMergedProperties with layer sorting for secure fields", async () => {
         const mocks = createGlobalMocks();
         const mockProfileInfo = createMockProfileInfo({
-            getAllProfiles: jest.fn(() => [{ profName: "testProfile", profType: "zosmf", profLoc: { osLoc: "/test/config/path" } }]),
-            mergeArgsForProfile: jest.fn(() => ({
+            getAllProfiles: vi.fn(() => [{ profName: "testProfile", profType: "zosmf", profLoc: { osLoc: "/test/config/path" } }]),
+            mergeArgsForProfile: vi.fn(() => ({
                 knownArgs: [{ argLoc: { osLoc: "/test/config/path", jsonLoc: "profiles.testProfile.properties.password" }, argValue: "secret" }],
             })),
-            getTeamConfig: jest.fn(() => ({
+            getTeamConfig: vi.fn(() => ({
                 layers: [
                     { path: "/test/config/path", user: true, global: false },
                     { path: "/test/global/config/path", user: false, global: true },
                 ],
                 api: {
                     layers: { activate: mocks.mockFn.resolved, get: mocks.mockFn.returnValue },
-                    secure: { secureFields: jest.fn().mockReturnValue(["profiles.testProfile.properties.password"]) },
+                    secure: { secureFields: vi.fn().mockReturnValue(["profiles.testProfile.properties.password"]) },
                     set: mocks.mockFn.resolved,
                 },
                 set: mocks.mockFn.resolved,
@@ -2650,7 +2647,7 @@ describe("configEditor", () => {
         ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
         const mockProfileOperations = {
-            redactSecureValues: jest.fn().mockReturnValue([
+            redactSecureValues: vi.fn().mockReturnValue([
                 {
                     argLoc: { osLoc: "/test/config/path", jsonLoc: "profiles.testProfile.properties.password" },
                     argValue: "secret",
@@ -2660,7 +2657,7 @@ describe("configEditor", () => {
         };
         (configEditor as any).profileOperations = mockProfileOperations;
 
-        const layerHasFieldSpy = jest.spyOn(configEditor as any, "layerHasField").mockReturnValue(true);
+        const layerHasFieldSpy = vi.spyOn(configEditor as any, "layerHasField").mockReturnValue(true);
 
         const result = await (configEditor as any).getWizardMergedProperties("root", "zosmf", "/test/config/path", "testProfile", {}, []);
 
@@ -2673,9 +2670,9 @@ describe("configEditor", () => {
     it("should handle getWizardMergedProperties with various change types", async () => {
         const mocks = createGlobalMocks();
         const mockProfileInfo = createMockProfileInfo({
-            getAllProfiles: jest.fn(() => [{ profName: "testProfile", profType: "zosmf", profLoc: { osLoc: "/test/config/path" } }]),
-            mergeArgsForProfile: jest.fn(() => ({ knownArgs: [] })),
-            getTeamConfig: jest.fn(() => ({
+            getAllProfiles: vi.fn(() => [{ profName: "testProfile", profType: "zosmf", profLoc: { osLoc: "/test/config/path" } }]),
+            mergeArgsForProfile: vi.fn(() => ({ knownArgs: [] })),
+            getTeamConfig: vi.fn(() => ({
                 layers: [{ path: "/test/config/path", user: true, global: false }],
                 api: { layers: { activate: mocks.mockFn.resolved, get: mocks.mockFn.returnValue }, set: mocks.mockFn.resolved },
                 set: mocks.mockFn.resolved,
@@ -2684,7 +2681,7 @@ describe("configEditor", () => {
 
         ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
-        ConfigUtils.parseConfigChanges = jest.fn().mockReturnValue([
+        ConfigUtils.parseConfigChanges = vi.fn().mockReturnValue([
             {
                 defaultsChanges: { "profiles.testProfile.properties.host": "new.host.com" },
                 defaultsDeleteKeys: ["profiles.testProfile.properties.port"],
@@ -2702,9 +2699,9 @@ describe("configEditor", () => {
     it("should handle getWizardMergedProperties with edge cases", async () => {
         const mocks = createGlobalMocks();
         const mockProfileInfo = createMockProfileInfo({
-            getAllProfiles: jest.fn(() => [{ profName: "testProfile", profType: "zosmf", profLoc: { osLoc: "/test/config/path" } }]),
-            mergeArgsForProfile: jest.fn(() => ({ knownArgs: [] })),
-            getTeamConfig: jest.fn(() => ({
+            getAllProfiles: vi.fn(() => [{ profName: "testProfile", profType: "zosmf", profLoc: { osLoc: "/test/config/path" } }]),
+            mergeArgsForProfile: vi.fn(() => ({ knownArgs: [] })),
+            getTeamConfig: vi.fn(() => ({
                 layers: [
                     { path: "/test/config/path", user: true, global: false },
                     { path: "/test/global/config/path", user: false, global: true },
@@ -2716,7 +2713,7 @@ describe("configEditor", () => {
 
         ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
-        ConfigUtils.parseConfigChanges = jest.fn().mockReturnValue([]);
+        ConfigUtils.parseConfigChanges = vi.fn().mockReturnValue([]);
 
         // Test with no changes
         const result1 = await (configEditor as any).getWizardMergedProperties("root", "zosmf", "/test/config/path", "testProfile", {}, []);
@@ -2732,7 +2729,7 @@ describe("configEditor", () => {
         const mockTeamConfig = {
             api: {
                 layers: {
-                    get: jest.fn().mockReturnValue({
+                    get: vi.fn().mockReturnValue({
                         properties: {
                             profiles: {
                                 testProfile: { type: "zosmf", properties: { host: "test.host.com" } },
@@ -2743,7 +2740,7 @@ describe("configEditor", () => {
             },
         };
 
-        const getProfileFromTeamConfigSpy = jest
+        const getProfileFromTeamConfigSpy = vi
             .spyOn(configEditor as any, "getProfileFromTeamConfig")
             .mockReturnValueOnce({ type: "zosmf", properties: { host: "test.host.com" } }) // original profile exists
             .mockReturnValueOnce(null); // target profile doesn't exist
@@ -2764,7 +2761,7 @@ describe("configEditor", () => {
         const mockTeamConfig = {
             api: {
                 layers: {
-                    get: jest.fn().mockReturnValue({
+                    get: vi.fn().mockReturnValue({
                         properties: {
                             profiles: {},
                         },
@@ -2773,7 +2770,7 @@ describe("configEditor", () => {
             },
         };
 
-        const getProfileFromTeamConfigSpy = jest.spyOn(configEditor as any, "getProfileFromTeamConfig").mockReturnValueOnce(null);
+        const getProfileFromTeamConfigSpy = vi.spyOn(configEditor as any, "getProfileFromTeamConfig").mockReturnValueOnce(null);
 
         const rename = { originalKey: "profiles.nonExistentProfile", newKey: "profiles.renamedProfile" };
 
@@ -2790,7 +2787,7 @@ describe("configEditor", () => {
         const mockTeamConfig = {
             api: {
                 layers: {
-                    get: jest.fn().mockReturnValue({
+                    get: vi.fn().mockReturnValue({
                         properties: {
                             profiles: {
                                 testProfile: { type: "zosmf", properties: { host: "test.host.com" } },
@@ -2802,7 +2799,7 @@ describe("configEditor", () => {
             },
         };
 
-        const getProfileFromTeamConfigSpy = jest
+        const getProfileFromTeamConfigSpy = vi
             .spyOn(configEditor as any, "getProfileFromTeamConfig")
             .mockReturnValueOnce({ type: "zosmf", properties: { host: "test.host.com" } })
             .mockReturnValueOnce({ type: "zosmf", properties: { host: "existing.host.com" } });
@@ -2824,7 +2821,7 @@ describe("configEditor", () => {
         const mockTeamConfig = {
             api: {
                 layers: {
-                    get: jest.fn().mockReturnValue({
+                    get: vi.fn().mockReturnValue({
                         properties: {
                             defaults: {
                                 zosmf: "profiles.testProfile",
@@ -2834,10 +2831,10 @@ describe("configEditor", () => {
                     }),
                 },
             },
-            set: jest.fn().mockResolvedValue(undefined),
+            set: vi.fn().mockResolvedValue(undefined),
         };
 
-        const updateDefaultsAfterRenameSpy = jest.spyOn(MoveUtils, "updateDefaultsAfterRename").mockImplementation((...args: any[]) => {
+        const updateDefaultsAfterRenameSpy = vi.spyOn(MoveUtils, "updateDefaultsAfterRename").mockImplementation((...args: any[]) => {
             const [layerActive, originalKey, newKey, updateTeamConfig] = args;
             const currentLayer = layerActive();
             const defaults = currentLayer.properties.defaults;
@@ -2876,7 +2873,7 @@ describe("configEditor", () => {
         const mockTeamConfig = {
             api: {
                 layers: {
-                    get: jest.fn().mockReturnValue({
+                    get: vi.fn().mockReturnValue({
                         properties: {
                             defaults: {
                                 zosmf: "profiles.testProfile",
@@ -2885,15 +2882,15 @@ describe("configEditor", () => {
                     }),
                 },
             },
-            set: jest.fn().mockResolvedValue(undefined),
+            set: vi.fn().mockResolvedValue(undefined),
         };
 
         const mockProfileOperations = {
-            handleMoveUtilsError: jest.fn().mockReturnValue("Error handled"),
+            handleMoveUtilsError: vi.fn().mockReturnValue("Error handled"),
         };
         (configEditor as any).profileOperations = mockProfileOperations;
 
-        const updateDefaultsAfterRenameSpy = jest.spyOn(MoveUtils, "updateDefaultsAfterRename").mockImplementation(() => {
+        const updateDefaultsAfterRenameSpy = vi.spyOn(MoveUtils, "updateDefaultsAfterRename").mockImplementation(() => {
             throw new Error("Defaults update failed");
         });
 
@@ -2924,7 +2921,7 @@ describe("configEditor", () => {
         const mockTeamConfig = {
             api: {
                 layers: {
-                    get: jest.fn().mockReturnValue({
+                    get: vi.fn().mockReturnValue({
                         properties: {
                             defaults: {
                                 zosmf: "profiles.testProfile",
@@ -2934,10 +2931,10 @@ describe("configEditor", () => {
                     }),
                 },
             },
-            set: jest.fn().mockResolvedValue(undefined),
+            set: vi.fn().mockResolvedValue(undefined),
         };
 
-        const updateDefaultsAfterRenameSpy = jest.spyOn(MoveUtils, "updateDefaultsAfterRename").mockImplementation((...args: any[]) => {
+        const updateDefaultsAfterRenameSpy = vi.spyOn(MoveUtils, "updateDefaultsAfterRename").mockImplementation((...args: any[]) => {
             const [layerActive, originalKey, newKey, updateTeamConfig] = args;
             const currentLayer = layerActive();
             const defaults = currentLayer.properties.defaults;

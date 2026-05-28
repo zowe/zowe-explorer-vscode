@@ -11,11 +11,12 @@
 
 import { ConfigEditorProfileOperations } from "../../../../src/utils/ConfigEditorProfileOperations";
 import { ConfigMoveAPI, IConfigLayer } from "../../../../src/webviews/src/config-editor/types";
+import { vi, Mock } from "vitest";
 
 // Mock console.warn to avoid noise in tests
 const originalConsoleWarn = console.warn;
 beforeAll(() => {
-    console.warn = jest.fn();
+    console.warn = vi.fn();
 });
 
 afterAll(() => {
@@ -27,7 +28,7 @@ describe("ConfigEditorProfileOperations", () => {
 
     beforeEach(() => {
         profileOperations = new ConfigEditorProfileOperations();
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe("updateRenameKeysForParentChanges", () => {
@@ -223,20 +224,20 @@ describe("ConfigEditorProfileOperations", () => {
 
         beforeEach(() => {
             mockConfigMoveAPI = {
-                get: jest.fn() as jest.MockedFunction<(path: string) => any>,
-                set: jest.fn() as jest.MockedFunction<(path: string, value: any) => void>,
-                delete: jest.fn() as jest.MockedFunction<(path: string) => void>,
+                get: vi.fn() as any,
+                set: vi.fn() as any,
+                delete: vi.fn() as any,
             };
-            mockLayerActive = jest.fn().mockReturnValue({
+            mockLayerActive = vi.fn().mockReturnValue({
                 properties: {
                     profiles: {},
                 },
-            }) as jest.MockedFunction<() => IConfigLayer>;
+            }) as any;
         });
 
         it("should create nested profile structure", () => {
             const originalProfile = { host: "localhost", port: 8080 };
-            (mockConfigMoveAPI.get as jest.MockedFunction<(path: string) => any>).mockReturnValue(originalProfile);
+            (mockConfigMoveAPI.get as any).mockReturnValue(originalProfile);
 
             profileOperations.createNestedProfileStructure(
                 mockConfigMoveAPI,
@@ -261,7 +262,7 @@ describe("ConfigEditorProfileOperations", () => {
         });
 
         it("should throw error when source profile not found", () => {
-            (mockConfigMoveAPI.get as jest.MockedFunction<(path: string) => any>).mockReturnValue(null);
+            (mockConfigMoveAPI.get as any).mockReturnValue(null);
 
             expect(() => {
                 profileOperations.createNestedProfileStructure(
@@ -277,7 +278,7 @@ describe("ConfigEditorProfileOperations", () => {
 
         it("should handle profile with existing profiles property", () => {
             const originalProfile = { host: "localhost", profiles: { existing: {} } };
-            (mockConfigMoveAPI.get as jest.MockedFunction<(path: string) => any>).mockReturnValue(originalProfile);
+            (mockConfigMoveAPI.get as any).mockReturnValue(originalProfile);
 
             profileOperations.createNestedProfileStructure(
                 mockConfigMoveAPI,
@@ -301,7 +302,7 @@ describe("ConfigEditorProfileOperations", () => {
 
         it("should move secure properties from parent to child", () => {
             const originalProfile = { host: "localhost", secure: ["password", "token"] };
-            (mockConfigMoveAPI.get as jest.MockedFunction<(path: string) => any>)
+            (mockConfigMoveAPI.get as any)
                 .mockReturnValueOnce(originalProfile) // First call for original profile
                 .mockReturnValueOnce(originalProfile) // Second call for secure properties
                 .mockReturnValueOnce({ host: "localhost" }) // Third call for child profile
@@ -328,7 +329,7 @@ describe("ConfigEditorProfileOperations", () => {
 
         it("should handle secure properties when child profile is null", () => {
             const originalProfile = { host: "localhost", secure: ["password"] };
-            (mockConfigMoveAPI.get as jest.MockedFunction<(path: string) => any>)
+            (mockConfigMoveAPI.get as any)
                 .mockReturnValueOnce(originalProfile) // First call for original profile
                 .mockReturnValueOnce(originalProfile) // Second call for secure properties
                 .mockReturnValueOnce(null); // Third call for child profile returns null
@@ -348,7 +349,7 @@ describe("ConfigEditorProfileOperations", () => {
 
         it("should handle secure properties when parent profile has no secure property", () => {
             const originalProfile = { host: "localhost" };
-            (mockConfigMoveAPI.get as jest.MockedFunction<(path: string) => any>)
+            (mockConfigMoveAPI.get as any)
                 .mockReturnValueOnce(originalProfile) // First call for original profile
                 .mockReturnValueOnce(originalProfile) // Second call for secure properties
                 .mockReturnValueOnce({ host: "localhost" }) // Third call for child profile
@@ -369,7 +370,7 @@ describe("ConfigEditorProfileOperations", () => {
 
         it("should handle errors in secure properties movement gracefully", () => {
             const originalProfile = { host: "localhost", secure: ["password"] };
-            (mockConfigMoveAPI.get as jest.MockedFunction<(path: string) => any>)
+            (mockConfigMoveAPI.get as any)
                 .mockReturnValueOnce(originalProfile) // First call for original profile
                 .mockImplementationOnce(() => {
                     throw new Error("Secure properties error");
@@ -397,15 +398,15 @@ describe("ConfigEditorProfileOperations", () => {
 
         beforeEach(() => {
             mockConfigMoveAPI = {
-                get: jest.fn() as jest.MockedFunction<(path: string) => any>,
-                set: jest.fn() as jest.MockedFunction<(path: string, value: any) => void>,
-                delete: jest.fn() as jest.MockedFunction<(path: string) => void>,
+                get: vi.fn() as any,
+                set: vi.fn() as any,
+                delete: vi.fn() as any,
             };
-            mockLayerActive = jest.fn().mockReturnValue({
+            mockLayerActive = vi.fn().mockReturnValue({
                 properties: {
                     profiles: {},
                 },
-            }) as jest.MockedFunction<() => IConfigLayer>;
+            }) as any;
         });
 
         it("should pass validation with valid API", () => {
@@ -427,21 +428,21 @@ describe("ConfigEditorProfileOperations", () => {
         });
 
         it("should throw error for missing get function", () => {
-            const invalidAPI = { set: jest.fn(), delete: jest.fn() };
+            const invalidAPI = { set: vi.fn(), delete: vi.fn() };
             expect(() => {
                 profileOperations.validateConfigMoveAPI(invalidAPI as any, mockLayerActive);
             }).toThrow("ConfigMoveAPI.get is not a function");
         });
 
         it("should throw error for missing set function", () => {
-            const invalidAPI = { get: jest.fn(), delete: jest.fn() };
+            const invalidAPI = { get: vi.fn(), delete: vi.fn() };
             expect(() => {
                 profileOperations.validateConfigMoveAPI(invalidAPI as any, mockLayerActive);
             }).toThrow("ConfigMoveAPI.set is not a function");
         });
 
         it("should throw error for missing delete function", () => {
-            const invalidAPI = { get: jest.fn(), set: jest.fn() };
+            const invalidAPI = { get: vi.fn(), set: vi.fn() };
             expect(() => {
                 profileOperations.validateConfigMoveAPI(invalidAPI as any, mockLayerActive);
             }).toThrow("ConfigMoveAPI.delete is not a function");
@@ -454,14 +455,14 @@ describe("ConfigEditorProfileOperations", () => {
         });
 
         it("should throw error for invalid layer structure", () => {
-            (mockLayerActive as jest.MockedFunction<() => IConfigLayer>).mockReturnValue({ properties: {} } as any);
+            (mockLayerActive as any).mockReturnValue({ properties: {} } as any);
             expect(() => {
                 profileOperations.validateConfigMoveAPI(mockConfigMoveAPI, mockLayerActive);
             }).toThrow("Invalid layer structure: missing properties or profiles");
         });
 
         it("should throw error for layerActive that throws", () => {
-            (mockLayerActive as jest.MockedFunction<() => IConfigLayer>).mockImplementation(() => {
+            (mockLayerActive as any).mockImplementation(() => {
                 throw new Error("Layer error");
             });
             expect(() => {

@@ -39,6 +39,7 @@ import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 vi.mock("../../../../src/utils/LoggerUtils");
 vi.mock("../../../../src/tools/ZoweLogger");
 vi.mock("../../../../src/utils/ReleaseNotes");
+vi.mock("../../../../src/utils/ConfigEditor");
 
 vi.mock("../../../../src/tools/ZoweLocalStorage", () => ({
     ZoweLocalStorage: {
@@ -719,33 +720,33 @@ describe("Test src/shared/extension", () => {
             registeredCommands = {};
             testContext.subscriptions = [];
 
-            jest.spyOn(vscode.commands, "registerCommand").mockImplementation((command, callback) => {
+            vi.spyOn(vscode.commands, "registerCommand").mockImplementation((command, callback) => {
                 registeredCommands[command] = callback;
-                return { dispose: jest.fn() } as any;
+                return { dispose: vi.fn() } as any;
             });
 
             // Mock window.registerWebviewPanelSerializer
-            jest.spyOn(vscode.window, "registerWebviewPanelSerializer").mockImplementation(() => {
-                return { dispose: jest.fn() } as any;
+            vi.spyOn(vscode.window, "registerWebviewPanelSerializer").mockImplementation(() => {
+                return { dispose: vi.fn() } as any;
             });
 
             // Mock window.registerWebviewViewProvider
-            jest.spyOn(vscode.window, "registerWebviewViewProvider").mockImplementation(() => {
-                return { dispose: jest.fn() } as any;
+            vi.spyOn(vscode.window, "registerWebviewViewProvider").mockImplementation(() => {
+                return { dispose: vi.fn() } as any;
             });
 
             // Mock singletons to avoid initialization errors
-            jest.spyOn(MvsCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: jest.fn() } as any);
-            jest.spyOn(TsoCommandHandler, "getInstance").mockReturnValue({ issueTsoCommand: jest.fn() } as any);
-            jest.spyOn(UnixCommandHandler, "getInstance").mockReturnValue({ issueUnixCommand: jest.fn() } as any);
-            jest.spyOn(TableViewProvider, "getInstance").mockReturnValue({} as any);
+            vi.spyOn(MvsCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: vi.fn() } as any);
+            vi.spyOn(TsoCommandHandler, "getInstance").mockReturnValue({ issueTsoCommand: vi.fn() } as any);
+            vi.spyOn(UnixCommandHandler, "getInstance").mockReturnValue({ issueUnixCommand: vi.fn() } as any);
+            vi.spyOn(TableViewProvider, "getInstance").mockReturnValue({} as any);
 
             // Mock other dependencies if needed
-            jest.spyOn(SharedHistoryView, "SharedHistoryView").mockImplementation();
+            vi.spyOn(SharedHistoryView, "SharedHistoryView").mockImplementation();
         });
 
         afterEach(() => {
-            jest.clearAllMocks();
+            vi.clearAllMocks();
         });
 
         it("should create a new ConfigEditor if one does not exist (zowe.configEditor)", async () => {
@@ -757,16 +758,16 @@ describe("Test src/shared/extension", () => {
 
             const mockConfigEditorInstance = {
                 panel: {
-                    onDidDispose: jest.fn(),
-                    dispose: jest.fn(),
-                    reveal: jest.fn(),
+                    onDidDispose: vi.fn(),
+                    dispose: vi.fn(),
+                    reveal: vi.fn(),
                     visible: true,
                 },
                 userSubmission: {
                     promise: Promise.resolve("success"),
                 },
             };
-            (ConfigEditor as jest.Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
 
             const result = await cmd({});
 
@@ -780,16 +781,16 @@ describe("Test src/shared/extension", () => {
 
             const mockConfigEditorInstance = {
                 panel: {
-                    onDidDispose: jest.fn(),
-                    dispose: jest.fn(),
-                    reveal: jest.fn(),
+                    onDidDispose: vi.fn(),
+                    dispose: vi.fn(),
+                    reveal: vi.fn(),
                     visible: true,
                 },
                 userSubmission: {
                     promise: Promise.resolve("success"),
                 },
             };
-            (ConfigEditor as jest.Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
 
             // First call to create it
             cmd({});
@@ -809,15 +810,15 @@ describe("Test src/shared/extension", () => {
 
             const mockConfigEditorInstance = {
                 panel: {
-                    onDidDispose: jest.fn(),
-                    dispose: jest.fn(),
-                    reveal: jest.fn(),
-                    webview: { postMessage: jest.fn() },
+                    onDidDispose: vi.fn(),
+                    dispose: vi.fn(),
+                    reveal: vi.fn(),
+                    webview: { postMessage: vi.fn() },
                 },
                 initialSelection: null as any,
                 userSubmission: { promise: Promise.resolve() }, // Add promise to prevent await issues if returned
             };
-            (ConfigEditor as jest.Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
 
             const result = await cmd("prof1", "path/1", "type1");
 
@@ -836,16 +837,16 @@ describe("Test src/shared/extension", () => {
 
             const mockConfigEditorInstance = {
                 panel: {
-                    onDidDispose: jest.fn(),
-                    dispose: jest.fn(),
-                    reveal: jest.fn(),
-                    webview: { postMessage: jest.fn() },
+                    onDidDispose: vi.fn(),
+                    dispose: vi.fn(),
+                    reveal: vi.fn(),
+                    webview: { postMessage: vi.fn() },
                     visible: true,
                 },
                 initialSelection: {},
                 userSubmission: { promise: Promise.resolve("success") },
             };
-            (ConfigEditor as jest.Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
 
             // Initialize
             initCmd({});
@@ -870,15 +871,15 @@ describe("Test src/shared/extension", () => {
 
             const mockConfigEditorInstance = {
                 panel: {
-                    onDidDispose: jest.fn(),
-                    dispose: jest.fn(),
-                    reveal: jest.fn(),
+                    onDidDispose: vi.fn(),
+                    dispose: vi.fn(),
+                    reveal: vi.fn(),
                     visible: true,
-                    webview: { postMessage: jest.fn() },
+                    webview: { postMessage: vi.fn() },
                 },
                 userSubmission: { promise: Promise.resolve() },
             };
-            (ConfigEditor as jest.Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
 
             initCmd({});
 
@@ -888,7 +889,7 @@ describe("Test src/shared/extension", () => {
         });
 
         it("should dispose unrelated panels when deserializing", async () => {
-            const spyRegisterWebview = jest.spyOn(vscode.window, "registerWebviewPanelSerializer");
+            const spyRegisterWebview = vi.spyOn(vscode.window, "registerWebviewPanelSerializer");
             SharedInit.registerCommonCommands(testContext, {} as any);
 
             const serializer = spyRegisterWebview.mock.calls[0][1];
@@ -896,7 +897,7 @@ describe("Test src/shared/extension", () => {
 
             const mockPanel = {
                 title: Constants.RELEASE_NOTES_PANEL_TITLE,
-                dispose: jest.fn(),
+                dispose: vi.fn(),
             };
 
             await serializer.deserializeWebviewPanel(mockPanel as any, undefined as any);
@@ -904,25 +905,25 @@ describe("Test src/shared/extension", () => {
         });
 
         it("should recreate Config Editor panel when deserializing", async () => {
-            const spyRegisterWebview = jest.spyOn(vscode.window, "registerWebviewPanelSerializer");
+            const spyRegisterWebview = vi.spyOn(vscode.window, "registerWebviewPanelSerializer");
             SharedInit.registerCommonCommands(testContext, {} as any);
 
             const serializer = spyRegisterWebview.mock.calls[0][1];
 
             const mockConfigEditorInstance = {
                 panel: {
-                    onDidDispose: jest.fn(),
-                    dispose: jest.fn(),
+                    onDidDispose: vi.fn(),
+                    dispose: vi.fn(),
                 },
             };
-            (ConfigEditor as jest.Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
 
             // Mock l10n to match the check
-            jest.spyOn(vscode.l10n, "t").mockReturnValue("Config Editor");
+            vi.spyOn(vscode.l10n, "t").mockReturnValue("Config Editor");
 
             const mockPanel = {
                 title: "Config Editor",
-                dispose: jest.fn(),
+                dispose: vi.fn(),
             };
 
             await serializer.deserializeWebviewPanel(mockPanel as any, undefined as any);

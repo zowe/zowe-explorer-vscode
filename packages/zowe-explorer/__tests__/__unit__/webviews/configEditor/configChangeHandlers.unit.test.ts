@@ -10,38 +10,41 @@
  */
 
 import { ConfigChangeHandlers, ChangeEntry } from "../../../../src/utils/ConfigChangeHandlers";
+import { Mock, vi } from "vitest";
+import { ProfileInfo } from "@zowe/imperative";
+import { ConfigSchemaHelpers } from "../../../../src/utils/ConfigSchemaHelpers";
 
 // Mock all external dependencies
-jest.mock("@zowe/imperative", () => ({
-    ProfileInfo: jest.fn().mockImplementation(() => ({
-        readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-        getTeamConfig: jest.fn().mockReturnValue({
+vi.mock("@zowe/imperative", () => ({
+    ProfileInfo: vi.fn().mockImplementation(() => ({
+        readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
+        getTeamConfig: vi.fn().mockReturnValue({
             api: {
                 layers: {
-                    get: jest.fn().mockReturnValue({
+                    get: vi.fn().mockReturnValue({
                         path: "/mock/config.json",
                         properties: {
                             $schema: "schema.json",
                         },
                     }),
-                    activate: jest.fn(),
+                    activate: vi.fn(),
                 },
                 profiles: {
-                    defaultSet: jest.fn(),
+                    defaultSet: vi.fn(),
                 },
             },
             layers: [],
-            delete: jest.fn(),
-            set: jest.fn(),
-            save: jest.fn(),
+            delete: vi.fn(),
+            set: vi.fn(),
+            save: vi.fn(),
         }),
     })),
     ProfileCredentials: {
-        defaultCredMgrWithKeytar: jest.fn().mockReturnValue("mock-cred-mgr"),
+        defaultCredMgrWithKeytar: vi.fn().mockReturnValue("mock-cred-mgr"),
     },
 }));
 
-jest.mock("@zowe/zowe-explorer-api", () => ({
+vi.mock("@zowe/zowe-explorer-api", () => ({
     ProfilesCache: {
         requireKeyring: "mock-keyring",
     },
@@ -54,47 +57,47 @@ jest.mock("@zowe/zowe-explorer-api", () => ({
     },
 }));
 
-jest.mock("../../../../src/utils/ConfigSchemaHelpers", () => ({
+vi.mock("../../../../src/utils/ConfigSchemaHelpers", () => ({
     ConfigSchemaHelpers: {
-        getProfileProperties: jest.fn().mockReturnValue(new Map()),
+        getProfileProperties: vi.fn().mockReturnValue(new Map()),
     },
 }));
 
-jest.mock("../../../../src/configuration/Profiles", () => ({
+vi.mock("../../../../src/configuration/Profiles", () => ({
     Profiles: {
-        getInstance: jest.fn().mockReturnValue({
+        getInstance: vi.fn().mockReturnValue({
             overrideWithEnv: false,
         }),
     },
 }));
 
-jest.mock("path", () => ({
-    join: jest.fn().mockImplementation((...args: string[]) => args.join("/")),
-    dirname: jest.fn().mockImplementation((p: string) => p.split("/").slice(0, -1).join("/")),
+vi.mock("path", () => ({
+    join: vi.fn().mockImplementation((...args: string[]) => args.join("/")),
+    dirname: vi.fn().mockImplementation((p: string) => p.split("/").slice(0, -1).join("/")),
 }));
 
 // Mock other dependencies that might cause initialization issues
-jest.mock("../../../../src/extending/ZoweExplorerApiRegister", () => ({
+vi.mock("../../../../src/extending/ZoweExplorerApiRegister", () => ({
     ZoweExplorerApiRegister: {
-        getInstance: jest.fn().mockReturnValue({
-            registerUssApi: jest.fn(),
-            registerMvsApi: jest.fn(),
-            registerJesApi: jest.fn(),
+        getInstance: vi.fn().mockReturnValue({
+            registerUssApi: vi.fn(),
+            registerMvsApi: vi.fn(),
+            registerJesApi: vi.fn(),
         }),
     },
 }));
 
-jest.mock("../../../../src/tools/ZoweLogger", () => ({
+vi.mock("../../../../src/tools/ZoweLogger", () => ({
     ZoweLogger: {
-        error: jest.fn(),
-        trace: jest.fn(),
-        debug: jest.fn(),
-        info: jest.fn(),
-        warn: jest.fn(),
+        error: vi.fn(),
+        trace: vi.fn(),
+        debug: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
     },
 }));
 
-jest.mock("../../../../src/configuration/Constants", () => ({
+vi.mock("../../../../src/configuration/Constants", () => ({
     Constants: {
         PROFILES_CACHE: null,
         SETTINGS_OVERRIDE_WITH_ENV_VAR: "zowe.overrides.env",
@@ -108,44 +111,46 @@ describe("ConfigChangeHandlers", () => {
 
     beforeEach(() => {
         // Reset all mocks
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
         // Mock layers
         mockLayers = {
-            find: jest.fn(),
+            find: vi.fn(),
         };
 
         // Mock profiles API
         mockProfiles = {
-            defaultSet: jest.fn(),
+            defaultSet: vi.fn(),
         };
 
         // Mock team config
         mockTeamConfig = {
             api: {
                 layers: {
-                    get: jest.fn().mockReturnValue({
+                    get: vi.fn().mockReturnValue({
                         path: "/mock/config.json",
                         properties: {
                             $schema: "schema.json",
                         },
                     }),
-                    activate: jest.fn(),
+                    activate: vi.fn(),
                 },
                 profiles: mockProfiles,
             },
             layers: mockLayers,
-            delete: jest.fn(),
-            set: jest.fn(),
-            save: jest.fn(),
+            delete: vi.fn(),
+            set: vi.fn(),
+            save: vi.fn(),
         };
 
         // Mock ProfileInfo constructor to return our mock
-        const { ProfileInfo } = require("@zowe/imperative");
-        ProfileInfo.mockImplementation(() => ({
-            readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
-            getTeamConfig: jest.fn().mockReturnValue(mockTeamConfig),
-        }));
+        vi.mocked(ProfileInfo).mockImplementation(
+            () =>
+                ({
+                    readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
+                    getTeamConfig: vi.fn().mockReturnValue(mockTeamConfig),
+                } as any)
+        );
     });
 
     describe("handleDefaultChanges", () => {
@@ -291,10 +296,10 @@ describe("ConfigChangeHandlers", () => {
     });
 
     describe("handleProfileChanges", () => {
-        let mockAreSecureValuesAllowed: jest.Mock;
+        let mockAreSecureValuesAllowed: Mock;
 
         beforeEach(() => {
-            mockAreSecureValuesAllowed = jest.fn().mockResolvedValue(true);
+            mockAreSecureValuesAllowed = vi.fn().mockResolvedValue(true);
         });
 
         it("should handle profile changes successfully", async () => {
@@ -459,8 +464,7 @@ describe("ConfigChangeHandlers", () => {
 
             const mockProfileProps = new Map([["port", { type: "number", path: "profiles.test.port" }]]);
 
-            const { ConfigSchemaHelpers } = require("../../../../src/utils/ConfigSchemaHelpers");
-            ConfigSchemaHelpers.getProfileProperties.mockReturnValue(mockProfileProps);
+            vi.mocked(ConfigSchemaHelpers.getProfileProperties).mockReturnValue(mockProfileProps);
 
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed);
 
@@ -559,15 +563,15 @@ describe("ConfigChangeHandlers", () => {
             const teamConfig = {
                 api: {
                     layers: {
-                        get: jest.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: jest.fn(),
+                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
+                        activate: vi.fn(),
                     },
                     profiles: {
-                        defaultSet: jest.fn(),
+                        defaultSet: vi.fn(),
                     },
                 },
                 layers: [],
-                delete: jest.fn(),
+                delete: vi.fn(),
             };
 
             await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer, teamConfig);
@@ -590,15 +594,15 @@ describe("ConfigChangeHandlers", () => {
             const teamConfig = {
                 api: {
                     layers: {
-                        get: jest.fn().mockReturnValue({ path: "/current/config.json" }),
-                        activate: jest.fn(),
+                        get: vi.fn().mockReturnValue({ path: "/current/config.json" }),
+                        activate: vi.fn(),
                     },
                     profiles: {
-                        defaultSet: jest.fn(),
+                        defaultSet: vi.fn(),
                     },
                 },
                 layers: [mockLayer],
-                delete: jest.fn(),
+                delete: vi.fn(),
             };
 
             await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer, teamConfig);
@@ -637,15 +641,15 @@ describe("ConfigChangeHandlers", () => {
             const teamConfig = {
                 api: {
                     layers: {
-                        get: jest.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: jest.fn(),
+                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
+                        activate: vi.fn(),
                     },
                     profiles: {
-                        defaultSet: jest.fn(),
+                        defaultSet: vi.fn(),
                     },
                 },
                 layers: [],
-                delete: jest.fn(),
+                delete: vi.fn(),
             };
 
             await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, "/mock/config.json", teamConfig);
@@ -683,13 +687,13 @@ describe("ConfigChangeHandlers", () => {
             const teamConfig = {
                 api: {
                     layers: {
-                        get: jest.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: jest.fn(),
+                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
+                        activate: vi.fn(),
                     },
                 },
                 layers: [],
-                set: jest.fn(),
-                delete: jest.fn(),
+                set: vi.fn(),
+                delete: vi.fn(),
             };
 
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, undefined, teamConfig);
@@ -717,13 +721,13 @@ describe("ConfigChangeHandlers", () => {
             const teamConfig = {
                 api: {
                     layers: {
-                        get: jest.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: jest.fn(),
+                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
+                        activate: vi.fn(),
                     },
                 },
                 layers: [],
-                set: jest.fn(),
-                delete: jest.fn(),
+                set: vi.fn(),
+                delete: vi.fn(),
             };
 
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
@@ -751,13 +755,13 @@ describe("ConfigChangeHandlers", () => {
             const teamConfig = {
                 api: {
                     layers: {
-                        get: jest.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: jest.fn(),
+                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
+                        activate: vi.fn(),
                     },
                 },
                 layers: [],
-                set: jest.fn(),
-                delete: jest.fn(),
+                set: vi.fn(),
+                delete: vi.fn(),
             };
 
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
@@ -783,13 +787,13 @@ describe("ConfigChangeHandlers", () => {
             const teamConfig = {
                 api: {
                     layers: {
-                        get: jest.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: jest.fn(),
+                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
+                        activate: vi.fn(),
                     },
                 },
                 layers: [],
-                set: jest.fn(),
-                delete: jest.fn(),
+                set: vi.fn(),
+                delete: vi.fn(),
             };
 
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
@@ -811,13 +815,13 @@ describe("ConfigChangeHandlers", () => {
             const teamConfig = {
                 api: {
                     layers: {
-                        get: jest.fn().mockReturnValue({ path: "/current/config.json" }),
-                        activate: jest.fn(),
+                        get: vi.fn().mockReturnValue({ path: "/current/config.json" }),
+                        activate: vi.fn(),
                     },
                 },
                 layers: [mockLayer],
-                set: jest.fn(),
-                delete: jest.fn(),
+                set: vi.fn(),
+                delete: vi.fn(),
             };
 
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, undefined, teamConfig);
@@ -841,15 +845,15 @@ describe("ConfigChangeHandlers", () => {
             const teamConfig = {
                 api: {
                     layers: {
-                        get: jest.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: jest.fn(),
+                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
+                        activate: vi.fn(),
                     },
                 },
                 layers: [],
-                set: jest.fn().mockImplementation(() => {
+                set: vi.fn().mockImplementation(() => {
                     throw new Error("Set operation failed");
                 }),
-                delete: jest.fn(),
+                delete: vi.fn(),
             };
 
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
@@ -872,13 +876,13 @@ describe("ConfigChangeHandlers", () => {
             const teamConfig = {
                 api: {
                     layers: {
-                        get: jest.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: jest.fn(),
+                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
+                        activate: vi.fn(),
                     },
                 },
                 layers: [],
-                set: jest.fn(),
-                delete: jest.fn().mockImplementation(() => {
+                set: vi.fn(),
+                delete: vi.fn().mockImplementation(() => {
                     throw new Error("Delete operation failed");
                 }),
             };
@@ -895,13 +899,13 @@ describe("ConfigChangeHandlers", () => {
             const teamConfig = {
                 api: {
                     layers: {
-                        get: jest.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: jest.fn(),
+                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
+                        activate: vi.fn(),
                     },
                 },
                 layers: [],
-                set: jest.fn(),
-                delete: jest.fn(),
+                set: vi.fn(),
+                delete: vi.fn(),
             };
 
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
@@ -948,13 +952,13 @@ describe("ConfigChangeHandlers", () => {
             const teamConfig = {
                 api: {
                     layers: {
-                        get: jest.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: jest.fn(),
+                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
+                        activate: vi.fn(),
                     },
                 },
                 layers: [],
-                set: jest.fn(),
-                delete: jest.fn(),
+                set: vi.fn(),
+                delete: vi.fn(),
             };
 
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);

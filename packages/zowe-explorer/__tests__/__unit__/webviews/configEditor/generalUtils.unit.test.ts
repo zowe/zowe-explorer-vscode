@@ -9,7 +9,8 @@
  *
  */
 
-jest.mock("@vscode/l10n", () => ({ t: (msg: string) => msg }));
+import { vi } from "vitest";
+vi.mock("@vscode/l10n", () => ({ t: (msg: string) => msg }));
 
 import {
     getSortOrderDisplayName,

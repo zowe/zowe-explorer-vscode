@@ -26,9 +26,11 @@ import {
     simulateDefaultsUpdateAfterRename,
 } from "../../../../src/webviews/src/config-editor/utils/MoveUtils";
 import { ConfigMoveAPI, IConfigLayer } from "../../../../src/webviews/src/config-editor/types";
+import { vi } from "vitest";
+import { set } from "es-toolkit/compat";
 
-jest.mock("es-toolkit/compat", () => ({
-    set: jest.fn((obj: Record<string, unknown>, path: string, value: unknown) => {
+vi.mock("es-toolkit/compat", () => ({
+    set: vi.fn((obj: Record<string, unknown>, path: string, value: unknown) => {
         const keys = path.split(".");
         let current: Record<string, unknown> = obj;
         for (let i = 0; i < keys.length - 1; i++) {
@@ -45,7 +47,7 @@ jest.mock("es-toolkit/compat", () => ({
 // Mock console.warn to avoid noise in tests
 const originalConsoleWarn = console.warn;
 beforeAll(() => {
-    console.warn = jest.fn();
+    console.warn = vi.fn();
 });
 
 afterAll(() => {
@@ -58,10 +60,10 @@ describe("MoveUtils", () => {
     let mockLayer: IConfigLayer;
 
     // Helper function to cast mock functions
-    const mockGet = () => mockConfigMoveAPI.get as jest.MockedFunction<(path: string) => any>;
-    const mockSet = () => mockConfigMoveAPI.set as jest.MockedFunction<(path: string, value: any) => void>;
-    const mockDelete = () => mockConfigMoveAPI.delete as jest.MockedFunction<(path: string) => void>;
-    const mockLayerActiveFn = () => mockLayerActive as jest.MockedFunction<() => IConfigLayer>;
+    const mockGet = () => mockConfigMoveAPI.get as any;
+    const mockSet = () => mockConfigMoveAPI.set as any;
+    const mockDelete = () => mockConfigMoveAPI.delete as any;
+    const mockLayerActiveFn = () => mockLayerActive as any;
 
     beforeEach(() => {
         mockLayer = {
@@ -78,13 +80,13 @@ describe("MoveUtils", () => {
         };
 
         mockConfigMoveAPI = {
-            get: jest.fn() as jest.MockedFunction<(path: string) => any>,
-            set: jest.fn() as jest.MockedFunction<(path: string, value: any) => void>,
-            delete: jest.fn() as jest.MockedFunction<(path: string) => void>,
+            get: vi.fn() as any,
+            set: vi.fn() as any,
+            delete: vi.fn() as any,
         };
 
-        mockLayerActive = jest.fn().mockReturnValue(mockLayer) as jest.MockedFunction<() => IConfigLayer>;
-        jest.clearAllMocks();
+        mockLayerActive = vi.fn().mockReturnValue(mockLayer) as any;
+        vi.clearAllMocks();
     });
 
     describe("moveProfile", () => {
@@ -290,7 +292,6 @@ describe("MoveUtils", () => {
             updateSecureArrays(() => layerWithSecure, "profiles.test", "profiles.test", ["password"], ["token"]);
 
             // Verify that set was called (mocked lodash.set)
-            const { set } = require("es-toolkit/compat");
             expect(set).toHaveBeenCalled();
         });
     });
@@ -344,7 +345,7 @@ describe("MoveUtils", () => {
 
         it("should return false for non-matching profile path", () => {
             // Clear any previous mocks
-            jest.clearAllMocks();
+            vi.clearAllMocks();
             const result = isSecurePropertyForProfile("profiles.test", "profiles.other.secure.password");
             expect(result).toBe(false);
         });
@@ -494,7 +495,7 @@ describe("MoveUtils", () => {
 
     describe("updateDefaultsAfterRename", () => {
         it("should update defaults after profile rename", () => {
-            const updateTeamConfig = jest.fn();
+            const updateTeamConfig = vi.fn();
 
             updateDefaultsAfterRename(mockLayerActive, "profile1", "renamedProfile1", updateTeamConfig);
 

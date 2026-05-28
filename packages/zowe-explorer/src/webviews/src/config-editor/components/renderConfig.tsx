@@ -425,9 +425,7 @@ export const RenderConfig = ({
                   }
                   style={{
                     backgroundColor: isFromMergedProps ? "var(--vscode-input-disabledBackground)" : "var(--vscode-input-background)",
-                    border: isFromMergedProps
-                      ? "1px solid var(--vscode-input-background)"
-                      : "1px solid var(--vscode-input-border)",
+                    border: isFromMergedProps ? "1px solid var(--vscode-input-background)" : "1px solid var(--vscode-input-border)",
                     borderRadius: "3px",
                     padding: "8px",
                     fontSize: "0.9em",
@@ -781,9 +779,9 @@ export const RenderConfig = ({
                       textTransform: "lowercase",
                       ...(showMergedProperties && isCurrentProfileUntyped()
                         ? {
-                              border: "2px solid var(--vscode-warningForeground)",
-                              outline: "2px solid var(--vscode-warningForeground)",
-                              boxShadow: "0 0 0 2px var(--vscode-warningForeground)",
+                            border: "2px solid var(--vscode-warningForeground)",
+                            outline: "2px solid var(--vscode-warningForeground)",
+                            boxShadow: "0 0 0 2px var(--vscode-warningForeground)",
                           }
                         : {}),
                     }}

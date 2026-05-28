@@ -1054,11 +1054,11 @@ describe("ZoweVsCodeExtension", () => {
 
         const mockEditor = {
             selection: {} as vscode.Selection,
-            revealRange: jest.fn(),
+            revealRange: vi.fn(),
         };
 
         beforeEach(() => {
-            jest.clearAllMocks();
+            vi.clearAllMocks();
         });
 
         it("should open config file and highlight a simple top-level profile", async () => {
@@ -1066,11 +1066,11 @@ describe("ZoweVsCodeExtension", () => {
             const mockDocument = {
                 getText: () => configWithSimpleProfile,
             };
-            const revealRangeSpy = jest.fn();
+            const revealRangeSpy = vi.fn();
             const editorWithSpy = { selection: {} as vscode.Selection, revealRange: revealRangeSpy };
-            jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
-            jest.spyOn(Gui, "showTextDocument").mockResolvedValue(editorWithSpy as any);
-            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+            vi.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
+            vi.spyOn(Gui, "showTextDocument").mockResolvedValue(editorWithSpy as any);
+            const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
 
             await ZoweVsCodeExtension.openConfigFileWithProfile(filePath, "base");
 
@@ -1085,11 +1085,11 @@ describe("ZoweVsCodeExtension", () => {
             const mockDocument = {
                 getText: () => configWithNestedProfile,
             };
-            const revealRangeSpy = jest.fn();
+            const revealRangeSpy = vi.fn();
             const editorWithSpy = { selection: {} as vscode.Selection, revealRange: revealRangeSpy };
-            jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
-            jest.spyOn(Gui, "showTextDocument").mockResolvedValue(editorWithSpy as any);
-            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+            vi.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
+            vi.spyOn(Gui, "showTextDocument").mockResolvedValue(editorWithSpy as any);
+            const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
 
             await ZoweVsCodeExtension.openConfigFileWithProfile(filePath, "lpar1.zosmf");
 
@@ -1103,11 +1103,11 @@ describe("ZoweVsCodeExtension", () => {
             const mockDocument = {
                 getText: () => configWithMultipleProfiles,
             };
-            const revealRangeSpy = jest.fn();
+            const revealRangeSpy = vi.fn();
             const editorWithSpy = { selection: {} as vscode.Selection, revealRange: revealRangeSpy };
-            jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
-            jest.spyOn(Gui, "showTextDocument").mockResolvedValue(editorWithSpy as any);
-            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+            vi.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
+            vi.spyOn(Gui, "showTextDocument").mockResolvedValue(editorWithSpy as any);
+            const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
 
             await ZoweVsCodeExtension.openConfigFileWithProfile(filePath, "zosmf");
 
@@ -1120,9 +1120,9 @@ describe("ZoweVsCodeExtension", () => {
             const mockDocument = {
                 getText: () => configWithSimpleProfile,
             };
-            jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
-            jest.spyOn(Gui, "showTextDocument").mockResolvedValue(mockEditor as any);
-            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+            vi.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
+            vi.spyOn(Gui, "showTextDocument").mockResolvedValue(mockEditor as any);
+            const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
 
             await ZoweVsCodeExtension.openConfigFileWithProfile(filePath, "nonexistent");
 
@@ -1135,9 +1135,9 @@ describe("ZoweVsCodeExtension", () => {
             const mockDocument = {
                 getText: () => configWithNestedProfile,
             };
-            jest.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
-            jest.spyOn(Gui, "showTextDocument").mockResolvedValue(mockEditor as any);
-            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+            vi.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue(mockDocument as any);
+            vi.spyOn(Gui, "showTextDocument").mockResolvedValue(mockEditor as any);
+            const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
 
             await ZoweVsCodeExtension.openConfigFileWithProfile(filePath, "lpar1.nonexistent");
 
@@ -1147,8 +1147,8 @@ describe("ZoweVsCodeExtension", () => {
         it("should show error message when file cannot be opened", async () => {
             const filePath = "/test/missing.config.json";
             const openError = new Error("File not found");
-            jest.spyOn(vscode.workspace, "openTextDocument").mockRejectedValue(openError);
-            const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+            vi.spyOn(vscode.workspace, "openTextDocument").mockRejectedValue(openError);
+            const errorMessageSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
 
             await ZoweVsCodeExtension.openConfigFileWithProfile(filePath, "base");
 

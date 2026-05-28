@@ -133,9 +133,7 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
                 <span className="tab-label tab-label-row" title={config.configPath}>
                   <span className={`codicon codicon-size-14 ${getConfigIcon(config)}`}></span>
                   {getTabLabel(config)}
-                  {hasPendingChanges && (
-                    <span className="codicon codicon-circle-filled tab-unsaved-indicator" title={l10n.t("Unsaved changes")} />
-                  )}
+                  {hasPendingChanges && <span className="codicon codicon-circle-filled tab-unsaved-indicator" title={l10n.t("Unsaved changes")} />}
                 </span>
               </div>
             );
@@ -172,11 +170,7 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
 
       {/* Context Menu */}
       {contextMenu && (
-        <div
-          className="tab-context-menu"
-          style={{ top: contextMenu.y, left: contextMenu.x }}
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className="tab-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }} onClick={(e) => e.stopPropagation()}>
           <div className="tab-context-menu-item" onClick={() => handleContextMenuAction("open")} id="tab-open-file">
             <span id="open-file" className="codicon codicon-go-to-file codicon-tab-menu-icon"></span>
             {l10n.t("Open File")}

@@ -12,6 +12,7 @@
 import { ConfigUtils, LayerModifications } from "../../../../src/utils/ConfigUtils";
 import { ChangeEntry } from "../../../../src/utils/ConfigChangeHandlers";
 import { schemaValidation } from "../../../../src/utils/ConfigSchemaHelpers";
+import { vi } from "vitest";
 
 describe("ConfigUtils", () => {
     describe("parseConfigChanges", () => {
@@ -309,10 +310,10 @@ describe("ConfigUtils", () => {
     });
 
     describe("processProfilesRecursively", () => {
-        let consoleWarnSpy: jest.SpyInstance;
+        let consoleWarnSpy: any;
 
         beforeEach(() => {
-            consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
+            consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation();
         });
 
         afterEach(() => {

@@ -10,71 +10,73 @@
  */
 
 import { ConfigEditorFileOperations } from "../../../../src/utils/ConfigEditorFileOperations";
-
-const vscode = require("vscode");
-const fs = require("fs");
+import { Mock, vi } from "vitest";
+import * as vscode from "vscode";
+import * as fs from "fs";
+import { Config, ConfigBuilder, ConfigSchema } from "@zowe/imperative";
+import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 
 // Mock all external dependencies
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
     workspace: {
-        openTextDocument: jest.fn(),
+        openTextDocument: vi.fn(),
     },
     window: {
-        showTextDocument: jest.fn(),
-        showInformationMessage: jest.fn(),
-        showErrorMessage: jest.fn(),
+        showTextDocument: vi.fn(),
+        showInformationMessage: vi.fn(),
+        showErrorMessage: vi.fn(),
     },
     Uri: {
-        file: jest.fn(),
+        file: vi.fn(),
     },
-    Position: jest.fn(),
-    Selection: jest.fn(),
-    Range: jest.fn(),
+    Position: vi.fn(),
+    Selection: vi.fn(),
+    Range: vi.fn(),
     TextEditorRevealType: {
         InCenter: "inCenter",
     },
 }));
 
-jest.mock("path", () => ({
-    join: jest.fn().mockImplementation((...args) => args.join("/")),
-    dirname: jest.fn().mockImplementation((p) => p.split("/").slice(0, -1).join("/")),
-    basename: jest.fn().mockImplementation((p) => p.split("/").pop() || ""),
+vi.mock("path", () => ({
+    join: vi.fn().mockImplementation((...args) => args.join("/")),
+    dirname: vi.fn().mockImplementation((p) => p.split("/").slice(0, -1).join("/")),
+    basename: vi.fn().mockImplementation((p) => p.split("/").pop() || ""),
 }));
 
-jest.mock("fs", () => ({
-    existsSync: jest.fn(),
-    mkdirSync: jest.fn(),
+vi.mock("fs", () => ({
+    existsSync: vi.fn(),
+    mkdirSync: vi.fn(),
 }));
 
-jest.mock("@zowe/imperative", () => ({
+vi.mock("@zowe/imperative", () => ({
     Config: {
-        load: jest.fn(),
+        load: vi.fn(),
     },
     ConfigBuilder: {
-        build: jest.fn(),
+        build: vi.fn(),
     },
     ConfigSchema: {
-        buildSchema: jest.fn(),
+        buildSchema: vi.fn(),
     },
 }));
 
-jest.mock("@zowe/zowe-explorer-api", () => ({
+vi.mock("@zowe/zowe-explorer-api", () => ({
     ZoweVsCodeExtension: {
         workspaceRoot: {
             uri: {
                 fsPath: "/mock/workspace",
             },
         },
-        openConfigFile: jest.fn(),
-        getConfigLayers: jest.fn(),
+        openConfigFile: vi.fn(),
+        getConfigLayers: vi.fn(),
     },
     FileManagement: {
-        getZoweDir: jest.fn().mockReturnValue("/mock/zowe"),
-        getFullPath: jest.fn().mockImplementation((p: string) => p),
+        getZoweDir: vi.fn().mockReturnValue("/mock/zowe"),
+        getFullPath: vi.fn().mockImplementation((p: string) => p),
     },
 }));
 
-jest.mock("@zowe/core-for-zowe-sdk", () => ({
+vi.mock("@zowe/core-for-zowe-sdk", () => ({
     ProfileConstants: {
         BaseProfile: "base",
     },
@@ -82,22 +84,22 @@ jest.mock("@zowe/core-for-zowe-sdk", () => ({
 
 describe("ConfigEditorFileOperations", () => {
     let fileOperations: ConfigEditorFileOperations;
-    let mockGetLocalConfigs: jest.Mock;
+    let mockGetLocalConfigs: Mock;
 
     beforeEach(() => {
         // Reset all mocks
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
-        mockGetLocalConfigs = jest.fn().mockResolvedValue({ configs: [], parseErrors: [] });
+        mockGetLocalConfigs = vi.fn().mockResolvedValue({ configs: [], parseErrors: [] });
         fileOperations = new ConfigEditorFileOperations(mockGetLocalConfigs);
 
         vscode.workspace.openTextDocument.mockResolvedValue({
-            getText: jest.fn().mockReturnValue('{"profiles": {"test": {"type": "zosmf"}}}'),
+            getText: vi.fn().mockReturnValue('{"profiles": {"test": {"type": "zosmf"}}}'),
         });
 
         vscode.window.showTextDocument.mockResolvedValue({
             selection: {},
-            revealRange: jest.fn(),
+            revealRange: vi.fn(),
         });
 
         vscode.Uri.file.mockImplementation((path: string) => ({ fsPath: path }));
@@ -108,18 +110,15 @@ describe("ConfigEditorFileOperations", () => {
 
     describe("createNewConfig", () => {
         beforeEach(() => {
-            const { Config, ConfigBuilder, ConfigSchema } = require("@zowe/imperative");
-            const { ZoweVsCodeExtension } = require("@zowe/zowe-explorer-api");
-
             Config.load.mockResolvedValue({
                 api: {
                     layers: {
-                        activate: jest.fn(),
-                        merge: jest.fn(),
+                        activate: vi.fn(),
+                        merge: vi.fn(),
                     },
                 },
-                save: jest.fn(),
-                setSchema: jest.fn(),
+                save: vi.fn(),
+                setSchema: vi.fn(),
                 userConfigName: "zowe.config.user.json",
                 configName: "zowe.config.json",
             });
@@ -132,18 +131,16 @@ describe("ConfigEditorFileOperations", () => {
 
             // Mock profilesCache
             (ZoweVsCodeExtension as any).profilesCache = {
-                getCoreProfileTypes: jest.fn().mockReturnValue([]),
-                getConfigArray: jest.fn().mockReturnValue([]),
+                getCoreProfileTypes: vi.fn().mockReturnValue([]),
+                getConfigArray: vi.fn().mockReturnValue([]),
             };
         });
 
         it("should create configuration successfully for all types", async () => {
-            const { ZoweVsCodeExtension } = require("@zowe/zowe-explorer-api");
-
             const configTypes = ["global-team", "global-user", "project-team", "project-user"];
 
             for (const configType of configTypes) {
-                jest.clearAllMocks();
+                vi.clearAllMocks();
 
                 const message = { configType };
                 fs.existsSync.mockReturnValueOnce(true).mockReturnValueOnce(true);
@@ -159,8 +156,6 @@ describe("ConfigEditorFileOperations", () => {
         });
 
         it("should handle missing workspace root for project configurations", async () => {
-            const { ZoweVsCodeExtension } = require("@zowe/zowe-explorer-api");
-
             // Mock no workspace root
             ZoweVsCodeExtension.workspaceRoot = null;
 
@@ -175,8 +170,6 @@ describe("ConfigEditorFileOperations", () => {
         });
 
         it("should handle existing configuration file scenarios", async () => {
-            const { ZoweVsCodeExtension } = require("@zowe/zowe-explorer-api");
-
             const message = { configType: "global-team" };
             fs.existsSync.mockReturnValue(true);
             ZoweVsCodeExtension.getConfigLayers.mockResolvedValue([{ path: "/mock/zowe/zowe.config.json" }]);
@@ -199,8 +192,6 @@ describe("ConfigEditorFileOperations", () => {
         });
 
         it("should handle configuration creation errors", async () => {
-            const { Config } = require("@zowe/imperative");
-
             const message = { configType: "global-team" };
             fs.existsSync.mockReturnValue(true);
 
@@ -218,8 +209,6 @@ describe("ConfigEditorFileOperations", () => {
         });
 
         it("should handle file not being created on disk", async () => {
-            const { ZoweVsCodeExtension } = require("@zowe/zowe-explorer-api");
-
             const message = { configType: "global-team" };
             fs.existsSync.mockReturnValueOnce(true).mockReturnValueOnce(false);
             ZoweVsCodeExtension.openConfigFile.mockResolvedValue(undefined);
@@ -233,8 +222,6 @@ describe("ConfigEditorFileOperations", () => {
 
     describe("checkExistingConfig", () => {
         it("should handle all existing config scenarios", async () => {
-            const { ZoweVsCodeExtension } = require("@zowe/zowe-explorer-api");
-
             // Test no existing config found
             ZoweVsCodeExtension.getConfigLayers.mockResolvedValue([]);
             let result = await (fileOperations as any).checkExistingConfig("/mock/path", false);

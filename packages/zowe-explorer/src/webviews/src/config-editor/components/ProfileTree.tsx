@@ -888,12 +888,7 @@ export function ProfileTree({
   };
 
   return (
-    <div
-      ref={scrollContainerRef}
-      className="profile-tree profile-tree-scroll"
-      data-testid="profile-tree"
-      data-profile-count={profileKeys.length}
-    >
+    <div ref={scrollContainerRef} className="profile-tree profile-tree-scroll" data-testid="profile-tree" data-profile-count={profileKeys.length}>
       {draggedProfile && !isDraggingRootProfile && renderRootDropZone()}
       {treeNodes.map((node) => renderNode(node))}
     </div>

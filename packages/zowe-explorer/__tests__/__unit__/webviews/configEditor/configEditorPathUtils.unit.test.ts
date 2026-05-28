@@ -10,6 +10,7 @@
  */
 
 import { ConfigEditorPathUtils } from "../../../../src/utils/ConfigEditorPathUtils";
+import { vi } from "vitest";
 
 describe("ConfigEditorPathUtils", () => {
     describe("constructNestedProfilePath", () => {
@@ -69,7 +70,7 @@ describe("ConfigEditorPathUtils", () => {
             // In practice, split(".") on a non-empty string will never return empty array
             // But we test the condition for completeness
             const originalSplit = String.prototype.split;
-            String.prototype.split = jest.fn().mockReturnValue([]);
+            String.prototype.split = vi.fn().mockReturnValue([]);
 
             expect(() => {
                 ConfigEditorPathUtils.constructNestedProfilePath("test");

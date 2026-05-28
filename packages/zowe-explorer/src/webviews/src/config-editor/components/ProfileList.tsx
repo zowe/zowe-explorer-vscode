@@ -78,11 +78,7 @@ export function ProfileList({
 
   // Get unique profile types for filter dropdown
   const availableTypes = Array.from(
-    new Set(
-      sortedProfileKeys
-        .map((key) => getProfileType(key))
-        .filter((type): type is string => type !== null && type.trim() !== "")
-    )
+    new Set(sortedProfileKeys.map((key) => getProfileType(key)).filter((type): type is string => type !== null && type.trim() !== ""))
   ).sort();
 
   // Filter and sort profiles based on search term, type filter, and sort order
@@ -291,231 +287,230 @@ export function ProfileList({
           />
         ) : (
           filteredProfileKeys.map((profileKey) => {
-            const rowHasPendingEdits =
-              Boolean(pendingProfiles[profileKey]) || hasPendingSecureChanges(profileKey) || hasPendingRename(profileKey);
+            const rowHasPendingEdits = Boolean(pendingProfiles[profileKey]) || hasPendingSecureChanges(profileKey) || hasPendingRename(profileKey);
             return (
-            <div
-              key={profileKey}
-              className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""} ${
-                rowHasPendingEdits ? "profile-list-item--pending" : ""
-              }`}
-              style={{
-                cursor: "pointer",
-                margin: "2px 0",
-                padding: "6px 8px",
-                borderRadius: "4px",
-                border: selectedProfileKey === profileKey ? "2px solid var(--vscode-button-background)" : "2px solid transparent",
-                backgroundColor: "var(--vscode-input-background)",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                fontSize: "0.9em",
-                minHeight: "28px",
-              }}
-              onClick={() => {
-                if (selectedProfileKey === profileKey) {
-                  // If clicking on the already selected profile, deselect it
-                  onProfileSelect("");
-                } else {
-                  onProfileSelect(profileKey);
-                }
-              }}
-              title={profileKey}
-              data-testid="profile-list-item"
-              data-profile-key={profileKey}
-              data-profile-name={profileKey}
-              data-profile-type={getProfileType(profileKey)}
-              data-is-selected={selectedProfileKey === profileKey}
-            >
-              <span
+              <div
+                key={profileKey}
+                className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""} ${
+                  rowHasPendingEdits ? "profile-list-item--pending" : ""
+                }`}
                 style={{
-                  flex: 1,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  opacity: rowHasPendingEdits ? 0.7 : 1,
+                  cursor: "pointer",
+                  margin: "2px 0",
+                  padding: "6px 8px",
+                  borderRadius: "4px",
+                  border: selectedProfileKey === profileKey ? "2px solid var(--vscode-button-background)" : "2px solid transparent",
+                  backgroundColor: "var(--vscode-input-background)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontSize: "0.9em",
+                  minHeight: "28px",
                 }}
-                data-testid="profile-name"
+                onClick={() => {
+                  if (selectedProfileKey === profileKey) {
+                    // If clicking on the already selected profile, deselect it
+                    onProfileSelect("");
+                  } else {
+                    onProfileSelect(profileKey);
+                  }
+                }}
+                title={profileKey}
+                data-testid="profile-list-item"
+                data-profile-key={profileKey}
                 data-profile-name={profileKey}
+                data-profile-type={getProfileType(profileKey)}
+                data-is-selected={selectedProfileKey === profileKey}
               >
-                {profileKey}
-              </span>
-              <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
-                {getProfileType(profileKey) && (
-                  <span
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const profileType = getProfileType(profileKey);
-                      if (profileType) {
-                        // If clicking on the same type that's already filtered, clear the filter
-                        if (filterType === profileType) {
-                          onFilterChange(null);
-                        } else {
-                          onFilterChange(profileType);
-                        }
-                      }
-                    }}
-                    style={
-                      isLightTheme
-                        ? (() => {
-                            const profileType = getProfileType(profileKey);
-                            const bgColor = getColorForProfileType(profileType!);
-
-                            // Determine text color based on background luminance
-                            const getTextColor = (hex: string): string => {
-                              const cleanHex = hex.replace("#", "");
-                              const r = parseInt(cleanHex.substring(0, 2), 16);
-                              const g = parseInt(cleanHex.substring(2, 4), 16);
-                              const b = parseInt(cleanHex.substring(4, 6), 16);
-
-                              // Convert to 0-1 range and apply gamma correction
-                              const rsRGB = r / 255;
-                              const gsRGB = g / 255;
-                              const bsRGB = b / 255;
-
-                              const rLinear = rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4);
-                              const gLinear = gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4);
-                              const bLinear = bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4);
-
-                              // Calculate relative luminance
-                              const luminance = 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
-
-                              return luminance <= 0.22 ? "white" : "black";
-                            };
-
-                            return {
-                              fontSize: "11px",
-                              color: getTextColor(bgColor),
-                              backgroundColor: bgColor,
-                              border: `1px solid ${bgColor}`,
-                              padding: "2px 6px",
-                              borderRadius: "10px",
-                              fontWeight: "600",
-                              whiteSpace: "nowrap",
-                              flexShrink: 0,
-                              cursor: "pointer",
-                              transition: "opacity 0.2s ease",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              lineHeight: "1",
-                            };
-                          })()
-                        : (() => {
-                            const profileType = getProfileType(profileKey);
-                            const bgColor = getColorForProfileType(profileType!);
-
-                            // For dark theme, lighten or darken the text color based on the original color's brightness
-                            const adjustColorForDarkTheme = (color: string) => {
-                              const hex = color.replace("#", "");
-                              const r = parseInt(hex.substr(0, 2), 16);
-                              const g = parseInt(hex.substr(2, 2), 16);
-                              const b = parseInt(hex.substr(4, 2), 16);
-
-                              // Calculate relative luminance
-                              const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
-                              // If color is too bright, darken it; if too dark, lighten it
-                              if (luminance > 0.7) {
-                                // Darken bright colors by 30%
-                                return `rgb(${Math.round(r * 0.7)}, ${Math.round(g * 0.7)}, ${Math.round(b * 0.7)})`;
-                              } else if (luminance < 0.3) {
-                                // Lighten dark colors by adding 40%
-                                return `rgb(${Math.min(255, Math.round(r + (255 - r) * 0.4))}, ${Math.min(
-                                  255,
-                                  Math.round(g + (255 - g) * 0.4)
-                                )}, ${Math.min(255, Math.round(b + (255 - b) * 0.4))})`;
-                              }
-                              // Medium colors are fine as-is
-                              return color;
-                            };
-
-                            const textColor = adjustColorForDarkTheme(bgColor);
-
-                            return {
-                              fontSize: "12px",
-                              color: textColor,
-                              backgroundColor: `${bgColor}22`,
-                              border: `1px solid ${bgColor}66`,
-                              padding: "0 7px",
-                              borderRadius: "2em",
-                              fontWeight: "500",
-                              whiteSpace: "nowrap",
-                              flexShrink: 0,
-                              cursor: "pointer",
-                              transition: "background-color 0.2s ease, border-color 0.2s ease",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              lineHeight: "20px",
-                              height: "22px",
-                            };
-                          })()
-                    }
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = "0.8";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = "1";
-                    }}
-                    title={
-                      filterType === getProfileType(profileKey)
-                        ? `Click to clear ${getProfileType(profileKey)} filter`
-                        : `Click to filter by ${getProfileType(profileKey)} type`
-                    }
-                  >
-                    {getProfileType(profileKey)}
-                  </span>
-                )}
-                {getProfileType(profileKey) && (
-                  <button
-                    className="profile-star-button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const profileType = getProfileType(profileKey);
-                      if (!profileType) return; // Don't allow interaction if no type
-
-                      if (isProfileDefault(profileKey)) {
-                        // If already default, deselect it by setting to empty
-                        if (profileType && setPendingDefaults && configurations && selectedTab !== null && selectedTab !== undefined) {
-                          const configPath = configurations[selectedTab]!.configPath;
-                          setPendingDefaults((prev) => ({
-                            ...prev,
-                            [configPath]: {
-                              ...prev[configPath],
-                              [profileType]: { value: "", path: [profileType] },
-                            },
-                          }));
-                        }
-                      } else {
-                        // Set as default
-                        onSetAsDefault(profileKey);
-                      }
-                    }}
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      padding: "2px",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                    title={isProfileDefault(profileKey) ? "Click to remove default" : "Set as default"}
-                  >
+                <span
+                  style={{
+                    flex: 1,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    opacity: rowHasPendingEdits ? 0.7 : 1,
+                  }}
+                  data-testid="profile-name"
+                  data-profile-name={profileKey}
+                >
+                  {profileKey}
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+                  {getProfileType(profileKey) && (
                     <span
-                      className={`codicon codicon-${isProfileDefault(profileKey) ? "star-full" : "star-empty"}`}
-                      style={{
-                        fontSize: "16px",
-                        color: isProfileDefault(profileKey) ? "var(--vscode-textPreformat-foreground)" : "var(--vscode-disabledForeground)",
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const profileType = getProfileType(profileKey);
+                        if (profileType) {
+                          // If clicking on the same type that's already filtered, clear the filter
+                          if (filterType === profileType) {
+                            onFilterChange(null);
+                          } else {
+                            onFilterChange(profileType);
+                          }
+                        }
                       }}
-                    />
-                  </button>
-                )}
+                      style={
+                        isLightTheme
+                          ? (() => {
+                              const profileType = getProfileType(profileKey);
+                              const bgColor = getColorForProfileType(profileType!);
+
+                              // Determine text color based on background luminance
+                              const getTextColor = (hex: string): string => {
+                                const cleanHex = hex.replace("#", "");
+                                const r = parseInt(cleanHex.substring(0, 2), 16);
+                                const g = parseInt(cleanHex.substring(2, 4), 16);
+                                const b = parseInt(cleanHex.substring(4, 6), 16);
+
+                                // Convert to 0-1 range and apply gamma correction
+                                const rsRGB = r / 255;
+                                const gsRGB = g / 255;
+                                const bsRGB = b / 255;
+
+                                const rLinear = rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4);
+                                const gLinear = gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4);
+                                const bLinear = bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4);
+
+                                // Calculate relative luminance
+                                const luminance = 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
+
+                                return luminance <= 0.22 ? "white" : "black";
+                              };
+
+                              return {
+                                fontSize: "11px",
+                                color: getTextColor(bgColor),
+                                backgroundColor: bgColor,
+                                border: `1px solid ${bgColor}`,
+                                padding: "2px 6px",
+                                borderRadius: "10px",
+                                fontWeight: "600",
+                                whiteSpace: "nowrap",
+                                flexShrink: 0,
+                                cursor: "pointer",
+                                transition: "opacity 0.2s ease",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                lineHeight: "1",
+                              };
+                            })()
+                          : (() => {
+                              const profileType = getProfileType(profileKey);
+                              const bgColor = getColorForProfileType(profileType!);
+
+                              // For dark theme, lighten or darken the text color based on the original color's brightness
+                              const adjustColorForDarkTheme = (color: string) => {
+                                const hex = color.replace("#", "");
+                                const r = parseInt(hex.substr(0, 2), 16);
+                                const g = parseInt(hex.substr(2, 2), 16);
+                                const b = parseInt(hex.substr(4, 2), 16);
+
+                                // Calculate relative luminance
+                                const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+                                // If color is too bright, darken it; if too dark, lighten it
+                                if (luminance > 0.7) {
+                                  // Darken bright colors by 30%
+                                  return `rgb(${Math.round(r * 0.7)}, ${Math.round(g * 0.7)}, ${Math.round(b * 0.7)})`;
+                                } else if (luminance < 0.3) {
+                                  // Lighten dark colors by adding 40%
+                                  return `rgb(${Math.min(255, Math.round(r + (255 - r) * 0.4))}, ${Math.min(
+                                    255,
+                                    Math.round(g + (255 - g) * 0.4)
+                                  )}, ${Math.min(255, Math.round(b + (255 - b) * 0.4))})`;
+                                }
+                                // Medium colors are fine as-is
+                                return color;
+                              };
+
+                              const textColor = adjustColorForDarkTheme(bgColor);
+
+                              return {
+                                fontSize: "12px",
+                                color: textColor,
+                                backgroundColor: `${bgColor}22`,
+                                border: `1px solid ${bgColor}66`,
+                                padding: "0 7px",
+                                borderRadius: "2em",
+                                fontWeight: "500",
+                                whiteSpace: "nowrap",
+                                flexShrink: 0,
+                                cursor: "pointer",
+                                transition: "background-color 0.2s ease, border-color 0.2s ease",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                lineHeight: "20px",
+                                height: "22px",
+                              };
+                            })()
+                      }
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.opacity = "0.8";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.opacity = "1";
+                      }}
+                      title={
+                        filterType === getProfileType(profileKey)
+                          ? `Click to clear ${getProfileType(profileKey)} filter`
+                          : `Click to filter by ${getProfileType(profileKey)} type`
+                      }
+                    >
+                      {getProfileType(profileKey)}
+                    </span>
+                  )}
+                  {getProfileType(profileKey) && (
+                    <button
+                      className="profile-star-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const profileType = getProfileType(profileKey);
+                        if (!profileType) return; // Don't allow interaction if no type
+
+                        if (isProfileDefault(profileKey)) {
+                          // If already default, deselect it by setting to empty
+                          if (profileType && setPendingDefaults && configurations && selectedTab !== null && selectedTab !== undefined) {
+                            const configPath = configurations[selectedTab]!.configPath;
+                            setPendingDefaults((prev) => ({
+                              ...prev,
+                              [configPath]: {
+                                ...prev[configPath],
+                                [profileType]: { value: "", path: [profileType] },
+                              },
+                            }));
+                          }
+                        } else {
+                          // Set as default
+                          onSetAsDefault(profileKey);
+                        }
+                      }}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        padding: "2px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                      title={isProfileDefault(profileKey) ? "Click to remove default" : "Set as default"}
+                    >
+                      <span
+                        className={`codicon codicon-${isProfileDefault(profileKey) ? "star-full" : "star-empty"}`}
+                        style={{
+                          fontSize: "16px",
+                          color: isProfileDefault(profileKey) ? "var(--vscode-textPreformat-foreground)" : "var(--vscode-disabledForeground)",
+                        }}
+                      />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          );
+            );
           })
         )}
       </div>

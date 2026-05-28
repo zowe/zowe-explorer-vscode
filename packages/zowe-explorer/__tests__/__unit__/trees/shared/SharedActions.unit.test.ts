@@ -79,6 +79,7 @@ function createGlobalMocks() {
             return callback(progress, token);
         }),
         configurable: true,
+        writable: true,
     });
 
     Object.defineProperty(Gui, "setStatusBarMessage", {
@@ -86,22 +87,25 @@ function createGlobalMocks() {
             dispose: vi.fn(),
         }),
         configurable: true,
+        writable: true,
     });
     Object.defineProperty(vscode.window, "createTreeView", {
         value: vi.fn().mockReturnValue({ onDidCollapseElement: vi.fn() }),
         configurable: true,
+        writable: true,
     });
-    Object.defineProperty(vscode.workspace, "getConfiguration", { value: vi.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showInformationMessage", { value: vi.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showInputBox", { value: vi.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showErrorMessage", { value: vi.fn(), configurable: true });
-    Object.defineProperty(Gui, "showMessage", { value: vi.fn(), configurable: true });
-    Object.defineProperty(Gui, "resolveQuickPick", { value: vi.fn(), configurable: true });
-    Object.defineProperty(Gui, "createQuickPick", { value: vi.fn(), configurable: true });
-    Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true });
+    Object.defineProperty(vscode.workspace, "getConfiguration", { value: vi.fn(), configurable: true, writable: true });
+    Object.defineProperty(vscode.window, "showInformationMessage", { value: vi.fn(), configurable: true, writable: true });
+    Object.defineProperty(vscode.window, "showInputBox", { value: vi.fn(), configurable: true, writable: true });
+    Object.defineProperty(vscode.window, "showErrorMessage", { value: vi.fn(), configurable: true, writable: true });
+    Object.defineProperty(Gui, "showMessage", { value: vi.fn(), configurable: true, writable: true });
+    Object.defineProperty(Gui, "resolveQuickPick", { value: vi.fn(), configurable: true, writable: true });
+    Object.defineProperty(Gui, "createQuickPick", { value: vi.fn(), configurable: true, writable: true });
+    Object.defineProperty(vscode, "ProgressLocation", { value: globalMocks.ProgressLocation, configurable: true, writable: true });
     Object.defineProperty(Profiles, "getInstance", {
         value: vi.fn().mockReturnValue(createInstanceOfProfile(globalMocks.imperativeProfile)),
         configurable: true,
+        writable: true,
     });
     Object.defineProperty(SettingsConfig, "getDirectValue", {
         value: createGetConfigMock({
@@ -109,6 +113,7 @@ function createGlobalMocks() {
             "zowe.jobs.default.sort": Sorting.JobSortOpts.Id,
         }),
         configurable: true,
+        writable: true,
     });
     vi.spyOn(zosfiles.Download, "ussFile").mockResolvedValue({
         success: true,
@@ -146,6 +151,16 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
         };
         return newMocks;
     }
+
+    const originalGetInstance = Profiles.getInstance;
+    afterEach(() => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: originalGetInstance,
+            configurable: true,
+            writable: true,
+        });
+        vi.restoreAllMocks();
+    });
 
     afterAll(() => vi.restoreAllMocks());
 
@@ -745,6 +760,8 @@ describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
                     checkProfileValidationSetting: blockMocks.mockCheckProfileValidationSetting.mockReturnValue(false),
                 };
             }),
+            configurable: true,
+            writable: true,
         });
         const response = await SharedActions.resetValidationSettings(testNode, false);
         expect(response.contextValue).toContain(`${Constants.VALIDATE_SUFFIX}false`);
@@ -764,6 +781,8 @@ describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
                     checkProfileValidationSetting: blockMocks.mockCheckProfileValidationSetting.mockReturnValue(true),
                 };
             }),
+            configurable: true,
+            writable: true,
         });
         const response = await SharedActions.resetValidationSettings(testNode, true);
         expect(response.contextValue).toContain(`${Constants.VALIDATE_SUFFIX}true`);
@@ -777,7 +796,8 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
 
     it("should refresh all tree providers and update session nodes", async () => {
         createGlobalMocks();
-        vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(createTreeProviders());
+        const providers = createTreeProviders();
+        vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(providers);
         const removedProfNames = new Set<string>();
         const addedProfTypes = new Set<string>();
         const removeSessionSpy = vi
@@ -797,7 +817,8 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
 
     it("should avoid running the refresh logic twice if a refresh is already in progress", async () => {
         createGlobalMocks();
-        vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(createTreeProviders());
+        const providers = createTreeProviders();
+        vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(providers);
         const removedProfNames = new Set<string>();
         const addedProfTypes = new Set<string>();
         const removeSessionSpy = vi
@@ -945,9 +966,18 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         expect(updateSessionNodeTooltipsMock).toHaveBeenCalledWith(treeProvider);
         expect(refresh).toHaveBeenCalledTimes(1);
         profilesMock.mockRestore();
+        syncSessionNodeMock.mockRestore();
+        refreshProfilesMock.mockRestore();
+        returnIconStateMock.mockRestore();
+        updateSessionNodeTooltipsMock.mockRestore();
+        registeredApiTypesMock.mockRestore();
+        removeSessionMock.mockRestore();
+        addDefaultSessionMock.mockRestore();
     });
 
     it("removes a session node in the given provider if the profile no longer exists", async () => {
+        const sessionNode = createDatasetSessionNode(createISession(), createIProfile());
+        const deleteSession = vi.fn();
         const addDefaultSessionMock = vi.spyOn(TreeViewUtils, "addDefaultSession").mockClear().mockResolvedValueOnce(undefined);
         const removeSessionMock = vi.spyOn(TreeViewUtils, "removeSession").mockClear().mockResolvedValueOnce(undefined);
         const registeredApiTypesMock = vi
@@ -987,6 +1017,12 @@ describe("Shared Actions Unit Tests - Function refreshProvider", () => {
         expect(updateSessionNodeTooltipsMock).toHaveBeenCalledWith(treeProvider);
         expect(refresh).toHaveBeenCalledTimes(1);
         profilesMock.mockRestore();
+        syncSessionNodeMock.mockRestore();
+        refreshProfilesMock.mockRestore();
+        updateSessionNodeTooltipsMock.mockRestore();
+        registeredApiTypesMock.mockRestore();
+        removeSessionMock.mockRestore();
+        addDefaultSessionMock.mockRestore();
     });
 
     describe("Shared Actions Unit Tests - Function updateSessionNodeTooltips", () => {
@@ -1141,6 +1177,8 @@ describe("Shared Actions Unit Tests - Function updateSchemaCommand", () => {
                     getConfigLayers: newMocks.mockGetConfigLayers,
                 };
             }),
+            configurable: true,
+            writable: true,
         });
         Object.defineProperty(ProfilesUtils, "setupProfileInfo", {
             value: vi.fn().mockResolvedValue(newMocks.mockProfileInfo),

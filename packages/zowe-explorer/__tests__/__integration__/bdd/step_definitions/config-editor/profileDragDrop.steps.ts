@@ -74,10 +74,10 @@ Then("the Config Editor profile list is in tree view mode after reload", async (
         await viewToggleButton.waitForExist({ timeout: 1000 });
         await viewToggleButton.click();
         await browser.pause(50);
-        await browser.waitUntil(
-            async () => (await (await browser.$("[data-testid='profile-list']")).getAttribute("data-view-mode")) === "tree",
-            { timeout: 2000, timeoutMsg: "Failed to switch to tree view after reload" }
-        );
+        await browser.waitUntil(async () => (await (await browser.$("[data-testid='profile-list']")).getAttribute("data-view-mode")) === "tree", {
+            timeout: 2000,
+            timeoutMsg: "Failed to switch to tree view after reload",
+        });
     }
     expect(await profileList.getAttribute("data-view-mode")).toBe("tree");
 });
@@ -99,10 +99,10 @@ async function ensureTreeView(): Promise<void> {
             { timeout: 1000, timeoutMsg: "Failed to switch to tree view" }
         );
     }
-    await browser.waitUntil(
-        async () => (await browser.$$("[data-testid='profile-tree-node']")).length > 0,
-        { timeout: 10000, timeoutMsg: "Profile tree not loaded within timeout" }
-    );
+    await browser.waitUntil(async () => (await browser.$$("[data-testid='profile-tree-node']")).length > 0, {
+        timeout: 10000,
+        timeoutMsg: "Profile tree not loaded within timeout",
+    });
 }
 
 async function getTreeNodeByProfileKey(profileKey: string) {
@@ -114,9 +114,7 @@ async function getTreeNodeByProfileKey(profileKey: string) {
 
 /** Root-level row only — needed when the same profile name could appear at multiple depths after pending renames. */
 async function getTreeNodeByProfileKeyAtRootLevel(profileKey: string) {
-    const el = await browser.$(
-        `[data-testid='profile-tree-node'][data-profile-key='${profileKey}'][data-profile-level='0']`
-    );
+    const el = await browser.$(`[data-testid='profile-tree-node'][data-profile-key='${profileKey}'][data-profile-level='0']`);
     await el.waitForExist({ timeout: 3000 });
     await el.waitForDisplayed({ timeout: 3000 });
     return el;

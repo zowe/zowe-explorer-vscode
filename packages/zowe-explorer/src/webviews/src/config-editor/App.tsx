@@ -571,9 +571,7 @@ function AppContent() {
         currentProfileName={selectedProfileKey ? selectedProfileKey.split(".").pop() || selectedProfileKey : ""}
         currentProfileKey={selectedProfileKey || ""}
         existingProfiles={
-          selectedTab === null || !selectedProfileKey
-            ? []
-            : getAllQualifiedProfileKeys(configurations[selectedTab]?.properties?.profiles)
+          selectedTab === null || !selectedProfileKey ? [] : getAllQualifiedProfileKeys(configurations[selectedTab]?.properties?.profiles)
         }
         pendingProfiles={(() => {
           if (selectedTab === null) return [];
@@ -594,12 +592,7 @@ function AppContent() {
           const configPath = configurations[selectedTab!]?.configPath;
           const config = configurations[selectedTab!];
           if (configPath && config && selectedProfileKey) {
-            const trueOriginalKey = resolveOriginalProfileKeyFromRenames(
-              selectedProfileKey,
-              configPath,
-              config.properties?.profiles,
-              renames
-            );
+            const trueOriginalKey = resolveOriginalProfileKeyFromRenames(selectedProfileKey, configPath, config.properties?.profiles, renames);
             handleRenameProfile(trueOriginalKey, newName);
           }
         }}

@@ -11,17 +11,18 @@
 
 import { ConfigSchemaHelpers, schemaValidation } from "../../../../src/utils/ConfigSchemaHelpers";
 import * as fs from "fs";
+import { vi } from "vitest";
 
 // Mock fs module
-jest.mock("fs", () => ({
-    readFileSync: jest.fn(),
+vi.mock("fs", () => ({
+    readFileSync: vi.fn(),
 }));
 
-const MockedFs = fs as jest.Mocked<typeof fs>;
+const MockedFs = fs as any;
 
 describe("ConfigSchemaHelpers", () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe("generateSchemaValidation", () => {
@@ -296,7 +297,7 @@ describe("ConfigSchemaHelpers", () => {
         });
 
         it("should handle file read errors", () => {
-            const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+            const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation();
             MockedFs.readFileSync.mockImplementation(() => {
                 throw new Error("File not found");
             });
@@ -310,7 +311,7 @@ describe("ConfigSchemaHelpers", () => {
         });
 
         it("should handle invalid JSON", () => {
-            const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+            const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation();
             MockedFs.readFileSync.mockReturnValue("invalid json");
 
             const result = ConfigSchemaHelpers.getProfileProperties("/path/to/schema.json");

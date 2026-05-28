@@ -10,40 +10,41 @@
  */
 
 import { ConfigEditorMessageHandlers } from "../../../../src/utils/ConfigEditorMessageHandlers";
+import { Mock, vi } from "vitest";
 
 // Mock vscode module
-jest.mock("vscode", () => ({
+vi.mock("vscode", () => ({
     workspace: {
-        openTextDocument: jest.fn(),
+        openTextDocument: vi.fn(),
     },
     window: {
-        showTextDocument: jest.fn(),
-        showErrorMessage: jest.fn(),
-        showOpenDialog: jest.fn(),
+        showTextDocument: vi.fn(),
+        showErrorMessage: vi.fn(),
+        showOpenDialog: vi.fn(),
     },
     commands: {
-        executeCommand: jest.fn(),
+        executeCommand: vi.fn(),
     },
     Uri: {
-        file: jest.fn((path) => ({ fsPath: path })),
+        file: vi.fn((path) => ({ fsPath: path })),
     },
-    Position: jest.fn((line, col) => ({ line, character: col })),
-    Selection: jest.fn(),
-    Range: jest.fn(),
+    Position: vi.fn((line, col) => ({ line, character: col })),
+    Selection: vi.fn(),
+    Range: vi.fn(),
     TextEditorRevealType: { InCenter: 1 },
 }));
 
 // Mock Zowe dependencies
-jest.mock("@zowe/imperative", () => ({
-    ProfileInfo: jest.fn(),
+vi.mock("@zowe/imperative", () => ({
+    ProfileInfo: vi.fn(),
     ProfileCredentials: {
-        defaultCredMgrWithKeytar: jest.fn(),
+        defaultCredMgrWithKeytar: vi.fn(),
     },
 }));
 
-jest.mock("@zowe/zowe-explorer-api", () => ({
+vi.mock("@zowe/zowe-explorer-api", () => ({
     ProfilesCache: {
-        requireKeyring: jest.fn(),
+        requireKeyring: vi.fn(),
     },
     ZoweVsCodeExtension: {
         workspaceRoot: {
@@ -54,20 +55,20 @@ jest.mock("@zowe/zowe-explorer-api", () => ({
     },
 }));
 
-jest.mock("../../../../src/tools/ZoweLocalStorage", () => ({
+vi.mock("../../../../src/tools/ZoweLocalStorage", () => ({
     LocalStorageAccess: {
-        getValue: jest.fn(),
-        setValue: jest.fn(),
+        getValue: vi.fn(),
+        setValue: vi.fn(),
     },
 }));
 
-jest.mock("../../../../src/configuration/Profiles", () => ({
+vi.mock("../../../../src/configuration/Profiles", () => ({
     Profiles: {
-        getInstance: jest.fn(),
+        getInstance: vi.fn(),
     },
 }));
 
-jest.mock("../../../../src/configuration/Definitions", () => ({
+vi.mock("../../../../src/configuration/Definitions", () => ({
     Definitions: {
         LocalStorageKey: {
             TEST_KEY: "test_key",
@@ -75,23 +76,23 @@ jest.mock("../../../../src/configuration/Definitions", () => ({
     },
 }));
 
-const vscode = require("vscode");
-const { ProfileInfo, ProfileCredentials } = require("@zowe/imperative");
-const { ZoweVsCodeExtension } = require("@zowe/zowe-explorer-api");
-const { LocalStorageAccess } = require("../../../../src/tools/ZoweLocalStorage");
-const { Profiles } = require("../../../../src/configuration/Profiles");
+import * as vscode from "vscode";
+import { ProfileInfo, ProfileCredentials } from "@zowe/imperative";
+import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { LocalStorageAccess } from "../../../../src/tools/ZoweLocalStorage";
+import { Profiles } from "../../../../src/configuration/Profiles";
 
 describe("ConfigEditorMessageHandlers", () => {
     let messageHandlers: ConfigEditorMessageHandlers;
-    let mockGetLocalConfigs: jest.Mock;
-    let mockAreSecureValuesAllowed: jest.Mock;
-    let mockPanel: { webview: { postMessage: jest.Mock } };
-    let mockProfileOperations: { validateProfileName: jest.Mock };
+    let mockGetLocalConfigs: Mock;
+    let mockAreSecureValuesAllowed: Mock;
+    let mockPanel: { webview: { postMessage: Mock } };
+    let mockProfileOperations: { validateProfileName: Mock };
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
-        mockGetLocalConfigs = jest.fn().mockResolvedValue({
+        mockGetLocalConfigs = vi.fn().mockResolvedValue({
             configs: [
                 { name: "config1", path: "/path/to/config1.json" },
                 { name: "config2", path: "/path/to/config2.json" },
@@ -99,16 +100,16 @@ describe("ConfigEditorMessageHandlers", () => {
             parseErrors: [],
         });
 
-        mockAreSecureValuesAllowed = jest.fn().mockResolvedValue(true);
+        mockAreSecureValuesAllowed = vi.fn().mockResolvedValue(true);
 
         mockPanel = {
             webview: {
-                postMessage: jest.fn().mockResolvedValue(true),
+                postMessage: vi.fn().mockResolvedValue(true),
             },
         };
 
         mockProfileOperations = {
-            validateProfileName: jest.fn(),
+            validateProfileName: vi.fn(),
         };
 
         messageHandlers = new ConfigEditorMessageHandlers(mockGetLocalConfigs, mockAreSecureValuesAllowed, mockPanel, mockProfileOperations as any);
@@ -117,7 +118,7 @@ describe("ConfigEditorMessageHandlers", () => {
 
         // Setup default mocks
         const mockProfileInfo = {
-            readProfilesFromDisk: jest.fn().mockResolvedValue(undefined),
+            readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
         };
         (ProfileInfo as any).mockImplementation(() => mockProfileInfo);
         (ProfileCredentials.defaultCredMgrWithKeytar as any).mockReturnValue("mockCredMgr");
@@ -222,7 +223,7 @@ describe("ConfigEditorMessageHandlers", () => {
 
     describe("handleInitialSelection", () => {
         it("should handle initial selection", async () => {
-            const mockSetInitialSelection = jest.fn();
+            const mockSetInitialSelection = vi.fn();
             const mockMessage = { profileName: "testProfile", configPath: "testPath", profileType: "zosmf" };
 
             messageHandlers.handleInitialSelection(mockMessage, mockSetInitialSelection);
@@ -237,7 +238,7 @@ describe("ConfigEditorMessageHandlers", () => {
 
     describe("handleConfigurationsReady", () => {
         it("should handle configurations ready with initial selection", async () => {
-            const mockSetInitialSelection = jest.fn();
+            const mockSetInitialSelection = vi.fn();
             const initialSelection = { profileName: "testProfile", configPath: "testPath", profileType: "zosmf" };
 
             await messageHandlers.handleConfigurationsReady(initialSelection, mockSetInitialSelection);
@@ -252,7 +253,7 @@ describe("ConfigEditorMessageHandlers", () => {
         });
 
         it("should handle configurations ready without initial selection", async () => {
-            const mockSetInitialSelection = jest.fn();
+            const mockSetInitialSelection = vi.fn();
 
             await messageHandlers.handleConfigurationsReady(undefined, mockSetInitialSelection);
 
