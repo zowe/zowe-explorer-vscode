@@ -436,7 +436,7 @@ importers:
         specifier: ^8.11.0
         version: 8.32.0(@zowe/imperative@8.32.0)
       '@zowe/zowe-explorer-api':
-        specifier: 'workspace:* '
+        specifier: workspace:*
         version: link:../zowe-explorer-api
       '@zowe/zowex-for-zowe-sdk':
         specifier: ^0.6.0

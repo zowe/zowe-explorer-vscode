@@ -22,6 +22,7 @@
     "build": "tsc -p ./ && pnpm madge",
     "clean": "rimraf bin lib coverage",
     "license": "node ../../scripts/updateLicenses.mjs",
+    "link:zowex": "sh -c 'pnpm add \"link:../../${1:-../zowex/packages/sdk}\"'",
     "newlint": "concurrently -n \"_eslint_,prettier\" \"pnpm lint:all\" \"pnpm lint:pretty\"",
     "newlint:html": "(mkdir -p \"results\" || true) && eslint . --format html > results/eslint.html",
     "lint": "concurrently -n \"_eslint_,prettier\" \"pnpm lint:src\" \"pnpm lint:html\" \"pnpm lint:pretty\"",
@@ -40,9 +41,9 @@
   },
   "dependencies": {
     "@zowe/core-for-zowe-sdk": "^8.11.0",
-    "@zowe/zowe-explorer-api": "workspace:* ",
-    "ssh2": "^1.16.0",
-    "@zowe/zowex-for-zowe-sdk": "^0.6.0"
+    "@zowe/zowe-explorer-api": "workspace:*",
+    "@zowe/zowex-for-zowe-sdk": "^0.6.0",
+    "ssh2": "^1.16.0"
   },
   "devDependencies": {
     "@types/ssh2": "^1.15.4",

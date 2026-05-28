@@ -15,3 +15,13 @@ To deploy an instance of the Zowe Remote SSH server, run the `Zowe Explorer: Con
 In the event that the server is unresponsive, you can restart the server with the `Zowe Explorer: Restart zowex server on host...` command.
 
 To remove the server instance entirely, run the `Zowe Explorer: Uninstall zowex server on host...` command.
+
+## Development
+
+To bundle changes made to the `zowex` SDK, run the following command to create a symlink to your local copy of the SDK:
+
+```bash
+pnpm --filter zowex-for-zowe-explorer link:zowex -- [relativePathToZowexSdk]
+```
+
+**Note:** The path must be relative to the root of the Zowe Explorer project. If omitted, it defaults to `../zowex/packages/sdk`.
