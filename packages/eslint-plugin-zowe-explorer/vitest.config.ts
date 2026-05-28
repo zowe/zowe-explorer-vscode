@@ -19,10 +19,14 @@ import { defineProject } from "vitest/config";
 export default defineProject({
     test: {
         name: "eslint-plugin-zowe-explorer",
+        testTimeout: 20000,
         globals: true,
         environment: "node",
         include: ["tests/**/*.js"],
         clearMocks: false,
         restoreMocks: false,
+        coverage: {
+            reportsDirectory: "results/unit/coverage",
+        },
     },
 });

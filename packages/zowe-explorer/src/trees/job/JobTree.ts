@@ -591,7 +591,7 @@ Would you like to do this now?`,
                 favoritesArray.push(favoriteEntry);
             });
         });
-        this.mPersistence.updateFavorites(favoritesArray);
+        this.mPersistence.updateFavorites({ favorites: favoritesArray });
     }
 
     /**

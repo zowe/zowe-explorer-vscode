@@ -57,7 +57,7 @@ describe("FtpMvsApi", () => {
         globals.SESSION_MAP.get = vi.fn().mockReturnValue({ mvsListConnection: { isConnected: () => true } });
         vi.spyOn(DataSetUtils, "downloadDataSet").mockImplementationOnce(() => {
             return new Promise((resolve) => {
-                resolve(new Buffer("Hello world"));
+                resolve(Buffer.from("Hello world"));
             });
         });
         vi.spyOn(MvsApi as any, "hashFile").mockResolvedValue("a".repeat(64));
@@ -429,6 +429,7 @@ describe("FtpMvsApi", () => {
     });
 
     it("should throw error when get contents failed", async () => {
+        vi.mocked(DataSetUtils.downloadDataSet).mockReset();
         vi.spyOn(DataSetUtils, "downloadDataSet").mockImplementationOnce(
             vi.fn((_val) => {
                 throw new Error("Download dataset failed.");
@@ -437,7 +438,7 @@ describe("FtpMvsApi", () => {
         const mockParams = {
             dataSetName: "IBMUSER.DS2",
             options: {
-                file: "/a/b/c",
+                file: createTempFileName(),
                 encoding: "",
             },
         };
@@ -453,7 +454,7 @@ describe("FtpMvsApi", () => {
             })
         );
         const response2 = { success: true, commandResponse: "", apiResponse: { items: [{ dsname: "IBMUSER.PDS", dsorg: "PO", lrecl: 255 }] } };
-        const dataSetMock = vi.spyOn(MvsApi, "dataSet").mockResolvedValue(response2 as any);
+        vi.spyOn(MvsApi, "dataSet").mockResolvedValue(response2 as any);
         const localFile = createTempFileName();
         const mockParams = {
             inputFilePath: localFile,

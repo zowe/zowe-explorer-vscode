@@ -55,8 +55,8 @@ describe("reloadActiveEditorForProfile", () => {
             document: {
                 fileName: "exampleFile.txt",
                 uri: fileUri,
-            } as any,
-        } as any as any);
+            },
+        });
         const statMock = vi.spyOn(workspace.fs, "stat").mockResolvedValueOnce(fakeFsEntry);
         const readFileMock = vi.spyOn(workspace.fs, "readFile").mockImplementationOnce((): Promise<Uint8Array> => {
             // wasAccessed flag should be false after reassigning in reloadActiveEditorForProfile

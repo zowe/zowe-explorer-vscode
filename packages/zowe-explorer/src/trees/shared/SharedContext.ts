@@ -99,6 +99,15 @@ export class SharedContext {
     }
 
     /**
+     * Helper function which identifies if the node is a vsam and a favorite
+     * @param node
+     * @return true if a favorite vsam, false otherwise
+     */
+    public static isFavoriteVsam(node: TreeItem): boolean {
+        return new RegExp("^(" + Constants.VSAM_CONTEXT + ")(.*" + Constants.FAV_SUFFIX + ")").test(node.contextValue);
+    }
+
+    /**
      * Helper function which identifies if the node is a Favorite binary or text file
      * @param node
      * @return true if a Favorite binary or text file, false otherwise

@@ -23,6 +23,8 @@ import { Definitions } from "../configuration/Definitions";
  */
 export class ZowePersistentFilters {
     private static readonly favorites: string = "favorites";
+    private static readonly vsamFavorites: string = "vsamFavorites";
+    private static readonly memberFavorites: string = "memberFavorites";
     private static readonly searchHistory: string = "searchHistory";
     private static readonly searchedKeywordHistory: string = "searchedKeywordHistory";
     private static readonly fileHistory: string = "fileHistory";
@@ -215,6 +217,24 @@ export class ZowePersistentFilters {
         return [];
     }
 
+    public readVsamFavorites(): string[] {
+        ZoweLogger.trace("PersistentFilters.readVsamFavorites called.");
+        const localStorageSchema = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
+        if (localStorageSchema) {
+            return localStorageSchema[ZowePersistentFilters.vsamFavorites] as string[] || [];
+        }
+        return [];
+    }
+
+    public readMemberFavorites(): string[] {
+        ZoweLogger.trace("PersistentFilters.readMemberFavorites called.");
+        const localStorageSchema = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
+        if (localStorageSchema) {
+            return localStorageSchema[ZowePersistentFilters.memberFavorites] as string[] || [];
+        }
+        return [];
+    }
+
     public getSortSetting(node: IZoweDatasetTreeNode): Sorting.NodeSort | undefined {
         ZoweLogger.trace("PersistentFilters.getSortSettings called.");
         const criteria = `${node.getProfileName()}-${node.label as string}`;
@@ -312,11 +332,21 @@ export class ZowePersistentFilters {
     /* Update functions, for updating the settings.json file in VSCode
     /*********************************************************************************************************************************************/
 
-    public updateFavorites(favorites: string[]): void {
+    public updateFavorites(options: {
+        favorites: string[];
+        vsamFavorites?: string[];
+        memberFavorites?: string[];
+    }): void {
         ZoweLogger.trace("PersistentFilters.updateFavorites called.");
         const settings = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
         if (settings.persistence) {
-            settings.favorites = favorites;
+            settings.favorites = options.favorites;
+            if (options.vsamFavorites !== undefined) {
+                settings.vsamFavorites = options.vsamFavorites;
+            }
+            if (options.memberFavorites !== undefined) {
+                settings.memberFavorites = options.memberFavorites;
+            }
             ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
         }
     }

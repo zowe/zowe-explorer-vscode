@@ -9,6 +9,7 @@
  *
  */
 
+import { vi, describe, beforeEach, it, expect } from "vitest";
 import { commands, EventEmitter, ExtensionContext, WebviewView } from "vscode";
 import { TableBuilder, TableViewProvider } from "../../../../src/vscode/ui";
 
@@ -48,6 +49,7 @@ describe("TableViewProvider", () => {
             const executeCommandMock = vi.spyOn(commands, "executeCommand").mockImplementation(() => Promise.resolve());
             await TableViewProvider.getInstance().setTableView(tableOne);
             expect((TableViewProvider.getInstance() as any).tableView).toBe(tableOne);
+            // Verify setContext is called to show the panel
             expect(executeCommandMock).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", true);
 
             const disposeSpy = vi.spyOn(tableOne, "dispose");
@@ -59,11 +61,25 @@ describe("TableViewProvider", () => {
             expect(disposeSpy).toHaveBeenCalled();
             executeCommandMock.mockRestore();
         });
+
         it("sets the table to null", async () => {
             const executeCommandMock = vi.spyOn(commands, "executeCommand").mockImplementation(() => Promise.resolve());
             await TableViewProvider.getInstance().setTableView(null);
             expect((TableViewProvider.getInstance() as any).tableView).toBe(null);
+            // Verify setContext is called to hide the panel
             expect(executeCommandMock).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", false);
+            executeCommandMock.mockRestore();
+        });
+        it("calls setContext when setting a table view", async () => {
+            // Verify that the context management is handled by setTableView
+            const builder = new TableBuilder(fakeExtContext);
+            const table = builder.isView().build();
+            const executeCommandMock = vi.spyOn(commands, "executeCommand").mockImplementation(() => Promise.resolve());
+
+            await TableViewProvider.getInstance().setTableView(table);
+
+            // Ensure setContext was called to show the panel
+            expect(executeCommandMock).toHaveBeenCalledWith("setContext", "zowe.vscode-extension-for-zowe.showZoweResources", true);
             executeCommandMock.mockRestore();
         });
     });

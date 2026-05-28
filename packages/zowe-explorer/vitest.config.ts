@@ -42,6 +42,7 @@ export default defineConfig({
             },
         },
         coverage: {
+            reportsDirectory: "results/unit/coverage",
             // Restrict coverage to first-party TypeScript sources. Otherwise the
             // v8 provider also reports on every JS file loaded during the run
             // (node_modules, webpack runtime stubs, webview bundles, etc.),

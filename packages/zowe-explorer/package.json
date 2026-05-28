@@ -1080,7 +1080,7 @@
           "group": "inline@1"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(session|pds).*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(session|pds).*/ && !listMultiSelection && zowe.vscode-extension-for-zowe.showZoweResources",
           "command": "zowe.ds.tableView",
           "group": "100_zowe_tableview"
         },
@@ -1090,12 +1090,12 @@
           "group": "inline@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*_fav.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member|vsam).*_fav.*/",
           "command": "zowe.removeFavorite",
           "group": "inline"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds|vsam).*/",
           "command": "zowe.addFavorite",
           "group": "inline"
         },
@@ -1215,7 +1215,7 @@
           "group": "003_zowe_dsWorkspace@0"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds).*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav|.*isFilterSearch)(member|migr|ds|pds|vsam).*/",
           "command": "zowe.addFavorite",
           "group": "003_zowe_dsWorkspace@0"
         },
@@ -1225,7 +1225,7 @@
           "group": "003_zowe_dsWorkspace@1"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member).*_fav.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds|ds|migr|member|vsam).*_fav.*/",
           "command": "zowe.removeFavorite",
           "group": "003_zowe_dsWorkspace@1"
         },
@@ -1515,7 +1515,7 @@
           "group": "099_zowe_jobsProfileAuthentication"
         },
         {
-          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection",
+          "when": "view == zowe.jobs.explorer && viewItem =~ /^(?!.*_fav.*)server.*/  && !listMultiSelection && zowe.vscode-extension-for-zowe.showZoweResources",
           "command": "zowe.jobs.tableView",
           "group": "100_zowe_tableview"
         },
@@ -2212,6 +2212,13 @@
           "description": "%zowe.settings.overrideWithEnvironmentVariables%",
           "scope": "window"
         },
+        "zowe.featureEnablement.tableView": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "**Table View for Datasets and Jobs**\n\nEnable the table view feature that allows viewing datasets and jobs in a tabular format in the Zowe Resources panel.",
+          "scope": "window",
+          "order": 1
+        },
         "zowe.settings.socketConnectTimeout": {
           "type": "number",
           "default": 60000,
@@ -2342,8 +2349,7 @@
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "concurrently -n \"_eslint_,prettier,markdown\" \"pnpm run \"/lint:[st].*/\"\" \"pnpm lint:pretty\" \"pnpm markdown\"",
-    "lint:all": "pnpm lint:src; pnpm lint:test; pnpm lint:html",
-    "lint:html": "mkdir -p results && eslint . --format html > results/eslint.html",
+    "lint:all": "pnpm lint:src; pnpm lint:test",
     "lint:pretty": "prettier --write . && prettier --check .",
     "lint:src": "eslint --format stylish \"src/**/*.ts\"",
     "lint:test": "eslint --format stylish \"__tests__/**/*.ts\"",

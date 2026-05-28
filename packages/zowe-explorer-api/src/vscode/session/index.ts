@@ -9,4 +9,4 @@
  *
  */
 
-export * from "../../zowe-explorer-api/__mocks__/vscode.ts";
+export * from "./AuthHandler";

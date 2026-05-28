@@ -14,6 +14,7 @@ import { Gui } from "../../../src/globals/Gui";
 import { PromptCredentialsOptions, ZoweVsCodeExtension, ProfilesCache, Types } from "../../../src";
 import { Login, Logout } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
+import { vi } from "vitest";
 
 describe("ZoweVsCodeExtension", () => {
     const fakeLogger = { debug: vi.fn() };

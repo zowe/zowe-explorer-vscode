@@ -32,6 +32,7 @@ import { ProfilesUtils } from "../../src/utils/ProfilesUtils";
 import { JobTree } from "../../src/trees/job/JobTree";
 import { MockedProperty } from "../__mocks__/mockUtils";
 import { ZoweExplorerApiRegister } from "../../src/extending/ZoweExplorerApiRegister";
+import { TableViewUtils } from "../../src/utils/TableViewUtils";
 
 const hoistedMocks = vi.hoisted(() => {
     const mockReadProfilesFromDisk = vi.fn().mockReturnValue(Promise.resolve());
@@ -528,6 +529,29 @@ describe("Extension Unit Tests", () => {
 
     it("Testing that activate correctly executes", () => {
         expect(allCommands.map((c) => c.cmd)).toEqual(globalMocks.expectedCommands);
+    });
+
+    it("Tests that TableViewUtils.initialize is called during activation", async () => {
+        const initializeSpy = vi.spyOn(TableViewUtils, "initialize");
+
+        globalMocks.mockReadFileSync.mockReturnValueOnce('{ "overrides": { "CredentialManager": "Managed by ANO" }}');
+        globalMocks.mockExistsSync.mockReturnValueOnce(false);
+        globalMocks.mockGetConfiguration.mockReturnValue({
+            persistence: true,
+            get: (_setting: string) => "",
+            update: vi.fn(),
+            inspect: (_configuration: string) => {
+                return {
+                    workspaceValue: undefined,
+                    globalValue: undefined,
+                };
+            },
+        });
+
+        await extension.activate(globalMocks.mockExtension);
+
+        expect(initializeSpy).toHaveBeenCalledWith(globalMocks.mockExtension);
+        initializeSpy.mockRestore();
     });
 
     it("Tests that activate() fails when trying to load with an invalid config", async () => {

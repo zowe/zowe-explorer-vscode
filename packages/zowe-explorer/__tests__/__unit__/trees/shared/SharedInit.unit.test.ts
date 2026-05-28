@@ -48,14 +48,6 @@ vi.mock("../../../../src/tools/ZoweLocalStorage", () => ({
     },
 }));
 
-vi.mock("../../../../src/trees/job/JobFSProvider", () => ({
-    JobFSProvider: {
-        instance: {
-            lookup: vi.fn(),
-        },
-    },
-}));
-
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
         const executeCommand = { fun: vi.fn() };
@@ -1074,16 +1066,8 @@ describe("Test src/shared/extension", () => {
     });
 
     describe("isDocumentASpool", () => {
-        let onProfileUpdated: vi.Mock;
-
-        beforeAll(() => {
-            onProfileUpdated = vi.fn().mockReturnValue(new vscode.Disposable(vi.fn()));
-            Object.defineProperty(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated", {
-                value: onProfileUpdated,
-                configurable: true,
-            });
-        });
-
+        vi.spyOn(JobFSProvider.instance, "lookup").mockReturnValue(undefined);
+        vi.spyOn(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated").mockImplementation(vi.fn());
         beforeEach(() => {
             vi.clearAllMocks();
         });
