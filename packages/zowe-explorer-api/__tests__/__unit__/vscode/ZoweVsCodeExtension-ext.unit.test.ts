@@ -339,7 +339,7 @@ describe("ZoweVsCodeExtension-ext tests with imperative mocked", () => {
             ] as vscode.WorkspaceFolder[];
 
             const spyFolders = vi.spyOn(vscode.workspace, "workspaceFolders", "get").mockReturnValue(mockFolders);
-            const spyExists = (fs.existsSync as any).mockImplementation((p: string) => p === "/valid/path");
+            (fs.existsSync as any).mockImplementation((p: string) => p === "/valid/path");
 
             // Access first time: should find valid folder and initialize cache
             const root1 = ZoweVsCodeExtension.workspaceRoot;
