@@ -15,7 +15,7 @@ import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { ZowePersistentFilters } from "../../../src/tools/ZowePersistentFilters";
 
 describe("PersistentFilters Unit Test", () => {
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: vi.fn(), configurable: true });
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({
@@ -39,7 +39,7 @@ describe("PersistentFilters Unit Test", () => {
                     },
                 ],
             }),
-            update: jest.fn(),
+            update: vi.fn(),
             keys: () => [],
         },
         configurable: true,
@@ -85,6 +85,48 @@ describe("PersistentFilters Unit Test", () => {
             pf["mSearchedKeywordHistory"] = ["test1", "test2"];
             pf.removeSearchedKeywordHistory("test1");
             expect(pf.getSearchedKeywordHistory().length).toEqual(1);
+        });
+    });
+
+    describe("readVsamFavorites", () => {
+        it("should return vsam favorites from local storage", () => {
+            const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset, 1, 1);
+            const spy = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+                persistence: true,
+                vsamFavorites: ["vsamFav1", "vsamFav2"]
+            } as any);
+            expect(pf.readVsamFavorites()).toEqual(["vsamFav1", "vsamFav2"]);
+            spy.mockRestore();
+        });
+
+        it("should return empty array if vsamFavorites is undefined", () => {
+            const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset, 1, 1);
+            const spy = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+                persistence: true
+            } as any);
+            expect(pf.readVsamFavorites()).toEqual([]);
+            spy.mockRestore();
+        });
+    });
+
+    describe("updateFavorites", () => {
+        it("should update regular and vsam favorites", () => {
+            const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset, 1, 1);
+            const getSpy = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+                persistence: true
+            } as any);
+            const setSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
+            
+            pf.updateFavorites({ favorites: ["fav1"], vsamFavorites: ["vsamFav1"] });
+            
+            expect(setSpy).toHaveBeenCalledWith(PersistenceSchemaEnum.Dataset, {
+                persistence: true,
+                favorites: ["fav1"],
+                vsamFavorites: ["vsamFav1"]
+            });
+            
+            getSpy.mockRestore();
+            setSpy.mockRestore();
         });
     });
 });

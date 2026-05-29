@@ -15,15 +15,15 @@ import { BufferBuilder, FileEntry, FilterEntry } from "../../../../src";
 describe("BufferBuilder", () => {
     it("calls the given callback on write", () => {
         const bufBuilder = new BufferBuilder();
-        const callbackMock = jest.fn();
+        const callbackMock = vi.fn();
         bufBuilder._write(new Uint8Array([1, 2, 3]), "binary", callbackMock);
         expect(callbackMock).toHaveBeenCalled();
     });
 
     it("calls 'push' on read", () => {
         const bufBuilder = new BufferBuilder();
-        const callbackMock = jest.fn();
-        const pushMock = jest.spyOn(bufBuilder, "push");
+        const callbackMock = vi.fn();
+        const pushMock = vi.spyOn(bufBuilder, "push");
         bufBuilder._write(new Uint8Array([1, 2, 3]), "binary", callbackMock);
         bufBuilder._read(3);
         expect(pushMock).toHaveBeenCalledTimes(2);

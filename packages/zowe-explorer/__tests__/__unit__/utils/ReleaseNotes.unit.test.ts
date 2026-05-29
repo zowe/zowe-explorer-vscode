@@ -9,6 +9,7 @@
  *
  */
 
+import { Mock } from "vitest";
 import * as vscode from "vscode";
 import * as fs from "fs/promises";
 import { ReleaseNotes } from "../../../src/utils/ReleaseNotes";
@@ -18,9 +19,9 @@ import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { Constants } from "../../../src/configuration/Constants";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 
-jest.mock("fs/promises", () => {
+vi.mock("fs/promises", () => {
     return {
-        readFile: jest
+        readFile: vi
             .fn()
             .mockResolvedValue(
                 "## `3.2.2`\n- Patch for 3.2.2\n\n" +
@@ -35,7 +36,7 @@ jest.mock("fs/promises", () => {
 describe("ReleaseNotes Webview", () => {
     let context: ExtensionContext;
     let panelMock: any;
-    let postMessageMock: jest.Mock;
+    let postMessageMock: Mock;
     const changelog =
         "## `3.2.2`\n- Patch for 3.2.2\n\n" +
         "## `3.2.1`\n- Patch for 3.2.1\n\n" +
@@ -50,11 +51,11 @@ describe("ReleaseNotes Webview", () => {
     }
 
     beforeEach(() => {
-        postMessageMock = jest.fn();
+        postMessageMock = vi.fn();
         panelMock = {
             webview: { postMessage: postMessageMock },
-            reveal: jest.fn(),
-            onDidDispose: jest.fn((cb) => cb()),
+            reveal: vi.fn(),
+            onDidDispose: vi.fn((cb) => cb()),
         };
         context = {
             subscriptions: [],
@@ -68,7 +69,7 @@ describe("ReleaseNotes Webview", () => {
         Object.defineProperty(ZoweLocalStorage, "globalState", {
             value: {
                 get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
-                update: jest.fn(),
+                update: vi.fn(),
                 keys: () => [],
             },
             configurable: true,
@@ -79,29 +80,29 @@ describe("ReleaseNotes Webview", () => {
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe("Release notes display logic", () => {
         it("should not display release notes on first install (no previous version)", () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(null);
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(null);
 
             ReleaseNotes.display(context, false);
             expect(ReleaseNotes.instance).toBeUndefined();
         });
 
         it("should not display release notes if setting is false", () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
 
             ReleaseNotes.display(context, false);
             expect(ReleaseNotes.instance).toBeUndefined();
         });
 
         it("should display release notes if version increased and setting is true", () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
 
             ReleaseNotes.display(context, false);
             assignPanelToInstance();
@@ -109,16 +110,16 @@ describe("ReleaseNotes Webview", () => {
         });
 
         it("should not display release notes if version stayed the same", () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.2");
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.2");
 
             ReleaseNotes.display(context, false);
             expect(ReleaseNotes.instance).toBeUndefined();
         });
 
         it("should not display release notes if version decreased", () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.3");
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.3");
 
             ReleaseNotes.display(context, false);
             expect(ReleaseNotes.instance).toBeUndefined();
@@ -126,15 +127,15 @@ describe("ReleaseNotes Webview", () => {
 
         it("should not display release notes for SNAPSHOT versions", () => {
             context.extension.packageJSON.version = "3.4.0-SNAPSHOT";
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.3");
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.3");
 
             ReleaseNotes.display(context, false);
             expect(ReleaseNotes.instance).toBeUndefined();
         });
 
         it("should always display release notes if force=true", () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(false);
 
             ReleaseNotes.display(context, true);
             assignPanelToInstance();
@@ -142,12 +143,12 @@ describe("ReleaseNotes Webview", () => {
         });
 
         it("should reveal panel if ReleaseNotes.instance already exists", () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
 
             ReleaseNotes.instance = new ReleaseNotes(context, "3.2");
-            const revealSpy = jest.fn();
-            (ReleaseNotes.instance as any).panel = { reveal: revealSpy, onDidDispose: jest.fn() };
+            const revealSpy = vi.fn();
+            (ReleaseNotes.instance as any).panel = { reveal: revealSpy, onDidDispose: vi.fn() };
 
             ReleaseNotes.display(context, false);
         });
@@ -184,9 +185,9 @@ describe("ReleaseNotes Webview", () => {
 
     describe("LocalStorage behavior", () => {
         it("should update localStorage for non-SNAPSHOT versions", () => {
-            const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
+            const setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue");
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.1");
 
             ReleaseNotes.shouldDisplayReleaseNotes(context);
             expect(setValueSpy).toHaveBeenCalledWith(expect.any(String), "3.2");
@@ -194,18 +195,18 @@ describe("ReleaseNotes Webview", () => {
 
         it("should not update localStorage for SNAPSHOT versions", () => {
             context.extension.packageJSON.version = "3.4.0-SNAPSHOT";
-            const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.3");
+            const setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue");
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue("3.3");
 
             ReleaseNotes.shouldDisplayReleaseNotes(context);
             expect(setValueSpy).not.toHaveBeenCalled();
         });
 
         it("should update localStorage on first install for non-SNAPSHOT versions", () => {
-            const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue");
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(null);
+            const setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue");
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(null);
 
             ReleaseNotes.shouldDisplayReleaseNotes(context);
             expect(setValueSpy).toHaveBeenCalledWith(expect.any(String), "3.2");
@@ -214,7 +215,7 @@ describe("ReleaseNotes Webview", () => {
 
     describe("onDidReceiveMessage", () => {
         it("should update setting on checkbox change via onDidReceiveMessage", async () => {
-            jest.spyOn(SettingsConfig, "setDirectValue").mockResolvedValue(undefined as any);
+            vi.spyOn(SettingsConfig, "setDirectValue").mockResolvedValue(undefined as any);
 
             const rn = new ReleaseNotes(context, "3.2");
             await rn.onDidReceiveMessage({ command: "toggleDisplayAfterUpdate", checked: false });
@@ -231,14 +232,14 @@ describe("ReleaseNotes Webview", () => {
 
         it("should call sendReleaseNotes if command is 'ready'", async () => {
             const rn = new ReleaseNotes(context, "3.2");
-            const sendSpy = jest.spyOn(rn, "sendReleaseNotes").mockResolvedValue(true);
+            const sendSpy = vi.spyOn(rn, "sendReleaseNotes").mockResolvedValue(true);
             await rn.onDidReceiveMessage({ command: "ready" });
             expect(sendSpy).toHaveBeenCalled();
         });
 
         it("should call sendReleaseNotes if command is 'selectVersion'", async () => {
             const rn = new ReleaseNotes(context, "3.2");
-            const sendSpy = jest.spyOn(rn, "sendReleaseNotes").mockResolvedValue(true);
+            const sendSpy = vi.spyOn(rn, "sendReleaseNotes").mockResolvedValue(true);
             await rn.onDidReceiveMessage({ command: "selectVersion", version: "3.1" });
             expect(sendSpy).toHaveBeenCalled();
             expect(rn["version"]).toBe("3.1");
@@ -269,7 +270,7 @@ describe("ReleaseNotes Webview", () => {
 
         it("should return extracted notes when changelog file is read successfully", async () => {
             const rn = new ReleaseNotes(context, "3.2");
-            const extractSpy = jest.spyOn(rn, "extractCurrentVersionNotes").mockReturnValue("some notes");
+            const extractSpy = vi.spyOn(rn, "extractCurrentVersionNotes").mockReturnValue("some notes");
             const result = await rn.getChangelog();
             expect(result).toBe("some notes");
             expect(extractSpy).toHaveBeenCalled();
@@ -277,10 +278,8 @@ describe("ReleaseNotes Webview", () => {
 
         it("should return error message and logs error if changelog file cannot be read", async () => {
             const rn = new ReleaseNotes(context, "3.2");
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const fsMock = require("fs/promises");
-            fsMock.readFile.mockRejectedValueOnce(new Error("File not found"));
-            const loggerSpy = jest.spyOn(ZoweLogger, "error").mockImplementation(() => {});
+            (fs.readFile as Mock).mockRejectedValueOnce(new Error("File not found"));
+            const loggerSpy = vi.spyOn(ZoweLogger, "error").mockImplementation(() => {});
             const result = await rn.getChangelog();
             expect(result).toBe("No changelog entries found for this version.");
             expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Error reading changelog file: Error: File not found"));
@@ -295,8 +294,8 @@ describe("ReleaseNotes Webview", () => {
 
     describe("Send notes functionality", () => {
         it("should read and send the correct release notes for the version", async () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(true);
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
 
             ReleaseNotes.display(context, false);
             assignPanelToInstance();
@@ -331,9 +330,9 @@ describe("ReleaseNotes Webview", () => {
         it("should return error message if release notes file is missing", async () => {
             const version = "4.0";
             // Simulate file not found
-            (fs.readFile as jest.Mock).mockImplementationOnce(() => Promise.reject(new Error("File not found")));
+            (fs.readFile as Mock).mockImplementationOnce(() => Promise.reject(new Error("File not found")));
             const rn = new ReleaseNotes(context, version);
-            const loggerSpy = jest.spyOn(ZoweLogger, "error").mockImplementation(() => {});
+            const loggerSpy = vi.spyOn(ZoweLogger, "error").mockImplementation(() => {});
             const notes = await rn.getReleaseNotes();
             expect(notes).toMatch(/No release notes found for this version/);
             expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("[ReleaseNotes] Error reading release notes file: Error: File not found"));
@@ -344,10 +343,10 @@ describe("ReleaseNotes Webview", () => {
             const rn = new ReleaseNotes(context, version);
             (rn as any).panel = panelMock;
             const versionOpts = ["3.2", "3.1", "4.0"];
-            const getAllMajorMinorVersionsSpy = jest.spyOn(rn, "getAllMajorMinorVersions").mockResolvedValueOnce(versionOpts);
+            const getAllMajorMinorVersionsSpy = vi.spyOn(rn, "getAllMajorMinorVersions").mockResolvedValueOnce(versionOpts);
 
-            jest.spyOn(rn, "getReleaseNotes").mockResolvedValueOnce("release notes content");
-            jest.spyOn(rn, "getChangelog").mockResolvedValueOnce("changelog content");
+            vi.spyOn(rn, "getReleaseNotes").mockResolvedValueOnce("release notes content");
+            vi.spyOn(rn, "getChangelog").mockResolvedValueOnce("changelog content");
 
             await rn.sendReleaseNotes();
 
@@ -367,7 +366,7 @@ describe("ReleaseNotes Webview", () => {
         it("should always include the extension's original version in version options, even after switching dropdown", async () => {
             // Simulate extension version is 3.3, changelog only has 3.2 and 3.1, and dropdown is switched to 3.2
             context.extension.packageJSON.version = "3.3.0";
-            (fs.readFile as jest.Mock).mockResolvedValueOnce(changelog);
+            (fs.readFile as Mock).mockResolvedValueOnce(changelog);
             const rn = new ReleaseNotes(context, "3.2");
             const versions = await rn.getAllMajorMinorVersions();
             expect(versions).toContain("3.3"); // extension's original version
@@ -378,7 +377,7 @@ describe("ReleaseNotes Webview", () => {
         it("should include both extension version and selected version if both are missing from changelog", async () => {
             // Simulate extension version is 4.0, selected version is 5.0, changelog only has 3.2 and 3.1
             context.extension.packageJSON.version = "4.0.0";
-            (fs.readFile as jest.Mock).mockResolvedValueOnce(changelog);
+            (fs.readFile as Mock).mockResolvedValueOnce(changelog);
             const rn = new ReleaseNotes(context, "5.0");
             const versions = await rn.getAllMajorMinorVersions();
             expect(versions).toContain("4.0"); // extension's original version
@@ -390,16 +389,16 @@ describe("ReleaseNotes Webview", () => {
         it("should not duplicate extension version or selected version if already present in changelog", async () => {
             // Simulate extension version is 3.2, selected version is 3.2, changelog has 3.2 and 3.1
             context.extension.packageJSON.version = "3.2.3";
-            (fs.readFile as jest.Mock).mockResolvedValueOnce(changelog);
+            (fs.readFile as Mock).mockResolvedValueOnce(changelog);
             const rn = new ReleaseNotes(context, "3.2");
             const versions = await rn.getAllMajorMinorVersions();
             expect(versions.filter((v) => v === "3.2").length).toBe(1);
         });
 
         it("should return empty array and log error if changelog cannot be read in getAllMajorMinorVersions", async () => {
-            (fs.readFile as jest.Mock).mockRejectedValueOnce(new Error("File not found"));
+            (fs.readFile as Mock).mockRejectedValueOnce(new Error("File not found"));
             const rn = new ReleaseNotes(context, "3.2");
-            const loggerSpy = jest.spyOn(ZoweLogger, "error").mockImplementation(() => {});
+            const loggerSpy = vi.spyOn(ZoweLogger, "error").mockImplementation(() => {});
             const versions = await rn.getAllMajorMinorVersions();
             expect(versions).toEqual([]);
             expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Error parsing changelog for versions: Error: File not found"));
@@ -431,7 +430,7 @@ describe("ReleaseNotes Webview", () => {
             });
 
             const l10nContent = JSON.stringify({ test: "content" });
-            (fs.readFile as jest.Mock).mockResolvedValueOnce(l10nContent);
+            (fs.readFile as Mock).mockResolvedValueOnce(l10nContent);
 
             await rn.onDidReceiveMessage({ command: "GET_LOCALIZATION" });
 
@@ -452,8 +451,8 @@ describe("ReleaseNotes Webview", () => {
                 writable: true,
             });
 
-            (fs.readFile as jest.Mock).mockRejectedValueOnce(new Error("Read failed"));
-            const loggerSpy = jest.spyOn(ZoweLogger, "warn").mockImplementation(() => {});
+            (fs.readFile as Mock).mockRejectedValueOnce(new Error("Read failed"));
+            const loggerSpy = vi.spyOn(ZoweLogger, "warn").mockImplementation(() => {});
 
             await rn.onDidReceiveMessage({ command: "GET_LOCALIZATION" });
 

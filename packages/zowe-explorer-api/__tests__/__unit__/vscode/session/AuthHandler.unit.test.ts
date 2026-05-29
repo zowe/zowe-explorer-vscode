@@ -10,10 +10,10 @@
  */
 
 import { Mutex } from "async-mutex";
-import { AuthHandler, AuthCancelledError, Gui, ZoweVsCodeExtension } from "../../../src";
-import { FileManagement } from "../../../src/utils/FileManagement";
+import { AuthHandler, AuthCancelledError, Gui, ZoweVsCodeExtension } from "../../../../src";
+import { FileManagement } from "../../../../src/utils/FileManagement";
 import { ImperativeError, IProfileLoaded, Session, SessConstants, RestConstants } from "@zowe/imperative";
-import { AuthPromptParams } from "../../../src/profiles/AuthHandler";
+import { AuthPromptParams } from "../../../../src/vscode/session/AuthHandler";
 import * as vscode from "vscode";
 
 const TEST_PROFILE_NAME = "lpar.zosmf";
@@ -68,10 +68,10 @@ describe("AuthHandler", () => {
     describe("waitForUnlock", () => {
         it("calls Mutex.waitForUnlock if the profile lock is present", async () => {
             // Used so that `setTimeout` can be invoked from 30sec timeout promise
-            jest.useFakeTimers();
+            vi.useFakeTimers();
             const mutex = new Mutex();
-            const isLockedMock = jest.spyOn(mutex, "isLocked").mockReturnValueOnce(true);
-            const waitForUnlockMock = jest.spyOn(mutex, "waitForUnlock").mockResolvedValueOnce(undefined);
+            const isLockedMock = vi.spyOn(mutex, "isLocked").mockReturnValueOnce(true);
+            const waitForUnlockMock = vi.spyOn(mutex, "waitForUnlock").mockResolvedValueOnce(undefined);
             (AuthHandler as any).profileLocks.set(TEST_PROFILE_NAME, mutex);
             await AuthHandler.waitForUnlock(TEST_PROFILE_NAME);
             expect(isLockedMock).toHaveBeenCalled();
@@ -79,7 +79,7 @@ describe("AuthHandler", () => {
             (AuthHandler as any).profileLocks.clear();
         });
         it("does nothing if the profile lock is not in the profileLocks map", async () => {
-            const waitForUnlockMock = jest.spyOn(Mutex.prototype, "waitForUnlock");
+            const waitForUnlockMock = vi.spyOn(Mutex.prototype, "waitForUnlock");
             await AuthHandler.waitForUnlock(TEST_PROFILE_NAME);
             expect(waitForUnlockMock).not.toHaveBeenCalled();
         });
@@ -89,8 +89,8 @@ describe("AuthHandler", () => {
         it("unlocks all profiles in the AuthHandler.profileLocks map", () => {
             const mutexAuthPrompt = new Mutex();
             const mutexProfile = new Mutex();
-            const releaseAuthPromptMutex = jest.spyOn(mutexAuthPrompt, "release");
-            const releaseProfileMutex = jest.spyOn(mutexProfile, "release");
+            const releaseAuthPromptMutex = vi.spyOn(mutexAuthPrompt, "release");
+            const releaseProfileMutex = vi.spyOn(mutexProfile, "release");
             (AuthHandler as any).authPromptLocks.set(TEST_PROFILE_NAME, mutexAuthPrompt);
             (AuthHandler as any).profileLocks.set(TEST_PROFILE_NAME, mutexProfile);
 
@@ -120,7 +120,7 @@ describe("AuthHandler", () => {
 
     describe("lockProfile", () => {
         it("does not acquire a Mutex if the profile type doesn't have locks enabled", async () => {
-            const acquireMutex = jest.spyOn(Mutex.prototype, "acquire");
+            const acquireMutex = vi.spyOn(Mutex.prototype, "acquire");
             await AuthHandler.lockProfile({
                 profile: {},
                 type: "sample-type",
@@ -138,12 +138,12 @@ describe("AuthHandler", () => {
         });
 
         it("handle promptForAuthentication call if error and options are given", async () => {
-            const promptForAuthenticationMock = jest.spyOn(AuthHandler, "promptForAuthentication").mockResolvedValueOnce(true);
+            const promptForAuthenticationMock = vi.spyOn(AuthHandler, "promptForAuthentication").mockResolvedValueOnce(true);
             const imperativeError = new ImperativeError({ msg: "Example auth error" });
             const authOpts: AuthPromptParams = {
                 authMethods: {
-                    promptCredentials: jest.fn(),
-                    ssoLogin: jest.fn(),
+                    promptCredentials: vi.fn(),
+                    ssoLogin: vi.fn(),
                 },
                 imperativeError,
             };
@@ -173,10 +173,10 @@ describe("AuthHandler", () => {
         it("handles a token-based authentication error - login successful, profile is string", async () => {
             const tokenNotValidMsg = "Token is not valid or expired.";
             const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
-            const ssoLogin = jest.fn().mockResolvedValue(true);
-            const promptCredentials = jest.fn();
-            const showMessageMock = jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Log in to Authentication Service");
-            const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
+            const ssoLogin = vi.fn().mockResolvedValue(true);
+            const promptCredentials = vi.fn();
+            const showMessageMock = vi.spyOn(Gui, "showMessage").mockResolvedValueOnce("Log in to Authentication Service");
+            const unlockProfileSpy = vi.spyOn(AuthHandler, "unlockProfile");
             await expect(
                 AuthHandler.promptForAuthentication("lpar.zosmf", { authMethods: { promptCredentials, ssoLogin }, imperativeError })
             ).resolves.toBe(true);
@@ -191,10 +191,10 @@ describe("AuthHandler", () => {
         it("handles a standard authentication error - credentials provided, profile is string", async () => {
             const tokenNotValidMsg = "Invalid credentials";
             const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
-            const ssoLogin = jest.fn().mockResolvedValue(true);
-            const promptCredentials = jest.fn().mockResolvedValue(["us3r", "p4ssw0rd"]);
-            const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Update Credentials");
-            const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile").mockClear();
+            const ssoLogin = vi.fn().mockResolvedValue(true);
+            const promptCredentials = vi.fn().mockResolvedValue(["us3r", "p4ssw0rd"]);
+            const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Update Credentials");
+            const unlockProfileSpy = vi.spyOn(AuthHandler, "unlockProfile").mockClear();
             await expect(
                 AuthHandler.promptForAuthentication("lpar.zosmf", { authMethods: { promptCredentials, ssoLogin }, imperativeError })
             ).resolves.toBe(true);
@@ -209,9 +209,9 @@ describe("AuthHandler", () => {
         it("throws AuthCancelledError when user cancels SSO login", async () => {
             const tokenNotValidMsg = "Token is not valid or expired.";
             const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
-            const ssoLogin = jest.fn().mockResolvedValue(true);
-            const promptCredentials = jest.fn();
-            const showMessageMock = jest.spyOn(Gui, "showMessage").mockClear().mockResolvedValueOnce(undefined); // User cancels
+            const ssoLogin = vi.fn().mockResolvedValue(true);
+            const promptCredentials = vi.fn();
+            const showMessageMock = vi.spyOn(Gui, "showMessage").mockClear().mockResolvedValueOnce(undefined); // User cancels
 
             await expect(
                 AuthHandler.promptForAuthentication("lpar.zosmf", {
@@ -229,9 +229,9 @@ describe("AuthHandler", () => {
         it("throws AuthCancelledError when user cancels credential prompt", async () => {
             const tokenNotValidMsg = "Invalid credentials";
             const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
-            const ssoLogin = jest.fn();
-            const promptCredentials = jest.fn();
-            const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockClear().mockResolvedValueOnce(undefined); // User cancels
+            const ssoLogin = vi.fn();
+            const promptCredentials = vi.fn();
+            const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockClear().mockResolvedValueOnce(undefined); // User cancels
 
             await expect(
                 AuthHandler.promptForAuthentication("lpar.zosmf", {
@@ -249,9 +249,9 @@ describe("AuthHandler", () => {
         it("throws AuthCancelledError when credential input is cancelled", async () => {
             const tokenNotValidMsg = "Invalid credentials";
             const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
-            const ssoLogin = jest.fn();
-            const promptCredentials = jest.fn().mockResolvedValue(undefined); // User cancels credential input
-            const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockClear().mockResolvedValueOnce("Update Credentials");
+            const ssoLogin = vi.fn();
+            const promptCredentials = vi.fn().mockResolvedValue(undefined); // User cancels credential input
+            const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockClear().mockResolvedValueOnce("Update Credentials");
 
             await expect(
                 AuthHandler.promptForAuthentication("lpar.zosmf", {
@@ -269,9 +269,9 @@ describe("AuthHandler", () => {
         it("returns false when user cancels SSO login and throwErrorOnCancel is false", async () => {
             const tokenNotValidMsg = "Token is not valid or expired.";
             const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
-            const ssoLogin = jest.fn().mockResolvedValue(true);
-            const promptCredentials = jest.fn();
-            const showMessageMock = jest.spyOn(Gui, "showMessage").mockClear().mockResolvedValueOnce(undefined); // User cancels
+            const ssoLogin = vi.fn().mockResolvedValue(true);
+            const promptCredentials = vi.fn();
+            const showMessageMock = vi.spyOn(Gui, "showMessage").mockClear().mockResolvedValueOnce(undefined); // User cancels
 
             const result = await AuthHandler.promptForAuthentication("lpar.zosmf", {
                 authMethods: { promptCredentials, ssoLogin },
@@ -287,9 +287,9 @@ describe("AuthHandler", () => {
         it("returns false when user cancels credential prompt and throwErrorOnCancel is false", async () => {
             const tokenNotValidMsg = "Invalid credentials";
             const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
-            const ssoLogin = jest.fn();
-            const promptCredentials = jest.fn();
-            const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockClear().mockResolvedValueOnce(undefined); // User cancels
+            const ssoLogin = vi.fn();
+            const promptCredentials = vi.fn();
+            const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockClear().mockResolvedValueOnce(undefined); // User cancels
 
             const result = await AuthHandler.promptForAuthentication("lpar.zosmf", {
                 authMethods: { promptCredentials, ssoLogin },
@@ -305,9 +305,9 @@ describe("AuthHandler", () => {
         it("returns false when credential input is cancelled and throwErrorOnCancel is false", async () => {
             const tokenNotValidMsg = "Invalid credentials";
             const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
-            const ssoLogin = jest.fn();
-            const promptCredentials = jest.fn().mockResolvedValue(undefined); // User cancels credential input
-            const errorMessageMock = jest.spyOn(Gui, "errorMessage").mockClear().mockResolvedValueOnce("Update Credentials");
+            const ssoLogin = vi.fn();
+            const promptCredentials = vi.fn().mockResolvedValue(undefined); // User cancels credential input
+            const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockClear().mockResolvedValueOnce("Update Credentials");
 
             const result = await AuthHandler.promptForAuthentication("lpar.zosmf", {
                 authMethods: { promptCredentials, ssoLogin },
@@ -356,7 +356,7 @@ describe("AuthHandler", () => {
         });
 
         it("does nothing if there is no mutex in the profile map", () => {
-            const releaseSpy = jest.spyOn(Mutex.prototype, "release").mockClear();
+            const releaseSpy = vi.spyOn(Mutex.prototype, "release").mockClear();
             AuthHandler.unlockProfile("unused_lpar.zosmf");
             expect(releaseSpy).not.toHaveBeenCalled();
         });
@@ -387,8 +387,8 @@ describe("AuthHandler", () => {
         });
 
         it("refreshes resources if refreshResources parameter is true", async () => {
-            const reloadActiveEditorMock = jest.spyOn(FileManagement, "reloadActiveEditorForProfile").mockResolvedValueOnce(undefined);
-            const reloadWorkspaceMock = jest.spyOn(FileManagement, "reloadWorkspacesForProfile").mockResolvedValueOnce(undefined);
+            const reloadActiveEditorMock = vi.spyOn(FileManagement, "reloadActiveEditorForProfile").mockResolvedValueOnce(undefined);
+            const reloadWorkspaceMock = vi.spyOn(FileManagement, "reloadWorkspacesForProfile").mockResolvedValueOnce(undefined);
             await AuthHandler.lockProfile(TEST_PROFILE_NAME);
             AuthHandler.unlockProfile(TEST_PROFILE_NAME, true);
             expect(reloadActiveEditorMock).toHaveBeenCalledWith(TEST_PROFILE_NAME);
@@ -399,8 +399,8 @@ describe("AuthHandler", () => {
     describe("getOrCreateAuthFlow", () => {
         const authOpts: AuthPromptParams = {
             authMethods: {
-                promptCredentials: jest.fn(),
-                ssoLogin: jest.fn(),
+                promptCredentials: vi.fn(),
+                ssoLogin: vi.fn(),
             },
             imperativeError: new ImperativeError({
                 msg: "Username or password is invalid or expired",
@@ -416,7 +416,7 @@ describe("AuthHandler", () => {
 
         it("reuses the same promise for concurrent requests", async () => {
             let resolveFlow: ((value: boolean | PromiseLike<boolean>) => void) | undefined;
-            const lockProfileMock = jest.spyOn(AuthHandler, "lockProfile").mockImplementation(
+            const lockProfileMock = vi.spyOn(AuthHandler, "lockProfile").mockImplementation(
                 () =>
                     new Promise<boolean>((resolve) => {
                         resolveFlow = resolve;
@@ -437,7 +437,7 @@ describe("AuthHandler", () => {
 
         it("clears the cached promise when authentication fails with AuthCancelledError", async () => {
             const cancellationError = new AuthCancelledError(TEST_PROFILE_NAME, "cancelled");
-            const lockProfileMock = jest.spyOn(AuthHandler, "lockProfile").mockRejectedValueOnce(cancellationError);
+            const lockProfileMock = vi.spyOn(AuthHandler, "lockProfile").mockRejectedValueOnce(cancellationError);
 
             await expect(AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts)).rejects.toBe(cancellationError);
             expect(lockProfileMock).toHaveBeenCalledTimes(1);
@@ -446,7 +446,7 @@ describe("AuthHandler", () => {
         });
 
         it("starts a new flow after the previous one resolves", async () => {
-            const lockProfileMock = jest.spyOn(AuthHandler, "lockProfile").mockClear().mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+            const lockProfileMock = vi.spyOn(AuthHandler, "lockProfile").mockClear().mockResolvedValueOnce(true).mockResolvedValueOnce(true);
 
             await expect(AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts)).resolves.toBeUndefined();
             expect(AuthHandler.getActiveAuthFlow(TEST_PROFILE_NAME)).toBeUndefined();
@@ -562,8 +562,8 @@ describe("AuthHandler", () => {
     describe("getSessFromProfile", () => {
         it("should return a session from a profile", () => {
             const mockSession = {} as Session;
-            const getSessionMock = jest.fn().mockReturnValue(mockSession);
-            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockImplementation(() => {
+            const getSessionMock = vi.fn().mockReturnValue(mockSession);
+            vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockImplementation(() => {
                 return {
                     getCommonApi: () => ({
                         getSession: getSessionMock,
@@ -625,7 +625,7 @@ describe("AuthHandler", () => {
                     type: SessConstants.AUTH_TYPE_BASIC,
                 },
             } as Session;
-            const getSessFromProfileMock = jest.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue(mockSession);
+            const getSessFromProfileMock = vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue(mockSession);
 
             const sessionType = AuthHandler.sessTypeFromProfile(profile);
 

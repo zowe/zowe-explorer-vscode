@@ -14,7 +14,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
 import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { SshClientCache } from "../src/SshClientCache";
-import { deployWithProgress, getVsceConfig } from "../src/Utilities";
+import { deployWithProgress } from "../src/ServerDeployment";
 
 vi.mock("@zowe/zowe-explorer-api", () => {
     class MockDeferredPromise {
@@ -79,9 +79,8 @@ vi.mock("../src/ConfigUtils", () => ({
     },
 }));
 
-vi.mock("../src/Utilities", () => ({
+vi.mock("../src/ServerDeployment", () => ({
     deployWithProgress: vi.fn(),
-    getVsceConfig: vi.fn(),
 }));
 
 vi.mock("vscode", () => ({
@@ -89,11 +88,15 @@ vi.mock("vscode", () => ({
     window: {
         showErrorMessage: vi.fn(),
     },
+    workspace: {
+        getConfiguration: vi.fn(),
+    },
 }));
 
 describe("SshClientCache", () => {
     let cache: SshClientCache;
     let mockGetLoadedProfConfig: ReturnType<typeof vi.fn>;
+    let mockGetProfilesCache: any;
 
     const mockProfile: imperative.IProfileLoaded = {
         name: "testProfile",
@@ -107,17 +110,27 @@ describe("SshClientCache", () => {
         const mockCollectedRequests = new Set([{ id: "mock-inflight-request-1" }]);
         // Reset the singleton instance for clean tests
         (SshClientCache as any).mInstance = undefined;
-        cache = SshClientCache.inst;
+        
+        // Create mock ProfilesCache
+        mockGetProfilesCache = {
+            getLoadedProfConfig: vi.fn(),
+            getCoreProfileTypes: vi.fn().mockReturnValue([]),
+            getConfigArray: vi.fn().mockReturnValue([]),
+        };
+        
+        // Initialize cache with mock ProfilesCache
+        cache = SshClientCache.initialize(mockGetProfilesCache);
 
         // Default mocks
-        vi.mocked(getVsceConfig).mockReturnValue({
+        vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
             get: vi.fn().mockImplementation((key, defaultVal) => {
                 const config: any = {
-                    keepAliveInterval: 30,
-                    workerCount: 2,
-                    requestTimeout: 60,
-                    responseTimeout: 60,
-                    serverAutoUpdate: true,
+                    "zowex.keepAliveInterval": 30,
+                    "zowex.workerCount": 2,
+                    "settings.requestTimeout": 60000, // in milliseconds as per old implementation
+                    "zowex.responseTimeout": 60,
+                    "zowex.serverAutoUpdate": true,
+                    "zowex.experimentalNativeSsh": false,
                 };
                 return config[key] === undefined ? defaultVal : config[key];
             }),
@@ -129,8 +142,7 @@ describe("SshClientCache", () => {
             collectAllRequests: vi.fn().mockReturnValue(mockCollectedRequests),
             serverChecksums: {},
         } as any);
-        const api = ZoweVsCodeExtension.getZoweExplorerApi();
-        mockGetLoadedProfConfig = api.getExplorerExtenderApi().getProfilesCache().getLoadedProfConfig as any;
+        mockGetLoadedProfConfig = mockGetProfilesCache.getLoadedProfConfig;
         mockGetLoadedProfConfig.mockResolvedValue(mockProfile); // Resolve with valid profile by default
     });
 
@@ -277,6 +289,7 @@ describe("SshClientCache", () => {
                 responseTimeoutMillis: 60000,
             });
 
+            // Set up ZoweVsCodeExtension spy for reloadClient tests
             vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
                 getExplorerExtenderApi: () => ({
                     getProfilesCache: () => ({
@@ -288,6 +301,9 @@ describe("SshClientCache", () => {
 
         it("should call connect with restart set to true", async () => {
             const connectSpy = vi.spyOn(cache, "connect").mockResolvedValue({} as any);
+            // Clear and reset the mock
+            mockGetLoadedProfConfig.mockClear();
+            mockGetLoadedProfConfig.mockResolvedValue(mockProfile);
 
             await (cache as any).reloadClient(clientId);
 
@@ -296,6 +312,9 @@ describe("SshClientCache", () => {
 
         it("should fetch updated profile and call connect with restart and retryRequests", async () => {
             const connectSpy = vi.spyOn(cache, "connect").mockResolvedValue({} as any);
+            // Clear and reset the mock
+            mockGetLoadedProfConfig.mockClear();
+            mockGetLoadedProfConfig.mockResolvedValue(mockProfile);
 
             await (cache as any).reloadClient(clientId, true);
 

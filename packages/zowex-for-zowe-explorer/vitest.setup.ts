@@ -9,6 +9,12 @@
  *
  */
 
-process.on("unhandledRejection", (reason) => {
-    fail(reason);
+import { afterAll } from "vitest";
+
+vi.mock("vscode", () => import("./__mocks__/vscode.ts"));
+
+afterAll(() => {
+    // Reset cached modules between test files so module-level singletons
+    // (e.g. ImperativeConfig.instance, Censor.mConfig) don't leak.
+    vi.resetModules();
 });

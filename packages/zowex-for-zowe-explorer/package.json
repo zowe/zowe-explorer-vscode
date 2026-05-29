@@ -35,7 +35,7 @@
     "oldtest": "vitest run --coverage",
     "oldtest:ui": "vitest --ui --coverage",
     "oldtest:watch": "vitest --watch",
-    "test": "echo 'Not Implemented'",
+    "test": "vitest run --coverage",
     "watch": "tsc --watch -p ./"
   },
   "dependencies": {
