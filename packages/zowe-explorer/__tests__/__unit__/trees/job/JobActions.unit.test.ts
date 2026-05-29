@@ -968,6 +968,42 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             "Job submitted: [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
         );
     });
+    it("Checking Submit Job for PDS Member with favorite suffix context", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const favProfileNode = new ZoweDatasetNode({
+            label: "test",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        const favoriteSubNode = new ZoweDatasetNode({
+            label: "TEST.JCL",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+        });
+        favoriteSubNode.contextValue = Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX;
+        const favoriteMember = new ZoweDatasetNode({
+            label: "MEMBER1",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favoriteSubNode,
+        });
+        // Set the context value with the favorite suffix to trigger the bug condition we fixed
+        favoriteMember.contextValue = Constants.DS_MEMBER_CONTEXT + Constants.FAV_SUFFIX;
+        const submitJobSpy = vi.spyOn(blockMocks.jesApi, "submitJob");
+        submitJobSpy.mockClear();
+        submitJobSpy.mockResolvedValueOnce(blockMocks.iJob);
+
+        await DatasetActions.submitMember(favoriteMember);
+        expect(submitJobSpy).toHaveBeenCalled();
+        // Since the member is in a PDS, even if the member itself is favorited, the label should still be PDS(member)
+        expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL(MEMBER1)");
+        expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
+            "Job submitted: [TESTJOB(JOB1234)](command:zowe.jobs.setJobSpool?%5B%22test%22%2C%22JOB1234%22%5D)"
+        );
+    });
     it("Checking Submit Job for Favourite PS Dataset content", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
