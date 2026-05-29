@@ -63,7 +63,7 @@ jobs:
         id: lerna
         run: echo "version=$(jq -r .version lerna.json)" >> $GITHUB_OUTPUT
 
-      - uses: zowe-actions/octorelease@ze-3.5
+      - uses: zowe-actions/octorelease@v1
         id: octorelease
         if: ${{ !contains(github.event.inputs.version || steps.lerna.outputs.version, '-SNAPSHOT') }}
         env:

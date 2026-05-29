@@ -19,11 +19,6 @@ module.exports = {
             name: "release/3.*",
             channel: "latest",
             level: "minor"
-        },
-        {
-            name: "ze-3.5",
-            channel: "latest",
-            level: "minor"
         }
         // {
         //     name: "next",
