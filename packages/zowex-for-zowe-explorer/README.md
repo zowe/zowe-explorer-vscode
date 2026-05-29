@@ -18,10 +18,31 @@ To remove the server instance entirely, run the `Zowe Explorer: Uninstall zowex 
 
 ## Development
 
-To bundle changes made to the `zowex` SDK, run the following command to create a symlink to your local copy of the SDK:
+### Linking a local Zowex SDK
+
+To test local changes to `@zowe/zowex-for-zowe-sdk`, link your local `zowex` repository from the root of the Zowe Explorer workspace:
 
 ```bash
-pnpm --filter zowex-for-zowe-explorer link:zowex -- [relativePathToZowexSdk]
+# Uses default path: ../zowex/packages/sdk
+pnpm --filter zowex-for-zowe-explorer link:zowex
+
+# Or specify a custom path (must be relative to workspace root)
+pnpm --filter zowex-for-zowe-explorer link:zowex -- ../custom-path/packages/sdk
 ```
 
-**Note:** The path must be relative to the root of the Zowe Explorer project. If omitted, it defaults to `../zowex/packages/sdk`.
+**Note:** The link automatically reflects edits to existing files. If you add or remove files in the SDK, re-run `pnpm install` in Zowe Explorer to update the package structure.
+
+### Testing backend changes
+
+To test changes to the `zowex` server without redeploying, define a `serverPath` property in your SSH profile in `zowe.config.json`. Point it to the directory containing the built `zowex` binary on the host (e.g., `<deployDir>/c/build-out`).
+
+```json
+"profiles": {
+  "ssh_dev": {
+    "type": "ssh",
+    "properties": {
+      "serverPath": "~/zowex/c/build-out"
+    }
+  }
+}
+```

@@ -4,5 +4,5 @@ const { join, resolve } = require("path");
 const secretsPkgDir = resolve(require.resolve("@zowe/secrets-for-zowe-sdk"), "..", "..");
 copySync(join(secretsPkgDir, "prebuilds"), resolve(__dirname, "..", "prebuilds"));
 // 2. Copy prebuilds for Zowex SSH server
-const zowexPkgDir = resolve(require.resolve("@zowe/zowex-for-zowe-sdk", { paths: [join(__dirname, "..", "..", "zowex-for-zowe-explorer")] }), "..", "..");
+const zowexPkgDir = resolve(require.resolve("@zowe/zowex-for-zowe-sdk"), "..", "..");
 copySync(join(zowexPkgDir, "bin"), resolve(__dirname, "..", "bin"));
