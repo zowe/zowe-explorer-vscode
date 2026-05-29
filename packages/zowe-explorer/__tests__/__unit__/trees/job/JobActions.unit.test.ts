@@ -989,7 +989,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: favoriteSubNode,
         });
-        // Set the context value with the favorite suffix to trigger the bug condition we fixed
+
         favoriteMember.contextValue = Constants.DS_MEMBER_CONTEXT + Constants.FAV_SUFFIX;
         const submitJobSpy = vi.spyOn(blockMocks.jesApi, "submitJob");
         submitJobSpy.mockClear();
@@ -997,7 +997,7 @@ describe("Jobs Actions Unit Tests - Function submitMember", () => {
 
         await DatasetActions.submitMember(favoriteMember);
         expect(submitJobSpy).toHaveBeenCalled();
-        // Since the member is in a PDS, even if the member itself is favorited, the label should still be PDS(member)
+
         expect(submitJobSpy.mock.calls[0][0]).toEqual("TEST.JCL(MEMBER1)");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
         expect(mocked(Gui.showMessage).mock.calls[0][0]).toEqual(
