@@ -16,6 +16,7 @@ import * as path from "path";
 import * as fs from "fs";
 import {
     Gui,
+    handleError,
     IZoweTreeNode,
     IZoweDatasetTreeNode,
     IZoweUSSTreeNode,
@@ -676,9 +677,9 @@ export class SharedUtils {
                 const node = (await provider.getChildren()).find((n) => n.label === profile?.name);
                 node?.setProfileToChoice?.(profile);
             } catch (err) {
-                if (err instanceof Error) {
-                    ZoweLogger.error(err.message);
-                }
+                await handleError(err, async (error) => {
+                    ZoweLogger.error(error.message);
+                });
                 return;
             }
         }

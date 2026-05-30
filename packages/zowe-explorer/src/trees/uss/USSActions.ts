@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, IZoweUSSTreeNode, Types, ZoweExplorerApiType, ZosEncoding, MessageSeverity } from "@zowe/zowe-explorer-api";
+import { errorMessage, Gui, imperative, IZoweUSSTreeNode, Types, ZoweExplorerApiType, ZosEncoding, MessageSeverity } from "@zowe/zowe-explorer-api";
 import { isBinaryFileSync } from "isbinaryfile";
 import { USSAttributeView } from "./USSAttributeView";
 import { USSFileStructure } from "./USSFileStructure";
@@ -168,13 +168,13 @@ export class USSActions {
                     ussFileProvider.refreshElement(equivalentNodeParent);
                 }
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Uss,
                         profile: node.getProfile(),
                         scenario: vscode.l10n.t("Unable to create node:"),
                     });
-                }
+                });
                 throw err;
             }
         }
@@ -1248,7 +1248,7 @@ export class USSActions {
                         await Gui.errorMessage(
                             vscode.l10n.t({
                                 message: "Failed to reveal '{0}': {1}",
-                                args: [targetFileName, err instanceof Error ? err.message : String(err)],
+                                args: [targetFileName, errorMessage(err)],
                                 comment: ["Item name", "Error message"],
                             })
                         );

@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import {
     Gui,
+    handleError,
     imperative,
     IZoweUSSTreeNode,
     ZoweTreeNode,
@@ -517,15 +518,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             await vscode.workspace.fs.delete(this.resourceUri, { recursive: this.isFolder });
         } catch (err) {
             ZoweLogger.error(err);
-            if (err instanceof Error) {
+            await handleError(err, async (error) => {
                 Gui.errorMessage(
                     vscode.l10n.t({
                         message: "Unable to delete node: {0}",
-                        args: [err.message],
+                        args: [error.message],
                         comment: ["Error message"],
                     })
                 );
-            }
+            });
             throw err;
         }
 

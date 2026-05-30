@@ -10,7 +10,7 @@
  */
 
 import { commands, ProviderResult, Uri, UriHandler } from "vscode";
-import { ZoweScheme } from "../../../zowe-explorer-api/src";
+import { ZoweScheme, handleError } from "../../../zowe-explorer-api/src";
 import { DatasetFSProvider } from "../trees/dataset/DatasetFSProvider";
 import { UssFSProvider } from "../trees/uss/UssFSProvider";
 import { ZoweLogger } from "../tools/ZoweLogger";
@@ -39,10 +39,10 @@ export class ZoweUriHandler implements UriHandler {
             .then(async (_entry) => {
                 await commands.executeCommand("vscode.open", parsedUri, { preview: false });
             })
-            .catch((err) => {
-                if (err instanceof Error) {
-                    ZoweLogger.error(`Failed to open external URL: ${err.message}`);
-                }
+            .catch(async (err) => {
+                await handleError(err, async (error) => {
+                    ZoweLogger.error(`Failed to open external URL: ${error.message}`);
+                });
             });
     }
 }

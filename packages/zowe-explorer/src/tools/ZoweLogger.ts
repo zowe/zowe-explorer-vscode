@@ -14,7 +14,7 @@
 import * as vscode from "vscode";
 import * as loggerConfig from "../../log4jsconfig.json";
 import * as path from "path";
-import { Gui, imperative, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, handleError, imperative, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 
 export class ZoweLogger {
     public static zeOutputChannel: vscode.OutputChannel;
@@ -31,10 +31,10 @@ export class ZoweLogger {
             return logsPath;
         } catch (err) {
             // Don't log error if logger failed to initialize
-            if (err instanceof Error) {
+            await handleError(err, async (error) => {
                 const errorMessage = vscode.l10n.t("Error encountered while activating and initializing logger");
-                await Gui.errorMessage(`${errorMessage}: ${err.message}`);
-            }
+                await Gui.errorMessage(`${errorMessage}: ${error.message}`);
+            });
         }
     }
 

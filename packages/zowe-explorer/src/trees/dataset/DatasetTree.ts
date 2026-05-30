@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import dayjs from "dayjs";
 import {
     Gui,
+    handleError,
     Validation,
     imperative,
     IZoweDatasetTreeNode,
@@ -210,9 +211,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 );
             } catch (err) {
                 // If the write fails, we cannot move to the next file
-                if (err instanceof Error) {
-                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
-                }
+                await handleError(err, async (error) => {
+                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, error.message));
+                });
                 return;
             }
 
@@ -534,9 +535,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 profile,
             });
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.warn(`Skipping creation of favorited profile. ${err.toString()}`);
-            }
+            await handleError(err, async (error) => {
+                ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
+            });
             return null;
         }
 

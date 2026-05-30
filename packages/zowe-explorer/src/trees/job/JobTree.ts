@@ -14,6 +14,7 @@ import * as path from "path";
 import { IJob } from "@zowe/zos-jobs-for-zowe-sdk";
 import {
     Gui,
+    handleError,
     Validation,
     imperative,
     IZoweJobTreeNode,
@@ -308,9 +309,9 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 profile,
             });
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.warn(`Skipping creation of favorited profile. ${err.toString()}`);
-            }
+            await handleError(err, async (error) => {
+                ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
+            });
             return null;
         }
 

@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
 import {
+    handleError,
     IZoweTreeNode,
     ZoweTreeNode,
     FileManagement,
@@ -555,7 +556,7 @@ export class ProfilesUtils {
                     })
                 );
             } catch (err) {
-                if (err instanceof Error) {
+                await handleError(err, async (error) => {
                     const errorMsg = vscode.l10n.t({
                         message: "Failed to parse JSON file {0}. Will try to re-create the file.",
                         args: [settingsFile],
@@ -568,7 +569,7 @@ export class ProfilesUtils {
                         encoding: "utf-8",
                         flag: "w",
                     });
-                }
+                });
             }
             if (settings?.overrides?.CredentialManager === ProfilesUtils.PROFILE_SECURITY) {
                 return;
