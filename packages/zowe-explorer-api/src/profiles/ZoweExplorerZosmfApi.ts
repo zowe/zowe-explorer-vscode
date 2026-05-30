@@ -18,7 +18,7 @@ import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import { MainframeInteraction } from "../extend/MainframeInteraction";
-import { FileManagement, errorMessage } from "../utils";
+import { FileManagement } from "../utils";
 import { Types } from "../Types";
 import { ProfilesCache } from "../profiles/ProfilesCache";
 import { VscSettings } from "../vscode/doc/VscSettings";
@@ -204,7 +204,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                     });
                 }
             } catch (err) {
-                const message = errorMessage(err);
+                const message = err instanceof Error ? err.toString() : "N/A";
                 return {
                     success: false,
                     commandResponse: message,

@@ -77,7 +77,7 @@ export class FileManagement {
                 // TODO: FEATURE-FLAG(fetchByDefault): remove fetch=true
                 await workspace.fs.stat(folder.uri.with({ query: "fetch=true" }));
             } catch (err) {
-                await handleError(err, async (error) => {
+                void handleError(err, (error) => {
                     // TODO: Remove console.error in favor of logger
                     // (need to move logger to ZE API)
                     // eslint-disable-next-line no-console

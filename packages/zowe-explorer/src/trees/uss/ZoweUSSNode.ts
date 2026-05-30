@@ -15,6 +15,7 @@ import * as path from "path";
 import {
     Gui,
     handleError,
+    handleError,
     imperative,
     IZoweUSSTreeNode,
     ZoweTreeNode,

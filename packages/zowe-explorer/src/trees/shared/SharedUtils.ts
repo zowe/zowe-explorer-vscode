@@ -17,6 +17,7 @@ import * as fs from "fs";
 import {
     Gui,
     handleError,
+    handleError,
     IZoweTreeNode,
     IZoweDatasetTreeNode,
     IZoweUSSTreeNode,

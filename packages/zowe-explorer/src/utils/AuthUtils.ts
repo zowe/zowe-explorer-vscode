@@ -13,6 +13,7 @@ import * as util from "util";
 import * as vscode from "vscode";
 import {
     handleError,
+    handleError,
     imperative,
     Gui,
     MainframeInteraction,
@@ -408,7 +409,7 @@ export class AuthUtils {
             this.updateNodeToolTip(sessionNode, profile);
             sessionNode.setSessionToChoice(commonApi.getSession());
         } catch (err) {
-            await handleError(err, async (error) => {
+            void handleError(err, async (error) => {
                 // API is not yet registered, or building the session failed for this profile
                 ZoweLogger.error(`Error syncing session for ${profileName}: ${error.message}`);
             });

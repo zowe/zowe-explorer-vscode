@@ -556,7 +556,7 @@ export class ProfilesUtils {
                     })
                 );
             } catch (err) {
-                await handleError(err, async (error) => {
+                void handleError(err, async (error) => {
                     const errorMsg = vscode.l10n.t({
                         message: "Failed to parse JSON file {0}. Will try to re-create the file.",
                         args: [settingsFile],

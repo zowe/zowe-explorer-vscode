@@ -111,9 +111,7 @@ export class ProfilesCache {
             return undefined;
         } catch (err) {
             // Log the error but don't throw - credential manager options are optional
-            imperative.Logger.getAppLogger().warn(
-                `Failed to read credential manager options from imperative.json: ${errorMessage(err)}`
-            );
+            imperative.Logger.getAppLogger().warn(`Failed to read credential manager options from imperative.json: ${errorMessage(err)}`);
             return undefined;
         }
     }
