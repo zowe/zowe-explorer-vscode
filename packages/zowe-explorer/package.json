@@ -2146,14 +2146,14 @@
         },
         "zowe.logger": {
           "type": "string",
-          "default": "%zowe.logger.info%",
+          "default": "INFO",
           "enum": [
-            "%zowe.logger.trace%",
-            "%zowe.logger.debug%",
-            "%zowe.logger.info%",
-            "%zowe.logger.warn%",
-            "%zowe.logger.error%",
-            "%zowe.logger.fatal%"
+            "TRACE",
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR",
+            "FATAL"
           ],
           "markdownEnumDescriptions": [
             "%zowe.logger.trace.description%",
