@@ -4943,6 +4943,18 @@ describe("Dataset Tree Unit Tests - Function checkFilterPattern", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         expect(blockMocks.testTree.checkFilterPattern("*SAMPLE*TEST*", "*SAMPLE*TEST*")).toEqual(true);
     });
+
+    it("should return true for single char qualifier", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        expect(blockMocks.testTree.checkFilterPattern("A", "A")).toEqual(true);
+    });
+
+    it("should return true for 4 qualifier dataset name", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        expect(blockMocks.testTree.checkFilterPattern("A.B.C.D", "A.B.C.D")).toEqual(true);
+    });
 });
 
 describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
@@ -5093,7 +5105,7 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
         expect(updateFavSpy).toHaveBeenCalledWith({
             favorites: [],
             vsamFavorites: [],
-            memberFavorites: [`[${profileLabel}]: MY.PDS(MEM1){pds}`, `[${profileLabel}]: MY.PDS(MEM2){pds}`]
+            memberFavorites: [`[${profileLabel}]: MY.PDS(MEM1){pds}`, `[${profileLabel}]: MY.PDS(MEM2){pds}`],
         });
     });
 
@@ -5121,7 +5133,7 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
         expect(updateFavSpy).toHaveBeenCalledWith({
             favorites: [`[${profileLabel}]: MY.PDS{pds}`],
             vsamFavorites: [],
-            memberFavorites: []
+            memberFavorites: [],
         });
     });
 
@@ -5160,7 +5172,7 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
         expect(updateFavSpy).toHaveBeenCalledWith({
             favorites: [`[${profileLabel}]: FULL.PDS{pds}`],
             vsamFavorites: [],
-            memberFavorites: [`[${profileLabel}]: MEMBER.PDS(MYMEM){pds}`]
+            memberFavorites: [`[${profileLabel}]: MEMBER.PDS(MYMEM){pds}`],
         });
     });
 });
@@ -7015,6 +7027,69 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
         expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
         expect(SharedContext.isFavorite(fakeChildren[0])).toBe(false);
         expect(fakeChildren[0].contextValue).not.toContain(Constants.FAV_SUFFIX);
+        withProfileMock.mockRestore();
+    });
+
+    it("applies member pattern when dataset has four qualifiers, single char qualifier and wildcard member filter", () => {
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            {
+                label: "ADAM.TEST.JCL.A",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                iconPath: undefined,
+                pattern: "",
+                memberPattern: "",
+            },
+        ];
+        const withProfileMock = vi.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+
+        testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "ADAM.TEST.JCL.A", member: "M*" }]);
+
+        expect(fakeChildren[0].memberPattern).toBe("M*");
+        expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
+        withProfileMock.mockRestore();
+    });
+
+    it("applies member pattern when dataset has single char trailing qualifier", () => {
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            {
+                label: "HLQ.TEST.TEST.T",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                iconPath: undefined,
+                pattern: "",
+                memberPattern: "",
+            },
+        ];
+        const withProfileMock = vi.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+
+        testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.TEST.TEST.T", member: "BLAH" }]);
+
+        expect(fakeChildren[0].memberPattern).toBe("BLAH");
+        expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
+        withProfileMock.mockRestore();
+    });
+
+    it("applies member pattern when dataset has single char middle qualifier", () => {
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            {
+                label: "HLQ.T.TEST",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                iconPath: undefined,
+                pattern: "",
+                memberPattern: "",
+            },
+        ];
+        const withProfileMock = vi.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+
+        testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.T.TEST", member: "BLAH" }]);
+
+        expect(fakeChildren[0].memberPattern).toBe("BLAH");
+        expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
         withProfileMock.mockRestore();
     });
 });
