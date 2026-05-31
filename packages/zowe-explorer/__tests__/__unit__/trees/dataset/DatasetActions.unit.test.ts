@@ -6988,6 +6988,21 @@ describe("DatasetActions - downloading functions", () => {
             mockGetDirsFromDataSet[Symbol.dispose]();
         });
 
+        it("should return early when selected nodes contain no members", async () => {
+            const nonMemberNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            nonMemberNode.contextValue = "notMember";
+
+            await DatasetActions.downloadMembers(nonMemberNode, [nonMemberNode]);
+
+            expect(mockGetDataSetDownloadOptions.mock).not.toHaveBeenCalled();
+            expect(mockExecuteDownloadWithProgress.mock).not.toHaveBeenCalled();
+        });
+
         it("should show options once and execute one multi-member progress/finish notification", async () => {
             const pdsNodeOne = new ZoweDatasetNode({
                 label: "TEST.PDS",
@@ -7048,6 +7063,71 @@ describe("DatasetActions - downloading functions", () => {
             expect(getContentsSpy).toHaveBeenCalledTimes(2);
             expect(getContentsSpy).toHaveBeenNthCalledWith(1, "TEST.PDS(MEMBER1)", expect.any(Object));
             expect(getContentsSpy).toHaveBeenNthCalledWith(2, "TEST.OTHER.PDS(MEMBER2)", expect.any(Object));
+        });
+
+        it("should aggregate command responses when member download responses indicate success false", async () => {
+            const pdsNodeOne = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            const pdsNodeTwo = new ZoweDatasetNode({
+                label: "TEST.OTHER.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            const memberNodeOne = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeOne,
+                profile: defaultTestProfile,
+            });
+            const memberNodeTwo = new ZoweDatasetNode({
+                label: "MEMBER2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeTwo,
+                profile: defaultTestProfile,
+            });
+
+            memberNodeOne.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeTwo.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeOne.getParent = vi.fn().mockReturnValue(pdsNodeOne);
+            memberNodeOne.getLabel = vi.fn().mockReturnValue("MEMBER1");
+            memberNodeOne.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeOne.getLabel = vi.fn().mockReturnValue("TEST.PDS");
+
+            memberNodeTwo.getParent = vi.fn().mockReturnValue(pdsNodeTwo);
+            memberNodeTwo.getLabel = vi.fn().mockReturnValue("MEMBER2");
+            memberNodeTwo.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeTwo.getLabel = vi.fn().mockReturnValue("TEST.OTHER.PDS");
+
+            vi.spyOn(testMocks.mvsApi, "getContents")
+                .mockResolvedValueOnce({
+                    success: false,
+                    commandResponse: "MEMBER1 failed",
+                    apiResponse: { etag: "123" },
+                })
+                .mockResolvedValueOnce({
+                    success: false,
+                    commandResponse: "MEMBER2 failed",
+                    apiResponse: { etag: "456" },
+                });
+
+            let aggregateResult: { response?: any; downloadedPath?: string } | undefined;
+            mockExecuteDownloadWithProgress.mock.mockImplementation(async (_title, downloadFn, _successMessage, _node) => {
+                aggregateResult = await downloadFn();
+            });
+
+            await DatasetActions.downloadMembers(memberNodeOne, [memberNodeOne, memberNodeTwo]);
+
+            expect(aggregateResult?.response?.success).toBe(false);
+            expect(aggregateResult?.response?.commandResponse).toContain("MEMBER1 failed");
+            expect(aggregateResult?.response?.commandResponse).toContain("MEMBER2 failed");
+            expect(aggregateResult?.response?.apiResponse?.downloadResult).toEqual({ downloaded: 2, total: 2 });
+            expect(aggregateResult?.downloadedPath).toBe(defaultDownloadOptions.selectedPath.fsPath);
         });
 
         it("should support mixed-profile selections by downloading valid-profile members only", async () => {
@@ -7126,6 +7206,134 @@ describe("DatasetActions - downloading functions", () => {
             expect(getContentsSpy).toHaveBeenCalledTimes(1);
             expect(getContentsSpy).toHaveBeenCalledWith("TEST.VALID.PDS(VALIDM1)", expect.any(Object));
             expect(mockErrorMessage.mock).not.toHaveBeenCalled();
+        });
+
+        it("should report progress for invalid and valid selected members when progress is available", async () => {
+            const validProfile = {
+                ...defaultTestProfile,
+                name: "validProfile",
+            };
+            const invalidProfile = {
+                ...defaultTestProfile,
+                name: "invalidProfile",
+            };
+
+            testMocks.profileInstance.checkCurrentProfile = vi.fn(async (profile) => {
+                testMocks.profileInstance.validProfile =
+                    profile?.name === "invalidProfile" ? Validation.ValidationType.INVALID : Validation.ValidationType.VALID;
+                return { status: "active", name: profile?.name ?? "" };
+            });
+
+            const pdsNodeValid = new ZoweDatasetNode({
+                label: "TEST.VALID.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: validProfile,
+            });
+            const pdsNodeInvalid = new ZoweDatasetNode({
+                label: "TEST.INVALID.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: invalidProfile,
+            });
+
+            const validMemberNode = new ZoweDatasetNode({
+                label: "VALIDM1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeValid,
+                profile: validProfile,
+            });
+            const invalidMemberNode = new ZoweDatasetNode({
+                label: "INVALIDM1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeInvalid,
+                profile: invalidProfile,
+            });
+
+            validMemberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+            invalidMemberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+            validMemberNode.getParent = vi.fn().mockReturnValue(pdsNodeValid);
+            validMemberNode.getLabel = vi.fn().mockReturnValue("VALIDM1");
+            validMemberNode.getProfile = vi.fn().mockReturnValue(validProfile);
+            pdsNodeValid.getLabel = vi.fn().mockReturnValue("TEST.VALID.PDS");
+
+            invalidMemberNode.getParent = vi.fn().mockReturnValue(pdsNodeInvalid);
+            invalidMemberNode.getLabel = vi.fn().mockReturnValue("INVALIDM1");
+            invalidMemberNode.getProfile = vi.fn().mockReturnValue(invalidProfile);
+            pdsNodeInvalid.getLabel = vi.fn().mockReturnValue("TEST.INVALID.PDS");
+
+            const reportProgressSpy = vi.spyOn(Gui, "reportProgress").mockImplementation((() => undefined) as any);
+            let aggregateResult: { response?: any; downloadedPath?: string } | undefined;
+            mockExecuteDownloadWithProgress.mock.mockImplementation(async (_title, downloadFn, _successMessage, _node) => {
+                const progress = { report: vi.fn() } as any;
+                aggregateResult = await downloadFn(progress, { isCancellationRequested: false } as vscode.CancellationToken);
+            });
+
+            await DatasetActions.downloadMembers(invalidMemberNode, [invalidMemberNode, validMemberNode]);
+
+            expect(reportProgressSpy).toHaveBeenCalledTimes(2);
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(1, expect.any(Object), 2, 0, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(2, expect.any(Object), 2, 1, "");
+            expect(aggregateResult?.response?.success).toBe(false);
+            reportProgressSpy.mockRestore();
+        });
+
+        it("should stop processing members when cancellation is requested", async () => {
+            const pdsNodeOne = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            const pdsNodeTwo = new ZoweDatasetNode({
+                label: "TEST.OTHER.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            const memberNodeOne = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeOne,
+                profile: defaultTestProfile,
+            });
+            const memberNodeTwo = new ZoweDatasetNode({
+                label: "MEMBER2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeTwo,
+                profile: defaultTestProfile,
+            });
+
+            memberNodeOne.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeTwo.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeOne.getParent = vi.fn().mockReturnValue(pdsNodeOne);
+            memberNodeOne.getLabel = vi.fn().mockReturnValue("MEMBER1");
+            memberNodeOne.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeOne.getLabel = vi.fn().mockReturnValue("TEST.PDS");
+
+            memberNodeTwo.getParent = vi.fn().mockReturnValue(pdsNodeTwo);
+            memberNodeTwo.getLabel = vi.fn().mockReturnValue("MEMBER2");
+            memberNodeTwo.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeTwo.getLabel = vi.fn().mockReturnValue("TEST.OTHER.PDS");
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { etag: "123" },
+            });
+
+            let aggregateResult: { response?: any; downloadedPath?: string } | undefined;
+            mockExecuteDownloadWithProgress.mock.mockImplementation(async (_title, downloadFn, _successMessage, _node) => {
+                const progress = { report: vi.fn() } as any;
+                aggregateResult = await downloadFn(progress, { isCancellationRequested: true } as vscode.CancellationToken);
+            });
+
+            await DatasetActions.downloadMembers(memberNodeOne, [memberNodeOne, memberNodeTwo]);
+
+            expect(getContentsSpy).not.toHaveBeenCalled();
+            expect(aggregateResult?.response?.apiResponse?.downloadResult).toEqual({ downloaded: 0, total: 2 });
+            expect(aggregateResult?.response?.commandResponse).toBe("");
         });
 
         it("should delegate to downloadMember when one member is selected", async () => {
