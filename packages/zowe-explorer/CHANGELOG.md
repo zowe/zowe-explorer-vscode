@@ -16,6 +16,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added comprehensive tooltip support for Zowe Resources Table including filter icons, sort icons, and action buttons (Open, Back, Pin, Settings) to improve user experience and accessibility. [#4201](https://github.com/zowe/zowe-explorer-vscode/pull/4201)
 - Added support for adding VSAM datasets to favorites. [#4103](https://github.com/zowe/zowe-explorer-vscode/issues/4103)
 - Added new VS Code toggle setting for enabling various features within Zowe Explorer. [#4242](https://github.com/zowe/zowe-explorer-vscode/issues/4242)
+- Fixed an issue where opening a highlighted PDS name using "Open selected data set" showed an unnecessary warning message even when the PDS was successfully filtered and displayed in the tree. [#4230](https://github.com/zowe/zowe-explorer-vscode/issues/4230)
 
 ### Bug fixes
 

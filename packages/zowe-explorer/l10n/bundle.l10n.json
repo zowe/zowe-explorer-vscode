@@ -1052,6 +1052,7 @@
   "Fixed an issue where moving a PDS member into the \"No members found\" placeholder of an empty PDS deleted the member without transferring its data. <a>#3950</a>": "Fixed an issue where moving a PDS member into the \"No members found\" placeholder of an empty PDS deleted the member without transferring its data. <a>#3950</a>",
   "Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. <a>#3590</a>": "Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. <a>#3590</a>",
   "Fixed an issue where opening a data set with the same starting pattern as an archived data set caused a REST API error (code 500) to appear in the editor. <a>#3407</a>": "Fixed an issue where opening a data set with the same starting pattern as an archived data set caused a REST API error (code 500) to appear in the editor. <a>#3407</a>",
+  "Fixed an issue where opening a highlighted PDS name using \"Open selected data set\" showed an unnecessary warning message even when the PDS was successfully filtered and displayed in the tree. <a>#4230</a>": "Fixed an issue where opening a highlighted PDS name using \"Open selected data set\" showed an unnecessary warning message even when the PDS was successfully filtered and displayed in the tree. <a>#4230</a>",
   "Fixed an issue where opening a PDS member after renaming an expanded PDS resulted in an error. <a>#3314</a>": "Fixed an issue where opening a PDS member after renaming an expanded PDS resulted in an error. <a>#3314</a>",
   "Fixed an issue where opening a USS file would show empty contents when an error occurred while fetching the file from the mainframe, instead of displaying an error message. <a>#3894</a>": "Fixed an issue where opening a USS file would show empty contents when an error occurred while fetching the file from the mainframe, instead of displaying an error message. <a>#3894</a>",
   "Fixed an issue where opening sequential data sets within favorited searches resulted in an error. <a>#3163</a>": "Fixed an issue where opening sequential data sets within favorited searches resulted in an error. <a>#3163</a>",
@@ -1671,7 +1672,6 @@
       "PDS name"
     ]
   },
-  "PDS {0} could not be found.": "PDS {0} could not be found.",
   "PDS already in favorites": "PDS already in favorites",
   "Perform the search with case sensitivity": "Perform the search with case sensitivity",
   "Permissions": "Permissions",
