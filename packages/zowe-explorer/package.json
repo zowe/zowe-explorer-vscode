@@ -372,6 +372,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.ds.downloadMembers",
+        "title": "%downloadMembers%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.ds.downloadAllMembers",
         "title": "%downloadAllMembers%",
         "category": "Zowe Explorer"
@@ -1195,6 +1200,11 @@
           "group": "002_zowe_dsTransfer@7"
         },
         {
+          "when": "view == zowe.ds.explorer && viewItem =~ /^member.*/ && listMultiSelection",
+          "command": "zowe.ds.downloadMembers",
+          "group": "002_zowe_dsTransfer@7"
+        },
+        {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*(_fav|_filterFav).*)session.*/ && !listMultiSelection",
           "command": "zowe.saveSearch",
           "group": "003_zowe_dsWorkspace@0"
@@ -1792,6 +1802,10 @@
         },
         {
           "command": "zowe.ds.downloadMember",
+          "when": "never"
+        },
+        {
+          "command": "zowe.ds.downloadMembers",
           "when": "never"
         },
         {

@@ -941,8 +941,48 @@ export class DatasetActions {
         );
     }
 
+    private static async downloadSingleMember(
+        selectedNode: IZoweDatasetTreeNode,
+        dataSetDownloadOptions: Definitions.DataSetDownloadOptions
+    ): Promise<{ response?: any; downloadedPath?: string }> {
+        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath, overrideExtension, fileExtension } = dataSetDownloadOptions;
+
+        const profile = selectedNode.getProfile();
+        const parent = selectedNode.getParent() as IZoweDatasetTreeNode;
+        const datasetName = parent.getLabel() as string;
+        const memberName = selectedNode.getLabel() as string;
+        const fullDatasetName = `${datasetName}(${memberName})`;
+
+        const fileName = uppercaseNames ? memberName : memberName.toLowerCase();
+
+        const extensionMap = await DatasetUtils.getExtensionMap(
+            parent,
+            uppercaseNames,
+            overrideExtension && fileExtension ? fileExtension : undefined
+        );
+        const extension = extensionMap[fileName] ?? DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+
+        const targetDirectory = generateDirectory
+            ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
+            : selectedPath.fsPath;
+        const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
+
+        const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
+        const downloadOptions = {
+            file: filePath,
+            binary: encoding?.kind === "binary",
+            record: isRecordEncoding,
+            encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
+            overwrite,
+            responseTimeout: profile?.profile?.responseTimeout,
+        };
+
+        const response = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(fullDatasetName, downloadOptions);
+        return { response, downloadedPath: filePath };
+    }
+
     /**
-     * Downloads a member
+     * Downloads a single member
      */
     public static async downloadMember(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.downloadMember called.");
@@ -958,45 +998,122 @@ export class DatasetActions {
         if (!dataSetDownloadOptions) {
             return;
         }
-        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath, overrideExtension, fileExtension } = dataSetDownloadOptions;
 
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading member"),
-            async () => {
-                const parent = node.getParent() as IZoweDatasetTreeNode;
-                const datasetName = parent.getLabel() as string;
-                const memberName = node.getLabel() as string;
-                const fullDatasetName = `${datasetName}(${memberName})`;
-
-                const fileName = uppercaseNames ? memberName : memberName.toLowerCase();
-
-                const extensionMap = await DatasetUtils.getExtensionMap(
-                    parent,
-                    uppercaseNames,
-                    overrideExtension && fileExtension ? fileExtension : undefined
-                );
-                const extension = extensionMap[fileName] ?? DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
-
-                const targetDirectory = generateDirectory
-                    ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
-                    : selectedPath.fsPath;
-                const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
-
-                const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
-                const downloadOptions = {
-                    file: filePath,
-                    binary: encoding?.kind === "binary",
-                    record: isRecordEncoding,
-                    encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
-                    overwrite,
-                    responseTimeout: profile?.profile?.responseTimeout,
-                };
-
-                const response = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(fullDatasetName, downloadOptions);
-                return { response, downloadedPath: filePath };
-            },
+            async () => DatasetActions.downloadSingleMember(node, dataSetDownloadOptions),
             vscode.l10n.t("Data set member"),
             node
+        );
+    }
+
+    /**
+     * Downloads member with multiselect mmode
+     */
+    public static async downloadMembers(node: IZoweDatasetTreeNode, nodeList?: IZoweDatasetTreeNode[]): Promise<void> {
+        ZoweLogger.trace("dataset.actions.downloadMembers called.");
+
+        const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList)
+            .filter((selectedNode) => SharedContext.isDsMember(selectedNode))
+            .map((selectedNode) => selectedNode as IZoweDatasetTreeNode);
+        if (selectedNodes.length === 0) {
+            return;
+        }
+
+        if (selectedNodes.length === 1) {
+            await DatasetActions.downloadMember(selectedNodes[0]);
+            return;
+        }
+
+        const validSelectedNodes: IZoweDatasetTreeNode[] = [];
+        const invalidProfileResponses: string[] = [];
+        for (const selectedNode of selectedNodes) {
+            const profile = selectedNode.getProfile();
+            await Profiles.getInstance().checkCurrentProfile(profile);
+            if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+                const nodeLabel = String(selectedNode.getLabel() ?? "");
+                const profileName = String(profile?.name ?? "");
+                const profileSuffix = profileName ? ` (${profileName})` : "";
+                invalidProfileResponses.push(`Failed to download ${nodeLabel}${profileSuffix}: ${DatasetActions.localizedStrings.profileInvalid}`);
+                continue;
+            }
+
+            validSelectedNodes.push(selectedNode);
+        }
+
+        if (validSelectedNodes.length === 0) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions(validSelectedNodes[0]);
+        if (!dataSetDownloadOptions) {
+            return;
+        }
+
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading members"),
+            async (progress, token) => {
+                const commandResponses: string[] = [...invalidProfileResponses];
+                let hasErrors = invalidProfileResponses.length > 0;
+                let downloadedCount = 0;
+                let processedCount = 0;
+                const totalCount = selectedNodes.length;
+
+                invalidProfileResponses.forEach((_) => {
+                    if (progress) {
+                        Gui.reportProgress(progress, totalCount, processedCount++, "");
+                    }
+                });
+
+                for (const selectedNode of validSelectedNodes) {
+                    if (token?.isCancellationRequested) {
+                        break;
+                    }
+
+                    const profile = selectedNode.getProfile();
+
+                    try {
+                        const { response } = await DatasetActions.downloadSingleMember(selectedNode, dataSetDownloadOptions);
+                        downloadedCount++;
+
+                        if (response?.success === false) {
+                            hasErrors = true;
+                        }
+
+                        if (response?.commandResponse) {
+                            commandResponses.push(response.commandResponse.toString());
+                        }
+                    } catch (e) {
+                        hasErrors = true;
+                        const nodeLabel = String(selectedNode.getLabel() ?? "");
+                        const profileName = String(profile?.name ?? "");
+                        const profileSuffix = profileName ? ` (${profileName})` : "";
+                        const message = e instanceof Error ? e.message : String(e);
+                        commandResponses.push(`Failed to download ${nodeLabel}${profileSuffix}: ${message}`);
+                    }
+
+                    if (progress) {
+                        Gui.reportProgress(progress, totalCount, processedCount++, "");
+                    }
+                }
+
+                const response = {
+                    success: !hasErrors,
+                    commandResponse: commandResponses.join("\n"),
+                    apiResponse: {
+                        downloadResult: {
+                            downloaded: downloadedCount,
+                            total: totalCount,
+                        },
+                    },
+                };
+
+                return { response, downloadedPath: dataSetDownloadOptions.selectedPath.fsPath };
+            },
+            vscode.l10n.t("Data set members"),
+            validSelectedNodes[0],
+            true
         );
     }
 

@@ -221,6 +221,7 @@ async function createGlobalMocks() {
             "zowe.ds.setDataSetFilter",
             "zowe.ds.downloadAllMembers",
             "zowe.ds.downloadMember",
+            "zowe.ds.downloadMembers",
             "zowe.ds.downloadDataSet",
             "zowe.uss.addSession",
             "zowe.uss.refreshAll",
