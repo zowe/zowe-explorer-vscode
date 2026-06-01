@@ -286,29 +286,23 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 profile: cachedProfile,
                 encoding: isDir ? undefined : this.getEncodingInMap(`${itemParentPath}/${itemName}`),
             });
+            const createParentDirs = (uri: vscode.Uri) => {
+                const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
+                if (parentUri.path !== uri.path && parentUri.path !== "/" && !UssFSProvider.instance.exists(parentUri)) {
+                    createParentDirs(parentUri);
+                    UssFSProvider.instance.createDirectory(parentUri);
+                }
+            };
+
             if (isDir) {
                 // Create an entry for the USS folder if it doesn't exist.
                 if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
-                    const createParentDirs = (uri: vscode.Uri) => {
-                        const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
-                        if (parentUri.path !== uri.path && parentUri.path !== "/" && !UssFSProvider.instance.exists(parentUri)) {
-                            createParentDirs(parentUri);
-                            UssFSProvider.instance.createDirectory(parentUri);
-                        }
-                    };
                     createParentDirs(ussNode.resourceUri);
                     UssFSProvider.instance.createDirectory(ussNode.resourceUri);
                 }
             } else {
                 // Create an entry for the USS file if it doesn't exist.
                 if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
-                    const createParentDirs = (uri: vscode.Uri) => {
-                        const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
-                        if (parentUri.path !== uri.path && parentUri.path !== "/" && !UssFSProvider.instance.exists(parentUri)) {
-                            createParentDirs(parentUri);
-                            UssFSProvider.instance.createDirectory(parentUri);
-                        }
-                    };
                     createParentDirs(ussNode.resourceUri);
                     UssFSProvider.instance.createEntry(ussNode.resourceUri, "file");
                 }
