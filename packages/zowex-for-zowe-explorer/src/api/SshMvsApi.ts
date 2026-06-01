@@ -290,7 +290,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             });
 
             if (response.success) {
-                Gui.infoMessage(`Successfully allocated dataset "${dataSetName}" like "${likeDataSetName}"`);
+                Gui.setStatusBarMessage(`Successfully allocated dataset "${dataSetName}" like "${likeDataSetName}"`);
             }
 
             return this.buildZosFilesResponse(response, response.success);
@@ -323,7 +323,6 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             return this.buildZosFilesResponse(response, true);
         } catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error);
-            Gui.errorMessage(`Error while copying ${fromDataSetName} to ${toDataSetName}: ${errorMsg}`);
             return this.buildZosFilesResponse({ success: false }, false, errorMsg);
         }
     }
