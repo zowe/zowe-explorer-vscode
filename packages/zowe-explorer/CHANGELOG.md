@@ -7,6 +7,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed an issue where Zowe Explorer failed to activate if a VS Code workspace is opened and contains an invalid directory path. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are treated as project-level directories. [#4271](https://github.com/zowe/zowe-explorer-vscode/issues/4271)
+- Fixed an issue where submitting a job from a favorited PDS member would fail. [#4282](https://github.com/zowe/zowe-explorer-vscode/issues/4282)
 
 ## `3.5.0`
 
