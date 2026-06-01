@@ -1181,6 +1181,52 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         providerStatSpy.mockRestore();
     });
 
+    it("Tests that getChildren() correctly handles absolute paths returned by the API", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const parentNode = new ZoweUSSNode({
+            label: "testDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.rootNode,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u",
+        });
+
+        const getUssFilesMock = vi.spyOn(parentNode as any, "getUssFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        name: "/u/testDir/subDir",
+                        mode: "dr-xr-xr-x",
+                    },
+                    {
+                        name: "/u/testDir/aFile.txt",
+                        mode: "-r-xr-xr-x",
+                    },
+                ],
+            },
+        });
+
+        const createEntrySpy = vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+
+        parentNode.dirty = true;
+        const children = await parentNode.getChildren();
+
+        expect(getUssFilesMock).toHaveBeenCalledTimes(1);
+        expect(children.length).toBe(2);
+        expect(children[0].label).toBe("aFile.txt");
+        expect(children[0].fullPath).toBe("/u/testDir/aFile.txt");
+        expect(children[1].label).toBe("subDir");
+        expect(children[1].fullPath).toBe("/u/testDir/subDir");
+
+        expect(globalMocks.FileSystemProvider.createDirectory).toHaveBeenCalled();
+        expect(createEntrySpy).toHaveBeenCalled();
+
+        createEntrySpy.mockRestore();
+    });
+
     it("Tests that error is thrown when node label is blank", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
