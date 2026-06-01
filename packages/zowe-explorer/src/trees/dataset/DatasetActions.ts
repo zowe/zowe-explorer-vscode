@@ -15,7 +15,6 @@ import * as path from "path";
 import {
     Gui,
     handleError,
-    handleError,
     imperative,
     IZoweDatasetTreeNode,
     Validation,

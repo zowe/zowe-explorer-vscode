@@ -13,7 +13,6 @@ import * as vscode from "vscode";
 import {
     FileManagement,
     handleError,
-    handleError,
     Gui,
     CorrelatedError,
     IZoweTree,

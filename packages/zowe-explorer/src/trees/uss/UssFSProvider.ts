@@ -14,7 +14,6 @@ import * as vscode from "vscode";
 import {
     BaseProvider,
     handleError,
-    handleError,
     BufferBuilder,
     FsAbstractUtils,
     imperative,

@@ -15,7 +15,6 @@ import dayjs from "dayjs";
 import {
     Gui,
     handleError,
-    handleError,
     Validation,
     imperative,
     IZoweDatasetTreeNode,

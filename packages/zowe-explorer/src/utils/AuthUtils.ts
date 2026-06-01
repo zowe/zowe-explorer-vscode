@@ -13,7 +13,6 @@ import * as util from "util";
 import * as vscode from "vscode";
 import {
     handleError,
-    handleError,
     imperative,
     Gui,
     MainframeInteraction,

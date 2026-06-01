@@ -14,7 +14,6 @@ import * as path from "path";
 import {
     errorMessage,
     handleError,
-    handleError,
     FsAbstractUtils,
     Gui,
     imperative,
