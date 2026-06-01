@@ -1142,6 +1142,45 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         setAttrsMock.mockRestore();
     });
 
+    it("Tests that getChildren() creates directory entries via UssFSProvider directly, avoiding vscode.workspace.fs and stat calls", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const parentNode = new ZoweUSSNode({
+            label: "testDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.rootNode,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u",
+        });
+
+        const getUssFilesMock = vi.spyOn(parentNode as any, "getUssFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        name: "subDir",
+                        mode: "dr-xr-xr-x",
+                    },
+                ],
+            },
+        });
+
+        const fsCreateDirectorySpy = vi.spyOn(vscode.workspace.fs, "createDirectory");
+        const providerStatSpy = vi.spyOn(UssFSProvider.instance, "stat");
+        
+        parentNode.dirty = true;
+        await parentNode.getChildren();
+
+        expect(getUssFilesMock).toHaveBeenCalledTimes(1);
+        expect(globalMocks.FileSystemProvider.createDirectory).toHaveBeenCalled();
+        expect(fsCreateDirectorySpy).not.toHaveBeenCalled();
+        expect(providerStatSpy).not.toHaveBeenCalled();
+
+        fsCreateDirectorySpy.mockRestore();
+        providerStatSpy.mockRestore();
+    });
+
     it("Tests that error is thrown when node label is blank", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
