@@ -8,7 +8,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Fixed an issue where renaming a data set to itself minus its rightmost qualifier caused the rename to fail. [#4273](https://github.com/zowe/zowe-explorer-vscode/issues/4273)
+- Fixed an issue that caused a rename to fail when removing the rightmost qualifier from a data set name. [#4273](https://github.com/zowe/zowe-explorer-vscode/issues/4273)
 
 ## `3.5.0`
 
