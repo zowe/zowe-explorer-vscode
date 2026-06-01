@@ -53,18 +53,20 @@ Reuse helpers in `packages/zowe-explorer/__tests__/__mocks__/mockCreators/`:
 If a fixture is missing, **add it to the matching file** instead of creating a one-off.
 
 ### `MockedProperty` over `Object.defineProperty`
+
 When you need to stub a property that Vitest can't easily mock (statics, getters, readonly fields), use the `MockedProperty` helper from `__mocks__/mockUtils.ts`. It restores the original value automatically.
 
 ```typescript
 import { MockedProperty } from "../../__mocks__/mockUtils";
 
 const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
-    value: { ssoLogin: vi.fn(), promptCredentials: vi.fn() } as any,
-    configurable: true,
+  value: { ssoLogin: vi.fn(), promptCredentials: vi.fn() } as any,
+  configurable: true,
 });
 ```
 
 ### Spying & Resetting
+
 - Prefer `vi.spyOn(...)` over `vi.mock(...)` for single methods—it leaves the rest of the module intact.
 - Reserve module-level `vi.mock("...")` for modules that must be fully replaced.
 - Call `vi.restoreAllMocks()` in `beforeEach` to prevent spy leaks across tests.

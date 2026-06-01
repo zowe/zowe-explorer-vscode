@@ -108,8 +108,8 @@ function createGlobalMocks() {
     Object.defineProperty(vscode.window, "createQuickPick", { value: vi.fn(), configurable: true });
     Object.defineProperty(vscode.window, "showInputBox", { value: vi.fn(), configurable: true });
     vi.spyOn(Gui, "showInputBox").mockImplementation((() => undefined) as any);
-    vi.spyOn(zosfiles.Rename, "dataSet").mockImplementation(() => { });
-    vi.spyOn(zosfiles.Rename, "dataSetMember").mockImplementation(() => { });
+    vi.spyOn(zosfiles.Rename, "dataSet").mockImplementation(() => {});
+    vi.spyOn(zosfiles.Rename, "dataSetMember").mockImplementation(() => {});
     Object.defineProperty(ZoweLogger, "log", { value: vi.fn(), configurable: true });
     Object.defineProperty(ZoweLogger.log, "debug", { value: vi.fn(), configurable: true });
     Object.defineProperty(ZoweLogger.log, "error", { value: vi.fn(), configurable: true });
@@ -5093,7 +5093,7 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
         expect(updateFavSpy).toHaveBeenCalledWith({
             favorites: [],
             vsamFavorites: [],
-            memberFavorites: [`[${profileLabel}]: MY.PDS(MEM1){pds}`, `[${profileLabel}]: MY.PDS(MEM2){pds}`]
+            memberFavorites: [`[${profileLabel}]: MY.PDS(MEM1){pds}`, `[${profileLabel}]: MY.PDS(MEM2){pds}`],
         });
     });
 
@@ -5121,7 +5121,7 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
         expect(updateFavSpy).toHaveBeenCalledWith({
             favorites: [`[${profileLabel}]: MY.PDS{pds}`],
             vsamFavorites: [],
-            memberFavorites: []
+            memberFavorites: [],
         });
     });
 
@@ -5160,7 +5160,7 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
         expect(updateFavSpy).toHaveBeenCalledWith({
             favorites: [`[${profileLabel}]: FULL.PDS{pds}`],
             vsamFavorites: [],
-            memberFavorites: [`[${profileLabel}]: MEMBER.PDS(MYMEM){pds}`]
+            memberFavorites: [`[${profileLabel}]: MEMBER.PDS(MYMEM){pds}`],
         });
     });
 });
@@ -7653,7 +7653,7 @@ describe("DatasetTree.crossLparMove", () => {
         vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         vi.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue({});
         vi.spyOn(DatasetFSProvider.instance, "readFile").mockResolvedValue(Buffer.from("hello"));
-        vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => { });
+        vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => {});
 
         apiMock = {
             createDataSet: vi.fn().mockResolvedValue({}),

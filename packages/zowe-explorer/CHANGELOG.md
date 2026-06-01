@@ -4,6 +4,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
+### Bug fixes
+
+- Fixed an issue where Zowe Explorer failed to activate if a VS Code workspace is opened and contains an invalid directory path. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are treated as project-level directories. [#4271](https://github.com/zowe/zowe-explorer-vscode/issues/4271)
+
+## `3.5.0`
+
 ### New features and enhancements
 
 - Enhanced "Show Attributes" feature with improved visual presentation: aligned all attribute table columns consistently across core and extender sections, added thousands separators for numeric values, and automatically appends the `%` symbol to "Used Space" values for better readability. [#3927](https://github.com/zowe/zowe-explorer-vscode/issues/3927)

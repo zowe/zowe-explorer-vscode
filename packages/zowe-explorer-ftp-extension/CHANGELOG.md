@@ -4,6 +4,10 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+## `3.5.0`
+
+### Bug fixes
+
 - Updated Zowe SDKs to `8.32.0` for technical currency. [#4209](https://github.com/zowe/zowe-explorer-vscode/pull/4209)
 - Fixed an issue where the FTP extension failed to load `zftp` profiles that do not have credentials defined. [#4110](https://github.com/zowe/zowe-explorer-vscode/issues/4110)
 

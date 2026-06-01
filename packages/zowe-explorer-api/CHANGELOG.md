@@ -4,6 +4,12 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
+### Bug fixes
+
+- Fixed an issue where the `ZoweVsCodeExtension.workspaceRoot` function getter could return a non-existent local directory. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are considered as the workspace root. [#4271](https://github.com/zowe/zowe-explorer-vscode/issues/4271)
+
+## `3.5.0`
+
 ### New features and enhancements
 
 - Implemented request caching capabilities for filesystem providers that extend the `BaseProvider` class. [#3844](https://github.com/zowe/zowe-explorer-vscode/issues/3554)
