@@ -422,12 +422,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     });
 
                     const responseItems = resp.apiResponse?.items ?? [];
-                    const exactMatch = responseItems.find((ds) => {
-                        const dsName = (ds?.dsname ?? ds?.name) as string | undefined;
-                        return dsName?.toUpperCase() === apiLookupName.toUpperCase();
-                    });
-                    const hasComparableName = responseItems.some((ds) => typeof (ds?.dsname ?? ds?.name) === "string");
-                    const matchedItem = exactMatch ?? (!hasComparableName && responseItems.length > 0 ? responseItems[0] : undefined);
+                    const matchedItem =
+                        responseItems.find((ds) => (ds?.dsname ?? ds?.name)?.toUpperCase() === apiLookupName.toUpperCase()) ??
+                        (responseItems.every((ds) => typeof (ds?.dsname ?? ds?.name) !== "string") ? responseItems[0] : undefined);
 
                     if (resp.success && matchedItem) {
                         entryIsDir = matchedItem.dsorg?.startsWith("PO");
