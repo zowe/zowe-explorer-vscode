@@ -1168,7 +1168,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 
         const fsCreateDirectorySpy = vi.spyOn(vscode.workspace.fs, "createDirectory");
         const providerStatSpy = vi.spyOn(UssFSProvider.instance, "stat");
-        
+
         parentNode.dirty = true;
         await parentNode.getChildren();
 
