@@ -54,22 +54,22 @@ If a fixture is missing, **add it to the matching file** instead of creating a o
 
 ### `MockedProperty` over `Object.defineProperty`
 
-When you need to stub a property that Jest can't easily mock (statics, getters, readonly fields), use the `MockedProperty` helper from `__mocks__/mockUtils.ts`. It restores the original value automatically.
+When you need to stub a property that Vitest can't easily mock (statics, getters, readonly fields), use the `MockedProperty` helper from `__mocks__/mockUtils.ts`. It restores the original value automatically.
 
 ```typescript
 import { MockedProperty } from "../../__mocks__/mockUtils";
 
 const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
-  value: { ssoLogin: jest.fn(), promptCredentials: jest.fn() } as any,
+  value: { ssoLogin: vi.fn(), promptCredentials: vi.fn() } as any,
   configurable: true,
 });
 ```
 
 ### Spying & Resetting
 
-- Prefer `jest.spyOn(...)` over `jest.mock(...)` for single methods—it leaves the rest of the module intact.
-- Reserve module-level `jest.mock("...")` for modules that must be fully replaced.
-- Call `jest.restoreAllMocks()` in `beforeEach` to prevent spy leaks across tests.
+- Prefer `vi.spyOn(...)` over `vi.mock(...)` for single methods—it leaves the rest of the module intact.
+- Reserve module-level `vi.mock("...")` for modules that must be fully replaced.
+- Call `vi.restoreAllMocks()` in `beforeEach` to prevent spy leaks across tests.
 - For one-off return values, prefer `mockReturnValueOnce` / `mockResolvedValueOnce`.
 
 ### Anti-patterns

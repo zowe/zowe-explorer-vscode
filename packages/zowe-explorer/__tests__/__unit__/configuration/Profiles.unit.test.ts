@@ -320,6 +320,15 @@ describe("Profiles Unit Test - Function createInstance", () => {
             return originalVscodeMock;
         });
         vi.doMock("@zowe/imperative");
+        vi.doMock("fs", async () => {
+            const actualFs = (await vi.importActual("fs")) as any;
+            return {
+                ...actualFs,
+                existsSync: vi
+                    .fn()
+                    .mockImplementation((p) => p === "fakePath" || p === "projectPath/zowe.config.user.json" || actualFs.existsSync(p)),
+            };
+        });
     });
 
     beforeEach(() => {
@@ -577,6 +586,11 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         Object.defineProperty(vscode.workspace, "workspaceFolders", {
             get: () => [{ uri: { fsPath: "projectPath/zowe.config.user.json", scheme: "file" }, name: "zowe.config.user.json", index: 0 }],
             configurable: true,
+        });
+        vi.spyOn(ZoweVsCodeExtension, "workspaceRoot", "get").mockReturnValue({
+            uri: { fsPath: "projectPath/zowe.config.user.json" } as any,
+            name: "zowe.config.user.json",
+            index: 0,
         });
         // Removes any loaded config
         imperative.ImperativeConfig.instance.loadedConfig = undefined as any;
