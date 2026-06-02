@@ -89,6 +89,7 @@ export namespace Definitions {
         favorites: string[];
         vsamFavorites?: string[];
         memberFavorites?: string[];
+        migratedFavorites?: string[];
         history: string[];
         sessions: string[];
         searchHistory: string[];

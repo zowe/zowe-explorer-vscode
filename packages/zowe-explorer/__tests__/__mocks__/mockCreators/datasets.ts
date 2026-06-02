@@ -95,6 +95,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         updateFavorites: vi.fn(),
         readVsamFavorites: vi.fn().mockReturnValue([]),
         readMemberFavorites: vi.fn().mockReturnValue([]),
+        readMigratedFavorites: vi.fn().mockReturnValue([]),
         renameNode: vi.fn(),
         findFavoritedNode: vi.fn(),
         findNonFavoritedNode: vi.fn(),

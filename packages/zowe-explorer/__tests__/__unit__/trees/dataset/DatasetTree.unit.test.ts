@@ -4973,6 +4973,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.PO.DS{pds}", "[test]: SAMPLE.PS.DS{ds}", "INVALID*"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -4988,6 +4989,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.DS{ds}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -5007,6 +5009,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}", "[test]: SAMPLE.PS.DS{ds}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -5029,6 +5032,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
