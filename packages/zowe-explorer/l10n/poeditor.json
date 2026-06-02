@@ -1236,6 +1236,7 @@
   "Fixed an issue where registering new profile types from a Zowe Explorer extender could cause an internal API error on startup. <a>#3412</a>": "",
   "Fixed an issue where remote changes to a data set member are not detected by Zowe Explorer if the member's resource path ends in an extension. <a>#3555</a>": "",
   "Fixed an issue where remote lookup functionality caused the local side of a conflict to be overwritten with the remote contents. <a>#3085</a>": "",
+  "Fixed an issue where renaming a data set to itself minus its rightmost qualifier caused the rename to fail. <a>#4273</a>": "",
   "Fixed an issue where renaming a data set with unsaved changes did not cancel the rename operation. Now, when renaming a data set with unsaved changes, you are prompted to resolve them before continuing. <a>#3326</a>": "",
   "Fixed an issue where renaming or deleting a USS file or data set did not update the opened editor. <a>#3260</a>": "",
   "Fixed an issue where renaming or deleting the team configuration file caused an unhandled exception in Zowe Explorer, causing old, non-existent profiles to remain in the tree views. <a>#3772</a>": "",
