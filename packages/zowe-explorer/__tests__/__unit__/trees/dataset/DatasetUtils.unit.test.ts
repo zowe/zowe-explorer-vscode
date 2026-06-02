@@ -139,15 +139,15 @@ describe("Dataset utils unit tests - function getExtensionMap", () => {
         } as any;
     }
 
-    it("should return extension map based on member names", async () => {
+    it("should not infer extensions from member names", async () => {
         const mockNode = createMockNode("TEST.PDS", [{ label: "MEMBER1" }, { label: "COBOL" }, { label: "XML" }]);
 
         const result = await DatasetUtils.getExtensionMap(mockNode, false);
 
         expect(result).toEqual({
             member1: "txt",
-            cobol: "cbl",
-            xml: "xml",
+            cobol: "txt",
+            xml: "txt",
         });
     });
 
@@ -158,7 +158,7 @@ describe("Dataset utils unit tests - function getExtensionMap", () => {
 
         expect(result).toEqual({
             MEMBER1: "txt",
-            COBOL: "cbl",
+            COBOL: "txt",
             ".f@K3": "txt",
         });
     });

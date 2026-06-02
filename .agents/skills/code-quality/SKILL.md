@@ -34,21 +34,21 @@ Centralize error formatting using `AuthUtils.errorHandling` rather than duplicat
 ```typescript
 // BAD: Inconsistent UI output and duplicated logging
 try {
-    await api.dataSet(filter);
+  await api.dataSet(filter);
 } catch (error) {
-    ZoweLogger.error(`Error: ${error.message}`);
-    vscode.window.showErrorMessage(`Failed to list datasets: ${error.message}`);
+  ZoweLogger.error(`Error: ${error.message}`);
+  vscode.window.showErrorMessage(`Failed to list datasets: ${error.message}`);
 }
 
 // GOOD: Consistent error handling that translates errors and handles auth edge cases
 try {
-    await api.dataSet(filter);
+  await api.dataSet(filter);
 } catch (error) {
-    await AuthUtils.errorHandling(error, {
-        apiType: ZoweExplorerApiType.Mvs,
-        profile: node.getProfile(),
-        scenario: "Dataset listing",
-    });
+  await AuthUtils.errorHandling(error, {
+    apiType: ZoweExplorerApiType.Mvs,
+    profile: node.getProfile(),
+    scenario: "Dataset listing",
+  });
 }
 ```
 
@@ -61,8 +61,8 @@ Always use the `Gui` utility (from `zowe-explorer-api`) for user interactions ra
 import { Gui } from "@zowe/zowe-explorer-api";
 
 const input = await Gui.showInputBox({
-    prompt: "Enter dataset name",
-    placeHolder: "HLQ.DATA.SET"
+  prompt: "Enter dataset name",
+  placeHolder: "HLQ.DATA.SET",
 });
 ```
 
