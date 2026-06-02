@@ -292,7 +292,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 // fileList was called on that file. Otherwise, it's a directory listing.
                 const hasSelfEntry = rawItems.some((item) => item.name === ".");
                 const isSingleFileMatch =
-                    rawItems.length === 1 && (rawItems[0].name === uriBasename || rawItems[0].name === ussPath) && !(rawItems[0].mode as string | undefined)?.startsWith("d");
+                    rawItems.length === 1 &&
+                    (rawItems[0].name === uriBasename || rawItems[0].name === ussPath) &&
+                    !(rawItems[0].mode as string | undefined)?.startsWith("d");
                 const isDirectoryResponse =
                     (hasSelfEntry && (rawItems.find((item) => item.name === ".")?.mode as string | undefined)?.startsWith("d")) ||
                     (rawItems.length > 0 && !hasSelfEntry && !isSingleFileMatch) ||

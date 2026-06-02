@@ -326,11 +326,7 @@ describe("USSUtils Unit Tests - filterHiddenFiles", () => {
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [
-                    { name: ".hidden" },
-                    { name: "visible.txt" },
-                    { name: ".profile" },
-                ],
+                items: [{ name: ".hidden" }, { name: "visible.txt" }, { name: ".profile" }],
             },
         } as any;
 
@@ -345,10 +341,7 @@ describe("USSUtils Unit Tests - filterHiddenFiles", () => {
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [
-                    { name: "/u/users/ibmuser/.hidden" },
-                    { name: "/u/users/ibmuser/visible.txt" },
-                ],
+                items: [{ name: "/u/users/ibmuser/.hidden" }, { name: "/u/users/ibmuser/visible.txt" }],
             },
         } as any;
 
