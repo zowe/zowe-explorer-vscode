@@ -2025,7 +2025,7 @@ describe("DatasetFSProvider", () => {
                     const dataSetMock = vi.fn().mockResolvedValue({
                         success: true,
                         apiResponse: {
-                            items: [{ name: "USER.DATA.PS" }],
+                            items: [{ dsname: "USER.DATA.PS" }],
                         },
                         commandResponse: "",
                     });
@@ -2039,6 +2039,30 @@ describe("DatasetFSProvider", () => {
                         profile: testProfile,
                     });
                     expect(dataSetMock).toHaveBeenCalled();
+                });
+
+                it("treats non-exact dataset API results as missing", async () => {
+                    const targetUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA" });
+                    const dataSetMock = vi.fn().mockResolvedValue({
+                        success: true,
+                        apiResponse: {
+                            items: [{ dsname: "USER.DATA.PS" }],
+                        },
+                        commandResponse: "",
+                    });
+                    vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                        dataSet: dataSetMock,
+                    } as any);
+
+                    await expect(
+                        (DatasetFSProvider.instance as any).fetchDataset(targetUri, {
+                            isRoot: false,
+                            slashAfterProfilePos: targetUri.path.indexOf("/", 1),
+                            profileName: "sestest",
+                            profile: testProfile,
+                        })
+                    ).rejects.toThrow();
+                    expect(dataSetMock).toHaveBeenCalledWith("USER.DATA", { attributes: true });
                 });
 
                 it("existing URI", async () => {
@@ -2087,7 +2111,7 @@ describe("DatasetFSProvider", () => {
                     const dataSetMock = vi.fn().mockResolvedValue({
                         success: true,
                         apiResponse: {
-                            items: [{ name: "USER.DATA.PDS", dsorg: "PO" }],
+                            items: [{ dsname: "USER.DATA.PDS", dsorg: "PO" }],
                         },
                         commandResponse: "",
                     });
@@ -2316,6 +2340,74 @@ describe("DatasetFSProvider", () => {
                 .mockReturnValue({ ...testEntries.session });
             await DatasetFSProvider.instance.rename(testUris.ps, testUris.ps.with({ path: "/USER.DATA.PS2" }), { overwrite: true });
             expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith("USER.DATA.PS", "USER.DATA.PS2");
+        });
+
+        it("renames a PS when removing the rightmost qualifier", async () => {
+            const mockMvsApi = {
+                renameDataSet: vi.fn(),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue({ ...testEntries.session });
+
+            const before = "HLQ.RENAME.ME";
+            const after = "HLQ.RENAME";
+            const oldPs = new DsEntry(before, false);
+            oldPs.metadata = new DsEntryMetadata({ profile: testProfile, path: `/${before}` });
+            const oldUri = Uri.from({ scheme: ZoweScheme.DS, path: `/sestest/${before}` });
+            const newUri = oldUri.with({ path: `/sestest/${after}` });
+
+            const lookupSpy = vi
+                .spyOn(DatasetFSProvider.instance as any, "lookup")
+                .mockImplementation((uri): DirEntry | FileEntry => ((uri as Uri).path === newUri.path ? (undefined as any) : oldPs));
+
+            await DatasetFSProvider.instance.rename(oldUri, newUri, { overwrite: false });
+            expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith(before, after);
+            lookupSpy.mockRestore();
+        });
+
+        it("renames a PS when adding a rightmost qualifier", async () => {
+            const mockMvsApi = {
+                renameDataSet: vi.fn(),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue({ ...testEntries.session });
+
+            const before = "HLQ.RENAME";
+            const after = "HLQ.RENAME.ME";
+            const oldPs = new DsEntry(before, false);
+            oldPs.metadata = new DsEntryMetadata({ profile: testProfile, path: `/${before}` });
+            const oldUri = Uri.from({ scheme: ZoweScheme.DS, path: `/sestest/${before}` });
+            const newUri = oldUri.with({ path: `/sestest/${after}` });
+
+            const lookupSpy = vi
+                .spyOn(DatasetFSProvider.instance as any, "lookup")
+                .mockImplementation((uri): DirEntry | FileEntry => ((uri as Uri).path === newUri.path ? (undefined as any) : oldPs));
+
+            await DatasetFSProvider.instance.rename(oldUri, newUri, { overwrite: false });
+            expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith(before, after);
+            lookupSpy.mockRestore();
+        });
+
+        it("renames a PS when a middle qualifier changes", async () => {
+            const before = "HLQ.RENAME.ME.THREE.MORE.TIMES";
+            const after = "HLQ.RENAME.ME.TWO.MORE.TIMES";
+            const oldPs = new DsEntry(before, false);
+            oldPs.metadata = new DsEntryMetadata({ profile: testProfile, path: `/${before}` });
+
+            const mockMvsApi = {
+                renameDataSet: vi.fn(),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+
+            const oldUri = Uri.from({ scheme: ZoweScheme.DS, path: `/sestest/${before}` });
+            const newUri = oldUri.with({ path: `/sestest/${after}` });
+            vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockImplementation((uri): DirEntry | FileEntry =>
+                (uri as Uri).path === newUri.path ? (undefined as any) : oldPs
+            );
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue({ ...testEntries.session });
+
+            await DatasetFSProvider.instance.rename(oldUri, newUri, { overwrite: false });
+            expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith(before, after);
         });
 
         it("renames a PDS", async () => {

@@ -410,12 +410,25 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
                 } else {
-                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(uriPath[0], {
+                    const requestedDsName = uriPath[0];
+                    const extension = DatasetUtils.getExtension(requestedDsName);
+                    const apiLookupName =
+                        extension && requestedDsName.toLowerCase().endsWith(extension)
+                            ? requestedDsName.slice(0, requestedDsName.length - extension.length)
+                            : requestedDsName;
+
+                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(apiLookupName, {
                         attributes: true,
                     });
-                    if (resp.success && resp.apiResponse?.items?.length > 0) {
-                        entryIsDir = resp.apiResponse.items[0].dsorg?.startsWith("PO");
-                        entryStats = DatasetUtils.getDataSetStats(resp.apiResponse.items[0]);
+
+                    const responseItems = resp.apiResponse?.items ?? [];
+                    const matchedItem =
+                        responseItems.find((ds) => (ds?.dsname ?? ds?.name)?.toUpperCase() === apiLookupName.toUpperCase()) ??
+                        (responseItems.every((ds) => typeof (ds?.dsname ?? ds?.name) !== "string") ? responseItems[0] : undefined);
+
+                    if (resp.success && matchedItem) {
+                        entryIsDir = matchedItem.dsorg?.startsWith("PO");
+                        entryStats = DatasetUtils.getDataSetStats(matchedItem);
                     } else {
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
