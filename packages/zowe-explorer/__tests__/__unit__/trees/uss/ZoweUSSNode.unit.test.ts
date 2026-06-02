@@ -1242,8 +1242,9 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        // Populate node with children from previous search to ensure they are removed
-        blockMocks.childNode.children = [createUSSNode(globalMocks.session, globalMocks.profileOne)];
+        // Populate node with children from previous search to ensure they are restored
+        const oldChild = createUSSNode(globalMocks.session, globalMocks.profileOne);
+        blockMocks.childNode.children = [oldChild];
         blockMocks.childNode.contextValue = Constants.USS_SESSION_CONTEXT;
         blockMocks.childNode.fullPath = "Throw Error";
         blockMocks.childNode.dirty = true;
@@ -1253,7 +1254,9 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         });
 
         const response = await blockMocks.childNode.getChildren();
-        expect(response).toEqual([]);
+        expect(response).toEqual([oldChild]);
+        expect(blockMocks.childNode.fullPath).toEqual("root/root");
+        expect(blockMocks.childNode.description).toEqual("root/root");
         expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual("Throwing an error to check error handling for unit tests!");
     });
