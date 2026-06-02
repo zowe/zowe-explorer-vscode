@@ -4,6 +4,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
+### Bug fixes
+
+- Fixed an issue where submitting a job from a favorited PDS member would fail. [#4282](https://github.com/zowe/zowe-explorer-vscode/issues/4282)
+
+## `3.5.0`
+
 ### New features and enhancements
 
 - Enhanced "Show Attributes" feature with improved visual presentation: aligned all attribute table columns consistently across core and extender sections, added thousands separators for numeric values, and automatically appends the `%` symbol to "Used Space" values for better readability. [#3927](https://github.com/zowe/zowe-explorer-vscode/issues/3927)
@@ -20,6 +26,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### Bug fixes
 
 - Fixed an issue where copying a USS file across profiles when a profile encoding was configured would corrupt characters in the destination file because the encoding was not passed to the upload call. [#4262](https://github.com/zowe/zowe-explorer-vscode/pull/4262)
+- Fixed an issue where Zowe Explorer failed to activate if a VS Code workspace is opened and contains an invalid directory path. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are treated as project-level directories. [#4271](https://github.com/zowe/zowe-explorer-vscode/issues/4271)
 - Fixed an issue where saving contents to a data set or USS file could trigger built-in conflict detection, specifically when the API does not include a timestamp for that resource. Now, the modification time of a data set or USS file in Zowe Explorer's filesystem is kept as-is if the API does not provide a timestamp. Users can continue to use the "Pull from Mainframe" context-menu option to fetch the latest contents of a data set or USS file in an opened editor. [#4206](https://github.com/zowe/zowe-explorer-vscode/issues/4206)
 - Updated USS and data set file system providers to generate notifications based on remote system changes rather than local file system cache updates. [#4162](https://github.com/zowe/zowe-explorer-vscode/pull/4162)
 - Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. [#3554](https://github.com/zowe/zowe-explorer-vscode/issues/3554)
