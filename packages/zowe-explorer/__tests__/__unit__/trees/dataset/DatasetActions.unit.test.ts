@@ -435,6 +435,22 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         await DatasetActions.refreshPS(child);
         expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(child.resourceUri, { editor: undefined });
     });
+    it("Checking favorite PDS Member refresh when member node context has favorite suffix", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocksShared();
+        const parent = new ZoweDatasetNode({
+            label: "parent",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        const child = new ZoweDatasetNode({ label: "child", collapsibleState: vscode.TreeItemCollapsibleState.None, parentNode: parent });
+        parent.contextValue = Constants.DS_PDS_CONTEXT + Constants.FAV_SUFFIX;
+        child.contextValue = Constants.DS_MEMBER_CONTEXT + Constants.FAV_SUFFIX;
+
+        await DatasetActions.refreshPS(child);
+        
+        expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(child.resourceUri, { editor: undefined });
+    });
     it("Checking favorite PS refresh", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocksShared();

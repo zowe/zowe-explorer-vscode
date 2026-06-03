@@ -43,7 +43,7 @@ The project is a monorepo managed by pnpm. `zowe-explorer` depends on `zowe-expl
 - `packages/zowe-explorer/`: Main VS Code extension (tree views, UI).
 - `packages/zowe-explorer-ftp-extension/`: Sample extension implementing FTP (`zftp`) profile support.
 
-*Note: Changes in the API can sometimes require a full monorepo build (`pnpm build`) to be picked up by the VS Code extension.*
+_Note: Changes in the API can sometimes require a full monorepo build (`pnpm build`) to be picked up by the VS Code extension._
 
 ## Architecture and logic patterns
 
@@ -55,6 +55,7 @@ The project is a monorepo managed by pnpm. `zowe-explorer` depends on `zowe-expl
 ## Code style examples
 
 **Error Handling:**
+
 ```typescript
 // ✅ Good - Uses AuthUtils.errorHandling for consistent user feedback
 try {
@@ -69,6 +70,7 @@ try {
 ```
 
 **Logging:**
+
 ```typescript
 // ✅ Good - Logs with context before handling
 ZoweLogger.error(`Operation failed for ${profile}: ${error.message}`);
@@ -84,15 +86,15 @@ ZoweLogger.error(`Operation failed for ${profile}: ${error.message}`);
 
 ## Boundaries
 
-- ✅ **Always do:** 
+- ✅ **Always do:**
   - Use `vscode.workspace.fs` or Zowe filesystem providers for file access.
   - Use `extensionContext.storageUri` or `globalStorageUri` for temporary files.
   - Sanitize user inputs before passing to shell commands.
   - Run `pnpm lint`, `pnpm pretty`, and `pnpm build` before submitting PRs.
-- ⚠️ **Ask first:** 
+- ⚠️ **Ask first:**
   - Before adding new external dependencies (check if they exist in the monorepo first to minimize bundle size).
   - Before making changes that might break backward compatibility in `zowe-explorer-api`.
-- 🚫 **Never do:** 
+- 🚫 **Never do:**
   - **NEVER** use direct `fs` or `path` calls for mainframe resources.
   - **NEVER** use hardcoded temporary directories.
   - **NEVER** log user credentials or passwords to the console.
