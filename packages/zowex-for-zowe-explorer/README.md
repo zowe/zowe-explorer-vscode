@@ -34,7 +34,7 @@ pnpm --filter zowex-for-zowe-explorer link:zowex -- ../custom-path/packages/sdk
 
 ### Testing backend changes
 
-To test changes to the `zowex` server without redeploying, define a `serverPath` property in your SSH profile in `zowe.config.json`. Point it to the directory containing the built `zowex` binary on the host (e.g., `<deployDir>/c/build-out`).
+To test changes to the `zowex` server without redeploying, define a `serverPath` property in your SSH profile in `zowe.config.json`. Point it to the directory containing the built `zowex` binary on the host (for example, `<deployDir>/c/build-out`).
 
 ```json
 "profiles": {
