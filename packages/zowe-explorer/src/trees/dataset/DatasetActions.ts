@@ -2117,7 +2117,7 @@ export class DatasetActions {
             const defaultMessage = vscode.l10n.t("Cannot submit, item invalid.");
             switch (true) {
                 // For favorited or non-favorited sequential DS:
-                case SharedContext.isFavorite(node):
+                case SharedContext.isFavorite(node) && !SharedContext.isDsMember(node):
                 case SharedContext.isSessionNotFav(node.getParent()):
                     sesName = node.getParent().getLabel() as string;
                     label = node.label as string;
@@ -2305,7 +2305,7 @@ export class DatasetActions {
         try {
             switch (true) {
                 // For favorited or non-favorited sequential DS:
-                case SharedContext.isFavorite(node):
+                case SharedContext.isFavorite(node) && !SharedContext.isDsMember(node):
                 case SharedContext.isSessionNotFav(node.getParent()):
                 case SharedContext.isDs(node):
                     label = node.label as string;
