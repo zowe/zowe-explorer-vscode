@@ -260,7 +260,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         // Preserve favorite context and any additional context values
         const isBinary = SharedContext.isBinary(this);
         const isPds = this.collapsibleState !== vscode.TreeItemCollapsibleState.None;
-        this.wasPds = isPds;
+        this.wasPds = isPds ? true : undefined;
         let previousContext = isBinary ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
         if (isPds) {
             previousContext = Constants.DS_PDS_CONTEXT;
@@ -368,7 +368,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
                         profile: cachedProfile,
                     });
-                    dsNode.wasPds = item.dsorg?.startsWith("PO");
+                    dsNode.wasPds = item.dsorg?.startsWith("PO") ? true : undefined;
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.dsorg?.startsWith("PO")) {
                     // Creates a ZoweDatasetNode for a PDS

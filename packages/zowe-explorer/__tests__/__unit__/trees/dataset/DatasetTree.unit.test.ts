@@ -471,7 +471,16 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         const blockMocks = createBlockMocks();
 
         const mockMvsApi = ZoweExplorerApiRegister.getMvsApi(blockMocks.profile);
-        mockMvsApi.dataSetsMatchingPattern = null;
+        Object.defineProperty(mockMvsApi, "dataSetsMatchingPattern", {
+            value: undefined,
+            writable: true,
+            configurable: true,
+        });
+        Object.defineProperty(mockMvsApi, "getCount", {
+            value: undefined,
+            writable: true,
+            configurable: true,
+        });
         const getMvsApiMock = vi.fn();
         getMvsApiMock.mockReturnValue(mockMvsApi);
         ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
@@ -5060,7 +5069,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
 
         const dsNode = profileNode.children[0] as ZoweDatasetNode;
         expect(SharedContext.isMigrated(dsNode)).toBe(true);
-        expect(dsNode.wasPds).toBe(false);
+        expect(dsNode.wasPds).toBeUndefined();
 
         const pdsNode = profileNode.children[1] as ZoweDatasetNode;
         expect(SharedContext.isMigrated(pdsNode)).toBe(true);

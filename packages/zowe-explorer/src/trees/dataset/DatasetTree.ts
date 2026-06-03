@@ -660,7 +660,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     profile,
                     contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
                 });
-                node.wasPds = contextValue.includes(Constants.DS_PDS_CONTEXT);
+                node.wasPds = contextValue.includes(Constants.DS_PDS_CONTEXT) ? true : undefined;
             } else if (contextValue.includes(Constants.DS_PDS_CONTEXT)) {
                 node = new ZoweDatasetNode({
                     label,
