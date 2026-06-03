@@ -4973,7 +4973,6 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.PO.DS{pds}", "[test]: SAMPLE.PS.DS{ds}", "INVALID*"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
-            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -4989,7 +4988,6 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.DS{ds}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
-            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -5009,7 +5007,6 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}", "[test]: SAMPLE.PS.DS{ds}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
-            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -5032,7 +5029,6 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
-            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -5045,6 +5041,30 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
         const pdsNodeAfterRefresh = blockMocks.testTree.mFavorites[0].children[0] as ZoweDatasetNode;
         expect(pdsNodeAfterRefresh.favoritedMemberNames).toEqual(["MEM1", "MEM2"]);
         expect(pdsNodeAfterRefresh.description).toBeUndefined();
+    });
+
+    it("successfully initializes migrated favorites from the main favorites list", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        vi.spyOn(blockMocks.testTree as any, "mPersistence" as any, "get").mockReturnValue({
+            readFavorites: () => ["[test]: SAMPLE.PS.MIGR{ds_migr}", "[test]: SAMPLE.PDS.MIGR{pds_migr}"],
+            readVsamFavorites: () => [],
+            readMemberFavorites: () => [],
+        } as any);
+        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        const profileNode = blockMocks.testTree.mFavorites[0];
+        expect(profileNode.children?.map((item) => item.label)).toEqual(["SAMPLE.PS.MIGR", "SAMPLE.PDS.MIGR"]);
+
+        const dsNode = profileNode.children[0] as ZoweDatasetNode;
+        expect(SharedContext.isMigrated(dsNode)).toBe(true);
+        expect(dsNode.wasPds).toBe(false);
+
+        const pdsNode = profileNode.children[1] as ZoweDatasetNode;
+        expect(SharedContext.isMigrated(pdsNode)).toBe(true);
+        expect(pdsNode.wasPds).toBe(true);
     });
 });
 

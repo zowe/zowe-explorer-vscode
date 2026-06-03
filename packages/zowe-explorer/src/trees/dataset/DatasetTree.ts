@@ -579,8 +579,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         const lines: string[] = this.mPersistence.readFavorites();
         const vsamLines: string[] = this.mPersistence.readVsamFavorites();
         const memberLines: string[] = this.mPersistence.readMemberFavorites();
-        const migratedLines: string[] = this.mPersistence.readMigratedFavorites ? this.mPersistence.readMigratedFavorites() : [];
-        const combinedLines = [...lines, ...vsamLines, ...memberLines, ...migratedLines];
+        const combinedLines = [...lines, ...vsamLines, ...memberLines];
         if (combinedLines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No data set favorites found."));
             return;
@@ -1490,7 +1489,6 @@ Would you like to do this now?`,
         const favoritesArray: string[] = [];
         const vsamFavoritesArray: string[] = [];
         const memberFavoritesArray: string[] = [];
-        const migratedFavoritesArray: string[] = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((favorite) => {
                 const pdsNode = favorite as ZoweDatasetNode;
@@ -1518,8 +1516,6 @@ Would you like to do this now?`,
                         "[" + profileNode.label.toString() + "]: " + favorite.label.toString() + "{" + baseContext + "}";
                     if (favorite.contextValue?.includes(Constants.VSAM_CONTEXT)) {
                         vsamFavoritesArray.push(favoriteEntry);
-                    } else if (SharedContext.isMigrated(favorite)) {
-                        migratedFavoritesArray.push(favoriteEntry);
                     } else {
                         favoritesArray.push(favoriteEntry);
                     }
@@ -1530,7 +1526,6 @@ Would you like to do this now?`,
             favorites: favoritesArray,
             vsamFavorites: vsamFavoritesArray,
             memberFavorites: memberFavoritesArray,
-            migratedFavorites: migratedFavoritesArray,
         });
     }
 
