@@ -27,10 +27,10 @@ To test local changes to `@zowe/zowex-for-zowe-sdk`, link your local `zowex` rep
 pnpm --filter zowex-for-zowe-explorer link:zowex
 
 # Or specify a custom path (must be relative to workspace root)
-pnpm --filter zowex-for-zowe-explorer link:zowex -- ../custom-path/packages/sdk
+pnpm --filter zowex-for-zowe-explorer link:zowex ../custom-path/packages/sdk
 ```
 
-**Note:** The link automatically reflects edits to existing files. If you add or remove files in the SDK, re-run `pnpm install` in Zowe Explorer to update the package structure.
+**Note:** Any code changes made to existing files in your local SDK repository are immediately available in Zowe Explorer because the package is linked. After adding or removing files in the SDK, you must re-run `pnpm install` in the Zowe Explorer workspace to ensure the new file structure is recognized.
 
 ### Testing backend changes
 

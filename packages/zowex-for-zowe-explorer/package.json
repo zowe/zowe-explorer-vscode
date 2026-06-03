@@ -22,7 +22,7 @@
     "build": "tsc -p ./ && pnpm madge",
     "clean": "rimraf bin lib coverage",
     "license": "node ../../scripts/updateLicenses.mjs",
-    "link:zowex": "sh -c 'pnpm add \"file:../../${1:-../zowex/packages/sdk}\"'",
+    "link:zowex": "node ../../scripts/linkZowex.js",
     "newlint": "concurrently -n \"_eslint_,prettier\" \"pnpm lint:all\" \"pnpm lint:pretty\"",
     "newlint:html": "(mkdir -p \"results\" || true) && eslint . --format html > results/eslint.html",
     "lint": "concurrently -n \"_eslint_,prettier\" \"pnpm lint:src\" \"pnpm lint:html\" \"pnpm lint:pretty\"",
