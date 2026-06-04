@@ -15,3 +15,34 @@ To deploy an instance of the Zowe Remote SSH server, run the `Zowe Explorer: Con
 In the event that the server is unresponsive, you can restart the server with the `Zowe Explorer: Restart zowex server on host...` command.
 
 To remove the server instance entirely, run the `Zowe Explorer: Uninstall zowex server on host...` command.
+
+## Development
+
+### Linking a local Zowex SDK
+
+To test local changes to `@zowe/zowex-for-zowe-sdk`, link your local `zowex` repository from the root of the Zowe Explorer workspace:
+
+```bash
+# Uses default path: ../zowex/packages/sdk
+pnpm --filter zowex-for-zowe-explorer link:zowex
+
+# Or specify a custom path (must be relative to workspace root)
+pnpm --filter zowex-for-zowe-explorer link:zowex ../custom-path/packages/sdk
+```
+
+**Note:** Any code changes made to existing files in your local SDK repository are immediately available in Zowe Explorer because the package is linked. After adding or removing files in the SDK, you must re-run `pnpm install` in the Zowe Explorer workspace to ensure the new file structure is recognized.
+
+### Testing backend changes
+
+To test changes to the `zowex` server without redeploying, define a `serverPath` property in your SSH profile in `zowe.config.json`. Point it to the directory containing the built `zowex` binary on the host (for example, `<deployDir>/c/build-out`).
+
+```json
+"profiles": {
+  "ssh_dev": {
+    "type": "ssh",
+    "properties": {
+      "serverPath": "~/zowex/c/build-out"
+    }
+  }
+}
+```
