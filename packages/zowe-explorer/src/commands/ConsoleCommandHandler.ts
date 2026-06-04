@@ -21,60 +21,60 @@ import { SettingsConfig } from "../configuration/SettingsConfig";
 import { Constants } from "../configuration/Constants";
 
 /**
- * Provides a class that manages submitting a command on the server
+ * Provides a class that manages submitting a console command on the server
  *
  * @export
- * @class MvsCommandHandler
+ * @class ConsoleCommandHandler
  */
-export class MvsCommandHandler extends ZoweCommandProvider {
+export class ConsoleCommandHandler extends ZoweCommandProvider {
     /**
      * Implements access singleton
-     * for {MvsCommandHandler}.
+     * for {ConsoleCommandHandler}.
      *
-     * @returns {MvsCommandHandler}
+     * @returns {ConsoleCommandHandler}
      */
-    public static getInstance(): MvsCommandHandler {
-        if (!MvsCommandHandler.instance) {
-            MvsCommandHandler.instance = new MvsCommandHandler();
+    public static getInstance(): ConsoleCommandHandler {
+        if (!ConsoleCommandHandler.instance) {
+            ConsoleCommandHandler.instance = new ConsoleCommandHandler();
         }
         return this.instance;
     }
 
     public readonly dialogs: ICommandProviderDialogs = {
-        commandSubmitted: vscode.l10n.t("MVS command submitted."),
-        defaultText: `$(plus) ${vscode.l10n.t("Create a new MVS command")}`,
-        selectProfile: vscode.l10n.t("Select the profile to use to submit the MVS command"),
-        searchCommand: vscode.l10n.t("Enter or update the MVS command"),
+        commandSubmitted: vscode.l10n.t("Console command submitted."),
+        defaultText: `$(plus) ${vscode.l10n.t("Create a new console command")}`,
+        selectProfile: vscode.l10n.t("Select the profile to use to submit the console command"),
+        searchCommand: vscode.l10n.t("Enter or update the console command"),
         writeCommand: (options) =>
             vscode.l10n.t({
-                message: "Select an MVS command to run against {0} (An option to edit will follow)",
+                message: "Select a console command to run against {0} (An option to edit will follow)",
                 args: options,
                 comment: ["Host name"],
             }),
         selectCommand: (options) =>
             vscode.l10n.t({
-                message: "Select an MVS command to run immediately against {0}",
+                message: "Select a console command to run immediately against {0}",
                 args: options,
                 comment: ["Host name"],
             }),
     };
 
     public history: ZowePersistentFilters;
-    private static instance: MvsCommandHandler;
+    private static instance: ConsoleCommandHandler;
 
     public constructor() {
-        super(vscode.l10n.t("Zowe MVS Command"));
+        super(vscode.l10n.t("Zowe Console Command"));
         this.history = new ZowePersistentFilters(PersistenceSchemaEnum.MvsCommands, ZoweCommandProvider.totalFilters);
     }
 
     /**
-     * Allow the user to submit a MVS Console command to the selected server. Response is written
+     * Allow the user to submit a console command to the selected server. Response is written
      * to the output channel.
      * @param session the session the command is to run against (optional) user is prompted if not supplied
      * @param command the command string (optional) user is prompted if not supplied
      */
-    public async issueMvsCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
-        ZoweLogger.trace("MvsCommandHandler.issueMvsCommand called.");
+    public async issueConsoleCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
+        ZoweLogger.trace("ConsoleCommandHandler.issueConsoleCommand called.");
         let profile: imperative.IProfileLoaded;
         if (node) {
             await this.checkCurrentProfile(node);
@@ -134,7 +134,7 @@ export class MvsCommandHandler extends ZoweCommandProvider {
         if (command.startsWith("/")) {
             command = command.substring(1);
         }
-        const response = await ZoweExplorerApiRegister.getCommandApi(profile).issueMvsCommand(command, profile.profile?.consoleName);
+        const response = await ZoweExplorerApiRegister.getCommandApi(profile).issueConsoleCommand(command, profile.profile?.consoleName);
         return response.commandResponse;
     }
 }

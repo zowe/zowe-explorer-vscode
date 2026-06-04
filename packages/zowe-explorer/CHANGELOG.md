@@ -4,6 +4,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
+### New features and enhancements
+
+- Renamed references to "MVS Command" to "Console Command" instead for clarity.
+
 ### Bug fixes
 
 - Fixed an issue where copying a USS file across profiles when a profile encoding was configured would corrupt characters in the destination file because the encoding was not passed to the upload call. [#4262](https://github.com/zowe/zowe-explorer-vscode/pull/4262)

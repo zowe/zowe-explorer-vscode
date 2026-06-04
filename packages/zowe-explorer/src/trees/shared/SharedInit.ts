@@ -33,7 +33,7 @@ import { SharedTreeProviders } from "./SharedTreeProviders";
 import { JobActions } from "../job/JobActions";
 import { UssFSProvider } from "../uss/UssFSProvider";
 import { Constants } from "../../configuration/Constants";
-import { MvsCommandHandler } from "../../commands/MvsCommandHandler";
+import { ConsoleCommandHandler } from "../../commands/ConsoleCommandHandler";
 import { TsoCommandHandler } from "../../commands/TsoCommandHandler";
 import { UnixCommandHandler } from "../../commands/UnixCommandHandler";
 import { Profiles } from "../../configuration/Profiles";
@@ -187,7 +187,7 @@ export class SharedInit {
         context.subscriptions.push(vscode.window.registerWebviewViewProvider("zowe-resources", TableViewProvider.getInstance()));
 
         const commandProviders: Definitions.IZoweCommandProviders = {
-            mvs: MvsCommandHandler.getInstance(),
+            mvs: ConsoleCommandHandler.getInstance(),
             tso: TsoCommandHandler.getInstance(),
             uss: UnixCommandHandler.getInstance(),
         };
@@ -412,9 +412,9 @@ export class SharedInit {
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.issueMvsCmd", async (node?, command?) => {
                     if (node) {
-                        await commandProviders.mvs.issueMvsCommand(node.session, command, node);
+                        await commandProviders.mvs.issueConsoleCommand(node.session, command, node);
                     } else {
-                        await commandProviders.mvs.issueMvsCommand();
+                        await commandProviders.mvs.issueConsoleCommand();
                     }
                 })
             );

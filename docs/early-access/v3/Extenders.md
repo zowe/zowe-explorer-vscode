@@ -22,7 +22,7 @@
 - Added support to issue Unix commands with Zowe zosmf and ssh profiles working together in Zowe Explorer for VS Code.
 - Added support to compare files in the MVS and USS treeviews and across the two treeviews.
 - Added option to convert v1 Profiles in use to team configuration file.
-- Added support for `consoleName` property in z/OSMF profiles when issuing MVS commands.
+- Added support for `consoleName` property in z/OSMF profiles when issuing console commands.
 - Added PEM certificate support as an authentication method for logging into the API ML.
 - Added support for logging in to multiple API ML instances per team config file.
 - Added remote lookup functionality for Data Sets and USS, allowing Zowe Explorer to locate and resolve mainframe resources on demand.
