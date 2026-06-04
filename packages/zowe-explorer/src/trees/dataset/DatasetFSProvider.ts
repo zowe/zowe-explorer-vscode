@@ -1152,4 +1152,19 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         parent.entries.set(basename, entry);
         return entry;
     }
+
+    public invalidateCache(uri: vscode.Uri): void {
+        try {
+            const parent = this.lookupParentDirectory(uri, true);
+            if (parent) {
+                const basename = path.posix.basename(uri.path);
+                if (parent.entries.has(basename)) {
+                    parent.entries.delete(basename);
+                    this.fireSoon({ type: vscode.FileChangeType.Deleted, uri });
+                }
+            }
+        } catch (e) {
+            // Ignore if parent directory cannot be looked up or doesn't exist
+        }
+    }
 }

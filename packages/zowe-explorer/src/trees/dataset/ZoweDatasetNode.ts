@@ -364,6 +364,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                                     await equiv.datasetRecalled(isPds);
                                     dsTree.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
                                 }
+                                if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                                    dsTree.updateFavorites();
+                                }
                             }
                         } else if (!SharedContext.isMigrated(dsNode) && migrationStatus === "YES") {
                             dsNode.datasetMigrated();
@@ -373,6 +376,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                                 if (equiv) {
                                     equiv.datasetMigrated();
                                     dsTree.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                                }
+                                if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                                    dsTree.updateFavorites();
                                 }
                             }
                         }

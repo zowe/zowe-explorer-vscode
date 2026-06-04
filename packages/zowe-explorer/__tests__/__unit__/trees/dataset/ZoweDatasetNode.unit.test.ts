@@ -1148,6 +1148,9 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
                 resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
@@ -1198,6 +1201,9 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
                 resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
@@ -1249,6 +1255,9 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
                 resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
@@ -1296,6 +1305,9 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
                 resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
@@ -1347,6 +1359,9 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
                 resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
@@ -1395,6 +1410,9 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
                 resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),

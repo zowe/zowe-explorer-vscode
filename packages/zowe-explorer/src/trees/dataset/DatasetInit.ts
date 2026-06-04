@@ -63,7 +63,7 @@ export class DatasetInit {
             vscode.commands.registerCommand("zowe.ds.refreshNode", async (node, nodeList) => {
                 const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Pulling from Mainframe...")}`);
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                selectedNodes = selectedNodes.filter((element) => SharedContext.isDs(element) || SharedContext.isDsMember(element));
+                selectedNodes = selectedNodes.filter((element) => SharedContext.isDs(element) || SharedContext.isDsMember(element) || SharedContext.isMigrated(element));
                 for (const item of selectedNodes) {
                     await DatasetActions.refreshPS(item as IZoweDatasetTreeNode);
                 }
@@ -73,9 +73,13 @@ export class DatasetInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.refreshDataset", async (node, nodeList) => {
                 let selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
-                selectedNodes = selectedNodes.filter((element) => SharedContext.isDs(element) || SharedContext.isPdsNotFav(element));
+                selectedNodes = selectedNodes.filter((element) => SharedContext.isDs(element) || SharedContext.isPdsNotFav(element) || SharedContext.isMigrated(element));
                 for (const item of selectedNodes) {
-                    await DatasetActions.refreshDataset(item as IZoweDatasetTreeNode, datasetProvider);
+                    if (SharedContext.isMigrated(item)) {
+                        await DatasetActions.refreshPS(item as IZoweDatasetTreeNode);
+                    } else {
+                        await DatasetActions.refreshDataset(item as IZoweDatasetTreeNode, datasetProvider);
+                    }
                 }
             })
         );

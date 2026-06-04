@@ -2177,6 +2177,45 @@ export class DatasetActions {
     }
 
     /**
+     * Refreshes a migrated dataset node
+     * @param node The migrated dataset node to refresh
+     */
+    private static async refreshMigratedDataSet(node: IZoweDatasetTreeNode): Promise<void> {
+        const dataSetName = node.label as string;
+        try {
+            ZoweLogger.info(`Refreshing migrated data set ${dataSetName}`);
+            const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Checking migration status...")}`);
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+            const resp = await mvsApi.dataSet(dataSetName, { attributes: true });
+            statusMsg.dispose();
+            if (resp.success && resp.apiResponse?.items?.[0]) {
+                const item = resp.apiResponse.items[0];
+                const isMigrated = item.migr?.toUpperCase() === "YES";
+                if (!isMigrated) {
+                    const isPds = item.dsorg?.startsWith("PO") ?? false;
+                    await (node as ZoweDatasetNode).datasetRecalled(isPds);
+                    const datasetProvider = SharedTreeProviders.ds;
+                    if (datasetProvider) {
+                        const isFav = SharedContext.isFavoriteDescendant(node);
+                        const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
+                        if (equiv) {
+                            await equiv.datasetRecalled(isPds);
+                            datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                        }
+                        if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                            datasetProvider.updateFavorites();
+                        }
+                    }
+                    datasetProvider.refreshElement(node.getParent());
+                } else {
+                }
+            }
+        } catch (err) {
+            await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+        }
+    }
+
+    /**
      * Refreshes the passed node with current mainframe data
      *
      * @param {IZoweDatasetTreeNode} node - The node which represents the dataset
@@ -2184,6 +2223,10 @@ export class DatasetActions {
     // This is not a UI refresh.
     public static async refreshPS(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.refreshPS called.");
+        if (SharedContext.isMigrated(node)) {
+            await DatasetActions.refreshMigratedDataSet(node);
+            return;
+        }
         let label: string;
         try {
             switch (true) {
@@ -2300,6 +2343,24 @@ export class DatasetActions {
                     })
                 );
                 const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+                node.datasetMigrated();
+                if (node.resourceUri) {
+                    DatasetFSProvider.instance.invalidateCache(node.resourceUri);
+                }
+                if (datasetProvider) {
+                    const isFav = SharedContext.isFavoriteDescendant(node);
+                    const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
+                    if (equiv) {
+                        equiv.datasetMigrated();
+                        if (equiv.resourceUri) {
+                            DatasetFSProvider.instance.invalidateCache(equiv.resourceUri);
+                        }
+                        datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                    }
+                    if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                        datasetProvider.updateFavorites();
+                    }
+                }
                 datasetProvider.refreshElement(node.getParent());
                 return response;
             } catch (err) {
@@ -2333,6 +2394,33 @@ export class DatasetActions {
                     })
                 );
                 const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+                let isPds = false;
+                try {
+                    const dsResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).dataSet(dataSetName, { attributes: true });
+                    if (dsResp.success && dsResp.apiResponse?.items?.[0]) {
+                        isPds = dsResp.apiResponse.items[0].dsorg?.startsWith("PO") ?? false;
+                    }
+                } catch (e) {
+                    ZoweLogger.warn(`Failed to fetch recalled dataset attributes: ${e}`);
+                }
+                await node.datasetRecalled(isPds);
+                if (node.resourceUri) {
+                    DatasetFSProvider.instance.invalidateCache(node.resourceUri);
+                }
+                if (datasetProvider) {
+                    const isFav = SharedContext.isFavoriteDescendant(node);
+                    const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
+                    if (equiv) {
+                        await equiv.datasetRecalled(isPds);
+                        if (equiv.resourceUri) {
+                            DatasetFSProvider.instance.invalidateCache(equiv.resourceUri);
+                        }
+                        datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                    }
+                    if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                        datasetProvider.updateFavorites();
+                    }
+                }
                 datasetProvider.refreshElement(node.getParent());
                 return response;
             } catch (err) {

@@ -777,8 +777,16 @@ Would you like to do this now?`,
                 try {
                     await DatasetFSProvider.instance.stat(favorite.resourceUri);
                     const entry = DatasetFSProvider.instance.lookup(favorite.resourceUri, true) as any;
-                    if (entry && entry.stats && entry.stats.migr === "YES" && favorite instanceof ZoweDatasetNode) {
-                        favorite.datasetMigrated();
+                    if (entry && entry.stats && favorite instanceof ZoweDatasetNode) {
+                        const isMigrated = entry.stats.migr === "YES";
+                        if (isMigrated && !SharedContext.isMigrated(favorite)) {
+                            favorite.datasetMigrated();
+                            this.updateFavorites();
+                        } else if (!isMigrated && SharedContext.isMigrated(favorite)) {
+                            const isPds = entry.type === vscode.FileType.Directory || entry.stats.dsorg?.startsWith("PO") || favorite.wasPds || false;
+                            await favorite.datasetRecalled(isPds);
+                            this.updateFavorites();
+                        }
                     }
                 } catch (error) {
                     ZoweLogger.warn(`Failed to stat favorite ${favorite.label}: ${error}`);
@@ -1320,18 +1328,17 @@ Would you like to do this now?`,
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
-        return profileNodeInFavorites?.children.find(
-            (temp) => {
-                if (temp.label !== node.getLabel().toString()) {
-                    return false;
-                }
-                const tempBase = SharedContext.getBaseContext(temp);
-                const nodeBase = SharedContext.getBaseContext(node);
-                return tempBase === nodeBase || 
-                       ((tempBase === "pds" || tempBase === "ds" || tempBase === "migr") && 
-                        (nodeBase === "pds" || nodeBase === "ds" || nodeBase === "migr"));
+        return profileNodeInFavorites?.children.find((temp) => {
+            if (temp.label !== node.getLabel().toString()) {
+                return false;
             }
-        );
+            const tempBase = SharedContext.getBaseContext(temp);
+            const nodeBase = SharedContext.getBaseContext(node);
+            return (
+                tempBase === nodeBase ||
+                ((tempBase === "pds" || tempBase === "ds" || tempBase === "migr") && (nodeBase === "pds" || nodeBase === "ds" || nodeBase === "migr"))
+            );
+        });
     }
 
     /**
@@ -1533,8 +1540,7 @@ Would you like to do this now?`,
                     if (SharedContext.isMigrated(favorite)) {
                         baseContext = pdsNode.wasPds ? "pds_migr" : "ds_migr";
                     }
-                    const favoriteEntry =
-                        "[" + profileNode.label.toString() + "]: " + favorite.label.toString() + "{" + baseContext + "}";
+                    const favoriteEntry = "[" + profileNode.label.toString() + "]: " + favorite.label.toString() + "{" + baseContext + "}";
                     if (favorite.contextValue?.includes(Constants.VSAM_CONTEXT)) {
                         vsamFavoritesArray.push(favoriteEntry);
                     } else {
