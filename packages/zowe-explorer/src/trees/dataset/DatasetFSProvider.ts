@@ -348,6 +348,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let entryExists: boolean;
         let pdsMember: boolean;
         let uriPath: string[];
+        let isMigrated = false;
 
         await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const apiRegister = ZoweExplorerApiRegister.getInstance();
@@ -429,12 +430,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     if (resp.success && matchedItem) {
                         entryIsDir = matchedItem.dsorg?.startsWith("PO");
                         entryStats = DatasetUtils.getDataSetStats(matchedItem);
+                        isMigrated = matchedItem.migr?.toUpperCase() === "YES";
                     } else {
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
                 }
             }
         });
+
+        if (isMigrated && entryExists && entry && entry.type === vscode.FileType.Directory) {
+            const parentDir = this.lookupParentDirectory(uri);
+            const dsname = uriPath[Number(pdsMember)];
+            parentDir.entries.delete(dsname);
+            entryExists = false;
+        }
 
         if (entryIsDir) {
             if (!entryExists) {

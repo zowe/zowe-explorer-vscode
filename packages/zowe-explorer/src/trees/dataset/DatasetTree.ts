@@ -773,6 +773,18 @@ Would you like to do this now?`,
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
         const favsForProfile = profileInFavs.children;
         for (const favorite of favsForProfile) {
+            if (favorite.resourceUri) {
+                try {
+                    await DatasetFSProvider.instance.stat(favorite.resourceUri);
+                    const entry = DatasetFSProvider.instance.lookup(favorite.resourceUri, true) as any;
+                    if (entry && entry.stats && entry.stats.migr === "YES" && favorite instanceof ZoweDatasetNode) {
+                        favorite.datasetMigrated();
+                    }
+                } catch (error) {
+                    ZoweLogger.warn(`Failed to stat favorite ${favorite.label}: ${error}`);
+                }
+            }
+
             if (favorite.resourceUri && !DatasetFSProvider.instance.exists(favorite.resourceUri)) {
                 if (SharedContext.isPds(favorite)) {
                     await vscode.workspace.fs.createDirectory(favorite.resourceUri);
