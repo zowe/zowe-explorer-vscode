@@ -1321,7 +1321,16 @@ Would you like to do this now?`,
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         return profileNodeInFavorites?.children.find(
-            (temp) => temp.label === node.getLabel().toString() && temp.contextValue.includes(node.contextValue)
+            (temp) => {
+                if (temp.label !== node.getLabel().toString()) {
+                    return false;
+                }
+                const tempBase = SharedContext.getBaseContext(temp);
+                const nodeBase = SharedContext.getBaseContext(node);
+                return tempBase === nodeBase || 
+                       ((tempBase === "pds" || tempBase === "ds" || tempBase === "migr") && 
+                        (nodeBase === "pds" || nodeBase === "ds" || nodeBase === "migr"));
+            }
         );
     }
 

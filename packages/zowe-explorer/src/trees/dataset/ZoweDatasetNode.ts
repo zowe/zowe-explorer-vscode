@@ -225,7 +225,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * Updates this node so the recalled data set can be interacted with.
      * @param isPds Whether the data set is a PDS
      */
-    private async datasetRecalled(isPds: boolean): Promise<void> {
+    public async datasetRecalled(isPds: boolean): Promise<void> {
         // Change context value to match dsorg, update collapsible state and assign resource URI
         // Preserve favorite context and any additional context values
         this.contextValue = this.contextValue.replace(Constants.DS_MIGRATED_FILE_CONTEXT, isPds ? Constants.DS_PDS_CONTEXT : Constants.DS_DS_CONTEXT);
@@ -260,7 +260,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         // Preserve favorite context and any additional context values
         const isBinary = SharedContext.isBinary(this);
         const isPds = this.collapsibleState !== vscode.TreeItemCollapsibleState.None;
-        this.wasPds = isPds ? true : undefined;
+        this.wasPds = isPds;
         let previousContext = isBinary ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
         if (isPds) {
             previousContext = Constants.DS_PDS_CONTEXT;
@@ -288,6 +288,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public async getChildren(paginate?: boolean): Promise<ZoweDatasetNode[]> {
         ZoweLogger.trace(`ZoweDatasetNode.getChildren called for ${this.label as string}.`);
+        const dsTree = SharedTreeProviders.ds as DatasetTree;
         if (!this.pattern && SharedContext.isSessionNotFav(this)) {
             const placeholder = new ZoweDatasetNode({
                 label: vscode.l10n.t("Use the search button to display data sets"),
@@ -354,9 +355,26 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     if (item.migr) {
                         const migrationStatus = item.migr.toUpperCase();
                         if (SharedContext.isMigrated(dsNode) && migrationStatus !== "YES") {
-                            await dsNode.datasetRecalled(item.dsorg?.startsWith("PO"));
+                            const isPds = item.dsorg?.startsWith("PO");
+                            await dsNode.datasetRecalled(isPds);
+                            if (dsTree) {
+                                const isFav = SharedContext.isFavoriteDescendant(dsNode);
+                                const equiv = dsTree.findEquivalentNode(dsNode, isFav) as ZoweDatasetNode;
+                                if (equiv) {
+                                    await equiv.datasetRecalled(isPds);
+                                    dsTree.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                                }
+                            }
                         } else if (!SharedContext.isMigrated(dsNode) && migrationStatus === "YES") {
                             dsNode.datasetMigrated();
+                            if (dsTree) {
+                                const isFav = SharedContext.isFavoriteDescendant(dsNode);
+                                const equiv = dsTree.findEquivalentNode(dsNode, isFav) as ZoweDatasetNode;
+                                if (equiv) {
+                                    equiv.datasetMigrated();
+                                    dsTree.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                                }
+                            }
                         }
                     }
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
@@ -521,11 +539,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
 
             if (SharedContext.isSession(this)) {
-                const dsTree = SharedTreeProviders.ds as DatasetTree;
-                // Reset and remove previous search patterns in case pattern has changed
-                dsTree.resetFilterForChildren(this.children);
-                // set new search patterns for each child of getChildren
-                dsTree.applyPatternsToChildren(this.children, this.patternMatches);
+                if (dsTree) {
+                    // Reset and remove previous search patterns in case pattern has changed
+                    dsTree.resetFilterForChildren(this.children);
+                    // set new search patterns for each child of getChildren
+                    dsTree.applyPatternsToChildren(this.children, this.patternMatches);
+                }
             }
         }
 
