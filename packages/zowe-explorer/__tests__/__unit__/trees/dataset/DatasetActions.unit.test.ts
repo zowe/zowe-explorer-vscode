@@ -465,6 +465,90 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         await DatasetActions.refreshPS(child);
         expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(child.resourceUri, { editor: undefined });
     });
+
+    it("Checking refresh of migrated dataset when it is still migrated", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocksShared();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.MIGRATED",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+
+        blockMocks.mvsApi.dataSet = vi.fn().mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{
+                    dsname: "HLQ.TEST.MIGRATED",
+                    migr: "YES"
+                }]
+            }
+        });
+
+        await DatasetActions.refreshPS(node);
+
+        expect(blockMocks.mvsApi.dataSet).toHaveBeenCalledWith("HLQ.TEST.MIGRATED", { attributes: true });
+        expect(mocked(Gui.showMessage)).not.toHaveBeenCalled();
+    });
+
+    it("Checking refresh of migrated dataset when it has been recalled", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocksShared();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RECALLED",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+
+        blockMocks.mvsApi.dataSet = vi.fn().mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{
+                    dsname: "HLQ.TEST.RECALLED",
+                    migr: "NO",
+                    dsorg: "PO"
+                }]
+            }
+        });
+
+        const datasetTreeMock = {
+            findEquivalentNode: vi.fn().mockReturnValue(undefined),
+            updateFavorites: vi.fn(),
+            refreshElement: vi.fn(),
+        };
+        Object.defineProperty(SharedTreeProviders, "ds", { value: datasetTreeMock, configurable: true });
+
+        const datasetRecalledSpy = vi.spyOn(node, "datasetRecalled");
+
+        await DatasetActions.refreshPS(node);
+
+        expect(blockMocks.mvsApi.dataSet).toHaveBeenCalledWith("HLQ.TEST.RECALLED", { attributes: true });
+        expect(datasetRecalledSpy).toHaveBeenCalledWith(true);
+        expect(datasetTreeMock.refreshElement).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).not.toHaveBeenCalled();
+    });
+
+    it("Checking refresh of migrated dataset when API call fails", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocksShared();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.FAIL",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+
+        const error = new Error("API error");
+        blockMocks.mvsApi.dataSet = vi.fn().mockRejectedValueOnce(error);
+
+        const errorHandlingSpy = vi.spyOn(AuthUtils, "errorHandling").mockResolvedValue(undefined as any);
+
+        await DatasetActions.refreshPS(node);
+
+        expect(errorHandlingSpy).toHaveBeenCalledWith(error, expect.anything());
+    });
 });
 
 describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
