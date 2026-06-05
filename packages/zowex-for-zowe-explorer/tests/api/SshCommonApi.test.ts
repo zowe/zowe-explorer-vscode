@@ -9,13 +9,17 @@
  *
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, afterEach, expect, it, vi } from "vitest";
 import { SshCommonApi } from "../../src/api/SshCommonApi";
 import { imperative } from "@zowe/zowe-explorer-api";
 import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 
 describe("SshCommonApi", () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     describe("getProfileTypeName", () => {
         it("should return the profile type name", () => {
             const commonApi = new SshCommonApi();
