@@ -282,6 +282,45 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     /**
+     * Synchronizes the migration status of a dataset node and its equivalent favorite node based on the mainframe response.
+     * @param dsNode The dataset node to sync
+     * @param migr The migration status from the mainframe ("YES" or other)
+     * @param dsorg The dataset organization (e.g., "PO" for PDS)
+     * @param dsTree The dataset tree provider
+     */
+    private async syncNodeMigrationStatus(dsNode: ZoweDatasetNode, migr: string, dsorg: string, dsTree: DatasetTree): Promise<void> {
+        const migrationStatus = migr.toUpperCase();
+        if (SharedContext.isMigrated(dsNode) && migrationStatus !== "YES") {
+            const isPds = dsorg?.startsWith("PO");
+            await dsNode.datasetRecalled(isPds);
+            if (dsTree) {
+                const isFav = SharedContext.isFavoriteDescendant(dsNode);
+                const equiv = dsTree.findEquivalentNode(dsNode, isFav) as ZoweDatasetNode;
+                if (equiv) {
+                    await equiv.datasetRecalled(isPds);
+                    dsTree.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                }
+                if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                    dsTree.updateFavorites();
+                }
+            }
+        } else if (!SharedContext.isMigrated(dsNode) && migrationStatus === "YES") {
+            dsNode.datasetMigrated();
+            if (dsTree) {
+                const isFav = SharedContext.isFavoriteDescendant(dsNode);
+                const equiv = dsTree.findEquivalentNode(dsNode, isFav) as ZoweDatasetNode;
+                if (equiv) {
+                    equiv.datasetMigrated();
+                    dsTree.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                }
+                if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                    dsTree.updateFavorites();
+                }
+            }
+        }
+    }
+
+    /**
      * Retrieves child nodes of this ZoweDatasetNode
      *
      * @returns {Promise<ZoweDatasetNode[]>}
@@ -353,35 +392,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 if (dsNode != null) {
                     elementChildren[dsNode.label.toString()] = dsNode;
                     if (item.migr) {
-                        const migrationStatus = item.migr.toUpperCase();
-                        if (SharedContext.isMigrated(dsNode) && migrationStatus !== "YES") {
-                            const isPds = item.dsorg?.startsWith("PO");
-                            await dsNode.datasetRecalled(isPds);
-                            if (dsTree) {
-                                const isFav = SharedContext.isFavoriteDescendant(dsNode);
-                                const equiv = dsTree.findEquivalentNode(dsNode, isFav) as ZoweDatasetNode;
-                                if (equiv) {
-                                    await equiv.datasetRecalled(isPds);
-                                    dsTree.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
-                                }
-                                if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
-                                    dsTree.updateFavorites();
-                                }
-                            }
-                        } else if (!SharedContext.isMigrated(dsNode) && migrationStatus === "YES") {
-                            dsNode.datasetMigrated();
-                            if (dsTree) {
-                                const isFav = SharedContext.isFavoriteDescendant(dsNode);
-                                const equiv = dsTree.findEquivalentNode(dsNode, isFav) as ZoweDatasetNode;
-                                if (equiv) {
-                                    equiv.datasetMigrated();
-                                    dsTree.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
-                                }
-                                if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
-                                    dsTree.updateFavorites();
-                                }
-                            }
-                        }
+                        await this.syncNodeMigrationStatus(dsNode, item.migr, item.dsorg, dsTree);
                     }
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
                     // Creates a ZoweDatasetNode for a migrated dataset

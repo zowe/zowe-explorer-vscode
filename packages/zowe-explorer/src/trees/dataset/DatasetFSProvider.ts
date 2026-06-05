@@ -438,7 +438,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         });
 
-        if (isMigrated && entryExists && entry && entry.type === vscode.FileType.Directory) {
+        if (isMigrated && entryExists && entry?.type === vscode.FileType.Directory) {
             const parentDir = this.lookupParentDirectory(uri);
             const dsname = uriPath[Number(pdsMember)];
             parentDir.entries.delete(dsname);

@@ -773,25 +773,7 @@ Would you like to do this now?`,
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
         const favsForProfile = profileInFavs.children;
         for (const favorite of favsForProfile) {
-            if (favorite.resourceUri) {
-                try {
-                    await DatasetFSProvider.instance.stat(favorite.resourceUri);
-                    const entry = DatasetFSProvider.instance.lookup(favorite.resourceUri, true) as any;
-                    if (entry && entry.stats && favorite instanceof ZoweDatasetNode) {
-                        const isMigrated = entry.stats.migr === "YES";
-                        if (isMigrated && !SharedContext.isMigrated(favorite)) {
-                            favorite.datasetMigrated();
-                            this.updateFavorites();
-                        } else if (!isMigrated && SharedContext.isMigrated(favorite)) {
-                            const isPds = entry.type === vscode.FileType.Directory || entry.stats.dsorg?.startsWith("PO") || favorite.wasPds || false;
-                            await favorite.datasetRecalled(isPds);
-                            this.updateFavorites();
-                        }
-                    }
-                } catch (error) {
-                    ZoweLogger.warn(`Failed to stat favorite ${favorite.label}: ${error}`);
-                }
-            }
+            await this.syncFavoriteMigrationStatus(favorite);
 
             if (favorite.resourceUri && !DatasetFSProvider.instance.exists(favorite.resourceUri)) {
                 if (SharedContext.isPds(favorite)) {
@@ -812,6 +794,33 @@ Would you like to do this now?`,
         }
         // This updates the profile node's children in the this.mFavorites array, as well.
         return updatedFavsForProfile;
+    }
+
+    /**
+     * Synchronizes the migration status of a favorited dataset node on startup by querying its cached/virtual filesystem entry.
+     * @param favorite The favorited dataset node to sync
+     */
+    private async syncFavoriteMigrationStatus(favorite: IZoweDatasetTreeNode): Promise<void> {
+        if (!favorite.resourceUri) {
+            return;
+        }
+        try {
+            await DatasetFSProvider.instance.stat(favorite.resourceUri);
+            const entry = DatasetFSProvider.instance.lookup(favorite.resourceUri, true) as any;
+            if (entry && entry.stats && favorite instanceof ZoweDatasetNode) {
+                const isMigrated = entry.stats.migr === "YES";
+                if (isMigrated && !SharedContext.isMigrated(favorite)) {
+                    favorite.datasetMigrated();
+                    this.updateFavorites();
+                } else if (!isMigrated && SharedContext.isMigrated(favorite)) {
+                    const isPds = entry.type === vscode.FileType.Directory || entry.stats.dsorg?.startsWith("PO") || favorite.wasPds || false;
+                    await favorite.datasetRecalled(isPds);
+                    this.updateFavorites();
+                }
+            }
+        } catch (error) {
+            ZoweLogger.warn(`Failed to stat favorite ${favorite.label}: ${error}`);
+        }
     }
 
     /**
