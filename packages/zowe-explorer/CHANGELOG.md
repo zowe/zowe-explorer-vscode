@@ -10,23 +10,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue that caused a rename to fail when removing the rightmost qualifier from a data set name. [#4273](https://github.com/zowe/zowe-explorer-vscode/issues/4273)
 - Fixed an issue where copying a USS file across profiles when a profile encoding was configured would corrupt characters in the destination file because the encoding was not passed to the upload call. [#4262](https://github.com/zowe/zowe-explorer-vscode/pull/4262)
 - Fixed an issue where submitting a job from a favorited PDS member would fail. [#4282](https://github.com/zowe/zowe-explorer-vscode/issues/4282)
 - Fixed an issue in USS where a directory could not be expanded if it contained at least one subdirectory that the user did not have access to. [#4278](https://github.com/zowe/zowe-explorer-vscode/issues/4278)
-
-## `3.5.0`
-
-### New features and enhancements
-
-### Bug fixes
-
-## `3.5.0`
-
-### New features and enhancements
-
-### Bug fixes
-
-- Fixed an issue that caused a rename to fail when removing the rightmost qualifier from a data set name. [#4273](https://github.com/zowe/zowe-explorer-vscode/issues/4273)
+- Fixed an issue in USS where a file was incorrectly identified as a directory if the request returned the full path of the file, causing an error when trying to open it in the editor. [#4305](https://github.com/zowe/zowe-explorer-vscode/issues/4305)
+- Fixed an issue in the USS tree view that prevented listing a single file path due to a duplicated and invalid URI path construction. [#4303](https://github.com/zowe/zowe-explorer-vscode/issues/4303)
+- Fixed an issue where navigating to an invalid or inaccessible path under one USS profile caused file and folder nodes under all profiles to disappear or show outdated results. [#4288](https://github.com/zowe/zowe-explorer-vscode/issues/4288)
+- Fixed an issue in USS where the search path in the profile node description or filter tooltip became out of sync and did not match the actual listed path after a failed search or a search timeout. [#4287](https://github.com/zowe/zowe-explorer-vscode/issues/4287)
 
 ## `3.5.0`
 
