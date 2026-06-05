@@ -412,9 +412,9 @@ export class SharedInit {
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.issueMvsCmd", async (node?, command?) => {
                     if (node) {
-                        await commandProviders.mvs.issueConsoleCommand(node.session, command, node);
+                        await commandProviders.mvs.issueMvsCommand(node.session, command, node);
                     } else {
-                        await commandProviders.mvs.issueConsoleCommand();
+                        await commandProviders.mvs.issueMvsCommand();
                     }
                 })
             );

@@ -73,8 +73,8 @@ export class ConsoleCommandHandler extends ZoweCommandProvider {
      * @param session the session the command is to run against (optional) user is prompted if not supplied
      * @param command the command string (optional) user is prompted if not supplied
      */
-    public async issueConsoleCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
-        ZoweLogger.trace("ConsoleCommandHandler.issueConsoleCommand called.");
+    public async issueMvsCommand(session?: imperative.Session, command?: string, node?: IZoweTreeNode): Promise<void> {
+        ZoweLogger.trace("ConsoleCommandHandler.issueMvsCommand called.");
         let profile: imperative.IProfileLoaded;
         if (node) {
             await this.checkCurrentProfile(node);
@@ -134,7 +134,7 @@ export class ConsoleCommandHandler extends ZoweCommandProvider {
         if (command.startsWith("/")) {
             command = command.substring(1);
         }
-        const response = await ZoweExplorerApiRegister.getCommandApi(profile).issueConsoleCommand(command, profile.profile?.consoleName);
+        const response = await ZoweExplorerApiRegister.getCommandApi(profile).issueMvsCommand(command, profile.profile?.consoleName);
         return response.commandResponse;
     }
 }

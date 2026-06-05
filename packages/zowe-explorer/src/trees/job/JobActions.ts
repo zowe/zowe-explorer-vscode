@@ -318,7 +318,7 @@ export class JobActions {
                 const profile = job.getProfile();
                 const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
                 if (commandApi) {
-                    const response = await commandApi.issueConsoleCommand(`f ${job.job.jobname},${command}`, profile.profile?.consoleName);
+                    const response = await commandApi.issueMvsCommand(`f ${job.job.jobname},${command}`, profile.profile?.consoleName);
                     Gui.showMessage(
                         vscode.l10n.t({
                             message: "Command response: {0}",
@@ -351,7 +351,7 @@ export class JobActions {
             const profile = job.getProfile();
             const commandApi = ZoweExplorerApiRegister.getInstance().getCommandApi(profile);
             if (commandApi) {
-                const response = await commandApi.issueConsoleCommand(`p ${job.job.jobname}`, profile.profile?.consoleName);
+                const response = await commandApi.issueMvsCommand(`p ${job.job.jobname}`, profile.profile?.consoleName);
                 Gui.showMessage(
                     vscode.l10n.t({
                         message: "Command response: {0}",

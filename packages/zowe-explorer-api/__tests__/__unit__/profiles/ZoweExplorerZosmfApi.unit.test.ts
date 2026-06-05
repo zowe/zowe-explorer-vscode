@@ -896,7 +896,7 @@ describe("ZosmfCommandApi", () => {
             transform: () => ["command", { addressSpaceOptions: { account: "ACCT#" } }],
         },
         {
-            name: "issueConsoleCommand",
+            name: "issueMvsCommand",
             spy: sharedSpyOn(zosconsole.IssueCommand, "issue"),
             args: ["command", "defcn"],
             transform: (args) => [{ command: args[0], consoleName: args[1], processResponses: true }],

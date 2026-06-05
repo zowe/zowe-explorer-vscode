@@ -63,7 +63,7 @@ describe("Test src/shared/extension", () => {
             _: { _: "_" },
         };
         const profileMocks = { deleteProfile: vi.fn(), disableValidation: vi.fn(), enableValidation: vi.fn(), refresh: vi.fn() };
-        const cmdProviders = { mvs: { issueConsoleCommand: vi.fn() }, tso: { issueTsoCommand: vi.fn() }, uss: { issueUnixCommand: vi.fn() } };
+        const cmdProviders = { mvs: { issueMvsCommand: vi.fn() }, tso: { issueTsoCommand: vi.fn() }, uss: { issueUnixCommand: vi.fn() } };
         const treeProvider = {
             addFavorite: vi.fn(),
             deleteSession: vi.fn(),
@@ -332,12 +332,12 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.issueMvsCmd:1",
-                mock: [{ spy: vi.spyOn(cmdProviders.mvs, "issueConsoleCommand"), arg: [undefined, undefined, test.value] }],
+                mock: [{ spy: vi.spyOn(cmdProviders.mvs, "issueMvsCommand"), arg: [undefined, undefined, test.value] }],
             },
             {
                 name: "zowe.issueMvsCmd:2",
                 parm: [],
-                mock: [{ spy: vi.spyOn(cmdProviders.mvs, "issueConsoleCommand"), arg: [] }],
+                mock: [{ spy: vi.spyOn(cmdProviders.mvs, "issueMvsCommand"), arg: [] }],
             },
             {
                 name: "zowe.selectForCompare",

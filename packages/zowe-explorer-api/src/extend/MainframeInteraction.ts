@@ -559,7 +559,7 @@ export namespace MainframeInteraction {
          * @returns {Promise<zosconsole.IConsoleResponse>}
          * @memberof ICommand
          */
-        issueConsoleCommand?(command: string, consoleName?: string): Promise<zosconsole.IConsoleResponse>;
+        issueMvsCommand?(command: string, consoleName?: string): Promise<zosconsole.IConsoleResponse>;
 
         /**
          * Issues a Unix Command and returns a Console Command API response.

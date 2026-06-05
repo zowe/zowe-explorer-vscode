@@ -156,7 +156,7 @@ describe("mvsCommandActions unit testing", () => {
         return ConsoleCommandHandler.getInstance();
     };
 
-    it("tests the issueConsoleCommand function", async () => {
+    it("tests the issueMvsCommand function", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: vi.fn(() => {
                 return {
@@ -187,9 +187,9 @@ describe("mvsCommandActions unit testing", () => {
 
         showInputBox.mockReturnValueOnce("/d iplinfo1");
         vi.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
-        vi.spyOn(mockCommandApi, "issueConsoleCommand").mockReturnValue({ commandResponse: "iplinfo1" } as any);
+        vi.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue({ commandResponse: "iplinfo1" } as any);
 
-        await getMvsActions().issueConsoleCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -205,7 +205,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueConsoleCommand function user selects a history item", async () => {
+    it("tests the issueMvsCommand function user selects a history item", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: vi.fn(() => {
                 return {
@@ -230,12 +230,12 @@ describe("mvsCommandActions unit testing", () => {
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         vi.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem2));
-        vi.spyOn(mockCommandApi, "issueConsoleCommand").mockReturnValue({ commandResponse: "iplinfo0" } as any);
+        vi.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue({ commandResponse: "iplinfo0" } as any);
 
         const actions = getMvsActions();
         (actions.history as any).mSearchHistory = [qpItem2.label];
 
-        await actions.issueConsoleCommand();
+        await actions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -251,7 +251,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueConsoleCommand function - issueSimple throws an error", async () => {
+    it("tests the issueMvsCommand function - issueSimple throws an error", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: vi.fn(() => {
                 return {
@@ -277,9 +277,9 @@ describe("mvsCommandActions unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
         vi.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
-        vi.spyOn(mockCommandApi, "issueConsoleCommand").mockReturnValue({ commandResponse: "iplinfo3" } as any);
+        vi.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValue({ commandResponse: "iplinfo3" } as any);
 
-        await getMvsActions().issueConsoleCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -293,7 +293,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showErrorMessage.mock.calls[0][0]).toEqual("fake testError");
     });
 
-    it("tests the issueConsoleCommand function user escapes the quick pick box", async () => {
+    it("tests the issueMvsCommand function user escapes the quick pick box", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: vi.fn(() => {
                 return {
@@ -322,7 +322,7 @@ describe("mvsCommandActions unit testing", () => {
         const actions = getMvsActions();
         (actions.history as any).mSearchHistory = [qpItem2.label];
 
-        await actions.issueConsoleCommand();
+        await actions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showInputBox.mock.calls.length).toBe(0);
@@ -335,7 +335,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueConsoleCommand function user escapes the console command box", async () => {
+    it("tests the issueMvsCommand function user escapes the console command box", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: vi.fn(() => {
                 return {
@@ -361,7 +361,7 @@ describe("mvsCommandActions unit testing", () => {
 
         vi.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
 
-        await getMvsActions().issueConsoleCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -374,7 +374,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueConsoleCommand function user starts typing a value in quick pick", async () => {
+    it("tests the issueMvsCommand function user starts typing a value in quick pick", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: vi.fn(() => {
                 return {
@@ -420,7 +420,7 @@ describe("mvsCommandActions unit testing", () => {
         const actions = getMvsActions();
         (actions.history as any).mSearchHistory = [qpItem2.label];
 
-        await actions.issueConsoleCommand();
+        await actions.issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -432,7 +432,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showInputBox.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueConsoleCommand prompt credentials", async () => {
+    it("tests the issueMvsCommand prompt credentials", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: vi.fn(() => {
                 return {
@@ -462,9 +462,9 @@ describe("mvsCommandActions unit testing", () => {
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         vi.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
-        vi.spyOn(mockCommandApi, "issueConsoleCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
+        vi.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
 
-        await getMvsActions().issueConsoleCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -476,7 +476,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showInputBox.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueConsoleCommand prompt credentials for password only", async () => {
+    it("tests the issueMvsCommand prompt credentials for password only", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: vi.fn(() => {
                 return {
@@ -504,9 +504,9 @@ describe("mvsCommandActions unit testing", () => {
         getCommandApiMock.mockReturnValue(mockCommandApi);
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
         vi.spyOn(Gui, "resolveQuickPick").mockImplementation(() => Promise.resolve(qpItem));
-        vi.spyOn(mockCommandApi, "issueConsoleCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
+        vi.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
 
-        await getMvsActions().issueConsoleCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -518,7 +518,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showInputBox.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueConsoleCommand error in prompt credentials", async () => {
+    it("tests the issueMvsCommand error in prompt credentials", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: vi.fn(() => {
                 return {
@@ -537,12 +537,12 @@ describe("mvsCommandActions unit testing", () => {
         showQuickPick.mockReturnValueOnce("firstName");
         showInputBox.mockReturnValueOnce("fake");
 
-        await getMvsActions().issueConsoleCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showErrorMessage.mock.calls.length).toBe(1);
     });
 
-    it("tests the issueConsoleCommand function user does not select a profile", async () => {
+    it("tests the issueMvsCommand function user does not select a profile", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: vi.fn(() => {
                 return {
@@ -558,12 +558,12 @@ describe("mvsCommandActions unit testing", () => {
 
         showQuickPick.mockReturnValueOnce(undefined);
 
-        await getMvsActions().issueConsoleCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueConsoleCommand function from a session", async () => {
+    it("tests the issueMvsCommand function from a session", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: vi.fn(() => {
                 return {
@@ -585,15 +585,15 @@ describe("mvsCommandActions unit testing", () => {
         apiRegisterInstance.getCommandApi = getCommandApiMock.bind(apiRegisterInstance);
 
         showInputBox.mockReturnValueOnce("/d iplinfo1");
-        vi.spyOn(mockCommandApi, "issueConsoleCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
+        vi.spyOn(mockCommandApi, "issueMvsCommand").mockReturnValueOnce({ commandResponse: "fake response" } as any);
 
-        await getMvsActions().issueConsoleCommand(session, null as any, testNode);
+        await getMvsActions().issueMvsCommand(session, null as any, testNode);
 
         expect(showInputBox.mock.calls.length).toBe(1);
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
-    it("tests the issueConsoleCommand handles error thrown by API register", async () => {
+    it("tests the issueMvsCommand handles error thrown by API register", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: vi.fn(() => {
                 return {
@@ -621,7 +621,7 @@ describe("mvsCommandActions unit testing", () => {
             throw testError;
         });
 
-        await getMvsActions().issueConsoleCommand();
+        await getMvsActions().issueMvsCommand();
 
         expect(showQuickPick.mock.calls.length).toBe(1);
         expect(showQuickPick.mock.calls[0][0]).toEqual(["firstName", "secondName"]);
@@ -635,7 +635,7 @@ describe("mvsCommandActions unit testing", () => {
         expect(showErrorMessage.mock.calls[0][0]).toContain(testError.message);
     });
 
-    it("tests the issueConsoleCommand function no profiles error", async () => {
+    it("tests the issueMvsCommand function no profiles error", async () => {
         Object.defineProperty(profileLoader.Profiles, "getInstance", {
             value: vi.fn(() => {
                 return {
@@ -654,7 +654,7 @@ describe("mvsCommandActions unit testing", () => {
             value: vi.fn().mockReturnValue([]),
             configurable: true,
         });
-        await getMvsActions().issueConsoleCommand();
+        await getMvsActions().issueMvsCommand();
         expect(showInformationMessage.mock.calls[0][0]).toEqual("No profiles available");
     });
 });

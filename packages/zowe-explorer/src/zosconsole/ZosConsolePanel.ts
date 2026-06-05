@@ -146,7 +146,7 @@ export class ZosConsoleViewProvider implements vscode.WebviewViewProvider {
     private async runOperCmd(command: string, profile: string): Promise<string> {
         try {
             const theProfile: imperative.IProfileLoaded = this.profiles.get(profile);
-            const response = await ZoweExplorerApiRegister.getCommandApi(theProfile).issueConsoleCommand(command);
+            const response = await ZoweExplorerApiRegister.getCommandApi(theProfile).issueMvsCommand(command);
             return response.commandResponse;
         } catch (e) {
             return (e as Error).message + "\n";

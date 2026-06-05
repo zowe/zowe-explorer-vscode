@@ -530,7 +530,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zostso.IssueTso.issueTsoCommand(this.getSession(), parms.account, command, parms);
         }
 
-        public issueConsoleCommand(command: string, consoleName?: string): Promise<zosconsole.IConsoleResponse> {
+        public issueMvsCommand(command: string, consoleName?: string): Promise<zosconsole.IConsoleResponse> {
             return zosconsole.IssueCommand.issue(this.getSession(), { command, consoleName, processResponses: true });
         }
 
