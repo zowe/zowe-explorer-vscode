@@ -776,6 +776,34 @@ describe("UssFSProvider", () => {
             createRecursiveSpy.mockRestore();
             existsSpy.mockRestore();
         });
+        it("does not create a directory entry when the response describes a plain file and profile returns the full path", async () => {
+            vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+                fileList: vi.fn().mockResolvedValueOnce({
+                    success: true,
+                    commandResponse: "",
+                    apiResponse: {
+                        // z/OSMF returns the full path in the name field
+                        items: [{ name: "/aFile.txt", mode: "-rwxrwxrwx" }],
+                    },
+                }),
+            } as any);
+            const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createRecursiveSpy = vi
+                .spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive")
+                .mockImplementation((() => undefined) as any);
+
+            expect(await UssFSProvider.instance.listFiles(testProfile, testUris.file)).toStrictEqual({
+                success: true,
+                commandResponse: "",
+                apiResponse: {
+                    items: [{ name: "/aFile.txt", mode: "-rwxrwxrwx" }],
+                },
+            });
+            expect(createRecursiveSpy).not.toHaveBeenCalled();
+
+            createRecursiveSpy.mockRestore();
+            existsSpy.mockRestore();
+        });
         it("keeps dot entries when keepRelative is true and skips directory creation", async () => {
             vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
                 fileList: vi.fn().mockResolvedValueOnce({
