@@ -9,12 +9,16 @@
  *
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, afterEach, expect, it, vi } from "vitest";
 import { SshJesApi } from "../../src/api/SshJesApi";
 import { IGetJobsParms } from "@zowe/zos-jobs-for-zowe-sdk";
 import { B64String } from "@zowe/zowex-for-zowe-sdk";
 
 describe("SshJesApi", () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     describe("getJobsByParameters", () => {
         it("should list jobs", async () => {
             const jesApi = new SshJesApi();

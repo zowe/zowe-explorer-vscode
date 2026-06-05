@@ -9,10 +9,14 @@
  *
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, afterEach, expect, it, vi } from "vitest";
 import { SshCommandApi } from "../../src/api/SshCommandApi";
 
 describe("SshCommandApi", () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     describe("issueTsoCommandWithParms", () => {
         it("should attempt to issue the TSO command", async () => {
             const commandApi = new SshCommandApi({ type: "ssh", message: "", failNotFound: true, profile: { profile: { user: "fake" } } });
