@@ -448,7 +448,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         child.contextValue = Constants.DS_MEMBER_CONTEXT + Constants.FAV_SUFFIX;
 
         await DatasetActions.refreshPS(child);
-        
+
         expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(child.resourceUri, { editor: undefined });
     });
     it("Checking favorite PS refresh", async () => {
