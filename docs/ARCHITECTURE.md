@@ -123,7 +123,7 @@ graph TB
 #### Command Providers
 
 - **[`ZoweCommandProvider`](packages/zowe-explorer/src/commands/ZoweCommandProvider.ts)**: Abstract base class for mainframe command execution
-- **[`MvsCommandHandler`](packages/zowe-explorer/src/commands/ConsoleCommandHandler.ts)**: Handles z/OS console commands
+- **[`ConsoleCommandHandler`](packages/zowe-explorer/src/commands/ConsoleCommandHandler.ts)**: Handles z/OS console commands
 - **[`TsoCommandHandler`](packages/zowe-explorer/src/commands/TsoCommandHandler.ts)**: Handles TSO commands
 - **[`UnixCommandHandler`](packages/zowe-explorer/src/commands/UnixCommandHandler.ts)**: Handles Unix System Services commands
 
