@@ -101,7 +101,7 @@ export class AuthUtils {
                     AuthHandler.disableSequentialRequests(profile);
                     return callbackValue;
                 } catch (err) {
-                    await handleError(err, async (error) => {
+                    await handleError(err, (error) => {
                         ZoweLogger.error(error.message);
                     });
                     if (
@@ -408,7 +408,7 @@ export class AuthUtils {
             this.updateNodeToolTip(sessionNode, profile);
             sessionNode.setSessionToChoice(commonApi.getSession());
         } catch (err) {
-            void handleError(err, async (error) => {
+            void handleError(err, (error) => {
                 // API is not yet registered, or building the session failed for this profile
                 ZoweLogger.error(`Error syncing session for ${profileName}: ${error.message}`);
             });

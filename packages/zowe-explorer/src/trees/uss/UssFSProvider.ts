@@ -157,7 +157,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 }
             }
         } catch (err) {
-            await handleError(err, async (error) => {
+            handleError(err, (error) => {
                 ZoweLogger.error(error.message);
             });
         }
@@ -530,7 +530,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     stream: bufBuilder,
                 });
             } catch (err) {
-                await handleError(err, async (error) => {
+                handleError(err, (error) => {
                     ZoweLogger.error(`[UssFSProvider] fetchFileAtUri failed due to an error. Details: \n${error.message}`);
                 });
                 if (

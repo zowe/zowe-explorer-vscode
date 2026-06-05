@@ -152,7 +152,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 );
             } catch (err) {
                 // If the write fails, we cannot move to the next file.
-                await handleError(err, async (error) => {
+                handleError(err, (error) => {
                     Gui.errorMessage(
                         vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), error.message)
                     );
@@ -1022,7 +1022,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 profile,
             });
         } catch (err) {
-            await handleError(err, async (error) => {
+            handleError(err, (error) => {
                 ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
             });
             return null;

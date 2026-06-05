@@ -2503,7 +2503,7 @@ export class DatasetActions {
                             }
                         } catch (err) {
                             ZoweLogger.error(err);
-                            await handleError(err, async (error) => {
+                            handleError(err, (error) => {
                                 Gui.errorMessage(error.message);
                             });
                         }
@@ -2607,7 +2607,7 @@ export class DatasetActions {
                                 });
                             }
                         } catch (err) {
-                            await handleError(err, async (error) => {
+                            handleError(err, (error) => {
                                 Gui.errorMessage(error.message);
                             });
                             return;
@@ -2725,7 +2725,7 @@ export class DatasetActions {
                             await mvsApi.copyDataSetCrossLpar(dsname, undefined, options, sourceProfile);
                         } catch (err) {
                             ZoweLogger.error(err);
-                            await handleError(err, async (error) => {
+                            handleError(err, (error) => {
                                 Gui.errorMessage(error.message);
                             });
                             return;
@@ -2740,7 +2740,7 @@ export class DatasetActions {
                             try {
                                 await DatasetActions.createDataSetFromSourceAttributes(sourceProfile, node.getProfile(), lbl, dsname);
                             } catch (err) {
-                                await handleError(err, async (error) => {
+                                handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to create {0}: {1}",
@@ -2801,7 +2801,7 @@ export class DatasetActions {
                                 });
                             } catch (err) {
                                 ZoweLogger.error(err);
-                                await handleError(err, async (error) => {
+                                handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to copy member {0}: {1}",

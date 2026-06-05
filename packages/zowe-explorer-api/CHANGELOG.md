@@ -1,10 +1,11 @@
-# Change Log
+﻿# Change Log
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
 ## TBD Release
 
 ### New features and enhancements
+
 - Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 ### Bug fixes
@@ -45,7 +46,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.4.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Introduced `getCount` API to let extenders efficiently retrieve the total number of data sets matching a filter, enabling more performant pagination. [#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
 - Added support for `jobEncoding` profile property when submitting jobs with the `ZosmfJesApi` class. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
@@ -76,7 +76,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.3.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Deprecated `protected _lookupParentDirectory()` and redefined it as a `public lookupParentDirectory()` method. [#3485] (https://github.com/zowe/zowe-explorer-vscode/issues/3485)
 - Added `DataSetAttributesProvider` class to allow extenders to provide additional attributes for data sets. [#3730](https://github.com/zowe/zowe-explorer-vscode/pull/3730)
@@ -110,7 +109,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.2.2`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added an optional `profilesCache` parameter to `ZoweTreeNode.getProfile` to fix an issue seen with out of date profile information within tree views. When provided, the tree node uses that cache to obtain profile information. [#3664](https://github.com/zowe/zowe-explorer-vscode/issues/3664)
 
@@ -126,7 +124,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.2.1`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Updated Zowe SDKs to `8.21.0` for technical currency. [#3668](https://github.com/zowe/zowe-explorer-vscode/pull/3668)
 
@@ -138,7 +135,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.2.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added functionality and code lens for pagination in job spool files. [#1787](https://github.com/zowe/zowe-explorer-vscode/issues/1787)
 - Updated the `Gui.showQuickPick` function to support selecting more than one `quickPickItem`. [#3526](https://github.com/zowe/zowe-explorer-vscode/pull/3526)
@@ -166,7 +162,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.1.2`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added new `fetchAttributes` API to `IZoweUSSTreeNode` to fetch latest attributes for UNIX files. [#3238](https://github.com/zowe/zowe-explorer-vscode/issues/3238)
 - Added new optional `refreshFavorites` to IZoweTree interface. [#3470](https://github.com/zowe/zowe-explorer-vscode/issues/3470)
@@ -182,7 +177,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.1.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Update Zowe SDKs to `8.10.4` to get the latest enhancements from Imperative and the z/OS Files SDK. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
 - Added new `searchDataSets` API to provide the ability to search all data sets and PDS members that match a pattern for a string. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
@@ -209,7 +203,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.0.2`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Zowe Explorer now includes support for the [VS Code display languages](https://code.visualstudio.com/docs/getstarted/locales) French, German, Japanese, Portuguese, and Spanish. [#3239](https://github.com/zowe/zowe-explorer-vscode/pull/3239)
 - Localization of strings within the webviews. [#2983](https://github.com/zowe/zowe-explorer-vscode/issues/2983)
@@ -224,7 +217,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.0.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Removal of V1 profile support. [#2072](https://github.com/zowe/vscode-extension-for-zowe/issues/2072)
 - Removal of deprecated APIs. Check the [list](https://github.com/zowe/zowe-explorer-vscode/wiki/v3-Changes-for-Users-and-Extenders) of APIs that were removed.
@@ -379,7 +371,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.0.0-next.202409251932`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added the `BaseProfileAuthOptions` interface to define base profile authentication options for SSO login and logout. [#3076](https://github.com/zowe/zowe-explorer-vscode/pull/3076)
 - Deprecated the methods `ZoweVsCodeExtension.loginWithBaseProfile` and `ZoweVsCodeExtension.logoutWithBaseProfile`. Use `ZoweVsCodeExtension.ssoLogin` and `ZoweVsCodeExtension.ssoLogout` instead, which use the `BaseProfileAuthOptions` interface and allow you to choose whether the token value in the base profile should have precedence in case there are conflicts. [#3076](https://github.com/zowe/zowe-explorer-vscode/pull/3076)
@@ -397,7 +388,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.0.0-next.202409132122`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added optional `patternMatches` property to the `IZoweDatasetTreeNode` interface to cache pattern matches from an applied filter search. [#1164](https://github.com/zowe/zowe-explorer-vscode/issues/1164)
 
@@ -414,7 +404,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.0.0-next.202408301858`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Deprecated the following properties on Zowe tree interfaces in favor of setters and getters to incentivize encapsulation: [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
   - `binary` property on the `IZoweDatasetTreeNode` interface - use the `getEncoding` and `setEncoding` functions instead.
@@ -533,7 +522,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.0.0-next.202404242037`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - **Breaking:** Marked `getJobsByParameters` as a required function for the `MainframeInteraction.IJes` interface. [#2764](https://github.com/zowe/vscode-extension-for-zowe/pull/2764)
   - The new `getJobsByParameters` API is meant to replace `getJobsByOwnerAndPrefix`, and it adds new capabilities such as querying by status and limiting the amount of returned jobs.
@@ -559,7 +547,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.0.0-next.202403051607`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Add Created Date to `stats` optional variable for storing dataset stats [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
 - Add Date created to DatasetSortOpts enum [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
@@ -577,7 +564,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.0.0-next.202402142205`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - **Breaking:** Removed the following properties/methods:
   - `IZoweUSSTreeNode.binaryFiles` -> `IZoweUSSTreeNode.encodingMap`
@@ -595,7 +581,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.0.0-next.202402071248`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Grouped common methods into singleton classes [#2109](https://github.com/zowe/vscode-extension-for-zowe/issues/2109)
 
@@ -608,7 +593,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.0.0-next.202401121747`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added new APIs for Issue UNIX Command. [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)
 
@@ -621,7 +605,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `3.0.0-next.202309121526`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Removal of v1 profile support. [#2072](https://github.com/zowe/vscode-extension-for-zowe/issues/2072)
 - Removal of deprecated APIs. Check the [list](https://github.com/zowe/vscode-extension-for-zowe/tree/next/docs/early-access/v3/Extenders.md) of APIs that were removed.
@@ -639,7 +622,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `2.17.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Updated the `@zowe/cli` dependency to 7.27.0 to support proxy environment variables [#3003](https://github.com/zowe/zowe-explorer-vscode/issues/3003)
 
@@ -661,7 +643,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `2.16.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added optional `consoleName` argument to `ZosmfCommandApi.issueMvsCommand`. [#1667](https://github.com/zowe/vscode-extension-for-zowe/issues/1667)
 - Added "Date Completed" attribute to JobSortOpts enum type. [#1685](https://github.com/zowe/vscode-extension-for-zowe/issues/1685)
@@ -683,7 +664,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `2.15.2`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added optional method `getDsDocumentFilePath` to `IZoweDatasetTreeNode` interface to make it easier for extenders to get the local file path of a data set node. [#2760](https://github.com/zowe/vscode-extension-for-zowe/pull/2760)
 
@@ -714,7 +694,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `2.14.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added optional `openDs` function to `IZoweDatasetTreeNode` to open a data set or member in the editor.
 - Added optional `setEncoding` function to `IZoweDatasetTreeNode` and `IZoweUSSTreeNode` to set the encoding of a node to binary, text, or a custom codepage.
@@ -742,7 +721,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `2.13.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added new optional boolean parameter `hideFromAllTrees` to `IZoweTree.deleteSession` for specifying whether to hide from all trees or current tree. [#2567](https://github.com/zowe/vscode-extension-for-zowe/issues/2567)
 - Added new optional parameter `provider` of type `IZoweTree<IZoweTreeNode>` for `IZoweTree.addSession` to specify a tree to add the profile to.
@@ -756,7 +734,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `2.12.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added optional `getTag` function to `ZoweExplorerAPI.IUss` for getting the tag of a file on USS.
 - Added new ProfilesCache API `getConfigArray` to allow extenders to get the registered profile type's metadata for team configuration file creation handled outside of Zowe Explorer views. [#2394](https://github.com/zowe/vscode-extension-for-zowe/issues/2394)
@@ -776,7 +753,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `2.11.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added optional `pendingActions` record to `IZoweTreeNode` to allow nodes to track pending promises.
 - Added optional `wasDoubleClicked` variable to `IZoweTreeNode` to track whether a node was double-clicked during an action.
@@ -788,7 +764,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `2.10.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added option to register callback to be called after making changes to team config profiles are made. [#2385](https://github.com/zowe/vscode-extension-for-zowe/issues/2385)
 - Replaced `keytar` dependency with `keyring` module from [`@zowe/secrets-for-zowe-sdk`](https://github.com/zowe/zowe-cli/tree/master/packages/secrets). [#2358](https://github.com/zowe/vscode-extension-for-zowe/issues/2358) [#2348](https://github.com/zowe/vscode-extension-for-zowe/issues/2348)
@@ -799,7 +774,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `2.9.1`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added optional `profile` parameter to `IPromptCredentialsOptions` so developers can choose to skip rebuilding the profile with ProfilesCache.
 
@@ -812,7 +786,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `2.9.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added optional IZoweTree functions, `addDsTemplate` and `getDSTemplates`.
 - Added a new type `DataSetAllocTemplate` for data set attributes.
@@ -831,7 +804,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `2.8.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Added `Gui.reportProgress` that can be used to notify users of action progress in conjunction with the `Gui.withProgress` call. [#2167](https://github.com/zowe/vscode-extension-for-zowe/issues/2167)
 - Updated linter rules and addressed linter errors. [#2184](https://github.com/zowe/vscode-extension-for-zowe/issues/2184)
@@ -851,7 +823,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `2.7.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Updated `IZoweTreeNode` with additional variable `description` to prevent compilation errors when updating node descriptions. [#2122](https://github.com/zowe/vscode-extension-for-zowe/issues/2122)
 - Updated `IZoweJobTreeNode` with additional variable `filtered` to track whether a job session node has been filtered. [#2122](https://github.com/zowe/vscode-extension-for-zowe/issues/2122)
@@ -866,7 +837,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 ## `2.6.0`
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - Refactored UI/UX methods into standalone `Gui` module for usability and maintainability. [#1967](https://github.com/zowe/vscode-extension-for-zowe/issues/1967)
 - New API call `dataSetsMatchingPattern` to allow filtering datasets via a pattern.
@@ -890,7 +860,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. [#2030](https://github.com/zowe/vscode-extension-for-zowe/issues/2030)
 
 ### New features and enhancements
-- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 
 - New API call `getJobsByParameters` to allow filtering jobs by status.
 - Added `findEquivalentNode` function to IZoweTree to find a corresponding favorited/non-favorited node.

@@ -677,7 +677,7 @@ export class SharedUtils {
                 const node = (await provider.getChildren()).find((n) => n.label === profile?.name);
                 node?.setProfileToChoice?.(profile);
             } catch (err) {
-                await handleError(err, async (error) => {
+                handleError(err, (error) => {
                     ZoweLogger.error(error.message);
                 });
                 return;

@@ -211,7 +211,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 );
             } catch (err) {
                 // If the write fails, we cannot move to the next file
-                await handleError(err, async (error) => {
+                handleError(err, (error) => {
                     Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, error.message));
                 });
                 return;
@@ -535,7 +535,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 profile,
             });
         } catch (err) {
-            await handleError(err, async (error) => {
+            handleError(err, (error) => {
                 ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
             });
             return null;

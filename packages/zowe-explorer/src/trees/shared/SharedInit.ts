@@ -613,7 +613,7 @@ export class SharedInit {
                 }
                 readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri));
             } catch (err) {
-                await handleError(err, async (error) => {
+                handleError(err, (error) => {
                     ZoweLogger.error(error.message);
                 });
             }
@@ -621,7 +621,7 @@ export class SharedInit {
         try {
             await Promise.all(readDirRequests);
         } catch (err) {
-            await handleError(err, async (error) => {
+            handleError(err, (error) => {
                 ZoweLogger.error(error.message);
             });
         }

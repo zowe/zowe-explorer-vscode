@@ -518,7 +518,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             await vscode.workspace.fs.delete(this.resourceUri, { recursive: this.isFolder });
         } catch (err) {
             ZoweLogger.error(err);
-            await handleError(err, async (error) => {
+            handleError(err, (error) => {
                 Gui.errorMessage(
                     vscode.l10n.t({
                         message: "Unable to delete node: {0}",

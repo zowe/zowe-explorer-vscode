@@ -478,7 +478,7 @@ export class JobActions {
                     sessionNodes.add(sesNode);
                 }
             } catch (err) {
-                await handleError(err, async (error) => {
+                handleError(err, (error) => {
                     failedJobs.push({ job: jobNode.job, error: error.message });
                 });
             }

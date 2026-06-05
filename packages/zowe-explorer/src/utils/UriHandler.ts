@@ -40,7 +40,7 @@ export class ZoweUriHandler implements UriHandler {
                 await commands.executeCommand("vscode.open", parsedUri, { preview: false });
             })
             .catch(async (err) => {
-                await handleError(err, async (error) => {
+                await handleError(err, (error) => {
                     ZoweLogger.error(`Failed to open external URL: ${error.message}`);
                 });
             });
