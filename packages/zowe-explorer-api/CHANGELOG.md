@@ -6,8 +6,6 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Renamed references to "MVS Command" to "Console Command" instead for clarity.
-
 ### Bug fixes
 
 ## `3.5.0`
