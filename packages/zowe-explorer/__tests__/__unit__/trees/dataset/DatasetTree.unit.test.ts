@@ -7558,6 +7558,35 @@ describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
         const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
         expect(result).toBe(false);
     });
+
+    it("returns true even if reveal/expand fails for found node in session", async () => {
+        const dsNode = { label: "MY.DATA.SET" };
+        mockSessionNode.getChildren.mockResolvedValue([dsNode]);
+        mockTreeView.reveal.mockRejectedValue(new Error("Expansion failed"));
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(result).toBe(true);
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(dsNode, { select: true, focus: true, expand: true });
+    });
+
+    it("returns true even if reveal/expand fails for found node in favorites", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        const favChild = { label: "MY.DATA.SET" };
+        mockFavNode.children = [favChild];
+        mockTreeView.reveal.mockRejectedValue(new Error("Expansion failed"));
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(result).toBe(true);
+    });
+
+    it("returns true even if reveal/expand fails after successful filtering", async () => {
+        mockSessionNode.getChildren.mockResolvedValue([]);
+        mockFavNode.children = [];
+        mockSessionNode.children = [{ label: "MY.DATA.SET" }];
+        vi.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
+        mockTreeView.reveal.mockRejectedValue(new Error("Expansion failed for large PDS"));
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
+        expect(testTree.filterTreeByPattern).toHaveBeenCalledWith(mockSessionNode, sessProfile, "MY.DATA.SET");
+        expect(result).toBe(true);
+    });
 });
 
 describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {

@@ -1888,10 +1888,18 @@ export class DatasetActions {
                 const lookup = await DatasetFSProvider.instance.remoteLookupForResource(datasetUri);
                 if (lookup && lookup instanceof PdsEntry) {
                     const datasetTree = SharedTreeProviders.ds as DatasetTree;
-                    await datasetTree.focusOnDsInTree(ds.dataSetName, sessProfile);
-                    // Note: focusOnDsInTree handles filtering and revealing the PDS in the tree.
-                    // Even if it returns false, the PDS may have been successfully filtered and displayed.
-                    // We don't show a warning here because the tree filtering is the intended behavior.
+                    const focused = await datasetTree.focusOnDsInTree(ds.dataSetName, sessProfile);
+                    if (!focused) {
+                        // Only show error if filtering failed (not just expansion)
+                        Gui.warningMessage(
+                            vscode.l10n.t({
+                                message: "Failed to filter tree for PDS {0}. The data set may not exist or there may be a connection issue.",
+                                args: [ds.dataSetName],
+                                comment: ["PDS name"],
+                            })
+                        );
+                    }
+                    // Return regardless of focus result - if filtering succeeded, the PDS is visible in tree
                     return;
                 }
             }

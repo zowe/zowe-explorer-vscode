@@ -448,7 +448,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         child.contextValue = Constants.DS_MEMBER_CONTEXT + Constants.FAV_SUFFIX;
 
         await DatasetActions.refreshPS(child);
-        
+
         expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(child.resourceUri, { editor: undefined });
     });
     it("Checking favorite PS refresh", async () => {
@@ -4440,7 +4440,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         expect(datasetTree.focusOnDsInTree).toHaveBeenCalledWith("MY.PDS", expect.anything());
     });
 
-    it("should call focusOnDsInTree for PDS without showing warning", async () => {
+    it("should show warning when focusOnDsInTree returns false (filtering failed)", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         setupMocksForZoom(blockMocks, "MY.PDS", "MY.PDS", "", true, true);
@@ -4455,9 +4455,8 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         await DatasetActions.zoom();
 
         expect(datasetTree.focusOnDsInTree).toHaveBeenCalledWith("MY.PDS", expect.anything());
-        // Warning should not be shown even if focusOnDsInTree returns false,
-        // as the PDS may have been successfully filtered and displayed
-        expect(warningSpy).not.toHaveBeenCalled();
+        // Warning should be shown if focusOnDsInTree returns false (filtering failed)
+        expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to filter tree for PDS MY.PDS"));
     });
 
     it("should open the dataset if not a PDS", async () => {
