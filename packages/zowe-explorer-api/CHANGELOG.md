@@ -6,7 +6,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Renamed references to "MVS Command" to "Console Command" instead for clarity. The MvsCommandHandler class is renamed to ConsoleCommandHandler.
+- Renamed references to "MVS Command" to "Console Command" instead for clarity. The MvsCommandHandler class is renamed to ConsoleCommandHandler. [#4300](https://github.com/zowe/zowe-explorer-vscode/issues/4300)
 
 ### Bug fixes
 
