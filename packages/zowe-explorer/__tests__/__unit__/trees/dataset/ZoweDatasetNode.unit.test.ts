@@ -41,6 +41,7 @@ import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
@@ -2592,5 +2593,75 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
 
         const result = await (pdsNode as any).listMembersInRange(undefined, 2);
         expect(result).toStrictEqual({ items: [] });
+    });
+
+    describe("syncNodeMigrationStatus", () => {
+        let dsNode: ZoweDatasetNode;
+        let mockDsTree: any;
+
+        beforeEach(() => {
+            dsNode = new ZoweDatasetNode({
+                label: "TEST.DATASET",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+            });
+            mockDsTree = {
+                findEquivalentNode: vi.fn(),
+                refreshElement: vi.fn(),
+                updateFavorites: vi.fn(),
+            };
+        });
+
+        it("should recall a migrated dataset if migrationStatus is NO", async () => {
+            vi.spyOn(SharedContext, "isMigrated").mockReturnValue(true);
+            vi.spyOn(SharedContext, "isFavoriteDescendant").mockReturnValue(true);
+            const datasetRecalledSpy = vi.spyOn(dsNode, "datasetRecalled").mockResolvedValue(undefined);
+
+            const equivNode = new ZoweDatasetNode({
+                label: "TEST.DATASET",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+            });
+            const equivRecalledSpy = vi.spyOn(equivNode, "datasetRecalled").mockResolvedValue(undefined);
+            vi.spyOn(equivNode, "getParent").mockReturnValue({} as any);
+            mockDsTree.findEquivalentNode.mockReturnValue(equivNode);
+
+            await (dsNode as any).syncNodeMigrationStatus(dsNode, "NO", "PO", mockDsTree);
+
+            expect(datasetRecalledSpy).toHaveBeenCalledWith(true);
+            expect(equivRecalledSpy).toHaveBeenCalledWith(true);
+            expect(mockDsTree.refreshElement).toHaveBeenCalled();
+            expect(mockDsTree.updateFavorites).toHaveBeenCalled();
+        });
+
+        it("should migrate a recalled dataset if migrationStatus is YES", async () => {
+            vi.spyOn(SharedContext, "isMigrated").mockReturnValue(false);
+            vi.spyOn(SharedContext, "isFavoriteDescendant").mockReturnValue(true);
+            const datasetMigratedSpy = vi.spyOn(dsNode, "datasetMigrated").mockImplementation(() => {});
+
+            const equivNode = new ZoweDatasetNode({
+                label: "TEST.DATASET",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+            });
+            const equivMigratedSpy = vi.spyOn(equivNode, "datasetMigrated").mockImplementation(() => {});
+            vi.spyOn(equivNode, "getParent").mockReturnValue({} as any);
+            mockDsTree.findEquivalentNode.mockReturnValue(equivNode);
+
+            await (dsNode as any).syncNodeMigrationStatus(dsNode, "YES", "PS", mockDsTree);
+
+            expect(datasetMigratedSpy).toHaveBeenCalled();
+            expect(equivMigratedSpy).toHaveBeenCalled();
+            expect(mockDsTree.refreshElement).toHaveBeenCalled();
+            expect(mockDsTree.updateFavorites).toHaveBeenCalled();
+        });
+
+        it("should do nothing if migration status matches the node state", async () => {
+            vi.spyOn(SharedContext, "isMigrated").mockReturnValue(true);
+            const datasetRecalledSpy = vi.spyOn(dsNode, "datasetRecalled");
+            const datasetMigratedSpy = vi.spyOn(dsNode, "datasetMigrated");
+
+            await (dsNode as any).syncNodeMigrationStatus(dsNode, "YES", "PS", mockDsTree);
+
+            expect(datasetRecalledSpy).not.toHaveBeenCalled();
+            expect(datasetMigratedSpy).not.toHaveBeenCalled();
+        });
     });
 });

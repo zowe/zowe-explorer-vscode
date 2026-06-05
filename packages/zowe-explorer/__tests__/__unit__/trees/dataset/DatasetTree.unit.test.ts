@@ -7876,3 +7876,66 @@ describe("DatasetTree.crossLparMove", () => {
         expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(srcUri, { recursive: true });
     });
 });
+
+describe("syncFavoriteMigrationStatus", () => {
+    let tree: DatasetTree;
+    let mockFavorite: any;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        tree = new DatasetTree();
+        mockFavorite = Object.create(ZoweDatasetNode.prototype);
+        mockFavorite.resourceUri = vscode.Uri.file("/sestest/USER.DATA.SET");
+        mockFavorite.label = "USER.DATA.SET";
+        mockFavorite.datasetMigrated = vi.fn();
+        mockFavorite.datasetRecalled = vi.fn().mockResolvedValue(undefined);
+        mockFavorite.wasPds = false;
+
+        vi.spyOn(tree, "updateFavorites").mockImplementation(() => {});
+    });
+
+    it("should return early if favorite has no resourceUri", async () => {
+        mockFavorite.resourceUri = undefined;
+        const statSpy = vi.spyOn(DatasetFSProvider.instance, "stat");
+
+        await (tree as any).syncFavoriteMigrationStatus(mockFavorite);
+
+        expect(statSpy).not.toHaveBeenCalled();
+    });
+
+    it("should migrate favorite if it is migrated on mainframe but not locally", async () => {
+        vi.spyOn(DatasetFSProvider.instance, "stat").mockResolvedValue({} as any);
+        vi.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue({
+            stats: { migr: "YES" },
+        } as any);
+        vi.spyOn(SharedContext, "isMigrated").mockReturnValue(false);
+
+        await (tree as any).syncFavoriteMigrationStatus(mockFavorite);
+
+        expect(mockFavorite.datasetMigrated).toHaveBeenCalled();
+        expect(tree.updateFavorites).toHaveBeenCalled();
+    });
+
+    it("should recall favorite if it is recalled on mainframe but migrated locally", async () => {
+        vi.spyOn(DatasetFSProvider.instance, "stat").mockResolvedValue({} as any);
+        vi.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue({
+            type: vscode.FileType.File,
+            stats: { migr: "NO", dsorg: "PS" },
+        } as any);
+        vi.spyOn(SharedContext, "isMigrated").mockReturnValue(true);
+
+        await (tree as any).syncFavoriteMigrationStatus(mockFavorite);
+
+        expect(mockFavorite.datasetRecalled).toHaveBeenCalledWith(false);
+        expect(tree.updateFavorites).toHaveBeenCalled();
+    });
+
+    it("should handle error gracefully and log warning if stat fails", async () => {
+        vi.spyOn(DatasetFSProvider.instance, "stat").mockRejectedValue(new Error("stat failed"));
+        const warnSpy = vi.spyOn(ZoweLogger, "warn").mockImplementation(() => {});
+
+        await (tree as any).syncFavoriteMigrationStatus(mockFavorite);
+
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to stat favorite"));
+    });
+});

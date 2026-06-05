@@ -2343,17 +2343,19 @@ export class DatasetActions {
                     })
                 );
                 const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+                const resourceUri = node.resourceUri;
                 node.datasetMigrated();
-                if (node.resourceUri) {
-                    DatasetFSProvider.instance.invalidateCache(node.resourceUri);
+                if (resourceUri) {
+                    DatasetFSProvider.instance.invalidateCache(resourceUri);
                 }
                 if (datasetProvider) {
                     const isFav = SharedContext.isFavoriteDescendant(node);
                     const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
                     if (equiv) {
+                        const equivUri = equiv.resourceUri;
                         equiv.datasetMigrated();
-                        if (equiv.resourceUri) {
-                            DatasetFSProvider.instance.invalidateCache(equiv.resourceUri);
+                        if (equivUri) {
+                            DatasetFSProvider.instance.invalidateCache(equivUri);
                         }
                         datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
                     }

@@ -2700,4 +2700,104 @@ describe("DatasetFSProvider", () => {
             expect(result.wasAccessed).toBe(false);
         });
     });
+
+    describe("invalidateCache", () => {
+        it("should remove the entry from parent entries map and fire a deleted event if it exists", () => {
+            const fireSoonSpy = vi.spyOn(DatasetFSProvider.instance as any, "fireSoon").mockImplementation(() => {});
+            const mockParent = {
+                entries: new Map([["USER.DATA.PS", {}]]),
+            };
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(mockParent);
+
+            DatasetFSProvider.instance.invalidateCache(testUris.ps);
+
+            expect(mockParent.entries.has("USER.DATA.PS")).toBe(false);
+            expect(fireSoonSpy).toHaveBeenCalledWith({
+                type: vscode.FileChangeType.Deleted,
+                uri: testUris.ps,
+            });
+        });
+
+        it("should do nothing if parent directory does not contain the entry", () => {
+            const fireSoonSpy = vi.spyOn(DatasetFSProvider.instance as any, "fireSoon").mockImplementation(() => {});
+            const mockParent = {
+                entries: new Map(),
+            };
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(mockParent);
+
+            DatasetFSProvider.instance.invalidateCache(testUris.ps);
+
+            expect(fireSoonSpy).not.toHaveBeenCalled();
+        });
+
+        it("should handle errors gracefully if lookupParentDirectory throws", () => {
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockImplementation(() => {
+                throw new Error("Parent not found");
+            });
+            expect(() => DatasetFSProvider.instance.invalidateCache(testUris.ps)).not.toThrow();
+        });
+    });
+
+    describe("remoteLookupForResource with migrated directory entry", () => {
+        it("should delete directory entry from parent and replace with a file entry if isMigrated is true and cached entry was a directory", async () => {
+            const mockMvsApi = {
+                dataSet: vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                dsname: "USER.DATA.PDS",
+                                migr: "YES",
+                                dsorg: "PS",
+                            },
+                        ],
+                    },
+                }),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+
+            const mockCommonApi = {
+                getSession: vi.fn().mockReturnValue({
+                    ISession: {
+                        type: "basic",
+                    },
+                }),
+            };
+            const mockZoweApiRegister = {
+                getCommonApi: vi.fn().mockReturnValue(mockCommonApi),
+                registeredApiTypes: vi.fn().mockReturnValue(["zosmf"]),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue(mockZoweApiRegister as any);
+
+            vi.spyOn(AuthHandler, "isProfileLocked").mockReturnValue(false);
+            vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValue(undefined);
+            vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
+            vi.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValue({
+                profile: testProfile,
+                isRoot: false,
+                slashAfterProfilePos: 8,
+                profileName: "sestest",
+            });
+
+            const mockParent = {
+                entries: new Map([["USER.DATA.PDS", { type: FileType.Directory }]]),
+                metadata: {
+                    profile: testProfile,
+                    path: "/",
+                },
+            };
+
+            vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue({ type: FileType.Directory });
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(mockParent);
+            vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(mockParent);
+            vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(true);
+
+            const uriInfo = (DatasetFSProvider.instance as any)._getInfoFromUri(testUris.pds);
+            const result = await (DatasetFSProvider.instance as any).fetchDataset(testUris.pds, uriInfo, true);
+
+            expect(mockParent.entries.get("USER.DATA.PDS")?.type).toBe(FileType.File);
+            expect(result).toBeDefined();
+            expect(result.type).toBe(FileType.File);
+        });
+    });
 });
