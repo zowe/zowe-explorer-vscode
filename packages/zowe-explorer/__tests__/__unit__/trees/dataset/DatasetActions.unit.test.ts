@@ -3326,10 +3326,10 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
         equivNode.resourceUri = vscode.Uri.file("/sestest/HLQ.TEST.TO.NODE");
         vi.spyOn(equivNode, "getParent").mockReturnValue({} as any);
 
-        const nodeRecalledSpy = vi.spyOn(node, "datasetRecalled").mockImplementation(async () => {
+        vi.spyOn(node, "datasetRecalled").mockImplementation(async () => {
             node.resourceUri = vscode.Uri.parse("zowe-ds:/sestest/HLQ.TEST.TO.NODE");
         });
-        const equivRecalledSpy = vi.spyOn(equivNode, "datasetRecalled").mockImplementation(async () => {
+        vi.spyOn(equivNode, "datasetRecalled").mockImplementation(async () => {
             equivNode.resourceUri = vscode.Uri.parse("zowe-ds:/sestest/HLQ.TEST.TO.NODE-equiv");
         });
 

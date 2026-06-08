@@ -1975,6 +1975,31 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
 
         expect(SharedContext.isFavorite(vsamNode)).toBe(false);
     });
+
+    it("Checking removeFavorite removes _fav context from migrated DS in search tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const migratedNode = new ZoweDatasetNode({
+            label: "MY.MIGRATED.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        migratedNode.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+        testTree.mSessionNodes[1].children = [migratedNode];
+
+        await testTree.addFavorite(migratedNode);
+
+        expect(SharedContext.isFavorite(migratedNode)).toBe(true);
+
+        const favMigrated = testTree.mFavorites[0].children[0];
+        await testTree.removeFavorite(favMigrated);
+
+        expect(SharedContext.isFavorite(migratedNode)).toBe(false);
+    });
     it("Checking removeFavorite from search-tree session node removes matching saved search", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
