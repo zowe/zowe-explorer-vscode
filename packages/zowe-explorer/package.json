@@ -2300,7 +2300,7 @@
     "build:nls": "pnpm run build:nlsPseudo"
   },
   "engines": {
-    "vscode": "^1.90.0"
+    "vscode": "^1.101.0"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^10.0.0",
@@ -2318,7 +2318,7 @@
     "@wdio/types": "^8.41.0",
     "adm-zip": "^0.5.16",
     "chalk": "^2.4.1",
-    "eslint-plugin-zowe-explorer": "3.5.0",
+    "eslint-plugin-zowe-explorer": "workspace:*",
     "expect-webdriverio": "^4.15.4",
     "fs-extra": "8.0.1",
     "glob": "^7.1.6",
