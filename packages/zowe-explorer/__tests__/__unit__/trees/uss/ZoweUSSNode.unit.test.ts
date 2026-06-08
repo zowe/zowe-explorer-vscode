@@ -1142,6 +1142,91 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         setAttrsMock.mockRestore();
     });
 
+    it("Tests that getChildren() creates directory entries via UssFSProvider directly, avoiding vscode.workspace.fs and stat calls", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const parentNode = new ZoweUSSNode({
+            label: "testDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.rootNode,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u",
+        });
+
+        const getUssFilesMock = vi.spyOn(parentNode as any, "getUssFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        name: "subDir",
+                        mode: "dr-xr-xr-x",
+                    },
+                ],
+            },
+        });
+
+        const fsCreateDirectorySpy = vi.spyOn(vscode.workspace.fs, "createDirectory");
+        const providerStatSpy = vi.spyOn(UssFSProvider.instance, "stat");
+
+        parentNode.dirty = true;
+        await parentNode.getChildren();
+
+        expect(getUssFilesMock).toHaveBeenCalledTimes(1);
+        expect(globalMocks.FileSystemProvider.createDirectory).toHaveBeenCalled();
+        expect(fsCreateDirectorySpy).not.toHaveBeenCalled();
+        expect(providerStatSpy).not.toHaveBeenCalled();
+
+        fsCreateDirectorySpy.mockRestore();
+        providerStatSpy.mockRestore();
+    });
+
+    it("Tests that getChildren() correctly handles absolute paths returned by the API", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const parentNode = new ZoweUSSNode({
+            label: "testDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.rootNode,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u",
+        });
+
+        const getUssFilesMock = vi.spyOn(parentNode as any, "getUssFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        name: "/u/testDir/subDir",
+                        mode: "dr-xr-xr-x",
+                    },
+                    {
+                        name: "/u/testDir/aFile.txt",
+                        mode: "-r-xr-xr-x",
+                    },
+                ],
+            },
+        });
+
+        const createEntrySpy = vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+
+        parentNode.dirty = true;
+        const children = await parentNode.getChildren();
+
+        expect(getUssFilesMock).toHaveBeenCalledTimes(1);
+        expect(children.length).toBe(2);
+        expect(children[0].label).toBe("aFile.txt");
+        expect(children[0].fullPath).toBe("/u/testDir/aFile.txt");
+        expect(children[1].label).toBe("subDir");
+        expect(children[1].fullPath).toBe("/u/testDir/subDir");
+
+        expect(globalMocks.FileSystemProvider.createDirectory).toHaveBeenCalled();
+        expect(createEntrySpy).toHaveBeenCalled();
+
+        createEntrySpy.mockRestore();
+    });
+
     it("Tests that error is thrown when node label is blank", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
@@ -1157,8 +1242,9 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
 
-        // Populate node with children from previous search to ensure they are removed
-        blockMocks.childNode.children = [createUSSNode(globalMocks.session, globalMocks.profileOne)];
+        // Populate node with children from previous search to ensure they are restored
+        const oldChild = createUSSNode(globalMocks.session, globalMocks.profileOne);
+        blockMocks.childNode.children = [oldChild];
         blockMocks.childNode.contextValue = Constants.USS_SESSION_CONTEXT;
         blockMocks.childNode.fullPath = "Throw Error";
         blockMocks.childNode.dirty = true;
@@ -1168,9 +1254,68 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         });
 
         const response = await blockMocks.childNode.getChildren();
-        expect(response).toEqual([]);
+        expect(response).toEqual([oldChild]);
+        expect(blockMocks.childNode.fullPath).toEqual("root/root");
+        expect(blockMocks.childNode.description).toEqual("root/root");
         expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual("Throwing an error to check error handling for unit tests!");
+    });
+
+    it("Tests that when List.fileList throws an error and lastValidPath is undefined on a session node, it resets properties and returns a placeholder", async () => {
+        const globalMocks = createGlobalMocks();
+
+        globalMocks.profileOps.loadNamedProfile = vi.fn().mockReturnValue(globalMocks.profileOne);
+
+        const sessionNode = new ZoweUSSNode({
+            label: "mySession",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            contextOverride: Constants.USS_SESSION_CONTEXT,
+        });
+        sessionNode.fullPath = "some/path";
+        sessionNode.lastValidPath = undefined;
+        sessionNode.lastValidTooltip = undefined;
+        sessionNode.dirty = true;
+
+        vi.spyOn(UssFSProvider.instance, "listFiles").mockImplementation(() => {
+            throw new Error("Failed to list files");
+        });
+
+        const response = await sessionNode.getChildren();
+        expect(response.length).toBe(1);
+        expect(response[0].label).toBe("Use the Search button to list USS files");
+        expect(sessionNode.fullPath).toBeUndefined();
+        expect(sessionNode.description).toBeUndefined();
+        expect(sessionNode.tooltip).toContain("Profile: mySession");
+        expect(sessionNode.tooltip).toContain("Profile Type: zosmf");
+    });
+
+    it("Tests that when List.fileList throws an error and lastValidPath is undefined on a non-session node, it resets properties and returns a placeholder without updating tooltip", async () => {
+        const globalMocks = createGlobalMocks();
+
+        const nonSessionNode = new ZoweUSSNode({
+            label: "myFolder",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        nonSessionNode.fullPath = "some/path";
+        nonSessionNode.lastValidPath = undefined;
+        nonSessionNode.lastValidTooltip = undefined;
+        nonSessionNode.dirty = true;
+        nonSessionNode.tooltip = "Some Tooltip";
+
+        vi.spyOn(UssFSProvider.instance, "listFiles").mockImplementation(() => {
+            throw new Error("Failed to list files");
+        });
+
+        const response = await nonSessionNode.getChildren();
+        expect(response.length).toBe(1);
+        expect(response[0].label).toBe("Use the Search button to list USS files");
+        expect(nonSessionNode.fullPath).toBeUndefined();
+        expect(nonSessionNode.description).toBeUndefined();
+        expect(nonSessionNode.tooltip).toBe("Some Tooltip");
     });
 
     it("Tests that when passing a session node that is not dirty the node.getChildren() method is exited early", async () => {

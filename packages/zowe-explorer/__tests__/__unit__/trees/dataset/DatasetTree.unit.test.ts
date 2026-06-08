@@ -5093,7 +5093,7 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
         expect(updateFavSpy).toHaveBeenCalledWith({
             favorites: [],
             vsamFavorites: [],
-            memberFavorites: [`[${profileLabel}]: MY.PDS(MEM1){pds}`, `[${profileLabel}]: MY.PDS(MEM2){pds}`]
+            memberFavorites: [`[${profileLabel}]: MY.PDS(MEM1){pds}`, `[${profileLabel}]: MY.PDS(MEM2){pds}`],
         });
     });
 
@@ -5121,7 +5121,7 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
         expect(updateFavSpy).toHaveBeenCalledWith({
             favorites: [`[${profileLabel}]: MY.PDS{pds}`],
             vsamFavorites: [],
-            memberFavorites: []
+            memberFavorites: [],
         });
     });
 
@@ -5160,7 +5160,7 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
         expect(updateFavSpy).toHaveBeenCalledWith({
             favorites: [`[${profileLabel}]: FULL.PDS{pds}`],
             vsamFavorites: [],
-            memberFavorites: [`[${profileLabel}]: MEMBER.PDS(MYMEM){pds}`]
+            memberFavorites: [`[${profileLabel}]: MEMBER.PDS(MYMEM){pds}`],
         });
     });
 });

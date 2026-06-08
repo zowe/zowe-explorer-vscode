@@ -319,3 +319,35 @@ describe("USSUtils Unit Tests - autoDetectEncoding", () => {
         expect(mockNode.getProfile).not.toHaveBeenCalled();
     });
 });
+
+describe("USSUtils Unit Tests - filterHiddenFiles", () => {
+    it("should filter out files starting with a dot", async () => {
+        const mockResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ name: ".hidden" }, { name: "visible.txt" }, { name: ".profile" }],
+            },
+        } as any;
+
+        const result = await USSUtils.filterHiddenFiles(mockResponse);
+
+        expect(result.apiResponse.items).toHaveLength(1);
+        expect(result.apiResponse.items[0].name).toBe("visible.txt");
+    });
+
+    it("should correctly handle absolute paths and filter based on basename", async () => {
+        const mockResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [{ name: "/u/users/ibmuser/.hidden" }, { name: "/u/users/ibmuser/visible.txt" }],
+            },
+        } as any;
+
+        const result = await USSUtils.filterHiddenFiles(mockResponse);
+
+        expect(result.apiResponse.items).toHaveLength(1);
+        expect(result.apiResponse.items[0].name).toBe("/u/users/ibmuser/visible.txt");
+    });
+});
