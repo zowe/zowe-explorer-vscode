@@ -2155,6 +2155,14 @@
             "ERROR",
             "FATAL"
           ],
+          "enumItemLabels": [
+            "%zowe.logger.trace%",
+            "%zowe.logger.debug%",
+            "%zowe.logger.info%",
+            "%zowe.logger.warn%",
+            "%zowe.logger.error%",
+            "%zowe.logger.fatal%"
+          ],
           "markdownEnumDescriptions": [
             "%zowe.logger.trace.description%",
             "%zowe.logger.debug.description%",

@@ -384,25 +384,25 @@
     "Shows whether persistent settings were successfully migrated to local storage": ""
   },
   "zowe.logger": {
-    "Select the log level for Zowe Explorer.  The default is INFO.": ""
+    "Select the log level for Zowe Explorer. The default is INFO.": ""
   },
   "zowe.logger.trace": {
-    "TRACE": ""
+    "Trace": ""
   },
   "zowe.logger.debug": {
-    "DEBUG": ""
+    "Debug": ""
   },
   "zowe.logger.info": {
-    "INFO": ""
+    "Info": ""
   },
   "zowe.logger.warn": {
-    "WARN": ""
+    "Warn": ""
   },
   "zowe.logger.error": {
-    "ERROR": ""
+    "Error": ""
   },
   "zowe.logger.fatal": {
-    "FATAL": ""
+    "Fatal": ""
   },
   "zowe.logger.trace.description": {
     "Messages about fine details of the application's behaviour.": ""
