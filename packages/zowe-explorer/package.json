@@ -2284,7 +2284,7 @@
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
     "lint": "concurrently -n \"_eslint_,prettier,markdown\" \"pnpm run \"/lint:[st].*/\"\" \"pnpm lint:pretty\" \"pnpm markdown\"",
-    "lint:all": "pnpm lint:src; pnpm lint:test",
+    "lint:all": "pnpm run \"/^lint:[st].*/\"",
     "lint:pretty": "prettier --write . && prettier --check .",
     "lint:src": "eslint --format stylish \"src/**/*.ts\"",
     "lint:test": "eslint --format stylish \"__tests__/**/*.ts\"",
