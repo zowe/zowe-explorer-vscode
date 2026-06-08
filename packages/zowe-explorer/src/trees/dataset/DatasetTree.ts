@@ -1500,7 +1500,7 @@ Would you like to do this now?`,
         this.mPersistence.updateFavorites({
             favorites: favoritesArray,
             vsamFavorites: vsamFavoritesArray,
-            memberFavorites: memberFavoritesArray
+            memberFavorites: memberFavoritesArray,
         });
     }
 
