@@ -10,5 +10,5 @@ Scenario Outline: User wants to issue a command
     Examples:
       | opt | cmd |
       | Issue TSO Command | PROFILE |
-      | Issue MVS Command | D T |
+      | Issue Console Command | D T |
       | Issue Unix Command | pwd |
