@@ -461,6 +461,7 @@
   "Confirm": "Confirm",
   "Conflict: Remote contents have changed.": "Conflict: Remote contents have changed.",
   "Connection Name": "Connection Name",
+  "Console command submitted.": "Console command submitted.",
   "Contents": "Contents",
   "Continue": "Continue",
   "Convert existing profiles": "Convert existing profiles",
@@ -482,9 +483,9 @@
       "Node type"
     ]
   },
+  "Create a new console command": "Create a new console command",
   "Create a new filter": "Create a new filter",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
-  "Create a new MVS command": "Create a new MVS command",
   "Create a new TSO command": "Create a new TSO command",
   "Create Data Set: Edit Attributes": "Create Data Set: Edit Attributes",
   "Create Data Set: Name": "Create Data Set: Name",
@@ -685,7 +686,7 @@
   "Enter job prefix": "Enter job prefix",
   "Enter job status": "Enter job status",
   "Enter local filter...": "Enter local filter...",
-  "Enter or update the MVS command": "Enter or update the MVS command",
+  "Enter or update the console command": "Enter or update the console command",
   "Enter or update the TSO command": "Enter or update the TSO command",
   "Enter or update the Unix command": "Enter or update the Unix command",
   "Enter search string in the input field at the top.": "Enter search string in the input field at the top.",
@@ -1558,7 +1559,6 @@
   "Moving MVS files...": "Moving MVS files...",
   "Moving USS files...": "Moving USS files...",
   "Must be a valid number": "Must be a valid number",
-  "MVS command submitted.": "MVS command submitted.",
   "MVS data set enhancements": "MVS data set enhancements",
   "Name": "Name",
   "Name of Data Set": "Name of Data Set",
@@ -1884,6 +1884,7 @@
   "Rename Operation cancelled.": "Rename Operation cancelled.",
   "Renamed \"Zowe Explorer z/OS Console\" to \"z/OS Console\". <a>#3445</a>": "Renamed \"Zowe Explorer z/OS Console\" to \"z/OS Console\". <a>#3445</a>",
   "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>": "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>",
+  "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>": "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>",
   "Renaming data set {0}/Old data set name": {
     "message": "Renaming data set {0}",
     "comment": [
@@ -1945,6 +1946,18 @@
   "Select": "Select",
   "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles": "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles",
   "Select a certificate and certificate key in PEM format:": "Select a certificate and certificate key in PEM format:",
+  "Select a console command to run against {0} (An option to edit will follow)/Host name": {
+    "message": "Select a console command to run against {0} (An option to edit will follow)",
+    "comment": [
+      "Host name"
+    ]
+  },
+  "Select a console command to run immediately against {0}/Host name": {
+    "message": "Select a console command to run immediately against {0}",
+    "comment": [
+      "Host name"
+    ]
+  },
   "Select a data set organization (DSORG)": "Select a data set organization (DSORG)",
   "Select a filter": "Select a filter",
   "Select a filter or type to create a new one": "Select a filter or type to create a new one",
@@ -1991,18 +2004,6 @@
   "Select Allocate Data Set to create now, or Edit Attributes to review values": "Select Allocate Data Set to create now, or Edit Attributes to review values",
   "Select an attribute to edit, or select Allocate Data Set to create the data set": "Select an attribute to edit, or select Allocate Data Set to create the data set",
   "Select an item before deleting": "Select an item before deleting",
-  "Select an MVS command to run against {0} (An option to edit will follow)/Host name": {
-    "message": "Select an MVS command to run against {0} (An option to edit will follow)",
-    "comment": [
-      "Host name"
-    ]
-  },
-  "Select an MVS command to run immediately against {0}/Host name": {
-    "message": "Select an MVS command to run immediately against {0}",
-    "comment": [
-      "Host name"
-    ]
-  },
   "Select Certificate": "Select Certificate",
   "Select Certificate Key": "Select Certificate Key",
   "Select default encoding for directory files (current: {0})": "Select default encoding for directory files (current: {0})",
@@ -2017,8 +2018,8 @@
   "Select the location of the config file to edit": "Select the location of the config file to edit",
   "Select the location where the config file will be initialized": "Select the location where the config file will be initialized",
   "Select the profile to use to open the data set": "Select the profile to use to open the data set",
+  "Select the profile to use to submit the console command": "Select the profile to use to submit the console command",
   "Select the profile to use to submit the job": "Select the profile to use to submit the job",
-  "Select the profile to use to submit the MVS command": "Select the profile to use to submit the MVS command",
   "Select the profile to use to submit the TSO command": "Select the profile to use to submit the TSO command",
   "Select the profile to use to submit the Unix command": "Select the profile to use to submit the Unix command",
   "Select the profile to which the original data set belongs": "Select the profile to which the original data set belongs",
@@ -2410,6 +2411,7 @@
   },
   "Your Jobs": "Your Jobs",
   "z/OS default codepage": "z/OS default codepage",
+  "Zowe Console Command": "Zowe Console Command",
   "Zowe Explorer": "Zowe Explorer",
   "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
   "Zowe Explorer log level: {0}/Log setting": {
@@ -2443,7 +2445,6 @@
       "Zowe directory path"
     ]
   },
-  "Zowe MVS Command": "Zowe MVS Command",
   "Zowe profiles initialized successfully.": "Zowe profiles initialized successfully.",
   "Zowe TSO Command": "Zowe TSO Command",
   "Zowe Unix Command": "Zowe Unix Command",
