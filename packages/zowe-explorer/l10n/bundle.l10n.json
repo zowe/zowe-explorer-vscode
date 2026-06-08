@@ -1885,7 +1885,7 @@
   "Rename Operation cancelled.": "Rename Operation cancelled.",
   "Renamed \"Zowe Explorer z/OS Console\" to \"z/OS Console\". <a>#3445</a>": "Renamed \"Zowe Explorer z/OS Console\" to \"z/OS Console\". <a>#3445</a>",
   "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>": "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>",
-  "Renamed references to \"MVS Command\" to \"Console Command\" instead for clarity.": "Renamed references to \"MVS Command\" to \"Console Command\" instead for clarity.",
+  "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>": "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>",
   "Renaming data set {0}/Old data set name": {
     "message": "Renaming data set {0}",
     "comment": [
