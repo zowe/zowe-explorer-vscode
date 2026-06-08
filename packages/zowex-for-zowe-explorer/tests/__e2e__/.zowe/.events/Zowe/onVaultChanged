@@ -1,0 +1,7 @@
+{
+  "eventTime": "2026-06-04T18:07:21.584Z",
+  "eventName": "onVaultChanged",
+  "eventType": 0,
+  "appName": "Zowe",
+  "eventFilePath": "/Users/pujalgandhi/Documents/ZOWE/zowe-explorer-vscode/packages/zowe-explorer/__tests__/__e2e__/.zowe/.events/Zowe/onVaultChanged"
+}

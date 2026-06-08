@@ -1,0 +1,60 @@
+{
+  "$schema": "./zowe.schema.json",
+  "profiles": {
+    "zosmf": {
+      "type": "zosmf",
+      "properties": {
+        "port": 1443
+      },
+      "secure": []
+    },
+    "tso": {
+      "type": "tso",
+      "properties": {
+        "account": "IZUACCT",
+        "codePage": "1047",
+        "logonProcedure": "IZUFPROC"
+      },
+      "secure": []
+    },
+    "ssh": {
+      "type": "ssh",
+      "properties": {
+        "port": 22
+      },
+      "secure": []
+    },
+    "zftp": {
+      "type": "zftp",
+      "properties": {
+        "port": 21,
+        "secureFtp": true
+      },
+      "secure": []
+    },
+    "mq": {
+      "type": "mq",
+      "properties": {
+        "port": 0
+      },
+      "secure": []
+    },
+    "project_base": {
+      "type": "base",
+      "properties": {
+        "host": "b025.lvn.broadcom.net",
+        "rejectUnauthorized": true
+      },
+      "secure": ["user", "password"]
+    }
+  },
+  "defaults": {
+    "zosmf": "zosmf",
+    "tso": "tso",
+    "ssh": "ssh",
+    "zftp": "zftp",
+    "mq": "mq",
+    "base": "project_base"
+  },
+  "autoStore": true
+}

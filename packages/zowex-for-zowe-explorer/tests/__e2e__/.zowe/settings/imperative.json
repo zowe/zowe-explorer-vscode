@@ -1,0 +1,5 @@
+{
+  "overrides": {
+    "CredentialManager": "@zowe/cli"
+  }
+}
