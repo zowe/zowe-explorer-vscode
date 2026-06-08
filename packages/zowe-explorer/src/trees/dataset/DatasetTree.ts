@@ -809,13 +809,21 @@ Would you like to do this now?`,
             const entry = DatasetFSProvider.instance.lookup(favorite.resourceUri, true) as any;
             if (entry && entry.stats && favorite instanceof ZoweDatasetNode) {
                 const isMigrated = entry.stats.migr === "YES";
-                if (isMigrated && !SharedContext.isMigrated(favorite)) {
-                    favorite.datasetMigrated();
-                    this.updateFavorites();
-                } else if (!isMigrated && SharedContext.isMigrated(favorite)) {
-                    const isPds = entry.type === vscode.FileType.Directory || entry.stats.dsorg?.startsWith("PO") || favorite.wasPds || false;
-                    await favorite.datasetRecalled(isPds);
-                    this.updateFavorites();
+                if (isMigrated) {
+                    if (favorite.justRecalled) {
+                        return;
+                    }
+                    if (!SharedContext.isMigrated(favorite)) {
+                        favorite.datasetMigrated();
+                        this.updateFavorites();
+                    }
+                } else {
+                    favorite.justRecalled = false;
+                    if (SharedContext.isMigrated(favorite)) {
+                        const isPds = entry.type === vscode.FileType.Directory || entry.stats.dsorg?.startsWith("PO") || favorite.wasPds || false;
+                        await favorite.datasetRecalled(isPds);
+                        this.updateFavorites();
+                    }
                 }
             }
         } catch (error) {

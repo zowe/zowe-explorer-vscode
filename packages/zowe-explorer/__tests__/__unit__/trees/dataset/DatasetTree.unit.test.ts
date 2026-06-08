@@ -7963,4 +7963,31 @@ describe("syncFavoriteMigrationStatus", () => {
 
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to stat favorite"));
     });
+
+    it("should not migrate favorite if isMigrated is true but favorite.justRecalled is true", async () => {
+        vi.spyOn(DatasetFSProvider.instance, "stat").mockResolvedValue({} as any);
+        vi.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue({
+            stats: { migr: "YES" },
+        } as any);
+        vi.spyOn(SharedContext, "isMigrated").mockReturnValue(false);
+        mockFavorite.justRecalled = true;
+
+        await (tree as any).syncFavoriteMigrationStatus(mockFavorite);
+
+        expect(mockFavorite.datasetMigrated).not.toHaveBeenCalled();
+        expect(mockFavorite.justRecalled).toBe(true);
+    });
+
+    it("should clear justRecalled flag if isMigrated is false", async () => {
+        vi.spyOn(DatasetFSProvider.instance, "stat").mockResolvedValue({} as any);
+        vi.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue({
+            stats: { migr: "NO" },
+        } as any);
+        vi.spyOn(SharedContext, "isMigrated").mockReturnValue(false);
+        mockFavorite.justRecalled = true;
+
+        await (tree as any).syncFavoriteMigrationStatus(mockFavorite);
+
+        expect(mockFavorite.justRecalled).toBe(false);
+    });
 });

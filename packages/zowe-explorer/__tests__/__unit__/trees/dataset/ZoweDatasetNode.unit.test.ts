@@ -2663,5 +2663,35 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
             expect(datasetRecalledSpy).not.toHaveBeenCalled();
             expect(datasetMigratedSpy).not.toHaveBeenCalled();
         });
+
+        it("should not migrate if migrationStatus is YES but dsNode.justRecalled is true", async () => {
+            vi.spyOn(SharedContext, "isMigrated").mockReturnValue(false);
+            dsNode.justRecalled = true;
+            const datasetMigratedSpy = vi.spyOn(dsNode, "datasetMigrated");
+
+            await (dsNode as any).syncNodeMigrationStatus(dsNode, "YES", "PS", mockDsTree);
+
+            expect(datasetMigratedSpy).not.toHaveBeenCalled();
+            expect(dsNode.justRecalled).toBe(true);
+        });
+
+        it("should clear justRecalled flag if migrationStatus is NO", async () => {
+            vi.spyOn(SharedContext, "isMigrated").mockReturnValue(false);
+            dsNode.justRecalled = true;
+
+            await (dsNode as any).syncNodeMigrationStatus(dsNode, "NO", "PS", mockDsTree);
+
+            expect(dsNode.justRecalled).toBe(false);
+        });
+
+        it("should fallback to wasPds when recalling if dsorg is undefined", async () => {
+            vi.spyOn(SharedContext, "isMigrated").mockReturnValue(true);
+            dsNode.wasPds = true;
+            const datasetRecalledSpy = vi.spyOn(dsNode, "datasetRecalled").mockResolvedValue(undefined);
+
+            await (dsNode as any).syncNodeMigrationStatus(dsNode, "NO", undefined, mockDsTree);
+
+            expect(datasetRecalledSpy).toHaveBeenCalledWith(true);
+        });
     });
 });

@@ -72,6 +72,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public pdsFavoriteState?: Definitions.PdsFavoriteState;
     public favoritedMemberNames?: string[];
     public wasPds?: boolean;
+    public justRecalled?: boolean;
 
     private paginator?: Paginator<IZosFilesResponse>;
     private paginatorData?: {
@@ -230,9 +231,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         // Preserve favorite context and any additional context values
         this.contextValue = this.contextValue.replace(Constants.DS_MIGRATED_FILE_CONTEXT, isPds ? Constants.DS_PDS_CONTEXT : Constants.DS_DS_CONTEXT);
         this.collapsibleState = isPds ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
+        const sessionLabel = this.getProfileName() ?? SharedUtils.getSessionLabel(this);
         this.resourceUri = vscode.Uri.from({
             scheme: ZoweScheme.DS,
-            path: `/${SharedUtils.getSessionLabel(this)}/${this.label as string}`,
+            path: `/${sessionLabel}/${this.label as string}`,
         });
 
         // Replace icon on existing node with new one
@@ -290,13 +292,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     private async syncNodeMigrationStatus(dsNode: ZoweDatasetNode, migr: string, dsorg: string, dsTree: DatasetTree): Promise<void> {
         const migrationStatus = migr.toUpperCase();
+        if (migrationStatus !== "YES") {
+            dsNode.justRecalled = false;
+        }
         if (SharedContext.isMigrated(dsNode) && migrationStatus !== "YES") {
-            const isPds = dsorg?.startsWith("PO");
+            const isPds = dsorg?.startsWith("PO") ?? dsNode.wasPds ?? false;
             await dsNode.datasetRecalled(isPds);
             if (dsTree) {
                 const isFav = SharedContext.isFavoriteDescendant(dsNode);
                 const equiv = dsTree.findEquivalentNode(dsNode, isFav) as ZoweDatasetNode;
                 if (equiv) {
+                    equiv.justRecalled = false;
                     await equiv.datasetRecalled(isPds);
                     dsTree.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
                 }
@@ -305,6 +311,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
             }
         } else if (!SharedContext.isMigrated(dsNode) && migrationStatus === "YES") {
+            if (dsNode.justRecalled) {
+                return;
+            }
             dsNode.datasetMigrated();
             if (dsTree) {
                 const isFav = SharedContext.isFavoriteDescendant(dsNode);

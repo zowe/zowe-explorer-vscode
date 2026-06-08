@@ -2192,13 +2192,15 @@ export class DatasetActions {
                 const item = resp.apiResponse.items[0];
                 const isMigrated = item.migr?.toUpperCase() === "YES";
                 if (!isMigrated) {
-                    const isPds = item.dsorg?.startsWith("PO") ?? false;
+                    const isPds = item.dsorg?.startsWith("PO") ?? (node as ZoweDatasetNode).wasPds ?? false;
+                    (node as ZoweDatasetNode).justRecalled = false;
                     await (node as ZoweDatasetNode).datasetRecalled(isPds);
                     const datasetProvider = SharedTreeProviders.ds;
                     if (datasetProvider) {
                         const isFav = SharedContext.isFavoriteDescendant(node);
                         const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
                         if (equiv) {
+                            equiv.justRecalled = false;
                             await equiv.datasetRecalled(isPds);
                             datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
                         }
@@ -2396,31 +2398,50 @@ export class DatasetActions {
                     })
                 );
                 const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
-                let isPds = false;
+                let isPds = node.wasPds ?? false;
+                let isStillMigrated = true;
                 try {
                     const dsResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).dataSet(dataSetName, { attributes: true });
                     if (dsResp.success && dsResp.apiResponse?.items?.[0]) {
-                        isPds = dsResp.apiResponse.items[0].dsorg?.startsWith("PO") ?? false;
+                        const item = dsResp.apiResponse.items[0];
+                        isStillMigrated = item.migr?.toUpperCase() === "YES";
+                        if (!isStillMigrated) {
+                            isPds = item.dsorg?.startsWith("PO") ?? node.wasPds ?? false;
+                        }
                     }
                 } catch (e) {
                     ZoweLogger.warn(`Failed to fetch recalled dataset attributes: ${e}`);
                 }
-                await node.datasetRecalled(isPds);
-                if (node.resourceUri) {
-                    DatasetFSProvider.instance.invalidateCache(node.resourceUri);
-                }
-                if (datasetProvider) {
-                    const isFav = SharedContext.isFavoriteDescendant(node);
-                    const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
-                    if (equiv) {
-                        await equiv.datasetRecalled(isPds);
-                        if (equiv.resourceUri) {
-                            DatasetFSProvider.instance.invalidateCache(equiv.resourceUri);
-                        }
-                        datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+
+                if (!isStillMigrated) {
+                    node.justRecalled = false;
+                    await node.datasetRecalled(isPds);
+                    if (node.resourceUri) {
+                        DatasetFSProvider.instance.invalidateCache(node.resourceUri);
                     }
-                    if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
-                        datasetProvider.updateFavorites();
+                    if (datasetProvider) {
+                        const isFav = SharedContext.isFavoriteDescendant(node);
+                        const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
+                        if (equiv) {
+                            equiv.justRecalled = false;
+                            await equiv.datasetRecalled(isPds);
+                            if (equiv.resourceUri) {
+                                DatasetFSProvider.instance.invalidateCache(equiv.resourceUri);
+                            }
+                            datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                        }
+                        if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                            datasetProvider.updateFavorites();
+                        }
+                    }
+                } else {
+                    node.justRecalled = true;
+                    if (datasetProvider) {
+                        const isFav = SharedContext.isFavoriteDescendant(node);
+                        const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
+                        if (equiv) {
+                            equiv.justRecalled = true;
+                        }
                     }
                 }
                 datasetProvider.refreshElement(node.getParent());
