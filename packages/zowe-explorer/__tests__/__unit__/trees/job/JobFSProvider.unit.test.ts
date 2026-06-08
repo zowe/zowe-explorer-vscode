@@ -696,6 +696,36 @@ describe("fetchSpoolAtUri", () => {
         jesApiMock.mockRestore();
         lookupAsFileMock.mockRestore();
     });
+
+    it("resolves profile from URI when metadata is missing", async () => {
+        const spoolEntryWithoutMetadata = { ...testEntries.spool, metadata: undefined };
+        const lookupAsFileMock = vi.spyOn(JobFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(spoolEntryWithoutMetadata);
+        const getInfoFromUriMock = vi.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue({
+            profile: testProfile,
+            path: "/TESTJOB(JOB1234) - ACTIVE/JES2.JESMSGLG.2",
+        });
+
+        const mockJesApi = {
+            downloadSingleSpool: vi.fn((opts) => {
+                opts.stream.write("test data");
+            }),
+        };
+
+        const jesApiMock = vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: vi.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: vi.fn().mockReturnValue(["zosmf"]),
+        } as any);
+
+        const entry = await JobFSProvider.instance.fetchSpoolAtUri(testUris.spool);
+
+        expect(getInfoFromUriMock).toHaveBeenCalledWith(testUris.spool);
+        expect(entry.metadata).toBeDefined();
+        expect(entry.metadata.profile).toBe(testProfile);
+
+        lookupAsFileMock.mockRestore();
+        getInfoFromUriMock.mockRestore();
+        jesApiMock.mockRestore();
+    });
 });
 
 describe("readFile", () => {
@@ -717,6 +747,298 @@ describe("readFile", () => {
         await expect(JobFSProvider.instance.readFile(testUris.spool)).rejects.toThrow();
         lookupAsFileMock.mockRestore();
         fetchSpoolAtUriMock.mockRestore();
+    });
+
+    it("creates entries from URI when spool entry doesn't exist", async () => {
+        const spoolEntry = { ...testEntries.spool };
+        const fileNotFoundError = vscode.FileSystemError.FileNotFound(testUris.spool);
+        const lookupAsFileMock = vi
+            .spyOn(JobFSProvider.instance as any, "_lookupAsFile")
+            .mockImplementationOnce(() => {
+                throw fileNotFoundError;
+            })
+            .mockReturnValueOnce(spoolEntry);
+        const createEntriesFromUriMock = vi.spyOn(JobFSProvider.instance as any, "_createEntriesFromUri").mockResolvedValueOnce(undefined);
+        const fetchSpoolAtUriMock = vi.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockResolvedValueOnce(spoolEntry);
+
+        expect(await JobFSProvider.instance.readFile(testUris.spool)).toBe(spoolEntry.data);
+        expect(createEntriesFromUriMock).toHaveBeenCalledWith(testUris.spool);
+        expect(spoolEntry.wasAccessed).toBe(true);
+
+        lookupAsFileMock.mockRestore();
+        createEntriesFromUriMock.mockRestore();
+        fetchSpoolAtUriMock.mockRestore();
+    });
+
+    it("throws error if entry creation fails", async () => {
+        const fileNotFoundError = vscode.FileSystemError.FileNotFound(testUris.spool);
+        const lookupAsFileMock = vi.spyOn(JobFSProvider.instance as any, "_lookupAsFile").mockImplementation(() => {
+            throw fileNotFoundError;
+        });
+        const createEntriesFromUriMock = vi
+            .spyOn(JobFSProvider.instance as any, "_createEntriesFromUri")
+            .mockRejectedValueOnce(new Error("Failed to create entries"));
+
+        await expect(JobFSProvider.instance.readFile(testUris.spool)).rejects.toThrow("Failed to create entries");
+
+        lookupAsFileMock.mockRestore();
+        createEntriesFromUriMock.mockRestore();
+    });
+
+    it("throws non-FileNotFound errors immediately without creating entries", async () => {
+        const customError = new Error("Custom error that is not FileNotFound");
+        const lookupAsFileMock = vi.spyOn(JobFSProvider.instance as any, "_lookupAsFile").mockImplementation(() => {
+            throw customError;
+        });
+        const createEntriesFromUriMock = vi.spyOn(JobFSProvider.instance as any, "_createEntriesFromUri");
+
+        await expect(JobFSProvider.instance.readFile(testUris.spool)).rejects.toThrow("Custom error that is not FileNotFound");
+        expect(createEntriesFromUriMock).not.toHaveBeenCalled();
+
+        lookupAsFileMock.mockRestore();
+        createEntriesFromUriMock.mockRestore();
+    });
+});
+
+describe("_createEntriesFromUri", () => {
+    const mockJob = createIJobObject();
+    const mockSpoolFile = createIJobFile();
+    // buildUniqueSpoolName will create: TESTJOB.JOB1234.STEP.STDOUT.101
+    const testJobUri = Uri.from({ scheme: ZoweScheme.Jobs, path: "/sestest/JOB1234/TESTJOB.JOB1234.STEP.STDOUT.101" });
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("throws FileNotFound error when URI has insufficient path parts", async () => {
+        const invalidUri = Uri.from({ scheme: ZoweScheme.Jobs, path: "/sestest/JOB1234" });
+        const getInfoFromUriMock = vi.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue({
+            profile: testProfile,
+            path: "/JOB1234",
+        });
+
+        await expect((JobFSProvider.instance as any)._createEntriesFromUri(invalidUri)).rejects.toThrow();
+
+        getInfoFromUriMock.mockRestore();
+    });
+
+    it("creates profile directory when it doesn't exist", async () => {
+        const getInfoFromUriMock = vi.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue({
+            profile: testProfile,
+            path: "/JOB1234/TESTJOB.JOB1234.STEP.STDOUT.101",
+        });
+        const existsMock = vi.spyOn(JobFSProvider.instance, "exists").mockReturnValue(false);
+        const createDirectoryMock = vi.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(() => undefined);
+        const jobEntryWithSpools = {
+            ...testEntries.job,
+            entries: new Map(),
+        };
+        const lookupAsDirMock = vi.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(jobEntryWithSpools);
+
+        const mockJesApi = {
+            getJobsByParameters: vi.fn().mockResolvedValue([mockJob]),
+            getSpoolFiles: vi.fn().mockResolvedValue([mockSpoolFile]),
+        };
+        const jesApiMock = vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: vi.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: vi.fn().mockReturnValue(["zosmf"]),
+        } as any);
+        const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValue(undefined);
+        const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
+        
+        // Mock writeFile to add the spool entry to the job's entries map
+        const writeFileMock = vi.spyOn(JobFSProvider.instance, "writeFile").mockImplementation((uri, content, options: any) => {
+            if (options?.name) {
+                jobEntryWithSpools.entries.set(options.name, testEntries.spool);
+            }
+        });
+
+        await (JobFSProvider.instance as any)._createEntriesFromUri(testJobUri);
+
+        expect(createDirectoryMock).toHaveBeenCalledWith(
+            expect.objectContaining({ path: "/sestest" }),
+            expect.objectContaining({ isFilter: true })
+        );
+
+        getInfoFromUriMock.mockRestore();
+        existsMock.mockRestore();
+        createDirectoryMock.mockRestore();
+        lookupAsDirMock.mockRestore();
+        jesApiMock.mockRestore();
+        ensureAuthNotCancelledMock.mockRestore();
+        waitForUnlockMock.mockRestore();
+        writeFileMock.mockRestore();
+    });
+
+    it("creates job directory and fetches job information when job doesn't exist", async () => {
+        const getInfoFromUriMock = vi.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue({
+            profile: testProfile,
+            path: "/JOB1234/TESTJOB.JOB1234.STEP.STDOUT.101",
+        });
+        const existsMock = vi
+            .spyOn(JobFSProvider.instance, "exists")
+            .mockReturnValueOnce(true) // profile exists
+            .mockReturnValueOnce(false); // job doesn't exist
+        const createDirectoryMock = vi.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(() => undefined);
+        const jobEntryWithSpools = {
+            ...testEntries.job,
+            entries: new Map(),
+        };
+        const lookupAsDirMock = vi.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(jobEntryWithSpools);
+
+        const mockJesApi = {
+            getJobsByParameters: vi.fn().mockResolvedValue([mockJob]),
+            getSpoolFiles: vi.fn().mockResolvedValue([mockSpoolFile]),
+        };
+        const jesApiMock = vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: vi.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: vi.fn().mockReturnValue(["zosmf"]),
+        } as any);
+        const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValue(undefined);
+        const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
+        
+        // Mock writeFile to add the spool entry to the job's entries map
+        const writeFileMock = vi.spyOn(JobFSProvider.instance, "writeFile").mockImplementation((uri, content, options: any) => {
+            if (options?.name) {
+                jobEntryWithSpools.entries.set(options.name, testEntries.spool);
+            }
+        });
+
+        await (JobFSProvider.instance as any)._createEntriesFromUri(testJobUri);
+
+        expect(mockJesApi.getJobsByParameters).toHaveBeenCalledWith({ jobid: "JOB1234" });
+        expect(createDirectoryMock).toHaveBeenCalledWith(
+            expect.objectContaining({ path: "/sestest/JOB1234" }),
+            expect.objectContaining({ job: mockJob })
+        );
+        expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
+        expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
+
+        getInfoFromUriMock.mockRestore();
+        existsMock.mockRestore();
+        createDirectoryMock.mockRestore();
+        lookupAsDirMock.mockRestore();
+        jesApiMock.mockRestore();
+        ensureAuthNotCancelledMock.mockRestore();
+        waitForUnlockMock.mockRestore();
+        writeFileMock.mockRestore();
+    });
+
+    it("throws FileNotFound error when job is not found on mainframe", async () => {
+        const getInfoFromUriMock = vi.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue({
+            profile: testProfile,
+            path: "/JOB1234/TESTJOB.JOB1234.STEP.STDOUT.101",
+        });
+        const existsMock = vi
+            .spyOn(JobFSProvider.instance, "exists")
+            .mockReturnValueOnce(true) // profile exists
+            .mockReturnValueOnce(false); // job doesn't exist
+
+        const mockJesApi = {
+            getJobsByParameters: vi.fn().mockResolvedValue([]), // No jobs found
+        };
+        const jesApiMock = vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: vi.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: vi.fn().mockReturnValue(["zosmf"]),
+        } as any);
+        const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValue(undefined);
+        const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
+
+        await expect((JobFSProvider.instance as any)._createEntriesFromUri(testJobUri)).rejects.toThrow();
+
+        getInfoFromUriMock.mockRestore();
+        existsMock.mockRestore();
+        jesApiMock.mockRestore();
+        ensureAuthNotCancelledMock.mockRestore();
+        waitForUnlockMock.mockRestore();
+    });
+
+    it("fetches spool files when job entry has no entries", async () => {
+        const getInfoFromUriMock = vi.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue({
+            profile: testProfile,
+            path: "/JOB1234/TESTJOB.JOB1234.STEP.STDOUT.101",
+        });
+        const existsMock = vi.spyOn(JobFSProvider.instance, "exists").mockReturnValue(true);
+        const jobEntryWithNoSpools = {
+            ...testEntries.job,
+            entries: new Map(),
+        };
+        const lookupAsDirMock = vi.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(jobEntryWithNoSpools);
+
+        const mockJesApi = {
+            getSpoolFiles: vi.fn().mockResolvedValue([mockSpoolFile]),
+        };
+        const jesApiMock = vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: vi.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: vi.fn().mockReturnValue(["zosmf"]),
+        } as any);
+        
+        // Mock writeFile to add the spool entry to the job's entries map with the correct name
+        const writeFileMock = vi.spyOn(JobFSProvider.instance, "writeFile").mockImplementation((uri, content, options: any) => {
+            if (options?.name) {
+                jobEntryWithNoSpools.entries.set(options.name, testEntries.spool);
+            }
+        });
+
+        await (JobFSProvider.instance as any)._createEntriesFromUri(testJobUri);
+
+        expect(mockJesApi.getSpoolFiles).toHaveBeenCalledWith(mockJob.jobname, mockJob.jobid);
+        expect(writeFileMock).toHaveBeenCalled();
+
+        getInfoFromUriMock.mockRestore();
+        existsMock.mockRestore();
+        lookupAsDirMock.mockRestore();
+        jesApiMock.mockRestore();
+        writeFileMock.mockRestore();
+    });
+
+    it("skips fetching spool files when job entry already has entries", async () => {
+        const getInfoFromUriMock = vi.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue({
+            profile: testProfile,
+            path: "/JOB1234/TESTJOB.JOB1234.STEP.STDOUT.101",
+        });
+        const existsMock = vi.spyOn(JobFSProvider.instance, "exists").mockReturnValue(true);
+        const jobEntryWithSpools = {
+            ...testEntries.job,
+            entries: new Map([["TESTJOB.JOB1234.STEP.STDOUT.101", testEntries.spool]]),
+        };
+        const lookupAsDirMock = vi.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(jobEntryWithSpools);
+
+        const mockJesApi = {
+            getSpoolFiles: vi.fn().mockResolvedValue([mockSpoolFile]),
+        };
+        const jesApiMock = vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            getJesApi: vi.fn().mockReturnValue(mockJesApi),
+            registeredJesApiTypes: vi.fn().mockReturnValue(["zosmf"]),
+        } as any);
+
+        await (JobFSProvider.instance as any)._createEntriesFromUri(testJobUri);
+
+        expect(mockJesApi.getSpoolFiles).not.toHaveBeenCalled();
+
+        getInfoFromUriMock.mockRestore();
+        existsMock.mockRestore();
+        lookupAsDirMock.mockRestore();
+        jesApiMock.mockRestore();
+    });
+
+    it("throws FileNotFound error when spool file is not found in job entries", async () => {
+        const getInfoFromUriMock = vi.spyOn(JobFSProvider.instance as any, "_getInfoFromUri").mockReturnValue({
+            profile: testProfile,
+            path: "/JOB1234/NONEXISTENT.SPOOL.FILE",
+        });
+        const existsMock = vi.spyOn(JobFSProvider.instance, "exists").mockReturnValue(true);
+        const jobEntryWithDifferentSpool = {
+            ...testEntries.job,
+            entries: new Map([["DIFFERENT.SPOOL.NAME", testEntries.spool]]),
+        };
+        const lookupAsDirMock = vi.spyOn(JobFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(jobEntryWithDifferentSpool);
+
+        await expect((JobFSProvider.instance as any)._createEntriesFromUri(testJobUri)).rejects.toThrow();
+
+        getInfoFromUriMock.mockRestore();
+        existsMock.mockRestore();
+        lookupAsDirMock.mockRestore();
     });
 });
 
