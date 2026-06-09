@@ -13,11 +13,14 @@ import { Given, Then, When } from "@cucumber/cucumber";
 import { paneDivForTree, clickContextMenuItem } from "../../../__common__/shared.wdio";
 import { ProfileNode } from "../../../__pageobjects__/ProfileNode";
 import quickPick from "../../../__pageobjects__/QuickPick";
+import { Key } from "webdriverio";
 
 const testInfo = {
     jclPds: process.env.ZE_TEST_JCL_PDS,
     jclMember: process.env.ZE_TEST_JCL_MEMBER,
 };
+
+let globalSubmittedJobId: string | undefined;
 
 async function findJobNode(profileNode: ProfileNode, name: string) {
     const profileItem = await profileNode.find();
@@ -54,9 +57,23 @@ When("the user opens the JCL PDS member", async function () {
 When("the user edits the JCL PDS member to contain a sleep job JCL", async function () {
     const sleepJcl = [
         `//E2ESLEEP JOB (),'E2E SLEEP',CLASS=A,MSGCLASS=A,NOTIFY=&SYSUID`,
-        `//STEP1    EXEC PGM=BPXBATCH,PARM='SH sleep 20'`,
-        `/*`
-    ].join('\n');
+        `//STEP1    EXEC PGM=IEBGENER`,
+        `//SYSIN    DD DUMMY`,
+        `//SYSPRINT DD SYSOUT=*`,
+        `//SYSUT1   DD *,DLM=ZZ`,
+        `/* REXX */`,
+        `call syscalls 'ON'`,
+        `address syscall "sleep 300"`,
+        `ZZ`,
+        `//SYSUT2   DD DSN=&&REXX(SLEEP),DISP=(,PASS),`,
+        `//            SPACE=(TRK,(1,1,1)),UNIT=SYSALLDA,`,
+        `//            DCB=(RECFM=FB,LRECL=80,DSORG=PO)`,
+        `//*`,
+        `//STEP2    EXEC PGM=IRXJCL,PARM='SLEEP'`,
+        `//SYSEXEC  DD DSN=&&REXX,DISP=(OLD,DELETE)`,
+        `//SYSTSPRT DD SYSOUT=*`,
+        `//SYSTSIN  DD DUMMY`,
+    ].join("\n");
     await this.editorForFile.clearText();
     await this.editorForFile.setText(sleepJcl);
 });
@@ -68,7 +85,7 @@ When("the user saves the JCL PDS member", async function () {
     await browser.pause(2000); // Give it some time to save to the mainframe
 });
 
-When("the user right-clicks on the JCL PDS member and selects \"Submit Job\"", async function () {
+When('the user right-clicks on the JCL PDS member and selects "Submit Job"', async function () {
     const memberNode = await this.pds.findChildItem(testInfo.jclMember);
     await expect(memberNode).toBeDefined();
     await clickContextMenuItem(memberNode, "Submit Job");
@@ -82,6 +99,10 @@ Then("a notification appears stating that the job was submitted", async function
             for (const notification of notifications) {
                 const text = await notification.getMessage();
                 if (text.includes("Job submitted") || text.includes("submitted")) {
+                    const match = text.match(/(JOB|STC|TSU)\d+/);
+                    if (match) {
+                        globalSubmittedJobId = match[0];
+                    }
                     return true;
                 }
             }
@@ -124,7 +145,7 @@ Then("the spool file content is displayed in the editor", async function () {
     await expect(openTabs.length).toBeGreaterThan(0);
 });
 
-Given ("a user who has expanded a job in the list", async function () {
+Given("a user who has expanded a job in the list", async function () {
     if (!this.jobNode) {
         this.tree = "Jobs";
         this.treePane = await paneDivForTree(this.tree);
@@ -141,7 +162,7 @@ Given ("a user who has expanded a job in the list", async function () {
     }
 });
 
-When("the user right-clicks on the first spool file and selects \"Open with Encoding\"", async function () {
+When('the user right-clicks on the first spool file and selects "Open with Encoding"', async function () {
     this.spoolFileNode = this.children[0];
     await expect(this.spoolFileNode).toBeDefined();
     await clickContextMenuItem(this.spoolFileNode, "Open with Encoding");
@@ -157,7 +178,7 @@ When("the user selects an encoding", async function () {
     await firstOption.click();
 });
 
-When("the user right-clicks on a job in the list and selects \"Get JCL\"", async function () {
+When('the user right-clicks on a job in the list and selects "Get JCL"', async function () {
     this.jobNode = await findJobNode(this.profileNode, "E2ESLEEP");
     await expect(this.jobNode).toBeDefined();
     await clickContextMenuItem(this.jobNode, "Get JCL");
@@ -177,7 +198,7 @@ Then("the JCL content for the job is displayed in the editor", async function ()
     await expect(openTabs.length).toBeGreaterThan(0);
 });
 
-When("the user right-clicks on a job in the list and selects \"Start Polling Active Jobs\"", async function () {
+When('the user right-clicks on a job in the list and selects "Start Polling Active Jobs"', async function () {
     this.jobNode = await findJobNode(this.profileNode, "E2ESLEEP");
     await expect(this.jobNode).toBeDefined();
     await clickContextMenuItem(this.jobNode, "Start Polling Active Jobs");
@@ -187,7 +208,7 @@ Then("the status or icon of the job indicates it is being polled", async functio
     await browser.pause(2000);
 });
 
-When("the user right-clicks on a job in the list and selects \"Stop Polling Active Jobs\"", async function () {
+When('the user right-clicks on a job in the list and selects "Stop Polling Active Jobs"', async function () {
     await clickContextMenuItem(this.jobNode, "Stop Polling Active Jobs");
 });
 
@@ -195,8 +216,34 @@ Then("the status or icon of the job indicates polling has stopped", async functi
     await browser.pause(1000);
 });
 
-When("the user right-clicks on an active job and selects \"Cancel Job\"", async function () {
-    this.jobNode = await findJobNode(this.profileNode, "E2ESLEEP");
+When("a user sets a filter search on the profile for the submitted job", async function () {
+    await expect(await this.profileNode.find()).toBeDefined();
+
+    const profileNode = this.profileNode;
+    await (await profileNode.find()).elem.moveTo();
+    const actionButtons = await (await profileNode.find()).getActionButtons();
+
+    // Locate and select the search button on the profile node
+    const searchButton = actionButtons[actionButtons.length - 1];
+    await searchButton.wait();
+    await searchButton.elem.click();
+
+    await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
+
+    const searchByIdSelector = await quickPick.findItem("$(search) Search by job ID");
+    await expect(searchByIdSelector).toBeClickable();
+    await searchByIdSelector.click();
+
+    const inputBox = await $('.input[aria-describedby="quickInput_message"]');
+    await expect(inputBox).toBeClickable();
+    await inputBox.setValue(globalSubmittedJobId || "E2ESLEEP");
+    await browser.keys(Key.Enter);
+
+    await profileNode.waitUntilExpanded();
+});
+
+When('the user right-clicks on an active job and selects "Cancel Job"', async function () {
+    this.jobNode = await findJobNode(this.profileNode, globalSubmittedJobId || "E2ESLEEP");
     await expect(this.jobNode).toBeDefined();
     await clickContextMenuItem(this.jobNode, "Cancel Job");
 });
@@ -231,7 +278,11 @@ Then("the job is cancelled successfully", async function () {
     await browser.pause(1000);
 });
 
-When("the user right-clicks on the job and selects \"Delete Job\"", async function () {
+When('the user right-clicks on the job and selects "Delete Job"', async function () {
+    if (!this.jobNode) {
+        this.jobNode = await findJobNode(this.profileNode, globalSubmittedJobId || "E2ESLEEP");
+        await expect(this.jobNode).toBeDefined();
+    }
     await clickContextMenuItem(this.jobNode, "Delete Job");
 });
 

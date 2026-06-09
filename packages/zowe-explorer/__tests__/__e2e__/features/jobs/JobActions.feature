@@ -51,7 +51,7 @@ Scenario: User wants to poll active jobs
 Scenario: User wants to cancel a job
     Given a user who is looking at the Zowe Explorer tree views
     And the user has a profile in their Jobs tree
-    When a user sets a filter search on the profile
+    When a user sets a filter search on the profile for the submitted job
     Then the profile node will list results of the filter search
     When the user right-clicks on an active job and selects "Cancel Job"
     Then a confirmation dialog appears to cancel the job
@@ -64,7 +64,7 @@ Scenario: User wants to cancel a job
 Scenario: User wants to delete a job
     Given a user who is looking at the Zowe Explorer tree views
     And the user has a profile in their Jobs tree
-    When a user sets a filter search on the profile
+    When a user sets a filter search on the profile for the submitted job
     Then the profile node will list results of the filter search
     When the user right-clicks on the job and selects "Delete Job"
     Then a confirmation dialog appears to delete the job
