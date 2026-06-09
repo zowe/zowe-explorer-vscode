@@ -113,7 +113,7 @@ Then("a notification appears stating that the job was submitted", async function
 });
 
 When("the user expands a job in the list", async function () {
-    this.jobNode = await findJobNode(this.profileNode, "E2ESLEEP");
+    this.jobNode = await findJobNode(this.profileNode, globalSubmittedJobId || "E2ESLEEP");
     await expect(this.jobNode).toBeDefined();
     await this.jobNode.expand();
     await browser.waitUntil(async () => await this.jobNode.hasChildren());
@@ -154,7 +154,7 @@ Given("a user who has expanded a job in the list", async function () {
             await (await this.profileNode.find()).expand();
             await this.profileNode.waitUntilExpanded();
         }
-        this.jobNode = await findJobNode(this.profileNode, "E2ESLEEP");
+        this.jobNode = await findJobNode(this.profileNode, globalSubmittedJobId || "E2ESLEEP");
         await expect(this.jobNode).toBeDefined();
         await this.jobNode.expand();
         await browser.waitUntil(async () => await this.jobNode.hasChildren());
@@ -179,7 +179,7 @@ When("the user selects an encoding", async function () {
 });
 
 When('the user right-clicks on a job in the list and selects "Get JCL"', async function () {
-    this.jobNode = await findJobNode(this.profileNode, "E2ESLEEP");
+    this.jobNode = await findJobNode(this.profileNode, globalSubmittedJobId || "E2ESLEEP");
     await expect(this.jobNode).toBeDefined();
     await clickContextMenuItem(this.jobNode, "Get JCL");
 });
@@ -198,18 +198,48 @@ Then("the JCL content for the job is displayed in the editor", async function ()
     await expect(openTabs.length).toBeGreaterThan(0);
 });
 
-When('the user right-clicks on a job in the list and selects "Start Polling Active Jobs"', async function () {
-    this.jobNode = await findJobNode(this.profileNode, "E2ESLEEP");
-    await expect(this.jobNode).toBeDefined();
-    await clickContextMenuItem(this.jobNode, "Start Polling Active Jobs");
+When('the user right-clicks on the profile and selects "Start Polling Active Jobs"', async function () {
+    const profileItem = await this.profileNode.find();
+    await expect(profileItem).toBeDefined();
+    await clickContextMenuItem(profileItem, "Start Polling Active Jobs");
+
+    // Wait for and click "Continue" on the notification
+    const workbench = await browser.getWorkbench();
+    await browser.waitUntil(
+        async () => {
+            const notifications = await workbench.getNotifications();
+            for (const notification of notifications) {
+                const text = await notification.getMessage();
+                if (text.includes("polling") || text.includes("Polling") || text.includes("Job polling")) {
+                    const buttons = await notification.elem.$$(".monaco-button");
+                    for (const btn of buttons) {
+                        const btnText = await btn.getText();
+                        if (btnText.includes("Continue")) {
+                            await btn.click();
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        },
+        { timeout: 10000, timeoutMsg: "Polling active jobs info notification did not appear" }
+    );
+
+    // Wait for the poll interval input box and press Enter to accept default
+    const inputBox = await $('.input[aria-describedby="quickInput_message"]');
+    await expect(inputBox).toBeClickable();
+    await browser.keys(Key.Enter);
 });
 
 Then("the status or icon of the job indicates it is being polled", async function () {
     await browser.pause(2000);
 });
 
-When('the user right-clicks on a job in the list and selects "Stop Polling Active Jobs"', async function () {
-    await clickContextMenuItem(this.jobNode, "Stop Polling Active Jobs");
+When('the user right-clicks on the profile and selects "Stop Polling Active Jobs"', async function () {
+    const profileItem = await this.profileNode.find();
+    await expect(profileItem).toBeDefined();
+    await clickContextMenuItem(profileItem, "Stop Polling Active Jobs");
 });
 
 Then("the status or icon of the job indicates polling has stopped", async function () {

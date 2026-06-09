@@ -37,15 +37,14 @@ Scenario: User wants to get JCL for a job
     When the user right-clicks on a job in the list and selects "Get JCL"
     Then the JCL content for the job is displayed in the editor
 
-@skip
 Scenario: User wants to poll active jobs
     Given a user who is looking at the Zowe Explorer tree views
     And the user has a profile in their Jobs tree
-    When a user sets a filter search on the profile
+    When a user sets a filter search on the profile for the submitted job
     Then the profile node will list results of the filter search
-    When the user right-clicks on a job in the list and selects "Start Polling Active Jobs"
+    When the user right-clicks on the profile and selects "Start Polling Active Jobs"
     Then the status or icon of the job indicates it is being polled
-    When the user right-clicks on a job in the list and selects "Stop Polling Active Jobs"
+    When the user right-clicks on the profile and selects "Stop Polling Active Jobs"
     Then the status or icon of the job indicates polling has stopped
 
 Scenario: User wants to cancel a job
