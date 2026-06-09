@@ -57,8 +57,8 @@
     "@zowe/zowe-explorer-api": "workspace:*"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^3.2.4",
-    "vitest": "^3.2.4"
+    "@vitest/coverage-v8": "^3.2.6",
+    "vitest": "^3.2.6"
   },
   "madge": {
     "detectiveOptions": {
