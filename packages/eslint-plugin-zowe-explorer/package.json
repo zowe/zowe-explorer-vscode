@@ -23,7 +23,7 @@
   "devDependencies": {
     "requireindex": "^1.1.0",
     "rewire": "^6.0.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.6"
   },
   "engines": {
     "node": ">=0.10.0"
