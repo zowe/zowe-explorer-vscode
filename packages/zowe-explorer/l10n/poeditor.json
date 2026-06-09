@@ -105,7 +105,7 @@
     "Edit Member": ""
   },
   "issueMvsCmd": {
-    "Issue MVS Command": ""
+    "Issue Console Command": ""
   },
   "uploadDialog": {
     "Upload Member...": ""
@@ -426,7 +426,7 @@
     "User has been asked to sync Zowe Explorer log setting with Zowe CLI's environment variable.": ""
   },
   "zowe.commands.mvs.history": {
-    "Toggle if MVS Commands persist locally": ""
+    "Toggle if Console Commands persist locally": ""
   },
   "zowe.commands.tso.history": {
     "Toggle if TSO Commands persist locally": ""
@@ -911,6 +911,7 @@
   "Confirm": "",
   "Conflict: Remote contents have changed.": "",
   "Connection Name": "",
+  "Console command submitted.": "",
   "Contents": "",
   "Continue": "",
   "Convert existing profiles": "",
@@ -922,9 +923,9 @@
   "copyName was called on USS node {0}, but its fullPath is invalid.": "",
   "Corrected description of the mnorc attribute for PDS members. <a>#4116</a>": "",
   "Create {0}": "",
+  "Create a new console command": "",
   "Create a new filter": "",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "",
-  "Create a new MVS command": "",
   "Create a new TSO command": "",
   "Create Data Set: Edit Attributes": "",
   "Create Data Set: Name": "",
@@ -1053,7 +1054,7 @@
   "Enter job prefix": "",
   "Enter job status": "",
   "Enter local filter...": "",
-  "Enter or update the MVS command": "",
+  "Enter or update the console command": "",
   "Enter or update the TSO command": "",
   "Enter or update the Unix command": "",
   "Enter search string in the input field at the top.": "",
@@ -1180,6 +1181,10 @@
   "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>": "",
   "Fixed an issue during initialization where the error dialog shown for a broken team configuration file was missing the \"Show Config\" action. <a>#3322</a>": "",
   "Fixed an issue in the Switch Authentication action, where changing from token-based authentication to username and password authentication did not properly invalidate the token. <a>#3654</a>": "",
+  "Fixed an issue in the USS tree view that prevented listing a single file path due to a duplicated and invalid URI path construction. <a>#4303</a>": "",
+  "Fixed an issue in USS where a directory could not be expanded if it contained at least one subdirectory that the user did not have access to. <a>#4278</a>": "",
+  "Fixed an issue in USS where a file was incorrectly identified as a directory if the request returned the full path of the file, causing an error when trying to open it in the editor. <a>#4305</a>": "",
+  "Fixed an issue in USS where the search path in the profile node description or filter tooltip became out of sync and did not match the actual listed path after a failed search or a search timeout. <a>#4287</a>": "",
   "Fixed an issue in USS where a directory could not be expanded if it contained at least one subdirectory that the user did not have access to. <a>#4278</a>": "",
   "Fixed an issue seen where extender favorites not showing in the tree views. <a>#3470</a>": "",
   "Fixed an issue seen with outdated profile information in the z/OS tree view data during upload and download of data set and USS files. <a>#3457</a>": "",
@@ -1233,6 +1238,7 @@
   "Fixed an issue where logical record length truncation detection failed for extenders. <a>#4002</a>": "",
   "Fixed an issue where moving a PDS member into the \"No members found\" placeholder of an empty PDS deleted the member without transferring its data. <a>#3950</a>": "",
   "Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. <a>#3590</a>": "",
+  "Fixed an issue where navigating to an invalid or inaccessible path under one USS profile caused file and folder nodes under all profiles to disappear or show outdated results. <a>#4288</a>": "",
   "Fixed an issue where opening a data set with the same starting pattern as an archived data set caused a REST API error (code 500) to appear in the editor. <a>#3407</a>": "",
   "Fixed an issue where opening a highlighted PDS name using \"Open selected data set\" showed an unnecessary warning message even when the PDS was successfully filtered and displayed in the tree. <a>#4230</a>": "",
   "Fixed an issue where opening a PDS member after renaming an expanded PDS resulted in an error. <a>#3314</a>": "",
@@ -1580,7 +1586,6 @@
   "Moving MVS files...": "",
   "Moving USS files...": "",
   "Must be a valid number": "",
-  "MVS command submitted.": "",
   "MVS data set enhancements": "",
   "Name": "",
   "Name of Data Set": "",
@@ -1785,6 +1790,7 @@
   "Rename Operation cancelled.": "",
   "Renamed \"Zowe Explorer z/OS Console\" to \"z/OS Console\". <a>#3445</a>": "",
   "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>": "",
+  "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>": "",
   "Renaming data set {0}": "",
   "Reorder, filter, sort, and choose visible columns": "",
   "Replace": "",
@@ -1831,6 +1837,8 @@
   "Select": "",
   "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles": "",
   "Select a certificate and certificate key in PEM format:": "",
+  "Select a console command to run against {0} (An option to edit will follow)": "",
+  "Select a console command to run immediately against {0}": "",
   "Select a data set organization (DSORG)": "",
   "Select a filter": "",
   "Select a filter or type to create a new one": "",
@@ -1847,8 +1855,6 @@
   "Select Allocate Data Set to create now, or Edit Attributes to review values": "",
   "Select an attribute to edit, or select Allocate Data Set to create the data set": "",
   "Select an item before deleting": "",
-  "Select an MVS command to run against {0} (An option to edit will follow)": "",
-  "Select an MVS command to run immediately against {0}": "",
   "Select Certificate": "",
   "Select Certificate Key": "",
   "Select default encoding for directory files (current: {0})": "",
@@ -1863,8 +1869,8 @@
   "Select the location of the config file to edit": "",
   "Select the location where the config file will be initialized": "",
   "Select the profile to use to open the data set": "",
+  "Select the profile to use to submit the console command": "",
   "Select the profile to use to submit the job": "",
-  "Select the profile to use to submit the MVS command": "",
   "Select the profile to use to submit the TSO command": "",
   "Select the profile to use to submit the Unix command": "",
   "Select the profile to which the original data set belongs": "",
@@ -2104,6 +2110,7 @@
   "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.": "",
   "Your Jobs": "",
   "z/OS default codepage": "",
+  "Zowe Console Command": "",
   "Zowe Explorer": "",
   "Zowe Explorer has activated successfully.": "",
   "Zowe Explorer log level: {0}": "",
@@ -2122,7 +2129,6 @@
   "Zowe Explorer: Stop Polling": "",
   "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager.": "",
   "Zowe home directory is located at {0}": "",
-  "Zowe MVS Command": "",
   "Zowe profiles initialized successfully.": "",
   "Zowe TSO Command": "",
   "Zowe Unix Command": "",
