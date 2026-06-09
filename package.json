@@ -58,7 +58,7 @@
   "scripts": {
     "clean": "pnpm -r clean",
     "fresh-clone": "pnpm -r --parallel fresh-clone && (rimraf node_modules || true)",
-    "prepare": "husky install",
+    "prepare": "husky install && node scripts/build-wdio-service.js",
     "lint": "pnpm -r lint",
     "madge": "pnpm -r madge",
     "pretty": "prettier --write .",

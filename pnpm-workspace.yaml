@@ -7,8 +7,8 @@ publicHoistPattern:
   - "*"
 linkWorkspacePackages: true
 allowBuilds:
-  '@vscode/vsce-sign': true
-  '@zowe/secrets-for-zowe-sdk': true
+  "@vscode/vsce-sign": true
+  "@zowe/secrets-for-zowe-sdk": true
   cpu-features: true
   edgedriver: true
   esbuild: true
