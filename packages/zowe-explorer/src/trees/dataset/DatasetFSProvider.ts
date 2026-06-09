@@ -445,7 +445,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entryExists = false;
         }
 
-        if (entryIsDir) {
+        if (entryIsDir && !isMigrated) {
             if (!entryExists) {
                 this.createDirectory(uri);
                 entry = this._lookupAsDirectory(uri, false) as PdsEntry;

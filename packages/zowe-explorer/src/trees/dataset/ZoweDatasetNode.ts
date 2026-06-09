@@ -414,7 +414,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
                         profile: cachedProfile,
                     });
-                    dsNode.wasPds = item.dsorg?.startsWith("PO") ? true : undefined;
+                    dsNode.wasPds = item.dsorg?.startsWith("PO");
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.dsorg?.startsWith("PO")) {
                     // Creates a ZoweDatasetNode for a PDS
@@ -566,13 +566,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
             }
 
-            if (SharedContext.isSession(this)) {
-                if (dsTree) {
-                    // Reset and remove previous search patterns in case pattern has changed
-                    dsTree.resetFilterForChildren(this.children);
-                    // set new search patterns for each child of getChildren
-                    dsTree.applyPatternsToChildren(this.children, this.patternMatches);
-                }
+            if (SharedContext.isSession(this) && dsTree) {
+                // Reset and remove previous search patterns in case pattern has changed
+                dsTree.resetFilterForChildren(this.children);
+                // set new search patterns for each child of getChildren
+                dsTree.applyPatternsToChildren(this.children, this.patternMatches);
             }
         }
 
