@@ -60,7 +60,7 @@ jobs:
         uses: t1m0thyj/unlock-keyring@v1
 
       - name: Integration tests
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.node-version == 'lts/-1' && matrix.os == 'ubuntu-22.04'
         run: xvfb-run pnpm test:integration --exclude "Activation.feature"
         env:
           ZE_TEST_VSCODE_VER: "1.101.0"
