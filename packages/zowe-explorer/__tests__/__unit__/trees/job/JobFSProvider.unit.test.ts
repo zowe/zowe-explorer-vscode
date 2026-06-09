@@ -845,7 +845,7 @@ describe("_createEntriesFromUri", () => {
         } as any);
         const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValue(undefined);
         const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
-        
+
         // Mock writeFile to add the spool entry to the job's entries map
         const writeFileMock = vi.spyOn(JobFSProvider.instance, "writeFile").mockImplementation((uri, content, options: any) => {
             if (options?.name) {
@@ -855,10 +855,7 @@ describe("_createEntriesFromUri", () => {
 
         await (JobFSProvider.instance as any)._createEntriesFromUri(testJobUri);
 
-        expect(createDirectoryMock).toHaveBeenCalledWith(
-            expect.objectContaining({ path: "/sestest" }),
-            expect.objectContaining({ isFilter: true })
-        );
+        expect(createDirectoryMock).toHaveBeenCalledWith(expect.objectContaining({ path: "/sestest" }), expect.objectContaining({ isFilter: true }));
 
         getInfoFromUriMock.mockRestore();
         existsMock.mockRestore();
@@ -896,7 +893,7 @@ describe("_createEntriesFromUri", () => {
         } as any);
         const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValue(undefined);
         const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
-        
+
         // Mock writeFile to add the spool entry to the job's entries map
         const writeFileMock = vi.spyOn(JobFSProvider.instance, "writeFile").mockImplementation((uri, content, options: any) => {
             if (options?.name) {
@@ -972,7 +969,7 @@ describe("_createEntriesFromUri", () => {
             getJesApi: vi.fn().mockReturnValue(mockJesApi),
             registeredJesApiTypes: vi.fn().mockReturnValue(["zosmf"]),
         } as any);
-        
+
         // Mock writeFile to add the spool entry to the job's entries map with the correct name
         const writeFileMock = vi.spyOn(JobFSProvider.instance, "writeFile").mockImplementation((uri, content, options: any) => {
             if (options?.name) {

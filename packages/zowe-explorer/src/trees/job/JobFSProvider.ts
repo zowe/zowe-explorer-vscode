@@ -229,7 +229,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         const metadata = spoolEntry.metadata ?? this._getInfoFromUri(uri);
         // Assign metadata to the entry if it was resolved from URI
-       spoolEntry.metadata ??= metadata;
+        spoolEntry.metadata ??= metadata;
         const profile = Profiles.getInstance().loadNamedProfile(metadata.profile.name);
         const profileEncoding = spoolEntry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
@@ -473,7 +473,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 job = jobs[0];
             });
             this.createDirectory(jobUri, { job });
-        } 
+        }
         jobEntry = this._lookupAsDirectory(jobUri, false) as JobEntry;
 
         // Fetch spool files for the job if not already loaded
