@@ -37,6 +37,8 @@ overrides:
   "minimatch@5": "^5.1.8"
   "minimatch@9": "^9.0.7"
   "rollup@4": "^4.59.0"
+  "tmp": "^0.2.7"
   "underscore": "^1.13.8"
+  "ws": "^8.17.1"
 # Previously set using `pnpm config set network-timeout`
 fetchTimeout: 60000
