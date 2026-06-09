@@ -2,6 +2,10 @@ packages:
   - "packages/*"
   - "packages/zowe-explorer/src/webviews/"
   - "!**/test/**"
+shamefullyHoist: true
+publicHoistPattern:
+  - "*"
+linkWorkspacePackages: true
 allowBuilds:
   '@vscode/vsce-sign': true
   '@zowe/secrets-for-zowe-sdk': true
@@ -38,3 +42,5 @@ overrides:
   "minimatch@9": "^9.0.7"
   "rollup@4": "^4.59.0"
   "underscore": "^1.13.8"
+# Previously set using `pnpm config set network-timeout`
+fetchTimeout: 60000
