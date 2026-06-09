@@ -1039,9 +1039,11 @@ describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
             parentNode: createDatasetSessionNode(createISession(), createIProfile()),
             profile: createIProfile(),
         });
+        const existsSpy = vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         const writeFileMock = vi.spyOn(vscode.workspace.fs, "writeFile").mockImplementation((() => undefined) as any);
         await (dsNode as any).datasetRecalled(false);
         expect(writeFileMock).toHaveBeenCalledWith(dsNode.resourceUri, new Uint8Array());
+        existsSpy.mockRestore();
     });
 
     it("updates the icon to folder - PDS", async () => {

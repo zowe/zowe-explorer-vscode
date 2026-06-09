@@ -151,6 +151,8 @@ function createGlobalMocks() {
     Object.defineProperty(SharedUtils, "concatChildNodes", { value: vi.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: vi.fn(), configurable: true });
     vi.spyOn(zosfiles.List, "dataSet").mockImplementation();
+    vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+    vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
     Object.defineProperty(vscode, "ProgressLocation", { value: vi.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: vi.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
