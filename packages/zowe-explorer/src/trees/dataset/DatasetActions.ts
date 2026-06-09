@@ -2396,7 +2396,8 @@ export class DatasetActions {
                         },
                         async () => {
                             try {
-                                return await mvsApi.copyDataSet(lbl, dsname, null, replace === "replace");
+                                const shouldReplace = ["replace", "notFound"].includes(replace);
+                                return await mvsApi.copyDataSet(lbl, dsname, null, shouldReplace);
                             } catch (error) {
                                 Gui.errorMessage(error.message);
                                 return;
