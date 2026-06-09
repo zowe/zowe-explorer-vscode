@@ -1107,6 +1107,7 @@
   "Fixed an issue where the filesystem continued to use a profile with invalid credentials to fetch resources. Now, after an authentication error occurs for a profile, it cannot be used again in the filesystem until the authentication error is resolved. <a>#3329</a>": "Fixed an issue where the filesystem continued to use a profile with invalid credentials to fetch resources. Now, after an authentication error occurs for a profile, it cannot be used again in the filesystem until the authentication error is resolved. <a>#3329</a>",
   "Fixed an issue where the first change to a Zowe team configuration did not accurately refresh the data set, USS and job trees. <a>#3524</a>": "Fixed an issue where the first change to a Zowe team configuration did not accurately refresh the data set, USS and job trees. <a>#3524</a>",
   "Fixed an issue where the job spool pagination code lens was appearing even though the extender did not support pagination. <a>#3714</a>": "Fixed an issue where the job spool pagination code lens was appearing even though the extender did not support pagination. <a>#3714</a>",
+  "Fixed an issue where the Jobs FileSystemProvider could not resolve profiles from URIs when opened programmatically, causing errors when extensions tried to open job spool files directly. The Jobs FileSystemProvider now extracts the profile name from the URI and loads it on-demand, matching the behavior of Datasets and USS FileSystemProviders. <a>#4284</a>": "Fixed an issue where the Jobs FileSystemProvider could not resolve profiles from URIs when opened programmatically, causing errors when extensions tried to open job spool files directly. The Jobs FileSystemProvider now extracts the profile name from the URI and loads it on-demand, matching the behavior of Datasets and USS FileSystemProviders. <a>#4284</a>",
   "Fixed an issue where the location prompt for the Create Directory and Create File USS features would appear even when a path is already set for the profile or parent folder. <a>#3183</a>": "Fixed an issue where the location prompt for the Create Directory and Create File USS features would appear even when a path is already set for the profile or parent folder. <a>#3183</a>",
   "Fixed an issue where the mismatch etag error returned was not triggering the diff editor, resulting in possible loss of data due to the issue. <a>#2277</a>": "Fixed an issue where the mismatch etag error returned was not triggering the diff editor, resulting in possible loss of data due to the issue. <a>#2277</a>",
   "Fixed an issue where the onProfilesUpdate event did not fire after secure credentials were updated. <a>#2822</a>": "Fixed an issue where the onProfilesUpdate event did not fire after secure credentials were updated. <a>#2822</a>",
@@ -1425,6 +1426,7 @@
   "Job enhancements": "Job enhancements",
   "Job ID": "Job ID",
   "Job Name": "Job Name",
+  "Job not found: {0}": "Job not found: {0}",
   "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again.": "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again.",
   "Job search cancelled.": "Job search cancelled.",
   "Job spool pagination": "Job spool pagination",
@@ -2077,6 +2079,7 @@
   },
   "Specify another codepage": "Specify another codepage",
   "Specify the data set type (DSNTYPE)": "Specify the data set type (DSNTYPE)",
+  "Spool file not found: {0}": "Spool file not found: {0}",
   "SSH profile missing connection details. Please update.": "SSH profile missing connection details. Please update.",
   "Starting to poll job {0} for completion./Job display name": {
     "message": "Starting to poll job {0} for completion.",
