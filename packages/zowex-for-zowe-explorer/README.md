@@ -28,6 +28,9 @@ pnpm --filter zowex-for-zowe-explorer link:zowex
 
 # Or specify a custom path (must be relative to workspace root)
 pnpm --filter zowex-for-zowe-explorer link:zowex ../custom-path/packages/sdk
+
+# Or specify a PR number from the zowex repo
+pnpm --filter zowex-for-zowe-explorer link:zowex 1337
 ```
 
 **Note:** Any code changes made to existing files in your local SDK repository are immediately available in Zowe Explorer because the package is linked. After adding or removing files in the SDK, you must re-run `pnpm install` in the Zowe Explorer workspace to ensure the new file structure is recognized.
