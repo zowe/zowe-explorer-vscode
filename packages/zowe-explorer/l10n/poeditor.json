@@ -384,25 +384,25 @@
     "Shows whether persistent settings were successfully migrated to local storage": ""
   },
   "zowe.logger": {
-    "Select the log level for Zowe Explorer.  The default is INFO.": ""
+    "Select the log level for Zowe Explorer. The default is INFO.": ""
   },
   "zowe.logger.trace": {
-    "TRACE": ""
+    "Trace": ""
   },
   "zowe.logger.debug": {
-    "DEBUG": ""
+    "Debug": ""
   },
   "zowe.logger.info": {
-    "INFO": ""
+    "Info": ""
   },
   "zowe.logger.warn": {
-    "WARN": ""
+    "Warn": ""
   },
   "zowe.logger.error": {
-    "ERROR": ""
+    "Error": ""
   },
   "zowe.logger.fatal": {
-    "FATAL": ""
+    "Fatal": ""
   },
   "zowe.logger.trace.description": {
     "Messages about fine details of the application's behaviour.": ""
@@ -1164,6 +1164,7 @@
   "Fixed a bug where renaming a USS file that used to exist but was deleted in z/OS resulted in an error. <a>#3485</a>.": "",
   "Fixed a bug where USS and data set workspace folders accessed via an extender (SSH, FTP, etc) are not loaded until the window is reloaded. <a>#3689</a>": "",
   "Fixed a bug where USS files and data set VS Code editors accessed by an extender (SSH, FTP, etc) are not restored when reloading/reopening a window. <a>#3678</a>": "",
+  "Fixed a localization issue where changing Zowe > Logger in a non-English language would use the localized value instead of the expected internal enum value for setting the log level. <a>#4292</a>": "",
   "Fixed a regression with the AuthUtils.syncSessionNode function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. <a>#3795</a>": "",
   "Fixed a z/OSMF issue for Data Sets and Jobs with special characters in the names. <a>#2175</a>": "",
   "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>": "",
