@@ -44,7 +44,7 @@ jobs:
       # install pnpm
       - run: npm install -g pnpm
 
-      - run: pnpm config set network-timeout 60000 && pnpm install
+      - run: pnpm config set fetchTimeout 60000 && pnpm install
 
       - run: pnpm build
         id: build
