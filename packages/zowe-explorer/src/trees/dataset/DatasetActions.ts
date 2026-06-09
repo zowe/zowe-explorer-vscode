@@ -2209,7 +2209,6 @@ export class DatasetActions {
                         }
                     }
                     datasetProvider.refreshElement(node.getParent());
-                } else {
                 }
             }
         } catch (err) {
