@@ -458,6 +458,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             profile: blockMocks.imperativeProfile,
             contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
         });
+        nodeMigrated.wasPds = false;
         const sampleChildren: ZoweDatasetNode[] = [nodeOk, nodeImpError, nodeMigrated];
         vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(testTree);
 
@@ -5094,7 +5095,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
 
         const dsNode = profileNode.children[0] as ZoweDatasetNode;
         expect(SharedContext.isMigrated(dsNode)).toBe(true);
-        expect(dsNode.wasPds).toBeUndefined();
+        expect(dsNode.wasPds).toBe(false);
 
         const pdsNode = profileNode.children[1] as ZoweDatasetNode;
         expect(SharedContext.isMigrated(pdsNode)).toBe(true);
