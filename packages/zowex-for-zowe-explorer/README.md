@@ -43,6 +43,8 @@ To test changes to a Zowex PR, specify a PR number from the `zowex` repository o
 pnpm --filter zowex-for-zowe-explorer link:zowex 1337
 ```
 
+**Note:** This command requires having GitHub CLI (`gh`) installed and authenticated to GitHub (`gh auth login`).
+
 This downloads the `zowex-sdk` artifact from the latest successful run of the `build` workflow for the specified PR, and installs the `zowex` SDK from the TGZ contained in the artifact.
 
 ### Testing backend changes
