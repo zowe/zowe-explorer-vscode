@@ -228,17 +228,18 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const bufBuilder = new BufferBuilder();
 
         const metadata = spoolEntry.metadata ?? this._getInfoFromUri(uri);
+        // Assign metadata to the entry if it was resolved from URI
+        spoolEntry.metadata ??= metadata;
         const profile = Profiles.getInstance().loadNamedProfile(metadata.profile.name);
         const profileEncoding = spoolEntry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
         const apiRegister = ZoweExplorerApiRegister.getInstance();
-        const jesApi = FsAbstractUtils.getApiOrThrowUnavailable(
-            spoolEntry.metadata.profile,
-            () => apiRegister.getJesApi(spoolEntry.metadata.profile),
-            { apiName: vscode.l10n.t("JES API"), registeredTypes: apiRegister.registeredJesApiTypes() }
-        );
+        const jesApi = FsAbstractUtils.getApiOrThrowUnavailable(metadata.profile, () => apiRegister.getJesApi(metadata.profile), {
+            apiName: vscode.l10n.t("JES API"),
+            registeredTypes: apiRegister.registeredJesApiTypes(),
+        });
         await AuthUtils.ensureAuthNotCancelled(profile);
-        await AuthHandler.waitForUnlock(spoolEntry.metadata.profile);
+        await AuthHandler.waitForUnlock(metadata.profile);
         const query = new URLSearchParams(uri.query);
         let recordRange = "";
         const recordsToFetch = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
@@ -298,7 +299,18 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns The spool file's contents as an array of bytes
      */
     public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const spoolEntry = this._lookupAsFile(uri) as SpoolEntry;
+        let spoolEntry: SpoolEntry;
+        try {
+            spoolEntry = this._lookupAsFile(uri) as SpoolEntry;
+        } catch (err) {
+            if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
+                throw err;
+            }
+            // Entry doesn't exist - need to create it from URI
+            await this._createEntriesFromUri(uri);
+            spoolEntry = this._lookupAsFile(uri) as SpoolEntry;
+        }
+
         if (!spoolEntry.wasAccessed) {
             await this.fetchSpoolAtUri(uri);
             spoolEntry.wasAccessed = true;
@@ -412,5 +424,85 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             profile: uriInfo.profile,
             path: uriInfo.isRoot ? "/" : uri.path.substring(uriInfo.slashAfterProfilePos),
         };
+    }
+
+    /**
+     * Creates the necessary directory and file entries in the FileSystem from a URI.
+     * This is used when a URI is opened programmatically without going through the tree.
+     * @param uri The URI to create entries for (format: zowe-jobs:/profileName/jobId/spoolName)
+     */
+    private async _createEntriesFromUri(uri: vscode.Uri): Promise<void> {
+        const metadata = this._getInfoFromUri(uri);
+        const pathParts = metadata.path.split("/").filter(Boolean);
+
+        // URI format: /jobId/spoolName
+        if (pathParts.length < 2) {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
+
+        const jobId = pathParts[0];
+        const spoolName = pathParts[1];
+
+        // Create profile directory if it doesn't exist
+        const profileUri = uri.with({ path: `/${metadata.profile.name}` });
+        if (!this.exists(profileUri)) {
+            this.createDirectory(profileUri, { isFilter: true });
+        }
+
+        // Create job directory if it doesn't exist
+        const jobUri = uri.with({ path: `/${metadata.profile.name}/${jobId}` });
+        let jobEntry: JobEntry;
+        if (!this.exists(jobUri)) {
+            // Fetch job information from the mainframe
+            const apiRegister = ZoweExplorerApiRegister.getInstance();
+            const jesApi = FsAbstractUtils.getApiOrThrowUnavailable(metadata.profile, () => apiRegister.getJesApi(metadata.profile), {
+                apiName: vscode.l10n.t("JES API"),
+                registeredTypes: apiRegister.registeredJesApiTypes(),
+            });
+
+            await AuthUtils.ensureAuthNotCancelled(metadata.profile);
+            await AuthHandler.waitForUnlock(metadata.profile);
+
+            // Get job by job ID
+            let job: IJob;
+            await AuthUtils.retryRequest(metadata.profile, async () => {
+                const jobs = await jesApi.getJobsByParameters({ jobid: jobId });
+                if (!jobs || jobs.length === 0) {
+                    throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Job not found: {0}", jobId));
+                }
+                job = jobs[0];
+            });
+            this.createDirectory(jobUri, { job });
+        }
+        jobEntry = this._lookupAsDirectory(jobUri, false) as JobEntry;
+
+        // Fetch spool files for the job if not already loaded
+        if (jobEntry.entries.size === 0) {
+            const apiRegister = ZoweExplorerApiRegister.getInstance();
+            const jesApi = FsAbstractUtils.getApiOrThrowUnavailable(metadata.profile, () => apiRegister.getJesApi(metadata.profile), {
+                apiName: vscode.l10n.t("JES API"),
+                registeredTypes: apiRegister.registeredJesApiTypes(),
+            });
+
+            await AuthUtils.retryRequest(metadata.profile, async () => {
+                const spoolFiles = await jesApi.getSpoolFiles(jobEntry.job.jobname, jobEntry.job.jobid);
+                for (const spool of spoolFiles) {
+                    const uniqueSpoolName = FsJobsUtils.buildUniqueSpoolName(spool);
+                    if (!jobEntry.entries.has(uniqueSpoolName)) {
+                        this.writeFile(uri.with({ path: path.posix.join(jobUri.path, uniqueSpoolName) }), new Uint8Array(), {
+                            create: true,
+                            overwrite: false,
+                            name: uniqueSpoolName,
+                            spool,
+                        });
+                    }
+                }
+            });
+        }
+
+        // Verify the spool entry exists
+        if (!jobEntry.entries.has(spoolName)) {
+            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Spool file not found: {0}", spoolName));
+        }
     }
 }
