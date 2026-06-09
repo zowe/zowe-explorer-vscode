@@ -19,6 +19,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue in the USS tree view that prevented listing a single file path due to a duplicated and invalid URI path construction. [#4303](https://github.com/zowe/zowe-explorer-vscode/issues/4303)
 - Fixed an issue where navigating to an invalid or inaccessible path under one USS profile caused file and folder nodes under all profiles to disappear or show outdated results. [#4288](https://github.com/zowe/zowe-explorer-vscode/issues/4288)
 - Fixed an issue in USS where the search path in the profile node description or filter tooltip became out of sync and did not match the actual listed path after a failed search or a search timeout. [#4287](https://github.com/zowe/zowe-explorer-vscode/issues/4287)
+- Fixed a localization issue where changing `Zowe > Logger` in a non-English language would use the localized value instead of the expected internal enum value for setting the log level. [#4292](https://github.com/zowe/zowe-explorer-vscode/issues/4292)
 
 ## `3.5.0`
 
@@ -37,6 +38,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where the Jobs FileSystemProvider could not resolve profiles from URIs when opened programmatically, causing errors when extensions tried to open job spool files directly. The Jobs FileSystemProvider now extracts the profile name from the URI and loads it on-demand, matching the behavior of Datasets and USS FileSystemProviders. [#4284](https://github.com/zowe/zowe-explorer-vscode/issues/4284)
 - Fixed an issue where Zowe Explorer failed to activate if a VS Code workspace is opened and contains an invalid directory path. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are treated as project-level directories. [#4271](https://github.com/zowe/zowe-explorer-vscode/issues/4271)
 - Fixed an issue where saving contents to a data set or USS file could trigger built-in conflict detection, specifically when the API does not include a timestamp for that resource. Now, the modification time of a data set or USS file in Zowe Explorer's filesystem is kept as-is if the API does not provide a timestamp. Users can continue to use the "Pull from Mainframe" context-menu option to fetch the latest contents of a data set or USS file in an opened editor. [#4206](https://github.com/zowe/zowe-explorer-vscode/issues/4206)
 - Updated USS and data set file system providers to generate notifications based on remote system changes rather than local file system cache updates. [#4162](https://github.com/zowe/zowe-explorer-vscode/pull/4162)
