@@ -36,7 +36,7 @@ class QuickPick {
 
     public async isNotInViewport(): Promise<boolean> {
         await this.findElement();
-        return !(await this.elem.isDisplayedInViewport());
+        return !(await this.elem.isDisplayed({ withinViewport: true }));
     }
 
     public async hasOptions(): Promise<boolean> {
