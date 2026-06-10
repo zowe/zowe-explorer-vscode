@@ -579,7 +579,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         const lines: string[] = this.mPersistence.readFavorites();
         const vsamLines: string[] = this.mPersistence.readVsamFavorites();
         const memberLines: string[] = this.mPersistence.readMemberFavorites();
-        const combinedLines = [...lines, ...vsamLines, ...memberLines];
+        const migratedLines: string[] = this.mPersistence.readMigratedFavorites();
+        const combinedLines = [...lines, ...vsamLines, ...memberLines, ...migratedLines];
         if (combinedLines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No data set favorites found."));
             return;
@@ -1534,6 +1535,7 @@ Would you like to do this now?`,
         const favoritesArray: string[] = [];
         const vsamFavoritesArray: string[] = [];
         const memberFavoritesArray: string[] = [];
+        const migratedFavoritesArray: string[] = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((favorite) => {
                 const pdsNode = favorite as ZoweDatasetNode;
@@ -1557,6 +1559,8 @@ Would you like to do this now?`,
                     const favoriteEntry = "[" + profileNode.label.toString() + "]: " + favorite.label.toString() + "{" + baseContext + "}";
                     if (favorite.contextValue?.includes(Constants.VSAM_CONTEXT)) {
                         vsamFavoritesArray.push(favoriteEntry);
+                    } else if (SharedContext.isMigrated(favorite)) {
+                        migratedFavoritesArray.push(favoriteEntry);
                     } else {
                         favoritesArray.push(favoriteEntry);
                     }
@@ -1567,6 +1571,7 @@ Would you like to do this now?`,
             favorites: favoritesArray,
             vsamFavorites: vsamFavoritesArray,
             memberFavorites: memberFavoritesArray,
+            migratedFavorites: migratedFavoritesArray,
         });
     }
 
@@ -1759,7 +1764,12 @@ Would you like to do this now?`,
 
     public getFavorites(): string[] {
         ZoweLogger.trace("DatasetTree.getFavorites called.");
-        return this.mPersistence.readFavorites();
+        return [
+            ...this.mPersistence.readFavorites(),
+            ...this.mPersistence.readVsamFavorites(),
+            ...this.mPersistence.readMemberFavorites(),
+            ...this.mPersistence.readMigratedFavorites(),
+        ];
     }
 
     public createFilterString(newFilter: string, node: IZoweDatasetTreeNode): string {

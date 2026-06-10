@@ -5008,6 +5008,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.PO.DS{pds}", "[test]: SAMPLE.PS.DS{ds}", "INVALID*"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -5023,6 +5024,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.DS{ds}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -5042,6 +5044,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}", "[test]: SAMPLE.PS.DS{ds}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -5064,6 +5067,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -5086,6 +5090,32 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.PS.MIGR{ds_migr}", "[test]: SAMPLE.PDS.MIGR{pds_migr}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
+        } as any);
+        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        const profileNode = blockMocks.testTree.mFavorites[0];
+        expect(profileNode.children?.map((item) => item.label)).toEqual(["SAMPLE.PS.MIGR", "SAMPLE.PDS.MIGR"]);
+
+        const dsNode = profileNode.children[0] as ZoweDatasetNode;
+        expect(SharedContext.isMigrated(dsNode)).toBe(true);
+        expect(dsNode.wasPds).toBe(false);
+
+        const pdsNode = profileNode.children[1] as ZoweDatasetNode;
+        expect(SharedContext.isMigrated(pdsNode)).toBe(true);
+        expect(pdsNode.wasPds).toBe(true);
+    });
+
+    it("successfully initializes migrated favorites from the migrated favorites list", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        vi.spyOn(blockMocks.testTree as any, "mPersistence" as any, "get").mockReturnValue({
+            readFavorites: () => [],
+            readVsamFavorites: () => [],
+            readMemberFavorites: () => [],
+            readMigratedFavorites: () => ["[test]: SAMPLE.PS.MIGR{ds_migr}", "[test]: SAMPLE.PDS.MIGR{pds_migr}"],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -5153,6 +5183,7 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
             favorites: [],
             vsamFavorites: [],
             memberFavorites: [`[${profileLabel}]: MY.PDS(MEM1){pds}`, `[${profileLabel}]: MY.PDS(MEM2){pds}`],
+            migratedFavorites: [],
         });
     });
 
@@ -5181,6 +5212,7 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
             favorites: [`[${profileLabel}]: MY.PDS{pds}`],
             vsamFavorites: [],
             memberFavorites: [],
+            migratedFavorites: [],
         });
     });
 
@@ -5220,6 +5252,36 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
             favorites: [`[${profileLabel}]: FULL.PDS{pds}`],
             vsamFavorites: [],
             memberFavorites: [`[${profileLabel}]: MEMBER.PDS(MYMEM){pds}`],
+            migratedFavorites: [],
+        });
+    });
+
+    it("persists migrated favorites to the migratedFavorites list", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        const migratedNode = new ZoweDatasetNode({
+            label: "MY.MIGRATED.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        migratedNode.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+
+        await testTree.addFavorite(migratedNode);
+
+        const updateFavSpy = vi.spyOn(testTree["mPersistence"], "updateFavorites");
+        testTree.updateFavorites();
+
+        const profileLabel = blockMocks.datasetSessionNode.label?.toString();
+        expect(updateFavSpy).toHaveBeenCalledWith({
+            favorites: [],
+            vsamFavorites: [],
+            memberFavorites: [],
+            migratedFavorites: [`[${profileLabel}]: MY.MIGRATED.DS{migr}`],
         });
     });
 });
@@ -6770,9 +6832,12 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
     describe("getFavorites", () => {
         it("gets all the favorites from persistent object", () => {
             vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
-                favorites: ["test1", "test2", "test3"],
-            });
-            expect(tree.getFavorites()).toEqual(["test1", "test2", "test3"]);
+                favorites: ["test1"],
+                vsamFavorites: ["test2"],
+                memberFavorites: ["test3"],
+                migratedFavorites: ["test4"],
+            } as any);
+            expect(tree.getFavorites()).toEqual(["test1", "test2", "test3", "test4"]);
         });
     });
 });
