@@ -318,7 +318,7 @@ export class ErrorCorrelator {
         let additionalDetails = "";
         if (error.initial instanceof ImperativeError) {
             if (error.initial.additionalDetails) {
-                additionalDetails = error.initial.additionalDetails;
+                additionalDetails = error.initial.additionalDetails + " ";
             }
             if (error.initial.causeErrors instanceof Error) {
                 additionalDetails += error.initial.causeErrors.message;
