@@ -40,17 +40,6 @@ try {
     // 3. Install dependencies and build
     console.log('Installing dependencies and building in temporary directory (using npm to avoid monorepo/workspace interference)...');
     execSync('npm install', { cwd: tempDir, stdio: 'inherit' });
-    
-    // Fix the fastify listen signature issue in the temp dir src before building it!
-    const indexServerPath = path.join(tempDir, 'src/server/index.ts');
-    if (fs.existsSync(indexServerPath)) {
-        let indexContent = fs.readFileSync(indexServerPath, 'utf8');
-        if (indexContent.includes('await app.listen(port)')) {
-            console.log('Applying Fastify v5 compatibility fix in source index.ts...');
-            indexContent = indexContent.replace('await app.listen(port)', 'await app.listen({ port })');
-            fs.writeFileSync(indexServerPath, indexContent, 'utf8');
-        }
-    }
 
     execSync('npm run build', { cwd: tempDir, stdio: 'inherit' });
 
