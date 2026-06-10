@@ -1555,7 +1555,7 @@ Would you like to do this now?`,
                 } else {
                     let baseContext = SharedContext.getBaseContext(favorite);
                     if (SharedContext.isMigrated(favorite)) {
-                        baseContext = pdsNode.wasPds ? "pds_migr" : "ds_migr";
+                        baseContext += "_migr";
                     }
                     const favoriteEntry = "[" + profileNode.label.toString() + "]: " + favorite.label.toString() + "{" + baseContext + "}";
                     if (favorite.contextValue?.includes(Constants.VSAM_CONTEXT)) {

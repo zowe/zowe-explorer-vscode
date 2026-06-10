@@ -1160,7 +1160,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 const basename = path.posix.basename(uri.path);
                 if (parent.entries.has(basename)) {
                     parent.entries.delete(basename);
-                    this.fireSoon({ type: vscode.FileChangeType.Deleted, uri });
                 }
             }
         } catch (e) {

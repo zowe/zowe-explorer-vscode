@@ -25,7 +25,6 @@ export class ZowePersistentFilters {
     private static readonly favorites: string = "favorites";
     private static readonly vsamFavorites: string = "vsamFavorites";
     private static readonly memberFavorites: string = "memberFavorites";
-    private static readonly migratedFavorites: string = "migratedFavorites";
     private static readonly searchHistory: string = "searchHistory";
     private static readonly searchedKeywordHistory: string = "searchedKeywordHistory";
     private static readonly fileHistory: string = "fileHistory";
@@ -213,12 +212,7 @@ export class ZowePersistentFilters {
         ZoweLogger.trace("PersistentFilters.readFavorites called.");
         const localStorageSchema = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
         if (localStorageSchema) {
-            const favorites = localStorageSchema[ZowePersistentFilters.favorites] as string[] || [];
-            const migratedFavorites = (localStorageSchema as any)[ZowePersistentFilters.migratedFavorites] as string[];
-            if (migratedFavorites && migratedFavorites.length > 0) {
-                return [...favorites, ...migratedFavorites];
-            }
-            return favorites;
+            return localStorageSchema[ZowePersistentFilters.favorites] as string[] || [];
         }
         return [];
     }
@@ -348,9 +342,6 @@ export class ZowePersistentFilters {
             }
             if (options.memberFavorites !== undefined) {
                 settings.memberFavorites = options.memberFavorites;
-            }
-            if ((settings as any).migratedFavorites !== undefined) {
-                delete (settings as any).migratedFavorites;
             }
             ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
         }
