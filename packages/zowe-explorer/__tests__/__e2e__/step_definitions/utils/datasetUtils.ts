@@ -50,11 +50,6 @@ async function allocateDs(world: any, dsName: string, dsType: string): Promise<v
     });
 }
 
-/**
- * Opens a PS dataset in the editor (triggering DatasetFSProvider.readFileImplementation so ZE
- * populates its in-memory FS cache), then closes the editor.  This is required before calling
- * deleteDsOrMember on a PS that has not been opened yet.
- */
 export async function openDsToPopulateCache(world: any, dsName: string): Promise<void> {
     const dsNode = await (await world.profileNode.find()).findChildItem(dsName);
     await dsNode.select();
@@ -66,10 +61,6 @@ export async function openDsToPopulateCache(world: any, dsName: string): Promise
     await editorView.closeEditor(dsName);
 }
 
-/**
- * Creates a PDS member via the ZE "Create New Member" context menu entry, waits for ZE to open
- * the new member's editor (which populates the FS cache), then closes the editor.
- */
 export async function createMemberInPds(pdsNode: any, memberName: string): Promise<void> {
     await pdsNode.elem.moveTo();
     await clickContextMenuItem(pdsNode, "Create New Member");
@@ -87,11 +78,6 @@ export async function createMemberInPds(pdsNode: any, memberName: string): Promi
     await editorView.closeEditor(memberName);
 }
 
-/**
- * Polls the tree by re-deriving the profile → PDS chain on each tick (avoids stale DOM
- * references caused by ZE re-rendering the PDS node after member creation), then returns once
- * the member is visible.
- */
 export async function waitForMemberInPds(world: any, pdsName: string, memberName: string): Promise<void> {
     await browser.waitUntil(
         async () => {
@@ -107,11 +93,6 @@ export async function waitForMemberInPds(world: any, pdsName: string, memberName
     );
 }
 
-/**
- * Deletes one or more datasets or members from the LPAR via ZE's DatasetFSProvider.
- * Entries must already exist in ZE's in-memory FS cache (use openDsToPopulateCache or
- * readDirectory first).  Silently ignores paths that are not in the cache.
- */
 export async function deleteDsOrMember(...nodePaths: string[]): Promise<void> {
     for (const nodePath of nodePaths) {
         try {
@@ -123,10 +104,6 @@ export async function deleteDsOrMember(...nodePaths: string[]): Promise<void> {
     }
 }
 
-/**
- * Fires zowe.ds.refreshAll, which sets dirty=true on all session nodes and emits
- * onDidChangeTreeData so VS Code re-fetches the node list from the LPAR.
- */
 export async function refreshDsTree(): Promise<void> {
     await browser.executeWorkbench(async (vscode) => {
         await vscode.commands.executeCommand("zowe.ds.refreshAll");
