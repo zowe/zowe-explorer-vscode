@@ -11,51 +11,28 @@
 
 import { Given, When, Then } from "@cucumber/cucumber";
 import { clickContextMenuItem } from "../../../__common__/shared.wdio";
-import { Key } from "webdriverio";
-import quickPick from "../../../__pageobjects__/QuickPick";
+import {
+    filterBase,
+    allocateSequentialDs,
+    openDsToPopulateCache,
+    createMemberInPds,
+    waitForMemberInPds,
+    deleteDsOrMember,
+    refreshDsTree,
+} from "../utils/datasetUtils";
 
-const filterBase = (process.env.ZE_TEST_DS_FILTER ?? "TEST*").replace(/\.\*?$|\*$/, "").replace(/\.$/, "");
-const deleteTestPsName = `${filterBase}.DELPS`;
-const deleteTestMemberName = "DELMEM";
+const deleteTestPsName = `${filterBase}.ADELPS`;
+const deleteTestMemberName = "ADELMEM";
 
 Given("a test sequential dataset has been created for deletion", async function () {
-    const profileNode = await this.profileNode.find();
-    await profileNode.elem.moveTo();
-    await clickContextMenuItem(profileNode, "Create New Data Set");
+    await deleteDsOrMember(`/${process.env.ZE_TEST_PROFILE_NAME}/${deleteTestPsName}`);
+    await browser.pause(1000);
 
-    const nameInputBox = await $('.input[aria-describedby="quickInput_message"]');
-    await nameInputBox.waitForDisplayed();
-    await nameInputBox.setValue(deleteTestPsName);
-    await browser.keys(Key.Enter);
-
-    await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
-    const typeOption = await quickPick.findItem("Sequential Data Set");
-    await expect(typeOption).toBeClickable();
-    await typeOption.click();
-
-    await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
-    const allocateOption = await quickPick.findItem("+ Allocate Data Set");
-    await expect(allocateOption).toBeClickable();
-    await allocateOption.click();
-
-    await browser.pause(3000);
-    await browser.waitUntil(async () => !!(await (await this.profileNode.find()).findChildItem(deleteTestPsName)), {
-        timeout: 15000,
-        timeoutMsg: `Test dataset ${deleteTestPsName} did not appear in tree after creation`,
-    });
-
-    const dsNode = await (await this.profileNode.find()).findChildItem(deleteTestPsName);
-    await dsNode.select();
-    const editorView = (await browser.getWorkbench()).getEditorView();
-    await browser.waitUntil(async () => (await editorView.getOpenEditorTitles()).includes(deleteTestPsName), {
-        timeout: 10000,
-        timeoutMsg: `Editor for ${deleteTestPsName} did not open after clicking the tree node`,
-    });
-    await editorView.closeEditor(deleteTestPsName);
+    await allocateSequentialDs(this, deleteTestPsName);
+    await openDsToPopulateCache(this, deleteTestPsName);
 
     this.deleteTestDs = await (await this.profileNode.find()).findChildItem(deleteTestPsName);
     this.deleteTestDsName = deleteTestPsName;
-    // Store the URI path for use in the programmatic delete step (see "confirms the deletion")
     this.deleteNodePath = `/${process.env.ZE_TEST_PROFILE_NAME}/${deleteTestPsName}`;
     await expect(this.deleteTestDs).toBeDefined();
 });
@@ -64,28 +41,22 @@ Given("a test PDS member has been created for deletion", async function () {
     this.deleteTestPds = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
     await expect(this.deleteTestPds).toBeDefined();
 
-    await this.deleteTestPds.elem.moveTo();
-    await clickContextMenuItem(this.deleteTestPds, "Create New Member");
+    await browser.executeWorkbench(async (vscode, pdsPath: string) => {
+        try {
+            await vscode.workspace.fs.readDirectory(vscode.Uri.from({ scheme: "zowe-ds", path: pdsPath, query: "fetch=true" }));
+        } catch {}
+    }, `/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}`);
 
-    const inputBox = await $('.input[aria-describedby="quickInput_message"]');
-    await inputBox.waitForDisplayed();
-    await inputBox.setValue(deleteTestMemberName);
-    await browser.keys(Key.Enter);
+    await deleteDsOrMember(`/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${deleteTestMemberName}`);
+    await browser.pause(1000);
+
+    this.deleteTestPds = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
+    await createMemberInPds(this.deleteTestPds, deleteTestMemberName);
+    await waitForMemberInPds(this, process.env.ZE_TEST_PDS, deleteTestMemberName);
+
+    this.deleteTestPds = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
+    this.deleteTestMember = await this.deleteTestPds.findChildItem(deleteTestMemberName);
     this.deleteTestMemberName = deleteTestMemberName;
-
-    const editorView = (await browser.getWorkbench()).getEditorView();
-    await browser.waitUntil(async () => (await editorView.getOpenEditorTitles()).includes(deleteTestMemberName), {
-        timeout: 10000,
-        timeoutMsg: `Editor for new member ${deleteTestMemberName} did not open`,
-    });
-    await editorView.closeEditor(deleteTestMemberName);
-
-    await browser.waitUntil(async () => !!(await this.deleteTestPds.findChildItem(this.deleteTestMemberName)), {
-        timeout: 10000,
-        timeoutMsg: `Member ${deleteTestMemberName} did not appear in PDS after creation`,
-    });
-    this.deleteTestMember = await this.deleteTestPds.findChildItem(this.deleteTestMemberName);
-    // Store the URI path for use in the programmatic delete step (see "confirms the deletion")
     this.deleteNodePath = `/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${deleteTestMemberName}`;
     await expect(this.deleteTestMember).toBeDefined();
 });
@@ -101,11 +72,8 @@ When("the user right-clicks on the test PDS member and selects {string}", async 
 });
 
 When("the user confirms the deletion", async function () {
-    await browser.executeWorkbench(async (vscode, nodePath: string) => {
-        const uri = vscode.Uri.from({ scheme: "zowe-ds", path: nodePath });
-        await vscode.workspace.fs.delete(uri, { recursive: false });
-        await vscode.commands.executeCommand("zowe.ds.refreshAll");
-    }, this.deleteNodePath);
+    await deleteDsOrMember(this.deleteNodePath);
+    await refreshDsTree();
     await browser.pause(3000);
 });
 
