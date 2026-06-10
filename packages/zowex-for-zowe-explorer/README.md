@@ -18,7 +18,9 @@ To remove the server instance entirely, run the `Zowe Explorer: Uninstall zowex 
 
 ## Development
 
-### Linking a local Zowex SDK
+### Linking Zowex SDK from source
+
+**From a local branch**
 
 To test local changes to `@zowe/zowex-for-zowe-sdk`, link your local `zowex` repository from the root of the Zowe Explorer workspace:
 
@@ -31,6 +33,19 @@ pnpm --filter zowex-for-zowe-explorer link:zowex ../custom-path/packages/sdk
 ```
 
 **Note:** Any code changes made to existing files in your local SDK repository are immediately available in Zowe Explorer because the package is linked. After adding or removing files in the SDK, you must re-run `pnpm install` in the Zowe Explorer workspace to ensure the new file structure is recognized.
+
+**From a pull request**
+
+To test changes to a Zowex PR, specify a PR number from the `zowex` repository on the `link:zowex` command:
+
+```bash
+# Installs SDK from CI build of Zowex PR #1337
+pnpm --filter zowex-for-zowe-explorer link:zowex 1337
+```
+
+**Note:** This command requires the GitHub CLI (`gh`) to be installed and authenticated to GitHub (`gh auth login`).
+
+This downloads the `zowex-sdk` artifact from the latest successful run of the `build` workflow for the specified PR, and installs the `zowex` SDK from the TGZ contained in the artifact.
 
 ### Testing backend changes
 
