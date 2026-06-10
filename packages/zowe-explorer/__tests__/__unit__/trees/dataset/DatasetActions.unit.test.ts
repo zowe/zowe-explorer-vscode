@@ -587,7 +587,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 1 item(s) were deleted:\n ` +
-                `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
+            `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
         );
         expect(blockMocks.fixMultiSelectMock).toHaveBeenCalledWith(blockMocks.testDatasetTree, blockMocks.testMemberNode.getParent());
     });
@@ -637,7 +637,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 2 item(s) were deleted:\n ` +
-                `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testVsamNode.getLabel().toString()}`
+            `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testVsamNode.getLabel().toString()}`
         );
     });
 
@@ -670,7 +670,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
             `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
-                `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}`,
+            `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
     });
@@ -688,7 +688,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.warningMessage)).toHaveBeenCalledWith(
             `Are you sure you want to delete the following 1 item(s)?\nThis will permanently remove these data sets and/or members from your ` +
-                `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}(${blockMocks.testFavMemberNode.getLabel().toString()})`,
+            `system.\n\n ${blockMocks.testFavoritedNode.getLabel().toString()}(${blockMocks.testFavMemberNode.getLabel().toString()})`,
             { items: ["Delete"], vsCodeOpts: { modal: true } }
         );
     });
@@ -755,7 +755,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 2 item(s) were deleted:\n ` +
-                `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testFavoritedNode.getLabel().toString()}`
+            `${blockMocks.testDatasetNode.getLabel().toString()}\n ${blockMocks.testFavoritedNode.getLabel().toString()}`
         );
     });
 
@@ -782,7 +782,7 @@ describe("Dataset Actions Unit Tests - Function deleteDatasetPrompt", () => {
         await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree, blockMocks.testMemberNode);
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith(
             `The following 1 item(s) were deleted:\n ` +
-                `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
+            `${blockMocks.testMemberNode.getParent().getLabel().toString()}(${blockMocks.testMemberNode.getLabel().toString()})`
         );
     });
 
@@ -1636,6 +1636,44 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             return Promise.resolve(prm);
         });
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
+    });
+
+    it("Testing copySequentialDatasets() calls copyDataSet with replace=true when target does not exist", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_DS_CONTEXT;
+        globalMocks.showInputBox.mockResolvedValueOnce("HLQ.TEST.COPY");
+        const copySpy = vi.spyOn(blockMocks.mvsApi, "copyDataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        vi.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        vi.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
+        mocked(vscode.window.withProgress).mockImplementation((prm, fnc) => {
+            fnc();
+            return Promise.resolve(prm);
+        });
+        await DatasetActions.copySequentialDatasets(
+            [
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    profileName: blockMocks.imperativeProfile.name,
+                    contextValue: Constants.DS_DS_CONTEXT,
+                },
+            ],
+            node
+        );
+        expect(copySpy).toHaveBeenCalledWith("HLQ.TEST.BEFORE.NODE", "HLQ.TEST.COPY", null, true);
     });
 
     it("Testing copySequentialDatasets() successfully runs on cross profile", async () => {
