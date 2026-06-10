@@ -19,6 +19,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where navigating to an invalid or inaccessible path under one USS profile caused file and folder nodes under all profiles to disappear or show outdated results. [#4288](https://github.com/zowe/zowe-explorer-vscode/issues/4288)
 - Fixed an issue in USS where the search path in the profile node description or filter tooltip became out of sync and did not match the actual listed path after a failed search or a search timeout. [#4287](https://github.com/zowe/zowe-explorer-vscode/issues/4287)
 - Fixed a localization issue where changing `Zowe > Logger` in a non-English language would use the localized value instead of the expected internal enum value for setting the log level. [#4292](https://github.com/zowe/zowe-explorer-vscode/issues/4292)
+- Fixed an issue where the `certAccount` property was not supported in z/OSMF profiles for authenticating with certificates stored in the OS keychain. [#4309](https://github.com/zowe/zowe-explorer-vscode/pull/4309)
 
 ## `3.5.0`
 
