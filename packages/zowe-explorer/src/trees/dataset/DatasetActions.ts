@@ -830,6 +830,22 @@ export class DatasetActions {
         );
     }
 
+    private static resolveMemberExtension(datasetName: string, overrideExtension?: string): string {
+        const resolvedExtension = overrideExtension ?? DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+        return resolvedExtension.startsWith(".") ? resolvedExtension.slice(1) : resolvedExtension;
+    }
+
+    private static buildMemberExtensionMap(membersToDownload: string[], uppercaseNames: boolean, extension: string): { [key: string]: string } {
+        const extensionMap: { [key: string]: string } = {};
+        for (let memberName of membersToDownload) {
+            if (!uppercaseNames) {
+                memberName = memberName.toLowerCase();
+            }
+            extensionMap[memberName] = extension;
+        }
+        return extensionMap;
+    }
+
     /**
      * Downloads all the members of a PDS
      */
@@ -909,11 +925,9 @@ export class DatasetActions {
 
                 const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
 
-                const extensionMap = await DatasetUtils.getExtensionMap(
-                    node,
-                    uppercaseNames,
-                    overrideExtension && fileExtension ? fileExtension : undefined
-                );
+                const membersToDownload = children.map((child) => String(child.member ?? ""));
+                const extension = DatasetActions.resolveMemberExtension(datasetName, overrideExtension ? fileExtension : undefined);
+                const extensionMap = DatasetActions.buildMemberExtensionMap(membersToDownload, uppercaseNames, extension);
 
                 const generatedFileDirectory = DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames);
 
@@ -943,24 +957,17 @@ export class DatasetActions {
 
     private static async downloadSingleMember(
         selectedNode: IZoweDatasetTreeNode,
-        dataSetDownloadOptions: Definitions.DataSetDownloadOptions
+        dataSetDownloadOptions: Definitions.DataSetDownloadOptions,
+        extension: string
     ): Promise<{ response?: any; downloadedPath?: string }> {
-        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath, overrideExtension, fileExtension } = dataSetDownloadOptions;
+        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath } = dataSetDownloadOptions;
 
         const profile = selectedNode.getProfile();
         const parent = selectedNode.getParent() as IZoweDatasetTreeNode;
         const datasetName = parent.getLabel() as string;
         const memberName = selectedNode.getLabel() as string;
         const fullDatasetName = `${datasetName}(${memberName})`;
-
         const fileName = uppercaseNames ? memberName : memberName.toLowerCase();
-
-        const extensionMap = await DatasetUtils.getExtensionMap(
-            parent,
-            uppercaseNames,
-            overrideExtension && fileExtension ? fileExtension : undefined
-        );
-        const extension = extensionMap[fileName] ?? DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
 
         const targetDirectory = generateDirectory
             ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
@@ -999,9 +1006,16 @@ export class DatasetActions {
             return;
         }
 
+        const parent = node.getParent() as IZoweDatasetTreeNode;
+        const datasetName = parent.getLabel() as string;
+        const extension = DatasetActions.resolveMemberExtension(
+            datasetName,
+            dataSetDownloadOptions.overrideExtension ? dataSetDownloadOptions.fileExtension : undefined
+        );
+
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading member"),
-            async () => DatasetActions.downloadSingleMember(node, dataSetDownloadOptions),
+            async () => DatasetActions.downloadSingleMember(node, dataSetDownloadOptions, extension),
             vscode.l10n.t("Data set member"),
             node
         );
@@ -1074,7 +1088,13 @@ export class DatasetActions {
                     const profile = selectedNode.getProfile();
 
                     try {
-                        const { response } = await DatasetActions.downloadSingleMember(selectedNode, dataSetDownloadOptions);
+                        const parent = selectedNode.getParent() as IZoweDatasetTreeNode;
+                        const datasetName = parent.getLabel() as string;
+                        const extension = DatasetActions.resolveMemberExtension(
+                            datasetName,
+                            dataSetDownloadOptions.overrideExtension ? dataSetDownloadOptions.fileExtension : undefined
+                        );
+                        const { response } = await DatasetActions.downloadSingleMember(selectedNode, dataSetDownloadOptions, extension);
                         downloadedCount++;
 
                         if (response?.success === false) {

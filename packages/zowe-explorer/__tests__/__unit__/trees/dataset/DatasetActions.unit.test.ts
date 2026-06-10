@@ -6708,7 +6708,6 @@ describe("DatasetActions - downloading functions", () => {
 
     describe("downloadSingleMember", () => {
         let testMocks: ReturnType<typeof createDownloadTestMocks>;
-        let mockGetExtensionMap: MockedProperty;
         let mockGetExtension: MockedProperty;
         let mockGetDirsFromDataSet: MockedProperty;
 
@@ -6736,7 +6735,6 @@ describe("DatasetActions - downloading functions", () => {
 
         beforeEach(() => {
             testMocks = createDownloadTestMocks();
-            mockGetExtensionMap = new MockedProperty(DatasetUtils, "getExtensionMap", undefined, vi.fn().mockResolvedValue({}));
             mockGetExtension = new MockedProperty(DatasetUtils, "getExtension", undefined, vi.fn().mockReturnValue("txt"));
             mockGetDirsFromDataSet = new MockedProperty(
                 zosfiles.ZosFilesUtils,
@@ -6747,7 +6745,6 @@ describe("DatasetActions - downloading functions", () => {
         });
 
         afterEach(() => {
-            mockGetExtensionMap[Symbol.dispose]();
             mockGetExtension[Symbol.dispose]();
             mockGetDirsFromDataSet[Symbol.dispose]();
         });
@@ -6761,7 +6758,7 @@ describe("DatasetActions - downloading functions", () => {
                 apiResponse: { etag: "123" },
             });
 
-            const result = await (DatasetActions as any).downloadSingleMember(memberNode, { ...defaultDownloadOptions });
+            const result = await (DatasetActions as any).downloadSingleMember(memberNode, { ...defaultDownloadOptions }, "txt");
 
             expect(getContentsSpy).toHaveBeenCalledWith(
                 "TEST.PDS(MEMBER1)",
@@ -6791,7 +6788,7 @@ describe("DatasetActions - downloading functions", () => {
                 apiResponse: { etag: "123" },
             });
 
-            const result = await (DatasetActions as any).downloadSingleMember(memberNode, optionsWithCase);
+            const result = await (DatasetActions as any).downloadSingleMember(memberNode, optionsWithCase, "txt");
 
             expect(getContentsSpy).toHaveBeenCalledWith(
                 "TEST.PDS(Member1)",
@@ -6819,7 +6816,7 @@ describe("DatasetActions - downloading functions", () => {
                 apiResponse: { etag: "123" },
             });
 
-            await (DatasetActions as any).downloadSingleMember(memberNode, optionsWithRecord);
+            await (DatasetActions as any).downloadSingleMember(memberNode, optionsWithRecord, "txt");
 
             expect(getContentsSpy).toHaveBeenCalledWith(
                 "TEST.PDS(MEMBER1)",
@@ -6838,7 +6835,6 @@ describe("DatasetActions - downloading functions", () => {
         let mockExecuteDownloadWithProgress: MockedProperty;
         let mockErrorMessage: MockedProperty;
         let mockTrace: MockedProperty;
-        let mockGetExtensionMap: MockedProperty;
         let mockGetExtension: MockedProperty;
         let mockGetDirsFromDataSet: MockedProperty;
 
@@ -6861,7 +6857,6 @@ describe("DatasetActions - downloading functions", () => {
 
             mockErrorMessage = new MockedProperty(Gui, "errorMessage", undefined, vi.fn());
             mockTrace = new MockedProperty(ZoweLogger, "trace", undefined, vi.fn());
-            mockGetExtensionMap = new MockedProperty(DatasetUtils, "getExtensionMap", undefined, vi.fn().mockResolvedValue({}));
             mockGetExtension = new MockedProperty(DatasetUtils, "getExtension", undefined, vi.fn().mockReturnValue("txt"));
             mockGetDirsFromDataSet = new MockedProperty(
                 zosfiles.ZosFilesUtils,
@@ -6876,7 +6871,6 @@ describe("DatasetActions - downloading functions", () => {
             mockExecuteDownloadWithProgress[Symbol.dispose]();
             mockErrorMessage[Symbol.dispose]();
             mockTrace[Symbol.dispose]();
-            mockGetExtensionMap[Symbol.dispose]();
             mockGetExtension[Symbol.dispose]();
             mockGetDirsFromDataSet[Symbol.dispose]();
         });
@@ -6961,7 +6955,6 @@ describe("DatasetActions - downloading functions", () => {
         let mockExecuteDownloadWithProgress: MockedProperty;
         let mockErrorMessage: MockedProperty;
         let mockTrace: MockedProperty;
-        let mockGetExtensionMap: MockedProperty;
         let mockGetExtension: MockedProperty;
         let mockGetDirsFromDataSet: MockedProperty;
 
@@ -6984,7 +6977,6 @@ describe("DatasetActions - downloading functions", () => {
 
             mockErrorMessage = new MockedProperty(Gui, "errorMessage", undefined, vi.fn());
             mockTrace = new MockedProperty(ZoweLogger, "trace", undefined, vi.fn());
-            mockGetExtensionMap = new MockedProperty(DatasetUtils, "getExtensionMap", undefined, vi.fn().mockResolvedValue({}));
             mockGetExtension = new MockedProperty(DatasetUtils, "getExtension", undefined, vi.fn().mockReturnValue("txt"));
             mockGetDirsFromDataSet = new MockedProperty(
                 zosfiles.ZosFilesUtils,
@@ -6999,7 +6991,6 @@ describe("DatasetActions - downloading functions", () => {
             mockExecuteDownloadWithProgress[Symbol.dispose]();
             mockErrorMessage[Symbol.dispose]();
             mockTrace[Symbol.dispose]();
-            mockGetExtensionMap[Symbol.dispose]();
             mockGetExtension[Symbol.dispose]();
             mockGetDirsFromDataSet[Symbol.dispose]();
         });
@@ -7079,6 +7070,66 @@ describe("DatasetActions - downloading functions", () => {
             expect(getContentsSpy).toHaveBeenCalledTimes(2);
             expect(getContentsSpy).toHaveBeenNthCalledWith(1, "TEST.PDS(MEMBER1)", expect.any(Object));
             expect(getContentsSpy).toHaveBeenNthCalledWith(2, "TEST.OTHER.PDS(MEMBER2)", expect.any(Object));
+        });
+
+        it("should apply override extension to every selected member under the same parent PDS", async () => {
+            const downloadOptions = {
+                ...defaultDownloadOptions,
+                overrideExtension: true,
+                fileExtension: "csv",
+            };
+            mockGetDataSetDownloadOptions.mock.mockResolvedValueOnce(downloadOptions);
+
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            const memberNodeOne = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNode,
+                profile: defaultTestProfile,
+            });
+            const memberNodeTwo = new ZoweDatasetNode({
+                label: "MEMBER2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNode,
+                profile: defaultTestProfile,
+            });
+
+            memberNodeOne.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeTwo.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeOne.getParent = vi.fn().mockReturnValue(pdsNode);
+            memberNodeOne.getLabel = vi.fn().mockReturnValue("MEMBER1");
+            memberNodeOne.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+
+            memberNodeTwo.getParent = vi.fn().mockReturnValue(pdsNode);
+            memberNodeTwo.getLabel = vi.fn().mockReturnValue("MEMBER2");
+            memberNodeTwo.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNode.getLabel = vi.fn().mockReturnValue("TEST.PDS");
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { etag: "123" },
+            });
+
+            await DatasetActions.downloadMembers(memberNodeOne, [memberNodeOne, memberNodeTwo]);
+
+            expect(getContentsSpy).toHaveBeenCalledTimes(2);
+            expect(getContentsSpy).toHaveBeenNthCalledWith(
+                1,
+                "TEST.PDS(MEMBER1)",
+                expect.objectContaining({ file: expect.stringMatching(/member1\.csv$/) })
+            );
+            expect(getContentsSpy).toHaveBeenNthCalledWith(
+                2,
+                "TEST.PDS(MEMBER2)",
+                expect.objectContaining({ file: expect.stringMatching(/member2\.csv$/) })
+            );
         });
 
         it("should aggregate command responses when member download responses indicate success false", async () => {
