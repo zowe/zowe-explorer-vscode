@@ -1111,6 +1111,13 @@ export class DatasetActions {
                         const profileSuffix = profileName ? ` (${profileName})` : "";
                         const message = e instanceof Error ? e.message : String(e);
                         commandResponses.push(`Failed to download ${nodeLabel}${profileSuffix}: ${message}`);
+                        ZoweLogger.error(`Error downloading member ${nodeLabel}${profileSuffix}: ${message}`);
+                        await AuthUtils.errorHandling(e as Error, {
+                            apiType: ZoweExplorerApiType.Mvs,
+                            profile,
+                            scenario: vscode.l10n.t("Unable to download data set member."),
+                        });
+                        break;
                     }
 
                     if (progress) {

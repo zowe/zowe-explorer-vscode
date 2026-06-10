@@ -7132,6 +7132,68 @@ describe("DatasetActions - downloading functions", () => {
             );
         });
 
+        it("should stop processing after first thrown error and call AuthUtils.errorHandling", async () => {
+            const pdsNodeOne = new ZoweDatasetNode({
+                label: "TEST.PDS.ONE",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            const pdsNodeTwo = new ZoweDatasetNode({
+                label: "TEST.PDS.TWO",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            const memberNodeOne = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeOne,
+                profile: defaultTestProfile,
+            });
+            const memberNodeTwo = new ZoweDatasetNode({
+                label: "MEMBER2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeTwo,
+                profile: defaultTestProfile,
+            });
+
+            memberNodeOne.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeTwo.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeOne.getParent = vi.fn().mockReturnValue(pdsNodeOne);
+            memberNodeOne.getLabel = vi.fn().mockReturnValue("MEMBER1");
+            memberNodeOne.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeOne.getLabel = vi.fn().mockReturnValue("TEST.PDS.ONE");
+
+            memberNodeTwo.getParent = vi.fn().mockReturnValue(pdsNodeTwo);
+            memberNodeTwo.getLabel = vi.fn().mockReturnValue("MEMBER2");
+            memberNodeTwo.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeTwo.getLabel = vi.fn().mockReturnValue("TEST.PDS.TWO");
+
+            const thrownError = new Error("HTTP(S) status 401");
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents");
+            getContentsSpy.mockRejectedValueOnce(thrownError);
+
+            const errorHandlingSpy = vi.spyOn(AuthUtils, "errorHandling").mockResolvedValue(false);
+            let aggregateResult: { response?: any; downloadedPath?: string } | undefined;
+            mockExecuteDownloadWithProgress.mock.mockImplementation(async (_title, downloadFn, _successMessage, _node) => {
+                aggregateResult = await downloadFn();
+            });
+
+            await DatasetActions.downloadMembers(memberNodeOne, [memberNodeOne, memberNodeTwo]);
+
+            expect(getContentsSpy).toHaveBeenCalledTimes(1);
+            expect(getContentsSpy).toHaveBeenCalledWith("TEST.PDS.ONE(MEMBER1)", expect.any(Object));
+            expect(errorHandlingSpy).toHaveBeenCalledWith(
+                thrownError,
+                expect.objectContaining({ apiType: ZoweExplorerApiType.Mvs, profile: defaultTestProfile })
+            );
+            expect(aggregateResult?.response?.success).toBe(false);
+
+            errorHandlingSpy.mockRestore();
+        });
+
         it("should aggregate command responses when member download responses indicate success false", async () => {
             const pdsNodeOne = new ZoweDatasetNode({
                 label: "TEST.PDS",
