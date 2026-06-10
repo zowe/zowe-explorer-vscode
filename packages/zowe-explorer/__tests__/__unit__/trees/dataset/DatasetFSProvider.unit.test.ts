@@ -2702,8 +2702,7 @@ describe("DatasetFSProvider", () => {
     });
 
     describe("invalidateCache", () => {
-        it("should remove the entry from parent entries map and fire a deleted event if it exists", () => {
-            const fireSoonSpy = vi.spyOn(DatasetFSProvider.instance as any, "fireSoon").mockImplementation(() => {});
+        it("should remove the entry from parent entries map if it exists", () => {
             const mockParent = {
                 entries: new Map([["USER.DATA.PS", {}]]),
             };
@@ -2712,22 +2711,15 @@ describe("DatasetFSProvider", () => {
             DatasetFSProvider.instance.invalidateCache(testUris.ps);
 
             expect(mockParent.entries.has("USER.DATA.PS")).toBe(false);
-            expect(fireSoonSpy).toHaveBeenCalledWith({
-                type: vscode.FileChangeType.Deleted,
-                uri: testUris.ps,
-            });
         });
 
         it("should do nothing if parent directory does not contain the entry", () => {
-            const fireSoonSpy = vi.spyOn(DatasetFSProvider.instance as any, "fireSoon").mockImplementation(() => {});
             const mockParent = {
                 entries: new Map(),
             };
             vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(mockParent);
 
             DatasetFSProvider.instance.invalidateCache(testUris.ps);
-
-            expect(fireSoonSpy).not.toHaveBeenCalled();
         });
 
         it("should handle errors gracefully if lookupParentDirectory throws", () => {

@@ -1026,7 +1026,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
             contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        const createDirMock = vi.spyOn(vscode.workspace.fs, "createDirectory").mockImplementation((() => undefined) as any);
+        const createDirMock = vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
         await (dsNode as any).datasetRecalled(true);
         expect(createDirMock).toHaveBeenCalledWith(dsNode.resourceUri);
     });
