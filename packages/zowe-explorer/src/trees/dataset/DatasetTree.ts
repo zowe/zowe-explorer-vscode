@@ -1553,10 +1553,7 @@ Would you like to do this now?`,
                         memberFavoritesArray.push(favoriteEntry);
                     }
                 } else {
-                    let baseContext = SharedContext.getBaseContext(favorite);
-                    if (SharedContext.isMigrated(favorite)) {
-                        baseContext += Constants.CONTEXT_PREFIX + Constants.DS_MIGRATED_FILE_CONTEXT;
-                    }
+                    const baseContext = SharedContext.getBaseContext(favorite);
                     const favoriteEntry = "[" + profileNode.label.toString() + "]: " + favorite.label.toString() + "{" + baseContext + "}";
                     if (favorite.contextValue?.includes(Constants.VSAM_CONTEXT)) {
                         vsamFavoritesArray.push(favoriteEntry);
