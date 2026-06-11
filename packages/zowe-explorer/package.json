@@ -2061,6 +2061,7 @@
           "deprecationMessage": "%zowe.history.deprecationMsg%"
         },
         "zowe.jobs.confirmSubmission": {
+          
           "type": "string",
           "default": "%zowe.jobs.confirmSubmission.allJobs%",
           "enum": [
@@ -2078,6 +2079,12 @@
           "description": "%zowe.jobs.confirmSubmission%",
           "scope": "window"
         },
+        "zowe.jobs.confirmDelete": {
+              "type": "boolean",
+              "default": true,
+              "description": "Prompt for confirmation before deleting jobs.",
+              "scope": "window"
+            },
         "zowe.commands.useIntegratedTerminals": {
           "type": "boolean",
           "default": false,
