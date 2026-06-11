@@ -576,11 +576,12 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     }
 
     public async refreshFavorites(profileType?: string): Promise<void> {
-        const lines: string[] = this.mPersistence.readFavorites();
-        const vsamLines: string[] = this.mPersistence.readVsamFavorites();
-        const memberLines: string[] = this.mPersistence.readMemberFavorites();
-        const migratedLines: string[] = this.mPersistence.readMigratedFavorites();
-        const combinedLines = [...lines, ...vsamLines, ...memberLines, ...migratedLines];
+        const combinedLines = [
+            ...this.mPersistence.readFavorites(),
+            ...this.mPersistence.readVsamFavorites(),
+            ...this.mPersistence.readMemberFavorites(),
+            ...this.mPersistence.readMigratedFavorites(),
+        ];
         if (combinedLines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No data set favorites found."));
             return;

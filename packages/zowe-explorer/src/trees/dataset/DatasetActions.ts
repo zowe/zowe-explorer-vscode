@@ -2182,9 +2182,10 @@ export class DatasetActions {
      */
     private static async refreshMigratedDataSet(node: IZoweDatasetTreeNode): Promise<void> {
         const dataSetName = node.label as string;
+        let statusMsg: vscode.Disposable;
         try {
             ZoweLogger.info(`Refreshing migrated data set ${dataSetName}`);
-            const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Checking migration status...")}`);
+            statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Checking migration status...")}`);
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
             const resp = await mvsApi.dataSet(dataSetName, { attributes: true });
             statusMsg.dispose();
@@ -2212,6 +2213,7 @@ export class DatasetActions {
                 }
             }
         } catch (err) {
+            statusMsg?.dispose();
             await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
         }
     }
@@ -2229,6 +2231,7 @@ export class DatasetActions {
             return;
         }
         let label: string;
+        let statusMsg: vscode.Disposable;
         try {
             switch (true) {
                 // For favorited or non-favorited sequential DS:
@@ -2250,12 +2253,13 @@ export class DatasetActions {
             }
 
             ZoweLogger.info(`Refreshing data set ${label}`);
-            const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Fetching data set...")}`);
+            statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Fetching data set...")}`);
             await DatasetFSProvider.instance.fetchDatasetAtUri(node.resourceUri, {
                 editor: vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path),
             });
             statusMsg.dispose();
         } catch (err) {
+            statusMsg?.dispose();
             if (err.message.includes(vscode.l10n.t("not found"))) {
                 ZoweLogger.error(
                     vscode.l10n.t({
