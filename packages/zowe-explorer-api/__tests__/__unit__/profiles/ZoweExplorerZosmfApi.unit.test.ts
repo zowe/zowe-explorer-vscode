@@ -919,6 +919,21 @@ describe("ZosmfCommandApi", () => {
             await expectUnixCommandApiWithSshSession(cmdApi, new ZoweExplorerZosmf.CommandApi(), SshSessionobj);
         });
     });
+
+    it("issueUnixCommand should properly escape single quotes in cwd", async () => {
+        const obj = new ZoweExplorerZosmf.CommandApi();
+        const spy = sharedSpyOn(zosuss.Shell, "executeSshCwd");
+        spy.mockClear().mockResolvedValue(undefined);
+        await obj.issueUnixCommand("ls", "dir'with'quotes", SshSessionobj);
+        expect(spy).toHaveBeenCalledWith(
+            SshSessionobj,
+            "ls",
+            "'dir'\\''with'\\''quotes'",
+            expect.any(Function),
+            true
+        );
+    });
+
     it("check whether sshProfileNeeded", () => {
         const obj = new ZoweExplorerZosmf.CommandApi();
         expect(obj.sshProfileRequired?.()).toBe(true);
