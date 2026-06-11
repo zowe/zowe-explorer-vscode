@@ -2424,6 +2424,25 @@ describe("DatasetFSProvider", () => {
             expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith(before, after);
         });
 
+        it("renames a PS and trims extensions", async () => {
+            const oldPs = new DsEntry("USER.DATA.PS.c", false);
+            oldPs.metadata = new DsEntryMetadata({ profile: testProfile, path: "/USER.DATA.PS.c" });
+            const mockMvsApi = {
+                renameDataSet: vi.fn(),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockImplementation((uri): DirEntry | FileEntry =>
+                (uri as Uri).path.includes("USER.DATA.PS2") ? (undefined as any) : oldPs
+            );
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue({ ...testEntries.session });
+
+            const oldUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PS.c" });
+            const newUri = oldUri.with({ path: "/sestest/USER.DATA.PS2.c" });
+
+            await DatasetFSProvider.instance.rename(oldUri, newUri, { overwrite: true });
+            expect(mockMvsApi.renameDataSet).toHaveBeenCalledWith("USER.DATA.PS", "USER.DATA.PS2");
+        });
+
         it("renames a PDS", async () => {
             const oldPds = new PdsEntry("USER.DATA.PDS");
             oldPds.metadata = new DsEntryMetadata({ profile: testProfile, path: "/USER.DATA.PDS" });

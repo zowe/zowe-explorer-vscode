@@ -4914,6 +4914,67 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             { overwrite: false }
         );
     });
+
+    it("Tests that rename() of member preserves extension in new URI", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("NEWMEM");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        const node = new ZoweDatasetNode({
+            label: "OLDMEM",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+        });
+        node.resourceUri = vscode.Uri.from({
+            scheme: ZoweScheme.DS,
+            path: "/sestest/HLQ.TEST.PDS/OLDMEM.jcl",
+        });
+
+        await testTree.rename(node);
+
+        expect(blockMocks.rename).toHaveBeenLastCalledWith(
+            expect.objectContaining({ path: "/sestest/HLQ.TEST.PDS/OLDMEM.jcl", scheme: ZoweScheme.DS }),
+            expect.objectContaining({ path: "/sestest/HLQ.TEST.PDS/NEWMEM.jcl", scheme: ZoweScheme.DS }),
+            { overwrite: false }
+        );
+    });
+
+    it("Tests that rename() of ps adds extension in new URI", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.COBOL");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        node.resourceUri = vscode.Uri.from({
+            scheme: ZoweScheme.DS,
+            path: "/sestest/HLQ.TEST.RENAME.NODE",
+        });
+
+        await testTree.rename(node);
+
+        expect(blockMocks.rename).toHaveBeenLastCalledWith(
+            expect.objectContaining({ path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS }),
+            expect.objectContaining({ path: "/sestest/HLQ.TEST.RENAME.COBOL.cbl", scheme: ZoweScheme.DS }),
+            { overwrite: false }
+        );
+    });
 });
 
 describe("Dataset Tree Unit Tests - Function checkFilterPattern", () => {
