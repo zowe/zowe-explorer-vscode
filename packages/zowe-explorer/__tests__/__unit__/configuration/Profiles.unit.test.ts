@@ -1401,6 +1401,30 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "inactive", name: "sestest" });
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
     });
+    it("should skip validation for profile using certificate auth loaded from OS keychain", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        const testProfile = {
+            name: "sestest",
+            profile: {
+                type: "zosmf",
+                host: "test",
+                port: 1443,
+                certAccount: "test",
+                rejectUnauthorized: false,
+                name: "testName",
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false,
+        };
+        const isCertFileValidSpy = vi.spyOn(Profiles.getInstance(), "isCertFileValid");
+        vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" } } as any);
+        await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+        expect(isCertFileValidSpy).not.toHaveBeenCalled();
+    });
 
     it("To check updated autoStore value", async () => {
         const globalMocks = createGlobalMocks();
