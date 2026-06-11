@@ -18,7 +18,7 @@ import { SshClientCache } from "../SshClientCache";
 import { SshErrorHandler } from "../SshErrorHandler";
 
 export class SshCommonApi implements MainframeInteraction.ICommon {
-    public constructor(public profile?: imperative.IProfileLoaded) {}
+    public constructor(public profile?: imperative.IProfileLoaded) { }
 
     public getProfileTypeName(): string {
         return ZosUssProfile.type;
@@ -162,14 +162,4 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
         return undefined;
     }
 
-    /**
-     * Converts an `ImperativeError` to a plain JS error to avoid losing additional details
-     * @param maybeError The thrown error to convert
-     */
-    protected buildRequestError(maybeError: unknown): Error | unknown {
-        if (!(maybeError instanceof ImperativeError)) {
-            return maybeError;
-        }
-        return new Error(`${maybeError.message}\n${maybeError.additionalDetails}`);
-    }
 }

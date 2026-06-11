@@ -222,17 +222,15 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             lrecl: 80,
             ...(options || {}),
         };
-        try {
-            const response = await (
-                await this.client
-            ).ds.createDataset({
-                dsname: dataSetName,
-                attributes: datasetAttributes,
-            });
-            return this.buildZosFilesResponse(response);
-        } catch (err) {
-            throw this.buildRequestError(err);
-        }
+
+        const response = await (
+            await this.client
+        ).ds.createDataset({
+            dsname: dataSetName,
+            attributes: datasetAttributes,
+        });
+        return this.buildZosFilesResponse(response);
+
     }
 
     public async createDataSetMember(dataSetName: string, _options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
@@ -292,16 +290,12 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
     }
 
     public async deleteDataSet(dataSetName: string, _options?: zosfiles.IDeleteDatasetOptions): Promise<zosfiles.IZosFilesResponse> {
-        try {
-            const response = await (
-                await this.client
-            ).ds.deleteDataset({
-                dsname: dataSetName,
-            });
-            return this.buildZosFilesResponse(response);
-        } catch (err) {
-            throw this.buildRequestError(err);
-        }
+        const response = await (
+            await this.client
+        ).ds.deleteDataset({
+            dsname: dataSetName,
+        });
+        return this.buildZosFilesResponse(response);
     }
 
     private buildZosFilesResponse(apiResponse: any, success = true, errorText?: string): zosfiles.IZosFilesResponse {
