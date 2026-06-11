@@ -12,6 +12,7 @@
 import * as semver from "semver";
 import * as vscode from "vscode";
 import * as path from "path";
+import * as fs from "fs";
 import { ProfilesCache } from "../profiles/ProfilesCache";
 import { Login, Logout, ProfileConstants } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
@@ -27,8 +28,35 @@ import { ZoweExplorerZosmf } from "../profiles/ZoweExplorerZosmfApi";
  * Collection of utility functions for writing Zowe Explorer VS Code extensions.
  */
 export class ZoweVsCodeExtension {
+    private static mWorkspaceRoot: vscode.WorkspaceFolder | undefined = undefined;
+    private static mWorkspaceRootInitialized = false;
+    private static mWorkspaceListener: vscode.Disposable | undefined = undefined;
+
     public static get workspaceRoot(): vscode.WorkspaceFolder | undefined {
-        return vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file");
+        if (!this.mWorkspaceRootInitialized) {
+            this.mWorkspaceRootInitialized = true;
+            this.mWorkspaceRoot = this.findValidWorkspaceRoot();
+
+            if (!this.mWorkspaceListener && vscode.workspace.onDidChangeWorkspaceFolders) {
+                this.mWorkspaceListener = vscode.workspace.onDidChangeWorkspaceFolders(() => {
+                    this.mWorkspaceRoot = this.findValidWorkspaceRoot();
+                });
+            }
+        }
+        return this.mWorkspaceRoot;
+    }
+
+    private static findValidWorkspaceRoot(): vscode.WorkspaceFolder | undefined {
+        return vscode.workspace.workspaceFolders?.find((f) => f.uri.scheme === "file" && fs.existsSync(f.uri.fsPath));
+    }
+
+    public static resetWorkspaceRootCache(): void {
+        this.mWorkspaceRoot = undefined;
+        this.mWorkspaceRootInitialized = false;
+        if (this.mWorkspaceListener) {
+            this.mWorkspaceListener.dispose();
+            this.mWorkspaceListener = undefined;
+        }
     }
 
     public static get onProfileUpdatedEmitter(): vscode.EventEmitter<imperative.IProfileLoaded> {
