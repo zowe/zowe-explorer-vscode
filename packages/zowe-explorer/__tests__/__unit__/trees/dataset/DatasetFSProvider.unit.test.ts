@@ -942,7 +942,7 @@ describe("DatasetFSProvider", () => {
                 items: [
                     {
                         dsorg: "PS",
-                        id: "ZOWE",
+                        dsname: "ZOWE",
                         lrecl,
                         recfm: "FB",
                     },
@@ -956,6 +956,7 @@ describe("DatasetFSProvider", () => {
             const parent = { entries: new Map(), metadata: { profile: { name: "profile" }, path: "/" } };
             const binaryEntry = { ...testEntries.pdsMember, wasAccessed: true, encoding: { kind: "binary" } } as DsEntry;
             parent.entries.set("MEMBER1", binaryEntry);
+            dsResponseMock.apiResponse.items[0].dsname = testEntries.pds.name;
             vi.spyOn(provider as any, "lookupParentDirectory").mockReturnValueOnce(parent);
 
             const mockMvsApi = {
@@ -991,6 +992,7 @@ describe("DatasetFSProvider", () => {
             const psEntry = { ...testEntries.ps, metadata: testEntries.ps.metadata } as DsEntry;
             const sessionEntry = { ...testEntries.session };
             sessionEntry.entries.set("USER.DATA.PS", psEntry);
+            dsResponseMock.apiResponse.items[0].dsname = psEntry.name;
             const lookupParentDirMock = vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
             vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(psEntry);
             const newContents = new Uint8Array([3, 6, 9]);
@@ -1018,6 +1020,7 @@ describe("DatasetFSProvider", () => {
             const psEntry = { ...testEntries.ps, metadata: testEntries.ps.metadata } as DsEntry;
             const sessionEntry = { ...testEntries.session };
             sessionEntry.entries.set("USER.DATA.PS", psEntry);
+            dsResponseMock.apiResponse.items[0].dsname = psEntry.name;
             const lookupParentDirMock = vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
             vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(psEntry);
             const handleConflictMock = vi
@@ -1047,6 +1050,7 @@ describe("DatasetFSProvider", () => {
             const psEntry = { ...testEntries.ps, metadata: testEntries.ps.metadata } as DsEntry;
             const sessionEntry = { ...testEntries.session };
             sessionEntry.entries.set("USER.DATA.PS", psEntry);
+            dsResponseMock.apiResponse.items[0].dsname = psEntry.name;
             const lookupParentDirMock = vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
             vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(psEntry);
             const handleErrorMock = vi.spyOn(DatasetFSProvider.instance as any, "_handleError").mockImplementation((() => undefined) as any);
@@ -1100,6 +1104,7 @@ describe("DatasetFSProvider", () => {
             it("in a PS data set with one invalid line", async () => {
                 const sessionEntry = { ...testEntries.session };
                 sessionEntry.entries.set("USER.DATA.PS", psEntry);
+                dsResponseMock.apiResponse.items[0].dsname = psEntry.name;
                 vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
                 vi.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({ lineCount: 1, lineAt } as any);
 
@@ -1113,6 +1118,7 @@ describe("DatasetFSProvider", () => {
             it("in a PS data set with multiple invalid lines", async () => {
                 const sessionEntry = { ...testEntries.session };
                 sessionEntry.entries.set("USER.DATA.PS", psEntry);
+                dsResponseMock.apiResponse.items[0].dsname = psEntry.name;
                 vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(sessionEntry);
                 vi.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({ lineCount: 10, lineAt } as any);
 
@@ -1126,6 +1132,7 @@ describe("DatasetFSProvider", () => {
             it("in a PDS member with one invalid line", async () => {
                 const pdsEntry = { ...testEntries.pds };
                 pdsEntry.entries.set("MEMBER1", pdsMemberEntry);
+                dsResponseMock.apiResponse.items[0].dsname = pdsEntry.name;
                 vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(pdsEntry);
                 vi.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({ lineCount: 1, lineAt } as any);
 
@@ -1139,6 +1146,7 @@ describe("DatasetFSProvider", () => {
             it("in a PDS member with multiple invalid lines", async () => {
                 const pdsEntry = { ...testEntries.pds };
                 pdsEntry.entries.set("MEMBER1", pdsMemberEntry);
+                dsResponseMock.apiResponse.items[0].dsname = pdsEntry.name;
                 vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(pdsEntry);
                 vi.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({ lineCount: 10, lineAt } as any);
 
@@ -1154,7 +1162,7 @@ describe("DatasetFSProvider", () => {
                 const dsResponseMock = {
                     success: true,
                     apiResponse: {
-                        items: [{ name: "USER.DATA.PS", recfm: "U", blksz: 10 }],
+                        items: [{ dsname: "USER.DATA.PS", recfm: "U", blksz: 10 }],
                     },
                     commandResponse: "",
                 };
@@ -1181,7 +1189,7 @@ describe("DatasetFSProvider", () => {
                 const dsResponseMock = {
                     success: true,
                     apiResponse: {
-                        items: [{ name: "USER.DATA.PS" }],
+                        items: [{ dsname: "USER.DATA.PS" }],
                     },
                     commandResponse: "",
                 };
@@ -1213,7 +1221,7 @@ describe("DatasetFSProvider", () => {
                 const dsResponseMock = {
                     success: true,
                     apiResponse: {
-                        items: [{ name: "USER.DATA.PS", recfm: "VB", lrecl: lrecl }],
+                        items: [{ dsname: "USER.DATA.PS", recfm: "VB", lrecl: lrecl }],
                     },
                     commandResponse: "",
                 };
@@ -1247,6 +1255,7 @@ describe("DatasetFSProvider", () => {
                 }),
                 dataSet: vi.fn().mockResolvedValue(dsResponseMock),
             };
+            dsResponseMock.apiResponse.items[0].dsname = testEntries.ps.name;
             vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
             const statusMsgMock = vi.spyOn(Gui, "setStatusBarMessage");
             const session = {
@@ -1279,6 +1288,7 @@ describe("DatasetFSProvider", () => {
                 ...testEntries.session,
                 entries: new Map([[testEntries.ps.name, { ...testEntries.ps, wasAccessed: false }]]),
             };
+            dsResponseMock.apiResponse.items[0].dsname = testEntries.ps.name;
             const lookupParentDirMock = vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(session);
             const newContents = new Uint8Array([]);
             await DatasetFSProvider.instance.writeFile(testUris.ps, newContents, { create: false, overwrite: true });
@@ -1293,6 +1303,7 @@ describe("DatasetFSProvider", () => {
                 ...testEntries.session,
                 entries: new Map([[testEntries.ps.name, { ...testEntries.ps }]]),
             };
+            dsResponseMock.apiResponse.items[0].dsname = testEntries.ps.name;
             const testUriWithDiffQuery = testUris.ps.with({ query: "inDiff=true" });
             const lookupParentDirMock = vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(session);
             const newContents = new Uint8Array([]);
@@ -1309,6 +1320,7 @@ describe("DatasetFSProvider", () => {
                 ...testEntries.session,
                 entries: new Map(),
             };
+            dsResponseMock.apiResponse.items[0].dsname = testEntries.ps.name;
             vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(session);
             let err;
             try {
@@ -1325,6 +1337,7 @@ describe("DatasetFSProvider", () => {
                 ...testEntries.session,
                 entries: new Map([[testEntries.ps.name, { ...testEntries.ps, wasAccessed: false }]]),
             };
+            dsResponseMock.apiResponse.items[0].dsname = testEntries.ps.name;
             vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(session);
             let err;
             try {
@@ -1341,6 +1354,7 @@ describe("DatasetFSProvider", () => {
                 ...testEntries.session,
                 entries: new Map([[testEntries.ps.name, { ...testEntries.pds }]]),
             };
+            dsResponseMock.apiResponse.items[0].dsname = testEntries.pds.name;
             vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(session);
             let err;
             try {
@@ -1370,7 +1384,7 @@ describe("DatasetFSProvider", () => {
             vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                 dataSet: vi.fn().mockResolvedValue({
                     success: true,
-                    apiResponse: { items: [{ name: "USER.DATA.PS", dsorg: "PS" }] },
+                    apiResponse: { items: [{ dsname: "USER.DATA.PS", dsorg: "PS" }] },
                 }),
             } as any);
             await DatasetFSProvider.instance.stat(testUris.ps);
@@ -1407,7 +1421,7 @@ describe("DatasetFSProvider", () => {
             vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                 dataSet: vi.fn().mockResolvedValue({
                     success: true,
-                    apiResponse: { items: [{ name: "USER.DATA.PS", dsorg: "PS" }] },
+                    apiResponse: { items: [{ dsname: "USER.DATA.PS", dsorg: "PS" }] },
                 }),
             } as any);
             const uriWithFetchQuery = testUris.ps.with({ query: "fetch=true" });
@@ -1422,7 +1436,7 @@ describe("DatasetFSProvider", () => {
             const dataSetMock = vi.fn().mockResolvedValue({
                 success: true,
                 apiResponse: {
-                    items: [{ name: "USER.DATA.PS", dsorg: "PS" }],
+                    items: [{ dsname: "USER.DATA.PS", dsorg: "PS" }],
                 },
                 commandResponse: "",
             });
@@ -1506,7 +1520,7 @@ describe("DatasetFSProvider", () => {
 
             const dataSetMock = vi.fn().mockResolvedValue({
                 success: true,
-                apiResponse: { items: [{ name: "USER.DATA.PS", dsorg: "PS" }] },
+                apiResponse: { items: [{ dsname: "USER.DATA.PS", dsorg: "PS" }] },
             });
             vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ dataSet: dataSetMock } as any);
             const result = await DatasetFSProvider.instance.stat(testUris.ps);
@@ -1550,7 +1564,7 @@ describe("DatasetFSProvider", () => {
                 vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
                     dataSet: vi.fn().mockResolvedValue({
                         success: true,
-                        apiResponse: { items: [{ name: "USER.DATA.PS", dsorg: "PS" }] },
+                        apiResponse: { items: [{ dsname: "USER.DATA.PS", dsorg: "PS" }] },
                         commandResponse: "",
                     }),
                 } as any);
@@ -2062,7 +2076,7 @@ describe("DatasetFSProvider", () => {
                             profile: testProfile,
                         })
                     ).rejects.toThrow();
-                    expect(dataSetMock).toHaveBeenCalledWith("USER.DATA", { attributes: true });
+                    expect(dataSetMock).toHaveBeenCalledWith("USER.DATA", { attributes: true, maxLength: 1 });
                 });
 
                 it("existing URI", async () => {
