@@ -9,7 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Renamed references to "MVS Command" to "Console Command" for clarity. [#4300](https://github.com/zowe/zowe-explorer-vscode/issues/4300)
 
 ### Bug fixes
- 
+
 - Fixed an issue where executing Unix commands could fail if the current working directory path contained certain special characters. [#4330](https://github.com/zowe/zowe-explorer-vscode/pull/4330)
 - Fixed an issue that caused a rename to fail when removing the rightmost qualifier from a data set name. [#4273](https://github.com/zowe/zowe-explorer-vscode/issues/4273)
 - Fixed an issue where copying a USS file across profiles when a profile encoding was configured would corrupt characters in the destination file because the encoding was not passed to the upload call. [#4262](https://github.com/zowe/zowe-explorer-vscode/pull/4262)
