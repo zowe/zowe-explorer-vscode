@@ -1412,7 +1412,7 @@ Would you like to do this now?`,
             query = query.toUpperCase();
             job["children"] = actual_jobs.filter((item) =>
                 item["job"]["exec-member"]
-                    ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"] as string} - ${item["job"].retcode}`.includes(
+                    ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"] } - ${item["job"].retcode}`.includes(
                           query
                       )
                     : `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query)
