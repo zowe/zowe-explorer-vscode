@@ -2149,16 +2149,16 @@ Would you like to do this now?`,
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {
         ZoweLogger.trace("DatasetTree.checkFilterPattern called.");
-        let existing: boolean;
+        if (!itemName.includes("*")) {
+            return dsName ? dsName.localeCompare(itemName.toUpperCase()) === 0 : false;
+        }
+
+        if (!dsName) {
+            return false;
+        }
+
+        let existing = false;
         if (!/(\*?)(\w+)(\*)(\w+)(\*?)/.test(itemName)) {
-            if (/^[^*](\w+)[^*]$/.test(itemName)) {
-                if (dsName) {
-                    const compare = dsName.localeCompare(itemName.toUpperCase());
-                    if (compare === 0) {
-                        existing = true;
-                    }
-                }
-            }
             if (/^(\*)$/.test(itemName)) {
                 existing = true;
             }
