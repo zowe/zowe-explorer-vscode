@@ -225,7 +225,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 if (job.retcode) {
                     nodeTitle =
                         job["exec-member"] !== undefined && job["exec-member"] !== ""
-                            ? `${job.jobname}(${job.jobid}) - ${job["exec-member"] as string} - ${job.retcode}`
+                            ? `${job.jobname}(${job.jobid}) - ${job["exec-member"]} - ${job.retcode}`
                             : `${job.jobname}(${job.jobid}) - ${job.retcode}`;
                 } else {
                     nodeTitle = `${job.jobname}(${job.jobid}) - ${job.status}`;

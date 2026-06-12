@@ -292,7 +292,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 // fileList was called on that file. Otherwise, it's a directory listing.
                 const hasSelfEntry = rawItems.some((item) => item.name === ".");
                 const isSingleFileMatch =
-                    rawItems.length === 1 && rawItems[0].name === uriBasename && !(rawItems[0].mode as string | undefined)?.startsWith("d");
+                    rawItems.length === 1 &&
+                    (rawItems[0].name === uriBasename || rawItems[0].name === ussPath) &&
+                    !(rawItems[0].mode as string | undefined)?.startsWith("d");
                 const isDirectoryResponse =
                     (hasSelfEntry && (rawItems.find((item) => item.name === ".")?.mode as string | undefined)?.startsWith("d")) ||
                     (rawItems.length > 0 && !hasSelfEntry && !isSingleFileMatch) ||
@@ -1084,12 +1086,16 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                         }
                     }
                 } else {
-                    const fileEntry = this.lookup(source);
+                    const fileEntry = this._lookupAsFile(source) as UssFile;
                     if (!fileEntry.wasAccessed) {
                         // must fetch contents of file first before pasting in new path
                         await this.readFile(source);
                     }
-                    await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath);
+                    const destProfile = Profiles.getInstance().loadNamedProfile(destInfo.profile.name);
+                    await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath, {
+                        binary: fileEntry.encoding?.kind === "binary",
+                        encoding: fileEntry.encoding?.kind === "other" ? fileEntry.encoding.codepage : destProfile.profile?.encoding,
+                    });
                 }
             });
         } catch (err) {
