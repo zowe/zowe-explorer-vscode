@@ -35,8 +35,8 @@
     "test": "pnpm test:unit",
     "lint": "concurrently -n \"_eslint_,prettier\" \"pnpm lint:all\" \"pnpm run \"/pretty.*/\"\"",
     "lint:all": "pnpm run \"/^lint:[st].*/\"",
-    "lint:src": "eslint . --format stylish src/**/*.ts",
-    "lint:test": "eslint . --format stylish __tests__/**/*.ts",
+    "lint:src": "eslint . --format stylish \"src/**/*.ts\"",
+    "lint:test": "eslint . --format stylish \"__tests__/**/*.ts\"",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "pretty": "prettier --write .",
     "pretty:check": "prettier --check .",
@@ -48,7 +48,7 @@
     "package": "vsce package --no-dependencies && node ../../scripts/mv-pack.js zowe-explorer-ftp-extension vsix"
   },
   "engines": {
-    "vscode": "^1.90.0"
+    "vscode": "^1.101.0"
   },
   "dependencies": {
     "@zowe/zos-files-for-zowe-sdk": "^8.32.0",
