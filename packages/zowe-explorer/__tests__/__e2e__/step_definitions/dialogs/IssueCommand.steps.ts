@@ -10,8 +10,40 @@
  */
 
 import { Then, When } from "@cucumber/cucumber";
+import { ProfileInfo } from "@zowe/imperative";
+import * as path from "path";
+
+const ALLOWED_COMMANDS_BY_PROFILE_TYPE: Record<string, string[]> = {
+    zosmf: ["Issue TSO Command", "Issue Console Command", "Issue Unix Command"],
+    ssh: ["Issue TSO Command"],
+};
+
+async function getProfileType(profileName: string): Promise<string | undefined> {
+    try {
+        const homeDir = process.env.ZOWE_TEST_DIR ? path.resolve(process.env.ZOWE_TEST_DIR) : undefined;
+        const profileInfo = new ProfileInfo("zowe");
+        await profileInfo.readProfilesFromDisk({ homeDir });
+        const allProfiles = profileInfo.getAllProfiles();
+        const found = allProfiles.find((prof) => prof.profName === profileName);
+        if (found) {
+            return found.profType;
+        }
+    } catch (error) {
+        console.error(`Failed to infer profile type for "${profileName}" via @zowe/imperative:`, error);
+    }
+    return undefined;
+}
 
 When(/a user selects (.*) from the command palette/, async function (command: string) {
+    const profileName = process.env.ZE_TEST_PROFILE_NAME;
+    const profileType = profileName ? await getProfileType(profileName) : process.env.ZE_TEST_PROFILE_TYPE || "zosmf";
+    const allowedCommands = ALLOWED_COMMANDS_BY_PROFILE_TYPE[profileType];
+
+    if (allowedCommands && !allowedCommands.includes(command)) {
+        console.log(`Skipping command "${command}" for profile "${profileName}" of type "${profileType}"`);
+        return "skipped";
+    }
+
     this.input = await (await browser.getWorkbench()).executeQuickPick(`Zowe Explorer: ${command}`);
     this.openedCommand = command;
 });
@@ -20,12 +52,36 @@ Then("a quick pick appears to select a profile", async function () {
 });
 When("a user selects a profile", async function () {
     await expect(this.input).toBeDefined();
-    const qpItems = await this.input.getQuickPicks();
-    await qpItems.at(0).select();
+    const profileName = process.env.ZE_TEST_PROFILE_NAME;
+    if (profileName) {
+        await this.input.selectQuickPick(profileName);
+    } else {
+        await this.input.selectQuickPick(0);
+    }
     await expect(this.input.elem).toBeDisplayedInViewport();
 });
 
 Then(/a user can enter in (.*) as the command and submit it/, async function (command: string) {
     await this.input.setText(command);
     await this.input.confirm();
+});
+
+Then(/a notification appears with message "(.*)"/, async function (expectedMessage: string) {
+    const workbench = await browser.getWorkbench();
+    await browser.waitUntil(
+        async () => {
+            const notifications = await workbench.getNotifications();
+            for (const notif of notifications) {
+                const message = await notif.getMessage();
+                if (message.includes(expectedMessage)) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        {
+            timeout: 15000,
+            timeoutMsg: `Notification with message "${expectedMessage}" did not appear within timeout.`,
+        }
+    );
 });
