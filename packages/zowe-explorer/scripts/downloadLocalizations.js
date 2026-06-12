@@ -59,16 +59,62 @@ async function downloadArtifact(downloadUrl) {
 }
 
 async function unzipArtifact(zipFilePath) {
+    const tempExtractDir = path.join(os.tmpdir(), `zowe-explorer-extract-${Date.now()}`);
     try {
-        // Files inside the zip are relative to top-level Zowe directory
         const targetDir = path.normalize(path.join(__dirname, "../../.."));
         console.log(`Extracting zip file to ${targetDir}`);
         const zip = new admZip(zipFilePath);
-        zip.extractAllTo(targetDir, true);
+        zip.extractAllTo(tempExtractDir, true);
+
+        // Calculate the package directory relative to the workspace root dynamically
+        const packageRelPath = path.relative(targetDir, path.join(__dirname, ".."));
+        copyNlsFiles(tempExtractDir, targetDir, packageRelPath);
+
         fs.unlinkSync(zipFilePath);
+        fs.rmSync(tempExtractDir, { recursive: true, force: true });
         console.log("Unzipped and removed zip file successfully.");
     } catch (error) {
         console.warn(`WARNING. Error unzipping translations zip file. Error: ${error}. Zowe Explorer build will not be localized.`);
         process.exit(0);
+    }
+}
+
+function copyNlsFiles(srcDir, destDir, packageRelPath) {
+    const srcPkgDir = path.join(srcDir, packageRelPath);
+    const destPkgDir = path.join(destDir, packageRelPath);
+    if (!fs.existsSync(srcPkgDir)) {
+        return;
+    }
+
+    // Copy package.nls.*.json files
+    const rootEntries = fs.readdirSync(srcPkgDir, { withFileTypes: true });
+    for (const entry of rootEntries) {
+        if (entry.isFile() && /^package\.nls\..*\.json$/.test(entry.name)) {
+            if (!fs.existsSync(destPkgDir)) {
+                fs.mkdirSync(destPkgDir, { recursive: true });
+            }
+            const srcPath = path.join(srcPkgDir, entry.name);
+            const destPath = path.join(destPkgDir, entry.name);
+            console.log(`Copying ${entry.name} to ${destPath}`);
+            fs.copyFileSync(srcPath, destPath);
+        }
+    }
+
+    // Copy bundle.l10n.*.json files
+    const srcL10nDir = path.join(srcPkgDir, "l10n");
+    const destL10nDir = path.join(destPkgDir, "l10n");
+    if (fs.existsSync(srcL10nDir)) {
+        const l10nEntries = fs.readdirSync(srcL10nDir, { withFileTypes: true });
+        for (const entry of l10nEntries) {
+            if (entry.isFile() && /^bundle\.l10n\..*\.json$/.test(entry.name)) {
+                if (!fs.existsSync(destL10nDir)) {
+                    fs.mkdirSync(destL10nDir, { recursive: true });
+                }
+                const srcPath = path.join(srcL10nDir, entry.name);
+                const destPath = path.join(destL10nDir, entry.name);
+                console.log(`Copying l10n/${entry.name} to ${destPath}`);
+                fs.copyFileSync(srcPath, destPath);
+            }
+        }
     }
 }
