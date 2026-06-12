@@ -917,6 +917,9 @@
     ]
   },
   "Favorites": "Favorites",
+  "VSAM Favorites": "VSAM Favorites",
+  "Member Favorites": "Member Favorites",
+  "Migrated Favorites": "Migrated Favorites",
   "Fetching data set...": "Fetching data set...",
   "Fetching spool file...": "Fetching spool file...",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
