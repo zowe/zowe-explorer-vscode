@@ -26,6 +26,11 @@ const admZip = require("adm-zip");
     const getLatestInfoApiUrl = new URL(`artifactory/api/storage/${artifactPath}?lastModified`, baseUrl);
 
     const downloadUrl = await getLatestVersionInfo(getLatestInfoApiUrl);
+    if(baseUrl.hostname !== downloadUrl.hostname) {
+        console.warn(`WARNING. Download URL hostname ${downloadUrl.hostname} does not match base URL hostname ${baseUrl.hostname}. Zowe Explorer build will not be localized.`);
+        process.exit(0);
+    }
+
     const zipFilePath = await downloadArtifact(downloadUrl);
     await unzipArtifact(zipFilePath);
 })();
@@ -62,17 +67,18 @@ async function unzipArtifact(zipFilePath) {
     const tempExtractDir = path.join(os.tmpdir(), `zowe-explorer-extract-${Date.now()}`);
     try {
         const targetDir = path.normalize(path.join(__dirname, "../../.."));
-        console.log(`Extracting zip file to ${targetDir}`);
+        console.log(`Extracting zip file to temporary directory: ${tempExtractDir}`);
         const zip = new admZip(zipFilePath);
         zip.extractAllTo(tempExtractDir, true);
 
         // Calculate the package directory relative to the workspace root dynamically
         const packageRelPath = path.relative(targetDir, path.join(__dirname, ".."));
+        console.log(`Copying localization files to target directory: ${targetDir}`);
         copyNlsFiles(tempExtractDir, targetDir, packageRelPath);
 
         fs.unlinkSync(zipFilePath);
         fs.rmSync(tempExtractDir, { recursive: true, force: true });
-        console.log("Unzipped and removed zip file successfully.");
+        console.log("Unzipped, copied localization files, and cleaned up successfully.");
     } catch (error) {
         console.warn(`WARNING. Error unzipping translations zip file. Error: ${error}. Zowe Explorer build will not be localized.`);
         process.exit(0);
@@ -95,7 +101,6 @@ function copyNlsFiles(srcDir, destDir, packageRelPath) {
             }
             const srcPath = path.join(srcPkgDir, entry.name);
             const destPath = path.join(destPkgDir, entry.name);
-            console.log(`Copying ${entry.name} to ${destPath}`);
             fs.copyFileSync(srcPath, destPath);
         }
     }
@@ -112,7 +117,6 @@ function copyNlsFiles(srcDir, destDir, packageRelPath) {
                 }
                 const srcPath = path.join(srcL10nDir, entry.name);
                 const destPath = path.join(destL10nDir, entry.name);
-                console.log(`Copying l10n/${entry.name} to ${destPath}`);
                 fs.copyFileSync(srcPath, destPath);
             }
         }
