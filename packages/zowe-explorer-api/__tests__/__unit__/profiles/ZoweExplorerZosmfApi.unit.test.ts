@@ -934,6 +934,57 @@ describe("ZosmfCommandApi", () => {
         );
     });
 
+    it("issueUnixCommand should safely wrap shell metacharacters in single quotes", async () => {
+        const obj = new ZoweExplorerZosmf.CommandApi();
+        const spy = sharedSpyOn(zosuss.Shell, "executeSshCwd");
+        spy.mockClear().mockResolvedValue(undefined);
+        
+        await obj.issueUnixCommand("pwd", "test'dir$(sleep 5)`whoami`", SshSessionobj);
+        
+        expect(spy).toHaveBeenCalledWith(
+            SshSessionobj,
+            "pwd",
+            "'test'\\''dir$(sleep 5)`whoami`'", 
+            expect.any(Function),
+            true
+        );
+    });
+
+    it("issueUnixCommand should handle consecutive and edge single quotes in cwd", async () => {
+        const obj = new ZoweExplorerZosmf.CommandApi();
+        const spy = sharedSpyOn(zosuss.Shell, "executeSshCwd");
+        spy.mockClear().mockResolvedValue(undefined);
+        
+        await obj.issueUnixCommand("ls", "''weird''dir'", SshSessionobj);
+        
+        expect(spy).toHaveBeenCalledWith(
+            SshSessionobj,
+            "ls",
+            "''\\'''\\''weird'\\'''\\''dir'\\'''",
+            expect.any(Function),
+            true
+        );
+    });
+
+    it("issueUnixCommand should call executeSsh directly if cwd is empty", async () => {
+        const obj = new ZoweExplorerZosmf.CommandApi();
+        const spySsh = sharedSpyOn(zosuss.Shell, "executeSsh");
+        const spySshCwd = sharedSpyOn(zosuss.Shell, "executeSshCwd");
+        
+        spySsh.mockClear().mockResolvedValue(undefined);
+        spySshCwd.mockClear().mockResolvedValue(undefined);
+        
+        await obj.issueUnixCommand("ls", "", SshSessionobj);
+        
+        expect(spySshCwd).not.toHaveBeenCalled();
+        expect(spySsh).toHaveBeenCalledWith(
+            SshSessionobj,
+            "ls",
+            expect.any(Function),
+            true
+        );
+    });
+
     it("check whether sshProfileNeeded", () => {
         const obj = new ZoweExplorerZosmf.CommandApi();
         expect(obj.sshProfileRequired?.()).toBe(true);
