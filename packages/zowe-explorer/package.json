@@ -1110,7 +1110,7 @@
           "group": "000_zowe_dsMainframeInteraction@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(pds.*|migr.*)/",
           "command": "zowe.ds.refreshDataset",
           "group": "000_zowe_dsMainframeInteraction@3"
         },
