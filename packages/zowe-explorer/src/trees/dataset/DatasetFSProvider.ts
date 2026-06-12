@@ -411,22 +411,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
                 } else {
-                    const requestedDsName = uriPath[0];
-                    const extension = DatasetUtils.getExtension(requestedDsName);
-                    const apiLookupName =
-                        extension && requestedDsName.toLowerCase().endsWith(extension)
-                            ? requestedDsName.slice(0, requestedDsName.length - extension.length)
-                            : requestedDsName;
-
-                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(apiLookupName, {
+                    const requestedDsName = FsDatasetsUtils.trimExtension(uriPath[0]);
+                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(requestedDsName, {
                         attributes: true,
+                        maxLength: 1,
                     });
 
                     const responseItems = resp.apiResponse?.items ?? [];
-                    const matchedItem =
-                        responseItems.find((ds) => (ds?.dsname ?? ds?.name)?.toUpperCase() === apiLookupName.toUpperCase()) ??
-                        (responseItems.every((ds) => typeof (ds?.dsname ?? ds?.name) !== "string") ? responseItems[0] : undefined);
-
+                    const matchedItem = responseItems.find((item) => item.dsname?.toUpperCase() === requestedDsName.toUpperCase());
                     if (resp.success && matchedItem) {
                         entryIsDir = matchedItem.dsorg?.startsWith("PO");
                         entryStats = DatasetUtils.getDataSetStats(matchedItem);
@@ -1061,7 +1053,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             await AuthUtils.ensureAuthNotCancelled(profile);
             await AuthHandler.waitForUnlock(entry.metadata.profile);
             if (FsDatasetsUtils.isPdsEntry(entry) || !entry.isMember) {
-                await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSet(oldName, newName);
+                await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSet(
+                    FsDatasetsUtils.trimExtension(oldName),
+                    FsDatasetsUtils.trimExtension(newName)
+                );
             } else {
                 const pdsName = path.basename(path.posix.join(entry.metadata.path, ".."));
                 await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSetMember(

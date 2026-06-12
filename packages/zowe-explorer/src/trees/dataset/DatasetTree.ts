@@ -2289,8 +2289,9 @@ Would you like to do this now?`,
             })
         );
         if (afterMemberName && afterMemberName !== beforeMemberName) {
+            const extension = path.parse(node.resourceUri.path).ext;
             const newUri = node.resourceUri.with({
-                path: path.posix.join(path.posix.dirname(node.resourceUri.path), afterMemberName),
+                path: path.posix.join(path.posix.dirname(node.resourceUri.path), extension ? afterMemberName.concat(extension) : afterMemberName),
             });
             await vscode.workspace.fs.rename(node.resourceUri, newUri, { overwrite: false });
             node.resourceUri = newUri;
@@ -2354,8 +2355,9 @@ Would you like to do this now?`,
             })
         );
         if (afterDataSetName && afterDataSetName !== beforeDataSetName) {
+            const extension = DatasetUtils.getExtension(afterDataSetName);
             const newUri = node.resourceUri.with({
-                path: path.posix.join(path.posix.dirname(node.resourceUri.path), afterDataSetName),
+                path: path.posix.join(path.posix.dirname(node.resourceUri.path), extension ? afterDataSetName.concat(extension) : afterDataSetName),
             });
             await vscode.workspace.fs.rename(node.resourceUri, newUri, { overwrite: false });
 
