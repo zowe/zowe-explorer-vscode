@@ -436,7 +436,9 @@ export class DatasetTableView {
             headerName: l10n.t("Creation Date"),
             useDateComparison: true,
             valueFormatter: (params: { value: string }): string => {
-                if (!params.value) {return "";}
+                if (!params.value) {
+                    return "";
+                }
                 return new Date(params.value).toLocaleDateString(this.userLocale);
             },
         },
@@ -445,7 +447,9 @@ export class DatasetTableView {
             headerName: l10n.t("Modified Date"),
             useDateComparison: true,
             valueFormatter: (params: { value: string }): string => {
-                if (!params.value) {return "";}
+                if (!params.value) {
+                    return "";
+                }
                 return new Date(params.value).toLocaleString(this.userLocale);
             },
         },

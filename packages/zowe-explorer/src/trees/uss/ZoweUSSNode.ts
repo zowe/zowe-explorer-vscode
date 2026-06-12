@@ -559,7 +559,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 .flatMap((group) => group.tabs)
                 .filter((tab) => {
                     const uri = (tab.input as any)?.uri;
-                    if (!uri) {return false;}
+                    if (!uri) {
+                        return false;
+                    }
                     return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
                 });
             if (tabsToClose.length > 0) {

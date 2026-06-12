@@ -58,7 +58,6 @@ describe("SshErrorCorrelations", () => {
 
             expect(() => registerSshErrorCorrelations()).not.toThrow();
         });
-
     });
 
     describe("connection failure correlations", () => {

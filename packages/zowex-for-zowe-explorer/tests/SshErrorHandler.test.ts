@@ -137,7 +137,6 @@ describe("SshErrorHandler", () => {
         });
     });
 
-
     describe("isFatalError", () => {
         it("should identify fatal OpenSSH error codes", () => {
             const fatalErrors = [
@@ -279,7 +278,6 @@ describe("SshErrorHandler", () => {
             );
         });
     });
-
 
     describe("isTimeoutError", () => {
         it("should return true for timeout errors", () => {

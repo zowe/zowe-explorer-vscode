@@ -230,7 +230,6 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             attributes: datasetAttributes,
         });
         return this.buildZosFilesResponse(response);
-
     }
 
     public async createDataSetMember(dataSetName: string, _options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {

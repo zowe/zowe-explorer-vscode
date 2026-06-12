@@ -18,7 +18,7 @@ import { SshClientCache } from "../SshClientCache";
 import { SshErrorHandler } from "../SshErrorHandler";
 
 export class SshCommonApi implements MainframeInteraction.ICommon {
-    public constructor(public profile?: imperative.IProfileLoaded) { }
+    public constructor(public profile?: imperative.IProfileLoaded) {}
 
     public getProfileTypeName(): string {
         return ZosUssProfile.type;
@@ -161,5 +161,4 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
         // All attempts failed
         return undefined;
     }
-
 }

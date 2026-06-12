@@ -245,24 +245,6 @@ export class ZowePersistentFilters {
         return [];
     }
 
-    public readVsamFavorites(): string[] {
-        ZoweLogger.trace("PersistentFilters.readVsamFavorites called.");
-        const localStorageSchema = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
-        if (localStorageSchema) {
-            return (localStorageSchema[ZowePersistentFilters.vsamFavorites] as string[]) || [];
-        }
-        return [];
-    }
-
-    public readMemberFavorites(): string[] {
-        ZoweLogger.trace("PersistentFilters.readMemberFavorites called.");
-        const localStorageSchema = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
-        if (localStorageSchema) {
-            return (localStorageSchema[ZowePersistentFilters.memberFavorites] as string[]) || [];
-        }
-        return [];
-    }
-
     public getSortSetting(node: IZoweDatasetTreeNode): Sorting.NodeSort | undefined {
         ZoweLogger.trace("PersistentFilters.getSortSettings called.");
         const criteria = `${node.getProfileName()}-${node.label as string}`;
