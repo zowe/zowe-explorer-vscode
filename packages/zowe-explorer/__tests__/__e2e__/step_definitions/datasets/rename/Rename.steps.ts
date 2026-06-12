@@ -10,17 +10,17 @@
  */
 
 import { After, Given, When, Then } from "@cucumber/cucumber";
-import { clickContextMenuItem } from "../../../__common__/shared.wdio";
+import { clickContextMenuItem } from "../../../../__common__/shared.wdio";
 import { Key } from "webdriverio";
 import {
     filterBase,
     allocateSequentialDs,
     allocatePartitionedDs,
-    openDsToPopulateCache,
     createMemberInPds,
     waitForMemberInPds,
     deleteDsOrMember,
-} from "../utils/datasetUtils";
+    openDsInEditor,
+} from "../../utils/datasetUtils";
 
 const renameTestPsName = `${filterBase}.ADS`;
 const renamedPsName = `${filterBase}.ARNDS`;
@@ -44,7 +44,7 @@ Given("a test sequential dataset has been created for renaming", async function 
     await browser.pause(1000);
 
     await allocateSequentialDs(this, renameTestPsName);
-    await openDsToPopulateCache(this, renameTestPsName);
+    await openDsInEditor(this, renameTestPsName);
 
     this.renameTestDs = await (await this.profileNode.find()).findChildItem(renameTestPsName);
     this.renameTestDsName = renameTestPsName;

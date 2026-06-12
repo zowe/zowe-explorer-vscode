@@ -13,13 +13,6 @@ Feature: Copying Data Sets and Members
     And enters a new name for the copied sequential dataset
     Then the copied sequential dataset should appear in the Data Sets list
 
-  Scenario: User wants to copy a PDS
-    Given a test member exists in the PDS for the copy test
-    When the user right-clicks on the PDS to copy and selects "Copy"
-    And the user right-clicks on the profile node to paste and selects "Paste"
-    And enters a new name for the copied PDS
-    Then the copied PDS should appear in the Data Sets list
-
   Scenario: User wants to copy a PDS member
     Given a test PDS member has been created for copying
     When the user right-clicks on the member to copy and selects "Copy"

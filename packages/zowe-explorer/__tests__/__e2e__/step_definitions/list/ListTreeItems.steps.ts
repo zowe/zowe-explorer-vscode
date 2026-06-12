@@ -24,8 +24,10 @@ const testInfo = {
 };
 
 async function setFilterForProfile(profileNode: ProfileNode, tree: string): Promise<void> {
-    await (await profileNode.find()).elem.moveTo();
-    const actionButtons = await (await profileNode.find()).getActionButtons();
+    const node = await profileNode.find();
+    await node.elem.moveTo();
+    await browser.pause(500);
+    const actionButtons = await node.getActionButtons();
 
     // Locate and select the search button on the profile node
     const searchButton = actionButtons[actionButtons.length - 1];

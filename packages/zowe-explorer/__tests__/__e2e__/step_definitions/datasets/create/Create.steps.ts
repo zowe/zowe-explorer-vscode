@@ -10,10 +10,8 @@
  */
 
 import { After, When, Then } from "@cucumber/cucumber";
-import { filterBase, allocateSequentialDs, allocatePartitionedDs, createMemberInPds, deleteDsOrMember } from "../utils/datasetUtils";
+import { filterBase, allocateSequentialDs, allocatePartitionedDs, createMemberInPds, deleteDsOrMember } from "../../utils/datasetUtils";
 
-// Names start with 'A' so they sort to the top of the virtual list, guaranteeing they are
-// rendered in the DOM viewport and findable by findChildItem regardless of other test data.
 const testPsName = `${filterBase}.ANEWPS`;
 const testPdsName = `${filterBase}.ANEWPDS`;
 const testMemberName = process.env.ZE_TEST_PDS_MEMBER;

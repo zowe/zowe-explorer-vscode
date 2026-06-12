@@ -50,7 +50,7 @@ async function allocateDs(world: any, dsName: string, dsType: string): Promise<v
     });
 }
 
-export async function openDsToPopulateCache(world: any, dsName: string): Promise<void> {
+export async function openDsInEditor(world: any, dsName: string): Promise<void> {
     const dsNode = await (await world.profileNode.find()).findChildItem(dsName);
     await dsNode.select();
     const editorView = (await browser.getWorkbench()).getEditorView();
@@ -92,6 +92,7 @@ export async function waitForMemberInPds(world: any, pdsName: string, memberName
         }
     );
 }
+
 
 export async function deleteDsOrMember(...nodePaths: string[]): Promise<void> {
     for (const nodePath of nodePaths) {
