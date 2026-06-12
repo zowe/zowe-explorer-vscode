@@ -107,7 +107,7 @@ export class DatasetTableViewPage {
      */
     public async ensureMainFrame(): Promise<void> {
         try {
-            await this.browser.switchToFrame(null);
+            await this.browser.switchFrame(null);
         } catch {
             // Already in main frame or frame switch failed, continue
         }
