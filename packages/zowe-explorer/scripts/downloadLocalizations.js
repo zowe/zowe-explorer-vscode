@@ -26,7 +26,7 @@ const admZip = require("adm-zip");
     const getLatestInfoApiUrl = new URL(`artifactory/api/storage/${artifactPath}?lastModified`, baseUrl);
 
     const downloadUrl = await getLatestVersionInfo(getLatestInfoApiUrl);
-    if(baseUrl.hostname !== downloadUrl.hostname) {
+    if(baseUrl.host !== downloadUrl.host) {
         console.warn(`WARNING. Download URL hostname ${downloadUrl.hostname} does not match base URL hostname ${baseUrl.hostname}. Zowe Explorer build will not be localized.`);
         process.exit(0);
     }
