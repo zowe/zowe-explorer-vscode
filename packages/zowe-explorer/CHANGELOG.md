@@ -100,7 +100,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Added support to delete VSAM data sets. [#3824](https://github.com/zowe/zowe-explorer-vscode/issues/3824)
 - Refactored data set pagination to use the new `getCount` API (if available) to optimize access to the total item count.[#3844](https://github.com/zowe/zowe-explorer-vscode/pull/3844)
 - Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. [#3826](https://github.com/zowe/zowe-explorer-vscode/issues/3826)
@@ -162,7 +161,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Added VSCode setting to allow users to enable and disable using the default TSO profile for issuing TSO commands. The default is set to true if a default TSO profile is set as the default. [#2528](https://github.com/zowe/zowe-explorer-vscode/issues/2528)
 - Added capability for extenders to provide additional attributes for data sets. [#3730](https://github.com/zowe/zowe-explorer-vscode/pull/3730)
 - Added hostname validation to prevent encountering a VS Code Proxy bug that occurs when attempting to connect to a z/OSMF server with the protocol specified as part of the hostname. [#3364](https://github.com/zowe/zowe-explorer-vscode/issues/3364)
@@ -216,7 +214,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Updated Zowe SDKs to `8.21.0` for technical currency. [#3668](https://github.com/zowe/zowe-explorer-vscode/pull/3668)
 
 ### Bug fixes
@@ -227,7 +224,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `3.2.0`
 
 ### New features and enhancements
-
 
 - Added pagination functionality for job spool files and created a key binding option (`ctrl + l`) to load more job spool records. [#1787](https://github.com/zowe/zowe-explorer-vscode/issues/1787)
 - Added case sensitive and regular expression search options to Data Set searches. [#3455](https://github.com/zowe/zowe-explorer-vscode/issues/3455)
@@ -283,7 +279,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Renamed "Zowe Explorer z/OS Console" to "z/OS Console". [#3445](https://github.com/zowe/zowe-explorer-vscode/pull/3445)
 - The "Open Recent Member" command can now be triggered from the command palette. [#3477](https://github.com/zowe/zowe-explorer-vscode/pull/3477)
 
@@ -318,7 +313,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `3.1.0`
 
 ### New features and enhancements
-
 
 - Updated Zowe SDKs to `8.10.4` for technical currency. [#3306](https://github.com/zowe/zowe-explorer-vscode/pull/3306)
 - Added expired JSON web token detection for profiles in each tree view (Data Sets, USS, Jobs). When a user performs a search on a profile, they are prompted to log in if their token expired. [#3175](https://github.com/zowe/zowe-explorer-vscode/issues/3175)
@@ -377,7 +371,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Zowe Explorer now includes support for the [VS Code display languages](https://code.visualstudio.com/docs/getstarted/locales) French, German, Japanese, Portuguese, and Spanish. Download the respective language pack and switch. [#3239](https://github.com/zowe/zowe-explorer-vscode/pull/3239)
 - Localization of strings within Zowe Explorer webviews. [#2983](https://github.com/zowe/zowe-explorer-vscode/issues/2983)
 
@@ -404,7 +397,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `3.0.0`
 
 ### New features and enhancements
-
 
 - Support VS Code engine 1.79.0 and higher.
 - Updated activation event to `onStartupFinished`. [#1910](https://github.com/zowe/vscode-extension-for-zowe/issues/1910)
@@ -464,7 +456,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Users can now follow a prompt to create a new Zowe client configuration. The prompt displays when VS Code is opened with Zowe Explorer installed, but the user does not have any Zowe client configurations. [#3148](https://github.com/zowe/zowe-explorer-vscode/pull/3148)
 
 ### Bug fixes
@@ -486,7 +477,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Implemented support for favoriting a data set search that contains member wildcards. [#1164](https://github.com/zowe/zowe-explorer-vscode/issues/1164)
 - Resolved `TypeError: Cannot read properties of undefined (reading 'direction')` error for favorited items. [#3067](https://github.com/zowe/zowe-explorer-vscode/pull/3067)
 
@@ -503,7 +493,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `3.0.0-next.202408301858`
 
 ### New features and enhancements
-
 
 - Refactored behavior and management of Favorites in Zowe Explorer. [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
 - Renamed `isHomeProfile` context helper function to `isGlobalProfile` for clarity. [#2026](https://github.com/zowe/zowe-explorer-vscode/issues/2026)
@@ -583,7 +572,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Implemented the FileSystemProvider for the Data Sets, Jobs and USS trees to handle all read/write actions as well as conflict resolution. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
 - **Breaking:** Removed the `zowe.jobs.zosJobsOpenSpool` command in favor of using `vscode.open` with a spool URI. See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris) for more information on spool URIs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
 - **Breaking:** Removed the `zowe.ds.ZoweNode.openPS` command in favor of using `vscode.open` with a data set URI. See the [FileSystemProvider wiki page](https://github.com/zowe/zowe-explorer-vscode/wiki/FileSystemProvider#file-paths-vs-uris) for more information on data set URIs. [#2207](https://github.com/zowe/zowe-explorer-vscode/issues/2207)
@@ -600,7 +588,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Implemented sorting of PDS members by date created [#2565](https://github.com/zowe/vscode-extension-for-zowe/pull/2565)
 - Added the capability for extenders to contribute new profile types to the Zowe schema during extender activation. [#2508](https://github.com/zowe/vscode-extension-for-zowe/issues/2508)
 - Migrated from `@zowe/cli` package to individual Zowe SDK packages. [#2719](https://github.com/zowe/vscode-extension-for-zowe/issues/2719)
@@ -615,7 +602,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - **Breaking:** Removed `zowe.uss.binary` and `zowe.uss.text` commands. Use `zowe.uss.openWithEncoding` instead.
 - Added UI migration steps on startup for users with v1 profiles to either convert existing v1 profiles to team configuration file or create a new team configuration file. [#2284](https://github.com/zowe/vscode-extension-for-zowe/issues/2284)
 - Removal of Theia support. [#2647](https://github.com/zowe/vscode-extension-for-zowe/issues/2647)
@@ -629,14 +615,12 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Adapted to new API changes from grouping of common methods into singleton classes [#2109](https://github.com/zowe/vscode-extension-for-zowe/issues/2109)
 - Migrated to webpack v5 [#2214](https://github.com/zowe/vscode-extension-for-zowe/issues/2214)
 
 ## `3.0.0-next.202401241448`
 
 ### New features and enhancements
-
 
 - Removed Gulp dependency and migrated from `i18n` standard to `l10n`. [#2253](https://github.com/zowe/vscode-extension-for-zowe/issues/2253)
 
@@ -647,7 +631,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `3.0.0-next.202401121747`
 
 ### New features and enhancements
-
 
 - Added the Issue UNIX Commands feature. [#1326](https://github.com/zowe/vscode-extension-for-zowe/issues/1326)
 - Minimized activation function for Zowe Explorer to load only necessary items on activation. [#1985](https://github.com/zowe/vscode-extension-for-zowe/issues/1985)
@@ -663,7 +646,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Migrate from Yarn to PNPM.
 - Update dependencies for technical currency purposes
 - Support VS Code engine 1.79.0 and higher.
@@ -672,7 +654,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `3.0.0-next.202309121526`
 
 ### New features and enhancements
-
 
 - Removal of v1 profile support. [#2072](https://github.com/zowe/vscode-extension-for-zowe/issues/2072)
 - Removal of support for Zowe Explorer APIs that have been removed. Check the [list](https://github.com/zowe/vscode-extension-for-zowe/tree/next/docs/early-access/v3/Extenders.md) of APIs that were removed.
@@ -684,7 +665,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `2.18.0`
 
 ### New features and enhancements
-
 
 - Added new Zowe Explorer z/OS Console webview with access via VS Code command pallete to issue MVS Console commands. [#2925](https://github.com/zowe/zowe-explorer-vscode/pull/2925)
 
@@ -698,7 +678,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `2.17.0`
 
 ### New features and enhancements
-
 
 - To add the ability to open a Favorited Job Search under Favorites [#2630](https://github.com/zowe/zowe-explorer-vscode/pull/2930)
 - Added the ability to switch between basic authentication and token-based authentication. [#2944](https://github.com/zowe/zowe-explorer-vscode/pull/2944)
@@ -726,7 +705,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `2.16.0`
 
 ### New features and enhancements
-
 
 - Added support for `consoleName` property in z/OSMF profiles when issuing MVS commands. [#1667](https://github.com/zowe/vscode-extension-for-zowe/issues/1667)
 - Updated sorting of PDS members to show items without stats at bottom of list. [#2660](https://github.com/zowe/vscode-extension-for-zowe/issues/2660)
@@ -789,7 +767,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Implemented sorting of PDS members by date created [#2707](https://github.com/zowe/vscode-extension-for-zowe/pull/2707)
 - Added the capability for extenders to contribute new profile types to the Zowe schema during extender activation. [#2508](https://github.com/zowe/vscode-extension-for-zowe/issues/2508)
 - Sort encoding by the latest encoding and filter any duplicate encoding if it already exists.
@@ -812,7 +789,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `2.14.0`
 
 ### New features and enhancements
-
 
 - Added new data set creation template for partitioned data set extended. [#2600](https://github.com/zowe/vscode-extension-for-zowe/issues/2600)
 - Added "Open with Encoding" feature to open data sets and USS files in a non-standard codepage. [#2435](https://github.com/zowe/vscode-extension-for-zowe/issues/2435)
@@ -842,7 +818,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `2.13.0`
 
 ### New features and enhancements
-
 
 - Added support for hiding a Zowe profile across all trees [#2567](https://github.com/zowe/vscode-extension-for-zowe/issues/2567)
 - Added support for enabling/disabling validation for a Zowe profile across all trees [#2570](https://github.com/zowe/vscode-extension-for-zowe/issues/2570)
@@ -878,7 +853,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `2.12.0`
 
 ### New features and enhancements
-
 
 - Introduce a new user interface for managing profiles via right-click action "Manage Profile".
 - Added new edit feature on `Edit Attributes` view for changing file tags on USS. [#2113](https://github.com/zowe/vscode-extension-for-zowe/issues/2113)
@@ -916,7 +890,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Allow deleting migrated datasets [#2447](https://github.com/zowe/vscode-extension-for-zowe/issues/2447)
 
 ### Bug fixes
@@ -932,7 +905,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `2.10.0`
 
 ### New features and enhancements
-
 
 - Added call to callback if defined by extenders when a change to the team config profile is made. [#2385](https://github.com/zowe/vscode-extension-for-zowe/issues/2385)
 - Replaced `keytar` dependency with `keyring` module from [`@zowe/secrets-for-zowe-sdk`](https://github.com/zowe/zowe-cli/tree/master/packages/secrets). [#2358](https://github.com/zowe/vscode-extension-for-zowe/issues/2358) [#2348](https://github.com/zowe/vscode-extension-for-zowe/issues/2348)
@@ -964,7 +936,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `2.9.0`
 
 ### New features and enhancements
-
 
 - Added option to save unique data set attributes as a template after allocation for future use. [#1425](https://github.com/zowe/vscode-extension-for-zowe/issues/1425)
 - Added "Cancel Job" feature for job nodes in Jobs tree view. [#2251](https://github.com/zowe/vscode-extension-for-zowe/issues/2251)
@@ -1003,7 +974,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Added a new Zowe Explorer setting, `zowe.logger`, with a default setting of `INFO`.
 - Added an output channel, `Zowe Explorer`, for logging within VS Code's Output view. The log level is set by the new Zowe Explorer setting, `zowe.logger`.
 - Added a new setting `zowe.files.logsFolder.path` that can be used to override Zowe Explorer logs folder if default location is read-only. [#2186](https://github.com/zowe/vscode-extension-for-zowe/issues/2186)
@@ -1029,7 +999,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `2.7.0`
 
 ### New features and enhancements
-
 
 - Added Job search query label to the session in the Jobs tree. [#2062](https://github.com/zowe/vscode-extension-for-zowe/pull/2064)
 - Added feature to copy datasets (pds, sequential, members across pds) with multi-select capabilities. [#1150](https://github.com/zowe/vscode-extension-for-zowe/issues/1550)
@@ -1062,7 +1031,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Added Job search prefix validator [1971](https://github.com/zowe/vscode-extension-for-zowe/issues/1971)
 - Added file association for `zowe.config.json` and `zowe.config.user.json` to automatically detect them as JSON with Comments. [#1997](https://github.com/zowe/vscode-extension-for-zowe/issues/1997)
 - Added the ability to list all datasets, even those with Imperative Errors. [#235](https://github.com/zowe/vscode-extension-for-zowe/issues/235) & [#2036](https://github.com/zowe/vscode-extension-for-zowe/issues/2036)
@@ -1087,7 +1055,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `2.5.0`
 
 ### New features and enhancements
-
 
 - Added ability to filter jobs by status. Improved Job filtering User experience. [#1925](https://github.com/zowe/vscode-extension-for-zowe/issues/1925)
 - Added option to view PDS member attributes, and updated formatting for attributes webview. [#1577](https://github.com/zowe/vscode-extension-for-zowe/issues/1577)
@@ -1119,7 +1086,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-
 - Added check for existing team configuration file in location during create, prompting user to continue with the create action. [#1923](https://github.com/zowe/vscode-extension-for-zowe/issues/1923)
 - Added a solution to allow Zowe Explorer extensions with a dependency on Zowe Explorer to work as web extension without Zowe Explorer functionality in vscode.dev. [#1953](https://github.com/zowe/vscode-extension-for-zowe/issues/1953)
 - Added a new setting `Secure Credentials Enabled`, default value is selected for security and will have to be unselected to allow creation of team configuration files without default secure arrays to support environments that don't have access to Zowe CLI's Secure Credential Management.
@@ -1133,7 +1099,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## `2.3.0`
 
 ### New features and enhancements
-
 
 - Added option to edit team configuration file via the + button for easy access. [#1896](https://github.com/zowe/vscode-extension-for-zowe/issues/1896)
 - Added multiple selection to manage context menu of Datasets, USS, and Jobs views. [#1428](https://github.com/zowe/vscode-extension-for-zowe/issues/1428)
