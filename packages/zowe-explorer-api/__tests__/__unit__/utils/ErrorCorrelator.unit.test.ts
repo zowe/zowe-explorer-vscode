@@ -69,7 +69,9 @@ describe("correlateError", () => {
     });
     it("returns a generic CorrelatedError with the full error details if no matches are found", () => {
         expect(
-            ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.Mvs, "A cryptic error with no available match", { profileType: "zosmf" })
+            ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.Mvs, "A cryptic error with no available match", {
+                profileType: "zosmf",
+            })
         ).toStrictEqual(new CorrelatedError({ initialError: "A cryptic error with no available match" }));
     });
 });
@@ -178,5 +180,26 @@ describe("displayCorrelatedError", () => {
         });
         expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.All, initialError, { profileType: "zosmf" });
         expect(errorMessageMock).toHaveBeenCalledWith("Network Error. Initial error.", { items: ["More info"] });
+    });
+
+    it("displays an error exposing the additionalDetails field", async () => {
+        const initialError = new ImperativeError({
+            msg: "Imperative Error.",
+            additionalDetails: "Failed to acquire ENQ on the data set!",
+            causeErrors: new Error("Initial error."),
+        });
+        const error = new CorrelatedError({
+            correlation: { summary: "Network Error." },
+            initialError: initialError,
+        });
+        const correlateErrorMock = vi.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValueOnce(error);
+        const errorMessageMock = vi.spyOn(Gui, "errorMessage");
+        await ErrorCorrelator.getInstance().displayError(ZoweExplorerApiType.All, initialError, {
+            profileType: "zosmf",
+        });
+        expect(correlateErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.All, initialError, { profileType: "zosmf" });
+        expect(errorMessageMock).toHaveBeenCalledWith("Network Error. Failed to acquire ENQ on the data set! Initial error.", {
+            items: ["More info"],
+        });
     });
 });

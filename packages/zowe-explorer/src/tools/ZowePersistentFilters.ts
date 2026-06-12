@@ -25,6 +25,7 @@ export class ZowePersistentFilters {
     private static readonly favorites: string = "favorites";
     private static readonly vsamFavorites: string = "vsamFavorites";
     private static readonly memberFavorites: string = "memberFavorites";
+    private static readonly migratedFavorites: string = "migratedFavorites";
     private static readonly searchHistory: string = "searchHistory";
     private static readonly searchedKeywordHistory: string = "searchedKeywordHistory";
     private static readonly fileHistory: string = "fileHistory";
@@ -212,7 +213,7 @@ export class ZowePersistentFilters {
         ZoweLogger.trace("PersistentFilters.readFavorites called.");
         const localStorageSchema = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
         if (localStorageSchema) {
-            return localStorageSchema[ZowePersistentFilters.favorites] as string[];
+            return (localStorageSchema[ZowePersistentFilters.favorites] as string[]) || [];
         }
         return [];
     }
@@ -221,7 +222,7 @@ export class ZowePersistentFilters {
         ZoweLogger.trace("PersistentFilters.readVsamFavorites called.");
         const localStorageSchema = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
         if (localStorageSchema) {
-            return localStorageSchema[ZowePersistentFilters.vsamFavorites] as string[] || [];
+            return (localStorageSchema[ZowePersistentFilters.vsamFavorites] as string[]) || [];
         }
         return [];
     }
@@ -230,7 +231,16 @@ export class ZowePersistentFilters {
         ZoweLogger.trace("PersistentFilters.readMemberFavorites called.");
         const localStorageSchema = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
         if (localStorageSchema) {
-            return localStorageSchema[ZowePersistentFilters.memberFavorites] as string[] || [];
+            return (localStorageSchema[ZowePersistentFilters.memberFavorites] as string[]) || [];
+        }
+        return [];
+    }
+
+    public readMigratedFavorites(): string[] {
+        ZoweLogger.trace("PersistentFilters.readMigratedFavorites called.");
+        const localStorageSchema = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
+        if (localStorageSchema) {
+            return (localStorageSchema[ZowePersistentFilters.migratedFavorites] as string[]) || [];
         }
         return [];
     }
@@ -336,6 +346,7 @@ export class ZowePersistentFilters {
         favorites: string[];
         vsamFavorites?: string[];
         memberFavorites?: string[];
+        migratedFavorites?: string[];
     }): void {
         ZoweLogger.trace("PersistentFilters.updateFavorites called.");
         const settings = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
@@ -346,6 +357,9 @@ export class ZowePersistentFilters {
             }
             if (options.memberFavorites !== undefined) {
                 settings.memberFavorites = options.memberFavorites;
+            }
+            if (options.migratedFavorites !== undefined) {
+                settings.migratedFavorites = options.migratedFavorites;
             }
             ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
         }

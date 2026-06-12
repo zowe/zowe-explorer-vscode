@@ -33,7 +33,7 @@ import { SharedTreeProviders } from "./SharedTreeProviders";
 import { JobActions } from "../job/JobActions";
 import { UssFSProvider } from "../uss/UssFSProvider";
 import { Constants } from "../../configuration/Constants";
-import { MvsCommandHandler } from "../../commands/MvsCommandHandler";
+import { ConsoleCommandHandler } from "../../commands/ConsoleCommandHandler";
 import { TsoCommandHandler } from "../../commands/TsoCommandHandler";
 import { UnixCommandHandler } from "../../commands/UnixCommandHandler";
 import { Profiles } from "../../configuration/Profiles";
@@ -188,7 +188,7 @@ export class SharedInit {
         context.subscriptions.push(vscode.window.registerWebviewViewProvider("zowe-resources", TableViewProvider.getInstance()));
 
         const commandProviders: Definitions.IZoweCommandProviders = {
-            mvs: MvsCommandHandler.getInstance(),
+            mvs: ConsoleCommandHandler.getInstance(),
             tso: TsoCommandHandler.getInstance(),
             uss: UnixCommandHandler.getInstance(),
         };
@@ -601,7 +601,7 @@ export class SharedInit {
 
     public static async setupRemoteWorkspaceFolders(e?: vscode.WorkspaceFoldersChangeEvent, profileType?: string): Promise<void> {
         const profInfo = Profiles.getInstance();
-        let uriMap = new Map<string, UriFsInfo>();
+        const uriMap = new Map<string, UriFsInfo>();
         const profileNames = new Set<string>(profInfo.getProfiles(profileType).map((prof) => prof.name));
         // Perform remote lookup for workspace folders that fit the `zowe-ds` or `zowe-uss` schemes.
         const newWorkspaces = (e?.added ?? vscode.workspace.workspaceFolders ?? [])

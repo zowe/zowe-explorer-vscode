@@ -4,10 +4,5 @@
     "types": ["node", "vitest/globals"]
   },
   "exclude": ["node_modules", ".vscode-test"],
-  "include": [
-    "__tests__/**/*.ts",
-    "__mocks__/**/*.ts",
-    "vitest.config.ts",
-    "vitest.setup.ts"
-  ]
+  "include": ["__tests__/**/*.ts", "__mocks__/**/*.ts", "vitest.config.ts", "vitest.setup.ts"]
 }

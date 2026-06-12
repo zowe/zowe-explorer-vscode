@@ -1,3 +1,74 @@
+## `3.5.0`
+
+**Warning:** This is the last release of Zowe Explorer that supports VS Code 1.90. Starting with the next minor release (Zowe v3.6), Zowe Explorer will require VS Code 1.101 or higher. This change ensures you are running on Node.js 22, as Node.js 20 reached its End of Life (EOL) on April 30, 2026, and is no longer receiving security fixes.
+
+### Job submission improvements
+
+When submitting a job, there are now two buttons on the job submission notification popup:
+
+- **Open Job:** This filters the job tree by the job ID to allow direct access to the job in one click. It behaves the same way as clicking the link on the popup but also closes the popup on the same click.
+- **Poll For Job Completion:** This button automatically starts polling for the job to complete. When it completes, there will be a new notification popup with the return code and the same open job button to filter the job in the job tree. The poll interval is `5000 ms` by default (i.e. checking for completion every 5 seconds) but this interval can be changed in the setting **Zowe > Jobs: Poll Interval**.
+
+![3.5-job-submission](./resources/release-notes/3.5-job-submission.png)
+
+![3.5-job-completion](./resources/release-notes/3.5-job-completion.png)
+
+### Download data sets and USS files to the local filesystem
+
+Zowe Explorer now supports being able to directly download data sets, data set members, USS files & USS directories to the local machine filesystem - with a multitude of basic and advanced options built into the download menus.
+
+**Right click** on sequential data sets, partitioned data sets (to download all members), partitioned data set members, USS files, or USS directories and click on the respective `Download ...` option to select download options.
+
+Please see the docs for much more detail on [downloading data sets](https://docs.zowe.org/stable/user-guide/ze-working-with-data-sets#downloading-a-data-set-to-a-local-file), downloading [USS files](https://docs.zowe.org/stable/user-guide/ze-working-with-uss-files#downloading-a-uss-file-to-a-local-file) or [USS directories](https://docs.zowe.org/stable/user-guide/ze-working-with-uss-files#downloading-a-uss-directory-to-a-local-directory).
+
+Note as this is a brand new feature, only the `z/OSMF` profile type supports this functionality upon release. Expect other profile types to add their backend support over time.
+
+### Filter data sets by name or by date created
+
+Now the right click option on partitioned data sets and profile to filter data sets/data set members supports filtering by name or by date created. The filter by name supports wildcards and comma-separated names in the same way as the data set search.
+
+Note that the filter only applies on the client side, so if pagination is enabled and active, each individual page is filtered and it may still require clicking through pages to get to the one with the filtered data sets or members.
+
+### Favorites changes
+
+#### Favorite VSAM data sets
+
+VSAM data sets can now be favorited.
+
+#### Favorite individual PDS members
+
+The favorites tree now supports being able to favorite individual members of a partitioned data set.
+
+When favoriting a data set member, the partitioned data set will still show in the favorites tree, but now only with the favorited data set member under it, rather than all members as before. When expanded, a tooltip will now show beside the data set name with the number of members that are favorited inside of it vs the total number of members the data set has.
+
+The entire PDS can still be favorited with all members. When a member is removed from favorites, only it is removed, unless it is the only member in the PDS, in which case the entire PDS will be removed from favorites.
+
+Several members may be favorited or unfavorited at once by doing a multi-selection.
+
+![3.5-favorites](./resources/release-notes/3.5-favorites.png)
+
+Note that when only a partial selection of PDS members are favorited, data set pagination is disabled on the PDS in the favorites tree.
+
+### Accessibility improvements
+
+Many issues have been addressed to allow screen readers to better navigate and use Zowe Explorer features.
+
+### Smarter data set search filtering
+
+Data set search is now even smarter because it supports comma-separated member names within a partitioned data set. For example, `MY.PDS(MEM1,TEST*)` will return `MY.PDS` with the member called `MEM1` and any members beginning with `TEST`.
+
+### Setting to hide hidden USS files
+
+Currently, hidden Unix files (those starting with a `.`) are always listed in the USS tree. There is now a setting **Zowe > Files: Show Hidden Files** that can be disabled to hide these files.
+
+### Localization for release notes and changelogs
+
+Text and alt text in the release notes and the changelogs are now localizable.
+
+Localization is tied to the VS Code localization setting. If there are no localizations available for a string, it will fallback to English.
+
+If you wish to make localization contributions to these or generally across the rest of Zowe Explorer, please reach out in the usual places.
+
 ## `3.4.0`
 
 ### VS Code engine support change

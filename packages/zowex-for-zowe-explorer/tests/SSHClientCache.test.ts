@@ -110,14 +110,14 @@ describe("SshClientCache", () => {
         const mockCollectedRequests = new Set([{ id: "mock-inflight-request-1" }]);
         // Reset the singleton instance for clean tests
         (SshClientCache as any).mInstance = undefined;
-        
+
         // Create mock ProfilesCache
         mockGetProfilesCache = {
             getLoadedProfConfig: vi.fn(),
             getCoreProfileTypes: vi.fn().mockReturnValue([]),
             getConfigArray: vi.fn().mockReturnValue([]),
         };
-        
+
         // Initialize cache with mock ProfilesCache
         cache = SshClientCache.initialize(mockGetProfilesCache);
 
