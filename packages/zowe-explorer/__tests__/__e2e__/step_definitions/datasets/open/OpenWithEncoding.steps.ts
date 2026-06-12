@@ -22,8 +22,6 @@ After(async function () {
     } catch {}
 });
 
-// ─── Scenario 1: Open sequential dataset with IBM-285 encoding ───────────────
-
 Given("a test sequential dataset has been created and populated for encoding", async function () {
     await openDsInEditor(this, process.env.ZE_TEST_PS);
     await writeDsContent(`/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PS}`, "$");
@@ -38,8 +36,6 @@ When("the user right-clicks on the dataset and selects {string}", async function
     await this.encodingDs.elem.moveTo();
     await clickContextMenuItem(this.encodingDs, contextMenuOption);
 });
-
-// ─── Shared encoding picker steps (used by both scenarios) ───────────────────
 
 When("the user selects {string} from the encoding picker", async function (option: string) {
     await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
@@ -58,18 +54,16 @@ When("the user enters {string} as the codepage", async function (codepage: strin
 
 Then("the dataset should open in the editor with the pound sign character", async function () {
     const editorView = (await browser.getWorkbench()).getEditorView();
-    await browser.waitUntil(
-        async () => (await editorView.getOpenEditorTitles()).some((t) => t.includes(this.encodingDsName)),
-        { timeout: 15000, timeoutMsg: `Editor for ${this.encodingDsName} did not open after selecting IBM-285 encoding` }
-    );
+    await browser.waitUntil(async () => (await editorView.getOpenEditorTitles()).some((t) => t.includes(this.encodingDsName)), {
+        timeout: 15000,
+        timeoutMsg: `Editor for ${this.encodingDsName} did not open after selecting IBM-285 encoding`,
+    });
     const content = await browser.executeWorkbench(async (vscode, dsName: string) => {
         const doc = vscode.workspace.textDocuments.find((d) => d.fileName.includes(dsName));
         return doc?.getText() ?? "";
     }, this.encodingDsName);
     await expect(content).toContain("£");
 });
-
-// ─── Scenario 2: Open PDS member with IBM-285 encoding ───────────────────────
 
 Given("a test PDS member has been created and populated for encoding", async function () {
     this.encodingPds = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
@@ -78,10 +72,10 @@ Given("a test PDS member has been created and populated for encoding", async fun
     await this.encodingMember.select();
 
     const editorView = (await browser.getWorkbench()).getEditorView();
-    await browser.waitUntil(
-        async () => (await editorView.getOpenEditorTitles()).some((t) => t.includes(process.env.ZE_TEST_PDS_MEMBER)),
-        { timeout: 10000, timeoutMsg: `Member ${process.env.ZE_TEST_PDS_MEMBER} did not open in editor` }
-    );
+    await browser.waitUntil(async () => (await editorView.getOpenEditorTitles()).some((t) => t.includes(process.env.ZE_TEST_PDS_MEMBER)), {
+        timeout: 10000,
+        timeoutMsg: `Member ${process.env.ZE_TEST_PDS_MEMBER} did not open in editor`,
+    });
     await editorView.closeEditor(process.env.ZE_TEST_PDS_MEMBER);
 
     await writeDsContent(`/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${process.env.ZE_TEST_PDS_MEMBER}`, "$");
@@ -103,10 +97,10 @@ When("the user right-clicks on the PDS member and selects {string}", async funct
 
 Then("the member should open in the editor with the pound sign character", async function () {
     const editorView = (await browser.getWorkbench()).getEditorView();
-    await browser.waitUntil(
-        async () => (await editorView.getOpenEditorTitles()).some((t) => t.includes(this.encodingMemberName)),
-        { timeout: 15000, timeoutMsg: `Editor for ${this.encodingMemberName} did not open after selecting IBM-285 encoding` }
-    );
+    await browser.waitUntil(async () => (await editorView.getOpenEditorTitles()).some((t) => t.includes(this.encodingMemberName)), {
+        timeout: 15000,
+        timeoutMsg: `Editor for ${this.encodingMemberName} did not open after selecting IBM-285 encoding`,
+    });
     const content = await browser.executeWorkbench(async (vscode, memberName: string) => {
         const doc = vscode.workspace.textDocuments.find((d) => d.fileName.includes(memberName));
         return doc?.getText() ?? "";
