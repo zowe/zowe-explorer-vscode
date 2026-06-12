@@ -27,8 +27,8 @@ const admZip = require("adm-zip");
 
     const downloadUrl = await getLatestVersionInfo(getLatestInfoApiUrl);
     if(baseUrl.host !== downloadUrl.host) {
-        console.warn(`WARNING. Download URL hostname ${downloadUrl.hostname} does not match base URL hostname ${baseUrl.hostname}. Zowe Explorer build will not be localized.`);
-        process.exit(0);
+        console.error(`ERROR: Download URL hostname ${downloadUrl.host} does not match base URL hostname ${baseUrl.host}. Zowe Explorer build will not be localized.`);
+        process.exit(1);
     }
 
     const zipFilePath = await downloadArtifact(downloadUrl);
