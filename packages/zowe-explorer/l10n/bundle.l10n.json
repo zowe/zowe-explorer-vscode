@@ -180,8 +180,8 @@
   "Added a new Poll For Job Completion button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting Zowe > Jobs: Poll Interval. <a>#3967</a>": "Added a new Poll For Job Completion button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting Zowe > Jobs: Poll Interval. <a>#3967</a>",
   "Added a new setting Secure Credentials Enabled, default value is selected for security and will have to be unselected to allow creation of team configuration files without default secure arrays to support environments that don't have access to Zowe CLI's Secure Credential Management.": "Added a new setting Secure Credentials Enabled, default value is selected for security and will have to be unselected to allow creation of team configuration files without default secure arrays to support environments that don't have access to Zowe CLI's Secure Credential Management.",
   "Added a new setting zowe.files.logsFolder.path that can be used to override Zowe Explorer logs folder if default location is read-only. <a>#2186</a>": "Added a new setting zowe.files.logsFolder.path that can be used to override Zowe Explorer logs folder if default location is read-only. <a>#2186</a>",
-  "Added a new VS Code setting that allows users to limit the number of concurrent REST requests sent to z/OSMF. <a>#4130</a>": "Added a new VS Code setting that allows users to limit the number of concurrent REST requests sent to z/OSMF. <a>#4130</a>",
-  "Added a new VS Code toggle setting that allows users to show or hide hidden files in the Unix System Service (USS) tree view.<a>#3912</a>": "Added a new VS Code toggle setting that allows users to show or hide hidden files in the Unix System Service (USS) tree view.<a>#3912</a>",
+  "Added a new VS Code setting zowe.settings.zosmfMaxConcurrentRequests, that allows users to limit the number of concurrent REST requests sent to z/OSMF. <a>#4130</a>": "Added a new VS Code setting zowe.settings.zosmfMaxConcurrentRequests, that allows users to limit the number of concurrent REST requests sent to z/OSMF. <a>#4130</a>",
+  "Added a new VS Code toggle setting zowe.files.showHiddenFiles, which allows users to show or hide hidden files in the Unix System Services (USS) tree view. <a>#3912</a>": "Added a new VS Code toggle setting zowe.files.showHiddenFiles, which allows users to show or hide hidden files in the Unix System Services (USS) tree view. <a>#3912</a>",
   "Added a new Zowe Explorer setting, zowe.logger, with a default setting of INFO.": "Added a new Zowe Explorer setting, zowe.logger, with a default setting of INFO.",
   "Added a prompt to create a new Zowe client configuration for an environment that does not have any Zowe client configurations. <a>#3148</a>": "Added a prompt to create a new Zowe client configuration for an environment that does not have any Zowe client configurations. <a>#3148</a>",
   "Added a Release Notes page which opens when VS Code is launched or from the command palette Display Release Notes. The zowe.settings.displayReleaseNotes setting can be changed to set when the release notes display. <a>#3621</a>": "Added a Release Notes page which opens when VS Code is launched or from the command palette Display Release Notes. The zowe.settings.displayReleaseNotes setting can be changed to set when the release notes display. <a>#3621</a>",
@@ -456,6 +456,7 @@
   "Confirm": "Confirm",
   "Conflict: Remote contents have changed.": "Conflict: Remote contents have changed.",
   "Connection Name": "Connection Name",
+  "Console command submitted.": "Console command submitted.",
   "Contents": "Contents",
   "Continue": "Continue",
   "Convert existing profiles": "Convert existing profiles",
@@ -477,9 +478,9 @@
       "Node type"
     ]
   },
+  "Create a new console command": "Create a new console command",
   "Create a new filter": "Create a new filter",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
-  "Create a new MVS command": "Create a new MVS command",
   "Create a new TSO command": "Create a new TSO command",
   "Create Data Set: Edit Attributes": "Create Data Set: Edit Attributes",
   "Create Data Set: Name": "Create Data Set: Name",
@@ -677,7 +678,7 @@
   "Enter job prefix": "Enter job prefix",
   "Enter job status": "Enter job status",
   "Enter local filter...": "Enter local filter...",
-  "Enter or update the MVS command": "Enter or update the MVS command",
+  "Enter or update the console command": "Enter or update the console command",
   "Enter or update the TSO command": "Enter or update the TSO command",
   "Enter or update the Unix command": "Enter or update the Unix command",
   "Enter search string in the input field at the top.": "Enter search string in the input field at the top.",
@@ -916,6 +917,9 @@
     ]
   },
   "Favorites": "Favorites",
+  "VSAM Favorites": "VSAM Favorites",
+  "Member Favorites": "Member Favorites",
+  "Migrated Favorites": "Migrated Favorites",
   "Fetching data set...": "Fetching data set...",
   "Fetching spool file...": "Fetching spool file...",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
@@ -988,6 +992,7 @@
   "Fixed a bug where renaming a USS file that used to exist but was deleted in z/OS resulted in an error. <a>#3485</a>.": "Fixed a bug where renaming a USS file that used to exist but was deleted in z/OS resulted in an error. <a>#3485</a>.",
   "Fixed a bug where USS and data set workspace folders accessed via an extender (SSH, FTP, etc) are not loaded until the window is reloaded. <a>#3689</a>": "Fixed a bug where USS and data set workspace folders accessed via an extender (SSH, FTP, etc) are not loaded until the window is reloaded. <a>#3689</a>",
   "Fixed a bug where USS files and data set VS Code editors accessed by an extender (SSH, FTP, etc) are not restored when reloading/reopening a window. <a>#3678</a>": "Fixed a bug where USS files and data set VS Code editors accessed by an extender (SSH, FTP, etc) are not restored when reloading/reopening a window. <a>#3678</a>",
+  "Fixed a localization issue where changing Zowe > Logger in a non-English language would use the localized value instead of the expected internal enum value for setting the log level. <a>#4292</a>": "Fixed a localization issue where changing Zowe > Logger in a non-English language would use the localized value instead of the expected internal enum value for setting the log level. <a>#4292</a>",
   "Fixed a regression with the AuthUtils.syncSessionNode function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. <a>#3795</a>": "Fixed a regression with the AuthUtils.syncSessionNode function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. <a>#3795</a>",
   "Fixed a z/OSMF issue for Data Sets and Jobs with special characters in the names. <a>#2175</a>": "Fixed a z/OSMF issue for Data Sets and Jobs with special characters in the names. <a>#2175</a>",
   "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>": "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>",
@@ -1001,8 +1006,13 @@
   "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>": "Fixed an issue during initialization where a broken team configuration file caused the \"Show Config\" action in the error dialog to stop working. <a>#3273</a>",
   "Fixed an issue during initialization where the error dialog shown for a broken team configuration file was missing the \"Show Config\" action. <a>#3322</a>": "Fixed an issue during initialization where the error dialog shown for a broken team configuration file was missing the \"Show Config\" action. <a>#3322</a>",
   "Fixed an issue in the Switch Authentication action, where changing from token-based authentication to username and password authentication did not properly invalidate the token. <a>#3654</a>": "Fixed an issue in the Switch Authentication action, where changing from token-based authentication to username and password authentication did not properly invalidate the token. <a>#3654</a>",
+  "Fixed an issue in the USS tree view that prevented listing a single file path due to a duplicated and invalid URI path construction. <a>#4303</a>": "Fixed an issue in the USS tree view that prevented listing a single file path due to a duplicated and invalid URI path construction. <a>#4303</a>",
+  "Fixed an issue in USS where a directory could not be expanded if it contained at least one subdirectory that the user did not have access to. <a>#4278</a>": "Fixed an issue in USS where a directory could not be expanded if it contained at least one subdirectory that the user did not have access to. <a>#4278</a>",
+  "Fixed an issue in USS where a file was incorrectly identified as a directory if the request returned the full path of the file, causing an error when trying to open it in the editor. <a>#4305</a>": "Fixed an issue in USS where a file was incorrectly identified as a directory if the request returned the full path of the file, causing an error when trying to open it in the editor. <a>#4305</a>",
+  "Fixed an issue in USS where the search path in the profile node description or filter tooltip became out of sync and did not match the actual listed path after a failed search or a search timeout. <a>#4287</a>": "Fixed an issue in USS where the search path in the profile node description or filter tooltip became out of sync and did not match the actual listed path after a failed search or a search timeout. <a>#4287</a>",
   "Fixed an issue seen where extender favorites not showing in the tree views. <a>#3470</a>": "Fixed an issue seen where extender favorites not showing in the tree views. <a>#3470</a>",
   "Fixed an issue seen with outdated profile information in the z/OS tree view data during upload and download of data set and USS files. <a>#3457</a>": "Fixed an issue seen with outdated profile information in the z/OS tree view data during upload and download of data set and USS files. <a>#3457</a>",
+  "Fixed an issue that caused a rename to fail when removing the rightmost qualifier from a data set name. <a>#4273</a>": "Fixed an issue that caused a rename to fail when removing the rightmost qualifier from a data set name. <a>#4273</a>",
   "Fixed an issue that prevented screen readers from reading Unix file attributes in the Unix file attributes webview, and added clear tags to help users understand how to edit those attributes.<a>#4024</a>": "Fixed an issue that prevented screen readers from reading Unix file attributes in the Unix file attributes webview, and added clear tags to help users understand how to edit those attributes.<a>#4024</a>",
   "Fixed an issue that would allow multiple member-filter on a single dataset search. <a>#2037</a>": "Fixed an issue that would allow multiple member-filter on a single dataset search. <a>#2037</a>",
   "Fixed an issue to review inconsistent capitalization across translation strings. <a>#2935</a>": "Fixed an issue to review inconsistent capitalization across translation strings. <a>#2935</a>",
@@ -1028,6 +1038,7 @@
   "Fixed an issue where clicking the Cancel button in the Save Credentials dialog triggered a 401 error prompting to update credentials. <a>#3713</a>": "Fixed an issue where clicking the Cancel button in the Save Credentials dialog triggered a 401 error prompting to update credentials. <a>#3713</a>",
   "Fixed an issue where clicking the refresh icon beside a profile in the Unix System Services (USS) view had no effect. <a>#3693</a>": "Fixed an issue where clicking the refresh icon beside a profile in the Unix System Services (USS) view had no effect. <a>#3693</a>",
   "Fixed an issue where copy-and-pasting an empty PDS within the same LPAR would result in an error. <a>#3541</a>": "Fixed an issue where copy-and-pasting an empty PDS within the same LPAR would result in an error. <a>#3541</a>",
+  "Fixed an issue where copying a USS file across profiles when a profile encoding was configured would corrupt characters in the destination file because the encoding was not passed to the upload call. <a>#4262</a>": "Fixed an issue where copying a USS file across profiles when a profile encoding was configured would corrupt characters in the destination file because the encoding was not passed to the upload call. <a>#4262</a>",
   "Fixed an issue where copying and pasting a file/folder in the USS tree would fail abruptly, displaying an error. <a>#3128</a>": "Fixed an issue where copying and pasting a file/folder in the USS tree would fail abruptly, displaying an error. <a>#3128</a>",
   "Fixed an issue where data set migration status was incorrectly handled when the migr attribute was not present in the API response. <a>#3471</a>": "Fixed an issue where data set migration status was incorrectly handled when the migr attribute was not present in the API response. <a>#3471</a>",
   "Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. <a>#3294</a>": "Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. <a>#3294</a>",
@@ -1051,6 +1062,7 @@
   "Fixed an issue where logical record length truncation detection failed for extenders. <a>#4002</a>": "Fixed an issue where logical record length truncation detection failed for extenders. <a>#4002</a>",
   "Fixed an issue where moving a PDS member into the \"No members found\" placeholder of an empty PDS deleted the member without transferring its data. <a>#3950</a>": "Fixed an issue where moving a PDS member into the \"No members found\" placeholder of an empty PDS deleted the member without transferring its data. <a>#3950</a>",
   "Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. <a>#3590</a>": "Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. <a>#3590</a>",
+  "Fixed an issue where navigating to an invalid or inaccessible path under one USS profile caused file and folder nodes under all profiles to disappear or show outdated results. <a>#4288</a>": "Fixed an issue where navigating to an invalid or inaccessible path under one USS profile caused file and folder nodes under all profiles to disappear or show outdated results. <a>#4288</a>",
   "Fixed an issue where opening a data set with the same starting pattern as an archived data set caused a REST API error (code 500) to appear in the editor. <a>#3407</a>": "Fixed an issue where opening a data set with the same starting pattern as an archived data set caused a REST API error (code 500) to appear in the editor. <a>#3407</a>",
   "Fixed an issue where opening a PDS member after renaming an expanded PDS resulted in an error. <a>#3314</a>": "Fixed an issue where opening a PDS member after renaming an expanded PDS resulted in an error. <a>#3314</a>",
   "Fixed an issue where opening a USS file would show empty contents when an error occurred while fetching the file from the mainframe, instead of displaying an error message. <a>#3894</a>": "Fixed an issue where opening a USS file would show empty contents when an error occurred while fetching the file from the mainframe, instead of displaying an error message. <a>#3894</a>",
@@ -1071,12 +1083,14 @@
   "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>": "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>",
   "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>": "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>",
   "Fixed an issue where ssh type profiles were throwing errors when making file system calls. <a>#3891</a>": "Fixed an issue where ssh type profiles were throwing errors when making file system calls. <a>#3891</a>",
+  "Fixed an issue where submitting a job from a favorited PDS member would fail. <a>#4282</a>": "Fixed an issue where submitting a job from a favorited PDS member would fail. <a>#4282</a>",
   "Fixed an issue where switching to a custom credential manager did not update the imperative.json file. <a>#3705</a>": "Fixed an issue where switching to a custom credential manager did not update the imperative.json file. <a>#3705</a>",
   "Fixed an issue where the 'Delete' key binding for the USS tree returns a 'contextValue' error. <a>#2796</a>": "Fixed an issue where the 'Delete' key binding for the USS tree returns a 'contextValue' error. <a>#2796</a>",
   "Fixed an issue where the \"Created Date\" and \"Modified Date\" columns were not sortable in the data sets table view, specifically when the user's locale differs from the default value (en (en-US)). Now, sorting works regardless of the VS Code language setting, and dates are now formatted with the user's locale. <a>#4008</a>": "Fixed an issue where the \"Created Date\" and \"Modified Date\" columns were not sortable in the data sets table view, specifically when the user's locale differs from the default value (en (en-US)). Now, sorting works regardless of the VS Code language setting, and dates are now formatted with the user's locale. <a>#4008</a>",
   "Fixed an issue where the \"Paste\" option is shown for a multi-select operation in the \"Data Sets\" view.": "Fixed an issue where the \"Paste\" option is shown for a multi-select operation in the \"Data Sets\" view.",
   "Fixed an issue where the attributes were not shown for VSAM data sets when using the Show Attributes feature. <a>#3545</a>": "Fixed an issue where the attributes were not shown for VSAM data sets when using the Show Attributes feature. <a>#3545</a>",
   "Fixed an issue where the AuthUtils.syncSessionNode function did not handle errors thrown by the ZoweTreeNode.setSessionToChoice function. Now, when an error occurs, the function returns early and the error message is printed to Zowe Explorer's logs and output channel. <a>#3524</a>": "Fixed an issue where the AuthUtils.syncSessionNode function did not handle errors thrown by the ZoweTreeNode.setSessionToChoice function. Now, when an error occurs, the function returns early and the error message is printed to Zowe Explorer's logs and output channel. <a>#3524</a>",
+  "Fixed an issue where the certAccount property was not supported in z/OSMF profiles for authenticating with certificates stored in the OS keychain. <a>#4309</a>": "Fixed an issue where the certAccount property was not supported in z/OSMF profiles for authenticating with certificates stored in the OS keychain. <a>#4309</a>",
   "Fixed an issue where the contents of an editor did not update when polling spool content or using the \"Pull from Mainframe\" action with jobs. <a>#3249</a>": "Fixed an issue where the contents of an editor did not update when polling spool content or using the \"Pull from Mainframe\" action with jobs. <a>#3249</a>",
   "Fixed an issue where the Create Directory and Create File features would continue processing when the first prompt was dismissed, causing an incorrect URI to be generated. <a>#3183</a>": "Fixed an issue where the Create Directory and Create File features would continue processing when the first prompt was dismissed, causing an incorrect URI to be generated. <a>#3183</a>",
   "Fixed an issue where the Create Directory and Create File features would incorrectly handle user-specified locations with trailing slashes. <a>#3183</a>": "Fixed an issue where the Create Directory and Create File features would incorrectly handle user-specified locations with trailing slashes. <a>#3183</a>",
@@ -1087,6 +1101,7 @@
   "Fixed an issue where the filesystem continued to use a profile with invalid credentials to fetch resources. Now, after an authentication error occurs for a profile, it cannot be used again in the filesystem until the authentication error is resolved. <a>#3329</a>": "Fixed an issue where the filesystem continued to use a profile with invalid credentials to fetch resources. Now, after an authentication error occurs for a profile, it cannot be used again in the filesystem until the authentication error is resolved. <a>#3329</a>",
   "Fixed an issue where the first change to a Zowe team configuration did not accurately refresh the data set, USS and job trees. <a>#3524</a>": "Fixed an issue where the first change to a Zowe team configuration did not accurately refresh the data set, USS and job trees. <a>#3524</a>",
   "Fixed an issue where the job spool pagination code lens was appearing even though the extender did not support pagination. <a>#3714</a>": "Fixed an issue where the job spool pagination code lens was appearing even though the extender did not support pagination. <a>#3714</a>",
+  "Fixed an issue where the Jobs FileSystemProvider could not resolve profiles from URIs when opened programmatically, causing errors when extensions tried to open job spool files directly. The Jobs FileSystemProvider now extracts the profile name from the URI and loads it on-demand, matching the behavior of Datasets and USS FileSystemProviders. <a>#4284</a>": "Fixed an issue where the Jobs FileSystemProvider could not resolve profiles from URIs when opened programmatically, causing errors when extensions tried to open job spool files directly. The Jobs FileSystemProvider now extracts the profile name from the URI and loads it on-demand, matching the behavior of Datasets and USS FileSystemProviders. <a>#4284</a>",
   "Fixed an issue where the location prompt for the Create Directory and Create File USS features would appear even when a path is already set for the profile or parent folder. <a>#3183</a>": "Fixed an issue where the location prompt for the Create Directory and Create File USS features would appear even when a path is already set for the profile or parent folder. <a>#3183</a>",
   "Fixed an issue where the mismatch etag error returned was not triggering the diff editor, resulting in possible loss of data due to the issue. <a>#2277</a>": "Fixed an issue where the mismatch etag error returned was not triggering the diff editor, resulting in possible loss of data due to the issue. <a>#2277</a>",
   "Fixed an issue where the onProfilesUpdate event did not fire after secure credentials were updated. <a>#2822</a>": "Fixed an issue where the onProfilesUpdate event did not fire after secure credentials were updated. <a>#2822</a>",
@@ -1105,6 +1120,7 @@
   "Fixed an issue where user would not get prompted when authentication error is thrown. <a>#2334</a>": "Fixed an issue where user would not get prompted when authentication error is thrown. <a>#2334</a>",
   "Fixed an issue where VS Code did not provide all context menu options for a profile node after a multi-select operation. <a>#2108</a>": "Fixed an issue where VS Code did not provide all context menu options for a profile node after a multi-select operation. <a>#2108</a>",
   "Fixed an issue where Zowe Explorer displayed a \"No Zowe client configurations\" prompt when a project user configuration existed but no global configuration was present. <a>#3168</a>": "Fixed an issue where Zowe Explorer displayed a \"No Zowe client configurations\" prompt when a project user configuration existed but no global configuration was present. <a>#3168</a>",
+  "Fixed an issue where Zowe Explorer failed to activate if a VS Code workspace is opened and contains an invalid directory path. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are treated as project-level directories. <a>#4271</a>": "Fixed an issue where Zowe Explorer failed to activate if a VS Code workspace is opened and contains an invalid directory path. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are treated as project-level directories. <a>#4271</a>",
   "Fixed an issue where Zowe Explorer sometimes prompted the user to convert V1 profiles when changes were made to a team configuration after initialization. <a>#3246</a>": "Fixed an issue where Zowe Explorer sometimes prompted the user to convert V1 profiles when changes were made to a team configuration after initialization. <a>#3246</a>",
   "Fixed an issue with \"Zowe Explorer: Poll Content in Active Editor\" keybind interfering with debug capabilities in VScode. The keybind to poll JES Spool file content will require the spool file to be active in the text editor. <a>#2285</a>": "Fixed an issue with \"Zowe Explorer: Poll Content in Active Editor\" keybind interfering with debug capabilities in VScode. The keybind to poll JES Spool file content will require the spool file to be active in the text editor. <a>#2285</a>",
   "Fixed an issue with the \"Create New Data Set\" feature where a data set attribute's original value was deleted after the user dismissed the input box. Now, the attribute's value is preserved when the user cancels their input. <a>#4003</a>": "Fixed an issue with the \"Create New Data Set\" feature where a data set attribute's original value was deleted after the user dismissed the input box. Now, the attribute's value is preserved when the user cancels their input. <a>#4003</a>",
@@ -1403,6 +1419,7 @@
   "Job enhancements": "Job enhancements",
   "Job ID": "Job ID",
   "Job Name": "Job Name",
+  "Job not found: {0}": "Job not found: {0}",
   "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again.": "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again.",
   "Job search cancelled.": "Job search cancelled.",
   "Job spool pagination": "Job spool pagination",
@@ -1534,7 +1551,6 @@
   "Moving MVS files...": "Moving MVS files...",
   "Moving USS files...": "Moving USS files...",
   "Must be a valid number": "Must be a valid number",
-  "MVS command submitted.": "MVS command submitted.",
   "MVS data set enhancements": "MVS data set enhancements",
   "Name": "Name",
   "Name of Data Set": "Name of Data Set",
@@ -1855,6 +1871,7 @@
   "Rename Operation cancelled.": "Rename Operation cancelled.",
   "Renamed \"Zowe Explorer z/OS Console\" to \"z/OS Console\". <a>#3445</a>": "Renamed \"Zowe Explorer z/OS Console\" to \"z/OS Console\". <a>#3445</a>",
   "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>": "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>",
+  "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>": "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>",
   "Renaming data set {0}/Old data set name": {
     "message": "Renaming data set {0}",
     "comment": [
@@ -1916,6 +1933,18 @@
   "Select": "Select",
   "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles": "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles",
   "Select a certificate and certificate key in PEM format:": "Select a certificate and certificate key in PEM format:",
+  "Select a console command to run against {0} (An option to edit will follow)/Host name": {
+    "message": "Select a console command to run against {0} (An option to edit will follow)",
+    "comment": [
+      "Host name"
+    ]
+  },
+  "Select a console command to run immediately against {0}/Host name": {
+    "message": "Select a console command to run immediately against {0}",
+    "comment": [
+      "Host name"
+    ]
+  },
   "Select a data set organization (DSORG)": "Select a data set organization (DSORG)",
   "Select a filter": "Select a filter",
   "Select a filter or type to create a new one": "Select a filter or type to create a new one",
@@ -1962,18 +1991,6 @@
   "Select Allocate Data Set to create now, or Edit Attributes to review values": "Select Allocate Data Set to create now, or Edit Attributes to review values",
   "Select an attribute to edit, or select Allocate Data Set to create the data set": "Select an attribute to edit, or select Allocate Data Set to create the data set",
   "Select an item before deleting": "Select an item before deleting",
-  "Select an MVS command to run against {0} (An option to edit will follow)/Host name": {
-    "message": "Select an MVS command to run against {0} (An option to edit will follow)",
-    "comment": [
-      "Host name"
-    ]
-  },
-  "Select an MVS command to run immediately against {0}/Host name": {
-    "message": "Select an MVS command to run immediately against {0}",
-    "comment": [
-      "Host name"
-    ]
-  },
   "Select Certificate": "Select Certificate",
   "Select Certificate Key": "Select Certificate Key",
   "Select default encoding for directory files (current: {0})": "Select default encoding for directory files (current: {0})",
@@ -1988,8 +2005,8 @@
   "Select the location of the config file to edit": "Select the location of the config file to edit",
   "Select the location where the config file will be initialized": "Select the location where the config file will be initialized",
   "Select the profile to use to open the data set": "Select the profile to use to open the data set",
+  "Select the profile to use to submit the console command": "Select the profile to use to submit the console command",
   "Select the profile to use to submit the job": "Select the profile to use to submit the job",
-  "Select the profile to use to submit the MVS command": "Select the profile to use to submit the MVS command",
   "Select the profile to use to submit the TSO command": "Select the profile to use to submit the TSO command",
   "Select the profile to use to submit the Unix command": "Select the profile to use to submit the Unix command",
   "Select the profile to which the original data set belongs": "Select the profile to which the original data set belongs",
@@ -2043,6 +2060,7 @@
   },
   "Specify another codepage": "Specify another codepage",
   "Specify the data set type (DSNTYPE)": "Specify the data set type (DSNTYPE)",
+  "Spool file not found: {0}": "Spool file not found: {0}",
   "SSH profile missing connection details. Please update.": "SSH profile missing connection details. Please update.",
   "Starting to poll job {0} for completion./Job display name": {
     "message": "Starting to poll job {0} for completion.",
@@ -2372,6 +2390,7 @@
   },
   "Your Jobs": "Your Jobs",
   "z/OS default codepage": "z/OS default codepage",
+  "Zowe Console Command": "Zowe Console Command",
   "Zowe Explorer": "Zowe Explorer",
   "Zowe Explorer has activated successfully.": "Zowe Explorer has activated successfully.",
   "Zowe Explorer log level: {0}/Log setting": {
@@ -2404,7 +2423,6 @@
       "Zowe directory path"
     ]
   },
-  "Zowe MVS Command": "Zowe MVS Command",
   "Zowe profiles initialized successfully.": "Zowe profiles initialized successfully.",
   "Zowe TSO Command": "Zowe TSO Command",
   "Zowe Unix Command": "Zowe Unix Command",

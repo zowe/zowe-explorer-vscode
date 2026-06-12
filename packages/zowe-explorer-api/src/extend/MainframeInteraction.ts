@@ -553,7 +553,7 @@ export namespace MainframeInteraction {
         issueTsoCommandWithParms?(command: string, parms?: zostso.IStartTsoParms, useNewTsoApis?: boolean): Promise<zostso.IIssueResponse>;
 
         /**
-         * Issues a MVS Command and returns a Console Command API response.
+         * Issues a console Command and returns a Console Command API response.
          *
          * @param {string} command
          * @returns {Promise<zosconsole.IConsoleResponse>}

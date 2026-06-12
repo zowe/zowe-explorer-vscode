@@ -15,7 +15,7 @@ import { Types, IZoweTreeNode, imperative, ZosEncoding, IZoweTree, Sorting } fro
 import type { DatasetTree } from "../trees/dataset/DatasetTree";
 import type { JobTree } from "../trees/job/JobTree";
 import type { USSTree } from "../trees/uss/USSTree";
-import type { MvsCommandHandler } from "../commands/MvsCommandHandler";
+import type { ConsoleCommandHandler } from "../commands/ConsoleCommandHandler";
 import type { TsoCommandHandler } from "../commands/TsoCommandHandler";
 import type { UnixCommandHandler } from "../commands/UnixCommandHandler";
 import type { IListOptions } from "@zowe/zos-files-for-zowe-sdk";
@@ -89,6 +89,7 @@ export namespace Definitions {
         favorites: string[];
         vsamFavorites?: string[];
         memberFavorites?: string[];
+        migratedFavorites?: string[];
         history: string[];
         sessions: string[];
         searchHistory: string[];
@@ -131,7 +132,7 @@ export namespace Definitions {
         job: Types.IZoweJobTreeType;
     }
     export interface IZoweCommandProviders {
-        mvs: MvsCommandHandler;
+        mvs: ConsoleCommandHandler;
         tso: TsoCommandHandler;
         uss: UnixCommandHandler;
     }

@@ -192,8 +192,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             droppedItems = { value: effectiveDataTransfer.value };
         }
 
-        if (!droppedItems || !Array.isArray(droppedItems.value)) return;
-        if (!resolvedTargetNode || !resolvedTargetNode.fullPath) return;
+        if (!droppedItems || !Array.isArray(droppedItems.value)) {return;}
+        if (!resolvedTargetNode || !resolvedTargetNode.fullPath) {return;}
 
         if (!resolvedTargetNode.fullPath.includes("\\") && !resolvedTargetNode.fullPath.includes("/")) {
             Gui.errorMessage(vscode.l10n.t("You must specify a directory before moving."));
@@ -209,16 +209,16 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
         // Helper to find the dragged node when keys differ (profile prefix, etc.)
         const findDraggedNode = (itemUri: { path: string }, label?: string) => {
-            let node = this.draggedNodes && this.draggedNodes[itemUri.path];
-            if (node) return node;
+            const node = this.draggedNodes && this.draggedNodes[itemUri.path];
+            if (node) {return node;}
             const nodes = Object.values(this.draggedNodes || {});
             for (const n of nodes) {
                 try {
                     const rpath = n?.resourceUri?.path;
-                    if (rpath === itemUri.path) return n;
-                    if (typeof rpath === "string" && rpath.endsWith(itemUri.path)) return n;
+                    if (rpath === itemUri.path) {return n;}
+                    if (typeof rpath === "string" && rpath.endsWith(itemUri.path)) {return n;}
                     const nlabel = SharedUtils.getNodeProperty(n, "label");
-                    if (label && nlabel === label) return n;
+                    if (label && nlabel === label) {return n;}
                 } catch {
                     // ignore malformed entries
                 }
@@ -254,7 +254,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
 
             // Skip nodes that are direct children of the target node
-            if (node.getParent() === target) continue;
+            if (node.getParent() === target) {continue;}
 
             const nodeLabel = SharedUtils.getNodeProperty(node, "label") || (item.label as string);
 
@@ -283,8 +283,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
         for (const item of droppedItems.value) {
             const node = findDraggedNode(item.uri, item.label);
-            if (!node) continue;
-            if (node.getParent() === target) continue;
+            if (!node) {continue;}
+            if (node.getParent() === target) {continue;}
 
             const nodeLabel = SharedUtils.getNodeProperty(node, "label") || (item.label as string);
             const newUriForNode = vscode.Uri.from({
@@ -538,7 +538,12 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 const favsForProfile = await this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
-            return element.getChildren();
+            const prevDescription = element.description;
+            const children = await element.getChildren();
+            if (element.description !== prevDescription) {
+                this.nodeDataChanged(element);
+            }
+            return children;
         }
         return this.mSessionNodes;
     }
