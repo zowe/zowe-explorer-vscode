@@ -590,7 +590,7 @@ export class SharedInit {
 
     public static async setupRemoteWorkspaceFolders(e?: vscode.WorkspaceFoldersChangeEvent, profileType?: string): Promise<void> {
         const profInfo = Profiles.getInstance();
-        let uriMap = new Map<string, UriFsInfo>();
+        const uriMap = new Map<string, UriFsInfo>();
         const profileNames = new Set<string>(profInfo.getProfiles(profileType).map((prof) => prof.name));
         // Perform remote lookup for workspace folders that fit the `zowe-ds` or `zowe-uss` schemes.
         const newWorkspaces = (e?.added ?? vscode.workspace.workspaceFolders ?? [])
