@@ -1927,7 +1927,7 @@
   "This data set has {0} members. Downloading a large number of files can take a long time. Do you want to continue?": "",
   "This directory has {0} members. Downloading a large number of files may take a long time. Do you want to continue?": "",
   "This log file can be found at {0}": "",
-  "This upload operation may result in data loss.": "",
+  "Line(s) in this file exceed the logical record length (LRECL) of this data set.": "",
   "This will remove all favorited data sets items for profile {0}. Continue?": "",
   "This will remove all favorited jobs items for profile {0}. Continue?": "",
   "This will remove all favorited USS items for profile {0}. Continue?": "",

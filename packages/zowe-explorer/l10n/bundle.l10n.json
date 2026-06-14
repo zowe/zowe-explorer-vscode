@@ -2158,7 +2158,7 @@
       "Log file location"
     ]
   },
-  "This upload operation may result in data loss.": "This upload operation may result in data loss.",
+  "Line(s) in this file exceed the logical record length (LRECL) of this data set.": "Line(s) in this file exceed the logical record length (LRECL) of this data set.",
   "This will remove all favorited data sets items for profile {0}. Continue?/Profile name": {
     "message": "This will remove all favorited data sets items for profile {0}. Continue?",
     "comment": [

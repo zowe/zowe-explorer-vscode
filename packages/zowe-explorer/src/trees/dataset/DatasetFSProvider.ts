@@ -938,7 +938,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 const rangeStrings = groupedLines.map((g) => (g.start === g.end ? `${g.start}` : `${g.start}-${g.end}`));
                 const maxRanges = 5;
                 const linesToReview = rangeStrings.length > maxRanges ? rangeStrings.slice(0, maxRanges).join(", ") + "..." : rangeStrings.join(", ");
-                const dataLossMsg = vscode.l10n.t("This upload operation may result in data loss.");
+                const dataLossMsg = vscode.l10n.t(
+                    "Line(s) in this file exceed the logical record length (LRECL) of this data set."
+                );
                 const shortMsg = vscode.l10n.t("Please review the following lines:");
                 const newErr = new Error(`${dataLossMsg} ${shortMsg} ${linesToReview}`);
                 newErr.stack = shortMsg + "\n";
