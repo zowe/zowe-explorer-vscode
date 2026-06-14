@@ -2601,11 +2601,14 @@ Would you like to do this now?`,
         }
 
         // Update filter for node based on selection & filter entry
+        // z/OS user IDs are always uppercase; normalize the input so filters match regardless of what the user typed
+        const normalizedFilter =
+            filterMethod === Sorting.DatasetFilterOpts.UserId ? filter.toUpperCase() : filter;
         this.updateFilterForNode(
             node,
             {
                 method: filterMethod as Sorting.DatasetFilterOpts,
-                value: filter,
+                value: normalizedFilter,
             },
             isSession
         );

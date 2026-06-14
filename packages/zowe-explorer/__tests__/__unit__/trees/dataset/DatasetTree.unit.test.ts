@@ -5798,14 +5798,14 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
         });
-        vi.spyOn(nodeA, "getStats").mockReturnValue({ user: "someUser", createdDate: new Date(), modifiedDate: new Date() });
+        vi.spyOn(nodeA, "getStats").mockReturnValue({ user: "SOMEUSER", createdDate: new Date(), modifiedDate: new Date() });
         const nodeB = new ZoweDatasetNode({
             label: "B",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: pds,
         });
         vi.spyOn(nodeB, "getStats").mockReturnValue({
-            user: "anotherUser",
+            user: "ANOTHERUSER",
             createdDate: new Date("2021-01-01T12:00:00"),
             modifiedDate: new Date("2022-01-01T12:00:00"),
         });
@@ -5815,7 +5815,7 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             parentNode: pds,
         });
         vi.spyOn(nodeC, "getStats").mockReturnValue({
-            user: "someUser",
+            user: "SOMEUSER",
             createdDate: new Date("2022-02-01T12:00:00"),
             modifiedDate: new Date("2022-03-15T16:30:00"),
         });
