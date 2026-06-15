@@ -5,6 +5,7 @@ Scenario Outline: User wants to issue a command
     When a user selects <opt> from the command palette
     Then a quick pick appears to select a profile
     When a user selects a profile
+    And a user selects a TSO profile if required
     Then a user can enter in <cmd> as the command and submit it
     Then a notification appears with message "<msg>"
 

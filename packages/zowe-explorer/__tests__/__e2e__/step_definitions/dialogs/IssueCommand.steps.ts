@@ -61,6 +61,26 @@ When("a user selects a profile", async function () {
     await expect(this.input.elem).toBeDisplayedInViewport();
 });
 
+When("a user selects a TSO profile if required", async function () {
+    await expect(this.input).toBeDefined();
+    if (this.openedCommand === "Issue TSO Command") {
+        // Since we are issuing a TSO command, check if VS Code is prompting for a TSO service profile
+        const placeholder = await this.input.getPlaceHolder();
+        if (placeholder.includes("Select a TSO profile") || placeholder.includes("Select the profile")) {
+            console.log(`TSO profile selection required (placeholder: "${placeholder}"). Selecting TSO profile...`);
+            const tsoProfileName = process.env.ZE_TEST_TSO_PROFILE_NAME || process.env.ZE_TEST_PROFILE_NAME;
+            if (tsoProfileName) {
+                await this.input.selectQuickPick(tsoProfileName);
+            } else {
+                await this.input.selectQuickPick(0);
+            }
+            await expect(this.input.elem).toBeDisplayedInViewport();
+        } else {
+            console.log(`TSO profile selection not prompted. Current placeholder: "${placeholder}"`);
+        }
+    }
+});
+
 Then(/a user can enter in (.*) as the command and submit it/, async function (command: string) {
     await this.input.setText(command);
     await this.input.confirm();
