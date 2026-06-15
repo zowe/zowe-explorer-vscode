@@ -105,3 +105,31 @@ Then(/a notification appears with message "(.*)"/, async function (expectedMessa
         }
     );
 });
+
+Then(/the "(.*)" output channel contains output matching "(.*)"/, async function (channelName: string, regexPattern: string) {
+    const workbench = await browser.getWorkbench();
+    const bottomBar = workbench.getBottomBar();
+    const outputView = await bottomBar.openOutputView();
+
+    // Select our target output channel
+    await outputView.selectChannel(channelName);
+
+    const regex = new RegExp(regexPattern);
+
+    // Wait up to a few seconds for the command output to stream to the channel.
+    await browser.waitUntil(
+        async () => {
+            const lines = await outputView.getText();
+            for (const line of lines) {
+                if (regex.test(line)) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        {
+            timeout: 10000,
+            timeoutMsg: `Output matching pattern "${regexPattern}" did not appear in output channel "${channelName}" within timeout.`,
+        }
+    );
+});
