@@ -148,7 +148,15 @@ Then(/the "(.*)" output channel contains output matching "(.*)"/, async function
     // Select our target output channel
     await outputView.selectChannel(channelName);
 
-    const regex = new RegExp(regexPattern);
+    // Dynamic resolution of placeholders
+    let finalPattern = regexPattern;
+    if (regexPattern === "USS_DIR") {
+        const ussDir = process.env.ZE_TEST_USS_FILTER || "/";
+        // Escape special regex characters in the directory path to ensure a safe match
+        finalPattern = ussDir.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+    }
+
+    const regex = new RegExp(finalPattern);
 
     // Wait up to a few seconds for the command output to stream to the channel.
     await browser.waitUntil(
@@ -163,7 +171,7 @@ Then(/the "(.*)" output channel contains output matching "(.*)"/, async function
         },
         {
             timeout: 10000,
-            timeoutMsg: `Output matching pattern "${regexPattern}" did not appear in output channel "${channelName}" within timeout.`,
+            timeoutMsg: `Output matching pattern "${finalPattern}" did not appear in output channel "${channelName}" within timeout.`,
         }
     );
 });

@@ -15,5 +15,5 @@ Scenario Outline: User wants to issue a command
       | opt | cmd | msg | channel | regex | serviceProfileType |
       | Issue TSO Command | PROFILE | TSO command submitted. | Zowe TSO Command | (IKJ\d+I\|READY\|PREFIX\() | tso |
       | Issue Console Command | D T | Console command submitted. | Zowe Console Command | (IEE\d+I\|CNZ\d+I\|TIME) | none |
-      | Issue Unix Command | pwd | Unix command submitted. | Zowe Unix Command | \/ | ssh |
+      | Issue Unix Command | pwd | Unix command submitted. | Zowe Unix Command | USS_DIR | ssh |
 
