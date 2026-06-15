@@ -540,7 +540,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                 await zosuss.Shell.executeSshCwd(
                     sshSession,
                     command,
-                    '"' + cwd + '"',
+                    "'" + cwd.replace(/'/g, "'\\''") + "'",
                     (data: string) => {
                         stdout += data;
                     },
