@@ -61,11 +61,15 @@ When("a user selects a profile", async function () {
     await expect(this.input.elem).toBeDisplayedInViewport();
 });
 
-When("a user selects a TSO profile if required", async function () {
+When(/a user selects a secondary profile of type "(.*)" if required/, async function (profileType: string) {
     await expect(this.input).toBeDefined();
-    if (this.openedCommand === "Issue TSO Command") {
-        // Since we are issuing a TSO command, check if VS Code is prompting for a TSO service profile
-        const placeholder = await this.input.getPlaceHolder();
+    if (profileType === "none") {
+        return;
+    }
+
+    const placeholder = await this.input.getPlaceHolder();
+
+    if (profileType === "tso") {
         if (placeholder.includes("Select a TSO profile") || placeholder.includes("Select the profile")) {
             console.log(`TSO profile selection required (placeholder: "${placeholder}"). Selecting TSO profile...`);
             const tsoProfileName = process.env.ZE_TEST_TSO_PROFILE_NAME || process.env.ZE_TEST_PROFILE_NAME;
@@ -78,6 +82,36 @@ When("a user selects a TSO profile if required", async function () {
         } else {
             console.log(`TSO profile selection not prompted. Current placeholder: "${placeholder}"`);
         }
+    } else if (profileType === "ssh") {
+        if (
+            placeholder.includes("submit the Unix command") ||
+            placeholder.includes("Select an SSH profile") ||
+            placeholder.includes("Select the profile")
+        ) {
+            console.log(`SSH profile selection required (placeholder: "${placeholder}"). Selecting SSH profile...`);
+            const sshProfileName = process.env.ZE_TEST_SSH_PROFILE_NAME;
+            if (sshProfileName) {
+                await this.input.selectQuickPick(sshProfileName);
+            } else {
+                await this.input.selectQuickPick(0);
+            }
+            await expect(this.input.elem).toBeDisplayedInViewport();
+        } else {
+            console.log(`SSH profile selection not prompted. Current placeholder: "${placeholder}"`);
+        }
+    }
+});
+
+When("a user selects a working directory if required", async function () {
+    await expect(this.input).toBeDefined();
+    if (this.openedCommand === "Issue Unix Command") {
+        // Since we are issuing a Unix command, we expect it to ask for the working directory path
+        console.log("Checking working directory prompt...");
+        const dir = process.env.ZE_TEST_USS_FILTER || "/";
+        console.log(`Entering working directory path: "${dir}"`);
+        await this.input.setText(dir);
+        await this.input.confirm();
+        await expect(this.input.elem).toBeDisplayedInViewport();
     }
 });
 
