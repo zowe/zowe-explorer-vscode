@@ -11,6 +11,7 @@
 
 import { Then, When } from "@cucumber/cucumber";
 import { ProfileInfo } from "@zowe/imperative";
+import { Key } from "webdriverio";
 import * as path from "path";
 
 const ALLOWED_COMMANDS_BY_PROFILE_TYPE: Record<string, string[]> = {
@@ -62,6 +63,25 @@ async function selectQuickPickItem(inputBox: any, indexOrText: string | number):
             timeoutMsg: `Quick pick item "${indexOrText}" was not found or could not be selected within 10 seconds.`,
         }
     );
+}
+
+async function setInputText(inputBox: any, text: string): Promise<void> {
+    // Click the input box to focus it
+    await inputBox.elem.click();
+    await browser.pause(100);
+
+    // Select all text: CMD+A on macOS, CTRL+A on Windows/Linux
+    const modifierKey = process.platform === "darwin" ? Key.Command : Key.Control;
+    await browser.action("key").down(modifierKey).down("a").up(modifierKey).up("a").perform();
+    await browser.pause(100);
+
+    // Delete selected text
+    await browser.action("key").down(Key.Backspace).up(Key.Backspace).perform();
+    await browser.pause(100);
+
+    // Type the new text
+    await browser.keys(text);
+    await browser.pause(200);
 }
 
 When(/a user selects (.*) from the command palette/, async function (command: string) {
@@ -139,14 +159,14 @@ When("a user selects a working directory if required", async function () {
         console.log("Checking working directory prompt...");
         const dir = process.env.ZE_TEST_USS_FILTER || "/";
         console.log(`Entering working directory path: "${dir}"`);
-        await this.input.setText(dir);
+        await setInputText(this.input, dir);
         await this.input.confirm();
         await expect(this.input.elem).toBeDisplayedInViewport();
     }
 });
 
 Then(/a user can enter in (.*) as the command and submit it/, async function (command: string) {
-    await this.input.setText(command);
+    await setInputText(this.input, command);
     await this.input.confirm();
 });
 
