@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import {
     FileManagement,
+    handleError,
     Gui,
     CorrelatedError,
     IZoweTree,
@@ -612,17 +613,17 @@ export class SharedInit {
                 }
                 readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri));
             } catch (err) {
-                if (err instanceof Error) {
-                    ZoweLogger.error(err.message);
-                }
+                handleError(err, (error) => {
+                    ZoweLogger.error(error.message);
+                });
             }
         }
         try {
             await Promise.all(readDirRequests);
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.error(err.message);
-            }
+            handleError(err, (error) => {
+                ZoweLogger.error(error.message);
+            });
         }
         if (profileType !== "zosmf" && newWorkspaces.length > 0) {
             await vscode.commands.executeCommand("workbench.files.action.refreshFilesExplorer");

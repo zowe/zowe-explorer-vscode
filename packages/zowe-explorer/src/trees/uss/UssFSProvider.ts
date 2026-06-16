@@ -13,6 +13,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import {
     BaseProvider,
+    handleError,
     BufferBuilder,
     FsAbstractUtils,
     imperative,
@@ -156,9 +157,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 }
             }
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.error(err.message);
-            }
+            handleError(err, (error) => {
+                ZoweLogger.error(error.message);
+            });
         }
 
         return entry;
@@ -529,9 +530,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     stream: bufBuilder,
                 });
             } catch (err) {
-                if (err instanceof Error) {
-                    ZoweLogger.error(`[UssFSProvider] fetchFileAtUri failed due to an error. Details: \n${err.message}`);
-                }
+                handleError(err, (error) => {
+                    ZoweLogger.error(`[UssFSProvider] fetchFileAtUri failed due to an error. Details: \n${error.message}`);
+                });
                 if (
                     !(
                         (err instanceof imperative.ImperativeError &&

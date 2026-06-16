@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Replaced repetitive `if (err instanceof Error)` patterns with `handleError` and `errorMessage` utility functions from `@zowe/zowe-explorer-api`. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 - Renamed references to "MVS Command" to "Console Command" for clarity. [#4300](https://github.com/zowe/zowe-explorer-vscode/issues/4300)
 
 ### Bug fixes

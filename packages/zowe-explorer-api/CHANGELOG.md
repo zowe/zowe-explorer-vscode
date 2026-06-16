@@ -1,4 +1,4 @@
-# Change Log
+﻿# Change Log
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
@@ -6,6 +6,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 - Added a function `trimExtension` in the `FsDatasetsUtils` class for stripping extension suffix off of a data set name. [#4326](https://github.com/zowe/zowe-explorer-vscode/pull/4326)
 
 ### Bug fixes
