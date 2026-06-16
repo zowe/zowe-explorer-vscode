@@ -1296,18 +1296,27 @@ When("the user enters {string} as the number value", async (value: string) => {
 });
 
 When("the user selects {string} as the boolean value", async (value: string) => {
-    let booleanSelect = await browser.$("select");
-    if (!booleanSelect || !(await booleanSelect.isExisting())) {
+    let booleanSelect = await browser.$("#new-property-value-select, .add-profile-input, .wizard-property-value-input");
+
+    if (!booleanSelect || !(await booleanSelect.isExisting()) || !(await booleanSelect.isDisplayed())) {
         const selects = await browser.$$("select");
         for (const select of selects) {
             if (await select.isDisplayed()) {
-                booleanSelect = select;
-                break;
+                const className = await select.getAttribute("class").catch(() => "");
+                if (className.includes("add-profile-input") || className.includes("wizard-property-value-input")) {
+                    booleanSelect = select;
+                    break;
+                }
             }
         }
     }
-    await booleanSelect.waitForExist({ timeout: 1000 });
-    await booleanSelect.waitForDisplayed({ timeout: 1000 });
+
+    if (!booleanSelect || !(await booleanSelect.isExisting()) || !(await booleanSelect.isDisplayed())) {
+        booleanSelect = await browser.$(".modal select, .add-profile-modal select, .wizard-modal select, select");
+    }
+
+    await booleanSelect.waitForExist({ timeout: 2000 });
+    await booleanSelect.waitForDisplayed({ timeout: 2000 });
 
     await browser.pause(100);
 
