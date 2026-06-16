@@ -256,6 +256,7 @@ When("a user sets a filter search on the profile for the submitted job", async f
     // Locate and select the search button on the profile node
     const searchButton = actionButtons[actionButtons.length - 1];
     await searchButton.wait();
+    await searchButton.elem.waitForClickable({ timeout: 5000 });
     await searchButton.elem.click();
 
     await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());

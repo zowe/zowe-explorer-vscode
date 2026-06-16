@@ -32,6 +32,7 @@ async function setFilterForProfile(profileNode: ProfileNode, tree: string): Prom
     const isUss = tree.toLowerCase() === "uss" || tree.toLowerCase() === "unix system services (uss)";
     const isJobs = !isUss && tree.toLowerCase() === "jobs";
     await searchButton.wait();
+    await searchButton.elem.waitForClickable({ timeout: 5000 });
     await searchButton.elem.click();
 
     await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());

@@ -238,6 +238,7 @@ Given("a sleep job has been submitted for polling", async function () {
         const actionButtons = await (await dsProfileNode.find()).getActionButtons();
         const searchButton = actionButtons[actionButtons.length - 1];
         await searchButton.wait();
+        await searchButton.elem.waitForClickable({ timeout: 5000 });
         await searchButton.elem.click();
 
         await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
@@ -319,6 +320,7 @@ Given("the Jobs tree has a favorited job search filter for the active job", asyn
     const actionButtons = await (await regularProfileNode.find()).getActionButtons();
     const searchButton = actionButtons[actionButtons.length - 1];
     await searchButton.wait();
+    await searchButton.elem.waitForClickable({ timeout: 5000 });
     await searchButton.elem.click();
 
     await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
