@@ -6,6 +6,17 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added a function `trimExtension` in the `FsDatasetsUtils` class for stripping extension suffix off of a data set name. [#4326](https://github.com/zowe/zowe-explorer-vscode/pull/4326)
+
+### Bug fixes
+
+- Fixed an issue where the `ZoweVsCodeExtension.workspaceRoot` function getter could return a non-existent local directory. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are considered as the workspace root. [#4271](https://github.com/zowe/zowe-explorer-vscode/issues/4271)
+- Fixed an issue where executing Unix commands could fail if the current working directory path contained certain special characters. [#4330](https://github.com/zowe/zowe-explorer-vscode/pull/4330)
+
+## `3.5.0`
+
+### New features and enhancements
+
 - Implemented request caching capabilities for filesystem providers that extend the `BaseProvider` class. [#3844](https://github.com/zowe/zowe-explorer-vscode/issues/3554)
 - Introduced a `FeatureFlag` class to manage experimental features via toggleable flags. [#3963](https://github.com/zowe/zowe-explorer-vscode/pull/3963)
 - Enhanced `DataSetAttributesProvider` to pass raw API response attributes to extenders via the `DsInfo` context object. Extenders can now access the `attributes` field in the context to retrieve data set information without making additional API calls. [#3927](https://github.com/zowe/zowe-explorer-vscode/issues/3927)

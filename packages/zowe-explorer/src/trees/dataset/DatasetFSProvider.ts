@@ -38,7 +38,7 @@ import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
-import * as dayjs from "dayjs";
+import dayjs from "dayjs";
 import { DatasetUtils } from "./DatasetUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
@@ -348,6 +348,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let entryExists: boolean;
         let pdsMember: boolean;
         let uriPath: string[];
+        let isMigrated = false;
 
         await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const apiRegister = ZoweExplorerApiRegister.getInstance();
@@ -410,12 +411,18 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
                 } else {
-                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(uriPath[0], {
+                    const requestedDsName = FsDatasetsUtils.trimExtension(uriPath[0]);
+                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(requestedDsName, {
                         attributes: true,
+                        maxLength: 1,
                     });
-                    if (resp.success && resp.apiResponse?.items?.length > 0) {
-                        entryIsDir = resp.apiResponse.items[0].dsorg?.startsWith("PO");
-                        entryStats = DatasetUtils.getDataSetStats(resp.apiResponse.items[0]);
+
+                    const responseItems = resp.apiResponse?.items ?? [];
+                    const matchedItem = responseItems.find((item) => item.dsname?.toUpperCase() === requestedDsName.toUpperCase());
+                    if (resp.success && matchedItem) {
+                        entryIsDir = matchedItem.dsorg?.startsWith("PO");
+                        entryStats = DatasetUtils.getDataSetStats(matchedItem);
+                        isMigrated = matchedItem.migr?.toUpperCase() === "YES";
                     } else {
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
@@ -423,7 +430,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
         });
 
-        if (entryIsDir) {
+        if (isMigrated && entryExists && entry?.type === vscode.FileType.Directory) {
+            const parentDir = this.lookupParentDirectory(uri);
+            const dsname = uriPath[Number(pdsMember)];
+            parentDir.entries.delete(dsname);
+            entryExists = false;
+        }
+
+        if (entryIsDir && !isMigrated) {
             if (!entryExists) {
                 this.createDirectory(uri);
                 entry = this._lookupAsDirectory(uri, false) as PdsEntry;
@@ -1039,7 +1053,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             await AuthUtils.ensureAuthNotCancelled(profile);
             await AuthHandler.waitForUnlock(entry.metadata.profile);
             if (FsDatasetsUtils.isPdsEntry(entry) || !entry.isMember) {
-                await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSet(oldName, newName);
+                await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSet(
+                    FsDatasetsUtils.trimExtension(oldName),
+                    FsDatasetsUtils.trimExtension(newName)
+                );
             } else {
                 const pdsName = path.basename(path.posix.join(entry.metadata.path, ".."));
                 await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSetMember(
@@ -1129,5 +1146,19 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         entry.metadata = profInfo;
         parent.entries.set(basename, entry);
         return entry;
+    }
+
+    public invalidateCache(uri: vscode.Uri): void {
+        try {
+            const parent = this.lookupParentDirectory(uri, true);
+            if (parent) {
+                const basename = path.posix.basename(uri.path);
+                if (parent.entries.has(basename)) {
+                    parent.entries.delete(basename);
+                }
+            }
+        } catch (e) {
+            // Ignore if parent directory cannot be looked up or doesn't exist
+        }
     }
 }

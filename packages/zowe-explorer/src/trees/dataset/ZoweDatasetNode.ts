@@ -11,7 +11,7 @@
 
 import { IZosmfListResponse, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import * as vscode from "vscode";
-import * as dayjs from "dayjs";
+import dayjs from "dayjs";
 import {
     Sorting,
     Types,
@@ -30,7 +30,6 @@ import {
     Paginator,
     IFetchResult,
     NavigationTreeItem,
-    PersistenceSchemaEnum,
     IDataSetCount,
     DsType,
 } from "@zowe/zowe-explorer-api";
@@ -72,6 +71,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public inFilterPrompt = false;
     public pdsFavoriteState?: Definitions.PdsFavoriteState;
     public favoritedMemberNames?: string[];
+    public wasPds?: boolean;
+    public justRecalled?: boolean;
 
     private paginator?: Paginator<IZosFilesResponse>;
     private paginatorData?: {
@@ -128,7 +129,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.id = this.label as string;
         }
 
-        if (this.label !== vscode.l10n.t("Favorites") && this.contextValue !== Constants.DS_MIGRATED_FILE_CONTEXT) {
+        if (this.label !== vscode.l10n.t("Favorites") && !SharedContext.isMigrated(this)) {
             const sessionLabel = opts.profile?.name ?? SharedUtils.getSessionLabel(this);
             if (
                 this.contextValue === Constants.DS_DS_CONTEXT ||
@@ -184,6 +185,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public setEtag(etag: string): void {
+        if (this.resourceUri == null) {
+            return;
+        }
         const dsEntry = DatasetFSProvider.instance.lookup(this.resourceUri, true) as DsEntry | PdsEntry;
         if (dsEntry == null || FsDatasetsUtils.isPdsEntry(dsEntry)) {
             return;
@@ -193,6 +197,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     public setStats(stats: Partial<Types.DatasetStats>): void {
+        if (this.resourceUri == null) {
+            return;
+        }
         const dsEntry = DatasetFSProvider.instance.lookup(this.resourceUri, true) as DsEntry | PdsEntry;
         if (dsEntry == null) {
             return;
@@ -219,14 +226,15 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * Updates this node so the recalled data set can be interacted with.
      * @param isPds Whether the data set is a PDS
      */
-    private async datasetRecalled(isPds: boolean): Promise<void> {
+    public async datasetRecalled(isPds: boolean): Promise<void> {
         // Change context value to match dsorg, update collapsible state and assign resource URI
         // Preserve favorite context and any additional context values
         this.contextValue = this.contextValue.replace(Constants.DS_MIGRATED_FILE_CONTEXT, isPds ? Constants.DS_PDS_CONTEXT : Constants.DS_DS_CONTEXT);
         this.collapsibleState = isPds ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
+        const sessionLabel = this.getProfileName() ?? SharedUtils.getSessionLabel(this);
         this.resourceUri = vscode.Uri.from({
             scheme: ZoweScheme.DS,
-            path: `/${SharedUtils.getSessionLabel(this)}/${this.label as string}`,
+            path: `/${sessionLabel}/${this.label as string}`,
         });
 
         // Replace icon on existing node with new one
@@ -237,10 +245,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         // Create entry in the filesystem to represent the recalled data set
         if (isPds) {
-            await vscode.workspace.fs.createDirectory(this.resourceUri);
+            DatasetFSProvider.instance.createDirectory(this.resourceUri);
         } else {
             this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             if (!DatasetFSProvider.instance.exists(this.resourceUri)) {
+                DatasetFSProvider.instance.createEntry(this.resourceUri, DsType.Ps);
                 await vscode.workspace.fs.writeFile(this.resourceUri, new Uint8Array());
             }
         }
@@ -254,6 +263,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         // Preserve favorite context and any additional context values
         const isBinary = SharedContext.isBinary(this);
         const isPds = this.collapsibleState !== vscode.TreeItemCollapsibleState.None;
+        this.wasPds = isPds;
         let previousContext = isBinary ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
         if (isPds) {
             previousContext = Constants.DS_PDS_CONTEXT;
@@ -275,12 +285,59 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     /**
+     * Synchronizes the migration status of a dataset node and its equivalent favorite node based on the mainframe response.
+     * @param dsNode The dataset node to sync
+     * @param migr The migration status from the mainframe ("YES" or other)
+     * @param dsorg The dataset organization (e.g., "PO" for PDS)
+     * @param dsTree The dataset tree provider
+     */
+    private async syncNodeMigrationStatus(dsNode: ZoweDatasetNode, migr: string, dsorg: string, dsTree: DatasetTree): Promise<void> {
+        const migrationStatus = migr.toUpperCase();
+        if (migrationStatus !== "YES") {
+            dsNode.justRecalled = false;
+        }
+        if (SharedContext.isMigrated(dsNode) && migrationStatus !== "YES") {
+            const isPds = dsorg?.startsWith("PO") ?? dsNode.wasPds ?? false;
+            await dsNode.datasetRecalled(isPds);
+            if (dsTree) {
+                const isFav = SharedContext.isFavoriteDescendant(dsNode);
+                const equiv = dsTree.findEquivalentNode(dsNode, isFav) as ZoweDatasetNode;
+                if (equiv) {
+                    equiv.justRecalled = false;
+                    await equiv.datasetRecalled(isPds);
+                    dsTree.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                }
+                if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                    dsTree.updateFavorites();
+                }
+            }
+        } else if (!SharedContext.isMigrated(dsNode) && migrationStatus === "YES") {
+            if (dsNode.justRecalled) {
+                return;
+            }
+            dsNode.datasetMigrated();
+            if (dsTree) {
+                const isFav = SharedContext.isFavoriteDescendant(dsNode);
+                const equiv = dsTree.findEquivalentNode(dsNode, isFav) as ZoweDatasetNode;
+                if (equiv) {
+                    equiv.datasetMigrated();
+                    dsTree.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                }
+                if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                    dsTree.updateFavorites();
+                }
+            }
+        }
+    }
+
+    /**
      * Retrieves child nodes of this ZoweDatasetNode
      *
      * @returns {Promise<ZoweDatasetNode[]>}
      */
     public async getChildren(paginate?: boolean): Promise<ZoweDatasetNode[]> {
         ZoweLogger.trace(`ZoweDatasetNode.getChildren called for ${this.label as string}.`);
+        const dsTree = SharedTreeProviders.ds as DatasetTree;
         if (!this.pattern && SharedContext.isSessionNotFav(this)) {
             const placeholder = new ZoweDatasetNode({
                 label: vscode.l10n.t("Use the search button to display data sets"),
@@ -345,12 +402,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 if (dsNode != null) {
                     elementChildren[dsNode.label.toString()] = dsNode;
                     if (item.migr) {
-                        const migrationStatus = item.migr.toUpperCase();
-                        if (SharedContext.isMigrated(dsNode) && migrationStatus !== "YES") {
-                            await dsNode.datasetRecalled(item.dsorg?.startsWith("PO"));
-                        } else if (!SharedContext.isMigrated(dsNode) && migrationStatus === "YES") {
-                            dsNode.datasetMigrated();
-                        }
+                        await this.syncNodeMigrationStatus(dsNode, item.migr, item.dsorg, dsTree);
                     }
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
                     // Creates a ZoweDatasetNode for a migrated dataset
@@ -361,6 +413,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
                         profile: cachedProfile,
                     });
+                    dsNode.wasPds = item.dsorg?.startsWith("PO");
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.dsorg?.startsWith("PO")) {
                     // Creates a ZoweDatasetNode for a PDS
@@ -512,8 +565,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
             }
 
-            if (SharedContext.isSession(this)) {
-                const dsTree = SharedTreeProviders.ds as DatasetTree;
+            if (SharedContext.isSession(this) && dsTree) {
                 // Reset and remove previous search patterns in case pattern has changed
                 dsTree.resetFilterForChildren(this.children);
                 // set new search patterns for each child of getChildren
@@ -727,6 +779,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      */
     public getEtag(): string {
         ZoweLogger.trace("ZoweDatasetNode.getEtag called.");
+        if (this.resourceUri == null) {
+            return undefined;
+        }
         const fileEntry = DatasetFSProvider.instance.lookup(this.resourceUri, true) as DsEntry;
         return fileEntry?.etag;
     }

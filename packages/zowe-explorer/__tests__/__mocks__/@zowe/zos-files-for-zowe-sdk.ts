@@ -90,13 +90,13 @@ export namespace List {
                 success: true,
                 apiResponse: {
                     items: [
-                        new Items("BRTVS99", "PS", null),
-                        new Items("BRTVS99.CA10", null, null, "YES"),
-                        new Items("BRTVS99.CA11.SPFTEMP0.CNTL", "PO", null),
-                        new Items("BRTVS99.DDIR", "PO", null),
-                        new Items("BRTVS99.VS1", "VS", null),
-                        new Items("BRTVS99.VS1.INDEX", "VS", null),
-                        new Items("BRTVS99.VS1.DATA", "VS", null),
+                        new Items("IBMUSER", "PS", null),
+                        new Items("IBMUSER.CA10", null, null, "YES"),
+                        new Items("IBMUSER.CA11.SPFTEMP0.CNTL", "PO", null),
+                        new Items("IBMUSER.DDIR", "PO", null),
+                        new Items("IBMUSER.VS1", "VS", null),
+                        new Items("IBMUSER.VS1.INDEX", "VS", null),
+                        new Items("IBMUSER.VS1.DATA", "VS", null),
                     ],
                 },
             };
@@ -117,7 +117,7 @@ export namespace List {
             const response = {
                 success: true,
                 apiResponse: {
-                    items: [new Items(null, "PS", "BRTVS99"), new Items(null, "PS", "BRTVS99.DDIR")],
+                    items: [new Items(null, "PS", "IBMUSER"), new Items(null, "PS", "IBMUSER.DDIR")],
                 },
             };
             resolve(response);
@@ -188,8 +188,9 @@ export class IZosFilesResponse {
 }
 
 export class ZosFilesUtils {
-    public static getDirsFromDataSet = jest.fn().mockReturnValue("test/dataset/path");
+    public static getDirsFromDataSet = vi.fn().mockReturnValue("test/dataset/path");
     public static DEFAULT_FILE_EXTENSION = "txt";
 }
 
-export const { Copy } = jest.requireActual("@zowe/zos-files-for-zowe-sdk");
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+export const { Copy } = require("@zowe/zos-files-for-zowe-sdk") as typeof import("@zowe/zos-files-for-zowe-sdk");

@@ -33,7 +33,7 @@ import { SharedTreeProviders } from "./SharedTreeProviders";
 import { JobActions } from "../job/JobActions";
 import { UssFSProvider } from "../uss/UssFSProvider";
 import { Constants } from "../../configuration/Constants";
-import { MvsCommandHandler } from "../../commands/MvsCommandHandler";
+import { ConsoleCommandHandler } from "../../commands/ConsoleCommandHandler";
 import { TsoCommandHandler } from "../../commands/TsoCommandHandler";
 import { UnixCommandHandler } from "../../commands/UnixCommandHandler";
 import { Profiles } from "../../configuration/Profiles";
@@ -58,6 +58,7 @@ import { JobFSProvider } from "../job/JobFSProvider";
 import { ZosmfRestClient } from "@zowe/core-for-zowe-sdk";
 
 export class SharedInit {
+    public static lastFocusedNode: { provider: IZoweTree<IZoweTreeNode>; node: IZoweTreeNode };
     public static onDidActivateExtensionEmitter = new vscode.EventEmitter<void>();
     public static onDidActivateExtension = SharedInit.onDidActivateExtensionEmitter.event;
 
@@ -186,7 +187,7 @@ export class SharedInit {
         context.subscriptions.push(vscode.window.registerWebviewViewProvider("zowe-resources", TableViewProvider.getInstance()));
 
         const commandProviders: Definitions.IZoweCommandProviders = {
-            mvs: MvsCommandHandler.getInstance(),
+            mvs: ConsoleCommandHandler.getInstance(),
             tso: TsoCommandHandler.getInstance(),
             uss: UnixCommandHandler.getInstance(),
         };

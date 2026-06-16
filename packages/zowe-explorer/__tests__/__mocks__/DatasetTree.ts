@@ -88,6 +88,6 @@ export class DatasetTree implements vscode.TreeDataProvider<ZoweDatasetNode> {
     }
 
     public get persistence(): ZowePersistentFilters {
-        return { getSortSetting: jest.fn() } as unknown as ZowePersistentFilters;
+        return { getSortSetting: vi.fn() } as unknown as ZowePersistentFilters;
     }
 }
