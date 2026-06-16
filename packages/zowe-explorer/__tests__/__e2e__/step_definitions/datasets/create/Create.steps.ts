@@ -28,13 +28,16 @@ After(async function () {
     }
 });
 
+When("the user right-clicks on the dataset profile and selects {string}", async function (_contextMenuOption: string) {});
+
 When("enters a new valid sequential dataset name", async function () {
     this.newPsName = testPsName;
     await allocateSequentialDs(this, testPsName);
 });
 
 Then("the new sequential dataset should be created successfully", async function () {
-    await browser.pause(1000);
+    this.newPsNode = await (await this.profileNode.find()).findChildItem(this.newPsName);
+    await expect(this.newPsNode).toBeDefined();
 });
 
 Then("the new dataset should appear in the Data Sets list", async function () {
@@ -53,7 +56,7 @@ Then("the new partitioned dataset should be created successfully", async functio
 });
 
 When("the user right-clicks on the newly created PDS and selects {string}", async function (_contextMenuOption: string) {
-    this.newPdsNode = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
+    this.newPdsNode = await this.profileNode.revealChildItem(testPdsName);
     await expect(this.newPdsNode).toBeDefined();
 });
 
