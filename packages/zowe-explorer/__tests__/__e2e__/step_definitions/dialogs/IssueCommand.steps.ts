@@ -15,7 +15,7 @@ import * as path from "path";
 
 const ALLOWED_COMMANDS_BY_PROFILE_TYPE: Record<string, string[]> = {
     zosmf: ["Issue TSO Command", "Issue Console Command", "Issue Unix Command"],
-    ssh: ["Issue TSO Command"],
+    ssh: ["Issue TSO Command", "Issue Unix Command"],
 };
 
 async function getProfileType(profileName: string): Promise<string | undefined> {
