@@ -34,6 +34,36 @@ async function getProfileType(profileName: string): Promise<string | undefined> 
     return undefined;
 }
 
+async function selectQuickPickItem(inputBox: any, indexOrText: string | number): Promise<void> {
+    await browser.waitUntil(
+        async () => {
+            const picks = await inputBox.getQuickPicks();
+            if (picks.length === 0) {
+                return false;
+            }
+            if (typeof indexOrText === "number") {
+                if (picks.length > indexOrText) {
+                    await picks[indexOrText].select();
+                    return true;
+                }
+            } else {
+                for (const pick of picks) {
+                    const label = await pick.getLabel();
+                    if (label.includes(indexOrText)) {
+                        await pick.select();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        },
+        {
+            timeout: 10000,
+            timeoutMsg: `Quick pick item "${indexOrText}" was not found or could not be selected within 10 seconds.`,
+        }
+    );
+}
+
 When(/a user selects (.*) from the command palette/, async function (command: string) {
     const profileName = process.env.ZE_TEST_PROFILE_NAME;
     const profileType = profileName ? await getProfileType(profileName) : process.env.ZE_TEST_PROFILE_TYPE || "zosmf";
@@ -54,9 +84,9 @@ When("a user selects a profile", async function () {
     await expect(this.input).toBeDefined();
     const profileName = process.env.ZE_TEST_PROFILE_NAME;
     if (profileName) {
-        await this.input.selectQuickPick(profileName);
+        await selectQuickPickItem(this.input, profileName);
     } else {
-        await this.input.selectQuickPick(0);
+        await selectQuickPickItem(this.input, 0);
     }
     await expect(this.input.elem).toBeDisplayedInViewport();
 });
@@ -74,9 +104,9 @@ When(/a user selects a secondary profile of type "(.*)" if required/, async func
             console.log(`TSO profile selection required (placeholder: "${placeholder}"). Selecting TSO profile...`);
             const tsoProfileName = process.env.ZE_TEST_TSO_PROFILE_NAME || process.env.ZE_TEST_PROFILE_NAME;
             if (tsoProfileName) {
-                await this.input.selectQuickPick(tsoProfileName);
+                await selectQuickPickItem(this.input, tsoProfileName);
             } else {
-                await this.input.selectQuickPick(0);
+                await selectQuickPickItem(this.input, 0);
             }
             await expect(this.input.elem).toBeDisplayedInViewport();
         } else {
@@ -91,9 +121,9 @@ When(/a user selects a secondary profile of type "(.*)" if required/, async func
             console.log(`SSH profile selection required (placeholder: "${placeholder}"). Selecting SSH profile...`);
             const sshProfileName = process.env.ZE_TEST_SSH_PROFILE_NAME;
             if (sshProfileName) {
-                await this.input.selectQuickPick(sshProfileName);
+                await selectQuickPickItem(this.input, sshProfileName);
             } else {
-                await this.input.selectQuickPick(0);
+                await selectQuickPickItem(this.input, 0);
             }
             await expect(this.input.elem).toBeDisplayedInViewport();
         } else {

@@ -54,11 +54,11 @@ export class SshCommandApi extends SshCommonApi implements MainframeInteraction.
     }
 
     public async issueUnixCommand?(_command: string, _cwd: string, _sshSession?: SshSession): Promise<string> {
-        const response = await (await this.client).uss.issueCmd(
-            {
-                commandText: `cd '${_cwd}' && ${_command}`,
-            }
-        );
+        const response = await (
+            await this.client
+        ).uss.issueCmd({
+            commandText: `cd '${_cwd}' && ${_command}`,
+        });
         return response.data ?? "";
     }
 
