@@ -40,7 +40,8 @@ Changelog:
 **Code coverage**
 
 - [ ] There is coverage for the code that I have added
-- [ ] I have added new test cases and they are passing
+- [ ] I have added new unit test cases and they are passing
+- [ ] I have added at least one end-to-end test for new features to validate behavior (if possible)
 - [ ] I have manually tested the changes
 
 **Deployment**
