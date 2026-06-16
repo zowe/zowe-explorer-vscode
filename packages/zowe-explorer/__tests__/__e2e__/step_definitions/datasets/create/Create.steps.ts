@@ -23,9 +23,6 @@ After(async function () {
     if (this.newPdsName) {
         await deleteDsOrMember(`/${process.env.ZE_TEST_PROFILE_NAME}/${testPdsName}`);
     }
-    if (this.newMemberName) {
-        await deleteDsOrMember(`/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${testMemberName}`);
-    }
 });
 
 When("the user right-clicks on the dataset profile and selects {string}", async function (_contextMenuOption: string) {});
