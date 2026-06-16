@@ -26,7 +26,17 @@ const testInfo = {
 async function setFilterForProfile(profileNode: ProfileNode, tree: string): Promise<void> {
     const node = await profileNode.find();
     await node.elem.moveTo();
-    await browser.pause(500);
+    let actionButtons: ViewItemAction[] = [];
+    await browser.waitUntil(
+        async () => {
+            actionButtons = await node.getActionButtons();
+            return actionButtons.length > 0;
+        },
+        {
+            timeout: 5000,
+            timeoutMsg: `Action buttons did not appear for the given node.`,
+        }
+    );
     const actionButtons = await node.getActionButtons();
 
     // Locate and select the search button on the profile node
