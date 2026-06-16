@@ -53,11 +53,17 @@ export class SshCommandApi extends SshCommonApi implements MainframeInteraction.
         }
     }
 
-    public issueUnixCommand?(_command: string, _cwd: string, _sshSession?: SshSession): Promise<string> {
-        throw new Error("Method not implemented.");
+    public async issueUnixCommand?(_command: string, _cwd: string, _sshSession?: SshSession): Promise<string> {
+        const response = await (
+            await this.client
+        ).uss.issueCmd({
+            commandText: `cd '${_cwd}' && ${_command}`,
+        });
+        return response.data ?? "";
     }
 
     public sshProfileRequired?(): boolean {
-        return true;
+        // We are already in the context of an SSH session, a separate SSH profile is not required.
+        return false;
     }
 }

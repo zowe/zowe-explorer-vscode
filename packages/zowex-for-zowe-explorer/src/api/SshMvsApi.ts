@@ -243,22 +243,17 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         return this.buildZosFilesResponse(response);
     }
 
-    public async allocateLikeDataSet(
-        dataSetName: string,
-        likeDataSetName: string,
-    ): Promise<zosfiles.IZosFilesResponse> {
-        const listResponse = await (await this.client).ds.listDatasets({
+    public async allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
+        const listResponse = await (
+            await this.client
+        ).ds.listDatasets({
             pattern: likeDataSetName,
             maxItems: 1,
             attributes: true,
         });
 
         if (listResponse.items.length === 0) {
-            return this.buildZosFilesResponse(
-                { success: false },
-                false,
-                `Source data set "${likeDataSetName}" not found`,
-            );
+            return this.buildZosFilesResponse({ success: false }, false, `Source data set "${likeDataSetName}" not found`);
         }
 
         const sourceDs: Dataset = listResponse.items[0];
@@ -281,7 +276,9 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         }
 
         try {
-            const response = await (await this.client).ds.createDataset({
+            const response = await (
+                await this.client
+            ).ds.createDataset({
                 dsname: dataSetName,
                 attributes: attributes,
             });
@@ -298,14 +295,11 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         }
     }
 
-    public async copyDataSet(
-        fromDataSetName: string,
-        toDataSetName: string,
-        _enq?: string,
-        replace?: boolean,
-    ): Promise<zosfiles.IZosFilesResponse> {
+    public async copyDataSet(fromDataSetName: string, toDataSetName: string, _enq?: string, replace?: boolean): Promise<zosfiles.IZosFilesResponse> {
         try {
-            const response = await (await this.client).ds.copyDatasetOrMember({
+            const response = await (
+                await this.client
+            ).ds.copyDatasetOrMember({
                 source: fromDataSetName,
                 target: toDataSetName,
                 replace: replace ?? false,
@@ -328,7 +322,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         toDataSetName: string,
         toMemberName: string,
         options: zosfiles.ICrossLparCopyDatasetOptions,
-        sourceProfile: imperative.IProfileLoaded,
+        sourceProfile: imperative.IProfileLoaded
     ): Promise<zosfiles.IZosFilesResponse> {
         const fromDataset = options["from-dataset"];
 
@@ -403,9 +397,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             // When a member is specified and the target PDS exists, check whether the member already exists
             if (targetMember != null && targetFound) {
                 const memberList = await targetClient.ds.listDsMembers({ dsname: targetDsn, pattern: targetMember });
-                targetMemberFound = memberList.items.some(
-                    (item) => item.name.toUpperCase() === targetMember.toUpperCase(),
-                );
+                targetMemberFound = memberList.items.some((item) => item.name.toUpperCase() === targetMember.toUpperCase());
             }
 
             if (!targetFound) {
@@ -475,13 +467,15 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
     public async copyDataSetMember(
         { dsn: fromDataSetName, member: fromMemberName }: zosfiles.IDataSet,
         { dsn: toDataSetName, member: toMemberName }: zosfiles.IDataSet,
-        options?: { replace?: boolean; overwrite?: boolean },
+        options?: { replace?: boolean; overwrite?: boolean }
     ): Promise<zosfiles.IZosFilesResponse> {
         const source = fromMemberName ? `${fromDataSetName}(${fromMemberName})` : fromDataSetName;
         const target = toMemberName ? `${toDataSetName}(${toMemberName})` : toDataSetName;
 
         try {
-            const response = await (await this.client).ds.copyDatasetOrMember({
+            const response = await (
+                await this.client
+            ).ds.copyDatasetOrMember({
                 source,
                 target,
                 replace: options?.replace ?? false,
