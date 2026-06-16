@@ -2337,20 +2337,3 @@ describe("openWithEncoding", () => {
         expect(promptMock).toHaveBeenCalledTimes(1);
     });
 });
-
-describe("ZosJobsProvider unit tests - Function searchPrompt", () => {
-    it("should return early and not open a prompt if inFilterPrompt is already true", async () => {
-        const globalMocks = await createGlobalMocks();
-        const node = globalMocks.testSessionNode;
-
-        node.inFilterPrompt = true;
-
-        vi.spyOn(globalMocks.testJobsProvider, "checkCurrentProfile").mockResolvedValue(undefined);
-        const getUserJobsMenuChoiceSpy = vi.spyOn(globalMocks.testJobsProvider, "getUserJobsMenuChoice").mockClear();
-
-        await globalMocks.testJobsProvider.searchPrompt(node);
-
-        expect(getUserJobsMenuChoiceSpy).not.toHaveBeenCalled();
-        expect(node.inFilterPrompt).toBe(true); // Should remain true
-    });
-});

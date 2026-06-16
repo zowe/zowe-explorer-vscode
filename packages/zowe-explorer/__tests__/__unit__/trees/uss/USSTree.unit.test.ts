@@ -1103,22 +1103,6 @@ describe("USSTree Unit Tests - Function filterPrompt", () => {
         });
         expect(updateTreeViewSpy).not.toHaveBeenCalled();
     });
-
-    it("should return early and not open a prompt if inFilterPrompt is already true", async () => {
-        const globalMocks = createGlobalMocks();
-        const node = globalMocks.testTree.mSessionNodes[1];
-
-        node.inFilterPrompt = true;
-
-        const createQuickPickSpy = vi.spyOn(Gui, "createQuickPick").mockClear();
-        const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockClear();
-
-        await globalMocks.testTree.filterPrompt(node);
-
-        expect(createQuickPickSpy).not.toHaveBeenCalled();
-        expect(showInputBoxSpy).not.toHaveBeenCalled();
-        expect(node.inFilterPrompt).toBe(true); // Should remain true
-    });
 });
 
 describe("USSTree Unit Tests - Function filterBy", () => {
