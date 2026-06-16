@@ -879,40 +879,58 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         if (Profiles.getInstance().validProfile !== Validation.ValidationType.INVALID) {
             let remotepath: string;
             if (SharedContext.isSessionNotFav(node)) {
-                ZoweLogger.debug(vscode.l10n.t("Prompting the user for a USS path"));
-                if (this.mPersistence.getSearchHistory().length > 0) {
-                    const items: vscode.QuickPickItem[] = this.mPersistence.getSearchHistory().map((element) => new FilterItem({ text: element }));
-                    const quickpick = Gui.createQuickPick();
-                    quickpick.placeholder = vscode.l10n.t("Select a filter or type to create a new one");
-                    quickpick.ignoreFocusOut = true;
+                if (node.inFilterPrompt) {
+                    ZoweLogger.debug("[USSTree.filterPrompt] Cancelled because filter prompt is already open for this node");
+                    return;
+                }
+                node.inFilterPrompt = true;
+                try {
+                    ZoweLogger.debug(vscode.l10n.t("Prompting the user for a USS path"));
+                    if (this.mPersistence.getSearchHistory().length > 0) {
+                        const items: vscode.QuickPickItem[] = this.mPersistence.getSearchHistory().map((element) => new FilterItem({ text: element }));
+                        const quickpick = Gui.createQuickPick();
+                        quickpick.placeholder = vscode.l10n.t("Select a filter or type to create a new one");
+                        quickpick.ignoreFocusOut = true;
 
-                    // Callback updates the "Create a new filter" option as user types
-                    quickpick.onDidChangeValue((value) => {
-                        const trimmedValue = value.trim();
-                        const createPick = trimmedValue
-                            ? new FilterDescriptor(`$(plus) ${vscode.l10n.t("Create a new filter")}: "${value.trim()}"`)
-                            : new FilterDescriptor(USSTree.defaultDialogText);
+                        // Callback updates the "Create a new filter" option as user types
+                        quickpick.onDidChangeValue((value) => {
+                            const trimmedValue = value.trim();
+                            const createPick = trimmedValue
+                                ? new FilterDescriptor(`$(plus) ${vscode.l10n.t("Create a new filter")}: "${value.trim()}"`)
+                                : new FilterDescriptor(USSTree.defaultDialogText);
+                            quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+                        });
+
+                        const createPick = new FilterDescriptor(USSTree.defaultDialogText);
                         quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
-                    });
 
-                    const createPick = new FilterDescriptor(USSTree.defaultDialogText);
-                    quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
-
-                    quickpick.show();
-                    const choice = await Gui.resolveQuickPick(quickpick);
-                    quickpick.hide();
-                    if (!choice) {
-                        Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
-                        return;
-                    }
-                    if (choice instanceof FilterDescriptor) {
-                        // If user typed something and selected "Create a new filter", use that input
-                        if (quickpick.value && quickpick.value.trim()) {
-                            remotepath = quickpick.value.trim();
+                        quickpick.show();
+                        const choice = await Gui.resolveQuickPick(quickpick);
+                        quickpick.hide();
+                        if (!choice) {
+                            Gui.showMessage(vscode.l10n.t("No selection made. Operation cancelled."));
+                            return;
+                        }
+                        if (choice instanceof FilterDescriptor) {
+                            // If user typed something and selected "Create a new filter", use that input
+                            if (quickpick.value && quickpick.value.trim()) {
+                                remotepath = quickpick.value.trim();
+                            } else {
+                                // Fall back to input box if no text was entered
+                                const options: vscode.InputBoxOptions = {
+                                    placeHolder: vscode.l10n.t("New filter"),
+                                    validateInput: (input: string) => (input.length > 0 ? null : vscode.l10n.t("Please enter a valid USS path.")),
+                                };
+                                remotepath = await Gui.showInputBox(options);
+                                if (remotepath == null) {
+                                    return;
+                                }
+                            }
                         } else {
-                            // Fall back to input box if no text was entered
+                            // User selected an existing filter - show input box with the filter pre-filled for editing
                             const options: vscode.InputBoxOptions = {
                                 placeHolder: vscode.l10n.t("New filter"),
+                                value: choice.label, // Pre-fill with the selected filter
                                 validateInput: (input: string) => (input.length > 0 ? null : vscode.l10n.t("Please enter a valid USS path.")),
                             };
                             remotepath = await Gui.showInputBox(options);
@@ -921,10 +939,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                             }
                         }
                     } else {
-                        // User selected an existing filter - show input box with the filter pre-filled for editing
+                        // No search history, use input box directly
                         const options: vscode.InputBoxOptions = {
                             placeHolder: vscode.l10n.t("New filter"),
-                            value: choice.label, // Pre-fill with the selected filter
                             validateInput: (input: string) => (input.length > 0 ? null : vscode.l10n.t("Please enter a valid USS path.")),
                         };
                         remotepath = await Gui.showInputBox(options);
@@ -932,16 +949,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                             return;
                         }
                     }
-                } else {
-                    // No search history, use input box directly
-                    const options: vscode.InputBoxOptions = {
-                        placeHolder: vscode.l10n.t("New filter"),
-                        validateInput: (input: string) => (input.length > 0 ? null : vscode.l10n.t("Please enter a valid USS path.")),
-                    };
-                    remotepath = await Gui.showInputBox(options);
-                    if (remotepath == null) {
-                        return;
-                    }
+                } finally {
+                    node.inFilterPrompt = false;
                 }
             } else {
                 // executing search from saved search in favorites

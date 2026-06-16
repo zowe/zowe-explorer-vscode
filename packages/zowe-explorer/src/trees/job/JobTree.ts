@@ -832,47 +832,56 @@ Would you like to do this now?`,
             }
 
             if (isSessionNotFav) {
-                searchCriteria = await this.applyRegularSessionSearchLabel(node);
+                if (node.inFilterPrompt) {
+                    ZoweLogger.debug("[JobTree.searchPrompt] Cancelled because filter prompt is already open for this node");
+                    return;
+                }
+                node.inFilterPrompt = true;
+                try {
+                    searchCriteria = await this.applyRegularSessionSearchLabel(node);
 
-                if (searchCriteria != null) {
-                    node.filtered = true;
-                    node.label = node.getProfileName();
-                    node.description = searchCriteria;
-                    node.dirty = true;
-                    const toolTipList = (node.tooltip as string).split("\n");
-                    switch (true) {
-                        case searchCriteria.includes(vscode.l10n.t("Owner: ")): {
-                            const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
-                            if (jobIdIndex !== -1) {
-                                toolTipList.splice(jobIdIndex, 1);
-                            }
+                    if (searchCriteria != null) {
+                        node.filtered = true;
+                        node.label = node.getProfileName();
+                        node.description = searchCriteria;
+                        node.dirty = true;
+                        const toolTipList = (node.tooltip as string).split("\n");
+                        switch (true) {
+                            case searchCriteria.includes(vscode.l10n.t("Owner: ")): {
+                                const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
+                                if (jobIdIndex !== -1) {
+                                    toolTipList.splice(jobIdIndex, 1);
+                                }
 
-                            const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
-                            if (searchCriteriaIndex === -1) {
-                                toolTipList.push(searchCriteria);
-                            } else {
-                                toolTipList[searchCriteriaIndex] = searchCriteria;
+                                const searchCriteriaIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
+                                if (searchCriteriaIndex === -1) {
+                                    toolTipList.push(searchCriteria);
+                                } else {
+                                    toolTipList[searchCriteriaIndex] = searchCriteria;
+                                }
+                                break;
                             }
-                            break;
+                            case searchCriteria.includes(vscode.l10n.t("JobId: ")): {
+                                const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
+                                if (searchFilterIndex !== -1) {
+                                    toolTipList.splice(searchFilterIndex, 1);
+                                }
+
+                                const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
+                                if (jobIdIndex === -1) {
+                                    toolTipList.push(searchCriteria);
+                                } else {
+                                    toolTipList[jobIdIndex] = searchCriteria;
+                                }
+                                break;
+                            }
                         }
-                        case searchCriteria.includes(vscode.l10n.t("JobId: ")): {
-                            const searchFilterIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Owner: ")));
-                            if (searchFilterIndex !== -1) {
-                                toolTipList.splice(searchFilterIndex, 1);
-                            }
-
-                            const jobIdIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("JobId: ")));
-                            if (jobIdIndex === -1) {
-                                toolTipList.push(searchCriteria);
-                            } else {
-                                toolTipList[jobIdIndex] = searchCriteria;
-                            }
-                            break;
-                        }
+                        node.tooltip = toolTipList.join("\n");
+                        this.addSearchHistory(searchCriteria);
+                        await TreeViewUtils.expandNode(node, this);
                     }
-                    node.tooltip = toolTipList.join("\n");
-                    this.addSearchHistory(searchCriteria);
-                    await TreeViewUtils.expandNode(node, this);
+                } finally {
+                    node.inFilterPrompt = false;
                 }
             } else {
                 if (isExpanded) {
