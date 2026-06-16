@@ -920,7 +920,7 @@ describe("ZosmfCommandApi", () => {
         });
     });
 
-    it("issueUnixCommand should properly escape single quotes in cwd", async () => {
+    it("issueUnixCommand should pass cwd raw to executeSshCwd (as the SDK handles escaping)", async () => {
         const obj = new ZoweExplorerZosmf.CommandApi();
         const spy = sharedSpyOn(zosuss.Shell, "executeSshCwd");
         spy.mockClear().mockResolvedValue(undefined);
@@ -928,13 +928,13 @@ describe("ZosmfCommandApi", () => {
         expect(spy).toHaveBeenCalledWith(
             SshSessionobj,
             "ls",
-            "'dir'\\''with'\\''quotes'",
+            "dir'with'quotes",
             expect.any(Function),
             true
         );
     });
 
-    it("issueUnixCommand should safely wrap shell metacharacters in single quotes", async () => {
+    it("issueUnixCommand should pass cwd raw to executeSshCwd even with shell metacharacters", async () => {
         const obj = new ZoweExplorerZosmf.CommandApi();
         const spy = sharedSpyOn(zosuss.Shell, "executeSshCwd");
         spy.mockClear().mockResolvedValue(undefined);
@@ -944,13 +944,13 @@ describe("ZosmfCommandApi", () => {
         expect(spy).toHaveBeenCalledWith(
             SshSessionobj,
             "pwd",
-            "'test'\\''dir$(sleep 5)`whoami`'", 
+            "test'dir$(sleep 5)`whoami`", 
             expect.any(Function),
             true
         );
     });
 
-    it("issueUnixCommand should handle consecutive and edge single quotes in cwd", async () => {
+    it("issueUnixCommand should pass cwd raw to executeSshCwd even with consecutive/edge single quotes", async () => {
         const obj = new ZoweExplorerZosmf.CommandApi();
         const spy = sharedSpyOn(zosuss.Shell, "executeSshCwd");
         spy.mockClear().mockResolvedValue(undefined);
@@ -960,7 +960,7 @@ describe("ZosmfCommandApi", () => {
         expect(spy).toHaveBeenCalledWith(
             SshSessionobj,
             "ls",
-            "''\\'''\\''weird'\\'''\\''dir'\\'''",
+            "''weird''dir'",
             expect.any(Function),
             true
         );
