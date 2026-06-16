@@ -28,8 +28,6 @@ After(async function () {
     }
 });
 
-When("the user right-clicks on the dataset profile and selects {string}", async function (_contextMenuOption: string) {});
-
 When("enters a new valid sequential dataset name", async function () {
     this.newPsName = testPsName;
     await allocateSequentialDs(this, testPsName);

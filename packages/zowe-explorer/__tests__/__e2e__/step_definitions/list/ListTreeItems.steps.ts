@@ -37,7 +37,7 @@ async function setFilterForProfile(profileNode: ProfileNode, tree: string): Prom
             timeoutMsg: `Action buttons did not appear for the given node.`,
         }
     );
-    const actionButtons = await node.getActionButtons();
+    actionButtons = await node.getActionButtons();
 
     // Locate and select the search button on the profile node
     const searchButton = actionButtons[actionButtons.length - 1];
