@@ -7,6 +7,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### New features and enhancements
 
 - Replaced repetitive `if (err instanceof Error)` patterns with `handleError` and `errorMessage` utility functions from `@zowe/zowe-explorer-api`. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
+- Added a new VS Code toggle setting `zowe.jobs.confirmDelete` that allows users to disable the job deletion confirmation dialog. [#4315](https://github.com/zowe/zowe-explorer-vscode/issues/4315)
 - Renamed references to "MVS Command" to "Console Command" for clarity. [#4300](https://github.com/zowe/zowe-explorer-vscode/issues/4300)
 
 ### Bug fixes

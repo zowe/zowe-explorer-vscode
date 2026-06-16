@@ -91,7 +91,7 @@ function createGlobalMocks() {
     newMocks.commandApi = createCommandApi(newMocks.imperativeProfile);
     bindCommandApi(newMocks.commandApi);
     Object.defineProperty(vscode.workspace, "getConfiguration", {
-        value: vi.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false]])),
+        value: vi.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false], ["zowe.jobs.confirmDelete", true]])),
         configurable: true,
     });
     Object.defineProperty(Gui, "showMessage", { value: vi.fn(), configurable: true });
