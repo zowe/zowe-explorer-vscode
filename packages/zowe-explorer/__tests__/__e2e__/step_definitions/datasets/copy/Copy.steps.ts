@@ -38,9 +38,6 @@ After(async function () {
     if (this.copyTestMemberName) {
         await deleteCopiedMember(`/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${copiedMemberName}`).catch(() => {});
     }
-
-    await refreshDsTree().catch(() => {});
-    await browser.pause(2000);
 });
 
 Given("a test sequential dataset has been created for copying", async function () {
@@ -55,12 +52,14 @@ Given("a test sequential dataset has been created for copying", async function (
 When("the user right-clicks on the dataset to copy and selects {string}", async function (contextMenuOption: string) {
     this.copyTestDs = await (await this.profileNode.find()).findChildItem(this.copyTestDsName);
     await this.copyTestDs.elem.moveTo();
+    await browser.pause(400);
     await clickContextMenuItem(this.copyTestDs, contextMenuOption);
 });
 
 When("the user right-clicks on the profile node to paste and selects {string}", async function (contextMenuOption: string) {
     const profileNode = await this.profileNode.find();
     await profileNode.elem.moveTo();
+    await browser.pause(400);
     await clickContextMenuItem(profileNode, contextMenuOption);
 });
 
@@ -90,7 +89,7 @@ Given("a test PDS member has been created for copying", async function () {
     await deleteCopiedMember(`/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${copiedMemberName}`);
     await browser.pause(1000);
 
-    this.copyTestPdsCopyTarget = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
+    this.copyTestPdsCopyTarget = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
     await this.copyTestPdsCopyTarget.expand();
     this.copyTestMember = await this.copyTestPdsCopyTarget.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
     this.copyTestMemberName = process.env.ZE_TEST_PDS_MEMBER;
@@ -98,15 +97,17 @@ Given("a test PDS member has been created for copying", async function () {
 });
 
 When("the user right-clicks on the member to copy and selects {string}", async function (contextMenuOption: string) {
-    this.copyTestPdsCopyTarget = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
+    this.copyTestPdsCopyTarget = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
     this.copyTestMember = await this.copyTestPdsCopyTarget.findChildItem(this.copyTestMemberName);
     await this.copyTestMember.elem.moveTo();
+    await browser.pause(400);
     await clickContextMenuItem(this.copyTestMember, contextMenuOption);
 });
 
 When("the user right-clicks on the PDS to paste and selects {string}", async function (contextMenuOption: string) {
-    this.copyTestPdsCopyTarget = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
+    this.copyTestPdsCopyTarget = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
     await this.copyTestPdsCopyTarget.elem.moveTo();
+    await browser.pause(400);
     await clickContextMenuItem(this.copyTestPdsCopyTarget, contextMenuOption);
 });
 
@@ -125,7 +126,7 @@ When("enters a new name for the copied member", async function () {
 Then("the copied member should appear under the PDS", async function () {
     await refreshDsTree();
 
-    this.copyTestPdsCopyTarget = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
+    this.copyTestPdsCopyTarget = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
     await this.copyTestPdsCopyTarget.expand();
 
     await browser.waitUntil(async () => !!(await this.copyTestPdsCopyTarget.findChildItem(this.copiedMemberName)), {

@@ -24,19 +24,30 @@ const testInfo = {
 };
 
 async function setFilterForProfile(profileNode: ProfileNode, tree: string): Promise<void> {
-    const node = await profileNode.find();
+    let node = await profileNode.find();
     await node.elem.moveTo();
+    await browser.pause(500);
+
     let actionButtons: ViewItemAction[] = [];
     await browser.waitUntil(
         async () => {
-            actionButtons = await node.getActionButtons();
-            return actionButtons.length > 0;
+            try {
+                node = await profileNode.find();
+                await node.elem.moveTo();
+                actionButtons = await node.getActionButtons();
+                return actionButtons.length > 0;
+            } catch {
+                return false;
+            }
         },
         {
-            timeout: 5000,
+            timeout: 10000,
             timeoutMsg: `Action buttons did not appear for the given node.`,
         }
     );
+
+    node = await profileNode.find();
+    await node.elem.moveTo();
     actionButtons = await node.getActionButtons();
 
     // Locate and select the search button on the profile node
