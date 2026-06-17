@@ -2019,6 +2019,10 @@ Would you like to do this now?`,
         }
 
         if (SharedContext.isSessionNotFav(node)) {
+            if (node.inFilterPrompt) {
+                ZoweLogger.debug("[DatasetTree.datasetFilterPrompt] Cancelled because filter prompt is already open for this node");
+                return;
+            }
             ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
             node.inFilterPrompt = true;
             try {
