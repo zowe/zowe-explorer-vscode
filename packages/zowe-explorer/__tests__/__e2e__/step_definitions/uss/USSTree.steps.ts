@@ -10,9 +10,8 @@
  */
 
 import { Then, When } from "@cucumber/cucumber";
-import { Key } from "webdriverio";
 import { TreeItem } from "wdio-vscode-service";
-import { clickContextMenuItem } from "../../../__common__/shared.wdio";
+import { clickContextMenuItem, fillInputBox } from "../../../__common__/shared.wdio";
 import quickPick from "../../../__pageobjects__/QuickPick";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -43,43 +42,6 @@ async function clickModalButton(buttonLabel: string): Promise<void> {
             return;
         }
     }
-}
-
-/**
- * Fills the active VS Code input box (showInputBox / quick-input) with a value
- * and confirms with Enter.
- */
-async function fillInputBox(value: string): Promise<void> {
-    await browser.waitUntil(() => quickPick.isClickable(), { timeout: 10000 });
-    const inputBox = await browser.$('.input[aria-describedby="quickInput_message"]');
-    await inputBox.waitForClickable({ timeout: 5000 });
-    await inputBox.clearValue();
-    await inputBox.setValue(value);
-    await browser.keys(Key.Enter);
-}
-
-/**
- * Selects an item from the active quick-pick by matching the visible label text.
- * Falls back to exact aria-label match if the label-name span is not found.
- */
-async function selectQuickPickItemByLabel(label: string): Promise<void> {
-    await browser.waitUntil(() => quickPick.isClickable(), { timeout: 10000 });
-    const rows = await quickPick.elem.$$('.monaco-list-row[role="option"]');
-    for (const row of rows) {
-        try {
-            const nameEl = await row.$(".label-name");
-            if ((await nameEl.getText()).trim() === label) {
-                await row.click();
-                return;
-            }
-        } catch {
-            // label-name span may not exist; fall through
-        }
-    }
-    // Fallback: aria-label exact match (no description suffix)
-    const item = await quickPick.findItem(label);
-    await item.waitForClickable({ timeout: 5000 });
-    await item.click();
 }
 
 // ─── Step: listing files ─────────────────────────────────────────────────────
@@ -248,7 +210,7 @@ When("the user opens the USS file with a specific encoding", async function () {
     await expect(ussFile).toBeDefined();
     await ussFile.elem.moveTo();
     await clickContextMenuItem(ussFile, "Open with Encoding");
-    await selectQuickPickItemByLabel(process.env.ZE_TEST_USS_ENCODING);
+    await quickPick.selectItemByLabel(process.env.ZE_TEST_USS_ENCODING);
     await browser.pause(2000);
 });
 
