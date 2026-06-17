@@ -14,6 +14,7 @@ import { paneDivForTree } from "../../../__common__/shared.wdio";
 import { Key } from "webdriverio";
 import quickPick from "../../../__pageobjects__/QuickPick";
 import { ProfileNode } from "../../../__pageobjects__/ProfileNode";
+import { ViewItemAction } from "wdio-vscode-service";
 
 const testInfo = {
     profileName: process.env.ZE_TEST_PROFILE_NAME,

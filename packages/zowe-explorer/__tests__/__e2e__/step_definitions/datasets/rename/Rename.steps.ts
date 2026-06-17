@@ -63,8 +63,12 @@ Given("a test partitioned dataset has been created for renaming", async function
 });
 
 Given("a test PDS member has been created for renaming", async function () {
-    this.renameTestPds = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
-    await expect(this.renameTestPds).toBeDefined();
+    await browser.waitUntil(
+        async () => !!(await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS)),
+        { timeout: 15000, timeoutMsg: `${process.env.ZE_TEST_PDS} not found in filtered tree` }
+    );
+    this.renameTestPds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
+    await this.renameTestPds.expand();
 
     await browser.executeWorkbench(async (vscode, pdsPath: string) => {
         try {
@@ -78,11 +82,11 @@ Given("a test PDS member has been created for renaming", async function () {
     );
     await browser.pause(1000);
 
-    this.renameTestPds = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
+    this.renameTestPds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
     await createMemberInPds(this.renameTestPds, renameTestMemberName);
     await waitForMemberInPds(this, process.env.ZE_TEST_PDS, renameTestMemberName);
 
-    this.renameTestPds = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
+    this.renameTestPds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
     this.renameTestMember = await this.renameTestPds.findChildItem(renameTestMemberName);
     this.renameTestMemberName = renameTestMemberName;
     await expect(this.renameTestMember).toBeDefined();
@@ -122,7 +126,10 @@ When("enters a new valid name for the partitioned dataset", async function () {
 });
 
 When("the user right-clicks on the PDS member to rename and selects {string}", async function (contextMenuOption: string) {
+    this.renameTestPds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
+    this.renameTestMember = await this.renameTestPds.findChildItem(this.renameTestMemberName);
     await this.renameTestMember.elem.moveTo();
+    await browser.pause(400);
     await clickContextMenuItem(this.renameTestMember, contextMenuOption);
 });
 

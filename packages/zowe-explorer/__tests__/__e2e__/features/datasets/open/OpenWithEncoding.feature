@@ -11,11 +11,11 @@ Feature: Opening Data Sets with Encoding
     When the user right-clicks on the dataset and selects "Open with Encoding"
     And the user selects "Other" from the encoding picker
     And the user enters "285" as the codepage
-    Then the dataset should open in the editor with the pound sign character
+    Then the dataset should open in the editor containing the text "£"
 
   Scenario: User opens a PDS member with IBM-285 encoding
     Given a test PDS member has been created and populated for encoding
     When the user right-clicks on the PDS member and selects "Open with Encoding"
     And the user selects "Other" from the encoding picker
     And the user enters "285" as the codepage
-    Then the member should open in the editor with the pound sign character
+    Then the member should open in the editor containing the text "£"

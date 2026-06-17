@@ -52,7 +52,7 @@ When("the user enters {string} as the codepage", async function (codepage: strin
     await browser.pause(2000);
 });
 
-Then("the dataset should open in the editor with the pound sign character", async function () {
+Then("the dataset should open in the editor containing the text {string}", async function (text: string) {
     const editorView = (await browser.getWorkbench()).getEditorView();
     await browser.waitUntil(async () => (await editorView.getOpenEditorTitles()).some((t) => t.includes(this.encodingDsName)), {
         timeout: 15000,
@@ -62,14 +62,21 @@ Then("the dataset should open in the editor with the pound sign character", asyn
         const doc = vscode.workspace.textDocuments.find((d) => d.fileName.includes(dsName));
         return doc?.getText() ?? "";
     }, this.encodingDsName);
-    await expect(content).toContain("£");
+    await expect(content).toContain(text);
 });
 
 Given("a test PDS member has been created and populated for encoding", async function () {
-    this.encodingPds = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
-    await this.encodingPds.expand();
-    this.encodingMember = await this.encodingPds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
-    await this.encodingMember.select();
+    await browser.executeWorkbench(async (vscode, pdsPath: string, memberPath: string) => {
+        await vscode.workspace.fs.readDirectory(
+            vscode.Uri.from({ scheme: "zowe-ds", path: pdsPath, query: "fetch=true" })
+        );
+        const memberUri = vscode.Uri.from({ scheme: "zowe-ds", path: memberPath });
+        const doc = await vscode.workspace.openTextDocument(memberUri);
+        await vscode.window.showTextDocument(doc, { preview: false });
+    },
+    `/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}`,
+    `/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${process.env.ZE_TEST_PDS_MEMBER}`
+    );
 
     const editorView = (await browser.getWorkbench()).getEditorView();
     await browser.waitUntil(async () => (await editorView.getOpenEditorTitles()).some((t) => t.includes(process.env.ZE_TEST_PDS_MEMBER)), {
@@ -79,23 +86,41 @@ Given("a test PDS member has been created and populated for encoding", async fun
     await editorView.closeEditor(process.env.ZE_TEST_PDS_MEMBER);
 
     await writeDsContent(`/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${process.env.ZE_TEST_PDS_MEMBER}`, "$");
-
-    this.encodingPds = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
+    await browser.waitUntil(
+        async () => !!(await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS)),
+        { timeout: 15000, timeoutMsg: `${process.env.ZE_TEST_PDS} not found in filtered tree` }
+    );
+    this.encodingPds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
     await this.encodingPds.expand();
-    this.encodingMember = await this.encodingPds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
+
+    await browser.waitUntil(
+        async () => {
+            this.encodingPds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
+            if (!this.encodingPds) return false;
+            this.encodingMember = await this.encodingPds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
+            return !!this.encodingMember;
+        },
+        { timeout: 15000, timeoutMsg: `Member ${process.env.ZE_TEST_PDS_MEMBER} did not appear in tree after PDS expansion` }
+    );
     this.encodingMemberName = process.env.ZE_TEST_PDS_MEMBER;
-    await expect(this.encodingMember).toBeDefined();
 });
 
 When("the user right-clicks on the PDS member and selects {string}", async function (contextMenuOption: string) {
-    this.encodingPds = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
-    await this.encodingPds.expand();
-    this.encodingMember = await this.encodingPds.findChildItem(this.encodingMemberName);
+    await browser.waitUntil(
+        async () => {
+            this.encodingPds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
+            if (!this.encodingPds) return false;
+            this.encodingMember = await this.encodingPds.findChildItem(this.encodingMemberName);
+            return !!this.encodingMember;
+        },
+        { timeout: 10000, timeoutMsg: `Member ${this.encodingMemberName} not found in tree for right-click` }
+    );
     await this.encodingMember.elem.moveTo();
+    await browser.pause(400);
     await clickContextMenuItem(this.encodingMember, contextMenuOption);
 });
 
-Then("the member should open in the editor with the pound sign character", async function () {
+Then("the member should open in the editor containing the text {string}", async function (text: string) {
     const editorView = (await browser.getWorkbench()).getEditorView();
     await browser.waitUntil(async () => (await editorView.getOpenEditorTitles()).some((t) => t.includes(this.encodingMemberName)), {
         timeout: 15000,
@@ -105,5 +130,5 @@ Then("the member should open in the editor with the pound sign character", async
         const doc = vscode.workspace.textDocuments.find((d) => d.fileName.includes(memberName));
         return doc?.getText() ?? "";
     }, this.encodingMemberName);
-    await expect(content).toContain("£");
+    await expect(content).toContain(text);
 });
