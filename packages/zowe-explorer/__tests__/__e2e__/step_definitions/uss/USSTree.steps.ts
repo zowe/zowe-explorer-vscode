@@ -14,12 +14,18 @@ import { TreeItem } from "wdio-vscode-service";
 import { clickContextMenuItem, fillInputBox } from "../../../__common__/shared.wdio";
 import quickPick from "../../../__pageobjects__/QuickPick";
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+const testInfo = {
+    newFile: process.env.ZE_TEST_USS_NEW_FILE,
+    renamedFile: process.env.ZE_TEST_USS_RENAMED_FILE,
+    newDir: process.env.ZE_TEST_USS_NEW_DIR,
+    renamedDir: process.env.ZE_TEST_USS_RENAMED_DIR,
+    copyDstDir: process.env.ZE_TEST_USS_COPY_DST_DIR,
+    ussFilter: process.env.ZE_TEST_USS_FILTER,
+    ussFile: process.env.ZE_TEST_USS_FILE,
+    encoding: process.env.ZE_TEST_USS_ENCODING,
+};
 
-/**
- * Waits for a VS Code modal confirmation dialog and clicks the button
- * matching the supplied label.
- */
+// Clicks the button matching buttonLabel in the active VS Code modal confirmation dialog.
 async function clickModalButton(buttonLabel: string): Promise<void> {
     await browser.waitUntil(
         async () => {
@@ -44,18 +50,14 @@ async function clickModalButton(buttonLabel: string): Promise<void> {
     }
 }
 
-// ─── Step: listing files ─────────────────────────────────────────────────────
-
 Then("the USS directory has files listed under it", async function () {
     await expect(this.children.length).toBeGreaterThan(0);
 });
 
-// ─── Steps: create/delete file ───────────────────────────────────────────────
-
 When("the user creates a new USS file in the directory", async function () {
     await this.ussDir.elem.moveTo();
     await clickContextMenuItem(this.ussDir, "Create File");
-    await fillInputBox(process.env.ZE_TEST_USS_NEW_FILE);
+    await fillInputBox(testInfo.newFile);
     // Allow time for the remote create to complete and tree to refresh
     await browser.pause(3000);
 });
@@ -64,16 +66,16 @@ Then("the new USS file appears in the directory listing", async function () {
     this.newFile = null;
     await browser.waitUntil(
         async () => {
-            this.newFile = await this.ussDir.findChildItem(process.env.ZE_TEST_USS_NEW_FILE);
+            this.newFile = await this.ussDir.findChildItem(testInfo.newFile);
             return this.newFile != null;
         },
-        { timeout: 30000, timeoutMsg: `New file "${process.env.ZE_TEST_USS_NEW_FILE}" did not appear in directory listing` }
+        { timeout: 30000, timeoutMsg: `New file "${testInfo.newFile}" did not appear in directory listing` }
     );
     await expect(this.newFile).toBeDefined();
 });
 
 When("the user deletes the new USS file from the directory", async function () {
-    const fileNode = (await this.ussDir.findChildItem(process.env.ZE_TEST_USS_NEW_FILE)) as TreeItem;
+    const fileNode = (await this.ussDir.findChildItem(testInfo.newFile)) as TreeItem;
     await expect(fileNode).toBeDefined();
     await fileNode.elem.moveTo();
     await clickContextMenuItem(fileNode, "Delete");
@@ -83,17 +85,15 @@ When("the user deletes the new USS file from the directory", async function () {
 
 Then("the USS file no longer appears in the directory listing", async function () {
     await browser.waitUntil(
-        async () => (await this.ussDir.findChildItem(process.env.ZE_TEST_USS_NEW_FILE)) == null,
-        { timeout: 30000, timeoutMsg: `File "${process.env.ZE_TEST_USS_NEW_FILE}" is still visible after delete` }
+        async () => (await this.ussDir.findChildItem(testInfo.newFile)) == null,
+        { timeout: 30000, timeoutMsg: `File "${testInfo.newFile}" is still visible after delete` }
     );
 });
-
-// ─── Steps: create/delete directory ─────────────────────────────────────────
 
 When("the user creates a new USS directory inside the parent", async function () {
     await this.ussDir.elem.moveTo();
     await clickContextMenuItem(this.ussDir, "Create Directory");
-    await fillInputBox(process.env.ZE_TEST_USS_NEW_DIR);
+    await fillInputBox(testInfo.newDir);
     await browser.pause(3000);
 });
 
@@ -101,16 +101,16 @@ Then("the new USS directory appears in the parent listing", async function () {
     this.newDir = null;
     await browser.waitUntil(
         async () => {
-            this.newDir = await this.ussDir.findChildItem(process.env.ZE_TEST_USS_NEW_DIR);
+            this.newDir = await this.ussDir.findChildItem(testInfo.newDir);
             return this.newDir != null;
         },
-        { timeout: 30000, timeoutMsg: `New directory "${process.env.ZE_TEST_USS_NEW_DIR}" did not appear in parent listing` }
+        { timeout: 30000, timeoutMsg: `New directory "${testInfo.newDir}" did not appear in parent listing` }
     );
     await expect(this.newDir).toBeDefined();
 });
 
 When("the user deletes the new USS directory from the parent", async function () {
-    const dirNode = (await this.ussDir.findChildItem(process.env.ZE_TEST_USS_NEW_DIR)) as TreeItem;
+    const dirNode = (await this.ussDir.findChildItem(testInfo.newDir)) as TreeItem;
     await expect(dirNode).toBeDefined();
     await dirNode.elem.moveTo();
     await clickContextMenuItem(dirNode, "Delete");
@@ -120,19 +120,17 @@ When("the user deletes the new USS directory from the parent", async function ()
 
 Then("the USS directory no longer appears in the parent listing", async function () {
     await browser.waitUntil(
-        async () => (await this.ussDir.findChildItem(process.env.ZE_TEST_USS_NEW_DIR)) == null,
-        { timeout: 30000, timeoutMsg: `Directory "${process.env.ZE_TEST_USS_NEW_DIR}" is still visible after delete` }
+        async () => (await this.ussDir.findChildItem(testInfo.newDir)) == null,
+        { timeout: 30000, timeoutMsg: `Directory "${testInfo.newDir}" is still visible after delete` }
     );
 });
 
-// ─── Steps: rename file ──────────────────────────────────────────────────────
-
 When("the user renames the new USS file to the renamed file name", async function () {
-    const fileNode = (await this.ussDir.findChildItem(process.env.ZE_TEST_USS_NEW_FILE)) as TreeItem;
+    const fileNode = (await this.ussDir.findChildItem(testInfo.newFile)) as TreeItem;
     await expect(fileNode).toBeDefined();
     await fileNode.elem.moveTo();
     await clickContextMenuItem(fileNode, "Rename");
-    await fillInputBox(process.env.ZE_TEST_USS_RENAMED_FILE);
+    await fillInputBox(testInfo.renamedFile);
     await browser.pause(3000);
 });
 
@@ -140,23 +138,23 @@ Then("the renamed USS file appears in the directory listing", async function () 
     this.renamedFile = null;
     await browser.waitUntil(
         async () => {
-            this.renamedFile = await this.ussDir.findChildItem(process.env.ZE_TEST_USS_RENAMED_FILE);
+            this.renamedFile = await this.ussDir.findChildItem(testInfo.renamedFile);
             return this.renamedFile != null;
         },
-        { timeout: 30000, timeoutMsg: `Renamed file "${process.env.ZE_TEST_USS_RENAMED_FILE}" did not appear in directory listing` }
+        { timeout: 30000, timeoutMsg: `Renamed file "${testInfo.renamedFile}" did not appear in directory listing` }
     );
     await expect(this.renamedFile).toBeDefined();
 });
 
 Then("the original USS file name no longer appears in the directory listing", async function () {
     await browser.waitUntil(
-        async () => (await this.ussDir.findChildItem(process.env.ZE_TEST_USS_NEW_FILE)) == null,
-        { timeout: 15000, timeoutMsg: `Original file "${process.env.ZE_TEST_USS_NEW_FILE}" still visible after rename` }
+        async () => (await this.ussDir.findChildItem(testInfo.newFile)) == null,
+        { timeout: 15000, timeoutMsg: `Original file "${testInfo.newFile}" still visible after rename` }
     );
 });
 
 When("the user deletes the renamed USS file from the directory", async function () {
-    const fileNode = (await this.ussDir.findChildItem(process.env.ZE_TEST_USS_RENAMED_FILE)) as TreeItem;
+    const fileNode = (await this.ussDir.findChildItem(testInfo.renamedFile)) as TreeItem;
     await expect(fileNode).toBeDefined();
     await fileNode.elem.moveTo();
     await clickContextMenuItem(fileNode, "Delete");
@@ -164,14 +162,12 @@ When("the user deletes the renamed USS file from the directory", async function 
     await browser.pause(3000);
 });
 
-// ─── Steps: rename directory ─────────────────────────────────────────────────
-
 When("the user renames the new USS directory to the renamed directory name", async function () {
-    const dirNode = (await this.ussDir.findChildItem(process.env.ZE_TEST_USS_NEW_DIR)) as TreeItem;
+    const dirNode = (await this.ussDir.findChildItem(testInfo.newDir)) as TreeItem;
     await expect(dirNode).toBeDefined();
     await dirNode.elem.moveTo();
     await clickContextMenuItem(dirNode, "Rename");
-    await fillInputBox(process.env.ZE_TEST_USS_RENAMED_DIR);
+    await fillInputBox(testInfo.renamedDir);
     await browser.pause(3000);
 });
 
@@ -179,23 +175,23 @@ Then("the renamed USS directory appears in the parent listing", async function (
     this.renamedDir = null;
     await browser.waitUntil(
         async () => {
-            this.renamedDir = await this.ussDir.findChildItem(process.env.ZE_TEST_USS_RENAMED_DIR);
+            this.renamedDir = await this.ussDir.findChildItem(testInfo.renamedDir);
             return this.renamedDir != null;
         },
-        { timeout: 30000, timeoutMsg: `Renamed directory "${process.env.ZE_TEST_USS_RENAMED_DIR}" did not appear in parent listing` }
+        { timeout: 30000, timeoutMsg: `Renamed directory "${testInfo.renamedDir}" did not appear in parent listing` }
     );
     await expect(this.renamedDir).toBeDefined();
 });
 
 Then("the original USS directory name no longer appears in the parent listing", async function () {
     await browser.waitUntil(
-        async () => (await this.ussDir.findChildItem(process.env.ZE_TEST_USS_NEW_DIR)) == null,
-        { timeout: 15000, timeoutMsg: `Original directory "${process.env.ZE_TEST_USS_NEW_DIR}" still visible after rename` }
+        async () => (await this.ussDir.findChildItem(testInfo.newDir)) == null,
+        { timeout: 15000, timeoutMsg: `Original directory "${testInfo.newDir}" still visible after rename` }
     );
 });
 
 When("the user deletes the renamed USS directory from the parent", async function () {
-    const dirNode = (await this.ussDir.findChildItem(process.env.ZE_TEST_USS_RENAMED_DIR)) as TreeItem;
+    const dirNode = (await this.ussDir.findChildItem(testInfo.renamedDir)) as TreeItem;
     await expect(dirNode).toBeDefined();
     await dirNode.elem.moveTo();
     await clickContextMenuItem(dirNode, "Delete");
@@ -203,40 +199,36 @@ When("the user deletes the renamed USS directory from the parent", async functio
     await browser.pause(3000);
 });
 
-// ─── Steps: open with encoding ───────────────────────────────────────────────
-
 When("the user opens the USS file with a specific encoding", async function () {
-    const ussFile = (await this.ussDir.findChildItem(process.env.ZE_TEST_USS_FILE)) as TreeItem;
+    const ussFile = (await this.ussDir.findChildItem(testInfo.ussFile)) as TreeItem;
     await expect(ussFile).toBeDefined();
     await ussFile.elem.moveTo();
     await clickContextMenuItem(ussFile, "Open with Encoding");
-    await quickPick.selectItemByLabel(process.env.ZE_TEST_USS_ENCODING);
+    await quickPick.selectItemByLabel(testInfo.encoding);
     await browser.pause(2000);
 });
 
 Then("the USS file opens in the editor with the specified encoding", async function () {
     const editorView = (await browser.getWorkbench()).getEditorView();
-    this.editorForFile = await editorView.openEditor(process.env.ZE_TEST_USS_FILE);
+    this.editorForFile = await editorView.openEditor(testInfo.ussFile);
     await expect(this.editorForFile).toBeDefined();
     await this.editorForFile.wait();
     await editorView.closeEditor(await this.editorForFile.getTitle());
 });
 
-// ─── Steps: copy/paste file ───────────────────────────────────────────────────
-
 When("the user copies the USS test file", async function () {
-    const ussFile = (await this.ussDir.findChildItem(process.env.ZE_TEST_USS_FILE)) as TreeItem;
+    const ussFile = (await this.ussDir.findChildItem(testInfo.ussFile)) as TreeItem;
     await expect(ussFile).toBeDefined();
     await ussFile.elem.moveTo();
     await clickContextMenuItem(ussFile, "Copy");
-    this.copiedFileName = process.env.ZE_TEST_USS_FILE;
+    this.copiedFileName = testInfo.ussFile;
 });
 
 When("the user pastes the USS file into the copy destination directory", async function () {
     // ZE_TEST_USS_COPY_DST_DIR is a directory at the same level as ZE_TEST_USS_DIR.
     // Use findChildItem + expand directly — revealChildItem waits for children which
     // would time out when the destination directory starts empty.
-    const dstDirName = process.env.ZE_TEST_USS_COPY_DST_DIR.replace(`${process.env.ZE_TEST_USS_FILTER}/`, "");
+    const dstDirName = testInfo.copyDstDir.replace(`${testInfo.ussFilter}/`, "");
     const profileNode = await this.profileNode.find();
     this.copyDstDir = (await profileNode.findChildItem(dstDirName)) as TreeItem;
     await expect(this.copyDstDir).toBeDefined();
