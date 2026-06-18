@@ -11,142 +11,122 @@
 
 import { ExtensionContext } from "vscode";
 import { Utilities } from "../src/Utilities";
-import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
-import { ConfigUtils } from "../src/ConfigUtils";
-import * as deploy from "../src/ServerDeployment";
-import { SshClientCache } from "../src/SshClientCache";
-import { SshErrorHandler } from "../src/SshErrorHandler";
 
-function createMocks(): void {
-    vi.mock("vscode", () => ({
-        Disposable: vi.fn(),
-        window: {
-            createQuickPick: vi.fn(),
-        },
-        workspace: {
-            getConfiguration: vi.fn(() => ({
-                get: vi.fn(),
-                update: vi.fn(),
-            })),
-        },
-        ConfigurationTarget: {
-            Global: 1,
-            Workspace: 2,
-            WorkspaceFolder: 3,
-        },
-        commands: {
-            registerCommand: vi.fn(),
-        },
-    }));
+vi.mock("vscode", () => ({
+    Disposable: vi.fn(),
+    window: {
+        createQuickPick: vi.fn(),
+    },
+    workspace: {
+        getConfiguration: vi.fn(() => ({
+            get: vi.fn(),
+            update: vi.fn(),
+        })),
+    },
+    ConfigurationTarget: {
+        Global: 1,
+        Workspace: 2,
+        WorkspaceFolder: 3,
+    },
+    commands: {
+        registerCommand: vi.fn(),
+    },
+}));
 
-    vi.mock("@zowe/zowe-explorer-api", () => {
-        class MockDeferredPromise {
-            promise = Promise.resolve();
-            resolve = vi.fn();
-        }
-        return {
-            Gui: {
-                showMessage: vi.fn(),
-                setStatusBarMessage: vi.fn(() => ({ dispose: vi.fn() })),
-            },
-            ZoweExplorerApiType: {
-                All: "all",
-                Mvs: "mvs",
-                Uss: "uss",
-                Jobs: "jobs",
-                Command: "command",
-            },
-            ZoweVsCodeExtension: {
-                getZoweExplorerApi: () => ({
-                    getExplorerExtenderApi: () => ({
-                        getProfilesCache: () => ({
-                            getLoadedProfConfig: vi.fn(),
-                            getProfilesCache: vi.fn(),
-                            getProfileInfo: vi.fn().mockResolvedValue({}),
-                        }),
+vi.mock("@zowe/zowe-explorer-api", () => {
+    class MockDeferredPromise {
+        promise = Promise.resolve();
+        resolve = vi.fn();
+    }
+    return {
+        Gui: {
+            showMessage: vi.fn(),
+            setStatusBarMessage: vi.fn(() => ({ dispose: vi.fn() })),
+        },
+        ZoweExplorerApiType: {
+            All: "all",
+            Mvs: "mvs",
+            Uss: "uss",
+            Jobs: "jobs",
+            Command: "command",
+        },
+        ZoweVsCodeExtension: {
+            getZoweExplorerApi: () => ({
+                getExplorerExtenderApi: () => ({
+                    getProfilesCache: () => ({
+                        getLoadedProfConfig: vi.fn(),
+                        getProfilesCache: vi.fn(),
+                        getProfileInfo: vi.fn().mockResolvedValue({}),
                     }),
                 }),
-            },
-            imperative: {
-                Logger: {
-                    getAppLogger: () => ({
-                        debug: vi.fn(),
-                        error: vi.fn(),
-                        info: vi.fn(),
-                        warn: vi.fn(),
-                        trace: vi.fn(),
-                    }),
-                },
-                ImperativeError: class extends Error {
-                    errorCode: string;
-                    constructor(msg: string) {
-                        super(msg);
-                        this.errorCode = "ENOTFOUND";
-                    }
-                },
-                DeferredPromise: MockDeferredPromise,
-            },
-        };
-    });
-
-    // VscePromptApi is instantiated inside the callbacks; replace its prototype methods.
-    vi.mock("../src/VscePromptApi", () => {
-        return {
-            VscePromptApi: vi.fn().mockImplementation(() => ({
-                promptForProfile: vi.fn(),
-                promptForDeployDirectory: vi.fn(),
-            })),
-        };
-    });
-    vi.mock("../src/ServerDeployment", () => {
-        return {
-            deployWithProgress: vi.fn().mockResolvedValue(true),
-        };
-    });
-    vi.mock("../src/ConfigUtils", () => ({
-        ConfigUtils: {
-            getServerPath: vi.fn().mockReturnValue("/mock/server/path"),
-            showSessionInTree: vi.fn().mockResolvedValue(undefined),
-        },
-    }));
-    vi.mock("../src/SshClientCache", () => ({
-        SshClientCache: {
-            inst: {
-                connect: vi.fn().mockResolvedValue({}),
-                end: vi.fn(),
-            },
-        },
-    }));
-    vi.mock("../src/SshErrorHandler", () => ({
-        SshErrorHandler: {
-            getInstance: () => ({
-                createErrorCallback: vi.fn().mockReturnValue(vi.fn()),
             }),
         },
-    }));
-    vi.mock("@zowe/zowex-for-zowe-sdk", () => ({
-        ZSshUtils: {
-            buildSession: vi.fn().mockReturnValue({ ISshSession: {} }),
-            uninstallServer: vi.fn().mockResolvedValue(undefined),
+        imperative: {
+            Logger: {
+                getAppLogger: () => ({
+                    debug: vi.fn(),
+                    error: vi.fn(),
+                    info: vi.fn(),
+                    warn: vi.fn(),
+                    trace: vi.fn(),
+                }),
+            },
+            ImperativeError: class extends Error {
+                errorCode: string;
+                constructor(msg: string) {
+                    super(msg);
+                    this.errorCode = "ENOTFOUND";
+                }
+            },
+            DeferredPromise: MockDeferredPromise,
         },
-    }));
-}
+    };
+});
+
+// VscePromptApi is instantiated inside the callbacks; replace its prototype methods.
+vi.mock("../src/VscePromptApi", () => ({
+    VscePromptApi: vi.fn().mockImplementation(() => ({
+        promptForProfile: vi.fn(),
+        promptForDeployDirectory: vi.fn(),
+    })),
+}));
+vi.mock("../src/ServerDeployment", () => ({
+    deployWithProgress: vi.fn().mockResolvedValue(true),
+}));
+vi.mock("../src/ConfigUtils", () => ({
+    ConfigUtils: {
+        getServerPath: vi.fn().mockReturnValue("/mock/server/path"),
+        showSessionInTree: vi.fn().mockResolvedValue(undefined),
+    },
+}));
+vi.mock("../src/SshClientCache", () => ({
+    SshClientCache: {
+        inst: {
+            connect: vi.fn().mockResolvedValue({}),
+            end: vi.fn(),
+        },
+    },
+}));
+vi.mock("../src/SshErrorHandler", () => ({
+    SshErrorHandler: {
+        getInstance: () => ({
+            createErrorCallback: vi.fn().mockReturnValue(vi.fn()),
+        }),
+    },
+}));
+vi.mock("@zowe/zowex-for-zowe-sdk", () => ({
+    ZSshUtils: {
+        buildSession: vi.fn().mockReturnValue({ ISshSession: {} }),
+        uninstallServer: vi.fn().mockResolvedValue(undefined),
+    },
+}));
 
 describe("Utilities", () => {
-    beforeEach(() => {
-        createMocks();
-    });
-
     afterEach(() => {
         vi.restoreAllMocks();
     });
-
-    function buildApi() {
-        // Re-import the mocked modules after createMocks() registered them.
-        // The mocked API/SDK are resolved via vi.mock hoisting, so importMock returns them.
-        return null as any;
-    }
 
     it("should register the connect/restart/uninstall commands", async () => {
         const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
@@ -279,6 +259,20 @@ describe("Utilities", () => {
 
             expect(showSessionSpy).not.toHaveBeenCalled();
         });
+
+        it("should propagate a thrown error from deployWithProgress", async () => {
+            const mockedDeploy = await vi.importMock("../src/ServerDeployment");
+            const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
+            const profile = { name: "p", profile: { host: "h" } };
+            VscePromptApi.mockImplementation(() => ({
+                promptForProfile: vi.fn().mockResolvedValue(profile),
+                promptForDeployDirectory: vi.fn().mockResolvedValue("/dir"),
+            }));
+            vi.spyOn(mockedDeploy, "deployWithProgress").mockRejectedValue(new Error("deploy exploded"));
+
+            const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
+            await expect((Utilities as any).connectCallback(api)).rejects.toThrow("deploy exploded");
+        });
     });
 
     describe("restartCallback", () => {
@@ -311,6 +305,19 @@ describe("Utilities", () => {
             await (Utilities as any).restartCallback(api);
 
             expect(connectSpy).not.toHaveBeenCalled();
+        });
+
+        it("should propagate a rejection from connect", async () => {
+            const mockedCache = await vi.importMock("../src/SshClientCache");
+            const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
+            const profile = { name: "myProf", profile: { host: "myHost" } };
+            VscePromptApi.mockImplementation(() => ({
+                promptForProfile: vi.fn().mockResolvedValue(profile),
+            }));
+            vi.spyOn(mockedCache.SshClientCache.inst, "connect").mockRejectedValue(new Error("connect failed"));
+
+            const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
+            await expect((Utilities as any).restartCallback(api, "myProf")).rejects.toThrow("connect failed");
         });
     });
 
