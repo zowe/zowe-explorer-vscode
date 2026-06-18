@@ -89,10 +89,12 @@ export class SshJesApi extends SshCommonApi implements MainframeInteraction.IJes
     }
 
     public async submitJcl(jcl: string, _internalReaderRecfm?: string, _internalReaderLrecl?: string): Promise<zosjobs.IJob> {
+        const encoding = this.profile?.profile?.jobEncoding;
         const response = await (
             await this.client
         ).jobs.submitJcl({
             jcl: B64String.encode(jcl),
+            encoding,
         });
         return { jobid: response.jobId, jobname: response.jobName } as zosjobs.IJob;
     }
