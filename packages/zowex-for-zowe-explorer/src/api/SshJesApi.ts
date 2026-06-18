@@ -21,6 +21,7 @@ export class SshJesApi extends SshCommonApi implements MainframeInteraction.IJes
         ).jobs.listJobs({
             owner: params.owner?.toUpperCase(),
             prefix: params.prefix,
+            status: params.status,
         });
         return response.items.map(
             (item): Partial<zosjobs.IJob> => ({
