@@ -11,7 +11,18 @@
 
 import { describe, afterEach, expect, it, vi } from "vitest";
 import { SshUssApi } from "../../src/api/SshUssApi";
+import { imperative } from "@zowe/zowe-explorer-api";
 import * as fs from "node:fs";
+
+// `node:fs` named imports are not configurable for spyOn under ESM, so mock the module.
+vi.mock("node:fs", async (importActual) => {
+    const actual = (await importActual()) as typeof import("node:fs");
+    return {
+        ...actual,
+        createReadStream: vi.fn(() => ({}) as any),
+        createWriteStream: vi.fn(() => ({}) as any),
+    };
+});
 
 describe("SshUssApi", () => {
     afterEach(() => {
@@ -70,9 +81,89 @@ describe("SshUssApi", () => {
         });
     });
 
-    describe.skip("getContents", () => {});
+    describe("getContents", () => {
+        it("should read a file into memory when a stream is provided", async () => {
+            const ussApi = new SshUssApi();
+            const readFileSpy = vi.fn().mockResolvedValue({ data: "Zm9v", etag: "etag1" });
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { readFile: readFileSpy } });
+            vi.spyOn(ussApi as any, "buildZosFilesResponse");
+            const writeSpy = vi.fn();
+            const endSpy = vi.fn();
 
-    describe.skip("uploadFromBuffer", () => {});
+            await ussApi.getContents("/u/file", { stream: { write: writeSpy, end: endSpy } as any });
+
+            expect(readFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", encoding: undefined, stream: undefined });
+            expect(writeSpy).toHaveBeenCalled();
+            expect(endSpy).toHaveBeenCalled();
+        });
+
+        it("should create a write stream to a file when a file path is provided (binary)", async () => {
+            const ussApi = new SshUssApi();
+            const readFileSpy = vi.fn().mockResolvedValue({ data: "", etag: "etag1" });
+            const createDirsSpy = vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => {});
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { readFile: readFileSpy } });
+            vi.spyOn(ussApi as any, "buildZosFilesResponse");
+
+            await ussApi.getContents("/u/file", { file: "/tmp/fake/file.txt", binary: true } as any);
+
+            expect(createDirsSpy).toHaveBeenCalledWith("/tmp/fake/file.txt");
+            expect(fs.createWriteStream).toHaveBeenCalledWith("/tmp/fake/file.txt");
+            expect(readFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", encoding: "binary", stream: expect.any(Function) });
+        });
+
+        it("should throw when no stream or file is provided", async () => {
+            const ussApi = new SshUssApi();
+            let error: Error;
+            try {
+                await ussApi.getContents("/u/file", {} as any);
+            } catch (err) {
+                error = err as Error;
+            }
+            expect(error).toBeDefined();
+            expect(error.message).toEqual("Failed to get contents: No stream or file path provided");
+        });
+    });
+
+    describe("uploadFromBuffer", () => {
+        it("should write a buffer to a USS file", async () => {
+            const ussApi = new SshUssApi();
+            const writeFileSpy = vi.fn().mockResolvedValue({ etag: "etag1" });
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { writeFile: writeFileSpy } });
+            vi.spyOn(ussApi as any, "buildZosFilesResponse");
+
+            await ussApi.uploadFromBuffer(Buffer.from("hello"), "/u/file");
+
+            expect(writeFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", encoding: undefined, data: expect.any(String), etag: undefined });
+        });
+
+        it("should throw a 412 error on etag mismatch", async () => {
+            const ussApi = new SshUssApi();
+            const err = new imperative.ImperativeError({ msg: "x", additionalDetails: "Etag mismatch happened" });
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { writeFile: vi.fn().mockRejectedValue(err) } });
+
+            let error: Error;
+            try {
+                await ussApi.uploadFromBuffer(Buffer.from("hi"), "/u/file");
+            } catch (e) {
+                error = e as Error;
+            }
+            expect(error.message).toEqual("Rest API failure with HTTP(S) status 412");
+        });
+
+        it("should rethrow non-etag errors", async () => {
+            const ussApi = new SshUssApi();
+            const err = new Error("some other failure");
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { writeFile: vi.fn().mockRejectedValue(err) } });
+
+            let error: Error;
+            try {
+                await ussApi.uploadFromBuffer(Buffer.from("hi"), "/u/file");
+            } catch (e) {
+                error = e as Error;
+            }
+            expect(error).toEqual(err);
+        });
+    });
 
     describe("putContent", () => {
         it("should write file", async () => {
@@ -158,7 +249,60 @@ describe("SshUssApi", () => {
         });
     });
 
-    describe.skip("copy", () => {});
+    describe("copy", () => {
+        it("should copy a USS file", async () => {
+            const ussApi = new SshUssApi();
+            const copyUssSpy = vi.fn().mockResolvedValue({ success: true });
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { copyUss: copyUssSpy } });
+
+            const response = await ussApi.copy("/u/dest", {
+                from: "/u/src",
+                recursive: true,
+                overwrite: true,
+                followSymlinks: true,
+                preserveAttributes: true,
+            });
+
+            expect(copyUssSpy).toHaveBeenCalledWith({
+                srcFsPath: "/u/src",
+                dstFsPath: "/u/dest",
+                recursive: true,
+                followSymlinks: true,
+                preserveAttributes: true,
+                force: true,
+            });
+            expect(JSON.parse(response.toString())).toEqual(expect.objectContaining({ success: true }));
+        });
+
+        it("should use default option values when none are provided", async () => {
+            const ussApi = new SshUssApi();
+            const copyUssSpy = vi.fn().mockResolvedValue({ success: true });
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { copyUss: copyUssSpy } });
+
+            await ussApi.copy("/u/dest", { from: "/u/src" });
+
+            expect(copyUssSpy).toHaveBeenCalledWith({
+                srcFsPath: "/u/src",
+                dstFsPath: "/u/dest",
+                recursive: false,
+                followSymlinks: false,
+                preserveAttributes: false,
+                force: false,
+            });
+        });
+
+        it("should throw when the source path is not provided", async () => {
+            const ussApi = new SshUssApi();
+            let error: Error;
+            try {
+                await ussApi.copy("/u/dest", {});
+            } catch (err) {
+                error = err as Error;
+            }
+            expect(error).toBeDefined();
+            expect(error.message).toEqual("Error: unix copy 'source' cannot be undefined");
+        });
+    });
 
     describe("create", () => {
         it("should create a USS directory", async () => {
@@ -322,7 +466,85 @@ describe("SshUssApi", () => {
         });
     });
 
-    describe.skip("updateAttributes", () => {});
+    describe("updateAttributes", () => {
+        it("should throw when the file no longer exists", async () => {
+            const ussApi = new SshUssApi();
+            vi.spyOn(ussApi, "fileList").mockResolvedValue({ success: false } as any);
+
+            let error: Error;
+            try {
+                await ussApi.updateAttributes("/u/file", { tag: "IBM-1047" });
+            } catch (err) {
+                error = err as Error;
+            }
+            expect(error).toBeDefined();
+            expect(error.message).toEqual("File no longer exists");
+        });
+
+        it("should update the tag of a file", async () => {
+            const ussApi = new SshUssApi();
+            const chtagFileSpy = vi.fn().mockResolvedValue({ success: true });
+            vi.spyOn(ussApi, "fileList").mockResolvedValue({ success: true, apiResponse: { items: [{ mode: "-rw-r--r--" }] } } as any);
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { chtagFile: chtagFileSpy } });
+            vi.spyOn(ussApi as any, "buildZosFilesResponse");
+
+            await ussApi.updateAttributes("/u/file", { tag: "IBM-1047" });
+
+            expect(chtagFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", tag: "IBM-1047", recursive: false });
+        });
+
+        it("should update the owner of a directory recursively", async () => {
+            const ussApi = new SshUssApi();
+            const chownFileSpy = vi.fn().mockResolvedValue({ success: true });
+            vi.spyOn(ussApi, "fileList").mockResolvedValue({ success: true, apiResponse: { items: [{ mode: "drwxr-xr-x" }] } } as any);
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { chownFile: chownFileSpy } });
+            vi.spyOn(ussApi as any, "buildZosFilesResponse");
+
+            await ussApi.updateAttributes("/u/dir", { uid: "100", gid: "200" });
+
+            expect(chownFileSpy).toHaveBeenCalledWith({ fspath: "/u/dir", owner: "100:200", recursive: true });
+        });
+
+        it("should update the owner using the owner/group aliases", async () => {
+            const ussApi = new SshUssApi();
+            const chownFileSpy = vi.fn().mockResolvedValue({ success: true });
+            vi.spyOn(ussApi, "fileList").mockResolvedValue({ success: true, apiResponse: { items: [{ mode: "-rw-r--r--" }] } } as any);
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { chownFile: chownFileSpy } });
+            vi.spyOn(ussApi as any, "buildZosFilesResponse");
+
+            await ussApi.updateAttributes("/u/file", { owner: "myuser", group: "grp" });
+
+            expect(chownFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", owner: "myuser:grp", recursive: false });
+        });
+
+        it("should update the permissions of a file", async () => {
+            const ussApi = new SshUssApi();
+            const chmodFileSpy = vi.fn().mockResolvedValue({ success: true });
+            vi.spyOn(ussApi, "fileList").mockResolvedValue({ success: true, apiResponse: { items: [{ mode: "-rw-r--r--" }] } } as any);
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { chmodFile: chmodFileSpy } });
+            vi.spyOn(ussApi as any, "buildZosFilesResponse");
+
+            await ussApi.updateAttributes("/u/file", { perms: "755" });
+
+            expect(chmodFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", mode: "755", recursive: false });
+        });
+
+        it("should combine multiple attribute updates into the success result", async () => {
+            const ussApi = new SshUssApi();
+            vi.spyOn(ussApi, "fileList").mockResolvedValue({ success: true, apiResponse: { items: [{ mode: "-rw-r--r--" }] } } as any);
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({
+                uss: {
+                    chtagFile: vi.fn().mockResolvedValue({ success: true }),
+                    chmodFile: vi.fn().mockResolvedValue({ success: false }),
+                },
+            });
+            const buildSpy = vi.spyOn(ussApi as any, "buildZosFilesResponse");
+
+            await ussApi.updateAttributes("/u/file", { tag: "IBM-1047", perms: "755" });
+
+            expect(buildSpy).toHaveBeenCalledWith(undefined, false);
+        });
+    });
 
     describe("buildZosFilesResponse", () => {
         it("should build a successful response 1", () => {

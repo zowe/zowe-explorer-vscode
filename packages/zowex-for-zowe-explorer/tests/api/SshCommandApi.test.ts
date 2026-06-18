@@ -90,25 +90,33 @@ describe("SshCommandApi", () => {
     });
 
     describe("issueUnixCommand", () => {
-        it("should throw an error due to not being implemented", async () => {
+        it("should issue a unix command through the SSH client", async () => {
             const commandApi = new SshCommandApi({ type: "ssh", message: "", failNotFound: true, profile: { profile: { user: "fake" } } });
-            let error: Error;
+            const issueCmdSpy = vi.fn().mockResolvedValue({ data: "fake-output" });
+            const clientSpy = vi.spyOn(commandApi, "client", "get").mockResolvedValue({ uss: { issueCmd: issueCmdSpy } });
 
-            try {
-                await commandApi.issueUnixCommand("fake", "fake");
-            } catch (err) {
-                error = err;
-            }
+            const response = await commandApi.issueUnixCommand("ls", "/u/user");
 
-            expect(error).toBeDefined();
-            expect(error.message).toEqual("Method not implemented.");
+            expect(clientSpy).toHaveBeenCalledTimes(1);
+            expect(issueCmdSpy).toHaveBeenCalledTimes(1);
+            expect(issueCmdSpy).toHaveBeenCalledWith({ commandText: "cd '/u/user' && ls" });
+            expect(response).toEqual("fake-output");
+        });
+
+        it("should return an empty string when no data is returned", async () => {
+            const commandApi = new SshCommandApi({ type: "ssh", message: "", failNotFound: true, profile: { profile: { user: "fake" } } });
+            vi.spyOn(commandApi, "client", "get").mockResolvedValue({ uss: { issueCmd: vi.fn().mockResolvedValue({}) } });
+
+            const response = await commandApi.issueUnixCommand("ls", "/u/user");
+
+            expect(response).toEqual("");
         });
     });
 
     describe("sshProfileRequired", () => {
-        it("should always say an SSH profile is required", () => {
+        it("should return false because an SSH session is already in context", () => {
             const commandApi = new SshCommandApi();
-            expect(commandApi.sshProfileRequired()).toEqual(true);
+            expect(commandApi.sshProfileRequired()).toEqual(false);
         });
     });
 });

@@ -246,6 +246,30 @@ describe("SshClientCache", () => {
             expect(ZSshClient.create).toHaveBeenCalledTimes(2); // Initial try + post-deploy try
         });
 
+        it("should skip the update and warn when the server is outdated but autoUpdate is false", async () => {
+            vi.mocked(vscode.workspace.getConfiguration).mockReturnValueOnce({
+                get: vi.fn().mockImplementation((key: string, defaultVal: any) => (key === "zowex.serverAutoUpdate" ? false : (defaultVal ?? null))),
+            } as any);
+            vi.mocked(ZSshUtils.checkIfOutdated).mockResolvedValueOnce(true);
+
+            await cache.connect(mockProfile);
+
+            // autoUpdate disabled => keep the existing client, no redeploy
+            expect(deployWithProgress).not.toHaveBeenCalled();
+            expect(ZSshClient.create).toHaveBeenCalledTimes(1);
+        });
+
+        it("should rethrow a non-ENOTFOUND error thrown during client creation", async () => {
+            vi.mocked(ZSshClient.create).mockRejectedValueOnce(new Error("some other failure"));
+
+            await expect(cache.connect(mockProfile)).rejects.toThrow("some other failure");
+        });
+
+        it("should expose the singleton instance and the profiles cache", () => {
+            expect(SshClientCache.inst).toBe(cache);
+            expect(cache.profilesCache).toBe(mockGetProfilesCache);
+        });
+
         it("should restart the client if opts.restart flag is true", async () => {
             const endSpy = vi.spyOn(cache, "end");
 
@@ -328,6 +352,12 @@ describe("SshClientCache", () => {
 
             await expect((cache as any).reloadClient(clientId, false)).rejects.toThrow(/Could not load profile testProfile/);
         });
+
+        it("should log and return early when reloading a non-existent session", async () => {
+            const connectSpy = vi.spyOn(cache, "connect").mockResolvedValue({} as any);
+            await (cache as any).reloadClient("nonexistent_client");
+            expect(connectSpy).not.toHaveBeenCalled();
+        });
     });
 
     describe("handleClientError() / promptErrorAndReload()", () => {
@@ -340,6 +370,16 @@ describe("SshClientCache", () => {
                 startTime: Date.now() - 30000, // Started 30 seconds ago
                 responseTimeoutMillis: 60000,
             });
+        });
+
+        it("should swallow error notifications while a session is mid-reload", async () => {
+            const session = (cache as any).mClientSessionMap.get(clientId);
+            // ServerStatus.RESTARTING === 2
+            session.status = 2;
+
+            await (cache as any).handleClientError(clientId, new Error("Fatal error encountered in zowex"));
+
+            expect(vscode.window.showErrorMessage).not.toHaveBeenCalled();
         });
 
         it("should reload AND retry if 'Reload and Retry' is clicked", async () => {
@@ -429,6 +469,42 @@ describe("SshClientCache", () => {
 
             // Should not show error message
             expect(vscode.window.showErrorMessage).not.toHaveBeenCalled();
+        });
+
+        it("should show a generic reload-failure message when 'Reload' fails", async () => {
+            vi.spyOn(cache as any, "reloadClient").mockRejectedValue(new Error("reload boom"));
+            vi.mocked(vscode.window.showErrorMessage).mockResolvedValue("Reload" as any);
+
+            await (cache as any).handleClientError(clientId, new Error("Something went wrong CEE5207E offset"));
+            await new Promise(process.nextTick);
+            await new Promise(process.nextTick);
+
+            expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Failed to reload ZRS. Try reloading your VSCode environment");
+        });
+
+        it("should show a generic reload-and-retry-failure message when 'Reload and Retry' fails", async () => {
+            const session = (cache as any).mClientSessionMap.get(clientId);
+            session.startTime = Date.now() - 70000;
+            vi.spyOn(cache as any, "reloadClient").mockRejectedValue(new Error("reload retry boom"));
+            vi.mocked(vscode.window.showErrorMessage).mockResolvedValue("Reload and Retry" as any);
+
+            await (cache as any).handleClientError(clientId, new Error("Request timed out"));
+            await new Promise(process.nextTick);
+            await new Promise(process.nextTick);
+
+            expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+                "Failed to reload ZRS and retry requests. Try reloading your VSCode environment"
+            );
+        });
+
+        it("should do nothing when the user clicks 'Close' on a reload prompt", async () => {
+            const reloadSpy = vi.spyOn(cache as any, "reloadClient");
+            vi.mocked(vscode.window.showErrorMessage).mockResolvedValue("Close" as any);
+
+            await (cache as any).handleClientError(clientId, new Error("Something went wrong CEE5207E offset"));
+            await new Promise(process.nextTick);
+
+            expect(reloadSpy).not.toHaveBeenCalled();
         });
 
         it("should show specific message on UNSUPPORTED error", async () => {
