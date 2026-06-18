@@ -79,22 +79,22 @@ export class JobActions {
             args: [jobs.length, displayedJobNames, additionalJobsCount > 0 ? `\n...and ${additionalJobsCount} more` : ""],
             comment: ["Jobs length", "Job names", "Additional jobs count"],
         });
-const confirmDelete = vscode.workspace
-    .getConfiguration()
-    .get<boolean>("zowe.jobs.confirmDelete", true);
+        const confirmDelete = vscode.workspace
+            .getConfiguration()
+            .get<boolean>("zowe.jobs.confirmDelete", true);
 
-if (confirmDelete) {
-    const deleteChoice = await Gui.warningMessage(message, {
-        items: [deleteButton],
-        vsCodeOpts: { modal: true },
-    });
+        if (confirmDelete) {
+            const deleteChoice = await Gui.warningMessage(message, {
+                items: [deleteButton],
+                vsCodeOpts: { modal: true },
+            });
 
-    if (!deleteChoice || deleteChoice === "Cancel") {
-        ZoweLogger.debug(vscode.l10n.t("Delete action was canceled."));
-        Gui.showMessage(vscode.l10n.t("Delete action was cancelled."));
-        return;
-    }
-}
+            if (!deleteChoice || deleteChoice === "Cancel") {
+                ZoweLogger.debug(vscode.l10n.t("Delete action was canceled."));
+                Gui.showMessage(vscode.l10n.t("Delete action was cancelled."));
+                return;
+            }
+        }
         const deletionResult: ReadonlyArray<IZoweJobTreeNode | Error> = await Promise.all(
             jobs.map(async (job) => {
                 try {

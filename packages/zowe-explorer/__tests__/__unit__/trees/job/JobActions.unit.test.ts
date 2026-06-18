@@ -1671,6 +1671,13 @@ describe("job deletion command", () => {
     const job = createIJobObject();
     const job2 = createIJobObject();
 
+    beforeEach(() => {
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: vi.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false], ["zowe.jobs.confirmDelete", true]])),
+            configurable: true,
+        });
+    });
+
     const spyOnRefreshAll = () => {
         const refreshAllStub = vi.fn();
         Object.defineProperty(SharedActions, "refreshAll", {
@@ -1760,6 +1767,23 @@ describe("job deletion command", () => {
         await JobActions.deleteCommand(jobsProvider, undefined);
 
         // assert
+        expect(mocked(jobsProvider.delete)).toHaveBeenCalledWith(jobNode);
+    });
+
+    it("should skip confirmation dialog and delete directly when confirmDelete setting is false", async () => {
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: vi.fn().mockImplementation(() => new Map([["zowe.jobs.confirmSubmission", false], ["zowe.jobs.confirmDelete", false]])),
+            configurable: true,
+        });
+        spyOnRefreshAll();
+
+        const jobsProvider = createJobsTree(session, job, profile, createTreeView());
+        jobsProvider.delete.mockResolvedValueOnce(Promise.resolve());
+        const jobNode = new ZoweJobNode({ label: "jobtest", collapsibleState: vscode.TreeItemCollapsibleState.Expanded, session, profile, job });
+
+        await JobActions.deleteCommand(jobsProvider, jobNode);
+
+        expect(mocked(Gui.warningMessage)).not.toHaveBeenCalled();
         expect(mocked(jobsProvider.delete)).toHaveBeenCalledWith(jobNode);
     });
 });
