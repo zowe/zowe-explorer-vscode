@@ -1,5 +1,5 @@
 <!-- 
-**NOTE:** The team reserves the right to close out low quality PRs or PRs with little to no human involvement.
+**NOTE:** The team reserves the right to close pull requests that fail to meet quality standards or lack human contribution.
 -->
 
 ## Proposed changes
