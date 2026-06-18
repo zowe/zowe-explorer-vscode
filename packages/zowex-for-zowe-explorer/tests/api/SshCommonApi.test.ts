@@ -16,6 +16,7 @@ import { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import * as vscode from "vscode";
 import { SshClientCache } from "../../src/SshClientCache";
+import { SshErrorHandler } from "../../src/SshErrorHandler";
 
 describe("SshCommonApi", () => {
     afterEach(() => {
@@ -194,6 +195,42 @@ describe("SshCommonApi", () => {
             vi.spyOn(AuthHandler, "promptForAuthentication").mockResolvedValue(false);
 
             const status = await commonApi.getStatus(passwordProfile, "ssh");
+            expect(status).toEqual("inactive");
+        });
+
+        it("should call handleError and return 'inactive' when profile.profile is undefined", async () => {
+            const noInnerProfile: imperative.IProfileLoaded = {
+                type: "ssh",
+                name: "sshProf",
+                message: "",
+                failNotFound: true,
+                profile: undefined,
+            } as any;
+            const commonApi = new SshCommonApi(noInnerProfile);
+            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+                connect: vi.fn().mockRejectedValue(new Error("connection refused")),
+            } as any);
+            vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(false);
+            const handleErrorSpy = vi.spyOn(SshErrorHandler.getInstance(), "handleError").mockResolvedValue(undefined as any);
+
+            const status = await commonApi.getStatus(noInnerProfile, "ssh");
+
+            expect(handleErrorSpy).toHaveBeenCalledWith(expect.any(Error), ZoweExplorerApiType.All, "SSH connection status check failed", false);
+            expect(status).toEqual("inactive");
+        });
+
+        it("should call handleError and return 'inactive' when both password and privateKey are set and auth fails", async () => {
+            const bothAuthProfile: imperative.IProfileLoaded = { ...profile, profile: { password: "p", privateKey: "/key", host: "h" } } as any;
+            const commonApi = new SshCommonApi(bothAuthProfile);
+            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+                connect: vi.fn().mockRejectedValue(new Error("All configured authentication methods failed")),
+            } as any);
+            vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(false);
+            const handleErrorSpy = vi.spyOn(SshErrorHandler.getInstance(), "handleError").mockResolvedValue(undefined as any);
+
+            const status = await commonApi.getStatus(bothAuthProfile, "ssh");
+
+            expect(handleErrorSpy).toHaveBeenCalledWith(expect.any(Error), ZoweExplorerApiType.All, "SSH connection status check failed", false);
             expect(status).toEqual("inactive");
         });
     });
