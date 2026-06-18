@@ -69,3 +69,5 @@ if (/^\d+$/.test(target)) {
 } else {
   execSync(`pnpm add "file:../../${target}" --no-lockfile`, { stdio: 'inherit' });
 }
+
+execSync("pnpm copy-prebuilds", { cwd: path.join(__dirname, "../packages/zowe-explorer" )});

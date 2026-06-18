@@ -39,7 +39,7 @@ const config = (mode) => ({
         conditionNames: ["@zowe:bundler", "..."],
     },
     watchOptions: {
-        ignored: /node_modules/,
+        ignored: /node_modules\/(?!.*zowex-for-zowe-sdk)/,
     },
     stats: {
         warnings: false,
