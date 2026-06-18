@@ -30,6 +30,14 @@ describe("SshCommandApi", () => {
             expect(issueCommandSpy).toHaveBeenCalledTimes(1);
             expect(response).toEqual({ success: true, commandResponse: "fake-data", startReady: false, zosmfResponse: [] });
         });
+
+        it("should propagate a rejection from the TSO client", async () => {
+            const commandApi = new SshCommandApi({ type: "ssh", message: "", failNotFound: true, profile: { profile: { user: "fake" } } });
+            const issueCmdSpy = vi.fn().mockRejectedValue(new Error("tso failure"));
+            vi.spyOn(commandApi, "client", "get").mockResolvedValue({ tso: { issueCmd: issueCmdSpy } });
+
+            await expect(commandApi.issueTsoCommandWithParms("test")).rejects.toThrow("tso failure");
+        });
     });
 
     describe("issueMvsCommand", () => {

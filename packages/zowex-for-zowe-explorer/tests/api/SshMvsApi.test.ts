@@ -93,15 +93,13 @@ describe("SshMvsApi", () => {
 
         it("should transform migrated=false to NO", async () => {
             const mvsApi = new SshMvsApi();
-            vi.spyOn(mvsApi as any, "buildZosFilesResponse");
             vi.spyOn(mvsApi, "client", "get").mockResolvedValue({
                 ds: { listDatasets: vi.fn().mockResolvedValue({ items: [{ name: "X", migrated: false }], returnedRows: 1 }) },
             });
 
-            await mvsApi.dataSet("X", { attributes: true } as any);
+            const result = await mvsApi.dataSet("X", { attributes: true } as any);
 
-            // value covered implicitly; ensure no throw
-            expect(true).toBe(true);
+            expect(result.apiResponse.items[0].migr).toEqual("NO");
         });
     });
 
@@ -484,6 +482,12 @@ describe("SshMvsApi", () => {
 
             expect(renameSpy).toHaveBeenCalledWith({ dsnameBefore: "USER.OLD", dsnameAfter: "USER.NEW" });
         });
+
+        it("should propagate a rejection from renameDataset", async () => {
+            const mvsApi = new SshMvsApi();
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { renameDataset: vi.fn().mockRejectedValue(new Error("renameDataset failed")) } });
+            await expect(mvsApi.renameDataSet("USER.OLD", "USER.NEW")).rejects.toThrow("renameDataset failed");
+        });
     });
 
     describe("renameDataSetMember", () => {
@@ -496,6 +500,12 @@ describe("SshMvsApi", () => {
             await mvsApi.renameDataSetMember("USER.PDS", "OLD", "NEW");
 
             expect(renameSpy).toHaveBeenCalledWith({ dsname: "USER.PDS", memberBefore: "OLD", memberAfter: "NEW" });
+        });
+
+        it("should propagate a rejection from renameMember", async () => {
+            const mvsApi = new SshMvsApi();
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { renameMember: vi.fn().mockRejectedValue(new Error("renameMember failed")) } });
+            await expect(mvsApi.renameDataSetMember("USER.PDS", "OLD", "NEW")).rejects.toThrow("renameMember failed");
         });
     });
 
@@ -517,6 +527,12 @@ describe("SshMvsApi", () => {
 
             expect(restoreSpy).toHaveBeenCalledWith({ dsname: "USER.DATA" });
         });
+
+        it("should propagate a rejection from restoreDataset", async () => {
+            const mvsApi = new SshMvsApi();
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { restoreDataset: vi.fn().mockRejectedValue(new Error("restoreDataset failed")) } });
+            await expect(mvsApi.hRecallDataSet("USER.DATA")).rejects.toThrow("restoreDataset failed");
+        });
     });
 
     describe("deleteDataSet", () => {
@@ -529,6 +545,12 @@ describe("SshMvsApi", () => {
             await mvsApi.deleteDataSet("USER.DATA");
 
             expect(deleteSpy).toHaveBeenCalledWith({ dsname: "USER.DATA" });
+        });
+
+        it("should propagate a rejection from deleteDataset", async () => {
+            const mvsApi = new SshMvsApi();
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { deleteDataset: vi.fn().mockRejectedValue(new Error("deleteDataset failed")) } });
+            await expect(mvsApi.deleteDataSet("USER.DATA")).rejects.toThrow("deleteDataset failed");
         });
     });
 

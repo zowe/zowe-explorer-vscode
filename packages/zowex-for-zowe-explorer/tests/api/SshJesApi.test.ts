@@ -11,7 +11,7 @@
 
 import { describe, afterEach, expect, it, vi } from "vitest";
 import { SshJesApi } from "../../src/api/SshJesApi";
-import { IGetJobsParms } from "@zowe/zos-jobs-for-zowe-sdk";
+import { IGetJobsParms, IJob } from "@zowe/zos-jobs-for-zowe-sdk";
 import { B64String } from "@zowe/zowex-for-zowe-sdk";
 
 describe("SshJesApi", () => {
@@ -63,6 +63,14 @@ describe("SshJesApi", () => {
                     retcode: "0",
                 },
             ]);
+        });
+
+        it("should propagate a rejection from listJobs", async () => {
+            const jesApi = new SshJesApi();
+            vi.spyOn(SshJesApi.prototype, "client", "get").mockResolvedValue({
+                jobs: { listJobs: vi.fn().mockRejectedValue(new Error("listJobs failed")) },
+            });
+            await expect(jesApi.getJobsByParameters({ owner: "u" })).rejects.toThrow("listJobs failed");
         });
     });
 
@@ -118,6 +126,14 @@ describe("SshJesApi", () => {
                 retcode: "0",
             });
         });
+
+        it("should propagate a rejection from getStatus", async () => {
+            const jesApi = new SshJesApi();
+            vi.spyOn(SshJesApi.prototype, "client", "get").mockResolvedValue({
+                jobs: { getStatus: vi.fn().mockRejectedValue(new Error("getStatus failed")) },
+            });
+            await expect(jesApi.getJob("fakejob1")).rejects.toThrow("getStatus failed");
+        });
     });
 
     describe("getSpoolFiles", () => {
@@ -136,6 +152,14 @@ describe("SshJesApi", () => {
             expect(listSpoolsSpy).toHaveBeenCalledTimes(1);
             expect(listSpoolsSpy).toHaveBeenCalledWith({ jobId: "FAKEID" });
             expect(response).toEqual([mockSpoolFile]);
+        });
+
+        it("should propagate a rejection from listSpools", async () => {
+            const jesApi = new SshJesApi();
+            vi.spyOn(SshJesApi.prototype, "client", "get").mockResolvedValue({
+                jobs: { listSpools: vi.fn().mockRejectedValue(new Error("listSpools failed")) },
+            });
+            await expect(jesApi.getSpoolFiles("fakejob", "fakeid")).rejects.toThrow("listSpools failed");
         });
     });
 
@@ -205,6 +229,19 @@ describe("SshJesApi", () => {
             expect(getJclSpy).toHaveBeenCalledWith({ jobId: "FAKEJOB" });
             expect(response).toEqual("fakedata");
         });
+
+        it("should propagate a rejection from getJcl", async () => {
+            const jesApi = new SshJesApi();
+            vi.spyOn(SshJesApi.prototype, "client", "get").mockResolvedValue({
+                jobs: { getJcl: vi.fn().mockRejectedValue(new Error("getJcl failed")) },
+            });
+            const fakeJob: IJob = {
+                jobid: "fakejob", jobname: "FAKEJOB", subsystem: "JES2", owner: "USER",
+                status: "OUTPUT", type: "JOB", class: "A", retcode: "CC 0000",
+                url: "", "files-url": "", "job-correlator": "", phase: 20, "phase-name": "Job is on the hard copy queue",
+            };
+            await expect(jesApi.getJclForJob(fakeJob)).rejects.toThrow("getJcl failed");
+        });
     });
 
     describe("cancelJob", () => {
@@ -244,6 +281,14 @@ describe("SshJesApi", () => {
             expect(submitJclSpy).toHaveBeenCalledWith({ jcl: B64String.encode("fakeJcl") });
             expect(response).toEqual({ jobid: "fakeid", jobname: "fakejob" });
         });
+
+        it("should propagate a rejection from submitJcl", async () => {
+            const jesApi = new SshJesApi();
+            vi.spyOn(SshJesApi.prototype, "client", "get").mockResolvedValue({
+                jobs: { submitJcl: vi.fn().mockRejectedValue(new Error("submitJcl failed")) },
+            });
+            await expect(jesApi.submitJcl("fakeJcl")).rejects.toThrow("submitJcl failed");
+        });
     });
 
     describe("submitJob", () => {
@@ -262,6 +307,14 @@ describe("SshJesApi", () => {
             expect(submitJobSpy).toHaveBeenCalledTimes(1);
             expect(submitJobSpy).toHaveBeenCalledWith({ dsname: "FAKE.DATA.SET" });
             expect(response).toEqual({ jobid: "fakeid", jobname: "fakejob" });
+        });
+
+        it("should propagate a rejection from submitJob", async () => {
+            const jesApi = new SshJesApi();
+            vi.spyOn(SshJesApi.prototype, "client", "get").mockResolvedValue({
+                jobs: { submitJob: vi.fn().mockRejectedValue(new Error("submitJob failed")) },
+            });
+            await expect(jesApi.submitJob("FAKE.DATA.SET")).rejects.toThrow("submitJob failed");
         });
     });
 

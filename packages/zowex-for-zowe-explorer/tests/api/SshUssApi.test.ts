@@ -46,6 +46,12 @@ describe("SshUssApi", () => {
             expect(buildZosFilesResponseSpy).toHaveBeenCalledTimes(1);
             expect(buildZosFilesResponseSpy).toHaveBeenCalledWith({ items: mockResponse.items, returnedRows: mockResponse.returnedRows });
         });
+
+        it("should propagate a rejection from listFiles", async () => {
+            const ussApi = new SshUssApi();
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { listFiles: vi.fn().mockRejectedValue(new Error("listFiles failed")) } });
+            await expect(ussApi.fileList("fakePath")).rejects.toThrow("listFiles failed");
+        });
     });
 
     describe("isFileTagBinOrAscii", () => {
@@ -341,6 +347,12 @@ describe("SshUssApi", () => {
     });
 
     describe("delete", () => {
+        it("should propagate a rejection from deleteFile", async () => {
+            const ussApi = new SshUssApi();
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { deleteFile: vi.fn().mockRejectedValue(new Error("deleteFile failed")) } });
+            await expect(ussApi.delete("fakePath")).rejects.toThrow("deleteFile failed");
+        });
+
         it("should delete a USS file", async () => {
             const ussApi = new SshUssApi();
             const clientSpy = vi.spyOn(ussApi, "client", "get");
@@ -409,6 +421,12 @@ describe("SshUssApi", () => {
             expect(moveFileSpy).toHaveBeenCalledWith({ source: "fakePath", target: "fakeNewPath" });
             expect(buildZosFilesResponseSpy).toHaveBeenCalledTimes(0);
         });
+
+        it("should propagate a rejection from moveFile", async () => {
+            const ussApi = new SshUssApi();
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { moveFile: vi.fn().mockRejectedValue(new Error("moveFile failed")) } });
+            await expect(ussApi.move("fakePath", "fakeNewPath")).rejects.toThrow("moveFile failed");
+        });
     });
 
     describe("rename", () => {
@@ -427,6 +445,12 @@ describe("SshUssApi", () => {
             expect(moveFileSpy).toHaveBeenCalledWith({ source: "fakePath", target: "fakeNewPath" });
             expect(buildZosFilesResponseSpy).toHaveBeenCalledTimes(1);
             expect(buildZosFilesResponseSpy).toHaveBeenCalledWith(mockResponse);
+        });
+
+        it("should propagate a rejection from moveFile", async () => {
+            const ussApi = new SshUssApi();
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { moveFile: vi.fn().mockRejectedValue(new Error("moveFile failed")) } });
+            await expect(ussApi.rename("fakePath", "fakeNewPath")).rejects.toThrow("moveFile failed");
         });
     });
 
