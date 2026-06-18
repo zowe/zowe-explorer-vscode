@@ -163,6 +163,37 @@ describe("VscePromptApi", () => {
             expect(result).toEqual({ label: "HostA", description: "desc" });
         });
 
+        it("should map separator items to a separator-kind QuickPick item", async () => {
+            api = makeApi();
+            const qp = {
+                items: [],
+                title: "",
+                placeholder: "",
+                selectedItems: [{ label: "HostA", description: "desc" }],
+                onDidChangeValue: vi.fn(() => ({ dispose: vi.fn() })),
+                onDidAccept: vi.fn((cb) => {
+                    qp._accept = cb;
+                    return { dispose: vi.fn() };
+                }),
+                onDidHide: vi.fn(() => ({ dispose: vi.fn() })),
+                show: vi.fn(() => qp._accept()),
+                hide: vi.fn(),
+            };
+            vi.spyOn(vscode.window, "createQuickPick").mockReturnValue(qp);
+
+            await (api as any).showCustomMenu({
+                items: [
+                    { separator: true, label: "Section" },
+                    { label: "HostA", description: "desc" },
+                ],
+                title: "T",
+                placeholder: "P",
+            });
+
+            expect(qp.items[0]).toEqual({ label: "Section", kind: vscode.QuickPickItemKind.Separator });
+            expect(qp.items[1]).toEqual({ label: "HostA", description: "desc" });
+        });
+
         it("should resolve a custom host when the selection starts with '>'", async () => {
             api = makeApi();
             const qp: any = {

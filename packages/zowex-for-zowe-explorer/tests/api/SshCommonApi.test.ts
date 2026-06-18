@@ -88,6 +88,18 @@ describe("SshCommonApi", () => {
             expect(buildSessionSpy).toHaveBeenCalledTimes(1);
             expect(buildSessionSpy).toHaveBeenCalledWith({ data: "fake" });
         });
+
+        it("should fall back to this.profile when no profile argument is provided", () => {
+            const mockSession: SshSession = { mISshSession: {}, ISshSession: {}, buildSession: vi.fn() };
+            const mockProfile = { type: "ssh", message: "test", failNotFound: true, profile: { name: "profileInstance" } } as any;
+            const buildSessionSpy = vi.spyOn(ZSshUtils, "buildSession").mockReturnValue(mockSession);
+            const commonApi = new SshCommonApi(mockProfile);
+
+            const sess = commonApi.getSshSession();
+
+            expect(sess).toEqual(mockSession);
+            expect(buildSessionSpy).toHaveBeenCalledWith({ name: "profileInstance" });
+        });
     });
 
     describe("getStatus", () => {

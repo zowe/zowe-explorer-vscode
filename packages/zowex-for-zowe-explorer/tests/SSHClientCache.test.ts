@@ -201,6 +201,16 @@ describe("SshClientCache", () => {
             );
         });
 
+        it("should release the profile lock via the AsyncMutex onDispose callback after connecting", async () => {
+            const deleteSpy = vi.spyOn((cache as any).mMutexMap, "delete");
+
+            await cache.connect(mockProfile);
+
+            // The `using` lock's [Symbol.dispose] runs onDispose, which removes the mutex from the map.
+            expect(deleteSpy).toHaveBeenCalledWith(clientId);
+            expect((cache as any).mMutexMap.has(clientId)).toBe(false);
+        });
+
         it("should create a new client session if one does not exist", async () => {
             const client = await cache.connect(mockProfile);
 

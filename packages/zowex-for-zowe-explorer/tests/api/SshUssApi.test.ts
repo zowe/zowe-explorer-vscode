@@ -142,6 +142,28 @@ describe("SshUssApi", () => {
             expect(writeFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", encoding: undefined, data: expect.any(String), etag: undefined });
         });
 
+        it("should write a buffer in binary mode and pass the etag through", async () => {
+            const ussApi = new SshUssApi();
+            const writeFileSpy = vi.fn().mockResolvedValue({ etag: "etag2" });
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { writeFile: writeFileSpy } });
+            vi.spyOn(ussApi as any, "buildZosFilesResponse");
+
+            await ussApi.uploadFromBuffer(Buffer.from("hi"), "/u/file", { binary: true, etag: "etag2" } as any);
+
+            expect(writeFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", encoding: "binary", data: expect.any(String), etag: "etag2" });
+        });
+
+        it("should forward a custom encoding (and etag) when binary is falsy", async () => {
+            const ussApi = new SshUssApi();
+            const writeFileSpy = vi.fn().mockResolvedValue({ etag: "etag3" });
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { writeFile: writeFileSpy } });
+            vi.spyOn(ussApi as any, "buildZosFilesResponse");
+
+            await ussApi.uploadFromBuffer(Buffer.from("hi"), "/u/file", { encoding: "IBM-1047", etag: "etag3" } as any);
+
+            expect(writeFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", encoding: "IBM-1047", data: expect.any(String), etag: "etag3" });
+        });
+
         it("should throw a 412 error on etag mismatch", async () => {
             const ussApi = new SshUssApi();
             const err = new imperative.ImperativeError({ msg: "x", additionalDetails: "Etag mismatch happened" });
@@ -323,7 +345,7 @@ describe("SshUssApi", () => {
             await ussApi.create("fakePath", "directory");
 
             expect(createFileSpy).toHaveBeenCalledTimes(1);
-            expect(createFileSpy).toHaveBeenCalledWith({ fspath: "fakePath", isDir: true, mode: undefined });
+            expect(createFileSpy).toHaveBeenCalledWith({ fspath: "fakePath", isDir: true, permissions: undefined });
             expect(buildZosFilesResponseSpy).toHaveBeenCalledTimes(1);
             expect(buildZosFilesResponseSpy).toHaveBeenCalledWith(mockResponse);
         });
@@ -340,9 +362,22 @@ describe("SshUssApi", () => {
             await ussApi.create("fakePath", "file");
 
             expect(createFileSpy).toHaveBeenCalledTimes(1);
-            expect(createFileSpy).toHaveBeenCalledWith({ fspath: "fakePath", isDir: false, mode: undefined });
+            expect(createFileSpy).toHaveBeenCalledWith({ fspath: "fakePath", isDir: false, permissions: undefined });
             expect(buildZosFilesResponseSpy).toHaveBeenCalledTimes(1);
             expect(buildZosFilesResponseSpy).toHaveBeenCalledWith(mockResponse);
+        });
+
+        it("should pass mode as permissions to createFile", async () => {
+            const ussApi = new SshUssApi();
+            const clientSpy = vi.spyOn(ussApi, "client", "get");
+            const createFileSpy = vi.fn();
+            const mockResponse = { data: "fake" };
+
+            clientSpy.mockResolvedValue({ uss: { createFile: createFileSpy } });
+            createFileSpy.mockResolvedValue(mockResponse);
+            await ussApi.create("fakePath", "file", "755");
+
+            expect(createFileSpy).toHaveBeenCalledWith({ fspath: "fakePath", isDir: false, permissions: "755" });
         });
     });
 
@@ -539,6 +574,18 @@ describe("SshUssApi", () => {
             await ussApi.updateAttributes("/u/file", { owner: "myuser", group: "grp" });
 
             expect(chownFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", owner: "myuser:grp", recursive: false });
+        });
+
+        it("should set the owner without a group suffix when no group is provided", async () => {
+            const ussApi = new SshUssApi();
+            const chownFileSpy = vi.fn().mockResolvedValue({ success: true });
+            vi.spyOn(ussApi, "fileList").mockResolvedValue({ success: true, apiResponse: { items: [{ mode: "-rw-r--r--" }] } } as any);
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { chownFile: chownFileSpy } });
+            vi.spyOn(ussApi as any, "buildZosFilesResponse");
+
+            await ussApi.updateAttributes("/u/file", { owner: "myuser" });
+
+            expect(chownFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", owner: "myuser", recursive: false });
         });
 
         it("should update the permissions of a file", async () => {

@@ -214,6 +214,24 @@ describe("Utilities", () => {
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
         });
 
+        it("should fall back to the profile name in the info message when host is undefined", async () => {
+            const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
+            const mockedDeploy = await vi.importMock("../src/ServerDeployment");
+            const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
+            const profile = { name: "myProf", profile: {} }; // no host
+            VscePromptApi.mockImplementation(() => ({
+                promptForProfile: vi.fn().mockResolvedValue(profile),
+                promptForDeployDirectory: vi.fn().mockResolvedValue("/deploy/dir"),
+            }));
+            vi.spyOn(mockedDeploy, "deployWithProgress").mockResolvedValue(true);
+            const showMessageSpy = vi.spyOn(mockedExplorer.Gui, "showMessage");
+
+            const api = mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
+            await (Utilities as any).connectCallback(api, "myProf");
+
+            expect(showMessageSpy).toHaveBeenCalledWith("Installed Zowe Remote SSH server on myProf");
+        });
+
         it("should abort when no profile is selected", async () => {
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const promptForProfile = vi.fn().mockResolvedValue(undefined);
@@ -307,6 +325,22 @@ describe("Utilities", () => {
             expect(connectSpy).not.toHaveBeenCalled();
         });
 
+        it("should fall back to the profile name in the info log when host is undefined", async () => {
+            const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
+            const mockedCache = await vi.importMock("../src/SshClientCache");
+            const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
+            const profile = { name: "myProf", profile: {} }; // no host
+            VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(profile) }));
+            vi.spyOn(mockedCache.SshClientCache.inst, "connect").mockResolvedValue({} as any);
+            const infoSpy = vi.fn();
+            vi.spyOn(mockedExplorer.imperative.Logger, "getAppLogger").mockReturnValue({ trace: vi.fn(), info: infoSpy } as any);
+
+            const api = mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
+            await (Utilities as any).restartCallback(api, "myProf");
+
+            expect(infoSpy).toHaveBeenCalledWith("Restarted Zowe Remote SSH server on myProf");
+        });
+
         it("should propagate a rejection from connect", async () => {
             const mockedCache = await vi.importMock("../src/SshClientCache");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
@@ -358,6 +392,27 @@ describe("Utilities", () => {
             await (Utilities as any).uninstallCallback(api);
 
             expect(endSpy).not.toHaveBeenCalled();
+        });
+
+        it("should fall back to the profile name in the info message when host is undefined", async () => {
+            const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
+            const mockedConfig = await vi.importMock("../src/ConfigUtils");
+            const mockedCache = await vi.importMock("../src/SshClientCache");
+            const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
+            const profile = { name: "myProf", profile: {} }; // no host
+            VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(profile) }));
+
+            vi.spyOn(mockedConfig.ConfigUtils, "getServerPath").mockReturnValue("/server/path");
+            vi.spyOn(mockedConfig.ConfigUtils, "showSessionInTree").mockResolvedValue(undefined);
+            vi.spyOn(mockedCache.SshClientCache.inst, "end");
+            vi.spyOn(ZSshUtils, "uninstallServer").mockResolvedValue(undefined);
+            vi.spyOn(ZSshUtils, "buildSession").mockReturnValue({ ISshSession: {} });
+            const showMessageSpy = vi.spyOn(mockedExplorer.Gui, "showMessage");
+
+            const api = mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
+            await (Utilities as any).uninstallCallback(api, "myProf");
+
+            expect(showMessageSpy).toHaveBeenCalledWith("Uninstalled Zowe Remote SSH server from myProf");
         });
     });
 });

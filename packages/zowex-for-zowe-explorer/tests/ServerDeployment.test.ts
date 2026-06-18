@@ -58,17 +58,21 @@ describe("ServerDeployment", () => {
         });
 
         it("should forward progress increments to the VS Code progress reporter", async () => {
-            const reported: number[] = [];
+            const progressReport = vi.fn();
+            vi.spyOn(vscode.window, "withProgress").mockImplementation(async (_opts: any, callback: any) => {
+                return callback({ report: progressReport }, { isCancellationRequested: false, onCancellationRequested: vi.fn() });
+            });
             vi.mocked(ZSshUtils.installServer).mockImplementation(async (_session, _path, opts) => {
                 opts?.onProgress?.(25);
                 opts?.onProgress?.(50);
-                reported.push(25, 50);
                 return true;
             });
 
             await deployWithProgress(fakeSession, "/server/path");
 
-            expect(reported).toEqual([25, 50]);
+            expect(progressReport).toHaveBeenCalledTimes(2);
+            expect(progressReport).toHaveBeenNthCalledWith(1, { increment: 25 });
+            expect(progressReport).toHaveBeenNthCalledWith(2, { increment: 50 });
         });
 
         it("should forward a non-successful install result", async () => {

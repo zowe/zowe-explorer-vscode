@@ -510,6 +510,17 @@ describe("SshMvsApi", () => {
             expect(response).toBeDefined();
         });
 
+        it("should stringify a non-Error value thrown during member copy", async () => {
+            const mvsApi = new SshMvsApi();
+            const buildSpy = vi.spyOn(mvsApi as any, "buildZosFilesResponse");
+            vi.spyOn(vscode.window, "showErrorMessage").mockReturnValue(undefined);
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { copyDatasetOrMember: vi.fn().mockRejectedValue("string err") } });
+
+            const response = await mvsApi.copyDataSetMember({ dsn: "A", member: "M1" }, { dsn: "B", member: "M2" });
+            expect(buildSpy).toHaveBeenCalledWith({ success: false }, false, "string err");
+            expect(response).toBeDefined();
+        });
+
         it("should return a failure response when the member copy is not successful", async () => {
             const mvsApi = new SshMvsApi();
             const buildSpy = vi.spyOn(mvsApi as any, "buildZosFilesResponse");
@@ -898,6 +909,44 @@ describe("SshMvsApi", () => {
 
             await mvsApi.copyDataSetCrossLpar("USER.TGT", undefined, { "from-dataset": { dsn: "USER.SRC" } } as any, sourceProfile);
             expect(buildSpy).toHaveBeenCalledWith({ success: false }, false, "read fail");
+        });
+
+        it("should read a member-qualified source and apply default attributes (lrecl 80, primary 1, CYLINDERS) when source attributes are missing", async () => {
+            const mvsApi = new SshMvsApi();
+            const createSpy = vi.fn().mockResolvedValue({ success: true });
+            const writeSpy = vi.fn().mockResolvedValue({ success: true });
+            const readSpy = vi.fn().mockResolvedValue({ data: "AAAA" });
+            const sourceClient = {
+                ds: {
+                    // no lrecl / alloc / blksize so the ?? fallbacks are exercised; spacu "CYLINDER" hits the CYLINDERS branch
+                    listDatasets: vi.fn().mockResolvedValue({ items: [{ name: "USER.SRC", dsorg: "PO", recfm: "FB", spacu: "CYLINDER" }] }),
+                    readDataset: readSpy,
+                },
+            };
+            const targetClient = {
+                ds: { listDatasets: vi.fn().mockResolvedValue({ items: [] }), createDataset: createSpy, writeDataset: writeSpy },
+            };
+            setupClients(mvsApi, sourceClient, targetClient);
+
+            await mvsApi.copyDataSetCrossLpar("USER.TGT", "NEWMEM", { "from-dataset": { dsn: "USER.SRC", member: "OLD" } } as any, sourceProfile);
+
+            expect(readSpy).toHaveBeenCalledWith({ dsname: "USER.SRC(OLD)", encoding: "binary" });
+            expect(createSpy).toHaveBeenCalledWith({
+                dsname: "USER.TGT",
+                attributes: expect.objectContaining({ lrecl: 80, primary: 1, alcunit: "CYLINDERS", secondary: 1 }),
+            });
+            expect(writeSpy).toHaveBeenCalledWith({ dsname: "USER.TGT(NEWMEM)", data: "AAAA", encoding: "binary" });
+        });
+
+        it("should stringify a non-Error value thrown during the cross-LPAR copy", async () => {
+            const mvsApi = new SshMvsApi();
+            const buildSpy = vi.spyOn(mvsApi as any, "buildZosFilesResponse");
+            vi.spyOn(vscode.window, "showErrorMessage").mockReturnValue(undefined);
+            const sourceClient = { ds: { listDatasets: vi.fn().mockRejectedValue("plain string failure") } };
+            setupClients(mvsApi, sourceClient, { ds: {} });
+
+            await mvsApi.copyDataSetCrossLpar("USER.TGT", undefined, { "from-dataset": { dsn: "USER.SRC" } } as any, sourceProfile);
+            expect(buildSpy).toHaveBeenCalledWith({ success: false }, false, "plain string failure");
         });
     });
 
