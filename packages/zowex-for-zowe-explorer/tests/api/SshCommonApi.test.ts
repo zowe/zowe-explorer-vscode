@@ -133,9 +133,13 @@ describe("SshCommonApi", () => {
             vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({ connect: connectMock } as any);
             vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(true);
             vi.spyOn(commonApi as any, "handlePrivateKeyFailure").mockResolvedValue(privateKeyProfile);
+            const warnSpy = vi.spyOn(vscode.window, "showWarningMessage").mockReturnValue(undefined);
 
             const status = await commonApi.getStatus(privateKeyProfile, "ssh");
             expect(status).toEqual("active");
+            expect(warnSpy).toHaveBeenCalledWith(
+                `Private key authentication failed for "${privateKeyProfile.name as string}". Falling back to password authentication...`
+            );
         });
 
         it("should return 'inactive' when private key fallback fails after retries", async () => {
@@ -159,9 +163,36 @@ describe("SshCommonApi", () => {
             } as any);
             vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(true);
             vi.spyOn(commonApi as any, "handlePrivateKeyFailure").mockRejectedValue(new Error("retry failed"));
+            const errorSpy = vi.spyOn(vscode.window, "showErrorMessage").mockReturnValue(undefined);
 
             const status = await commonApi.getStatus(privateKeyProfile, "ssh");
             expect(status).toEqual("inactive");
+            expect(errorSpy).toHaveBeenCalledWith(
+                `Authentication failed for profile ${privateKeyProfile.name as string}. Both private key and password authentication failed.`
+            );
+        });
+
+        it("should return 'inactive' when handlePrivateKeyFailure succeeds but the second connect also fails", async () => {
+            const privateKeyProfile: imperative.IProfileLoaded = { ...profile, profile: { privateKey: "/k", host: "h", user: "u" } } as any;
+            const updatedProfile = { ...privateKeyProfile, profile: { ...privateKeyProfile.profile, password: "p", privateKey: undefined } };
+            const commonApi = new SshCommonApi(privateKeyProfile);
+            const connectMock = vi
+                .fn()
+                // first connect (private key) fails
+                .mockRejectedValueOnce(new Error("private key failure"))
+                // second connect (password fallback) also fails
+                .mockRejectedValueOnce(new Error("password also failed"));
+            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({ connect: connectMock } as any);
+            vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(true);
+            vi.spyOn(commonApi as any, "handlePrivateKeyFailure").mockResolvedValue(updatedProfile);
+            const errorSpy = vi.spyOn(vscode.window, "showErrorMessage").mockReturnValue(undefined);
+
+            const status = await commonApi.getStatus(privateKeyProfile, "ssh");
+            expect(status).toEqual("inactive");
+            expect(connectMock).toHaveBeenCalledTimes(2);
+            expect(errorSpy).toHaveBeenCalledWith(
+                `Authentication failed for profile ${privateKeyProfile.name as string}. Both private key and password authentication failed.`
+            );
         });
 
         it("should prompt for authentication when password-only auth fails", async () => {
@@ -281,6 +312,22 @@ describe("SshCommonApi", () => {
             const result = await (commonApi as any).handlePrivateKeyFailure(profile);
             expect(result).toBeUndefined();
             expect(warningSpy).toHaveBeenCalled();
+        });
+
+        it("should show warning with counter (1/3), (2/3), (3/3) across all retry attempts", async () => {
+            const commonApi = new SshCommonApi(profile);
+            vi.spyOn(vscode.window, "showInputBox").mockResolvedValue("bad-pass");
+            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+                connect: vi.fn().mockRejectedValue(new Error("auth failed")),
+            } as any);
+            const warningSpy = vi.spyOn(vscode.window, "showWarningMessage").mockReturnValue(undefined);
+
+            await (commonApi as any).handlePrivateKeyFailure(profile);
+
+            expect(warningSpy).toHaveBeenCalledTimes(3);
+            expect(warningSpy).toHaveBeenNthCalledWith(1, "Password authentication failed (1/3)");
+            expect(warningSpy).toHaveBeenNthCalledWith(2, "Password authentication failed (2/3)");
+            expect(warningSpy).toHaveBeenNthCalledWith(3, "Password authentication failed (3/3)");
         });
 
         it("should return undefined immediately when the password has expired (FOTS1668)", async () => {

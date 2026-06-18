@@ -11,7 +11,7 @@
 
 import { describe, afterEach, expect, it, vi } from "vitest";
 import { SshMvsApi } from "../../src/api/SshMvsApi";
-import { imperative } from "@zowe/zowe-explorer-api";
+import { Gui, imperative } from "@zowe/zowe-explorer-api";
 import * as fs from "node:fs";
 import * as vscode from "vscode";
 import { SshClientCache } from "../../src/SshClientCache";
@@ -162,16 +162,21 @@ describe("SshMvsApi", () => {
             expect(readDatasetSpy).toHaveBeenCalledWith({ dsname: "USER.DATA", encoding: "binary", stream: expect.any(Function) });
         });
 
+        it("should forward a custom encoding string when binary is falsy", async () => {
+            const mvsApi = new SshMvsApi();
+            const readDatasetSpy = vi.fn().mockResolvedValue({ data: "", etag: "etag1" });
+            vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => {});
+            vi.spyOn(mvsApi as any, "buildZosFilesResponse");
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { readDataset: readDatasetSpy } });
+
+            await mvsApi.getContents("USER.DATA", { file: "/tmp/fake/file.txt", encoding: "IBM-1047" } as any);
+
+            expect(readDatasetSpy).toHaveBeenCalledWith({ dsname: "USER.DATA", encoding: "IBM-1047", stream: expect.any(Function) });
+        });
+
         it("should throw when no stream or file is provided", async () => {
             const mvsApi = new SshMvsApi();
-            let error: Error;
-            try {
-                await mvsApi.getContents("USER.DATA", {} as any);
-            } catch (err) {
-                error = err as Error;
-            }
-            expect(error).toBeDefined();
-            expect(error.message).toEqual("Failed to get contents: No stream or file path provided");
+            await expect(mvsApi.getContents("USER.DATA", {} as any)).rejects.toThrow("Failed to get contents: No stream or file path provided");
         });
     });
 
@@ -245,6 +250,15 @@ describe("SshMvsApi", () => {
             expect(fs.createReadStream).toHaveBeenCalledWith("/tmp/file.txt");
             expect(writeDatasetSpy).toHaveBeenCalledWith({ dsname: "USER.DATA", encoding: undefined, stream: expect.any(Function), etag: "e" });
         });
+
+        it("should propagate a rejection from writeDataset", async () => {
+            const mvsApi = new SshMvsApi();
+            vi.spyOn(mvsApi as any, "resolveDataSetName").mockResolvedValue("USER.DATA");
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { writeDataset: vi.fn().mockRejectedValue(new Error("write failed")) } });
+
+            await expect(mvsApi.putContents("/tmp/file.txt", "USER.DATA")).rejects.toThrow("write failed");
+            expect(fs.createReadStream).not.toHaveBeenCalled();
+        });
     });
 
     describe("resolveDataSetName & generateMemberName", () => {
@@ -288,6 +302,16 @@ describe("SshMvsApi", () => {
             const mvsApi = new SshMvsApi();
             expect((mvsApi as any).generateMemberName("123456")).toEqual("MEMBER");
         });
+
+        it("should return the dataset name as-is when listDatasets returns no items", async () => {
+            const mvsApi = new SshMvsApi();
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({
+                ds: { listDatasets: vi.fn().mockResolvedValue({ items: [] }) },
+            });
+
+            const result = await (mvsApi as any).resolveDataSetName("/tmp/file.txt", "USER.PS");
+            expect(result).toEqual("USER.PS");
+        });
     });
 
     describe("createDataSet", () => {
@@ -328,6 +352,15 @@ describe("SshMvsApi", () => {
 
             expect(createMemberSpy).toHaveBeenCalledWith({ dsname: "USER.PDS", overwrite: true });
         });
+
+        it("should propagate a rejection from createMember", async () => {
+            const mvsApi = new SshMvsApi();
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({
+                ds: { createMember: vi.fn().mockRejectedValue(new Error("createMember failed")) },
+            });
+
+            await expect(mvsApi.createDataSetMember("USER.PDS")).rejects.toThrow("createMember failed");
+        });
     });
 
     describe("allocateLikeDataSet", () => {
@@ -357,6 +390,7 @@ describe("SshMvsApi", () => {
         it("should allocate a new dataset like the source", async () => {
             const mvsApi = new SshMvsApi();
             const createDatasetSpy = vi.fn().mockResolvedValue({ success: true });
+            const statusBarSpy = vi.spyOn(Gui, "setStatusBarMessage");
             vi.spyOn(mvsApi as any, "buildZosFilesResponse");
             vi.spyOn(mvsApi, "client", "get").mockResolvedValue({
                 ds: { listDatasets: vi.fn().mockResolvedValue({ items: [sourceDs] }), createDataset: createDatasetSpy },
@@ -369,11 +403,13 @@ describe("SshMvsApi", () => {
                 attributes: expect.objectContaining({ dsname: "USER.NEW", recfm: "FB", dsorg: "PS", alcunit: "TRACKS" }),
             });
             expect(createDatasetSpy.mock.calls[0][0].attributes).not.toHaveProperty("dirblk");
+            expect(statusBarSpy).toHaveBeenCalledWith(`Successfully allocated dataset "USER.NEW" like "USER.SRC"`);
         });
 
         it("should add dirblk=25 when source is a PDS/PDSE/LIBRARY", async () => {
             const mvsApi = new SshMvsApi();
             const createDatasetSpy = vi.fn().mockResolvedValue({ success: true });
+            const statusBarSpy = vi.spyOn(Gui, "setStatusBarMessage");
             vi.spyOn(mvsApi as any, "buildZosFilesResponse");
             vi.spyOn(mvsApi, "client", "get").mockResolvedValue({
                 ds: {
@@ -388,6 +424,21 @@ describe("SshMvsApi", () => {
                 dsname: "USER.NEW",
                 attributes: expect.objectContaining({ alcunit: "CYLINDERS", dirblk: 25 }),
             });
+            expect(statusBarSpy).toHaveBeenCalledWith(`Successfully allocated dataset "USER.NEW" like "USER.SRC"`);
+        });
+
+        it("should return a failure response without a status bar message when createDataset returns { success: false }", async () => {
+            const mvsApi = new SshMvsApi();
+            const buildZosFilesResponseSpy = vi.spyOn(mvsApi as any, "buildZosFilesResponse");
+            const statusBarSpy = vi.spyOn(Gui, "setStatusBarMessage");
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({
+                ds: { listDatasets: vi.fn().mockResolvedValue({ items: [sourceDs] }), createDataset: vi.fn().mockResolvedValue({ success: false }) },
+            });
+
+            const response = await mvsApi.allocateLikeDataSet("USER.NEW", "USER.SRC");
+            expect(statusBarSpy).not.toHaveBeenCalled();
+            expect(buildZosFilesResponseSpy).toHaveBeenCalledWith({ success: false }, false);
+            expect(response).toBeDefined();
         });
 
         it("should report an error and return a failure response when createDataset throws", async () => {
@@ -776,6 +827,66 @@ describe("SshMvsApi", () => {
                 false,
                 "Data set copy aborted. The existing target data set was not overwritten."
             );
+        });
+
+        it("should skip prompt and write when options.replace is true and target exists", async () => {
+            const mvsApi = new SshMvsApi();
+            const promptFn = vi.fn();
+            const writeSpy = vi.fn().mockResolvedValue({ success: true });
+            const buildSpy = vi.spyOn(mvsApi as any, "buildZosFilesResponse");
+            const sourceClient = {
+                ds: {
+                    listDatasets: vi.fn().mockResolvedValue({ items: [baseSourceItem] }),
+                    readDataset: vi.fn().mockResolvedValue({ data: "AAAA" }),
+                },
+            };
+            const targetClient = {
+                ds: { listDatasets: vi.fn().mockResolvedValue({ items: [{ name: "USER.TGT", dsorg: "PS" }] }), writeDataset: writeSpy },
+            };
+            setupClients(mvsApi, sourceClient, targetClient);
+
+            await mvsApi.copyDataSetCrossLpar(
+                "USER.TGT",
+                undefined,
+                { "from-dataset": { dsn: "USER.SRC" }, replace: true, promptFn } as any,
+                sourceProfile
+            );
+
+            expect(promptFn).not.toHaveBeenCalled();
+            expect(writeSpy).toHaveBeenCalledWith({ dsname: "USER.TGT", data: "AAAA", encoding: "binary" });
+            expect(buildSpy).toHaveBeenCalledWith({ success: true }, true);
+        });
+
+        it("should write without prompt when target PDS exists but the member slot is free", async () => {
+            const mvsApi = new SshMvsApi();
+            const promptFn = vi.fn();
+            const writeSpy = vi.fn().mockResolvedValue({ success: true });
+            const buildSpy = vi.spyOn(mvsApi as any, "buildZosFilesResponse");
+            const sourceClient = {
+                ds: {
+                    listDatasets: vi.fn().mockResolvedValue({ items: [baseSourceItem] }),
+                    readDataset: vi.fn().mockResolvedValue({ data: "AAAA" }),
+                },
+            };
+            const targetClient = {
+                ds: {
+                    listDatasets: vi.fn().mockResolvedValue({ items: [{ name: "USER.TGT", dsorg: "PO" }] }),
+                    listDsMembers: vi.fn().mockResolvedValue({ items: [] }), // member does not exist
+                    writeDataset: writeSpy,
+                },
+            };
+            setupClients(mvsApi, sourceClient, targetClient);
+
+            await mvsApi.copyDataSetCrossLpar(
+                "USER.TGT",
+                "NEWMEM",
+                { "from-dataset": { dsn: "USER.SRC" }, promptFn } as any,
+                sourceProfile
+            );
+
+            expect(promptFn).not.toHaveBeenCalled();
+            expect(writeSpy).toHaveBeenCalledWith({ dsname: "USER.TGT(NEWMEM)", data: "AAAA", encoding: "binary" });
+            expect(buildSpy).toHaveBeenCalledWith({ success: true }, true);
         });
 
         it("should handle a thrown error during the copy operation", async () => {
