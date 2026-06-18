@@ -82,5 +82,11 @@ describe("ServerDeployment", () => {
 
             expect(result).toEqual(false);
         });
+
+        it("should propagate a rejection from ZSshUtils.installServer", async () => {
+            vi.mocked(ZSshUtils.installServer).mockRejectedValue(new Error("install failed"));
+
+            await expect(deployWithProgress(fakeSession, "/server/path")).rejects.toThrow("install failed");
+        });
     });
 });

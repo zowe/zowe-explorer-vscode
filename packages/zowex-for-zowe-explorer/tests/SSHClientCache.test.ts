@@ -18,8 +18,15 @@ import { deployWithProgress } from "../src/ServerDeployment";
 
 vi.mock("@zowe/zowe-explorer-api", () => {
     class MockDeferredPromise {
-        promise = Promise.resolve();
-        resolve = vi.fn();
+        public promise: Promise<unknown>;
+        public resolve!: (value?: unknown) => void;
+        public reject!: (reason?: unknown) => void;
+        constructor() {
+            this.promise = new Promise((resolve, reject) => {
+                this.resolve = resolve;
+                this.reject = reject;
+            });
+        }
     }
     return {
         Gui: {},
@@ -289,6 +296,45 @@ describe("SshClientCache", () => {
             // Should pass the flags down to end()
             expect(endSpy).toHaveBeenCalledWith(clientId, { restart: true, retryRequests: true });
             expect(ZSshClient.create).toHaveBeenCalledTimes(2);
+        });
+
+        it("should reuse the cached client on a second connect without restart (cache hit)", async () => {
+            const first = await cache.connect(mockProfile);
+            vi.mocked(ZSshClient.create).mockClear();
+
+            const second = await cache.connect(mockProfile);
+
+            // The second connect must short-circuit on the existing session-map entry, not rebuild.
+            expect(second).toBe(first);
+            expect(ZSshClient.create).not.toHaveBeenCalled();
+        });
+
+        it("should serialize overlapping connect() calls so exactly one client is built", async () => {
+            let releaseCreate!: (client: unknown) => void;
+            const createGate = new Promise((resolve) => {
+                releaseCreate = resolve;
+            });
+            const builtClient = { dispose: vi.fn(), collectAllRequests: vi.fn(), serverChecksums: {} };
+            vi.mocked(ZSshClient.create).mockReset();
+            vi.mocked(ZSshClient.create).mockReturnValueOnce(createGate as any);
+            vi.mocked(ZSshClient.create).mockResolvedValue(builtClient as any);
+
+            const firstConnect = cache.connect(mockProfile);
+            await Promise.resolve();
+            await Promise.resolve();
+            expect((cache as any).mMutexMap.has(clientId)).toBe(true);
+
+            const secondConnect = cache.connect(mockProfile);
+
+            releaseCreate(builtClient);
+            const [c1, c2] = await Promise.all([firstConnect, secondConnect]);
+
+            // Only the first build runs; the second observes the populated session map and reuses it.
+            expect(ZSshClient.create).toHaveBeenCalledTimes(1);
+            expect(c1).toBe(builtClient);
+            expect(c2).toBe(builtClient);
+            // The lock is released once the build completes.
+            expect((cache as any).mMutexMap.has(clientId)).toBe(false);
         });
     });
 

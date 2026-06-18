@@ -99,7 +99,8 @@ describe("SshUssApi", () => {
             await ussApi.getContents("/u/file", { stream: { write: writeSpy, end: endSpy } as any });
 
             expect(readFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", encoding: undefined, stream: undefined });
-            expect(writeSpy).toHaveBeenCalled();
+            // "Zm9v" is base64 for "foo"; verify the response was actually B64String.decode'd before writing.
+            expect(writeSpy).toHaveBeenCalledWith("foo");
             expect(endSpy).toHaveBeenCalled();
         });
 

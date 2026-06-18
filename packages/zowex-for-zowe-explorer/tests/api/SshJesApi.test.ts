@@ -210,6 +210,14 @@ describe("SshJesApi", () => {
             expect(readSpoolSpy).toHaveBeenCalledWith({ spoolId: 1, jobId: "FAKEID", encoding: "1047" });
             expect(response).toEqual("fakedata");
         });
+
+        it("should propagate a rejection from readSpool", async () => {
+            const jesApi = new SshJesApi();
+            vi.spyOn(SshJesApi.prototype, "client", "get").mockResolvedValue({
+                jobs: { readSpool: vi.fn().mockRejectedValue(new Error("readSpool failed")) },
+            });
+            await expect(jesApi.getSpoolContentById("fakejob", "fakeid", 1)).rejects.toThrow("readSpool failed");
+        });
     });
 
     describe("getJclForJob", () => {
@@ -236,9 +244,19 @@ describe("SshJesApi", () => {
                 jobs: { getJcl: vi.fn().mockRejectedValue(new Error("getJcl failed")) },
             });
             const fakeJob: IJob = {
-                jobid: "fakejob", jobname: "FAKEJOB", subsystem: "JES2", owner: "USER",
-                status: "OUTPUT", type: "JOB", class: "A", retcode: "CC 0000",
-                url: "", "files-url": "", "job-correlator": "", phase: 20, "phase-name": "Job is on the hard copy queue",
+                jobid: "fakejob",
+                jobname: "FAKEJOB",
+                subsystem: "JES2",
+                owner: "USER",
+                status: "OUTPUT",
+                type: "JOB",
+                class: "A",
+                retcode: "CC 0000",
+                url: "",
+                "files-url": "",
+                "job-correlator": "",
+                phase: 20,
+                "phase-name": "Job is on the hard copy queue",
             };
             await expect(jesApi.getJclForJob(fakeJob)).rejects.toThrow("getJcl failed");
         });
@@ -260,6 +278,14 @@ describe("SshJesApi", () => {
             expect(cancelJobSpy).toHaveBeenCalledTimes(1);
             expect(cancelJobSpy).toHaveBeenCalledWith({ jobId: "FAKEJOB" });
             expect(response).toEqual(true);
+        });
+
+        it("should propagate a rejection from cancelJob", async () => {
+            const jesApi = new SshJesApi();
+            vi.spyOn(SshJesApi.prototype, "client", "get").mockResolvedValue({
+                jobs: { cancelJob: vi.fn().mockRejectedValue(new Error("cancelJob failed")) },
+            });
+            await expect(jesApi.cancelJob({ jobid: "fakejob" } as any)).rejects.toThrow("cancelJob failed");
         });
     });
 

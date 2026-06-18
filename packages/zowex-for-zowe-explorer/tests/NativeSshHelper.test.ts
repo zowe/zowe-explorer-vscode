@@ -184,5 +184,85 @@ describe("NativeSshHelper", () => {
             expect(fetchMock).toHaveBeenCalledTimes(1);
             expect(String(fetchMock.mock.calls[0][0])).toContain("linux-arm-gnueabihf");
         });
+
+        it.each([
+            ["win32", "arm64", "win32-arm64-msvc"],
+            ["darwin", "x64", "darwin-x64"],
+            ["linux", "x64", "linux-x64-gnu"],
+            ["linux", "arm64", "linux-arm64-gnu"],
+        ])("should resolve the %s-%s triple (%s) when downloading", async (platform, arch, triple) => {
+            setPlatform(platform, arch);
+            vi.spyOn(fs, "existsSync").mockReturnValue(false);
+            vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined as never);
+            vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined as never);
+
+            handleNativeSshSettings(fakeContext);
+            await flush();
+
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+            expect(String(fetchMock.mock.calls[0][0])).toContain(triple);
+        });
+
+        it("should warn when the platform is supported but the architecture is not (arch lookup misses)", async () => {
+            // Exercises the `NATIVE_TRIPLES[platform]?.[arch]` arch-miss branch (distinct from an
+            // entirely unknown platform): win32 is known, but "mips" has no entry.
+            setPlatform("win32", "mips");
+            const warnSpy = vi.spyOn(vscode.window, "showWarningMessage").mockReturnValue(undefined);
+            vi.spyOn(fs, "existsSync").mockReturnValue(false);
+
+            handleNativeSshSettings(fakeContext);
+            await flush();
+
+            expect(warnSpy).toHaveBeenCalledTimes(1);
+            expect(String(warnSpy.mock.calls[0][0])).toContain("No native SSH binary available for win32-mips");
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("ensureNativeBinary timeout handling", () => {
+        beforeEach(() => {
+            mockFlag(true);
+            vi.spyOn(imperative.Logger, "getAppLogger").mockReturnValue({ info: vi.fn(), error: vi.fn() } as any);
+            setPlatform("darwin", "arm64");
+            vi.spyOn(fs, "existsSync").mockReturnValue(false);
+            vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined as never);
+            vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined as never);
+        });
+
+        it("should clear the abort timeout after a successful fetch", async () => {
+            fetchMock.mockResolvedValue({ ok: true, status: 200, arrayBuffer: () => Promise.resolve(new ArrayBuffer(4)) });
+            const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
+
+            handleNativeSshSettings(fakeContext);
+            await flush();
+
+            // The `finally { clearTimeout(timeoutId) }` arm must run on the success path.
+            expect(clearTimeoutSpy).toHaveBeenCalled();
+        });
+
+        it("should abort the request and surface an error when the timeout elapses", async () => {
+            vi.useFakeTimers();
+            try {
+                const abortSpy = vi.spyOn(AbortController.prototype, "abort");
+                // fetch only settles when its AbortSignal fires, so advancing the timer triggers the reject.
+                fetchMock.mockImplementation(
+                    (_url: string, opts: { signal: AbortSignal }) =>
+                        new Promise((_resolve, reject) => {
+                            opts.signal.addEventListener("abort", () => reject(new Error("The operation was aborted")));
+                        })
+                );
+                const errorSpy = vi.spyOn(vscode.window, "showErrorMessage").mockReturnValue(undefined);
+
+                handleNativeSshSettings(fakeContext);
+                // SSH_TIMEOUT is 60_000ms; advancing past it fires the controller.abort() callback.
+                await vi.advanceTimersByTimeAsync(60_000);
+
+                expect(abortSpy).toHaveBeenCalled();
+                expect(errorSpy).toHaveBeenCalledTimes(1);
+                expect(String(errorSpy.mock.calls[0][0])).toContain("Failed to download native SSH binary");
+            } finally {
+                vi.useRealTimers();
+            }
+        });
     });
 });

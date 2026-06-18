@@ -414,5 +414,21 @@ describe("Utilities", () => {
 
             expect(showMessageSpy).toHaveBeenCalledWith("Uninstalled Zowe Remote SSH server from myProf");
         });
+
+        it("should propagate a rejection from ZSshUtils.uninstallServer", async () => {
+            const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
+            const mockedConfig = await vi.importMock("../src/ConfigUtils");
+            const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
+            const profile = { name: "myProf", profile: { host: "myHost" } };
+            VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(profile) }));
+
+            vi.spyOn(mockedConfig.ConfigUtils, "getServerPath").mockReturnValue("/server/path");
+            vi.spyOn(mockedConfig.ConfigUtils, "showSessionInTree").mockResolvedValue(undefined);
+            vi.spyOn(ZSshUtils, "buildSession").mockReturnValue({ ISshSession: {} });
+            vi.spyOn(ZSshUtils, "uninstallServer").mockRejectedValue(new Error("uninstall failed"));
+
+            const api = mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
+            await expect((Utilities as any).uninstallCallback(api, "myProf")).rejects.toThrow("uninstall failed");
+        });
     });
 });
