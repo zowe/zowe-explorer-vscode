@@ -13,7 +13,6 @@ export function deployWithProgress(session: SshSession, serverPath: string): The
         async (progress) => {
             // Create error callback that uses error correlations
             const errorCallback = SshErrorHandler.getInstance().createErrorCallback(ZoweExplorerApiType.All, "Server installation");
-
             // Pass callbacks for both progress and error handling
             return await ZSshUtils.installServer(session, serverPath, {
                 onProgress: (progressIncrement) => {

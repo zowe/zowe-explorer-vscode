@@ -28,16 +28,26 @@ export function registerCommands(context: vscode.ExtensionContext, zoweExplorerA
             if (!profile?.profile) {
                 return;
             }
-            const defaultServerPath = ConfigUtils.getServerPath(profile.profile);
-            const deployDirectory = await vscePromptApi.promptForDeployDirectory(profile.profile.host, defaultServerPath);
-            if (!deployDirectory) {
-                return;
-            }
 
             const sshSession = ZSshUtils.buildSession(profile.profile);
-            const deployStatus = await deployWithProgress(sshSession, deployDirectory);
-            if (!deployStatus) {
-                return;
+            const pathServer = await ZSshUtils.detectServerOnPath(sshSession);
+            imperative.Logger.getAppLogger().trace("detectServerOnPath return value: %s", JSON.stringify(pathServer));
+            if (pathServer.serverPath
+                && pathServer.hasExecutePermission
+                && pathServer.writeAccessToParent) {
+                imperative.Logger.getAppLogger().debug("Skipping deploy as an instance of the server exists on the user's PATH");
+                // todo :   store in config (Configutils)
+            } else {
+                const defaultServerPath = ConfigUtils.getServerPath(profile.profile);
+                const deployDirectory = await vscePromptApi.promptForDeployDirectory(profile.profile.host, defaultServerPath);
+                if (!deployDirectory) {
+                    return;
+                }
+
+                const deployStatus = await deployWithProgress(sshSession, deployDirectory);
+                if (!deployStatus) {
+                    return;
+                }
             }
 
             await ConfigUtils.showSessionInTree(profile.name!, true, zoweExplorerApi);
