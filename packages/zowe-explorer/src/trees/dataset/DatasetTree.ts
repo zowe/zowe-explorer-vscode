@@ -45,7 +45,6 @@ import { SharedUtils } from "../shared/SharedUtils";
 import { FilterDescriptor, FilterItem } from "../../management/FilterManagement";
 import { IconUtils } from "../../icons/IconUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
-import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import { DataSetTemplates } from "./DatasetTemplates";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
@@ -403,9 +402,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 return this.loadProfilesForFavorites(this.log, element);
             }
             const prevDescription = element.description;
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(element.getProfile());
             const response = await element.getChildren(
                 SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE) > 0 &&
-                    !ProfilesUtils.isSshProfile(element.getProfile())
+                    (mvsApi.supportsDsPagination?.() ?? true)
             );
 
             // If getChildren updated the parent node's description,

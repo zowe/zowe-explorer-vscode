@@ -28,7 +28,7 @@ import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { SharedContext } from "../trees/shared/SharedContext";
-import { ProfilesUtils } from "./ProfilesUtils";
+import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
@@ -416,10 +416,11 @@ export class AuthUtils {
         }
         if (nodeToRefresh) {
             nodeToRefresh.dirty = true;
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(nodeToRefresh.getProfile());
             const shouldPaginate =
                 SharedContext.isDatasetNode(nodeToRefresh) &&
                 SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE) > 0 &&
-                !ProfilesUtils.isSshProfile(nodeToRefresh.getProfile());
+                (mvsApi.supportsDsPagination?.() ?? true);
             void nodeToRefresh
                 .getChildren(shouldPaginate)
                 .then(() => SharedTreeProviders.getProviderForNode(nodeToRefresh).refreshElement(nodeToRefresh));
