@@ -420,7 +420,7 @@ export class AuthUtils {
             const shouldPaginate =
                 SharedContext.isDatasetNode(nodeToRefresh) &&
                 SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE) > 0 &&
-                (mvsApi.supportsDsPagination?.() ?? true);
+                (mvsApi.supportsDsPagination?.() ?? false);
             void nodeToRefresh
                 .getChildren(shouldPaginate)
                 .then(() => SharedTreeProviders.getProviderForNode(nodeToRefresh).refreshElement(nodeToRefresh));

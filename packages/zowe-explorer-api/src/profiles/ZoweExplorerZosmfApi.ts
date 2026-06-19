@@ -265,6 +265,10 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.List.dataSet(this.getSession(), filter, { responseTimeout: this.profile?.profile?.responseTimeout, ...options });
         }
 
+        public supportsDsPagination(): boolean {
+            return true;
+        }
+
         public allMembers(dataSetName: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.List.allMembers(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,

@@ -419,6 +419,10 @@ export namespace MainframeInteraction {
          */
         getCount?(dataSetPatterns: string[]): Promise<IDataSetCount>;
 
+        /**
+         * Returns whether this MVS API implementation supports pagination
+         * Defaults to `false` when not implemented.
+         */
         supportsDsPagination?(): boolean;
     }
 

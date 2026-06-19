@@ -6,6 +6,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Recent Changes
 
+- Implemented `supportsDsPagination` in `SshMvsApi` to return `false` to resolve an error appearing when deleting an expanded PDS when using an SSH profile. [#768](https://github.com/zowe/zowex/issues/768)
 - Fixed an issue where the `SshJesApi.getJobsByParameters` function did not provide the status parameter to the request. Now, jobs are correctly filtered by status. [#4345](https://github.com/zowe/zowe-explorer-vscode/issues/4345)
 - Implemented the `issueUnixCommand` function, allowing users to issue z/OS UNIX commands with an SSH profile. [#4337](https://github.com/zowe/zowe-explorer-vscode/pull/4337)
 - Added the functionality to copy datasets and members in the Data Sets tree. [#377](https://github.com/zowe/zowex/pull/377)

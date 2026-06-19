@@ -405,7 +405,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(element.getProfile());
             const response = await element.getChildren(
                 SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE) > 0 &&
-                    (mvsApi.supportsDsPagination?.() ?? true)
+                    (mvsApi.supportsDsPagination?.() ?? false)
             );
 
             // If getChildren updated the parent node's description,
