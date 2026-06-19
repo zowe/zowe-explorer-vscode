@@ -802,4 +802,8 @@ export class ProfilesUtils {
     public static hasNoAuthType(session: ISession, profile: IProfileLoaded): boolean {
         return session.type === SessConstants.AUTH_TYPE_NONE && profile.type !== "ssh";
     }
+
+    public static isSshProfile(profile: IProfileLoaded): boolean {
+        return profile?.type === "ssh";
+    }
 }
