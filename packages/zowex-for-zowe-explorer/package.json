@@ -23,8 +23,6 @@
     "clean": "rimraf bin lib coverage",
     "license": "node ../../scripts/updateLicenses.mjs",
     "link:zowex": "node ../../scripts/linkZowex.js",
-    "newlint": "concurrently -n \"_eslint_,prettier\" \"pnpm lint:all\" \"pnpm lint:pretty\"",
-    "newlint:html": "(mkdir -p \"results\" || true) && eslint . --format html > results/eslint.html",
     "lint": "concurrently -n \"_eslint_,prettier\" \"pnpm lint:src\" \"pnpm lint:html\" \"pnpm lint:pretty\"",
     "lint:all": "pnpm run \"/^lint:[hst].*/\"",
     "lint:html": "(mkdir -p \"results\" || true) && eslint ./src --format html > results/eslint.html",
@@ -33,9 +31,6 @@
     "lint:test": "eslint --format stylish \"tests/**/*.ts\"",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "package": "echo 'zowex: nothing to package.'",
-    "oldtest": "vitest run --coverage",
-    "oldtest:ui": "vitest --ui --coverage",
-    "oldtest:watch": "vitest --watch",
     "test": "vitest run --coverage",
     "watch": "tsc --watch -p ./"
   },

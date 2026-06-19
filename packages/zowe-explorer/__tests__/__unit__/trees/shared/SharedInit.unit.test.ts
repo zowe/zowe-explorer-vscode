@@ -14,7 +14,7 @@ import * as vscode from "vscode";
 import * as core from "@zowe/core-for-zowe-sdk";
 import * as profUtils from "../../../../src/utils/ProfilesUtils";
 import * as SharedHistoryView from "../../../../src/trees/shared/SharedHistoryView";
-import { IviIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
+import { IJestIt, ITestContext, processSubscriptions } from "../../../__common__/testUtils";
 import { Constants } from "../../../../src/configuration/Constants";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { SharedActions } from "../../../../src/trees/shared/SharedActions";
@@ -80,7 +80,7 @@ describe("Test src/shared/extension", () => {
         const onProfileUpdated = vi.fn().mockReturnValue(new vscode.Disposable(vi.fn()));
         const mockOnProfileUpdated = new MockedProperty(ZoweExplorerApiRegister.getInstance(), "onProfileUpdated", undefined, onProfileUpdated);
 
-        const commands: IviIt[] = [
+        const commands: IJestIt[] = [
             {
                 name: "zowe.updateSecureCredentials",
                 parm: ["@zowe/cli"],
