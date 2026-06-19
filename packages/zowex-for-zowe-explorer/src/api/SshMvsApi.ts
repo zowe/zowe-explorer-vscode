@@ -62,6 +62,10 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         });
     }
 
+    public supportsDsPagination(): boolean {
+        return false;
+    }
+
     public async allMembers(dataSetName: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
         const response = await (
             await this.client

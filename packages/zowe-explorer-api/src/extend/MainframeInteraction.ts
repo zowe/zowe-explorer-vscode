@@ -418,6 +418,8 @@ export namespace MainframeInteraction {
          * @param dataSetPatterns the list of data set patterns to obtain the total item count for.
          */
         getCount?(dataSetPatterns: string[]): Promise<IDataSetCount>;
+
+        supportsDsPagination?(): boolean;
     }
 
     /**
