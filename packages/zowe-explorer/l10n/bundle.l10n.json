@@ -113,14 +113,19 @@
   "**How it works:**": "**How it works:**",
   "**New** Extender registration APIs:": "**New** Extender registration APIs:",
   "**Note:** Sorting is only applied within each page, while the overall member list is fetched by alphabetical, ascending order.": "**Note:** Sorting is only applied within each page, while the overall member list is fetched by alphabetical, ascending order.",
+  "**Open Job:** This filters the job tree by the job ID to allow direct access to the job in one click. It behaves the same way as clicking the link on the popup but also closes the popup on the same click.": "**Open Job:** This filters the job tree by the job ID to allow direct access to the job in one click. It behaves the same way as clicking the link on the popup but also closes the popup on the same click.",
   "**Open the table:**": "**Open the table:**",
   "**Open the table:** Right-click a filtered jobs profile and select **Show as Table**.": "**Open the table:** Right-click a filtered jobs profile and select **Show as Table**.",
   "**Open:** Right-click a profile in Data Sets, USS, or Jobs tree and select an **Issue x Command** option.": "**Open:** Right-click a profile in Data Sets, USS, or Jobs tree and select an **Issue x Command** option.",
+  "**Poll For Job Completion:** This button automatically starts polling for the job to complete. When it completes, there will be a new notification popup with the return code and the same open job button to filter the job in the job tree. The poll interval is 5000 ms by default (i.e. checking for completion every 5 seconds) but this interval can be changed in the setting **Zowe > Jobs: Poll Interval**.": "**Poll For Job Completion:** This button automatically starts polling for the job to complete. When it completes, there will be a new notification popup with the return code and the same open job button to filter the job in the job tree. The poll interval is 5000 ms by default (i.e. checking for completion every 5 seconds) but this interval can be changed in the setting **Zowe > Jobs: Poll Interval**.",
+  "**Right click** on sequential data sets, partitioned data sets (to download all members), partitioned data set members, USS files, or USS directories and click on the respective Download ... option to select download options.": "**Right click** on sequential data sets, partitioned data sets (to download all members), partitioned data set members, USS files, or USS directories and click on the respective Download ... option to select download options.",
   "**Row actions:** Right-click a data set to:": "**Row actions:** Right-click a data set to:",
   "**Row actions:** Right-click a job to:": "**Row actions:** Right-click a job to:",
   "**Search options:**": "**Search options:**",
   "/u/username/directory": "/u/username/directory",
   "#### Copy across LPAR updates": "#### Copy across LPAR updates",
+  "#### Favorite individual PDS members": "#### Favorite individual PDS members",
+  "#### Favorite VSAM data sets": "#### Favorite VSAM data sets",
   "#### Get JCL encoding": "#### Get JCL encoding",
   "#### Loading credential manager options": "#### Loading credential manager options",
   "#### Submit job with encoding": "#### Submit job with encoding",
@@ -144,6 +149,7 @@
     ]
   },
   "Ability to compare 2 files from MVS and/or UNIX System Services views via right click actions, with option to compare in Read-Only mode too.": "Ability to compare 2 files from MVS and/or UNIX System Services views via right click actions, with option to compare in Read-Only mode too.",
+  "Accessibility improvements": "Accessibility improvements",
   "Account Number": "Account Number",
   "action is not supported for this property type.": "action is not supported for this property type.",
   "Actions": "Actions",
@@ -257,6 +263,7 @@
   "Added support for enabling/disabling validation for a Zowe profile across all trees <a>#2570</a>": "Added support for enabling/disabling validation for a Zowe profile across all trees <a>#2570</a>",
   "Added support for encoding profile property when retrieving JCL with z/OSMF. <a>#3877</a>": "Added support for encoding profile property when retrieving JCL with z/OSMF. <a>#3877</a>",
   "Added support for encoding profile property when retrieving JCL with z/OSMF. For example, include \"encoding\": \"IBM-1147\" in the z/OSMF profile to view JCL with \"IBM-1147\" encoding via the right-click Get JCL job option.": "Added support for encoding profile property when retrieving JCL with z/OSMF. For example, include \"encoding\": \"IBM-1147\" in the z/OSMF profile to view JCL with \"IBM-1147\" encoding via the right-click Get JCL job option.",
+  "Added support for favoriting migrated data sets and synchronizing their migration/recall status. <a>#4308</a>": "Added support for favoriting migrated data sets and synchronizing their migration/recall status. <a>#4308</a>",
   "Added support for fetching virtual workspaces in parallel after Zowe Explorer activation. <a>#3880</a>": "Added support for fetching virtual workspaces in parallel after Zowe Explorer activation. <a>#3880</a>",
   "Added support for hiding a Zowe profile across all trees <a>#2567</a>": "Added support for hiding a Zowe profile across all trees <a>#2567</a>",
   "Added support for jobEncoding profile property when submitting jobs to z/OSMF. <a>#3826</a>": "Added support for jobEncoding profile property when submitting jobs to z/OSMF. <a>#3826</a>",
@@ -392,6 +399,7 @@
   "Changes in credential management detected, refreshing Zowe Explorer.": "Changes in credential management detected, refreshing Zowe Explorer.",
   "Changes in the credential vault detected, refreshing Zowe Explorer.": "Changes in the credential vault detected, refreshing Zowe Explorer.",
   "Changing authentication to basic was successful for profile {0}.": "Changing authentication to basic was successful for profile {0}.",
+  "Checking migration status...": "Checking migration status...",
   "Choose a location to create the {0}/Node type": {
     "message": "Choose a location to create the {0}",
     "comment": [
@@ -512,6 +520,7 @@
     ]
   },
   "Current Records": "Current Records",
+  "Currently, hidden Unix files (those starting with a .) are always listed in the USS tree. There is now a setting **Zowe > Files: Show Hidden Files** that can be disabled to hide these files.": "Currently, hidden Unix files (those starting with a .) are always listed in the USS tree. There is now a setting **Zowe > Files: Show Hidden Files** that can be disabled to hide these files.",
   "Custom credential manager {0} found, attempting to activate./Credential manager display name": {
     "message": "Custom credential manager {0} found, attempting to activate.",
     "comment": [
@@ -540,6 +549,7 @@
       "New data set name"
     ]
   },
+  "Data set search is now even smarter because it supports comma-separated member names within a partitioned data set. For example, MY.PDS(MEM1,TEST*) will return MY.PDS with the member called MEM1 and any members beginning with TEST.": "Data set search is now even smarter because it supports comma-separated member names within a partitioned data set. For example, MY.PDS(MEM1,TEST*) will return MY.PDS with the member called MEM1 and any members beginning with TEST.",
   "Data set searches now support case sensitivity and regular expressions. Enable these options in the Search PDS members Quick Pick dialog.": "Data set searches now support case sensitivity and regular expressions. Enable these options in the Search PDS members Quick Pick dialog.",
   "Data Set Template Save Location": "Data Set Template Save Location",
   "Data set tree pagination": "Data set tree pagination",
@@ -589,6 +599,7 @@
   "Do you wish to use this credential manager instead?": "Do you wish to use this credential manager instead?",
   "Don't ask again": "Don't ask again",
   "Download": "Download",
+  "Download data sets and USS files to the local filesystem": "Download data sets and USS files to the local filesystem",
   "Download Options": "Download Options",
   "Download single spool operation not implemented by extender. Please contact the extension developer(s).": "Download single spool operation not implemented by extender. Please contact the extension developer(s).",
   "Downloaded: {0}/Download time": {
@@ -917,9 +928,7 @@
     ]
   },
   "Favorites": "Favorites",
-  "VSAM Favorites": "VSAM Favorites",
-  "Member Favorites": "Member Favorites",
-  "Migrated Favorites": "Migrated Favorites",
+  "Favorites changes": "Favorites changes",
   "Fetching data set...": "Fetching data set...",
   "Fetching spool file...": "Fetching spool file...",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
@@ -949,6 +958,7 @@
       "Node label"
     ]
   },
+  "Filter data sets by name or by date created": "Filter data sets by name or by date created",
   "Filter updated for {0}/Job label": {
     "message": "Filter updated for {0}",
     "comment": [
@@ -1016,6 +1026,7 @@
   "Fixed an issue that prevented screen readers from reading Unix file attributes in the Unix file attributes webview, and added clear tags to help users understand how to edit those attributes.<a>#4024</a>": "Fixed an issue that prevented screen readers from reading Unix file attributes in the Unix file attributes webview, and added clear tags to help users understand how to edit those attributes.<a>#4024</a>",
   "Fixed an issue that would allow multiple member-filter on a single dataset search. <a>#2037</a>": "Fixed an issue that would allow multiple member-filter on a single dataset search. <a>#2037</a>",
   "Fixed an issue to review inconsistent capitalization across translation strings. <a>#2935</a>": "Fixed an issue to review inconsistent capitalization across translation strings. <a>#2935</a>",
+  "Fixed an issue when renaming a data set or member where new extension suffix was not detected. <a>#4142</a>": "Fixed an issue when renaming a data set or member where new extension suffix was not detected. <a>#4142</a>",
   "Fixed an issue where a 401 error could occur when opening PDS members after updating credentials within the same user session. <a>#3150</a>": "Fixed an issue where a 401 error could occur when opening PDS members after updating credentials within the same user session. <a>#3150</a>",
   "Fixed an issue where a 401 Unauthorized error is thrown by the FileSystemProvider implementations when the user cancels or closes an authentication prompt. Now, the filesystem throws a more explicit AuthCancelledError in this scenario. <a>#3662</a>": "Fixed an issue where a 401 Unauthorized error is thrown by the FileSystemProvider implementations when the user cancels or closes an authentication prompt. Now, the filesystem throws a more explicit AuthCancelledError in this scenario. <a>#3662</a>",
   "Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. <a>#3294</a>": "Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. <a>#3294</a>",
@@ -1075,6 +1086,7 @@
   "Fixed an issue where remote changes to a data set member are not detected by Zowe Explorer if the member's resource path ends in an extension. <a>#3555</a>": "Fixed an issue where remote changes to a data set member are not detected by Zowe Explorer if the member's resource path ends in an extension. <a>#3555</a>",
   "Fixed an issue where remote lookup functionality caused the local side of a conflict to be overwritten with the remote contents. <a>#3085</a>": "Fixed an issue where remote lookup functionality caused the local side of a conflict to be overwritten with the remote contents. <a>#3085</a>",
   "Fixed an issue where renaming a data set with unsaved changes did not cancel the rename operation. Now, when renaming a data set with unsaved changes, you are prompted to resolve them before continuing. <a>#3326</a>": "Fixed an issue where renaming a data set with unsaved changes did not cancel the rename operation. Now, when renaming a data set with unsaved changes, you are prompted to resolve them before continuing. <a>#3326</a>",
+  "Fixed an issue where renaming a sequential data set with an extension suffix like .jcl would fail. <a>#4326</a>": "Fixed an issue where renaming a sequential data set with an extension suffix like .jcl would fail. <a>#4326</a>",
   "Fixed an issue where renaming or deleting a USS file or data set did not update the opened editor. <a>#3260</a>": "Fixed an issue where renaming or deleting a USS file or data set did not update the opened editor. <a>#3260</a>",
   "Fixed an issue where renaming or deleting the team configuration file caused an unhandled exception in Zowe Explorer, causing old, non-existent profiles to remain in the tree views. <a>#3772</a>": "Fixed an issue where renaming or deleting the team configuration file caused an unhandled exception in Zowe Explorer, causing old, non-existent profiles to remain in the tree views. <a>#3772</a>",
   "Fixed an issue where right-click menu for data set shows wrong options after deleting multiple PDS members. <a>#3516</a>": "Fixed an issue where right-click menu for data set shows wrong options after deleting multiple PDS members. <a>#3516</a>",
@@ -1300,6 +1312,7 @@
   "Hovering over a data set, USS, or jobs profile now displays detailed connection information.": "Hovering over a data set, USS, or jobs profile now displays detailed connection information.",
   "ID": "ID",
   "If searching more than 50 members, a prompt displays to confirm or cancel.": "If searching more than 50 members, a prompt displays to confirm or cancel.",
+  "If you wish to make localization contributions to these or generally across the rest of Zowe Explorer, please reach out in the usual places.": "If you wish to make localization contributions to these or generally across the rest of Zowe Explorer, please reach out in the usual places.",
   "Implemented a \"Show as Table\" option for profile nodes in the Jobs tree, displaying lists of jobs in a tabular view. Jobs can be filtered and sorted within this view, and users can select jobs to cancel, delete or download. <a>#2258</a>": "Implemented a \"Show as Table\" option for profile nodes in the Jobs tree, displaying lists of jobs in a tabular view. Jobs can be filtered and sorted within this view, and users can select jobs to cancel, delete or download. <a>#2258</a>",
   "Implemented a \"Show as Table\" option for profile nodes in the Jobs tree, displaying lists of jobs in a tabular view. Jobs can be filtered and sorted within this view, and users can select jobs to cancel, delete, or download. <a>#2258</a>": "Implemented a \"Show as Table\" option for profile nodes in the Jobs tree, displaying lists of jobs in a tabular view. Jobs can be filtered and sorted within this view, and users can select jobs to cancel, delete, or download. <a>#2258</a>",
   "Implemented change detection in the data sets and USS filesystems so that changes on the mainframe are reflected in opened editors for Data Sets and USS files. <a>#3040</a>": "Implemented change detection in the data sets and USS filesystems so that changes on the mainframe are reflected in opened editors for Data Sets and USS files. <a>#3040</a>",
@@ -1425,6 +1438,7 @@
   "Job search cancelled.": "Job search cancelled.",
   "Job spool pagination": "Job spool pagination",
   "Job submission failed.": "Job submission failed.",
+  "Job submission improvements": "Job submission improvements",
   "Job submitted {0} using profile {1}./Job IDProfile name": {
     "message": "Job submitted {0} using profile {1}.",
     "comment": [
@@ -1487,6 +1501,8 @@
     ]
   },
   "Loading release notes...": "Loading release notes...",
+  "Localization for release notes and changelogs": "Localization for release notes and changelogs",
+  "Localization is tied to the VS Code localization setting. If there are no localizations available for a string, it will fallback to English.": "Localization is tied to the VS Code localization setting. If there are no localizations available for a string, it will fallback to English.",
   "Localization of strings within Zowe Explorer webviews. <a>#2983</a>": "Localization of strings within Zowe Explorer webviews. <a>#2983</a>",
   "Log in to Authentication Service": "Log in to Authentication Service",
   "Log in to obtain a new token value": "Log in to obtain a new token value",
@@ -1506,6 +1522,7 @@
     ]
   },
   "Manage Persistent Properties": "Manage Persistent Properties",
+  "Many issues have been addressed to allow screen readers to better navigate and use Zowe Explorer features.": "Many issues have been addressed to allow screen readers to better navigate and use Zowe Explorer features.",
   "Member '{0}' not found in PDS '{1}'/Member namePDS name": {
     "message": "Member '{0}' not found in PDS '{1}'",
     "comment": [
@@ -1629,6 +1646,10 @@
     ]
   },
   "not set": "not set",
+  "Note as this is a brand new feature, only the z/OSMF profile type supports this functionality upon release. Expect other profile types to add their backend support over time.": "Note as this is a brand new feature, only the z/OSMF profile type supports this functionality upon release. Expect other profile types to add their backend support over time.",
+  "Note that the filter only applies on the client side, so if pagination is enabled and active, each individual page is filtered and it may still require clicking through pages to get to the one with the filtered data sets or members.": "Note that the filter only applies on the client side, so if pagination is enabled and active, each individual page is filtered and it may still require clicking through pages to get to the one with the filtered data sets or members.",
+  "Note that when only a partial selection of PDS members are favorited, data set pagination is disabled on the PDS in the favorites tree.": "Note that when only a partial selection of PDS members are favorited, data set pagination is disabled on the PDS in the favorites tree.",
+  "Now the right click option on partitioned data sets and profile to filter data sets/data set members supports filtering by name or by date created. The filter by name supports wildcards and comma-separated names in the same way as the data set search.": "Now the right click option on partitioned data sets and profile to filter data sets/data set members supports filtering by name or by date created. The filter by name supports wildcards and comma-separated names in the same way as the data set search.",
   "Off": "Off",
   "Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command:": "Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command:",
   "Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command: <a>#2853</a>": "Omitted the following Zowe Explorer commands from the Command Palette that do not execute properly when run as a standalone command: <a>#2853</a>",
@@ -1701,6 +1722,7 @@
   "Please enter a valid USS path.": "Please enter a valid USS path.",
   "Please install associated VS Code extension for custom credential manager or revert to default.": "Please install associated VS Code extension for custom credential manager or revert to default.",
   "Please review the following lines:": "Please review the following lines:",
+  "Please see the docs for much more detail on <a>downloading data sets</a>, downloading <a>USS files</a> or <a>USS directories</a>.": "Please see the docs for much more detail on <a>downloading data sets</a>, downloading <a>USS files</a> or <a>USS directories</a>.",
   "Please select a single profile or PDS.": "Please select a single profile or PDS.",
   "Plugin of name '{0}' was defined for custom credential management on imperative.json file./Credential manager display name": {
     "message": "Plugin of name '{0}' was defined for custom credential management on imperative.json file.",
@@ -1884,6 +1906,7 @@
   "Replaced an import of ILocalStorageAccess from \"@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess\" to \"@zowe/zowe-explorer-api\". <a>#3606</a>": "Replaced an import of ILocalStorageAccess from \"@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess\" to \"@zowe/zowe-explorer-api\". <a>#3606</a>",
   "Replaced keytar dependency with keyring module from <a>@zowe/secrets-for-zowe-sdk</a>. <a>#2358</a> <a>#2348</a>": "Replaced keytar dependency with keyring module from <a>@zowe/secrets-for-zowe-sdk</a>. <a>#2358</a> <a>#2348</a>",
   "Replaced lodash dependency with es-toolkit to reduce webview bundle size and add technical currency. <a>#3060</a>": "Replaced lodash dependency with es-toolkit to reduce webview bundle size and add technical currency. <a>#3060</a>",
+  "Replaced repetitive if (err instanceof Error) patterns with handleError and errorMessage utility functions from @zowe/zowe-explorer-api. <a>#4207</a>": "Replaced repetitive if (err instanceof Error) patterns with handleError and errorMessage utility functions from @zowe/zowe-explorer-api. <a>#4207</a>",
   "Replaced ts-loader dependency with esbuild-loader to improve build speed for developers. <a>#2909</a>": "Replaced ts-loader dependency with esbuild-loader to improve build speed for developers. <a>#2909</a>",
   "Replaced ts-loader with esbuild-loader to improve build speed for developers. <a>#2909</a>": "Replaced ts-loader with esbuild-loader to improve build speed for developers. <a>#2909</a>",
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.",
@@ -2033,7 +2056,9 @@
   },
   "Set a filter...": "Set a filter...",
   "Set up <a>POEditor project</a> for contributing translations and cleaned up redundant localization strings. <a>#546</a>": "Set up <a>POEditor project</a> for contributing translations and cleaned up redundant localization strings. <a>#546</a>",
+  "Setting to hide hidden USS files": "Setting to hide hidden USS files",
   "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.",
+  "Several members may be favorited or unfavorited at once by doing a multi-selection.": "Several members may be favorited or unfavorited at once by doing a multi-selection.",
   "Showing attributes for {0}./Label": {
     "message": "Showing attributes for {0}.",
     "comment": [
@@ -2041,6 +2066,7 @@
     ]
   },
   "Size": "Size",
+  "Smarter data set search filtering": "Smarter data set search filtering",
   "Solved issue with a conflicting keybinding for Edit History, changed keybinding to Ctrl+Alt+y for Windows and ⌘ Cmd+⌥ Opt+y for macOS. <a>#2543</a>": "Solved issue with a conflicting keybinding for Edit History, changed keybinding to Ctrl+Alt+y for Windows and ⌘ Cmd+⌥ Opt+y for macOS. <a>#2543</a>",
   "Sort": "Sort",
   "Sort Direction": "Sort Direction",
@@ -2087,6 +2113,7 @@
   "Team config file deleted, refreshing Zowe Explorer.": "Team config file deleted, refreshing Zowe Explorer.",
   "Team config file updated, refreshing Zowe Explorer.": "Team config file updated, refreshing Zowe Explorer.",
   "Template of Data Set to be Created": "Template of Data Set to be Created",
+  "Text and alt text in the release notes and the changelogs are now localizable.": "Text and alt text in the release notes and the changelogs are now localizable.",
   "The 'move' function is not implemented for this USS API.": "The 'move' function is not implemented for this USS API.",
   "The \"Open Recent Member\" command can now be triggered from the command palette. <a>#3477</a>": "The \"Open Recent Member\" command can now be triggered from the command palette. <a>#3477</a>",
   "The \"Zowe Resources\" panel is now hidden by default until Zowe Explorer reveals it to display a table or other data. <a>#3113</a>": "The \"Zowe Resources\" panel is now hidden by default until Zowe Explorer reveals it to display a table or other data. <a>#3113</a>",
@@ -2104,6 +2131,8 @@
   "The default sort order of every data set or job can now be changed. For example, to always open a data set to see the most recently edited members, set the default sort order to be by descending, date modified. The following settings are available:": "The default sort order of every data set or job can now be changed. For example, to always open a data set to see the most recently edited members, set the default sort order to be by descending, date modified. The following settings are available:",
   "The downloadAllMembers API is not supported for this profile type. Please contact the extension developer.": "The downloadAllMembers API is not supported for this profile type. Please contact the extension developer.",
   "The downloadDirectory API is not supported for this profile type. Please contact the extension developer.": "The downloadDirectory API is not supported for this profile type. Please contact the extension developer.",
+  "The entire PDS can still be favorited with all members. When a member is removed from favorites, only it is removed, unless it is the only member in the PDS, in which case the entire PDS will be removed from favorites.": "The entire PDS can still be favorited with all members. When a member is removed from favorites, only it is removed, unless it is the only member in the PDS, in which case the entire PDS will be removed from favorites.",
+  "The favorites tree now supports being able to favorite individual members of a partitioned data set.": "The favorites tree now supports being able to favorite individual members of a partitioned data set.",
   "The following {0} item(s) were deleted:\n{1}{2}/Data Sets deleted lengthData Sets deletedAdditional datasets count": {
     "message": "The following {0} item(s) were deleted:\n{1}{2}",
     "comment": [
@@ -2350,6 +2379,7 @@
   "View members of a partitioned data set": "View members of a partitioned data set",
   "Volumes": "Volumes",
   "VS Code engine support change": "VS Code engine support change",
+  "VSAM data sets can now be favorited.": "VSAM data sets can now be favorited.",
   "Waiting for data from extension...": "Waiting for data from extension...",
   "Welcome to the integrated terminal for: {0}/Terminal Name": {
     "message": "Welcome to the integrated terminal for: {0}",
@@ -2359,6 +2389,8 @@
   },
   "What's New in Zowe Explorer {0}": "What's New in Zowe Explorer {0}",
   "When all jobs have completed, polling automatically stops. Alternatively, to stop polling, right-click the profile again and select **Stop Polling Active Jobs**.": "When all jobs have completed, polling automatically stops. Alternatively, to stop polling, right-click the profile again and select **Stop Polling Active Jobs**.",
+  "When favoriting a data set member, the partitioned data set will still show in the favorites tree, but now only with the favorited data set member under it, rather than all members as before. When expanded, a tooltip will now show beside the data set name with the number of members that are favorited inside of it vs the total number of members the data set has.": "When favoriting a data set member, the partitioned data set will still show in the favorites tree, but now only with the favorited data set member under it, rather than all members as before. When expanded, a tooltip will now show beside the data set name with the number of members that are favorited inside of it vs the total number of members the data set has.",
+  "When submitting a job, there are now two buttons on the job submission notification popup:": "When submitting a job, there are now two buttons on the job submission notification popup:",
   "When the user types in a data set pattern in the input box of the filter selection prompt, the \"Create a new filter\" option now updates to include the pattern. Once clicked, the new filter is added to the user's search history and the pattern is used for listing data sets. <a>#3015</a>": "When the user types in a data set pattern in the input box of the filter selection prompt, the \"Create a new filter\" option now updates to include the pattern. Once clicked, the new filter is added to the user's search history and the pattern is used for listing data sets. <a>#3015</a>",
   "When the user types in a USS file path in the input box of the filter selection prompt, the \"Create a new filter\" option now updates to include the file path. Once clicked, the new filter is added to the user's search history and the path is used for listing a USS directory. <a>#3015</a>": "When the user types in a USS file path in the input box of the filter selection prompt, the \"Create a new filter\" option now updates to include the file path. Once clicked, the new filter is added to the user's search history and the path is used for listing a USS directory. <a>#3015</a>",
   "Write": "Write",
@@ -2408,6 +2440,7 @@
     ]
   },
   "Zowe Explorer now includes support for the <a>VS Code display languages</a> French, German, Japanese, Portuguese, and Spanish. Download the respective language pack and switch. <a>#3239</a>": "Zowe Explorer now includes support for the <a>VS Code display languages</a> French, German, Japanese, Portuguese, and Spanish. Download the respective language pack and switch. <a>#3239</a>",
+  "Zowe Explorer now supports being able to directly download data sets, data set members, USS files & USS directories to the local machine filesystem - with a multitude of basic and advanced options built into the download menus.": "Zowe Explorer now supports being able to directly download data sets, data set members, USS files & USS directories to the local machine filesystem - with a multitude of basic and advanced options built into the download menus.",
   "Zowe Explorer profiles are being set as secured.": "Zowe Explorer profiles are being set as secured.",
   "Zowe Explorer profiles are being set as unsecured.": "Zowe Explorer profiles are being set as unsecured.",
   "Zowe Explorer: Cancel job": "Zowe Explorer: Cancel job",
