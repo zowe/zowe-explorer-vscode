@@ -10,11 +10,13 @@
  */
 
 import type { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
-import { imperative, ProfilesCache } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { type ClientOptions, type ExistingClientRequest, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils } from "./ConfigUtils";
 import { deployWithProgress } from "./ServerDeployment";
+import { SshErrorHandler } from "./SshErrorHandler";
+import path from "path";
 
 class AsyncMutex extends imperative.DeferredPromise<void> implements Disposable {
     public constructor(private onDispose?: () => void) {
@@ -50,7 +52,7 @@ export class SshClientCache extends vscode.Disposable {
     private static readonly mNoRestart: ZSshRestartOptions = { restart: false, retryRequests: false };
     private static mInstance: SshClientCache;
     private readonly mClientSessionMap: Map<string, ZSshClientSessions> = new Map();
-    private readonly mClientServerPathMap: Map<string, string> = new Map();
+    private readonly mClientOnPathServerMap: Map<string, string> = new Map();
     private mMutexMap: Map<string, AsyncMutex> = new Map();
     private static readonly ERROR_SNIPPETS = {
         FATAL: ["CEE5207E", "CEE3204S", "at compile unit offset", "Fatal error encountered in zowex"],
@@ -86,10 +88,38 @@ export class SshClientCache extends vscode.Disposable {
         return this.mProfilesCache;
     }
 
-    public setServerPath(profile: imperative.IProfileLoaded, serverPath: string): void {
+    /***
+     * Cache the parent directory of an instance of the backend server detected on the user's $PATH
+     */
+    public setOnPathServer(profile: imperative.IProfileLoaded, serverPath: string): void {
         const clientId = this.getClientId(profile);
-        this.mClientServerPathMap
+        this.mClientOnPathServerMap.set(clientId, serverPath);
     }
+
+    /**
+     * Detect if a usable instance of our server binary exists on the user's USS environment.
+     * @param session - established SSH session used to detect the server
+     * @param profile - the SSH profile used to connect
+     * @returns true if a usable version of the SSH backend server is detected on the user's path
+     */
+    public async isServerDetectedOnPath(session: SshSession, profile: imperative.IProfileLoaded): Promise<boolean> {
+        try {
+            const pathServer = await ZSshUtils.detectServerOnPath(session);
+            imperative.Logger.getAppLogger().debug("detectServerOnPath return value: %s", JSON.stringify(pathServer));
+            if (pathServer.serverPath && pathServer.hasExecutePermission) {
+                imperative.Logger.getAppLogger().debug("Skipping deploy, since a usable instance of the server exists on the user's PATH");
+                // remove binary from the full path to set serverPath to the parent directory,
+                // the same as a user would configure the path manually
+                this.setOnPathServer(profile, path.resolve(pathServer.serverPath, ".."));
+                return true;
+            }
+        } catch (e) {
+            imperative.Logger.getAppLogger().error("Error detecting server on user's $PATH: %s", e);
+            await SshErrorHandler.getInstance().handleError(e as Error, ZoweExplorerApiType.All, "Detecting server on $PATH");
+        }
+        return false;
+    }
+
     public async connect(profile: imperative.IProfileLoaded, opts: ZSshRestartOptions = SshClientCache.mNoRestart): Promise<ZSshClient> {
         const clientId = this.getClientId(profile);
         let replayRequests: Set<ExistingClientRequest> = new Set();
@@ -105,7 +135,9 @@ export class SshClientCache extends vscode.Disposable {
         if (!this.mClientSessionMap.has(clientId)) {
             using _lock = this.acquireProfileLock(clientId);
             const session = ZSshUtils.buildSession(profile.profile!);
-            const serverPath = ConfigUtils.getServerPath(profile.profile);
+            const serverIsOnPath = await this.isServerDetectedOnPath(session, profile);
+
+            const serverPath = this.mClientOnPathServerMap.get(clientId) ?? ConfigUtils.getServerPath(profile.profile);
             const vsceConfig = vscode.workspace.getConfiguration("zowe");
             const keepAliveInterval = vsceConfig.get<number>("zowex.keepAliveInterval");
             const numWorkers = vsceConfig.get<number>("zowex.workerCount");
@@ -126,7 +158,7 @@ export class SshClientCache extends vscode.Disposable {
                     useNativeSsh,
                 });
                 imperative.Logger.getAppLogger().debug(`Server checksums: ${JSON.stringify(newClient.serverChecksums)}`);
-                if (await ZSshUtils.checkIfOutdated(newClient.serverChecksums)) {
+                if (!serverIsOnPath && (await ZSshUtils.checkIfOutdated(newClient.serverChecksums))) {
                     if (autoUpdate) {
                         imperative.Logger.getAppLogger().info(`Server is out of date, deploying to ${profile.name}`);
                         newClient = undefined;

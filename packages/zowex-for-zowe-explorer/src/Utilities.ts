@@ -30,14 +30,7 @@ export function registerCommands(context: vscode.ExtensionContext, zoweExplorerA
             }
 
             const sshSession = ZSshUtils.buildSession(profile.profile);
-            const pathServer = await ZSshUtils.detectServerOnPath(sshSession);
-            imperative.Logger.getAppLogger().trace("detectServerOnPath return value: %s", JSON.stringify(pathServer));
-            if (pathServer.serverPath
-                && pathServer.hasExecutePermission
-                && pathServer.writeAccessToParent) {
-                imperative.Logger.getAppLogger().debug("Skipping deploy as an instance of the server exists on the user's PATH");
-                // todo :   store in config (Configutils)
-            } else {
+            if (!(await SshClientCache.inst.isServerDetectedOnPath(sshSession, profile))) {
                 const defaultServerPath = ConfigUtils.getServerPath(profile.profile);
                 const deployDirectory = await vscePromptApi.promptForDeployDirectory(profile.profile.host, defaultServerPath);
                 if (!deployDirectory) {
@@ -48,12 +41,12 @@ export function registerCommands(context: vscode.ExtensionContext, zoweExplorerA
                 if (!deployStatus) {
                     return;
                 }
+                const infoMsg = `Installed Zowe Remote SSH server on ${(profile.profile.host as string) ?? profile.name}`;
+                imperative.Logger.getAppLogger().info(infoMsg);
+                await Gui.showMessage(infoMsg);
             }
 
             await ConfigUtils.showSessionInTree(profile.name!, true, zoweExplorerApi);
-            const infoMsg = `Installed Zowe Remote SSH server on ${(profile.profile.host as string) ?? profile.name}`;
-            imperative.Logger.getAppLogger().info(infoMsg);
-            await Gui.showMessage(infoMsg);
         }),
         vscode.commands.registerCommand(`zowe.zowex.restart`, async (profName?: string) => {
             imperative.Logger.getAppLogger().trace("Running restart command for profile %s", profName);
