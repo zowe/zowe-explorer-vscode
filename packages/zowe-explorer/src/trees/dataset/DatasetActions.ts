@@ -14,6 +14,7 @@ import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as path from "path";
 import {
     Gui,
+    handleError,
     imperative,
     IZoweDatasetTreeNode,
     Validation,
@@ -297,9 +298,9 @@ export class DatasetActions {
         } catch (err) {
             const errorMsg = vscode.l10n.t("Error encountered when creating data set.");
             ZoweLogger.error(errorMsg + JSON.stringify(err));
-            if (err instanceof Error) {
-                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile(), scenario: errorMsg });
-            }
+            await handleError(err, async (error) => {
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile(), scenario: errorMsg });
+            });
             throw new Error(err);
         }
 
@@ -446,14 +447,14 @@ export class DatasetActions {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName);
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
                         profile,
                         dsName: newDSName,
                         scenario: vscode.l10n.t("Unable to create data set."),
                     });
-                }
+                });
                 throw err;
             }
         }
@@ -1271,13 +1272,13 @@ export class DatasetActions {
                     });
                 }
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
                         parentDsName: label,
                         scenario: vscode.l10n.t("Unable to create member."),
                     });
-                }
+                });
                 throw err;
             }
 
@@ -1482,13 +1483,13 @@ export class DatasetActions {
                     );
                 }
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
                         profile: node.getProfile(),
                         scenario: vscode.l10n.t("Unable to list attributes."),
                     });
-                }
+                });
                 throw err;
             }
 
@@ -2584,9 +2585,9 @@ export class DatasetActions {
                             }
                         } catch (err) {
                             ZoweLogger.error(err);
-                            if (err instanceof Error) {
-                                Gui.errorMessage(err.message);
-                            }
+                            handleError(err, (error) => {
+                                Gui.errorMessage(error.message);
+                            });
                         }
                     }
                 }
@@ -2688,9 +2689,9 @@ export class DatasetActions {
                                 });
                             }
                         } catch (err) {
-                            if (err instanceof Error) {
-                                Gui.errorMessage(err.message);
-                            }
+                            handleError(err, (error) => {
+                                Gui.errorMessage(error.message);
+                            });
                             return;
                         }
                     }
@@ -2806,9 +2807,9 @@ export class DatasetActions {
                             await mvsApi.copyDataSetCrossLpar(dsname, undefined, options, sourceProfile);
                         } catch (err) {
                             ZoweLogger.error(err);
-                            if (err instanceof Error) {
-                                Gui.errorMessage(err.message);
-                            }
+                            handleError(err, (error) => {
+                                Gui.errorMessage(error.message);
+                            });
                             return;
                         }
                     } else {
@@ -2821,15 +2822,15 @@ export class DatasetActions {
                             try {
                                 await DatasetActions.createDataSetFromSourceAttributes(sourceProfile, node.getProfile(), lbl, dsname);
                             } catch (err) {
-                                if (err instanceof Error) {
+                                handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to create {0}: {1}",
-                                            args: [dsname, err.message],
+                                            args: [dsname, error.message],
                                             comment: ["Data set name", "Error message"],
                                         })
                                     );
-                                }
+                                });
                                 return;
                             }
                         }
@@ -2882,15 +2883,15 @@ export class DatasetActions {
                                 });
                             } catch (err) {
                                 ZoweLogger.error(err);
-                                if (err instanceof Error) {
+                                handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to copy member {0}: {1}",
-                                            args: [child, err.message],
+                                            args: [child, error.message],
                                             comment: ["Member name", "Error message"],
                                         })
                                     );
-                                }
+                                });
                             }
                         }
                     }

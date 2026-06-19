@@ -12,6 +12,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import {
+    errorMessage,
+    handleError,
     FsAbstractUtils,
     Gui,
     imperative,
@@ -150,11 +152,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 );
             } catch (err) {
                 // If the write fails, we cannot move to the next file.
-                if (err instanceof Error) {
+                handleError(err, (error) => {
                     Gui.errorMessage(
-                        vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), err.message)
+                        vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), error.message)
                     );
-                }
+                });
                 return;
             }
 
@@ -411,7 +413,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 setImmediate(() => {
                     Promise.resolve(this.getTreeView().reveal(originalNode, { select: true, focus: true })).catch((revealErr) => {
                         // If reveal fails, just log it - the rename was still successful
-                        ZoweLogger.warn(`Could not reveal renamed node: ${revealErr instanceof Error ? revealErr.message : String(revealErr)}`);
+                        ZoweLogger.warn(`Could not reveal renamed node: ${errorMessage(revealErr)}`);
                     });
                 });
                 Gui.showMessage(
@@ -422,13 +424,13 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     })
                 );
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Uss,
                         profile: originalNode.getProfile(),
                         scenario: vscode.l10n.t("Unable to rename node:"),
                     });
-                }
+                });
                 throw err;
             }
         }
@@ -1038,9 +1040,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 profile,
             });
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.warn(`Skipping creation of favorited profile. ${err.toString()}`);
-            }
+            handleError(err, (error) => {
+                ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
+            });
             return null;
         }
 
