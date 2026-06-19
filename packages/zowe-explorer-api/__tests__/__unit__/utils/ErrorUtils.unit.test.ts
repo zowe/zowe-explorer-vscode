@@ -8,6 +8,7 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
+
 import { errorMessage, handleError } from "../../../src/utils/ErrorUtils";
 import { vi } from "vitest";
 
