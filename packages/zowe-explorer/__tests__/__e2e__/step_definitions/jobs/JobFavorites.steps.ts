@@ -243,9 +243,7 @@ Given("a sleep job has been submitted for polling", async function () {
 
         await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
         if (await quickPick.hasOptions()) {
-            const createFilter = await quickPick.findItem(
-                "$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
-            );
+            const createFilter = await quickPick.findItem("$(plus) Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)");
             await expect(createFilter).toBeClickable();
             await createFilter.click();
         }
@@ -360,9 +358,7 @@ Given("the Jobs tree has a favorited job search filter for the active job", asyn
 
     // The newly added filter is the last child under the favorited profile
     const favProfileChildren = await (await this.favProfileNode.find()).getChildren();
-    const activeFilterNode = favProfileChildren.length > 0
-        ? (favProfileChildren[favProfileChildren.length - 1] as TreeItem)
-        : undefined;
+    const activeFilterNode = favProfileChildren.length > 0 ? (favProfileChildren[favProfileChildren.length - 1] as TreeItem) : undefined;
     await expect(activeFilterNode).toBeDefined();
 
     // Click once to initialize collapsible state, then expand

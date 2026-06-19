@@ -180,7 +180,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 // otherwise look for only stepname:ddname to update the record count in the label
                 const spoolSuffix = procstep ? ` - ${procstep}` : "";
                 const existing = this.children.find((element) =>
-                    (element.label as string)?.includes(`${spool.stepname}:${spool.ddname}${spoolSuffix}`)
+                    (element.label as string)?.includes(`${spool.stepname}:${spool.ddname}${spoolSuffix}`),
                 );
                 if (existing) {
                     existing.tooltip = existing.label = newLabel;

@@ -230,7 +230,7 @@ export function buildMemberInfo(member: any, parentUri: string): IDataSetInfo {
 export class PatternDataSource implements IDataSetSource {
     public constructor(
         public profile: imperative.IProfileLoaded,
-        private pattern: string
+        private pattern: string,
     ) {
         this.pattern = this.pattern.toLocaleUpperCase();
     }
@@ -248,7 +248,7 @@ export class PatternDataSource implements IDataSetSource {
                 this.pattern
                     .toUpperCase()
                     .split(",")
-                    .map((p: string) => p.trim())
+                    .map((p: string) => p.trim()),
             ),
         ];
 
@@ -344,7 +344,7 @@ export class PDSMembersDataSource implements IDataSetSource {
         public parentDataSource: IDataSetSource | null,
         public pdsName: string,
         private pdsUri: string,
-        private profile: imperative.IProfileLoaded
+        private profile: imperative.IProfileLoaded,
     ) {}
 
     public async fetchDataSets(): Promise<IDataSetInfo[]> {
@@ -663,7 +663,7 @@ export class DatasetTableView {
 
             // Check if all provided rows are currently pinned
             const allRowsPinned = rows.every((selectedRow) =>
-                pinnedRows.some((pinnedRow) => JSON.stringify(selectedRow) === JSON.stringify(pinnedRow))
+                pinnedRows.some((pinnedRow) => JSON.stringify(selectedRow) === JSON.stringify(pinnedRow)),
             );
 
             return allRowsPinned ? l10n.t("Unpin") : l10n.t("Pin");
@@ -703,7 +703,7 @@ export class DatasetTableView {
 
             // Check if all target rows are currently pinned
             const allRowsPinned = rowsArray.every((selectedRow) =>
-                pinnedRows.some((pinnedRow) => JSON.stringify(selectedRow) === JSON.stringify(pinnedRow))
+                pinnedRows.some((pinnedRow) => JSON.stringify(selectedRow) === JSON.stringify(pinnedRow)),
             );
 
             let success: boolean;
@@ -730,7 +730,7 @@ export class DatasetTableView {
                         message: messageKey,
                         args: [rowsArray.length.toString()],
                         comment: ["Number of rows pinned/unpinned"],
-                    })
+                    }),
                 );
             } else {
                 const errorKey = actionPerformed === "pinned" ? "Failed to pin rows to the table." : "Failed to unpin rows from the table.";
@@ -743,7 +743,7 @@ export class DatasetTableView {
                     message: "Error toggling pin state for rows: {0}",
                     args: [error instanceof Error ? error.message : String(error)],
                     comment: ["Error message"],
-                })
+                }),
             );
         }
     }
@@ -1385,7 +1385,7 @@ export class DatasetTableView {
                 new TreeDataSource(sessionNode),
                 selectedNode.label.toString(),
                 uri.toString(),
-                profile
+                profile,
             );
             this.currentTableType = "members";
             this.originalPattern = sessionNode.pattern;

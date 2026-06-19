@@ -38,7 +38,7 @@ const processTreeData = (
   hierarchicalData: Table.RowData[],
   expansionDepth: number = 0,
   parentId?: string,
-  currentDepth: number = 0
+  currentDepth: number = 0,
 ): Table.RowData[] => {
   let flatData: Table.RowData[] = [];
   hierarchicalData.forEach((node: Table.RowData) => {
@@ -568,7 +568,7 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
       const themeAttr = getVsCodeTheme();
       setTheme(themeAttr === "vscode-light" ? "ag-theme-quartz" : "ag-theme-quartz-dark");
     },
-    { attributes: true }
+    { attributes: true },
   );
 
   let getLocaleText = (params: GetLocaleTextParams<any, any>): string => {
