@@ -101,7 +101,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             new ZoweJobNode({
                 label: vscode.l10n.t("Favorites"),
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            }),
+            })
         );
         this.mFavoriteSession.contextValue = Constants.FAVORITE_CONTEXT;
         const icon = IconGenerator.getIconByNode(this.mFavoriteSession);
@@ -260,7 +260,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
         ZoweLogger.trace("JobTree.findFavoritedNode called.");
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, node.getProfileName());
         return profileNodeInFavorites?.children.find(
-            (temp) => temp.label === node.getLabel().toString() && temp.contextValue.includes(node.contextValue),
+            (temp) => temp.label === node.getLabel().toString() && temp.contextValue.includes(node.contextValue)
         );
     }
 
@@ -426,7 +426,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 message: "Loading profile: {0} for jobs favorites",
                 args: [profileName],
                 comment: ["Profile name"],
-            }),
+            })
         );
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
@@ -563,7 +563,7 @@ Would you like to do this now?`,
         if (profileNodeInFavorites) {
             const startLength = profileNodeInFavorites.children.length;
             profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
-                (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue)),
+                (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
             );
             // Remove profile node from Favorites if it contains no more favorites.
             if (profileNodeInFavorites.children.length < 1) {
@@ -726,7 +726,7 @@ Would you like to do this now?`,
             searchCriteriaObj.Owner,
             searchCriteriaObj.Prefix,
             searchCriteriaObj.JobId,
-            searchCriteriaObj.Status,
+            searchCriteriaObj.Status
         );
         this.applySearchLabelToNode(node, searchCriteriaObj);
         return searchCriteria;
@@ -967,7 +967,7 @@ Would you like to do this now?`,
 
     private async handleEditingMultiJobParameters(
         jobProperties: Definitions.IJobPickerOption[],
-        node: IZoweJobTreeNode,
+        node: IZoweJobTreeNode
     ): Promise<Definitions.IJobSearchCriteria | undefined> {
         ZoweLogger.trace("JobTree.handleEditingMultiJobParameters called.");
         const editableItems: vscode.QuickPickItem[] = [new FilterItem({ text: JobTree.submitJobQueryLabel, show: true }), Constants.SEPARATORS.BLANK];
@@ -1086,7 +1086,7 @@ Would you like to do this now?`,
                 comment: ["URI path"],
             }),
             prompt: vscode.l10n.t(
-                "Polling automatically checks for job status updates at regular intervals. Enter the time in milliseconds between each check (minimum 1000ms).",
+                "Polling automatically checks for job status updates at regular intervals. Enter the time in milliseconds between each check (minimum 1000ms)."
             ),
             placeHolder: vscode.l10n.t("e.g., 5000 for checking every 5 seconds"),
             value: pollValue.toString(),
@@ -1133,7 +1133,7 @@ Would you like to do this now?`,
                         args: [path.posix.basename(node.resourceUri.path)],
                         comment: ["Unique spool name"],
                     })}`,
-                    Constants.STATUS_BAR_TIMEOUT_MS,
+                    Constants.STATUS_BAR_TIMEOUT_MS
                 );
                 await JobFSProvider.instance.fetchSpoolAtUri(node.resourceUri);
                 statusMsg.dispose();
@@ -1204,7 +1204,7 @@ Would you like to do this now?`,
 
         // Show informational message about polling before prompting for interval
         const infoMessage = vscode.l10n.t(
-            "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again.",
+            "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again."
         );
         const continueButton = vscode.l10n.t("Continue");
         const userResponse = await Gui.infoMessage(infoMessage, { items: [continueButton], vsCodeOpts: { modal: false } });
@@ -1233,7 +1233,7 @@ Would you like to do this now?`,
                     message: "No active jobs found for session: {0}",
                     args: [session.label],
                     comment: ["Session label"],
-                }),
+                })
             );
             return;
         }
@@ -1246,7 +1246,7 @@ Would you like to do this now?`,
                     message: "No active jobs found for session: {0}",
                     args: [session.label],
                     comment: ["Session label"],
-                }),
+                })
             );
             return;
         }
@@ -1277,7 +1277,7 @@ Would you like to do this now?`,
                         args: [activeJobCount],
                         comment: ["Number of active jobs"],
                     })}`,
-                    Constants.ACTIVE_JOBS_POLLING_TIMEOUT_MS,
+                    Constants.ACTIVE_JOBS_POLLING_TIMEOUT_MS
                 );
 
                 // Refresh the session to get all current jobs (including any new ones)
@@ -1328,7 +1328,7 @@ Would you like to do this now?`,
                             message: "No more active jobs for {0}. Stopping polling.",
                             args: [session.label],
                             comment: ["Session label"],
-                        }),
+                        })
                     );
                     return;
                 } else {
@@ -1395,7 +1395,7 @@ Would you like to do this now?`,
                         args: [job.label as string],
                         comment: ["Job label"],
                     })}`,
-                    Constants.MS_PER_SEC * 4,
+                    Constants.MS_PER_SEC * 4
                 );
             }
             return;
@@ -1414,7 +1414,7 @@ Would you like to do this now?`,
             job["children"] = actual_jobs.filter((item) =>
                 item["job"]["exec-member"]
                     ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"]} - ${item["job"].retcode}`.includes(query)
-                    : `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query),
+                    : `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query)
             );
             SharedTreeProviders.job.refresh();
             this.updateFilterForJob(job, query);
@@ -1424,7 +1424,7 @@ Would you like to do this now?`,
                     args: [job.label as string],
                     comment: ["Job label"],
                 })}`,
-                Constants.MS_PER_SEC * 4,
+                Constants.MS_PER_SEC * 4
             );
         });
         job.children = actual_jobs;

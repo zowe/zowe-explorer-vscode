@@ -70,7 +70,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             new ZoweUSSNode({
                 label: vscode.l10n.t("Favorites"),
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            }),
+            })
         );
         this.mFavoriteSession.contextValue = Constants.FAVORITE_CONTEXT;
         const icon = IconGenerator.getIconByNode(this.mFavoriteSession);
@@ -106,7 +106,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 try {
                     await ZoweExplorerApiRegister.getUssApi(destinationInfo.profile).create(
                         destUri.path.substring(destinationInfo.slashAfterProfilePos),
-                        "directory",
+                        "directory"
                     );
                 } catch (err) {
                     // The directory might already exist. Ignore the error and try to move files
@@ -125,7 +125,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     destUri.with({
                         path: path.posix.join(destUri.path, childNode.label as string),
                     }),
-                    true,
+                    true
                 );
             }
             await vscode.workspace.fs.delete(sourceUri, { recursive: true });
@@ -134,7 +134,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             try {
                 await ZoweExplorerApiRegister.getUssApi(destinationInfo.profile).create(
                     destUri.path.substring(destinationInfo.slashAfterProfilePos),
-                    "file",
+                    "file"
                 );
             } catch (err) {
                 // The file might already exist. Ignore the error and try to write it to the LPAR
@@ -148,13 +148,13 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                         query: "forceUpload=true",
                     }),
                     contents,
-                    { create: true, overwrite: true, noStatusMsg: true },
+                    { create: true, overwrite: true, noStatusMsg: true }
                 );
             } catch (err) {
                 // If the write fails, we cannot move to the next file.
                 handleError(err, (error) => {
                     Gui.errorMessage(
-                        vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), error.message),
+                        vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), error.message)
                     );
                 });
                 return;
@@ -421,7 +421,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                         message: "{0} renamed from {1} to {2}",
                         args: [nodeType === "folder" ? "Directory" : "File", oldName, newName],
                         comment: ["Node type", "Old name", "New name"],
-                    }),
+                    })
                 );
             } catch (err) {
                 await handleError(err, async (error) => {
@@ -744,7 +744,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
         if (profileNodeInFavorites) {
             profileNodeInFavorites.children = profileNodeInFavorites.children?.filter(
-                (temp) => !(temp.fullPath === node.fullPath && temp.contextValue.startsWith(node.contextValue)),
+                (temp) => !(temp.fullPath === node.fullPath && temp.contextValue.startsWith(node.contextValue))
             );
             // Remove profile node from Favorites if it contains no more favorites.
             if (profileNodeInFavorites.children?.length < 1) {
@@ -1171,7 +1171,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 message: "Loading profile: {0} for USS favorites",
                 args: [profileName],
                 comment: ["Profile name"],
-            }),
+            })
         );
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {

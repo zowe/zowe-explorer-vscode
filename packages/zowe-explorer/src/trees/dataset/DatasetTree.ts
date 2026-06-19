@@ -60,7 +60,7 @@ import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
 export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implements Types.IZoweDatasetTreeType {
     private static readonly persistenceSchema: PersistenceSchemaEnum = PersistenceSchemaEnum.Dataset;
     private static readonly defaultDialogText: string = `$(plus) ${vscode.l10n.t(
-        "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)",
+        "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)"
     )}`;
     public mFavoriteSession: ZoweDatasetNode;
 
@@ -81,7 +81,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             new ZoweDatasetNode({
                 label: vscode.l10n.t("Favorites"),
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            }),
+            })
         );
         this.mFavoriteSession.contextValue = Constants.FAVORITE_CONTEXT;
         const icon = IconGenerator.getIconByNode(this.mFavoriteSession);
@@ -112,7 +112,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         sourceNode: IZoweDatasetTreeNode,
         sourceUri: vscode.Uri,
         destUri: vscode.Uri,
-        recursiveCall?: boolean,
+        recursiveCall?: boolean
     ): Promise<void> {
         const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
         const sourceInfo = FsAbstractUtils.getInfoForUri(sourceUri, Profiles.getInstance());
@@ -161,7 +161,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     destUri.with({
                         path: path.posix.join(destUri.path, childNode.getLabel() as string),
                     }),
-                    true,
+                    true
                 );
             }
             await vscode.workspace.fs.delete(sourceUri, { recursive: true });
@@ -181,7 +181,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         await ZoweExplorerApiRegister.getMvsApi(destinationInfo.profile).createDataSet(
                             zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
                             dsname,
-                            {},
+                            {}
                         );
                     }
                 }
@@ -207,7 +207,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                         query: queryString,
                     }),
                     contents,
-                    { create: true, overwrite: true },
+                    { create: true, overwrite: true }
                 );
             } catch (err) {
                 // If the write fails, we cannot move to the next file
@@ -229,7 +229,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     public async handleDrop(
         targetNode: IZoweDatasetTreeNode | undefined,
         dataTransfer: vscode.DataTransfer,
-        _token: vscode.CancellationToken,
+        _token: vscode.CancellationToken
     ): Promise<void> {
         const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.ds.explorer");
         if (!droppedItems) {
@@ -270,8 +270,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 if (SharedUtils.hasNameCollision(srcNames, tgtNames)) {
                     Gui.errorMessage(
                         vscode.l10n.t(
-                            "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving.",
-                        ),
+                            "Cannot move: One or more members already exist in the target PDS. Please resolve name collisions before moving."
+                        )
                     );
                     return;
                 }
@@ -404,7 +404,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
             const prevDescription = element.description;
             const response = await element.getChildren(
-                SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE) > 0,
+                SettingsConfig.getDirectValue<number>(Constants.SETTINGS_DATASETS_PER_PAGE, Constants.DEFAULT_ITEMS_PER_PAGE) > 0
             );
 
             // If getChildren updated the parent node's description,
@@ -709,7 +709,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     message: "Error creating data set favorite node: {0} for profile {1}.",
                     args: [label, profile.name],
                     comment: ["Label", "Profile name"],
-                }),
+                })
             );
         }
         if (node) {
@@ -734,7 +734,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 message: "Loading profile: {0} for data set favorites",
                 args: [profileName],
                 comment: ["Profile name"],
-            }),
+            })
         );
         // Load profile for parent profile node in this.mFavorites array
         if (!parentNode.getProfile() || !parentNode.getSession()) {
@@ -955,7 +955,7 @@ Would you like to do this now?`,
         } else {
             // pds | ds
             const existingFav = profileNodeInFavorites.children.find(
-                (child) => child.label === (node.label as string) && SharedContext.isFavoritePds(child),
+                (child) => child.label === (node.label as string) && SharedContext.isFavoritePds(child)
             ) as ZoweDatasetNode | undefined;
             if (existingFav && existingFav.pdsFavoriteState === Definitions.PdsFavoriteState.SpecificMembers) {
                 // PDS has specific member favourites so upgrade to full PDS favourite
@@ -1041,7 +1041,7 @@ Would you like to do this now?`,
                         message: "Member {0} is already in favorites",
                         args: [memberName],
                         comment: ["Member name"],
-                    }),
+                    })
                 );
             }
             return;
@@ -1065,7 +1065,7 @@ Would you like to do this now?`,
                         message: "Member {0} is already in favorites",
                         args: [memberName],
                         comment: ["Member name"],
-                    }),
+                    })
                 );
                 return;
             }
@@ -1248,7 +1248,7 @@ Would you like to do this now?`,
             const patternIsFavorited =
                 sessionPattern != null &&
                 (profileNodeInFavorites?.children.some(
-                    (child) => child.label === sessionPattern && SharedContext.isFavorite(child) && SharedContext.isDsSession(child),
+                    (child) => child.label === sessionPattern && SharedContext.isFavorite(child) && SharedContext.isDsSession(child)
                 ) ??
                     false);
 
@@ -1412,7 +1412,7 @@ Would you like to do this now?`,
             const sessionPattern = (node as ZoweDatasetNode).pattern;
             if (sessionPattern != null) {
                 const matchIndex = profileNodeInFavorites.children.findIndex(
-                    (child) => child.label === sessionPattern && SharedContext.isFavorite(child) && SharedContext.isDsSession(child),
+                    (child) => child.label === sessionPattern && SharedContext.isFavorite(child) && SharedContext.isDsSession(child)
                 );
                 if (matchIndex >= 0) {
                     profileNodeInFavorites.children.splice(matchIndex, 1);
@@ -1512,7 +1512,7 @@ Would you like to do this now?`,
         const wasMigrated = SharedContext.isMigrated(node) && SharedContext.isFavorite(node);
         const wasSession = SharedContext.isFavorite(node) && SharedContext.isDsSession(node);
         profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
-            (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue)),
+            (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
         );
         // Remove profile node from favorites if it contains no more favorites
         if (profileNodeInFavorites.children.length < 1) {
@@ -1646,7 +1646,7 @@ Would you like to do this now?`,
             const defaultSortOpts = SharedUtils.getDefaultSortOptions(
                 DatasetUtils.DATASET_SORT_OPTS,
                 Constants.SETTINGS_DS_DEFAULT_SORT,
-                Sorting.DatasetSortOpts,
+                Sorting.DatasetSortOpts
             );
             for (const sessionNode of this.mSessionNodes) {
                 const isSession = SharedContext.isDsSession(sessionNode);
@@ -2118,7 +2118,7 @@ Would you like to do this now?`,
         node: IZoweDatasetTreeNode,
         profile: imperative.IProfileLoaded,
         pattern: string,
-        addToHistory?: boolean,
+        addToHistory?: boolean
     ): Promise<void> {
         ZoweLogger.trace("DatasetTree.filterTreeByPattern called.");
         await AuthUtils.updateNodeToolTip(node, profile);
@@ -2299,7 +2299,7 @@ Would you like to do this now?`,
                 message: "Renaming data set {0}",
                 args: [afterMemberName],
                 comment: ["Old data set name"],
-            }),
+            })
         );
         if (afterMemberName && afterMemberName !== beforeMemberName) {
             const extension = path.parse(node.resourceUri.path).ext;
@@ -2313,7 +2313,7 @@ Would you like to do this now?`,
             node.command.arguments = [node.resourceUri];
             const otherParent = this.findEquivalentNode(
                 node.getParent() as IZoweDatasetTreeNode,
-                SharedContext.isFavorite(node.getParent()) || SharedContext.isFavoriteDescendant(node),
+                SharedContext.isFavorite(node.getParent()) || SharedContext.isFavoriteDescendant(node)
             );
             if (otherParent) {
                 const otherMember = otherParent.children.find((child) => child.label === beforeMemberName);
@@ -2334,7 +2334,7 @@ Would you like to do this now?`,
                     message: "Member renamed from {0} to {1}",
                     args: [beforeMemberName, afterMemberName],
                     comment: ["Old member name", "New member name"],
-                }),
+                })
             );
         }
     }
@@ -2365,7 +2365,7 @@ Would you like to do this now?`,
                 message: "Renaming data set {0}",
                 args: [afterDataSetName],
                 comment: ["Old data set name"],
-            }),
+            })
         );
         if (afterDataSetName && afterDataSetName !== beforeDataSetName) {
             const extension = DatasetUtils.getExtension(afterDataSetName);
@@ -2415,7 +2415,7 @@ Would you like to do this now?`,
                     message: "Data set renamed from {0} to {1}",
                     args: [beforeDataSetName, afterDataSetName],
                     comment: ["Old data set name", "New data set name"],
-                }),
+                })
             );
         }
     }
@@ -2501,7 +2501,7 @@ Would you like to do this now?`,
                     args: [specifier],
                     comment: ["Specifier"],
                 }),
-            },
+            }
         );
         if (selection == null) {
             return;
@@ -2539,7 +2539,7 @@ Would you like to do this now?`,
                 args: [node.label as string],
                 comment: ["Node label"],
             })}`,
-            Constants.MS_PER_SEC * 4,
+            Constants.MS_PER_SEC * 4
         );
     }
 
@@ -2642,7 +2642,7 @@ Would you like to do this now?`,
                         args: [specifier],
                         comment: ["Specifier"],
                     }),
-                },
+                }
             )
         )?.replace(" $(check)", "");
 
@@ -2658,7 +2658,7 @@ Would you like to do this now?`,
                         args: [node.label as string],
                         comment: ["Node label"],
                     })}`,
-                    Constants.MS_PER_SEC * 4,
+                    Constants.MS_PER_SEC * 4
                 );
             }
             return;
@@ -2699,7 +2699,7 @@ Would you like to do this now?`,
                 method: filterMethod as Sorting.DatasetFilterOpts,
                 value: filter,
             },
-            isSession,
+            isSession
         );
         Gui.setStatusBarMessage(
             `$(check) ${vscode.l10n.t({
@@ -2707,7 +2707,7 @@ Would you like to do this now?`,
                 args: [node.label as string],
                 comment: ["Node label"],
             })}`,
-            Constants.MS_PER_SEC * 4,
+            Constants.MS_PER_SEC * 4
         );
     }
 

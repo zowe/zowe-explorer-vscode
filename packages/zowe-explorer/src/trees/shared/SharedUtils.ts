@@ -176,7 +176,7 @@ export class SharedUtils {
     public static parseFavorites(lines: string[]): Definitions.FavoriteData[] {
         const invalidFavoriteWarning = (line: string): void =>
             ZoweLogger.warn(
-                vscode.l10n.t({ message: "Failed to parse a saved favorite. Attempted to parse: {0}", args: [line], comment: ["Plaintext line"] }),
+                vscode.l10n.t({ message: "Failed to parse a saved favorite. Attempted to parse: {0}", args: [line], comment: ["Plaintext line"] })
             );
 
         return lines
@@ -355,7 +355,7 @@ export class SharedUtils {
     public static async promptForUploadEncoding(
         profile: imperative.IProfileLoaded,
         contextLabel: string,
-        taggedEncoding?: string,
+        taggedEncoding?: string
     ): Promise<ZosEncoding | undefined> {
         const items = SharedUtils.buildEncodingOptions(profile, taggedEncoding);
 
@@ -373,7 +373,7 @@ export class SharedUtils {
                 message: "Default encoding is {0}",
                 args: [defaultEncoding],
                 comment: ["Encoding name"],
-            }),
+            })
         );
 
         return SharedUtils.processEncodingResponse(response, contextLabel);
@@ -403,7 +403,7 @@ export class SharedUtils {
                 message: "Default encoding is {0}",
                 args: [defaultEncoding],
                 comment: ["Encoding name"],
-            }),
+            })
         );
 
         return SharedUtils.processEncodingResponse(response, contextLabel);
@@ -411,7 +411,7 @@ export class SharedUtils {
 
     public static async promptForEncoding(
         node: IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode,
-        taggedEncoding?: string,
+        taggedEncoding?: string
     ): Promise<ZosEncoding | undefined> {
         const profile = node.getProfile();
         const items = SharedUtils.buildEncodingOptions(profile, taggedEncoding, false);
@@ -441,7 +441,7 @@ export class SharedUtils {
                     message: "Current encoding is {0}",
                     args: [currentEncoding],
                     comment: ["Encoding name"],
-                }),
+                })
         );
 
         return SharedUtils.processEncodingResponse(response, node.label as string);
@@ -458,7 +458,7 @@ export class SharedUtils {
     public static async promptForDirectoryEncoding(
         profile: imperative.IProfileLoaded,
         contextLabel: string,
-        currentDirectoryEncoding?: ZosEncoding,
+        currentDirectoryEncoding?: ZosEncoding
     ): Promise<ZosEncoding | undefined> {
         const items = SharedUtils.buildEncodingOptions(profile, undefined, true);
 
@@ -488,7 +488,7 @@ export class SharedUtils {
                 message: "Current encoding is {0}",
                 args: [currentEncoding],
                 comment: ["Encoding name"],
-            }),
+            })
         );
 
         return SharedUtils.processEncodingResponse(response, contextLabel);
@@ -506,7 +506,7 @@ export class SharedUtils {
     public static addToWorkspace(
         this: void,
         node: IZoweUSSTreeNode | IZoweDatasetTreeNode,
-        nodeList: IZoweUSSTreeNode[] | IZoweDatasetTreeNode[],
+        nodeList: IZoweUSSTreeNode[] | IZoweDatasetTreeNode[]
     ): void {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList);
@@ -526,7 +526,7 @@ export class SharedUtils {
                             message: "A search must be set for {0} before it can be added to a workspace.",
                             args: [item.label as string],
                             comment: "Name of USS session",
-                        }),
+                        })
                     );
                     continue;
                 }
@@ -566,7 +566,7 @@ export class SharedUtils {
      */
     public static debounceAsync<T extends (...args: any[]) => Promise<any>>(
         callback: T,
-        delay: number,
+        delay: number
     ): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
         let timeoutId: ReturnType<typeof setTimeout>;
 
@@ -642,7 +642,7 @@ export class SharedUtils {
 
     public static async handleDragAndDropOverwrite(
         target: IZoweDatasetTreeNode | IZoweUSSTreeNode | undefined,
-        draggedNodes: Record<string, IZoweDatasetTreeNode | IZoweUSSTreeNode>,
+        draggedNodes: Record<string, IZoweDatasetTreeNode | IZoweUSSTreeNode>
     ): Promise<boolean> {
         const movedIntoChild = Object.values(draggedNodes).some((n) => target.resourceUri.path.startsWith(n.resourceUri.path));
         if (movedIntoChild) {
@@ -660,7 +660,7 @@ export class SharedUtils {
                     vsCodeOpts: {
                         modal: true,
                     },
-                },
+                }
             );
             if (resp == null || resp !== userOpts[0]) {
                 return false;
@@ -798,7 +798,7 @@ export class SharedUtils {
         downloadedPath: string | undefined,
         hasErrors: boolean,
         hasWarnings: boolean,
-        onViewDetails?: () => void,
+        onViewDetails?: () => void
     ): Promise<void> {
         const items: string[] = [];
 
@@ -857,7 +857,7 @@ export class SharedUtils {
     public static async isSamePhysicalDataset(
         srcProfile: imperative.IProfileLoaded,
         dstProfile: imperative.IProfileLoaded,
-        srcDsn: string,
+        srcDsn: string
     ): Promise<boolean> {
         try {
             // get API for each profile
@@ -918,7 +918,7 @@ export class SharedUtils {
     public static async isLikelySameUssObjectByUris(
         sourceNode: IZoweUSSTreeNode,
         targetParent: IZoweUSSTreeNode,
-        droppedLabel: string,
+        droppedLabel: string
     ): Promise<boolean> {
         //normalize paths
         const equal =
@@ -962,7 +962,7 @@ export class SharedUtils {
      */
     public static async showMultiSelectQuickPick(
         items: vscode.QuickPickItem[],
-        options: { title: string; placeholder: string },
+        options: { title: string; placeholder: string }
     ): Promise<vscode.QuickPickItem[] | null> {
         const quickPick = Gui.createQuickPick();
         quickPick.title = options.title;
