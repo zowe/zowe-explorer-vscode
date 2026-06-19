@@ -29,6 +29,7 @@ export default defineConfig({
             "packages/zowe-explorer/vitest.config.ts",
             "packages/zowe-explorer-ftp-extension/vitest.config.ts",
             "packages/eslint-plugin-zowe-explorer/vitest.config.ts",
+            "packages/zowex-for-zowe-explorer/vitest.config.ts",
         ],
         coverage: {
             provider: "v8",

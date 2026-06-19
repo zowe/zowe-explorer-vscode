@@ -1,0 +1,12 @@
+# Ignore everything
+*
+*/**
+
+# Allowlist what we need
+!bin/*
+!out/*
+
+!CHANGELOG.md
+!LICENSE
+!package*.json
+!README.md

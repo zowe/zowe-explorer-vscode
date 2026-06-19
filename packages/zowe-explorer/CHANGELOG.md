@@ -11,6 +11,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where additional error details were not displayed, particularly using SSH profiles. [zowex/#766](https://github.com/zowe/zowex/issues/766)
+
 ## `3.5.1`
 
 ### Bug fixes
