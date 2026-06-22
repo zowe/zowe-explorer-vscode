@@ -8,12 +8,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - Fixed an issue where the `SshJesApi.getJobsByParameters` function did not provide the status parameter to the request. Now, jobs are correctly filtered by status. [#4345](https://github.com/zowe/zowe-explorer-vscode/issues/4345)
 - Implemented the `issueUnixCommand` function, allowing users to issue z/OS UNIX commands with an SSH profile. [#4337](https://github.com/zowe/zowe-explorer-vscode/pull/4337)
-- Added the functionality to copy datasets and members in the Data Sets tree. [#377](https://github.com/zowe/zowex/pull/377)
+- Added the functionality to copy data sets and members in the **DATA SETS** tree. [#377](https://github.com/zowe/zowex/pull/377)
 - Updated the `promptForProfile` function to deprioritize project-level configurations and disable profile creation during zowex server uninstall and restart operations. [#4224](https://github.com/zowe/zowe-explorer-vscode/pull/4224)
 - **Breaking:** Refactored the code to be directly integrated into Zowe Explorer. [#4210](https://github.com/zowe/zowe-explorer-vscode/pull/4210)
-- **Breaking:** Changed the settings to align with Zowe Explorer. [#4210](https://github.com/zowe/zowe-explorer-vscode/pull/4210)
+- **Breaking:** Changed the following settings to align with Zowe Explorer. [#4210](https://github.com/zowe/zowe-explorer-vscode/pull/4210)
   - `zowex-vsce.requestTimeout` -> `zowe.settings.requestTimeout`
-  - All others, replace the setting prefix `zowex-vsce` with `zowe.zowex`
+  - All other settings, replace the setting prefix `zowex-vsce` with `zowe.zowex`
 - Fixed error handling of methods in `SshMvsApi` class so that errors are thrown and propagated to extenders. [#917](https://github.com/zowe/zowex/issues/917)
 - Fixed error where the encoding was not being passed when attempting to open spool files with an encoding. [#983](https://github.com/zowe/zowex/issues/983)
 
@@ -25,12 +25,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## `0.4.0`
 
 - Added error correlation for expired z/OS password (`FOTS1668`/`FOTS1669`), surfacing actionable tips and documentation links in Zowe Explorer when SSH commands fail due to an expired password. [#867](https://github.com/zowe/zowex/pull/867)
-- Updated **Show Attributes** to display member ISPF statistics [#630](https://github.com/zowe/zowex/issues/630)
-- Improved Error Message handling and actions when encountering unrecoverable errors in `zowex`. [#548](https://github.com/zowe/zowex/issues/548)
+- Updated **Show Attributes** to display member ISPF statistics. [#630](https://github.com/zowe/zowex/issues/630)
+- Improved error message handling and actions when encountering unrecoverable errors in `zowex`. [#548](https://github.com/zowe/zowex/issues/548)
 - Added the functionality for the **Rename** option in the USS tree. [#820](https://github.com/zowe/zowex/pull/820)
 - Added the functionality to move files in the USS tree. [#820](https://github.com/zowe/zowex/pull/820)
 - Added the functionality to copy USS files and directories. [#379](https://github.com/zowe/zowex/pull/379).
-- Added experimental native client for improved performance which can be enabled via a VS Code setting. [#833](https://github.com/zowe/zowex/pull/833)
+- Added experimental native client for improved performance which can be enabled via the VS Code setting `zowex-vsce.experimentalNativeSsh`. [#833](https://github.com/zowe/zowex/pull/833)
 
 ## `0.3.0`
 
