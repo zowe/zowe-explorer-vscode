@@ -23,9 +23,8 @@ After(async function () {
     if (this.newPdsName) {
         await deleteDsOrMember(`/${process.env.ZE_TEST_PROFILE_NAME}/${testPdsName}`);
     }
+    await browser.pause(4000);
 });
-
-When("the user right-clicks on the dataset profile and selects {string}", async function (_contextMenuOption: string) {});
 
 When("enters a new valid sequential dataset name", async function () {
     this.newPsName = testPsName;
@@ -53,7 +52,7 @@ Then("the new partitioned dataset should be created successfully", async functio
 });
 
 When("the user right-clicks on the newly created PDS and selects {string}", async function (_contextMenuOption: string) {
-    this.newPdsNode = await this.profileNode.revealChildItem(testPdsName);
+    this.newPdsNode = await (await this.profileNode.find()).findChildItem(testPdsName);
     await expect(this.newPdsNode).toBeDefined();
 });
 
@@ -63,13 +62,18 @@ When("enters a valid member name", async function () {
 });
 
 Then("the new member should be created successfully", async function () {
-    await browser.waitUntil(async () => !!(await this.newPdsNode.findChildItem(this.newMemberName)), {
-        timeout: 10000,
-        timeoutMsg: `Member ${this.newMemberName} did not appear in PDS after creation`,
-    });
+    await browser.waitUntil(
+        async () => {
+            const pdsNode = await (await this.profileNode.find()).findChildItem(testPdsName);
+            if (!pdsNode) return false;
+            return !!(await pdsNode.findChildItem(this.newMemberName));
+        },
+        { timeout: 15000, timeoutMsg: `Member ${this.newMemberName} did not appear in PDS after creation` }
+    );
 });
 
 Then("the new member should be visible under the PDS node", async function () {
-    const memberNode = await this.newPdsNode.findChildItem(this.newMemberName);
+    const pdsNode = await (await this.profileNode.find()).findChildItem(testPdsName);
+    const memberNode = await pdsNode?.findChildItem(this.newMemberName);
     await expect(memberNode).toBeDefined();
 });

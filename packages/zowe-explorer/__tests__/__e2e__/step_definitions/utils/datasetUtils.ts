@@ -24,6 +24,7 @@ export async function allocatePartitionedDs(world: any, dsName: string): Promise
 }
 
 async function allocateDs(world: any, dsName: string, dsType: string): Promise<void> {
+    await browser.pause(4000);
     const profileNode = await world.profileNode.find();
     await profileNode.elem.moveTo();
     await clickContextMenuItem(profileNode, "Create New Data Set");
