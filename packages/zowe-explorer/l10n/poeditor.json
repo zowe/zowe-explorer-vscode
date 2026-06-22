@@ -1805,6 +1805,7 @@
   "Replaced an import of ILocalStorageAccess from \"@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess\" to \"@zowe/zowe-explorer-api\". <a>#3606</a>": "",
   "Replaced keytar dependency with keyring module from <a>@zowe/secrets-for-zowe-sdk</a>. <a>#2358</a> <a>#2348</a>": "",
   "Replaced lodash dependency with es-toolkit to reduce webview bundle size and add technical currency. <a>#3060</a>": "",
+  "Replaced repetitive if (err instanceof Error) patterns with handleError and errorMessage utility functions from @zowe/zowe-explorer-api. <a>#4207</a>": "",
   "Replaced ts-loader dependency with esbuild-loader to improve build speed for developers. <a>#2909</a>": "",
   "Replaced ts-loader with esbuild-loader to improve build speed for developers. <a>#2909</a>": "",
   "Required API functions for pasting (fileList and copy/uploadFromBuffer) were not found.": "",
