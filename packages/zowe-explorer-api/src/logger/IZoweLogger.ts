@@ -28,7 +28,10 @@ export class IZoweLogger {
     /**
      * Creates an instance of the Imperative logger
      */
-    public constructor(private extensionName: string, loggingPath: string) {
+    public constructor(
+        private extensionName: string,
+        loggingPath: string
+    ) {
         for (const appenderName of Object.keys(loggerConfig.log4jsConfig.appenders)) {
             this.LOGGER_CONFIG.log4jsConfig.appenders[appenderName].filename = path.join(
                 loggingPath,

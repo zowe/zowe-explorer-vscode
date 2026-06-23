@@ -38,7 +38,7 @@ export default defineConfig({
         mockReset: false,
         server: {
             deps: {
-                inline: [/@zowe\/zowex-for-zowe-explorer/],
+                inline: [/zowex-for-zowe-explorer/],
             },
         },
         coverage: {
@@ -75,7 +75,7 @@ export default defineConfig({
         alias: {
             vscode: fileURLToPath(new URL("./__tests__/__mocks__/vscode.ts", import.meta.url)),
             "@zowe/zowe-explorer-api": fileURLToPath(new URL("../zowe-explorer-api/src/index.ts", import.meta.url)),
-            "@zowe/zowex-for-zowe-explorer": fileURLToPath(new URL("../zowex-for-zowe-explorer/src/index.ts", import.meta.url)),
+            "zowex-for-zowe-explorer": fileURLToPath(new URL("../zowex-for-zowe-explorer/src/index.ts", import.meta.url)),
         },
     },
     esbuild: {
