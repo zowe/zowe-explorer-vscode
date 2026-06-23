@@ -7835,13 +7835,13 @@ describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
     });
 
     it("sets filter and reveals node if dataset is not found in session or favorites", async () => {
-        mockSessionNode.getChildren.mockResolvedValue([]);
+        const pdsNode = { label: "MY.DATA.SET" };
+        mockSessionNode.getChildren.mockResolvedValueOnce([]).mockResolvedValueOnce([pdsNode]);
         mockFavNode.children = [];
-        mockSessionNode.children = [{ label: "MY.DATA.SET" }];
         vi.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
         const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
         expect(testTree.filterTreeByPattern).toHaveBeenCalledWith(mockSessionNode, sessProfile, "MY.DATA.SET");
-        expect(mockTreeView.reveal).toHaveBeenCalledWith(mockSessionNode.children[0], { select: true, focus: true, expand: true });
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(pdsNode, { select: true, focus: true, expand: true });
         expect(result).toBe(true);
     });
 
@@ -7882,9 +7882,9 @@ describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
     });
 
     it("returns true even if reveal/expand fails after successful filtering", async () => {
-        mockSessionNode.getChildren.mockResolvedValue([]);
+        const pdsNode = { label: "MY.DATA.SET" };
+        mockSessionNode.getChildren.mockResolvedValueOnce([]).mockResolvedValueOnce([pdsNode]);
         mockFavNode.children = [];
-        mockSessionNode.children = [{ label: "MY.DATA.SET" }];
         vi.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
         mockTreeView.reveal.mockRejectedValue(new Error("Expansion failed for large PDS"));
         const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
@@ -7938,20 +7938,19 @@ describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
     });
 
     it("sets filter and reveals node if dataset is not found in session or favorites", async () => {
-        mockSessionNode.getChildren.mockResolvedValue([]);
+        const pdsNode = { label: "MY.DATA.SET" };
+        mockSessionNode.getChildren.mockResolvedValueOnce([]).mockResolvedValueOnce([pdsNode]);
         mockFavNode.children = [];
-        mockSessionNode.children = [{ label: "MY.DATA.SET" }];
         vi.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
         const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
         expect(testTree.filterTreeByPattern).toHaveBeenCalledWith(mockSessionNode, sessProfile, "MY.DATA.SET");
-        expect(mockTreeView.reveal).toHaveBeenCalledWith(mockSessionNode.children[0], { select: true, focus: true, expand: true });
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(pdsNode, { select: true, focus: true, expand: true });
         expect(result).toBe(true);
     });
 
     it("returns false if dataset is not found anywhere", async () => {
-        mockSessionNode.getChildren.mockResolvedValue([]);
+        mockSessionNode.getChildren.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
         mockFavNode.children = [];
-        mockSessionNode.children = [];
         vi.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
         const result = await testTree.focusOnDsInTree("NOT.FOUND", sessProfile);
         expect(result).toBe(false);

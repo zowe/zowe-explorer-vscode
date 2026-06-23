@@ -2293,7 +2293,10 @@ Would you like to do this now?`,
                 );
                 return false;
             }
-            const pdsNode = sessionNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+
+            // Wait for children to be loaded after filtering
+            const children = await sessionNode.getChildren();
+            const pdsNode = children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
             if (pdsNode) {
                 try {
                     await this.getTreeView().reveal(pdsNode, { select: true, focus: true, expand: true });
@@ -2310,10 +2313,11 @@ Would you like to do this now?`,
                 }
                 return true;
             }
-            // Filtering succeeded but node not found in children - this shouldn't happen
-            ZoweLogger.warn(
+            // Filtering succeeded but node not found in children after loading
+            // This can happen if the dataset doesn't exist or doesn't match the filter
+            ZoweLogger.debug(
                 vscode.l10n.t({
-                    message: "PDS {0} was filtered but not found in session children",
+                    message: "PDS {0} was not found after filtering. The dataset may not exist or may not match the filter criteria.",
                     args: [dsName],
                     comment: ["PDS name"],
                 })
