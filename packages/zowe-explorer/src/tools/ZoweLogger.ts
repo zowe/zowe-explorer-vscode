@@ -14,7 +14,7 @@
 import * as vscode from "vscode";
 import * as loggerConfig from "../../log4jsconfig.json";
 import * as path from "path";
-import { Gui, imperative, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { Gui, handleError, imperative, MessageSeverity, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import type { Config, LayoutFunction, LayoutsParam, LoggingEvent } from "log4js";
 
 export class ZoweLogger {
@@ -32,10 +32,10 @@ export class ZoweLogger {
             return logsPath;
         } catch (err) {
             // Don't log error if logger failed to initialize
-            if (err instanceof Error) {
+            await handleError(err, async (error) => {
                 const errorMessage = vscode.l10n.t("Error encountered while activating and initializing logger");
-                await Gui.errorMessage(`${errorMessage}: ${err.message}`);
-            }
+                await Gui.errorMessage(`${errorMessage}: ${error.message}`);
+            });
         }
     }
 
@@ -49,7 +49,7 @@ export class ZoweLogger {
         for (const appenderName of Object.keys(loggerConfigCopy.log4jsConfig.appenders)) {
             loggerConfigCopy.log4jsConfig.appenders[appenderName].filename = path.join(
                 logsPath,
-                loggerConfigCopy.log4jsConfig.appenders[appenderName].filename
+                loggerConfigCopy.log4jsConfig.appenders[appenderName].filename,
             );
             loggerConfigCopy.log4jsConfig.categories[appenderName].level = zeLogLevel;
         }

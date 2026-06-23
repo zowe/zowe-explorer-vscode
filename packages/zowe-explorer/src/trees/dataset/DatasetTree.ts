@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import dayjs from "dayjs";
 import {
     Gui,
+    handleError,
     Validation,
     imperative,
     IZoweDatasetTreeNode,
@@ -210,9 +211,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 );
             } catch (err) {
                 // If the write fails, we cannot move to the next file
-                if (err instanceof Error) {
-                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
-                }
+                handleError(err, (error) => {
+                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, error.message));
+                });
                 return;
             }
 
@@ -544,9 +545,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 profile,
             });
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.warn(`Skipping creation of favorited profile. ${err.toString()}`);
-            }
+            handleError(err, (error) => {
+                ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
+            });
             return null;
         }
 
@@ -2163,16 +2164,16 @@ Would you like to do this now?`,
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {
         ZoweLogger.trace("DatasetTree.checkFilterPattern called.");
-        let existing: boolean;
+        if (!itemName.includes("*")) {
+            return dsName ? dsName.localeCompare(itemName.toUpperCase()) === 0 : false;
+        }
+
+        if (!dsName) {
+            return false;
+        }
+
+        let existing = false;
         if (!/(\*?)(\w+)(\*)(\w+)(\*?)/.test(itemName)) {
-            if (/^[^*](\w+)[^*]$/.test(itemName)) {
-                if (dsName) {
-                    const compare = dsName.localeCompare(itemName.toUpperCase());
-                    if (compare === 0) {
-                        existing = true;
-                    }
-                }
-            }
             if (/^(\*)$/.test(itemName)) {
                 existing = true;
             }
