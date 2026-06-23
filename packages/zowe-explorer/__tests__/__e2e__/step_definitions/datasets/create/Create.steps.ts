@@ -9,7 +9,7 @@
  *
  */
 
-import { After, When, Then } from "@cucumber/cucumber";
+import { After, Given, When, Then } from "@cucumber/cucumber";
 import { filterBase, allocateSequentialDs, allocatePartitionedDs, createMemberInPds, deleteDsOrMember } from "../../utils/datasetUtils";
 
 const testPsName = `${filterBase}.ANEWPS`;
@@ -26,7 +26,7 @@ After(async function () {
     await browser.pause(4000);
 });
 
-When("enters a new valid sequential dataset name", async function () {
+Given("a user enters a new valid sequential dataset name", async function () {
     this.newPsName = testPsName;
     await allocateSequentialDs(this, testPsName);
 });
@@ -41,7 +41,7 @@ Then("the new dataset should appear in the Data Sets list", async function () {
     await expect(this.newPsNode).toBeDefined();
 });
 
-When("enters a new valid partitioned dataset name", async function () {
+Given("a user enters a new valid partitioned dataset name", async function () {
     this.newPdsName = testPdsName;
     await allocatePartitionedDs(this, testPdsName);
 });

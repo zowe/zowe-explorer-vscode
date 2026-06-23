@@ -68,7 +68,7 @@ Given("a test PDS member has been created for renaming", async function () {
         { timeout: 15000, timeoutMsg: `${process.env.ZE_TEST_PDS} not found in filtered tree` }
     );
     this.renameTestPds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
-    await this.renameTestPds.expand();
+    await this.renameTestPds.waitUntilExpanded();
 
     await browser.executeWorkbench(async (vscode, pdsPath: string) => {
         try {

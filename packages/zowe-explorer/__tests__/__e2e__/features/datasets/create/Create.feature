@@ -7,12 +7,12 @@ Feature: Creating Data Sets and Members
     Then the profile node will list results of the filter search
 
   Scenario: User wants to create a new Sequential Dataset (PS)
-    And enters a new valid sequential dataset name
+    Given a user enters a new valid sequential dataset name
     Then the new sequential dataset should be created successfully
     And the new dataset should appear in the Data Sets list
 
   Scenario: User wants to create a new Partitioned Dataset (PDS) and add a member
-    And enters a new valid partitioned dataset name
+    Given a user enters a new valid partitioned dataset name
     Then the new partitioned dataset should be created successfully
     When the user right-clicks on the newly created PDS and selects "Create New Member"
     And enters a valid member name
