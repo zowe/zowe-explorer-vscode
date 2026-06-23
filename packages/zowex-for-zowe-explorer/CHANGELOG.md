@@ -6,6 +6,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Recent Changes
 
+- Fixed an issue with the `updateAttributes` function in the `SshUssApi` class that caused the API's `success` property to always return `false`. [#4348](https://github.com/zowe/zowe-explorer-vscode/pull/4348)
 - Fixed an issue where the `SshJesApi.getJobsByParameters` function did not provide the status parameter to the request. Now, jobs are correctly filtered by status. [#4345](https://github.com/zowe/zowe-explorer-vscode/issues/4345)
 - Implemented the `issueUnixCommand` function, allowing users to issue z/OS UNIX commands with an SSH profile. [#4337](https://github.com/zowe/zowe-explorer-vscode/pull/4337)
 - Added the functionality to copy data sets and members in the **DATA SETS** tree. [#377](https://github.com/zowe/zowex/pull/377)
