@@ -290,7 +290,6 @@ describe("VscePromptApi", () => {
             api = makeApi();
             const coreTypes = [{ type: "zosmf" }];
             const configTypes = [{ type: "ssh" }];
-            const base = { type: "base" };
             vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
                 profilesCache: {
                     getCoreProfileTypes: vi.fn().mockReturnValue(coreTypes),
