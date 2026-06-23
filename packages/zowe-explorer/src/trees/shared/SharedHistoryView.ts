@@ -117,7 +117,7 @@ export class SharedHistoryView extends WebView {
             sessions: treeProvider.getSessions(),
             fileHistory: treeProvider.getFileHistory(),
             favorites: treeProvider.getFavorites(),
-            searchedKeywordHistory: type === "ds" ? (treeProvider as DatasetTree).getSearchedKeywordHistory?.() ?? [] : [],
+            searchedKeywordHistory: type === "ds" ? ((treeProvider as DatasetTree).getSearchedKeywordHistory?.() ?? []) : [],
             encodingHistory: type === "uss" || type === "ds" ? this.fetchEncodingHistory() : [],
         };
     }

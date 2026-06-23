@@ -5,11 +5,13 @@ on:
     paths:
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
+      - packages/zowex-for-zowe-explorer/**
       - .github/workflows/zowe-explorer-ci.yml
   pull_request:
     paths:
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
+      - packages/zowex-for-zowe-explorer/**
       - .github/workflows/zowe-explorer-ci.yml
 
 jobs:

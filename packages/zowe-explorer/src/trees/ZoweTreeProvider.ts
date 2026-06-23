@@ -34,7 +34,10 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     protected log: imperative.Logger = imperative.Logger.getAppLogger();
     protected validProfile: number = -1;
 
-    public constructor(protected persistenceSchema: PersistenceSchemaEnum, public mFavoriteSession: IZoweTreeNode) {
+    public constructor(
+        protected persistenceSchema: PersistenceSchemaEnum,
+        public mFavoriteSession: IZoweTreeNode
+    ) {
         this.mPersistence = new ZowePersistentFilters(this.persistenceSchema);
     }
 

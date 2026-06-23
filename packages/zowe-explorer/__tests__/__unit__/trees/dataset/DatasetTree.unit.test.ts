@@ -3755,6 +3755,23 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             expect(node.inFilterPrompt).toBe(false);
             expect(Gui.showMessage).toHaveBeenCalledWith("You must enter a pattern.");
         });
+
+        it("should return early and not open a prompt if inFilterPrompt is already true", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const node = blockMocks.datasetSessionNode;
+
+            node.inFilterPrompt = true;
+
+            const createQuickPickSpy = vi.spyOn(Gui, "createQuickPick").mockClear();
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockClear();
+
+            await blockMocks.testTree.datasetFilterPrompt(node);
+
+            expect(createQuickPickSpy).not.toHaveBeenCalled();
+            expect(showInputBoxSpy).not.toHaveBeenCalled();
+            expect(node.inFilterPrompt).toBe(true); // Should remain true
+        });
     });
 });
 describe("Dataset Tree Unit Tests - Function editSession", () => {
