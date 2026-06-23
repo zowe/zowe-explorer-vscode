@@ -308,6 +308,23 @@ describe("SshJesApi", () => {
             expect(response).toEqual({ jobid: "fakeid", jobname: "fakejob" });
         });
 
+        it("should pass the profile's jobEncoding when set", async () => {
+            const jesApi = new SshJesApi({ profile: { jobEncoding: "IBM-1047" } } as any);
+            const clientSpy = vi.spyOn(SshJesApi.prototype, "client", "get");
+            const submitJclSpy = vi.fn();
+            const jobData = { jobId: "fakeid", jobName: "fakejob" };
+            const jcl = "fakeJcl";
+
+            clientSpy.mockResolvedValue({ jobs: { submitJcl: submitJclSpy } });
+            submitJclSpy.mockResolvedValue(jobData);
+
+            const response = await jesApi.submitJcl(jcl);
+
+            expect(submitJclSpy).toHaveBeenCalledTimes(1);
+            expect(submitJclSpy).toHaveBeenCalledWith({ jcl: B64String.encode("fakeJcl"), encoding: "IBM-1047" });
+            expect(response).toEqual({ jobid: "fakeid", jobname: "fakejob" });
+        });
+
         it("should propagate a rejection from submitJcl", async () => {
             const jesApi = new SshJesApi();
             vi.spyOn(SshJesApi.prototype, "client", "get").mockResolvedValue({
