@@ -52,10 +52,6 @@ export namespace Gui {
     export function warningMessage() {
         return undefined;
     }
-
-    export function setStatusBarMessage(_text: string, _timeoutOrThenable?: number | Promise<any>): { dispose(): void } {
-        return { dispose: () => {} };
-    }
 }
 
 export class ZoweVsCodeExtension {
