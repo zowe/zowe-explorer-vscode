@@ -308,7 +308,7 @@ describe("SshClientCache", () => {
             expect(second).toBe(first);
             expect(ZSshClient.create).not.toHaveBeenCalled();
         });
-
+        
         it("should serialize overlapping connect() calls so exactly one client is built", async () => {
             let releaseCreate!: (client: unknown) => void;
             const createGate = new Promise((resolve) => {
@@ -355,6 +355,17 @@ describe("SshClientCache", () => {
             cache.end(clientId, { restart: true, retryRequests: true });
 
             expect(mockClient.dispose).toHaveBeenCalledWith(true);
+            expect((cache as any).mClientSessionMap.has(clientId)).toBe(false);
+        });
+
+        it("should resolve the client id from a profile object when given a profile", () => {
+            const mockClient = { dispose: vi.fn() };
+            // The session is keyed by `${name}_${type}`, derived from the profile via getClientId().
+            (cache as any).mClientSessionMap.set(clientId, { client: mockClient });
+
+            cache.end(mockProfile);
+
+            expect(mockClient.dispose).toHaveBeenCalledWith(false);
             expect((cache as any).mClientSessionMap.has(clientId)).toBe(false);
         });
     });

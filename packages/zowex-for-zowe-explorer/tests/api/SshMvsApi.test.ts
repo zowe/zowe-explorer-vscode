@@ -191,6 +191,24 @@ describe("SshMvsApi", () => {
             expect(readDatasetSpy).toHaveBeenCalledWith({ dsname: "USER.DATA", encoding: "IBM-1047", stream: expect.any(Function) });
         });
 
+        it("should provide the file write stream via the lazy stream factory", async () => {
+            const mvsApi = new SshMvsApi();
+            const fakeWriteStream = { mock: "writeStream" };
+            vi.mocked(fs.createWriteStream).mockReturnValue(fakeWriteStream as any);
+            vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => {});
+            const readDatasetSpy = vi.fn().mockImplementation(async (opts: any) => {
+                expect(opts.stream()).toBe(fakeWriteStream);
+                return { data: "", etag: "etag1" };
+            });
+            vi.spyOn(mvsApi as any, "buildZosFilesResponse");
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { readDataset: readDatasetSpy } });
+
+            await mvsApi.getContents("USER.DATA", { file: "/tmp/fake/file.txt" } as any);
+
+            expect(fs.createWriteStream).toHaveBeenCalledWith("/tmp/fake/file.txt");
+            expect(readDatasetSpy).toHaveBeenCalled();
+        });
+
         it("should throw when no stream or file is provided", async () => {
             const mvsApi = new SshMvsApi();
             await expect(mvsApi.getContents("USER.DATA", {} as any)).rejects.toThrow("Failed to get contents: No stream or file path provided");
@@ -219,6 +237,17 @@ describe("SshMvsApi", () => {
             await mvsApi.uploadFromBuffer(Buffer.from("hello"), "USER.DATA", { binary: true } as any);
 
             expect(writeDatasetSpy).toHaveBeenCalledWith({ dsname: "USER.DATA", encoding: "binary", data: expect.any(String), etag: undefined });
+        });
+
+        it("should forward a custom encoding (and etag) when binary is falsy", async () => {
+            const mvsApi = new SshMvsApi();
+            const writeDatasetSpy = vi.fn().mockResolvedValue({ etag: "etag3" });
+            vi.spyOn(mvsApi as any, "buildZosFilesResponse");
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { writeDataset: writeDatasetSpy } });
+
+            await mvsApi.uploadFromBuffer(Buffer.from("hello"), "USER.DATA", { encoding: "IBM-1047", etag: "etag3" } as any);
+
+            expect(writeDatasetSpy).toHaveBeenCalledWith({ dsname: "USER.DATA", encoding: "IBM-1047", data: expect.any(String), etag: "etag3" });
         });
 
         it("should throw a 412 error on etag mismatch", async () => {
@@ -475,6 +504,38 @@ describe("SshMvsApi", () => {
             }
         );
 
+        it("should not add dirblk when the source dataset has no dsntype", async () => {
+            const mvsApi = new SshMvsApi();
+            const createDatasetSpy = vi.fn().mockResolvedValue({ success: true });
+            vi.spyOn(mvsApi as any, "buildZosFilesResponse");
+            vi.spyOn(Gui, "setStatusBarMessage");
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({
+                ds: {
+                    // dsntype is undefined, so the `dsntype ?? ""` nullish fallback is exercised.
+                    listDatasets: vi.fn().mockResolvedValue({ items: [{ name: "USER.SRC", recfm: "FB", dsorg: "PS" }] }),
+                    createDataset: createDatasetSpy,
+                },
+            });
+
+            await mvsApi.allocateLikeDataSet("USER.NEW", "USER.SRC");
+
+            expect(createDatasetSpy.mock.calls[0][0].attributes).not.toHaveProperty("dirblk");
+        });
+
+        it("should stringify a non-Error value thrown during allocation", async () => {
+            const mvsApi = new SshMvsApi();
+            const buildZosFilesResponseSpy = vi.spyOn(mvsApi as any, "buildZosFilesResponse");
+            const errorSpy = vi.spyOn(vscode.window, "showErrorMessage").mockReturnValue(undefined);
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({
+                ds: { listDatasets: vi.fn().mockResolvedValue({ items: [sourceDs] }), createDataset: vi.fn().mockRejectedValue("string failure") },
+            });
+
+            const response = await mvsApi.allocateLikeDataSet("USER.NEW", "USER.SRC");
+            expect(errorSpy.mock.calls[0][0]).toEqual("Failed to allocate dataset: string failure");
+            expect(buildZosFilesResponseSpy).toHaveBeenCalledWith({ success: false }, false, "string failure");
+            expect(response).toBeDefined();
+        });
+
         it("should return a failure response without a status bar message when createDataset returns { success: false }", async () => {
             const mvsApi = new SshMvsApi();
             const buildZosFilesResponseSpy = vi.spyOn(mvsApi as any, "buildZosFilesResponse");
@@ -535,6 +596,16 @@ describe("SshMvsApi", () => {
 
             const response = await mvsApi.copyDataSet("USER.FROM", "USER.TO");
             expect(buildSpy).toHaveBeenCalledWith({ success: false }, false, "copy failed");
+            expect(response).toBeDefined();
+        });
+
+        it("should stringify a non-Error value thrown during copy", async () => {
+            const mvsApi = new SshMvsApi();
+            const buildSpy = vi.spyOn(mvsApi as any, "buildZosFilesResponse");
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { copyDatasetOrMember: vi.fn().mockRejectedValue("string failure") } });
+
+            const response = await mvsApi.copyDataSet("USER.FROM", "USER.TO");
+            expect(buildSpy).toHaveBeenCalledWith({ success: false }, false, "string failure");
             expect(response).toBeDefined();
         });
     });

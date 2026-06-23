@@ -129,6 +129,24 @@ describe("SshUssApi", () => {
             expect(error).toBeDefined();
             expect(error.message).toEqual("Failed to get contents: No stream or file path provided");
         });
+
+        it("should provide the file write stream via the lazy stream factory", async () => {
+            const ussApi = new SshUssApi();
+            const fakeWriteStream = { mock: "writeStream" };
+            vi.mocked(fs.createWriteStream).mockReturnValue(fakeWriteStream as any);
+            vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => {});
+            const readFileSpy = vi.fn().mockImplementation(async (opts: any) => {
+                expect(opts.stream()).toBe(fakeWriteStream);
+                return { data: "", etag: "etag1" };
+            });
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { readFile: readFileSpy } });
+            vi.spyOn(ussApi as any, "buildZosFilesResponse");
+
+            await ussApi.getContents("/u/file", { file: "/tmp/fake/file.txt" } as any);
+
+            expect(fs.createWriteStream).toHaveBeenCalledWith("/tmp/fake/file.txt");
+            expect(readFileSpy).toHaveBeenCalled();
+        });
     });
 
     describe("uploadFromBuffer", () => {
@@ -259,6 +277,23 @@ describe("SshUssApi", () => {
             });
             expect(buildZosFilesResponseSpy).toHaveBeenCalledTimes(1);
             expect(buildZosFilesResponseSpy).toHaveBeenCalledWith({ etag: "ABCDEF" });
+        });
+
+        it("should create a read stream from the input path via the lazy stream factory", async () => {
+            const ussApi = new SshUssApi();
+            const fakeReadStream = { mock: "readStream" };
+            vi.mocked(fs.createReadStream).mockReturnValue(fakeReadStream as any);
+            const writeFileSpy = vi.fn().mockImplementation(async (opts: any) => {
+                expect(opts.stream()).toBe(fakeReadStream);
+                return { etag: "ABCDEF" };
+            });
+            vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { writeFile: writeFileSpy } });
+            vi.spyOn(ussApi as any, "buildZosFilesResponse");
+
+            await ussApi.putContent("fakeLocalPath", "fakePath");
+
+            expect(fs.createReadStream).toHaveBeenCalledWith("fakeLocalPath");
+            expect(writeFileSpy).toHaveBeenCalled();
         });
     });
 
