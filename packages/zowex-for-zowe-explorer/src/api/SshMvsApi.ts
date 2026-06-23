@@ -63,13 +63,26 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
     }
 
     public async allMembers(dataSetName: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
-        const response = await (
-            await this.client
-        ).ds.listDsMembers({
-            dsname: dataSetName,
-            attributes: options?.attributes,
-            pattern: options?.pattern,
-        });
+        const listDsMembers = async () => {
+            try {
+                return await (
+                    await this.client
+                ).ds.listDsMembers({
+                    dsname: dataSetName,
+                    attributes: options?.attributes,
+                    pattern: options?.pattern,
+                });
+            } catch (err) {
+                if ((err as Error)?.message?.includes("EDC5049I")) {
+                    throw new imperative.ImperativeError({
+                        msg: (err as Error).message,
+                        errorCode: String(imperative.RestConstants.HTTP_STATUS_404),
+                    });
+                }
+                throw err;
+            }
+        };
+        const response = await listDsMembers();
 
         return this.buildZosFilesResponse({
             items: response.items.map((item) => {
