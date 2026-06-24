@@ -63,7 +63,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
     }
 
     public async allMembers(dataSetName: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
-        const listDsMembers = async () => {
+        const listDsMembers = async (): Promise<zosfiles.IZosFilesResponse> => {
             try {
                 return await (
                     await this.client
