@@ -190,7 +190,7 @@ export class SshUssApi extends SshCommonApi implements MainframeInteraction.IUss
             throw new Error("File no longer exists");
         }
         const isDir = ussItem.apiResponse.items[0].mode.startsWith("d");
-        let success = false;
+        let success = true;
         if (attributes.tag) {
             const response = await (
                 await this.client
