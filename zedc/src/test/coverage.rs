@@ -15,7 +15,7 @@ use std::thread;
 use supports_hyperlinks::Stream;
 
 /// Run the coverage check command
-pub fn run_coverage_check(verbose: bool, filter: Option<String>) -> Result<()> {
+pub fn run_coverage_check(verbose: bool, filter: Option<String>, threshold: Option<f64>) -> Result<()> {
     let repo_root_pathbuf = match util::find_dir_match(&["package.json"]) {
         Ok(Some(d)) => d,
         Ok(None) => anyhow::bail!("Could not find a repo folder containing package.json (used for resolving coverage paths)."),
@@ -126,6 +126,10 @@ pub fn run_coverage_check(verbose: bool, filter: Option<String>) -> Result<()> {
         }
     }
 
+    // Get main branch baseline before touching coverage files with the current run
+    let baseline_pct =
+        get_main_baseline_coverage(&changed_lines, &repo_root_pathbuf, &filter, verbose);
+
     // Run the tests with coverage
     let display_text = match &filter {
         Some(pkg) => format!("Running unit tests with coverage for package '{}'...", pkg),
@@ -149,11 +153,37 @@ pub fn run_coverage_check(verbose: bool, filter: Option<String>) -> Result<()> {
 
     // Process coverage reports
     println!("{}", "\nProcessing coverage reports...".blue());
-    let (_covered_lines_in_patch, uncovered_lines_details) =
+    let (covered_lines_in_patch, uncovered_lines_details) =
         process_coverage_reports(&changed_lines, &repo_root_pathbuf, verbose, &filter)?;
 
+    let current_pct = if filtered_total_lines > 0 {
+        covered_lines_in_patch as f64 / filtered_total_lines as f64 * 100.0
+    } else {
+        0.0
+    };
+
     // Display results
-    display_coverage_results(filtered_total_lines, &uncovered_lines_details, verbose)
+    display_coverage_results(
+        filtered_total_lines,
+        covered_lines_in_patch,
+        &uncovered_lines_details,
+        baseline_pct,
+        current_pct,
+        verbose,
+    )?;
+
+    // Gate on threshold — exit non-zero so CI can use this as a quality gate
+    if let Some(thresh) = threshold {
+        if current_pct < thresh {
+            anyhow::bail!(
+                "Patch coverage {:.1}% is below threshold of {:.1}%",
+                current_pct,
+                thresh
+            );
+        }
+    }
+
+    Ok(())
 }
 
 /// Get the changed files and lines from git diff
@@ -1014,13 +1044,94 @@ fn process_file_statements(
     }
 }
 
+/// Stash uncommitted changes, run tests on main, restore — returns baseline patch coverage %.
+///
+/// Returns `None` when there are no uncommitted changes to stash (e.g., CI where all changes
+/// are already committed), when stashing fails, or when the main branch tests fail.
+fn get_main_baseline_coverage(
+    changed_lines: &HashMap<String, Vec<usize>>,
+    repo_root_pathbuf: &PathBuf,
+    filter: &Option<String>,
+    verbose: bool,
+) -> Option<f64> {
+    let stash_output = Command::new("git")
+        .args([
+            "stash",
+            "push",
+            "--include-untracked",
+            "-m",
+            "zedc-cov-baseline",
+        ])
+        .output()
+        .ok()?;
+
+    if !stash_output.status.success() {
+        if verbose {
+            eprintln!(
+                "Debug - git stash failed ({}); skipping baseline.",
+                String::from_utf8_lossy(&stash_output.stderr).trim()
+            );
+        }
+        return None;
+    }
+
+    let stash_msg = String::from_utf8_lossy(&stash_output.stdout);
+    if stash_msg.contains("No local changes to save") {
+        if verbose {
+            println!("Debug - No uncommitted changes to stash; baseline skipped.");
+        }
+        return None;
+    }
+
+    let display_text = match filter {
+        Some(pkg) => format!(
+            "Getting main branch baseline for package '{}'...",
+            pkg
+        ),
+        None => "Getting main branch baseline coverage...".to_string(),
+    };
+    println!("{}", display_text.blue());
+
+    let baseline_pct = (|| -> Option<f64> {
+        let (ok, _, _) = run_tests(filter.clone()).ok()?;
+        if !ok {
+            if verbose {
+                println!("Debug - Main branch tests failed; baseline unavailable.");
+            }
+            return None;
+        }
+        let (covered, uncovered) =
+            process_coverage_reports(changed_lines, repo_root_pathbuf, verbose, filter).ok()?;
+        let uncovered_count: usize = uncovered.values().map(|v| v.len()).sum();
+        let total = covered + uncovered_count;
+        if total == 0 {
+            return None;
+        }
+        Some(covered as f64 / total as f64 * 100.0)
+    })();
+
+    let pop = Command::new("git").args(["stash", "pop"]).output();
+    match pop {
+        Ok(o) if o.status.success() => {}
+        _ => eprintln!(
+            "{}",
+            "Warning: 'git stash pop' failed — run it manually to restore your changes.".yellow()
+        ),
+    }
+
+    baseline_pct
+}
+
 /// Display coverage results
 fn display_coverage_results(
-    initial_total_lines_in_patch: usize,
+    total_changed_lines: usize,
+    covered_lines_in_patch: usize,
     uncovered_lines_details: &HashMap<String, Vec<usize>>,
+    baseline_pct: Option<f64>,
+    current_pct: f64,
     verbose: bool,
 ) -> Result<()> {
-    if initial_total_lines_in_patch == 0 {
+    if total_changed_lines == 0 {
         println!(
             "{}",
             "No relevant lines found in patch to calculate coverage against.".yellow()
@@ -1035,8 +1146,35 @@ fn display_coverage_results(
         );
     }
 
-    // Display uncovered lines if any
     display_uncovered_lines(uncovered_lines_details);
+
+    let total_str = total_changed_lines.to_string();
+    println!();
+    if let Some(base_pct) = baseline_pct {
+        let delta = current_pct - base_pct;
+        let delta_str = if delta > 0.0 {
+            format!("+{:.1}%", delta).green().to_string()
+        } else if delta < 0.0 {
+            format!("{:.1}%", delta).red().to_string()
+        } else {
+            "no change".dimmed().to_string()
+        };
+        println!(
+            "You changed {} lines — previously {:.1}% covered, now {:.1}% covered ({})",
+            total_str.bold(),
+            base_pct,
+            current_pct,
+            delta_str
+        );
+    } else {
+        println!(
+            "You changed {} lines — {}/{} covered ({:.1}% patch coverage)",
+            total_str.bold(),
+            covered_lines_in_patch,
+            total_changed_lines,
+            current_pct
+        );
+    }
 
     Ok(())
 }

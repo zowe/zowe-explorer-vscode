@@ -34,6 +34,12 @@ pub enum Commands {
         verbose: bool,
         #[arg(short, long, help = "Filter tests to a specific package")]
         filter: Option<String>,
+        #[arg(
+            long,
+            value_name = "N",
+            help = "Exit non-zero if patch coverage falls below this percentage (0–100)"
+        )]
+        threshold: Option<f64>,
     },
 }
 
@@ -64,8 +70,12 @@ pub async fn handle_cmd(
                 }
             };
         }
-        Commands::Coverage { verbose, filter } => {
-            coverage::run_coverage_check(verbose, filter)?;
+        Commands::Coverage {
+            verbose,
+            filter,
+            threshold,
+        } => {
+            coverage::run_coverage_check(verbose, filter, threshold)?;
         }
     }
 
