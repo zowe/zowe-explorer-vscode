@@ -7,6 +7,7 @@ use cmd::{generate_completions, Args, RootCommands};
 mod cmd;
 mod code;
 mod pm;
+mod pr;
 mod setup;
 mod status;
 mod test;
@@ -47,6 +48,11 @@ async fn main() -> Result<()> {
         },
         RootCommands::Status { verbose } => status::handle_cmd(verbose).await?,
         RootCommands::Completions { shell } => generate_completions(shell)?,
+        RootCommands::Pr {
+            pr_number,
+            vsc_version,
+            skip_setup,
+        } => pr::handle_cmd(pr_number, vsc_version, skip_setup).await?,
     }
 
     Ok(())

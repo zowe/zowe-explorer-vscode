@@ -67,6 +67,17 @@ pub enum RootCommands {
         #[arg(value_enum)]
         shell: clap_complete::Shell,
     },
+    /// Fetch a PR, check it out, build the VSIXes, and launch the sandbox all in one step
+    Pr {
+        /// GitHub pull request number
+        pr_number: u64,
+        /// VS Code version to use for the sandbox (default: latest)
+        #[arg(long, value_name = "VERSION")]
+        vsc_version: Option<String>,
+        /// Skip dependency installation (reuse existing node_modules)
+        #[arg(long)]
+        skip_setup: bool,
+    },
 }
 
 /// Command-line arguments for the zedc tool
