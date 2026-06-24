@@ -36,8 +36,11 @@ After(async function () {
         await deleteDsOrMember(`/${process.env.ZE_TEST_PROFILE_NAME}/${copiedPsName}`).catch(() => {});
     }
     if (this.copyTestMemberName) {
-        await deleteCopiedMember(`/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${copiedMemberName}`).catch(() => {});
+        await deleteCopiedMember(
+            `/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${copiedMemberName}`
+        ).catch(() => {});
     }
+    await browser.pause(4000);
 });
 
 Given("a test sequential dataset has been created for copying", async function () {
@@ -83,15 +86,24 @@ Then("the copied sequential dataset should appear in the Data Sets list", async 
 });
 
 Given("a test PDS member has been created for copying", async function () {
-    this.copyTestPdsCopyTarget = await this.profileNode.revealChildItem(process.env.ZE_TEST_PDS);
-    await expect(this.copyTestPdsCopyTarget).toBeDefined();
-
-    await deleteCopiedMember(`/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${copiedMemberName}`);
+    await deleteCopiedMember(
+        `/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${copiedMemberName}`
+    );
     await browser.pause(1000);
 
-    this.copyTestPdsCopyTarget = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
-    await this.copyTestPdsCopyTarget.expand();
-    this.copyTestMember = await this.copyTestPdsCopyTarget.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
+    await browser.waitUntil(
+        async () => {
+            const freshPds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
+            if (!freshPds) return false;
+            await freshPds.expand();
+            const member = await freshPds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
+            if (!member) return false;
+            this.copyTestPdsCopyTarget = freshPds;
+            this.copyTestMember = member;
+            return true;
+        },
+        { timeout: 15000, timeoutMsg: `${process.env.ZE_TEST_PDS_MEMBER} not found under ${process.env.ZE_TEST_PDS}` }
+    );
     this.copyTestMemberName = process.env.ZE_TEST_PDS_MEMBER;
     await expect(this.copyTestMember).toBeDefined();
 });
@@ -126,11 +138,13 @@ When("enters a new name for the copied member", async function () {
 Then("the copied member should appear under the PDS", async function () {
     await refreshDsTree();
 
-    this.copyTestPdsCopyTarget = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
-    await this.copyTestPdsCopyTarget.expand();
-
-    await browser.waitUntil(async () => !!(await this.copyTestPdsCopyTarget.findChildItem(this.copiedMemberName)), {
-        timeout: 15000,
-        timeoutMsg: `Copied member ${this.copiedMemberName} did not appear under the PDS after copy-paste`,
-    });
+    await browser.waitUntil(
+        async () => {
+            const freshPds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
+            if (!freshPds) return false;
+            await freshPds.expand();
+            return !!(await freshPds.findChildItem(this.copyTestMemberName));
+        },
+        { timeout: 15000, timeoutMsg: `Copied member ${this.copyTestMemberName} did not appear under the PDS after copy-paste` }
+    );
 });
