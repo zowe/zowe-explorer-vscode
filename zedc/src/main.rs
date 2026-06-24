@@ -6,6 +6,7 @@ use cmd::{generate_completions, Args, RootCommands};
 
 mod cmd;
 mod code;
+mod doctor;
 mod pm;
 mod pr;
 mod setup;
@@ -46,6 +47,7 @@ async fn main() -> Result<()> {
             Ok(_output) => {}
             Err(e) => eprintln!("Error from zedc pm: {}", e),
         },
+        RootCommands::Doctor => doctor::handle_cmd().await?,
         RootCommands::Status { verbose } => status::handle_cmd(verbose).await?,
         RootCommands::Completions { shell } => generate_completions(shell)?,
         RootCommands::Pr {

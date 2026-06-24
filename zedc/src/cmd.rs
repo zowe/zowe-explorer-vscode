@@ -67,6 +67,8 @@ pub enum RootCommands {
         #[arg(value_enum)]
         shell: clap_complete::Shell,
     },
+    /// Check that installed tool versions satisfy the project's requirements
+    Doctor,
     /// Fetch a PR, check it out, build the VSIXes, and launch the sandbox all in one step
     Pr {
         /// GitHub pull request number
