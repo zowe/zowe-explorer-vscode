@@ -184,6 +184,16 @@ describe("SshErrorHandler", () => {
             expect(errorHandler.isFatalError("Prefix FOTS4241 Authentication failed suffix")).toBe(true);
             expect(errorHandler.isFatalError("Some message with FSUM6260 in the middle")).toBe(true);
         });
+
+        it("should classify any literal SshErrors key substring as fatal (e.g. FOTS1668, EDC5133I)", () => {
+            expect(errorHandler.isFatalError("FOTS1668 Your password has expired")).toBe(true);
+            expect(errorHandler.isFatalError("EDC5133I no space left on device")).toBe(true);
+            expect(errorHandler.isFatalError(new Error("EDC5133I no space left on device"))).toBe(true);
+        });
+
+        it("should not treat the REQUEST_TIMEOUT key as fatal when the message is an actual timeout", () => {
+            expect(errorHandler.isFatalError("Request timed out after 5000 ms")).toBe(false);
+        });
     });
 
     describe("extractErrorCode", () => {
@@ -306,6 +316,17 @@ describe("SshErrorHandler", () => {
             });
 
             expect(errorHandler.isTimeoutError(imperativeError)).toBe(true);
+        });
+
+        it("should recognize the fully-formed 'after N ms' timeout message", () => {
+            expect(errorHandler.isTimeoutError("Request timed out after 12345 ms")).toBe(true);
+            expect(errorHandler.isTimeoutError(new Error("Request timed out after 1 ms"))).toBe(true);
+        });
+
+        it("should exercise the RegExp matcher branch and return false for a non-timeout message", () => {
+            const imperativeError = new ImperativeError({ msg: "Some failure", errorCode: "EOTHER" });
+            expect(errorHandler.isTimeoutError(imperativeError)).toBe(false);
+            expect(errorHandler.isTimeoutError("Connection reset by peer")).toBe(false);
         });
     });
 });
