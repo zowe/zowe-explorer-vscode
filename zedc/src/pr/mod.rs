@@ -27,9 +27,21 @@ async fn fetch_pr_info(pr_number: u64) -> Result<String> {
     Ok(branch)
 }
 
+/// Returns the name of the currently checked-out branch, or `None` for a detached HEAD.
+fn current_branch(ze_dir: &Path) -> Result<Option<String>> {
+    let out = Command::new("git")
+        .args(["rev-parse", "--abbrev-ref", "HEAD"])
+        .current_dir(ze_dir)
+        .output()
+        .context("Failed to run git rev-parse")?;
+    let name = String::from_utf8_lossy(&out.stdout).trim().to_owned();
+    Ok(if name == "HEAD" { None } else { Some(name) })
+}
+
 /// Fetches and checks out the PR branch by its PR number.
 ///
 /// Uses `refs/pull/<N>/head` so fork PRs work without adding the fork as a remote.
+/// If the branch is already checked out, pulls the latest commits instead.
 fn checkout_pr_branch(ze_dir: &Path, pr_number: u64, branch: &str) -> Result<()> {
     println!("{}", "Checking out branch...".underline());
 
@@ -52,26 +64,53 @@ fn checkout_pr_branch(ze_dir: &Path, pr_number: u64, branch: &str) -> Result<()>
         );
     }
 
-    // git fetch origin refs/pull/<N>/head:<branch>  (-f allows updating an existing local ref)
-    let fetch_refspec = format!("refs/pull/{}/head:{}", pr_number, branch);
-    let fetched = Command::new("git")
-        .args(["fetch", "-f", "origin", &fetch_refspec])
-        .current_dir(ze_dir)
-        .status()
-        .context("Failed to run git fetch")?;
+    let already_on_branch = current_branch(ze_dir)?.as_deref() == Some(branch);
 
-    if !fetched.success() {
-        bail!("git fetch failed for PR #{}", pr_number);
-    }
+    if already_on_branch {
+        // git refuses to update a branch ref that is currently checked out via the
+        // `refs/pull/<N>/head:<branch>` refspec.  Fetch into FETCH_HEAD and fast-forward instead.
+        let fetch_refspec = format!("refs/pull/{}/head", pr_number);
+        let fetched = Command::new("git")
+            .args(["fetch", "origin", &fetch_refspec])
+            .current_dir(ze_dir)
+            .status()
+            .context("Failed to run git fetch")?;
+        if !fetched.success() {
+            bail!("git fetch failed for PR #{}", pr_number);
+        }
+        let merged = Command::new("git")
+            .args(["merge", "--ff-only", "FETCH_HEAD"])
+            .current_dir(ze_dir)
+            .status()
+            .context("Failed to run git merge")?;
+        if !merged.success() {
+            bail!(
+                "Could not fast-forward '{}' to the PR head — your local branch has diverged.\n\
+                 Please resolve this manually before running `zedc pr`.",
+                branch
+            );
+        }
+    } else {
+        // Fetch the PR head directly into a local branch name.
+        // -f allows overwriting an existing local ref that isn't checked out.
+        let fetch_refspec = format!("refs/pull/{}/head:{}", pr_number, branch);
+        let fetched = Command::new("git")
+            .args(["fetch", "-f", "origin", &fetch_refspec])
+            .current_dir(ze_dir)
+            .status()
+            .context("Failed to run git fetch")?;
+        if !fetched.success() {
+            bail!("git fetch failed for PR #{}", pr_number);
+        }
 
-    let checked_out = Command::new("git")
-        .args(["checkout", branch])
-        .current_dir(ze_dir)
-        .status()
-        .context("Failed to run git checkout")?;
-
-    if !checked_out.success() {
-        bail!("git checkout '{}' failed", branch);
+        let checked_out = Command::new("git")
+            .args(["checkout", branch])
+            .current_dir(ze_dir)
+            .status()
+            .context("Failed to run git checkout")?;
+        if !checked_out.success() {
+            bail!("git checkout '{}' failed", branch);
+        }
     }
 
     println!("✔️  On branch '{}'", branch.bold());
