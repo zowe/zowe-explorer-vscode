@@ -41,13 +41,20 @@ export class Utilities {
         if (!profile?.profile) {
             return;
         }
-        const defaultServerPath = ConfigUtils.getServerPath(profile.profile);
-        const deployDirectory = await vscePromptApi.promptForDeployDirectory(profile.profile.host, defaultServerPath);
+        let configuredServerPath = ConfigUtils.getServerPath(profile.profile);
+        const sshSession = ZSshUtils.buildSession(profile.profile);
+        let serverIsOnPath = false;
+        if (configuredServerPath == null) {
+            serverIsOnPath = await SshClientCache.inst.isServerDetectedOnPath(sshSession, profile.profile);
+            if (serverIsOnPath) {
+                configuredServerPath = ConfigUtils.getServerPath(profile.profile);
+            }
+        }
+        const deployDirectory = serverIsOnPath ? configuredServerPath : await vscePromptApi.promptForDeployDirectory(profile.profile.host, defaultServerPath);
         if (!deployDirectory) {
             return;
         }
 
-        const sshSession = ZSshUtils.buildSession(profile.profile);
         const deployStatus = await deployWithProgress(sshSession, deployDirectory);
         if (!deployStatus) {
             return;

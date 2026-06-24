@@ -52,7 +52,6 @@ export class SshClientCache extends vscode.Disposable {
     private static readonly mNoRestart: ZSshRestartOptions = { restart: false, retryRequests: false };
     private static mInstance: SshClientCache;
     private readonly mClientSessionMap: Map<string, ZSshClientSessions> = new Map();
-    private readonly mClientOnPathServerMap: Map<string, string> = new Map();
     private mMutexMap: Map<string, AsyncMutex> = new Map();
     private static readonly ERROR_SNIPPETS = {
         FATAL: ["CEE5207E", "CEE3204S", "at compile unit offset", "Fatal error encountered in zowex"],
@@ -86,14 +85,6 @@ export class SshClientCache extends vscode.Disposable {
 
     public get profilesCache(): ProfilesCache {
         return this.mProfilesCache;
-    }
-
-    /***
-     * Cache the parent directory of an instance of the backend server detected on the user's $PATH
-     */
-    public setOnPathServer(profile: imperative.IProfileLoaded, serverPath: string): void {
-        const clientId = this.getClientId(profile);
-        this.mClientOnPathServerMap.set(clientId, serverPath);
     }
 
     /**
@@ -137,7 +128,7 @@ export class SshClientCache extends vscode.Disposable {
             const session = ZSshUtils.buildSession(profile.profile!);
             const serverIsOnPath = await this.isServerDetectedOnPath(session, profile);
 
-            const serverPath = this.mClientOnPathServerMap.get(clientId) ?? ConfigUtils.getServerPath(profile.profile);
+            const serverPath = ConfigUtils.getServerPath(profile.profile);
             const vsceConfig = vscode.workspace.getConfiguration("zowe");
             const keepAliveInterval = vsceConfig.get<number>("zowex.keepAliveInterval");
             const numWorkers = vsceConfig.get<number>("zowex.workerCount");

@@ -14,13 +14,13 @@ import { type IZoweTree, type IZoweTreeNode, type imperative, type IApiExplorerE
 import { ZSshClient } from "@zowe/zowex-for-zowe-sdk";
 
 export class ConfigUtils {
-    public static getServerPath(profile?: imperative.IProfile): string {
+    public static getServerPath(profile?: imperative.IProfile): string | undefined {
         const serverPathMap: Record<string, string> = vscode.workspace.getConfiguration("zowe").get("zowex.serverInstallPath") ?? {};
         return (
             (profile && serverPathMap[profile?.host]) ??
             process.env.ZOWE_OPT_SERVER_PATH ??
             (profile?.serverPath as string) ??
-            ZSshClient.DEFAULT_SERVER_PATH
+            undefined
         );
     }
 
