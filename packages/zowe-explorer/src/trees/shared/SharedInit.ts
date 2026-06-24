@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import {
     FileManagement,
+    handleError,
     Gui,
     CorrelatedError,
     IZoweTree,
@@ -56,6 +57,7 @@ import { TroubleshootError } from "../../utils/TroubleshootError";
 import { ReleaseNotes } from "../../utils/ReleaseNotes";
 import { JobFSProvider } from "../job/JobFSProvider";
 import { ZosmfRestClient } from "@zowe/core-for-zowe-sdk";
+import * as zowex from "zowex-for-zowe-explorer";
 
 export class SharedInit {
     public static lastFocusedNode: { provider: IZoweTree<IZoweTreeNode>; node: IZoweTreeNode };
@@ -192,6 +194,14 @@ export class SharedInit {
             uss: UnixCommandHandler.getInstance(),
         };
 
+        // Zowe Native registrations
+        const zoweExplorerApi = ZoweExplorerApiRegister.getInstance().getExplorerExtenderApi();
+        context.subscriptions.push(...zowex.Utilities.registerCommands(context, zoweExplorerApi));
+        context.subscriptions.push(zowex.SshClientCache.initialize(zoweExplorerApi.getProfilesCache()));
+        zowex.handleNativeSshSettings(context);
+
+        zowex.registerSshErrorCorrelations();
+
         // Webview for editing persistent items on Zowe Explorer
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.editHistory", () => {
@@ -263,6 +273,9 @@ export class SharedInit {
         // Register functions & event listeners
         context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {
+                if (e.affectsConfiguration(Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH)) {
+                    zowex.handleNativeSshSettings(context);
+                }
                 // If the log folder location has been changed, update current log folder preference
                 if (e.affectsConfiguration(Constants.SETTINGS_LOGS_FOLDER_PATH) || e.affectsConfiguration(Constants.LOGGER_SETTINGS)) {
                     await SharedInit.initZoweLogger(context);
@@ -612,17 +625,17 @@ export class SharedInit {
                 }
                 readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri));
             } catch (err) {
-                if (err instanceof Error) {
-                    ZoweLogger.error(err.message);
-                }
+                handleError(err, (error) => {
+                    ZoweLogger.error(error.message);
+                });
             }
         }
         try {
             await Promise.all(readDirRequests);
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.error(err.message);
-            }
+            handleError(err, (error) => {
+                ZoweLogger.error(error.message);
+            });
         }
         if (profileType !== "zosmf" && newWorkspaces.length > 0) {
             await vscode.commands.executeCommand("workbench.files.action.refreshFilesExplorer");

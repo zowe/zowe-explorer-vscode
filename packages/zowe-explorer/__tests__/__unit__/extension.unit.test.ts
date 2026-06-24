@@ -278,6 +278,9 @@ async function createGlobalMocks() {
             "zowe.jobs.loadMoreRecords",
             "zowe.updateSecureCredentials",
             "zowe.manualPoll",
+            "zowe.zowex.connect",
+            "zowe.zowex.restart",
+            "zowe.zowex.uninstall",
             "zowe.editHistory",
             "zowe.displayReleaseNotes",
             "zowe.promptCredentials",
@@ -447,7 +450,7 @@ async function createGlobalMocks() {
                     update: vi.fn(),
                     keys: vi.fn(() => []),
                 },
-            } as unknown as vscode.ExtensionContext)
+            }) as unknown as vscode.ExtensionContext
     );
     globalMocks.mockExtension = new mockExtensionCreator();
 

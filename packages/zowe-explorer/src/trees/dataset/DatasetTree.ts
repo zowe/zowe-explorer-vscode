@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import dayjs from "dayjs";
 import {
     Gui,
+    handleError,
     Validation,
     imperative,
     IZoweDatasetTreeNode,
@@ -210,9 +211,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 );
             } catch (err) {
                 // If the write fails, we cannot move to the next file
-                if (err instanceof Error) {
-                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
-                }
+                handleError(err, (error) => {
+                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, error.message));
+                });
                 return;
             }
 
@@ -231,7 +232,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         _token: vscode.CancellationToken
     ): Promise<void> {
         const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.ds.explorer");
-        if (!droppedItems) {return;}
+        if (!droppedItems) {
+            return;
+        }
 
         let target = targetNode;
         if (!target) {
@@ -244,7 +247,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // check each dropped node for same-object, member collision, and structure issues
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
-            if (!node) {continue;}
+            if (!node) {
+                continue;
+            }
             const srcDsn = (SharedContext.isDsMember(node) ? node.getParent() : node).getLabel() as string;
             const tgtDsn = target.getLabel() as string;
 
@@ -297,7 +302,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         // 4. Overwrite prompt (name collision only)
         const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
-        if (!overwrite) {return;}
+        if (!overwrite) {
+            return;
+        }
 
         // 5. Move logic
         const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving MVS files...")}`);
@@ -307,7 +314,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
             const nodeParent = node.getParent();
-            if (!node || nodeParent === target) {continue;}
+            if (!node || nodeParent === target) {
+                continue;
+            }
 
             const nodeLabel = SharedUtils.getNodeProperty(node, "label");
             const newUriForNode = vscode.Uri.from({
@@ -534,9 +543,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 profile,
             });
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.warn(`Skipping creation of favorited profile. ${err.toString()}`);
-            }
+            handleError(err, (error) => {
+                ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
+            });
             return null;
         }
 
@@ -2011,6 +2020,10 @@ Would you like to do this now?`,
         }
 
         if (SharedContext.isSessionNotFav(node)) {
+            if (node.inFilterPrompt) {
+                ZoweLogger.debug("[DatasetTree.datasetFilterPrompt] Cancelled because filter prompt is already open for this node");
+                return;
+            }
             ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
             node.inFilterPrompt = true;
             try {

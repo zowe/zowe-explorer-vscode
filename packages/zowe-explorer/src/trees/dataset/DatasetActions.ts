@@ -14,6 +14,7 @@ import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as path from "path";
 import {
     Gui,
+    handleError,
     imperative,
     IZoweDatasetTreeNode,
     Validation,
@@ -49,6 +50,7 @@ import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetTree } from "./DatasetTree";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
+import { DATASET_ATTR_DEFS, MEMBER_ATTR_DEFS } from "./DatasetAttributes";
 
 type ClipboardItem = {
     profileName: string;
@@ -296,9 +298,9 @@ export class DatasetActions {
         } catch (err) {
             const errorMsg = vscode.l10n.t("Error encountered when creating data set.");
             ZoweLogger.error(errorMsg + JSON.stringify(err));
-            if (err instanceof Error) {
-                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile(), scenario: errorMsg });
-            }
+            await handleError(err, async (error) => {
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile(), scenario: errorMsg });
+            });
             throw new Error(err);
         }
 
@@ -445,14 +447,14 @@ export class DatasetActions {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName);
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
                         profile,
                         dsName: newDSName,
                         scenario: vscode.l10n.t("Unable to create data set."),
                     });
-                }
+                });
                 throw err;
             }
         }
@@ -1414,13 +1416,13 @@ export class DatasetActions {
                     });
                 }
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
                         parentDsName: label,
                         scenario: vscode.l10n.t("Unable to create member."),
                     });
-                }
+                });
                 throw err;
             }
 
@@ -1625,62 +1627,26 @@ export class DatasetActions {
                     );
                 }
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
                         profile: node.getProfile(),
                         scenario: vscode.l10n.t("Unable to list attributes."),
                     });
-                }
+                });
                 throw err;
             }
 
             const attributeRecord: Record<string, unknown> = attributes[0];
-            const datasetAttributeDefinitions: Array<[string, string, string]> = [
-                ["dsname", "Data Set Name", "The name of the dataset"],
-                ["member", "Member Name", "The name of the member"],
-                ["blksz", "Block Size", "The block size of the dataset"],
-                ["catnm", "Catalog Name", "The catalog in which the dataset entry is stored"],
-                ["cdate", "Create Date", "The dataset creation date"],
-                ["dev", "Device Type", "The type of the device the dataset is stored on"],
-                ["dsntp", "Data Set Type", "LIBRARY, (LIBRARY,1), (LIBRARY,2), PDS, HFS, EXTREQ, EXTPREF, BASIC or LARGE"],
-                ["dsorg", "Data Set Organization", "PS, PO, or DA"],
-                ["edate", "Expiration Date", "The dataset expiration date"],
-                ["extx", "Extensions", "The number of extensions the dataset has"],
-                ["lrecl", "Logical Record Length", "The length in bytes of each record"],
-                ["migr", "Migration", "Indicates if automatic migration is active"],
-                ["mvol", "Multivolume", "Whether the dataset is on multiple volumes"],
-                ["ovf", "Space overflow", "Indicates if space overflow was encountered (YES or NO)"],
-                ["rdate", "Reference Date", "Last referenced date"],
-                ["recfm", "Record Format", "Valid values: A, B, D, F, M, S, T, U, V (combinable)"],
-                ["sizex", "Size", "Size of the first extent in tracks"],
-                ["spacu", "Space Unit", "Type of space units measurement"],
-                ["used", "Used Space", "Used space percentage"],
-                ["vol", "Volume", "Volume serial numbers for data set"],
-                ["vols", "Volumes", "Multiple volume serial numbers"],
-            ];
-            const memberAttributeDefinitions: Array<[string, string, string]> = [
-                ["vers", "Version", "Member version number"],
-                ["mod", "Modification Level", "Member modification level"],
-                ["c4date", "Created Date", "Creation date (4-character year format)"],
-                ["m4date", "Modified Date", "Last change date (4-character year format)"],
-                ["mtime", "Modified Time", "Last change time (in format hh:mm)"],
-                ["msec", "Modified Seconds", "Seconds value of the last change time"],
-                ["cnorc", "Current Records", "Current number of records"],
-                ["inorc", "Initial Records", "Initial number of records"],
-                ["mnorc", "Modified Records", "Number of changed records"],
-                ["user", "User", "User ID of last user to change the given member"],
-                ["sclm", "Modified by ISPF/SCLM", "Indicates whether the member was last modified by SCLM or ISPF"],
-            ];
-            const attributeDefinitions = isMemberNode ? [...datasetAttributeDefinitions, ...memberAttributeDefinitions] : datasetAttributeDefinitions;
+            const attributeDefinitions = isMemberNode ? MEMBER_ATTR_DEFS : DATASET_ATTR_DEFS;
 
             const getAttributeValue = (key: string): string | number | boolean | undefined => {
+                const value = attributeRecord[key] as string | number | boolean | undefined;
                 if (isMemberNode) {
-                    if (key === "dsname") {
-                        return (attributeRecord[key] as string | number | boolean | undefined) ?? parentDsName;
-                    }
-                    if (key === "member") {
-                        return (attributeRecord[key] as string | number | boolean | undefined) ?? label;
+                    if (key === "dsname" && value == null) {
+                        return parentDsName;
+                    } else if (key === "member" && value == null) {
+                        return label;
                     }
                 }
                 return attributeRecord[key] as string | number | boolean | undefined;
@@ -1691,12 +1657,12 @@ export class DatasetActions {
                     title: "Zowe Explorer",
                     reference: "https://docs.zowe.org/stable/typedoc/interfaces/_zowe_zos_files_for_zowe_sdk.izosmflistresponse",
                     keys: new Map(
-                        attributeDefinitions.map(([key, displayName, description]) => [
-                            key,
+                        attributeDefinitions.map(({ id, name, description }) => [
+                            id,
                             {
-                                displayName: vscode.l10n.t(displayName),
+                                displayName: vscode.l10n.t(name),
                                 description: description ? vscode.l10n.t(description) : undefined,
-                                value: getAttributeValue(key) ,
+                                value: getAttributeValue(id) as string | number | boolean,
                             },
                         ])
                     ),
@@ -2311,7 +2277,9 @@ export class DatasetActions {
                 .flatMap((group) => group.tabs)
                 .filter((tab) => {
                     const uri = (tab.input as any)?.uri;
-                    if (!uri) {return false;}
+                    if (!uri) {
+                        return false;
+                    }
                     return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
                 });
             if (tabsToClose.length > 0) {
@@ -2689,7 +2657,8 @@ export class DatasetActions {
                         },
                         async () => {
                             try {
-                                return await mvsApi.copyDataSet(lbl, dsname, null, replace === "replace");
+                                const shouldReplace = ["replace", "notFound"].includes(replace);
+                                return await mvsApi.copyDataSet(lbl, dsname, null, shouldReplace);
                             } catch (error) {
                                 Gui.errorMessage(error.message);
                                 return;
@@ -2760,9 +2729,9 @@ export class DatasetActions {
                             }
                         } catch (err) {
                             ZoweLogger.error(err);
-                            if (err instanceof Error) {
-                                Gui.errorMessage(err.message);
-                            }
+                            handleError(err, (error) => {
+                                Gui.errorMessage(error.message);
+                            });
                         }
                     }
                 }
@@ -2864,9 +2833,9 @@ export class DatasetActions {
                                 });
                             }
                         } catch (err) {
-                            if (err instanceof Error) {
-                                Gui.errorMessage(err.message);
-                            }
+                            handleError(err, (error) => {
+                                Gui.errorMessage(error.message);
+                            });
                             return;
                         }
                     }
@@ -2982,9 +2951,9 @@ export class DatasetActions {
                             await mvsApi.copyDataSetCrossLpar(dsname, undefined, options, sourceProfile);
                         } catch (err) {
                             ZoweLogger.error(err);
-                            if (err instanceof Error) {
-                                Gui.errorMessage(err.message);
-                            }
+                            handleError(err, (error) => {
+                                Gui.errorMessage(error.message);
+                            });
                             return;
                         }
                     } else {
@@ -2997,15 +2966,15 @@ export class DatasetActions {
                             try {
                                 await DatasetActions.createDataSetFromSourceAttributes(sourceProfile, node.getProfile(), lbl, dsname);
                             } catch (err) {
-                                if (err instanceof Error) {
+                                handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to create {0}: {1}",
-                                            args: [dsname, err.message],
+                                            args: [dsname, error.message],
                                             comment: ["Data set name", "Error message"],
                                         })
                                     );
-                                }
+                                });
                                 return;
                             }
                         }
@@ -3058,15 +3027,15 @@ export class DatasetActions {
                                 });
                             } catch (err) {
                                 ZoweLogger.error(err);
-                                if (err instanceof Error) {
+                                handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to copy member {0}: {1}",
-                                            args: [child, err.message],
+                                            args: [child, error.message],
                                             comment: ["Member name", "Error message"],
                                         })
                                     );
-                                }
+                                });
                             }
                         }
                     }
@@ -3530,15 +3499,13 @@ export class DatasetActions {
             await datasetProvider.getTreeView().reveal(sessionNode, { select: true, focus: true, expand: true });
 
             if (targetMember && sessionNode.children && sessionNode.children.length > 0) {
-                const pdsNode = sessionNode.children.find((child) => child.label.toString().toUpperCase() === targetPattern) ;
+                const pdsNode = sessionNode.children.find((child) => child.label.toString().toUpperCase() === targetPattern);
 
                 if (pdsNode && SharedContext.isPds(pdsNode)) {
                     await TreeViewUtils.expandNode(pdsNode, datasetProvider);
 
                     if (pdsNode.children) {
-                        const memberNode = pdsNode.children.find(
-                            (child) => child.label.toString().toUpperCase() === targetMember
-                        ) ;
+                        const memberNode = pdsNode.children.find((child) => child.label.toString().toUpperCase() === targetMember);
 
                         if (memberNode) {
                             try {

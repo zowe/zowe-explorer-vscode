@@ -43,7 +43,7 @@ function spyOnSubscription(sub: IJestIt): void {
     spyMap.forEach((mocks, spy) => {
         spy.mockClear();
         mocks.forEach((mock) => {
-            if (mock.ret) {
+            if (mock.ret != null) {
                 spy.mockReturnValueOnce(mock.ret);
             } else {
                 spy.mockImplementationOnce(vi.fn());

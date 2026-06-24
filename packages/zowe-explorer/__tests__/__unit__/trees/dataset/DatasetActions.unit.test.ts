@@ -1744,6 +1744,44 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
     });
 
+    it("Testing copySequentialDatasets() calls copyDataSet with replace=true when target does not exist", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_DS_CONTEXT;
+        globalMocks.showInputBox.mockResolvedValueOnce("HLQ.TEST.COPY");
+        const copySpy = vi.spyOn(blockMocks.mvsApi, "copyDataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        vi.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        vi.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
+        mocked(vscode.window.withProgress).mockImplementation((prm, fnc) => {
+            fnc();
+            return Promise.resolve(prm);
+        });
+        await DatasetActions.copySequentialDatasets(
+            [
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    profileName: blockMocks.imperativeProfile.name,
+                    contextValue: Constants.DS_DS_CONTEXT,
+                },
+            ],
+            node
+        );
+        expect(copySpy).toHaveBeenCalledWith("HLQ.TEST.BEFORE.NODE", "HLQ.TEST.COPY", null, true);
+    });
+
     it("Testing copySequentialDatasets() successfully runs on cross profile", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -4293,7 +4331,7 @@ describe("Dataset Actions Unit Tests - Function confirmJobSubmission", () => {
             () =>
                 ({
                     get: () => Constants.JOB_SUBMIT_DIALOG_OPTS[1],
-                } as any)
+                }) as any
         );
         vi.spyOn(Gui, "warningMessage").mockResolvedValue({
             title: "Submit",
@@ -6902,6 +6940,88 @@ describe("DatasetActions - downloading functions", () => {
 
             reportProgressSpy.mockRestore();
         });
+
+        it("should pass abortDownload callback wired to CancellationToken", async () => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            pdsNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            });
+
+            const mockToken = { isCancellationRequested: false, onCancellationRequested: vi.fn() };
+            let capturedOptions: any;
+
+            vi.spyOn(testMocks.mvsApi, "downloadAllMembers").mockImplementation(async (_dsName, opts: any) => {
+                capturedOptions = opts;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockExecuteDownloadWithProgress = new MockedProperty(
+                DatasetActions,
+                "executeDownloadWithProgress" as any,
+                undefined,
+                vi.fn().mockImplementation(async (_title, downloadFn, _downloadType, _node, _cancellable) => {
+                    return await downloadFn(undefined, mockToken);
+                })
+            );
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(capturedOptions.abortDownload).toBeDefined();
+            expect(typeof capturedOptions.abortDownload).toBe("function");
+            expect(capturedOptions.abortDownload()).toBe(false);
+
+            mockToken.isCancellationRequested = true;
+            expect(capturedOptions.abortDownload()).toBe(true);
+        });
+
+        it("should pass abortDownload that returns false when token is undefined", async () => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            pdsNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            });
+
+            let capturedOptions: any;
+
+            vi.spyOn(testMocks.mvsApi, "downloadAllMembers").mockImplementation(async (_dsName, opts: any) => {
+                capturedOptions = opts;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockExecuteDownloadWithProgress = new MockedProperty(
+                DatasetActions,
+                "executeDownloadWithProgress" as any,
+                undefined,
+                vi.fn().mockImplementation(async (_title, downloadFn, _downloadType, _node, _cancellable) => {
+                    return await downloadFn(undefined, undefined);
+                })
+            );
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(capturedOptions.abortDownload()).toBe(false);
+        });
     });
 
     describe("downloadSingleMember", () => {
@@ -8033,6 +8153,82 @@ describe("DatasetActions - downloading functions", () => {
                     binary: false,
                 })
             );
+        });
+    });
+
+    describe("executeDownloadWithProgress", () => {
+        const executeDownloadWithProgress = (DatasetActions as any).executeDownloadWithProgress;
+
+        let mockHandleDownloadResponse: MockedProperty;
+        let mockAuthErrorHandling: MockedProperty;
+        let mockNode: any;
+        const mockProfile = { name: "testProfile" };
+        const mockProgress = { report: vi.fn() };
+        const mockToken = { isCancellationRequested: false };
+
+        beforeEach(() => {
+            mockNode = { getProfile: vi.fn().mockReturnValue(mockProfile) };
+            Object.defineProperty(DatasetActions, "executeDownloadWithProgress", {
+                value: executeDownloadWithProgress,
+                configurable: true,
+                writable: true,
+            });
+            (vscode.window.withProgress as vi.Mock).mockImplementation((_options: any, callback: any) => callback(mockProgress, mockToken));
+            mockHandleDownloadResponse = new MockedProperty(SharedUtils, "handleDownloadResponse", undefined, vi.fn().mockResolvedValue(undefined));
+            mockAuthErrorHandling = new MockedProperty(AuthUtils, "errorHandling", undefined, vi.fn().mockResolvedValue(undefined));
+        });
+
+        afterEach(() => {
+            (vscode.window.withProgress as vi.Mock).mockReset();
+            mockHandleDownloadResponse[Symbol.dispose]();
+            mockAuthErrorHandling[Symbol.dispose]();
+        });
+
+        it("should call vscode.window.withProgress with the correct title, location, and cancellable flag", async () => {
+            const downloadFn = vi.fn().mockResolvedValue({ response: { success: true }, downloadedPath: "/path/file" });
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "DS", mockNode, true);
+
+            expect(vscode.window.withProgress).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    title: "test download",
+                    cancellable: true,
+                }),
+                expect.any(Function)
+            );
+        });
+
+        it("should default cancellable to false when not provided", async () => {
+            const downloadFn = vi.fn().mockResolvedValue({ response: { success: true }, downloadedPath: "/path/file" });
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "DS", mockNode);
+
+            expect(vscode.window.withProgress).toHaveBeenCalledWith(expect.objectContaining({ cancellable: false }), expect.any(Function));
+        });
+
+        it("should invoke downloadFn with progress and token, then call handleDownloadResponse on success", async () => {
+            const mockResponse = { success: true, commandResponse: "ok" };
+            const mockDownloadedPath = "/test/path/file.txt";
+            const downloadFn = vi.fn().mockResolvedValue({ response: mockResponse, downloadedPath: mockDownloadedPath });
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "MEMBER", mockNode, false);
+
+            expect(downloadFn).toHaveBeenCalledWith(mockProgress, mockToken);
+            expect(mockHandleDownloadResponse.mock).toHaveBeenCalledWith(mockResponse, "MEMBER", mockDownloadedPath, false);
+            expect(mockAuthErrorHandling.mock).not.toHaveBeenCalled();
+        });
+
+        it("should call AuthUtils.errorHandling when downloadFn throws, and not call handleDownloadResponse", async () => {
+            const error = new Error("Download failed");
+            const downloadFn = vi.fn().mockRejectedValue(error);
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "DS", mockNode, false);
+
+            expect(mockAuthErrorHandling.mock).toHaveBeenCalledWith(error, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile: mockProfile,
+            });
+            expect(mockHandleDownloadResponse.mock).not.toHaveBeenCalled();
         });
     });
 });

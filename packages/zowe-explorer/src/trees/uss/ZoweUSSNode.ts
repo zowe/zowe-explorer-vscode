@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import {
     Gui,
+    handleError,
     imperative,
     IZoweUSSTreeNode,
     ZoweTreeNode,
@@ -203,7 +204,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public getSessionNode(): IZoweUSSTreeNode {
         ZoweLogger.trace("ZoweUSSNode.getSessionNode called.");
-        return this.session ? this : (this.getParent()?.getSessionNode() as IZoweUSSTreeNode) ?? this;
+        return this.session ? this : ((this.getParent()?.getSessionNode() as IZoweUSSTreeNode) ?? this);
     }
 
     /**
@@ -517,15 +518,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             await vscode.workspace.fs.delete(this.resourceUri, { recursive: this.isFolder });
         } catch (err) {
             ZoweLogger.error(err);
-            if (err instanceof Error) {
+            handleError(err, (error) => {
                 Gui.errorMessage(
                     vscode.l10n.t({
                         message: "Unable to delete node: {0}",
-                        args: [err.message],
+                        args: [error.message],
                         comment: ["Error message"],
                     })
                 );
-            }
+            });
             throw err;
         }
 
@@ -559,7 +560,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 .flatMap((group) => group.tabs)
                 .filter((tab) => {
                     const uri = (tab.input as any)?.uri;
-                    if (!uri) {return false;}
+                    if (!uri) {
+                        return false;
+                    }
                     return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
                 });
             if (tabsToClose.length > 0) {

@@ -281,7 +281,7 @@ export class ErrorCorrelator {
         }
 
         for (const apiError of [
-            ...(opts?.profileType ? this.errorMatches.get(api)?.[opts.profileType] ?? [] : []),
+            ...(opts?.profileType ? (this.errorMatches.get(api)?.[opts.profileType] ?? []) : []),
             ...(this.errorMatches.get(api)?.any ?? []),
             ...this.errorMatches.get(ZoweExplorerApiType.All).any,
         ]) {
@@ -315,8 +315,16 @@ export class ErrorCorrelator {
      */
     public async displayCorrelatedError(error: CorrelatedError, opts?: DisplayCorrelatedErrorOpts): Promise<string | undefined> {
         const errorCodeStr = error.properties.errorCode ? ` (Error Code ${error.properties.errorCode})` : "";
-        const additionalDetails =
-            error.initial instanceof ImperativeError && error.initial.causeErrors instanceof Error ? error.initial.causeErrors.message : undefined;
+        let additionalDetails = "";
+        if (error.initial instanceof ImperativeError) {
+            if (error.initial.additionalDetails) {
+                additionalDetails = error.initial.additionalDetails + " ";
+            }
+            if (error.initial.causeErrors instanceof Error) {
+                additionalDetails += error.initial.causeErrors.message;
+            }
+        }
+
         const userSelection = await Gui.errorMessage(
             `${opts?.additionalContext ? opts.additionalContext + ": " : ""}${error.message}${errorCodeStr}${
                 additionalDetails ? " " + additionalDetails : ""

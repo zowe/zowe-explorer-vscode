@@ -154,6 +154,15 @@ export enum QuickPickItemKind {
 }
 
 /**
+ * A location in the editor at which progress notifications can be shown.
+ */
+export enum ProgressLocation {
+    SourceControl = 1,
+    Window = 10,
+    Notification = 15,
+}
+
+/**
  * Represents a tab within a {@link TabGroup group of tabs}.
  * Tabs are merely the graphical representation within the editor area.
  * A backing editor is not a guarantee.
@@ -494,6 +503,17 @@ export namespace window {
                 onDidReceiveMessage: vi.fn(),
             },
         };
+    }
+
+    export function showInputBox(_options?: any): Thenable<string | undefined> {
+        return Promise.resolve(undefined);
+    }
+
+    export function withProgress<R>(
+        _options: { location: any; title?: string; cancellable?: boolean },
+        task: (progress: { report: (value: { increment?: number; message?: string }) => void }, token: any) => Thenable<R>
+    ): Thenable<R> {
+        return task({ report: () => {} }, { isCancellationRequested: false, onCancellationRequested: () => ({ dispose: () => {} }) }) as Thenable<R>;
     }
 
     /**

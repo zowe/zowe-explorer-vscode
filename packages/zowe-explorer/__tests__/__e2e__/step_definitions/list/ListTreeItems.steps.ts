@@ -32,6 +32,7 @@ async function setFilterForProfile(profileNode: ProfileNode, tree: string): Prom
     const isUss = tree.toLowerCase() === "uss" || tree.toLowerCase() === "unix system services (uss)";
     const isJobs = !isUss && tree.toLowerCase() === "jobs";
     await searchButton.wait();
+    await searchButton.elem.waitForClickable({ timeout: 5000 });
     await searchButton.elem.click();
 
     await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
@@ -108,9 +109,9 @@ Given(/the user has a profile in their (.*) tree/, async function (tree: string)
         await expect(plusIcon).toBeDefined();
         await plusIcon.elem.click();
         await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
-        const firstProfileEntry = await quickPick.findItemByIndex(2);
-        await expect(firstProfileEntry).toBeClickable();
-        await firstProfileEntry.click();
+        const profileEntry = await quickPick.findItem(`$(home) ${testInfo.profileName}`);
+        await expect(profileEntry).toBeClickable();
+        await profileEntry.click();
         this.yesOpt = await quickPick.findItem("Yes, Apply to all trees");
         await expect(this.yesOpt).toBeClickable();
         await this.yesOpt.click();
@@ -143,11 +144,22 @@ When("a user expands a USS directory in the list", async function () {
     this.ussDir = await this.profileNode.revealChildItem(testInfo.ussDir);
     this.children = await this.ussDir.getChildren();
 });
+When("a user expands a Job in the list", async function () {
+    const profileItem = await this.profileNode.find();
+    const jobs = await profileItem.getChildren();
+    await expect(jobs.length).toBeGreaterThan(0);
+    this.jobNode = jobs[0];
+    await this.jobNode.expand();
+    await browser.waitUntil(async () => await this.jobNode.hasChildren());
+    this.children = await this.jobNode.getChildren();
+});
 Then("the node will expand and list its children", async function () {
     if (this.pds) {
         await expect(await this.pds.isExpanded()).toBe(true);
-    } else {
+    } else if (this.ussDir) {
         await expect(await this.ussDir.isExpanded()).toBe(true);
+    } else {
+        await expect(await this.jobNode.isExpanded()).toBe(true);
     }
 });
 Then("the user can select a child in the list and open it", async function () {

@@ -10,7 +10,7 @@
  */
 
 import { Gui } from "../../globals";
-import { CorrelatedError, FileManagement } from "../../utils";
+import { CorrelatedError, errorMessage, FileManagement } from "../../utils";
 import * as imperative from "@zowe/imperative";
 import { IZoweTreeNode } from "../../tree";
 import { E_CANCELED, Mutex } from "async-mutex";
@@ -182,12 +182,12 @@ export class AuthHandler {
             // refresh an active, unsaved editor if it uses the profile
             FileManagement.reloadActiveEditorForProfile(profileName)
                 // eslint-disable-next-line no-console
-                .catch((err) => err instanceof Error && console.error(err.message));
+                .catch((err) => console.error(errorMessage(err)));
 
             // refresh virtual workspaces for the profile
             FileManagement.reloadWorkspacesForProfile(profileName)
                 // eslint-disable-next-line no-console
-                .catch((err) => err instanceof Error && console.error(err.message));
+                .catch((err) => console.error(errorMessage(err)));
         }
     }
 

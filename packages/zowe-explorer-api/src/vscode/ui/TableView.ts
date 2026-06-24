@@ -1022,10 +1022,13 @@ export namespace Table {
                 });
             }
 
-            const rowsObject = rows.reduce((acc, row, index) => {
-                acc[index] = row;
-                return acc;
-            }, {} as Record<number, RowData>);
+            const rowsObject = rows.reduce(
+                (acc, row, index) => {
+                    acc[index] = row;
+                    return acc;
+                },
+                {} as Record<number, RowData>
+            );
 
             return this.request<boolean>("pin-rows", { rows: rowsObject });
         }
@@ -1036,10 +1039,13 @@ export namespace Table {
          * @returns Whether the webview successfully unpinned the rows
          */
         public async unpinRows(rows: RowData[]): Promise<boolean> {
-            const rowsObject = rows.reduce((acc, row, index) => {
-                acc[index] = row;
-                return acc;
-            }, {} as Record<number, RowData>);
+            const rowsObject = rows.reduce(
+                (acc, row, index) => {
+                    acc[index] = row;
+                    return acc;
+                },
+                {} as Record<number, RowData>
+            );
 
             return this.request<boolean>("unpin-rows", { rows: rowsObject });
         }
