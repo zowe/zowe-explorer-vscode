@@ -34,7 +34,7 @@ export default defineConfig({
         coverage: {
             include: ["src/**"],
             excludeAfterRemap: true,
-            exclude: [...coverageConfigDefaults.exclude, "**/*.js", "**/lib/**", "**/benchmarks/**", "vitest.config.ts"],
+            exclude: [...coverageConfigDefaults.exclude, "**/*.js", "**/lib/**", "**/benchmarks/**", "vitest.config.ts", "**/index.{ts,js}"],
         },
     },
     resolve: {
