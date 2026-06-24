@@ -9,7 +9,7 @@
  *
  */
 
-import { Then, When } from "@cucumber/cucumber";
+import { After, Then, When } from "@cucumber/cucumber";
 import { TreeItem } from "wdio-vscode-service";
 import { clickContextMenuItem, fillInputBox } from "../../../__common__/shared.wdio";
 import quickPick from "../../../__pageobjects__/QuickPick";
@@ -25,30 +25,25 @@ const testInfo = {
     encoding: process.env.ZE_TEST_USS_ENCODING,
 };
 
-// Clicks the button matching buttonLabel in the active VS Code modal confirmation dialog.
-async function clickModalButton(buttonLabel: string): Promise<void> {
-    await browser.waitUntil(
-        async () => {
-            try {
-                const buttons = await browser.$$(".dialog-buttons-container .monaco-button, .dialog-buttons .monaco-button");
-                for (const btn of buttons) {
-                    if ((await btn.getText()).trim() === buttonLabel) return true;
-                }
-                return false;
-            } catch {
-                return false;
+// Polls for a notification toast action button and clicks it if it appears within 8 seconds.
+// Used to handle optional "Replace" prompts when creating files/dirs that already exist.
+async function optionallyClickNotificationButton(buttonTitle: string): Promise<void> {
+    const deadline = Date.now() + 8000;
+    while (Date.now() < deadline) {
+        try {
+            const btn = await browser.$(`//a[contains(@class,"monaco-button") and @title="${buttonTitle}"]`);
+            if (await btn.isExisting()) {
+                await btn.click();
+                return;
             }
-        },
-        { timeout: 15000, timeoutMsg: `Modal button "${buttonLabel}" did not appear` }
-    );
-    const buttons = await browser.$$(".dialog-buttons-container .monaco-button, .dialog-buttons .monaco-button");
-    for (const btn of buttons) {
-        if ((await btn.getText()).trim() === buttonLabel) {
-            await btn.click();
-            return;
+        } catch {
+            // Not found yet — keep polling.
         }
+        await browser.pause(500);
     }
+    // No notification appeared — file/directory didn't already exist; proceed normally.
 }
+
 
 Then("the USS directory has files listed under it", async function () {
     await expect(this.children.length).toBeGreaterThan(0);
@@ -58,6 +53,7 @@ When("the user creates a new USS file in the directory", async function () {
     await this.ussDir.elem.moveTo();
     await clickContextMenuItem(this.ussDir, "Create File");
     await fillInputBox(testInfo.newFile);
+    await optionallyClickNotificationButton("Replace");
     // Allow time for the remote create to complete and tree to refresh
     await browser.pause(3000);
 });
@@ -79,7 +75,6 @@ When("the user deletes the new USS file from the directory", async function () {
     await expect(fileNode).toBeDefined();
     await fileNode.elem.moveTo();
     await clickContextMenuItem(fileNode, "Delete");
-    await clickModalButton("Delete");
     await browser.pause(3000);
 });
 
@@ -94,6 +89,7 @@ When("the user creates a new USS directory inside the parent", async function ()
     await this.ussDir.elem.moveTo();
     await clickContextMenuItem(this.ussDir, "Create Directory");
     await fillInputBox(testInfo.newDir);
+    await optionallyClickNotificationButton("Replace");
     await browser.pause(3000);
 });
 
@@ -114,7 +110,6 @@ When("the user deletes the new USS directory from the parent", async function ()
     await expect(dirNode).toBeDefined();
     await dirNode.elem.moveTo();
     await clickContextMenuItem(dirNode, "Delete");
-    await clickModalButton("Delete");
     await browser.pause(3000);
 });
 
@@ -158,7 +153,6 @@ When("the user deletes the renamed USS file from the directory", async function 
     await expect(fileNode).toBeDefined();
     await fileNode.elem.moveTo();
     await clickContextMenuItem(fileNode, "Delete");
-    await clickModalButton("Delete");
     await browser.pause(3000);
 });
 
@@ -195,7 +189,6 @@ When("the user deletes the renamed USS directory from the parent", async functio
     await expect(dirNode).toBeDefined();
     await dirNode.elem.moveTo();
     await clickContextMenuItem(dirNode, "Delete");
-    await clickModalButton("Delete");
     await browser.pause(3000);
 });
 
@@ -254,6 +247,48 @@ When("the user deletes the copied USS file from the destination directory", asyn
     await expect(copiedFile).toBeDefined();
     await copiedFile.elem.moveTo();
     await clickContextMenuItem(copiedFile, "Delete");
-    await clickModalButton("Delete");
     await browser.pause(3000);
+});
+
+// Runs after every scenario in this feature. Deletes any test artifacts that were created
+// but not cleaned up (e.g. when a scenario failed mid-way). Safe to run even when artifacts
+// do not exist — errors are silently swallowed.
+After(async function () {
+    if (!this.ussDir) {
+        return;
+    }
+
+    // Files and directories that live directly under the USS test directory
+    const childNames = [testInfo.newFile, testInfo.renamedFile, testInfo.newDir, testInfo.renamedDir].filter(Boolean) as string[];
+    for (const name of childNames) {
+        try {
+            const item = (await this.ussDir.findChildItem(name)) as TreeItem | null;
+            if (item) {
+                await item.elem.moveTo();
+                await clickContextMenuItem(item, "Delete");
+                await browser.pause(1500);
+            }
+        } catch {
+            // Artifact absent or already deleted — continue.
+        }
+    }
+
+    // The copied file sits one level deeper, inside the copy-destination directory
+    if (this.profileNode && testInfo.copyDstDir && testInfo.ussFile) {
+        try {
+            const dstDirName = testInfo.copyDstDir.replace(`${testInfo.ussFilter}/`, "");
+            const profileItem = await this.profileNode.find();
+            const copyDstDir = (await profileItem.findChildItem(dstDirName)) as TreeItem | null;
+            if (copyDstDir) {
+                const copiedFile = (await copyDstDir.findChildItem(testInfo.ussFile)) as TreeItem | null;
+                if (copiedFile) {
+                    await copiedFile.elem.moveTo();
+                    await clickContextMenuItem(copiedFile, "Delete");
+                    await browser.pause(1500);
+                }
+            }
+        } catch {
+            // Artifact absent or already deleted — continue.
+        }
+    }
 });

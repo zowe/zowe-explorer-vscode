@@ -937,17 +937,20 @@ export class USSActions {
             args: [displayedFileNames, additionalFilesCount > 0 ? `\n...and ${additionalFilesCount} more` : ""],
             comment: ["File names", "Additional files count"],
         });
+        const confirmDeletion = vscode.workspace.getConfiguration().get<boolean>("zowe.uss.deleteNode.confirmDeletion", true);
         const deleteButton = vscode.l10n.t("Delete");
         let cancelled = false;
-        await Gui.warningMessage(message, {
-            items: [deleteButton],
-            vsCodeOpts: { modal: true },
-        }).then((selection) => {
-            if (!selection || selection === "Cancel") {
-                ZoweLogger.debug(vscode.l10n.t("Delete action was canceled."));
-                cancelled = true;
-            }
-        });
+        if (confirmDeletion) {
+            await Gui.warningMessage(message, {
+                items: [deleteButton],
+                vsCodeOpts: { modal: true },
+            }).then((selection) => {
+                if (!selection || selection === "Cancel") {
+                    ZoweLogger.debug(vscode.l10n.t("Delete action was canceled."));
+                    cancelled = true;
+                }
+            });
+        }
         for (const item of selectedNodes) {
             await item.deleteUSSNode(ussFileProvider, "", cancelled);
         }

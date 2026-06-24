@@ -24,8 +24,18 @@ const testInfo = {
 };
 
 async function setFilterForProfile(profileNode: ProfileNode, tree: string): Promise<void> {
-    await (await profileNode.find()).elem.moveTo();
-    const actionButtons = await (await profileNode.find()).getActionButtons();
+    const profileItem = await profileNode.find();
+
+    // If the profile is already expanded with filter results, skip re-applying the filter.
+    // This handles re-runs where the tree state is still set from a previous run.
+    if (await profileItem.isExpanded() && await profileItem.hasChildren()) {
+        return;
+    }
+
+    // Hover and wait for action buttons to appear before querying them
+    await profileItem.elem.moveTo();
+    await browser.pause(300);
+    const actionButtons = await profileItem.getActionButtons();
 
     // Locate and select the search button on the profile node
     const searchButton = actionButtons[actionButtons.length - 1];
@@ -35,7 +45,9 @@ async function setFilterForProfile(profileNode: ProfileNode, tree: string): Prom
     await searchButton.elem.waitForClickable({ timeout: 5000 });
     await searchButton.elem.click();
 
-    await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
+    // Use isDisplayed rather than isClickable: a visible notification toast can prevent
+    // isClickable from returning true even when the QuickPick has fully rendered.
+    await browser.waitUntil((): Promise<boolean> => quickPick.isDisplayed());
 
     if (isJobs) {
         // Jobs
