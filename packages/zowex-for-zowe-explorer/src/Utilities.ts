@@ -57,8 +57,9 @@ export class Utilities {
         if (!deployDirectory) {
             return;
         }
+        let deployStatus = false;
         if (await ZSshUtils.hasWriteAccess(sshSession, deployDirectory)) {
-            const deployStatus = await deployWithProgress(sshSession, deployDirectory);
+            deployStatus = await deployWithProgress(sshSession, deployDirectory);
             if (!deployStatus) {
                 return;
             }
@@ -68,9 +69,11 @@ export class Utilities {
         }
 
         await ConfigUtils.showSessionInTree(profile.name!, true, zoweExplorerApi);
-        const infoMsg = `Installed Zowe Remote SSH server on ${(profile.profile.host as string) ?? profile.name}`;
-        imperative.Logger.getAppLogger().info(infoMsg);
-        await Gui.showMessage(infoMsg);
+        if (deployStatus) {
+            const infoMsg = `Installed Zowe Remote SSH server on ${(profile.profile.host as string) ?? profile.name}`;
+            imperative.Logger.getAppLogger().info(infoMsg);
+            await Gui.showMessage(infoMsg);
+        }
     }
 
     private static async restartCallback(zoweExplorerApi: IApiExplorerExtender, profName?: string): Promise<void> {
