@@ -54,8 +54,8 @@ importers:
         specifier: ^22.15.34
         version: 22.15.34
       '@types/vscode':
-        specifier: ^1.89.0
-        version: 1.89.0
+        specifier: ~1.101.0
+        version: 1.101.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^6.21.0
         version: 6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)
@@ -295,8 +295,8 @@ importers:
   packages/zowe-explorer-api:
     dependencies:
       '@types/vscode':
-        specifier: ^1.89.0
-        version: 1.89.0
+        specifier: ~1.101.0
+        version: 1.101.0
       '@zowe/core-for-zowe-sdk':
         specifier: ^8.32.0
         version: 8.32.0(@zowe/imperative@8.32.0)
@@ -1833,8 +1833,8 @@ packages:
   '@types/vscode-webview@1.57.5':
     resolution: {integrity: sha512-iBAUYNYkz+uk1kdsq05fEcoh8gJmwT3lqqFPN7MGyjQ3HVloViMdo7ZJ8DFIP8WOK74PjOEilosqAyxV2iUFUw==}
 
-  '@types/vscode@1.89.0':
-    resolution: {integrity: sha512-TMfGKLSVxfGfoO8JfIE/neZqv7QLwS4nwPwL/NwMvxtAY2230H2I4Z5xx6836pmJvMAzqooRQ4pmLm7RUicP3A==}
+  '@types/vscode@1.101.0':
+    resolution: {integrity: sha512-ZWf0IWa+NGegdW3iU42AcDTFHWW7fApLdkdnBqwYEtHVIBGbTu0ZNQKP/kX3Ds/uMJXIMQNAojHR4vexCEEz5Q==}
 
   '@types/which@2.0.2':
     resolution: {integrity: sha512-113D3mDkZDjo+EeUEHCFy0qniNc1ZpecGiAU7WSo7YDoSzolZIQKpYFHrPpjkB2nuyahcKfrmLXeQlh7gqJYdw==}
@@ -8682,7 +8682,7 @@ snapshots:
 
   '@types/vscode-webview@1.57.5': {}
 
-  '@types/vscode@1.89.0': {}
+  '@types/vscode@1.101.0': {}
 
   '@types/which@2.0.2': {}
 
