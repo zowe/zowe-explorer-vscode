@@ -15,12 +15,12 @@ import { clickContextMenuItem, fillInputBox } from "../../../__common__/shared.w
 import quickPick from "../../../__pageobjects__/QuickPick";
 
 const testInfo = {
-    newFile: process.env.ZE_TEST_USS_NEW_FILE,
-    renamedFile: process.env.ZE_TEST_USS_RENAMED_FILE,
-    newDir: process.env.ZE_TEST_USS_NEW_DIR,
-    renamedDir: process.env.ZE_TEST_USS_RENAMED_DIR,
+    newFile: "ze-e2e-new.txt",
+    renamedFile: "ze-e2e-renamed.txt",
+    newDir: "ze-e2e-newdir",
+    renamedDir: "ze-e2e-renameddir",
     ussFile: process.env.ZE_TEST_USS_FILE,
-    encoding: process.env.ZE_TEST_USS_ENCODING,
+    encoding: "EBCDIC",
 };
 
 // Polls for a notification toast action button and clicks it if it appears within 8 seconds.
