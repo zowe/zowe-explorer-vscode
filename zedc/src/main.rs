@@ -54,7 +54,8 @@ async fn main() -> Result<()> {
             pr_number,
             vsc_version,
             skip_setup,
-        } => pr::handle_cmd(pr_number, vsc_version, skip_setup).await?,
+            build,
+        } => pr::handle_cmd(pr_number, vsc_version, skip_setup, build).await?,
     }
 
     Ok(())

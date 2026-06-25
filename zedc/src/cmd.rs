@@ -69,7 +69,7 @@ pub enum RootCommands {
     },
     /// Check that installed tool versions satisfy the project's requirements
     Doctor,
-    /// Fetch a PR, check it out, build the VSIXes, and launch the sandbox all in one step
+    /// Fetch a PR, reuse its posted VSIX artifact (or build from source), and launch the sandbox
     Pr {
         /// GitHub pull request number
         pr_number: u64,
@@ -79,6 +79,9 @@ pub enum RootCommands {
         /// Skip dependency installation (reuse existing node_modules)
         #[arg(long)]
         skip_setup: bool,
+        /// Always build from source, ignoring any VSIX artifact posted on the PR
+        #[arg(long)]
+        build: bool,
     },
 }
 
