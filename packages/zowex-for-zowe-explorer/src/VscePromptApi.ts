@@ -183,7 +183,7 @@ export class VscePromptApi extends AbstractConfigManager {
     }
 
     protected storeServerPath(host: string, path: string): void {
-        SshClientCache.storeServerPath(host, path);
+        SshClientCache.inst.storeServerPath(host, path);
     }
 
     protected getClientSetting<T>(setting: keyof ISshSession): T | undefined {

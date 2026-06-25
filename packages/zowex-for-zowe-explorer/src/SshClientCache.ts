@@ -10,14 +10,14 @@
  */
 
 import type { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
-import { IApiExplorerExtender, imperative, ProfilesCache, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { type ClientOptions, type ExistingClientRequest, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils } from "./ConfigUtils";
 import { deployWithProgress } from "./ServerDeployment";
 import { SshErrorHandler } from "./SshErrorHandler";
 import path from "path";
-import { VscePromptApi } from "./VscePromptApi";
+
 
 class AsyncMutex extends imperative.DeferredPromise<void> implements Disposable {
     public constructor(private onDispose?: () => void) {
@@ -92,7 +92,7 @@ export class SshClientCache extends vscode.Disposable {
      * @param host - host from the profile
      * @param path - parent directory of the SSH server binary
      */
-    public static storeServerPath(host: string, serverPath: string): void {
+    public storeServerPath(host: string, serverPath: string): void {
         const config = vscode.workspace.getConfiguration("zowe");
         let serverPathMap: Record<string, string> = config.get("zowex.serverInstallPath") ?? {};
         if (!serverPathMap) {
@@ -115,7 +115,7 @@ export class SshClientCache extends vscode.Disposable {
                 imperative.Logger.getAppLogger().debug("Skipping deploy, since a usable instance of the server exists on the user's PATH");
                 // path.resolve(): remove binary from the full path to set serverPath to the parent directory,
                 // the same as a user would configure the path manually
-                SshClientCache.storeServerPath(profile.host, path.resolve(pathServer.serverPath, ".."));
+                SshClientCache.inst.storeServerPath(profile.host, path.resolve(pathServer.serverPath, ".."));
                 return true;
             }
         } catch (e) {
