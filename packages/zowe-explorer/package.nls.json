@@ -182,6 +182,7 @@
   "downloadDataSet": "Download Data Set...",
   "downloadAllMembers": "Download All Members...",
   "downloadMember": "Download Member...",
+  "downloadMembers": "Download Members...",
   "issueUnixCmd": "Issue Unix Command",
   "selectForCompare": "Select for Compare",
   "copyName": "Copy Name",
