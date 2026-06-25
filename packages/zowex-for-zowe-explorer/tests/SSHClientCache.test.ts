@@ -308,7 +308,7 @@ describe("SshClientCache", () => {
             expect(second).toBe(first);
             expect(ZSshClient.create).not.toHaveBeenCalled();
         });
-        
+
         it("should serialize overlapping connect() calls so exactly one client is built", async () => {
             let releaseCreate!: (client: unknown) => void;
             const createGate = new Promise((resolve) => {
