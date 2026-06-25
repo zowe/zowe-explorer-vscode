@@ -869,9 +869,9 @@ export class USSActions {
                     directory: directoryPath,
                     overwrite: downloadOptions.overwrite,
                     includeHidden: includeHidden,
-                    maxConcurrentRequests: profile?.profile?.maxConcurrentRequests || 1,
+                    maxConcurrentRequests: profile.profile?.maxConcurrentRequests || 1,
                     task,
-                    responseTimeout: profile?.profile?.responseTimeout,
+                    responseTimeout: profile.profile?.responseTimeout,
                     abortDownload: () => token?.isCancellationRequested ?? false,
                 };
 

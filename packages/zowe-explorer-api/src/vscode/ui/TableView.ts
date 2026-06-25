@@ -21,6 +21,8 @@ import * as fs from "fs";
 import { Logger } from "@zowe/imperative";
 import type { IDataSetSource } from "../../dataset";
 import { Gui } from "../../globals/Gui";
+
+/* eslint-disable @typescript-eslint/no-namespace */
 export namespace Table {
     /* Tree node structure for hierarchical data */
     export type TreeNodeData = {
@@ -520,16 +522,9 @@ export namespace Table {
                 let conditionResult: boolean | Promise<boolean>;
 
                 if (typeof condition === "string") {
-                    try {
-                        // Reason for no-implied-eval: Need to keep support for string conditions to prevent breaking changes
-                        // However, they are not recommended and should be avoided if possible
-                        // eslint-disable-next-line @typescript-eslint/no-implied-eval
-                        const condFn = new Function("data", `return (${condition})(data);`);
-                        conditionResult = condFn(conditionData);
-                    } catch (error) {
-                        Logger.getImperativeLogger().warn(`Failed to evaluate string condition for action ${actionCommand}:`, error);
-                        return defaultValue;
-                    }
+                    // TODO (v4): Remove `string` from the `Conditional` type
+                    Logger.getImperativeLogger().warn(`String conditions are deprecated for TableView. Use a function instead.`);
+                    return defaultValue;
                 } else {
                     conditionResult = condition(conditionData);
                 }
