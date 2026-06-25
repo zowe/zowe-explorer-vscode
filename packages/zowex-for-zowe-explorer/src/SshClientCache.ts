@@ -174,7 +174,7 @@ export class SshClientCache extends vscode.Disposable {
                     }
                 }
                 return false;
-            }
+            };
 
             try {
                 serverShouldDeploy = await launchServer();
