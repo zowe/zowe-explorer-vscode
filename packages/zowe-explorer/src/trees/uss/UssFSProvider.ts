@@ -808,7 +808,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         } catch (err) {
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 // Some unknown error happened, rollback optimistic entry creation
-                if (isNew && parentDir?.entries.has(fileName)) {
+                if (isNew && parentDir.entries.has(fileName)) {
                     parentDir.entries.delete(fileName);
                     parentDir.size -= 1;
                 }
