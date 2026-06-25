@@ -1,9 +1,11 @@
 use crate::cmd;
+use crate::output::{self, exit};
 use crate::util;
 use anyhow::Result;
 use glob::glob;
 use indicatif::{ProgressBar, ProgressStyle};
 use owo_colors::OwoColorize;
+use serde::Serialize;
 use std::collections::HashMap;
 use std::fs;
 use std::io::{BufRead, BufReader};
@@ -14,8 +16,80 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use supports_hyperlinks::Stream;
 
-/// Run the coverage check command
-pub fn run_coverage_check(verbose: bool, filter: Option<String>, threshold: Option<f64>) -> Result<()> {
+/// A changed file together with the patch lines left uncovered by tests.
+#[derive(Serialize)]
+struct UncoveredFile {
+    file: String,
+    lines: Vec<usize>,
+}
+
+/// Structured patch-coverage results (the `coverage` object in `--json` output).
+#[derive(Serialize)]
+struct CoverageData {
+    /// Percentage of changed lines covered by tests, rounded to one decimal.
+    patch_pct: Option<f64>,
+    /// Patch coverage on `main` before the change, when a baseline was computed.
+    baseline_pct: Option<f64>,
+    total_changed_lines: usize,
+    covered_lines: usize,
+    /// The `--threshold` gate, when one was supplied.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    threshold: Option<f64>,
+    uncovered: Vec<UncoveredFile>,
+}
+
+/// Top-level machine-readable coverage envelope emitted by `--json`.
+#[derive(Serialize)]
+struct CoverageEnvelope {
+    coverage: CoverageData,
+    passed: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    message: Option<String>,
+}
+
+/// Rounds a percentage to a single decimal place for stable JSON output.
+fn round1(pct: f64) -> f64 {
+    (pct * 10.0).round() / 10.0
+}
+
+/// Builds an empty coverage payload for the "nothing to measure" exit paths.
+fn empty_coverage(threshold: Option<f64>) -> CoverageData {
+    CoverageData {
+        patch_pct: None,
+        baseline_pct: None,
+        total_changed_lines: 0,
+        covered_lines: 0,
+        threshold,
+        uncovered: Vec::new(),
+    }
+}
+
+/// Converts the internal uncovered-lines map into a deterministic, serializable list.
+fn to_uncovered_files(details: &HashMap<String, Vec<usize>>) -> Vec<UncoveredFile> {
+    let mut files: Vec<UncoveredFile> = details
+        .iter()
+        .map(|(file, lines)| {
+            let mut lines = lines.clone();
+            lines.sort_unstable();
+            lines.dedup();
+            UncoveredFile {
+                file: file.clone(),
+                lines,
+            }
+        })
+        .collect();
+    files.sort_by(|a, b| a.file.cmp(&b.file));
+    files
+}
+
+/// Run the coverage check command. Returns a stable exit code.
+pub fn run_coverage_check(
+    verbose: bool,
+    filter: Option<String>,
+    threshold: Option<f64>,
+) -> Result<i32> {
+    let json = output::json_enabled();
+
     let repo_root_pathbuf = match util::find_dir_match(&["package.json"]) {
         Ok(Some(d)) => d,
         Ok(None) => anyhow::bail!("Could not find a repo folder containing package.json (used for resolving coverage paths)."),
@@ -29,19 +103,31 @@ pub fn run_coverage_check(verbose: bool, filter: Option<String>, threshold: Opti
         get_changed_files_and_lines(verbose)?;
 
     if changed_lines.is_empty() {
-        println!(
-            "{}",
-            "No changes detected compared to main branch.".yellow()
-        );
-        return Ok(());
+        let msg = "No changes detected compared to main branch.";
+        if json {
+            output::emit_json(&CoverageEnvelope {
+                coverage: empty_coverage(threshold),
+                passed: true,
+                message: Some(msg.to_string()),
+            });
+        } else {
+            println!("{}", msg.yellow());
+        }
+        return Ok(exit::SUCCESS);
     }
 
     if initial_total_lines_in_patch == 0 {
-        println!(
-            "{}",
-            "No effectively changed lines found in the diff to check for coverage.".yellow()
-        );
-        return Ok(());
+        let msg = "No effectively changed lines found in the diff to check for coverage.";
+        if json {
+            output::emit_json(&CoverageEnvelope {
+                coverage: empty_coverage(threshold),
+                passed: true,
+                message: Some(msg.to_string()),
+            });
+        } else {
+            println!("{}", msg.yellow());
+        }
+        return Ok(exit::SUCCESS);
     }
 
     // If filter is provided, filter the changed_lines to only include files from that package
@@ -78,15 +164,20 @@ pub fn run_coverage_check(verbose: bool, filter: Option<String>, threshold: Opti
         }
 
         if filtered_total_lines == 0 {
-            println!(
-                "{}",
-                format!(
-                    "No changed lines found in package '{}' to check for coverage.",
-                    pkg
-                )
-                .yellow()
+            let msg = format!(
+                "No changed lines found in package '{}' to check for coverage.",
+                pkg
             );
-            return Ok(());
+            if json {
+                output::emit_json(&CoverageEnvelope {
+                    coverage: empty_coverage(threshold),
+                    passed: true,
+                    message: Some(msg),
+                });
+            } else {
+                println!("{}", msg.yellow());
+            }
+            return Ok(exit::SUCCESS);
         }
     } else {
         // Exclude files containing __tests__ if no package filter is provided
@@ -118,11 +209,17 @@ pub fn run_coverage_check(verbose: bool, filter: Option<String>, threshold: Opti
         }
 
         if filtered_total_lines == 0 {
-            println!(
-                "{}",
-                "No changed lines found (excluding '__tests__') to check for coverage.".yellow()
-            );
-            return Ok(());
+            let msg = "No changed lines found (excluding '__tests__') to check for coverage.";
+            if json {
+                output::emit_json(&CoverageEnvelope {
+                    coverage: empty_coverage(threshold),
+                    passed: true,
+                    message: Some(msg.to_string()),
+                });
+            } else {
+                println!("{}", msg.yellow());
+            }
+            return Ok(exit::SUCCESS);
         }
     }
 
@@ -131,28 +228,41 @@ pub fn run_coverage_check(verbose: bool, filter: Option<String>, threshold: Opti
         get_main_baseline_coverage(&changed_lines, &repo_root_pathbuf, &filter, verbose);
 
     // Run the tests with coverage
-    let display_text = match &filter {
-        Some(pkg) => format!("Running unit tests with coverage for package '{}'...", pkg),
-        None => "Running unit tests with coverage for all packages...".to_string(),
-    };
-    println!("{}", display_text.blue());
+    if !json {
+        let display_text = match &filter {
+            Some(pkg) => format!("Running unit tests with coverage for package '{}'...", pkg),
+            None => "Running unit tests with coverage for all packages...".to_string(),
+        };
+        println!("{}", display_text.blue());
+    }
 
     let (test_success, stdout_lines, stderr_lines) = run_tests(filter.clone())?;
 
     if !test_success {
-        println!("pnpm test stdout:");
-        for line in stdout_lines.iter() {
-            println!("{}", line);
+        if json {
+            output::emit_json(&CoverageEnvelope {
+                coverage: empty_coverage(threshold),
+                passed: false,
+                message: Some("pnpm test failed.".to_string()),
+            });
+        } else {
+            println!("pnpm test stdout:");
+            for line in stdout_lines.iter() {
+                println!("{}", line);
+            }
+            println!("pnpm test stderr:");
+            for line in stderr_lines.iter() {
+                eprintln!("{}", line);
+            }
+            eprintln!("{}", "pnpm test failed.".red());
         }
-        println!("pnpm test stderr:");
-        for line in stderr_lines.iter() {
-            eprintln!("{}", line);
-        }
-        anyhow::bail!("pnpm test failed.");
+        return Ok(exit::TESTS_FAILED);
     }
 
     // Process coverage reports
-    println!("{}", "\nProcessing coverage reports...".blue());
+    if !json {
+        println!("{}", "\nProcessing coverage reports...".blue());
+    }
     let (covered_lines_in_patch, uncovered_lines_details) =
         process_coverage_reports(&changed_lines, &repo_root_pathbuf, verbose, &filter)?;
 
@@ -162,28 +272,49 @@ pub fn run_coverage_check(verbose: bool, filter: Option<String>, threshold: Opti
         0.0
     };
 
-    // Display results
-    display_coverage_results(
-        filtered_total_lines,
-        covered_lines_in_patch,
-        &uncovered_lines_details,
-        baseline_pct,
-        current_pct,
-        verbose,
-    )?;
+    let passed = match threshold {
+        Some(thresh) => current_pct >= thresh,
+        None => true,
+    };
+    let below_threshold_msg = threshold.filter(|_| !passed).map(|thresh| {
+        format!(
+            "Patch coverage {:.1}% is below threshold of {:.1}%",
+            current_pct, thresh
+        )
+    });
 
-    // Gate on threshold — exit non-zero so CI can use this as a quality gate
-    if let Some(thresh) = threshold {
-        if current_pct < thresh {
-            anyhow::bail!(
-                "Patch coverage {:.1}% is below threshold of {:.1}%",
-                current_pct,
-                thresh
-            );
+    if json {
+        output::emit_json(&CoverageEnvelope {
+            coverage: CoverageData {
+                patch_pct: Some(round1(current_pct)),
+                baseline_pct: baseline_pct.map(round1),
+                total_changed_lines: filtered_total_lines,
+                covered_lines: covered_lines_in_patch,
+                threshold,
+                uncovered: to_uncovered_files(&uncovered_lines_details),
+            },
+            passed,
+            message: below_threshold_msg,
+        });
+    } else {
+        display_coverage_results(
+            filtered_total_lines,
+            covered_lines_in_patch,
+            &uncovered_lines_details,
+            baseline_pct,
+            current_pct,
+            verbose,
+        )?;
+        if let Some(msg) = &below_threshold_msg {
+            eprintln!("\n{}", msg.red());
         }
     }
 
-    Ok(())
+    Ok(if passed {
+        exit::SUCCESS
+    } else {
+        exit::COVERAGE_BELOW_THRESHOLD
+    })
 }
 
 /// Get the changed files and lines from git diff
@@ -493,7 +624,13 @@ fn parse_hunk_header(
 
 /// Run the tests with coverage
 fn run_tests(filter: Option<String>) -> Result<(bool, Vec<String>, Vec<String>)> {
-    let pb = ProgressBar::new_spinner();
+    // In machine-readable mode, use a hidden bar so no spinner/ANSI escapes
+    // leak onto stdout; all set_message/tick calls below become no-ops.
+    let pb = if output::json_enabled() {
+        ProgressBar::hidden()
+    } else {
+        ProgressBar::new_spinner()
+    };
     pb.set_style(
         ProgressStyle::default_spinner()
             .template("{spinner:.green} {msg}")
@@ -1083,14 +1220,13 @@ fn get_main_baseline_coverage(
         return None;
     }
 
-    let display_text = match filter {
-        Some(pkg) => format!(
-            "Getting main branch baseline for package '{}'...",
-            pkg
-        ),
-        None => "Getting main branch baseline coverage...".to_string(),
-    };
-    println!("{}", display_text.blue());
+    if !output::json_enabled() {
+        let display_text = match filter {
+            Some(pkg) => format!("Getting main branch baseline for package '{}'...", pkg),
+            None => "Getting main branch baseline coverage...".to_string(),
+        };
+        println!("{}", display_text.blue());
+    }
 
     let baseline_pct = (|| -> Option<f64> {
         let (ok, _, _) = run_tests(filter.clone()).ok()?;

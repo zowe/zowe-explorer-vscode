@@ -191,13 +191,19 @@ fn build_vsix(ze_dir: &Path) -> Result<Vec<String>> {
         let entry = entry?;
         let path = entry.path();
         if path.extension().map_or(false, |e| e == "vsix") {
-            println!("  📦 {}", path.file_name().unwrap().to_string_lossy().bold());
+            println!(
+                "  📦 {}",
+                path.file_name().unwrap().to_string_lossy().bold()
+            );
             vsix_paths.push(path.to_string_lossy().into_owned());
         }
     }
 
     if vsix_paths.is_empty() {
-        bail!("No .vsix files found in `dist/` after `{} package`", pkg_mgr);
+        bail!(
+            "No .vsix files found in `dist/` after `{} package`",
+            pkg_mgr
+        );
     }
 
     println!("✔️  Built {} VSIX(es)", vsix_paths.len());
@@ -232,12 +238,10 @@ fn table_row_value(line: &str, key: &str) -> Option<String> {
 /// body is not a recognizable artifact comment.
 fn parse_artifact_comment(body: &str) -> Option<ArtifactComment> {
     // The artifact ID is the run of digits immediately following the last `/artifacts/` link.
-    let artifact_id: u64 = body
-        .rsplit_once("/artifacts/")
-        .and_then(|(_, rest)| {
-            let digits: String = rest.chars().take_while(char::is_ascii_digit).collect();
-            digits.parse().ok()
-        })?;
+    let artifact_id: u64 = body.rsplit_once("/artifacts/").and_then(|(_, rest)| {
+        let digits: String = rest.chars().take_while(char::is_ascii_digit).collect();
+        digits.parse().ok()
+    })?;
 
     let pr_commit = body
         .lines()
@@ -258,7 +262,12 @@ async fn download_artifact_vsixes(gh: &Octocrab, artifact_id: u64) -> Result<Vec
 
     let raw_artifact = gh
         .actions()
-        .download_artifact(OWNER, REPO, ArtifactId::from(artifact_id), ArchiveFormat::Zip)
+        .download_artifact(
+            OWNER,
+            REPO,
+            ArtifactId::from(artifact_id),
+            ArchiveFormat::Zip,
+        )
         .await
         .context("Failed to download artifact from GitHub")?;
 
@@ -283,7 +292,10 @@ async fn download_artifact_vsixes(gh: &Octocrab, artifact_id: u64) -> Result<Vec
     for entry in std::fs::read_dir(&vsix_dir)? {
         let path = entry?.path();
         if path.extension().map_or(false, |e| e == "vsix") {
-            println!("  📦 {}", path.file_name().unwrap().to_string_lossy().bold());
+            println!(
+                "  📦 {}",
+                path.file_name().unwrap().to_string_lossy().bold()
+            );
             vsix_paths.push(path.to_string_lossy().into_owned());
         }
     }
@@ -403,7 +415,9 @@ pub async fn handle_cmd(
     skip_setup: bool,
     build: bool,
 ) -> Result<()> {
-    println!("{}\n", format!("zedc pr #{}", pr_number).bold());
+    if !crate::output::json_enabled() {
+        println!("{}\n", format!("zedc pr #{}", pr_number).bold());
+    }
 
     let ze_dir = crate::util::find_dir_match(&["package.json"])?
         .context("Could not find a repo root containing package.json")?;
@@ -476,7 +490,10 @@ mod tests {
 
     #[test]
     fn short_sha_truncates_to_seven_chars() {
-        assert_eq!(short_sha("1015def08145a227bbecb7d7f1d530ce1cd45363"), "1015def");
+        assert_eq!(
+            short_sha("1015def08145a227bbecb7d7f1d530ce1cd45363"),
+            "1015def"
+        );
         assert_eq!(short_sha("abc"), "abc");
     }
 }

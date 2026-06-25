@@ -2,6 +2,7 @@
 
 use std::process::Command;
 
+use crate::output::OutputFormat;
 use crate::test::Commands as TestCommands;
 use anyhow::Result;
 use clap::{command, CommandFactory, Parser, Subcommand};
@@ -91,6 +92,26 @@ pub enum RootCommands {
 pub struct Args {
     #[command(subcommand)]
     pub command: RootCommands,
+
+    /// Output format for command results
+    #[arg(long, value_enum, value_name = "FORMAT", global = true)]
+    pub format: Option<OutputFormat>,
+
+    /// Emit machine-readable JSON (shorthand for `--format json`)
+    #[arg(long, global = true)]
+    pub json: bool,
+}
+
+impl Args {
+    /// Resolves the effective output format, treating `--json` as a shorthand
+    /// for `--format json`. The explicit `--json` flag takes precedence.
+    pub fn output_format(&self) -> OutputFormat {
+        if self.json {
+            OutputFormat::Json
+        } else {
+            self.format.unwrap_or_default()
+        }
+    }
 }
 
 /// Generate shell completion scripts for the specified shell

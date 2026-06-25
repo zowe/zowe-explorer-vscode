@@ -12,7 +12,9 @@ use owo_colors::OwoColorize;
 /// # Arguments
 /// * `reference` - (optional) A reference to checkout using Git before performing the setup.
 pub async fn handle_cmd(reference: Option<String>) -> anyhow::Result<()> {
-    println!("{}\n", "zedc setup".bold());
+    if !crate::output::json_enabled() {
+        println!("{}\n", "zedc setup".bold());
+    }
 
     // Locate the Zowe Explorer repo (relative to the current path) before continuing.
     let ze_dir = crate::util::find_dir_match(&["package.json"])?;

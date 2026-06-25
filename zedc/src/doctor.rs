@@ -2,11 +2,13 @@
 
 use anyhow::Result;
 use owo_colors::OwoColorize;
+use serde::Serialize;
 use serde_json::Value;
 use std::path::PathBuf;
 use std::process::Command;
 
 use crate::cmd;
+use crate::output::{self, exit, OutputFormat};
 use crate::pm;
 use crate::util::find_dir_match;
 
@@ -49,7 +51,8 @@ impl std::fmt::Display for Version {
 
 // ─── Check result ─────────────────────────────────────────────────────────────
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
+#[serde(rename_all = "lowercase")]
 enum CheckStatus {
     Pass,
     Fail,
@@ -58,6 +61,7 @@ enum CheckStatus {
     Skip,
 }
 
+#[derive(Serialize)]
 struct CheckResult {
     label: String,
     status: CheckStatus,
@@ -84,12 +88,7 @@ impl CheckResult {
         let installed_str = self.installed.as_deref().unwrap_or("not found");
         let installed_padded = format!("{:<22}", installed_str);
 
-        print!(
-            "  {}  {}  {}",
-            icon,
-            label_padded.bold(),
-            installed_padded
-        );
+        print!("  {}  {}  {}", icon, label_padded.bold(), installed_padded);
 
         if let Some(req) = &self.required {
             let req_display = format!("(required: {})", req);
@@ -136,10 +135,17 @@ fn infer_node_requirement(pkg: &Value) -> Option<(String, String)> {
     {
         // Strip range prefix (^, ~, >=, >, =) to get the base version string
         let stripped = types_node.trim_start_matches(|c: char| !c.is_ascii_digit());
-        if let Some(major) = stripped.split('.').next().and_then(|m| m.parse::<u32>().ok()) {
+        if let Some(major) = stripped
+            .split('.')
+            .next()
+            .and_then(|m| m.parse::<u32>().ok())
+        {
             return Some((
                 format!(">={}.0.0", major),
-                format!("inferred from @types/node@{} in devDependencies", types_node),
+                format!(
+                    "inferred from @types/node@{} in devDependencies",
+                    types_node
+                ),
             ));
         }
     }
@@ -525,6 +531,18 @@ fn check_dependencies(ze_dir: &PathBuf) -> CheckResult {
     }
 }
 
+// ─── Report ─────────────────────────────────────────────────────────────────
+
+/// Machine-readable summary of every environment check, emitted by `--json`.
+#[derive(Serialize)]
+struct DoctorReport {
+    /// `true` when no check failed (warnings do not affect this).
+    passed: bool,
+    failures: usize,
+    warnings: usize,
+    checks: Vec<CheckResult>,
+}
+
 // ─── Entry point ──────────────────────────────────────────────────────────────
 
 fn print_section(title: &str) {
@@ -532,48 +550,21 @@ fn print_section(title: &str) {
     println!("{}", "─".repeat(title.len()).blue());
 }
 
-pub async fn handle_cmd() -> Result<()> {
-    let workspace = std::env::current_dir().unwrap_or_default();
-    let ze_dir = find_dir_match(&["package.json"])?.unwrap_or(workspace.clone());
-
-    let pkg_json: Value = std::fs::read_to_string(ze_dir.join("package.json"))
-        .ok()
-        .and_then(|s| serde_json::from_str(&s).ok())
-        .unwrap_or(Value::Object(Default::default()));
-
-    println!(
-        "{}",
-        "Zowe Explorer Dev Environment Doctor".bold().green()
-    );
+/// Renders the collected check results as colorized terminal output.
+fn render_text(results: &[CheckResult], fails: usize, warns: usize) {
+    println!("{}", "Zowe Explorer Dev Environment Doctor".bold().green());
     println!("{}", "=".repeat(40).green());
 
-    let mut results: Vec<CheckResult> = Vec::new();
-
+    // results are ordered: node, pkg_mgr, git, vscode, dependencies.
     print_section("Runtime Checks");
-    let r = check_node(&pkg_json);
-    r.print();
-    results.push(r);
-
-    let r = check_pkg_mgr(&pkg_json, &ze_dir);
-    r.print();
-    results.push(r);
-
-    let r = check_git();
-    r.print();
-    results.push(r);
-
-    let r = check_vscode();
-    r.print();
-    results.push(r);
+    for r in results.iter().take(4) {
+        r.print();
+    }
 
     print_section("Workspace Checks");
-    let r = check_dependencies(&ze_dir);
-    r.print();
-    results.push(r);
-
-    // Summary
-    let fails = results.iter().filter(|r| r.is_failure()).count();
-    let warns = results.iter().filter(|r| r.is_warning()).count();
+    for r in results.iter().skip(4) {
+        r.print();
+    }
 
     println!();
     if fails == 0 && warns == 0 {
@@ -594,12 +585,46 @@ pub async fn handle_cmd() -> Result<()> {
             );
         }
     }
+}
 
-    if fails > 0 {
-        std::process::exit(1);
+/// Runs every environment check and returns a stable exit code:
+/// [`exit::FAILURE`] when any check failed, [`exit::SUCCESS`] otherwise.
+pub async fn handle_cmd() -> Result<i32> {
+    let workspace = std::env::current_dir().unwrap_or_default();
+    let ze_dir = find_dir_match(&["package.json"])?.unwrap_or(workspace.clone());
+
+    let pkg_json: Value = std::fs::read_to_string(ze_dir.join("package.json"))
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or(Value::Object(Default::default()));
+
+    let results: Vec<CheckResult> = vec![
+        check_node(&pkg_json),
+        check_pkg_mgr(&pkg_json, &ze_dir),
+        check_git(),
+        check_vscode(),
+        check_dependencies(&ze_dir),
+    ];
+
+    let fails = results.iter().filter(|r| r.is_failure()).count();
+    let warns = results.iter().filter(|r| r.is_warning()).count();
+
+    if output::format() == OutputFormat::Json {
+        output::emit_json(&DoctorReport {
+            passed: fails == 0,
+            failures: fails,
+            warnings: warns,
+            checks: results,
+        });
+    } else {
+        render_text(&results, fails, warns);
     }
 
-    Ok(())
+    Ok(if fails > 0 {
+        exit::FAILURE
+    } else {
+        exit::SUCCESS
+    })
 }
 
 #[cfg(test)]
