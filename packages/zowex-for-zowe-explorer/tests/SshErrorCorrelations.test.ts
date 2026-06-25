@@ -11,6 +11,7 @@
 
 import { ErrorCorrelator, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { afterEach, beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
+import { SshErrors } from "@zowe/zowex-for-zowe-sdk";
 import { registerSshErrorCorrelations } from "../src/SshErrorCorrelations";
 
 // Mock Zowe Explorer API
@@ -49,8 +50,8 @@ describe("SshErrorCorrelations", () => {
 
             expect(mockGetInstance).toHaveBeenCalled();
 
-            // Should register multiple correlations (connection failures, memory failures, filesystem errors, expired password)
-            expect(mockErrorCorrelator.addCorrelation).toHaveBeenCalledTimes(17); // 1 request timeout + 6 connection (incl. FOTS1668) + 4 memory + 6 filesystem
+            // One correlation per entry in the SDK's SshErrors map
+            expect(mockErrorCorrelator.addCorrelation).toHaveBeenCalledTimes(Object.keys(SshErrors).length);
         });
 
         it("should handle missing ErrorCorrelator gracefully", () => {
@@ -242,6 +243,50 @@ describe("SshErrorCorrelations", () => {
         });
     });
 
+    describe("request timeout & disk/password correlations", () => {
+        beforeEach(() => {
+            registerSshErrorCorrelations();
+        });
+
+        const findCorrelation = (code: string): any =>
+            (mockErrorCorrelator.addCorrelation as any).mock.calls.find((call: any) => call[2].errorCode === code)?.[2];
+
+        it("should register the REQUEST_TIMEOUT correlation with both string and RegExp matchers", () => {
+            const correlation = findCorrelation("REQUEST_TIMEOUT");
+
+            expect(correlation).toBeDefined();
+            expect(correlation.summary).toContain("exceeded the timeout limit");
+            expect(correlation.matches).toContain("Request timed out");
+            expect(correlation.matches).toEqual(expect.arrayContaining([expect.any(RegExp)]));
+            expect(correlation.tips.length).toBeGreaterThan(0);
+            // The timeout correlation intentionally ships without resource links.
+            expect(correlation.resources).toBeUndefined();
+        });
+
+        it("should register the FOTS1668 expired-password correlation", () => {
+            const correlation = findCorrelation("FOTS1668");
+
+            expect(correlation).toBeDefined();
+            expect(correlation.summary).toContain("password has expired");
+            expect(correlation.matches).toEqual(
+                expect.arrayContaining(["FOTS1668", "FOTS1669", "Your password has expired", "Password change required but no TTY available"])
+            );
+            expect(correlation.resources).toHaveLength(1);
+            expect(new URL(correlation.resources[0].href).host).toBe("www.ibm.com");
+        });
+
+        it("should register the EDC5133I out-of-space correlation", () => {
+            const correlation = findCorrelation("EDC5133I");
+
+            expect(correlation).toBeDefined();
+            expect(correlation.summary).toContain("no space left on the device");
+            expect(correlation.matches).toEqual(["EDC5133I"]);
+            expect(correlation.tips).toEqual(expect.arrayContaining([expect.stringContaining("free space")]));
+            // EDC5133I has no resource links.
+            expect(correlation.resources).toBeUndefined();
+        });
+    });
+
     describe("correlation structure validation", () => {
         beforeEach(() => {
             registerSshErrorCorrelations();
@@ -320,8 +365,11 @@ describe("SshErrorCorrelations", () => {
             const errorCodes = allCalls.map((call) => call[2].errorCode);
 
             const expectedCodes = [
+                // Request timeout
+                "REQUEST_TIMEOUT",
                 // Connection failures
                 "FOTS4241",
+                "FOTS1668",
                 "FOTS4134",
                 "FOTS4231",
                 "FOTS4203",
@@ -333,11 +381,15 @@ describe("SshErrorCorrelations", () => {
                 "FOTS4311",
                 // Filesystem errors
                 "FSUM6260",
+                "EDC5133I",
                 "FOTS4152",
                 "FOTS4154",
                 "FOTS4150",
                 "FOTS4312",
             ];
+
+            // Sanity check: the curated list should match the SDK's full set of registered codes.
+            expect(expectedCodes.sort()).toEqual(Object.keys(SshErrors).sort());
 
             expectedCodes.forEach((expectedCode) => {
                 expect(errorCodes).toContain(expectedCode);

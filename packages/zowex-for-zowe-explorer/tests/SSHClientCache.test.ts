@@ -18,8 +18,15 @@ import { deployWithProgress } from "../src/ServerDeployment";
 
 vi.mock("@zowe/zowe-explorer-api", () => {
     class MockDeferredPromise {
-        promise = Promise.resolve();
-        resolve = vi.fn();
+        public promise: Promise<unknown>;
+        public resolve!: (value?: unknown) => void;
+        public reject!: (reason?: unknown) => void;
+        constructor() {
+            this.promise = new Promise((resolve, reject) => {
+                this.resolve = resolve;
+                this.reject = reject;
+            });
+        }
     }
     return {
         Gui: {},
@@ -201,6 +208,16 @@ describe("SshClientCache", () => {
             );
         });
 
+        it("should release the profile lock via the AsyncMutex onDispose callback after connecting", async () => {
+            const deleteSpy = vi.spyOn((cache as any).mMutexMap, "delete");
+
+            await cache.connect(mockProfile);
+
+            // The `using` lock's [Symbol.dispose] runs onDispose, which removes the mutex from the map.
+            expect(deleteSpy).toHaveBeenCalledWith(clientId);
+            expect((cache as any).mMutexMap.has(clientId)).toBe(false);
+        });
+
         it("should create a new client session if one does not exist", async () => {
             const client = await cache.connect(mockProfile);
 
@@ -246,6 +263,30 @@ describe("SshClientCache", () => {
             expect(ZSshClient.create).toHaveBeenCalledTimes(2); // Initial try + post-deploy try
         });
 
+        it("should skip the update and warn when the server is outdated but autoUpdate is false", async () => {
+            vi.mocked(vscode.workspace.getConfiguration).mockReturnValueOnce({
+                get: vi.fn().mockImplementation((key: string, defaultVal: any) => (key === "zowex.serverAutoUpdate" ? false : (defaultVal ?? null))),
+            } as any);
+            vi.mocked(ZSshUtils.checkIfOutdated).mockResolvedValueOnce(true);
+
+            await cache.connect(mockProfile);
+
+            // autoUpdate disabled => keep the existing client, no redeploy
+            expect(deployWithProgress).not.toHaveBeenCalled();
+            expect(ZSshClient.create).toHaveBeenCalledTimes(1);
+        });
+
+        it("should rethrow a non-ENOTFOUND error thrown during client creation", async () => {
+            vi.mocked(ZSshClient.create).mockRejectedValueOnce(new Error("some other failure"));
+
+            await expect(cache.connect(mockProfile)).rejects.toThrow("some other failure");
+        });
+
+        it("should expose the singleton instance and the profiles cache", () => {
+            expect(SshClientCache.inst).toBe(cache);
+            expect(cache.profilesCache).toBe(mockGetProfilesCache);
+        });
+
         it("should restart the client if opts.restart flag is true", async () => {
             const endSpy = vi.spyOn(cache, "end");
 
@@ -255,6 +296,45 @@ describe("SshClientCache", () => {
             // Should pass the flags down to end()
             expect(endSpy).toHaveBeenCalledWith(clientId, { restart: true, retryRequests: true });
             expect(ZSshClient.create).toHaveBeenCalledTimes(2);
+        });
+
+        it("should reuse the cached client on a second connect without restart (cache hit)", async () => {
+            const first = await cache.connect(mockProfile);
+            vi.mocked(ZSshClient.create).mockClear();
+
+            const second = await cache.connect(mockProfile);
+
+            // The second connect must short-circuit on the existing session-map entry, not rebuild.
+            expect(second).toBe(first);
+            expect(ZSshClient.create).not.toHaveBeenCalled();
+        });
+        
+        it("should serialize overlapping connect() calls so exactly one client is built", async () => {
+            let releaseCreate!: (client: unknown) => void;
+            const createGate = new Promise((resolve) => {
+                releaseCreate = resolve;
+            });
+            const builtClient = { dispose: vi.fn(), collectAllRequests: vi.fn(), serverChecksums: {} };
+            vi.mocked(ZSshClient.create).mockReset();
+            vi.mocked(ZSshClient.create).mockReturnValueOnce(createGate as any);
+            vi.mocked(ZSshClient.create).mockResolvedValue(builtClient as any);
+
+            const firstConnect = cache.connect(mockProfile);
+            await Promise.resolve();
+            await Promise.resolve();
+            expect((cache as any).mMutexMap.has(clientId)).toBe(true);
+
+            const secondConnect = cache.connect(mockProfile);
+
+            releaseCreate(builtClient);
+            const [c1, c2] = await Promise.all([firstConnect, secondConnect]);
+
+            // Only the first build runs; the second observes the populated session map and reuses it.
+            expect(ZSshClient.create).toHaveBeenCalledTimes(1);
+            expect(c1).toBe(builtClient);
+            expect(c2).toBe(builtClient);
+            // The lock is released once the build completes.
+            expect((cache as any).mMutexMap.has(clientId)).toBe(false);
         });
     });
 
@@ -275,6 +355,17 @@ describe("SshClientCache", () => {
             cache.end(clientId, { restart: true, retryRequests: true });
 
             expect(mockClient.dispose).toHaveBeenCalledWith(true);
+            expect((cache as any).mClientSessionMap.has(clientId)).toBe(false);
+        });
+
+        it("should resolve the client id from a profile object when given a profile", () => {
+            const mockClient = { dispose: vi.fn() };
+            // The session is keyed by `${name}_${type}`, derived from the profile via getClientId().
+            (cache as any).mClientSessionMap.set(clientId, { client: mockClient });
+
+            cache.end(mockProfile);
+
+            expect(mockClient.dispose).toHaveBeenCalledWith(false);
             expect((cache as any).mClientSessionMap.has(clientId)).toBe(false);
         });
     });
@@ -328,6 +419,12 @@ describe("SshClientCache", () => {
 
             await expect((cache as any).reloadClient(clientId, false)).rejects.toThrow(/Could not load profile testProfile/);
         });
+
+        it("should log and return early when reloading a non-existent session", async () => {
+            const connectSpy = vi.spyOn(cache, "connect").mockResolvedValue({} as any);
+            await (cache as any).reloadClient("nonexistent_client");
+            expect(connectSpy).not.toHaveBeenCalled();
+        });
     });
 
     describe("handleClientError() / promptErrorAndReload()", () => {
@@ -340,6 +437,16 @@ describe("SshClientCache", () => {
                 startTime: Date.now() - 30000, // Started 30 seconds ago
                 responseTimeoutMillis: 60000,
             });
+        });
+
+        it("should swallow error notifications while a session is mid-reload", async () => {
+            const session = (cache as any).mClientSessionMap.get(clientId);
+            // ServerStatus.RESTARTING === 2
+            session.status = 2;
+
+            await (cache as any).handleClientError(clientId, new Error("Fatal error encountered in zowex"));
+
+            expect(vscode.window.showErrorMessage).not.toHaveBeenCalled();
         });
 
         it("should reload AND retry if 'Reload and Retry' is clicked", async () => {
@@ -429,6 +536,42 @@ describe("SshClientCache", () => {
 
             // Should not show error message
             expect(vscode.window.showErrorMessage).not.toHaveBeenCalled();
+        });
+
+        it("should show a generic reload-failure message when 'Reload' fails", async () => {
+            vi.spyOn(cache as any, "reloadClient").mockRejectedValue(new Error("reload boom"));
+            vi.mocked(vscode.window.showErrorMessage).mockResolvedValue("Reload" as any);
+
+            await (cache as any).handleClientError(clientId, new Error("Something went wrong CEE5207E offset"));
+            await new Promise(process.nextTick);
+            await new Promise(process.nextTick);
+
+            expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Failed to reload ZRS. Try reloading your VSCode environment");
+        });
+
+        it("should show a generic reload-and-retry-failure message when 'Reload and Retry' fails", async () => {
+            const session = (cache as any).mClientSessionMap.get(clientId);
+            session.startTime = Date.now() - 70000;
+            vi.spyOn(cache as any, "reloadClient").mockRejectedValue(new Error("reload retry boom"));
+            vi.mocked(vscode.window.showErrorMessage).mockResolvedValue("Reload and Retry" as any);
+
+            await (cache as any).handleClientError(clientId, new Error("Request timed out"));
+            await new Promise(process.nextTick);
+            await new Promise(process.nextTick);
+
+            expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+                "Failed to reload ZRS and retry requests. Try reloading your VSCode environment"
+            );
+        });
+
+        it("should do nothing when the user clicks 'Close' on a reload prompt", async () => {
+            const reloadSpy = vi.spyOn(cache as any, "reloadClient");
+            vi.mocked(vscode.window.showErrorMessage).mockResolvedValue("Close" as any);
+
+            await (cache as any).handleClientError(clientId, new Error("Something went wrong CEE5207E offset"));
+            await new Promise(process.nextTick);
+
+            expect(reloadSpy).not.toHaveBeenCalled();
         });
 
         it("should show specific message on UNSUPPORTED error", async () => {
