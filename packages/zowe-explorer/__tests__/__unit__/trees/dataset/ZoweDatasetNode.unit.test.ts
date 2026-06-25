@@ -204,6 +204,34 @@ describe("ZoweDatasetNode Unit Tests", () => {
         expect(response).toEqual([]);
     });
 
+    it("returns empty children without an error when allMembers throws a 404 ImperativeError", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: vi.fn(() => ({
+                loadNamedProfile: vi.fn().mockReturnValue(profileOne),
+            })),
+            configurable: true,
+        });
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.DELETED.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+        pdsNode.dirty = true;
+        vi.spyOn(zosfiles.List, "allMembers").mockRejectedValueOnce(
+            new imperative.ImperativeError({ msg: "EDC5049I The specified file name could not be located.", errorCode: "404" })
+        );
+        const errorHandlingSpy = vi.spyOn(AuthUtils, "errorHandling").mockResolvedValue(false);
+
+        const children = await pdsNode.getChildren();
+
+        expect(children).toEqual([]);
+        expect(errorHandlingSpy).not.toHaveBeenCalled();
+    });
+
     it("Checks that when List.dataSet/allMembers() returns an empty response, it returns a label of 'No data sets found'", async () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: vi.fn(() => {
