@@ -455,7 +455,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entry = parentDir.entries.get(dsname) as DsEntry;
         }
 
-        if (entryStats) {
+        if (entry != null && entryStats) {
             entry.stats = { ...entry.stats, ...entryStats };
         }
         return entry;
