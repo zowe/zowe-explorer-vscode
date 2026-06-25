@@ -66,43 +66,52 @@ Then("the dataset should open in the editor containing the text {string}", async
 });
 
 Given("a test PDS member has been created and populated for encoding", async function () {
-    await browser.executeWorkbench(async (vscode, pdsPath: string, memberPath: string) => {
-        await vscode.workspace.fs.readDirectory(
-            vscode.Uri.from({ scheme: "zowe-ds", path: pdsPath, query: "fetch=true" })
-        );
-        const memberUri = vscode.Uri.from({ scheme: "zowe-ds", path: memberPath });
-        const doc = await vscode.workspace.openTextDocument(memberUri);
-        await vscode.window.showTextDocument(doc, { preview: false });
-    },
-    `/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}`,
-    `/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${process.env.ZE_TEST_PDS_MEMBER}`
+    const memberName = process.env.ZE_TEST_PDS_MEMBER;
+    const pdsName = process.env.ZE_TEST_PDS;
+
+    await browser.executeWorkbench(async (vscode, pdsPath: string) => {
+        await vscode.workspace.fs.readDirectory(vscode.Uri.from({ scheme: "zowe-ds", path: pdsPath, query: "fetch=true" }));
+    }, `/${process.env.ZE_TEST_PROFILE_NAME}/${pdsName}`);
+
+    await browser.waitUntil(async () => !!(await (await this.profileNode.find()).findChildItem(pdsName)), {
+        timeout: 15000,
+        timeoutMsg: `${pdsName} not found in filtered tree`,
+    });
+    const pdsNode = await (await this.profileNode.find()).findChildItem(pdsName);
+    await pdsNode.expand();
+
+    const memberNode = await browser.waitUntil(
+        async () => {
+            const freshPds = await (await this.profileNode.find()).findChildItem(pdsName);
+            if (!freshPds) return undefined;
+            return (await freshPds.findChildItem(memberName)) ?? undefined;
+        },
+        { timeout: 15000, timeoutMsg: `Member ${memberName} not found after PDS expansion` }
     );
+    await memberNode.select();
 
     const editorView = (await browser.getWorkbench()).getEditorView();
-    await browser.waitUntil(async () => (await editorView.getOpenEditorTitles()).some((t) => t.includes(process.env.ZE_TEST_PDS_MEMBER)), {
+    const matchesTitle = (t: string): boolean =>
+        t.toUpperCase() === memberName.toUpperCase() || t.toUpperCase().startsWith(`${memberName.toUpperCase()}.`);
+    await browser.waitUntil(async () => (await editorView.getOpenEditorTitles()).some(matchesTitle), {
         timeout: 10000,
-        timeoutMsg: `Member ${process.env.ZE_TEST_PDS_MEMBER} did not open in editor`,
+        timeoutMsg: `Member ${memberName} did not open in editor`,
     });
-    await editorView.closeEditor(process.env.ZE_TEST_PDS_MEMBER);
+    const actualTitle = (await editorView.getOpenEditorTitles()).find(matchesTitle);
+    await editorView.closeEditor(actualTitle);
 
-    await writeDsContent(`/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${process.env.ZE_TEST_PDS_MEMBER}`, "$");
-    await browser.waitUntil(
-        async () => !!(await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS)),
-        { timeout: 15000, timeoutMsg: `${process.env.ZE_TEST_PDS} not found in filtered tree` }
-    );
-    this.encodingPds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
-    await this.encodingPds.expand();
+    await writeDsContent(`/${process.env.ZE_TEST_PROFILE_NAME}/${pdsName}/${memberName}`, "$");
 
     await browser.waitUntil(
         async () => {
-            this.encodingPds = await (await this.profileNode.find()).findChildItem(process.env.ZE_TEST_PDS);
+            this.encodingPds = await (await this.profileNode.find()).findChildItem(pdsName);
             if (!this.encodingPds) return false;
-            this.encodingMember = await this.encodingPds.findChildItem(process.env.ZE_TEST_PDS_MEMBER);
+            this.encodingMember = await this.encodingPds.findChildItem(memberName);
             return !!this.encodingMember;
         },
-        { timeout: 15000, timeoutMsg: `Member ${process.env.ZE_TEST_PDS_MEMBER} did not appear in tree after PDS expansion` }
+        { timeout: 15000, timeoutMsg: `Member ${memberName} did not appear in tree after PDS expansion` }
     );
-    this.encodingMemberName = process.env.ZE_TEST_PDS_MEMBER;
+    this.encodingMemberName = memberName;
 });
 
 When("the user right-clicks on the PDS member and selects {string}", async function (contextMenuOption: string) {
@@ -126,9 +135,8 @@ Then("the member should open in the editor containing the text {string}", async 
         timeout: 15000,
         timeoutMsg: `Editor for ${this.encodingMemberName} did not open after selecting IBM-285 encoding`,
     });
-    const content = await browser.executeWorkbench(async (vscode, memberName: string) => {
-        const doc = vscode.workspace.textDocuments.find((d) => d.fileName.includes(memberName));
-        return doc?.getText() ?? "";
-    }, this.encodingMemberName);
+    const content = await browser.executeWorkbench(async (vscode) => {
+        return vscode.window.activeTextEditor?.document.getText() ?? "";
+    });
     await expect(content).toContain(text);
 });

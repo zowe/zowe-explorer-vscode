@@ -72,11 +72,13 @@ export async function createMemberInPds(pdsNode: any, memberName: string): Promi
     await browser.keys(Key.Enter);
 
     const editorView = (await browser.getWorkbench()).getEditorView();
+    const matchesTitle = (t: string): boolean =>
+        t.toUpperCase() === memberName.toUpperCase() || t.toUpperCase().startsWith(`${memberName.toUpperCase()}.`);
     await browser.waitUntil(
-        async () => (await editorView.getOpenEditorTitles()).some((t) => t.toUpperCase().startsWith(memberName.toUpperCase())),
+        async () => (await editorView.getOpenEditorTitles()).some(matchesTitle),
         { timeout: 10000, timeoutMsg: `Editor for new member ${memberName} did not open` }
     );
-    const actualTitle = (await editorView.getOpenEditorTitles()).find((t) => t.toUpperCase().startsWith(memberName.toUpperCase()));
+    const actualTitle = (await editorView.getOpenEditorTitles()).find(matchesTitle);
     await editorView.closeEditor(actualTitle);
 }
 
