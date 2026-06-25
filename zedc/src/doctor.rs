@@ -147,6 +147,41 @@ fn infer_node_requirement(pkg: &Value) -> Option<(String, String)> {
     None
 }
 
+// ─── Requirement parsing ──────────────────────────────────────────────────────
+
+/// Splits a semver requirement string (e.g. ">=1.101.0", "^1.101.0", "~1.2.3")
+/// into its comparison operator and parsed [`Version`]. Bare versions (no operator)
+/// default to ">=".
+fn parse_requirement(req_str: &str) -> Option<(&'static str, Version)> {
+    let (op, ver_str): (&'static str, &str) = if let Some(rest) = req_str.strip_prefix(">=") {
+        (">=", rest.trim())
+    } else if let Some(rest) = req_str.strip_prefix('^') {
+        ("^", rest.trim())
+    } else if let Some(rest) = req_str.strip_prefix('~') {
+        ("~", rest.trim())
+    } else if let Some(rest) = req_str.strip_prefix('>') {
+        (">", rest.trim())
+    } else {
+        (">=", req_str.trim())
+    };
+
+    Version::parse(ver_str).map(|ver| (op, ver))
+}
+
+/// Returns `true` if `installed` satisfies the requirement described by `op`/`required`.
+fn satisfies(installed: &Version, op: &str, required: &Version) -> bool {
+    match op {
+        "^" => installed.major == required.major && installed >= required,
+        "~" => {
+            installed.major == required.major
+                && installed.minor == required.minor
+                && installed >= required
+        }
+        ">" => installed > required,
+        _ => installed >= required,
+    }
+}
+
 // ─── Individual checks ────────────────────────────────────────────────────────
 
 fn check_node(pkg: &Value) -> CheckResult {
@@ -185,29 +220,11 @@ fn check_node(pkg: &Value) -> CheckResult {
         };
     };
 
-    // Parse operator and version from requirement string
-    let (op, ver_str): (&str, &str) = if let Some(rest) = req_str.strip_prefix(">=") {
-        (">=", rest.trim())
-    } else if let Some(rest) = req_str.strip_prefix('^') {
-        ("^", rest.trim())
-    } else if let Some(rest) = req_str.strip_prefix('~') {
-        ("~", rest.trim())
-    } else if let Some(rest) = req_str.strip_prefix('>') {
-        (">", rest.trim())
-    } else {
-        (">=", req_str.trim())
-    };
-
     let installed_ver = Version::parse(&installed_raw);
-    let required_ver = Version::parse(ver_str);
 
-    match (installed_ver, required_ver) {
-        (Some(inst), Some(req)) => {
-            let passes = match op {
-                "^" => inst.major == req.major && inst >= req,
-                ">" => inst > req,
-                _ => inst >= req,
-            };
+    match (installed_ver, parse_requirement(&req_str)) {
+        (Some(inst), Some((op, req))) => {
+            let passes = satisfies(&inst, op, &req);
             CheckResult {
                 label,
                 status: if passes {
@@ -380,6 +397,109 @@ fn check_git() -> CheckResult {
     }
 }
 
+/// Locates and parses the Zowe Explorer extension's `package.json`, whose
+/// `engines.vscode` field defines the minimum supported VS Code version.
+///
+/// The lookup walks upward from the current directory for
+/// `packages/zowe-explorer/package.json` so the correct manifest is used
+/// regardless of where `zedc doctor` is invoked within the monorepo.
+fn find_zowe_explorer_pkg() -> Option<Value> {
+    let dir = find_dir_match(&["packages/zowe-explorer/package.json"]).ok()??;
+    let contents = std::fs::read_to_string(dir.join("package.json")).ok()?;
+    serde_json::from_str(&contents).ok()
+}
+
+fn check_vscode() -> CheckResult {
+    // `code --version` prints three lines: version, commit hash, then architecture.
+    // We only care about the first line (e.g. "1.101.0").
+    let installed_raw = cmd::as_binary("code")
+        .arg("--version")
+        .output()
+        .ok()
+        .filter(|o| o.status.success())
+        .and_then(|o| String::from_utf8(o.stdout).ok())
+        .and_then(|s| s.lines().next().map(|l| l.trim().to_string()))
+        .filter(|s| !s.is_empty());
+
+    let pkg = find_zowe_explorer_pkg().unwrap_or(Value::Object(Default::default()));
+    check_vscode_with(&pkg, installed_raw)
+}
+
+/// Core VS Code validation, decoupled from process invocation for testability.
+/// `installed_raw` is the version string reported by `code --version` (first line),
+/// or `None` if the `code` binary could not be located/executed.
+fn check_vscode_with(pkg: &Value, installed_raw: Option<String>) -> CheckResult {
+    let label = "VS Code".to_string();
+
+    let required = pkg
+        .pointer("/engines/vscode")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
+    let Some(installed_raw) = installed_raw else {
+        return CheckResult {
+            label,
+            status: CheckStatus::Fail,
+            installed: None,
+            required,
+            detail: Some("code not found in PATH".to_string()),
+            fix_hint: Some(
+                "install VS Code and add the 'code' command to PATH (Command Palette → 'Shell Command: Install code command in PATH')"
+                    .to_string(),
+            ),
+        };
+    };
+
+    let Some(req_str) = required else {
+        return CheckResult {
+            label,
+            status: CheckStatus::Skip,
+            installed: Some(installed_raw),
+            required: None,
+            detail: Some(
+                "no engines.vscode requirement found in packages/zowe-explorer/package.json"
+                    .to_string(),
+            ),
+            fix_hint: None,
+        };
+    };
+
+    let installed_ver = Version::parse(&installed_raw);
+
+    match (installed_ver, parse_requirement(&req_str)) {
+        (Some(inst), Some((op, req))) => {
+            let passes = satisfies(&inst, op, &req);
+            CheckResult {
+                label,
+                status: if passes {
+                    CheckStatus::Pass
+                } else {
+                    CheckStatus::Fail
+                },
+                installed: Some(installed_raw.clone()),
+                required: Some(format!("{}{}", op, req)),
+                detail: Some("engines.vscode in packages/zowe-explorer/package.json".to_string()),
+                fix_hint: if !passes {
+                    Some(format!(
+                        "installed {} does not satisfy {}{}  —  update VS Code to a compatible version",
+                        installed_raw, op, req
+                    ))
+                } else {
+                    None
+                },
+            }
+        }
+        _ => CheckResult {
+            label,
+            status: CheckStatus::Warn,
+            installed: Some(installed_raw),
+            required: Some(req_str),
+            detail: Some("could not parse versions for comparison".to_string()),
+            fix_hint: None,
+        },
+    }
+}
+
 fn check_dependencies(ze_dir: &PathBuf) -> CheckResult {
     let label = "node_modules".to_string();
     let installed = pm::check_dependencies(ze_dir);
@@ -442,6 +562,10 @@ pub async fn handle_cmd() -> Result<()> {
     r.print();
     results.push(r);
 
+    let r = check_vscode();
+    r.print();
+    results.push(r);
+
     print_section("Workspace Checks");
     let r = check_dependencies(&ze_dir);
     r.print();
@@ -476,4 +600,77 @@ pub async fn handle_cmd() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn parses_caret_requirement() {
+        let (op, ver) = parse_requirement("^1.101.0").expect("should parse");
+        assert_eq!(op, "^");
+        assert_eq!(ver, Version::parse("1.101.0").unwrap());
+    }
+
+    #[test]
+    fn bare_requirement_defaults_to_gte() {
+        let (op, ver) = parse_requirement("1.101.0").expect("should parse");
+        assert_eq!(op, ">=");
+        assert_eq!(ver, Version::parse("1.101.0").unwrap());
+    }
+
+    #[test]
+    fn caret_allows_same_major_higher_minor_patch() {
+        let req = Version::parse("1.101.0").unwrap();
+        assert!(satisfies(&Version::parse("1.101.0").unwrap(), "^", &req));
+        assert!(satisfies(&Version::parse("1.101.5").unwrap(), "^", &req));
+        assert!(satisfies(&Version::parse("1.102.0").unwrap(), "^", &req));
+    }
+
+    #[test]
+    fn caret_rejects_lower_or_different_major() {
+        let req = Version::parse("1.101.0").unwrap();
+        assert!(!satisfies(&Version::parse("1.100.9").unwrap(), "^", &req));
+        assert!(!satisfies(&Version::parse("2.0.0").unwrap(), "^", &req));
+    }
+
+    #[test]
+    fn tilde_pins_major_and_minor() {
+        let req = Version::parse("1.101.0").unwrap();
+        assert!(satisfies(&Version::parse("1.101.4").unwrap(), "~", &req));
+        assert!(!satisfies(&Version::parse("1.102.0").unwrap(), "~", &req));
+    }
+
+    #[test]
+    fn vscode_pass_when_installed_satisfies_engines() {
+        let pkg = json!({ "engines": { "vscode": "^1.101.0" } });
+        let result = check_vscode_with(&pkg, Some("1.101.5".to_string()));
+        assert_eq!(result.status, CheckStatus::Pass);
+    }
+
+    #[test]
+    fn vscode_fail_when_installed_too_old() {
+        let pkg = json!({ "engines": { "vscode": "^1.101.0" } });
+        let result = check_vscode_with(&pkg, Some("1.99.0".to_string()));
+        assert_eq!(result.status, CheckStatus::Fail);
+        assert!(result.fix_hint.is_some());
+    }
+
+    #[test]
+    fn vscode_skip_when_no_engines_field() {
+        let pkg = json!({});
+        let result = check_vscode_with(&pkg, Some("1.101.0".to_string()));
+        assert_eq!(result.status, CheckStatus::Skip);
+    }
+
+    #[test]
+    fn vscode_fail_when_code_not_found() {
+        let pkg = json!({ "engines": { "vscode": "^1.101.0" } });
+        let result = check_vscode_with(&pkg, None);
+        assert_eq!(result.status, CheckStatus::Fail);
+        assert_eq!(result.installed, None);
+        assert_eq!(result.required.as_deref(), Some("^1.101.0"));
+    }
 }
