@@ -19,8 +19,6 @@ const testInfo = {
     renamedFile: process.env.ZE_TEST_USS_RENAMED_FILE,
     newDir: process.env.ZE_TEST_USS_NEW_DIR,
     renamedDir: process.env.ZE_TEST_USS_RENAMED_DIR,
-    copyDstDir: process.env.ZE_TEST_USS_COPY_DST_DIR,
-    ussFilter: process.env.ZE_TEST_USS_FILTER,
     ussFile: process.env.ZE_TEST_USS_FILE,
     encoding: process.env.ZE_TEST_USS_ENCODING,
 };
@@ -217,22 +215,17 @@ When("the user copies the USS test file", async function () {
     this.copiedFileName = testInfo.ussFile;
 });
 
-When("the user pastes the USS file into the copy destination directory", async function () {
-    // ZE_TEST_USS_COPY_DST_DIR is a directory at the same level as ZE_TEST_USS_DIR.
-    // Use findChildItem + expand directly — revealChildItem waits for children which
-    // would time out when the destination directory starts empty.
-    const dstDirName = testInfo.copyDstDir.replace(`${testInfo.ussFilter}/`, "");
-    const profileNode = await this.profileNode.find();
-    this.copyDstDir = (await profileNode.findChildItem(dstDirName)) as TreeItem;
+When("the user pastes the USS file into the new USS directory", async function () {
+    // The destination is newDir, just created as a direct child of the already-expanded
+    // USS test directory. findChildItem finds it without any scrolling concerns.
+    this.copyDstDir = (await this.ussDir.findChildItem(testInfo.newDir)) as TreeItem;
     await expect(this.copyDstDir).toBeDefined();
-    await this.copyDstDir.expand();
     await this.copyDstDir.elem.moveTo();
     await clickContextMenuItem(this.copyDstDir, "Paste");
     await browser.pause(5000);
 });
 
-Then("the copied USS file appears in the destination directory listing", async function () {
-    // Re-expand the destination so the tree reflects the newly pasted file
+Then("the copied USS file appears in the new USS directory listing", async function () {
     await this.copyDstDir.expand();
     await browser.waitUntil(
         async () => (await this.copyDstDir.findChildItem(this.copiedFileName)) != null,
@@ -240,14 +233,6 @@ Then("the copied USS file appears in the destination directory listing", async f
     );
     const copiedFile = await this.copyDstDir.findChildItem(this.copiedFileName);
     await expect(copiedFile).toBeDefined();
-});
-
-When("the user deletes the copied USS file from the destination directory", async function () {
-    const copiedFile = (await this.copyDstDir.findChildItem(this.copiedFileName)) as TreeItem;
-    await expect(copiedFile).toBeDefined();
-    await copiedFile.elem.moveTo();
-    await clickContextMenuItem(copiedFile, "Delete");
-    await browser.pause(3000);
 });
 
 // Runs after every scenario in this feature. Deletes any test artifacts that were created
@@ -273,22 +258,4 @@ After(async function () {
         }
     }
 
-    // The copied file sits one level deeper, inside the copy-destination directory
-    if (this.profileNode && testInfo.copyDstDir && testInfo.ussFile) {
-        try {
-            const dstDirName = testInfo.copyDstDir.replace(`${testInfo.ussFilter}/`, "");
-            const profileItem = await this.profileNode.find();
-            const copyDstDir = (await profileItem.findChildItem(dstDirName)) as TreeItem | null;
-            if (copyDstDir) {
-                const copiedFile = (await copyDstDir.findChildItem(testInfo.ussFile)) as TreeItem | null;
-                if (copiedFile) {
-                    await copiedFile.elem.moveTo();
-                    await clickContextMenuItem(copiedFile, "Delete");
-                    await browser.pause(1500);
-                }
-            }
-        } catch {
-            // Artifact absent or already deleted — continue.
-        }
-    }
 });

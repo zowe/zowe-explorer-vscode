@@ -52,7 +52,10 @@ Feature: USS Tree actions
     Then the USS file opens in the editor with the specified encoding
 
   Scenario: User copies and pastes a USS file to another directory
+    When the user creates a new USS directory inside the parent
+    Then the new USS directory appears in the parent listing
     When the user copies the USS test file
-    And the user pastes the USS file into the copy destination directory
-    Then the copied USS file appears in the destination directory listing
-    When the user deletes the copied USS file from the destination directory
+    And the user pastes the USS file into the new USS directory
+    Then the copied USS file appears in the new USS directory listing
+    When the user deletes the new USS directory from the parent
+    Then the USS directory no longer appears in the parent listing
