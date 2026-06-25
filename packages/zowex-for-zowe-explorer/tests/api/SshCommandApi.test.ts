@@ -111,6 +111,16 @@ describe("SshCommandApi", () => {
             expect(response).toEqual("fake-output");
         });
 
+        it("should safely escape cwd so that shell meta-characters are not interpreted", async () => {
+            const commandApi = new SshCommandApi({ type: "ssh", message: "", failNotFound: true, profile: { profile: { user: "fake" } } });
+            const issueCmdSpy = vi.fn().mockResolvedValue({ data: "" });
+            vi.spyOn(commandApi, "client", "get").mockResolvedValue({ uss: { issueCmd: issueCmdSpy } });
+
+            await commandApi.issueUnixCommand("ls", "/u/user's/dir");
+
+            expect(issueCmdSpy).toHaveBeenCalledWith({ commandText: "cd '/u/user'\\''s/dir' && ls" });
+        });
+
         it("should return an empty string when no data is returned", async () => {
             const commandApi = new SshCommandApi({ type: "ssh", message: "", failNotFound: true, profile: { profile: { user: "fake" } } });
             vi.spyOn(commandApi, "client", "get").mockResolvedValue({ uss: { issueCmd: vi.fn().mockResolvedValue({}) } });
