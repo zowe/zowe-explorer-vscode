@@ -1101,6 +1101,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
             }
         } catch (error) {
+            // A 404 means the dataset no longer exists (e.g. deleted while the tree was still showing it).
+            // Return undefined silently — no popup — so the tree can clean up the stale node.
+            if (error instanceof imperative.ImperativeError && Number(error.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
+                return;
+            }
             const updated = await AuthUtils.errorHandling(error, {
                 apiType: ZoweExplorerApiType.Mvs,
                 profile: this.getProfile(),

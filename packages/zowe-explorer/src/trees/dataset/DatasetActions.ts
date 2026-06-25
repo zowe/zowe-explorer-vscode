@@ -930,7 +930,7 @@ export class DatasetActions {
                     encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
                     overwrite,
                     task,
-                    responseTimeout: profile?.profile?.responseTimeout,
+                    responseTimeout: profile.profile?.responseTimeout,
                     abortDownload: () => token?.isCancellationRequested ?? false,
                 };
 
