@@ -8,7 +8,6 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-/** biome-ignore-all lint/complexity/noStaticOnlyClass: <explanation> */ // todo revert
 
 import { Gui, imperative, ZoweExplorerApiType, type IApiExplorerExtender } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
