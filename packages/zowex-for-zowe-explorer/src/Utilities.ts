@@ -57,7 +57,7 @@ export class Utilities {
             return;
         }
         let deployStatus = false;
-        if (await ZSshUtils.hasWriteAccess(sshSession, deployDirectory)) {
+        if (!await ZSshUtils.lacksWriteAccess(sshSession, deployDirectory)) {
             deployStatus = await deployWithProgress(sshSession, deployDirectory);
             if (!deployStatus) {
                 return;

@@ -196,7 +196,7 @@ export class SshClientCache extends vscode.Disposable {
                 }
 
                 if (serverShouldDeploy) {
-                    if (await ZSshUtils.hasWriteAccess(session, serverPath)) {
+                    if (!await ZSshUtils.lacksWriteAccess(session, serverPath)) {
                         await deployWithProgress(session, serverPath);
                     } else {
                         imperative.Logger.getAppLogger()
