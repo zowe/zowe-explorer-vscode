@@ -65,6 +65,9 @@ vi.mock("@zowe/zowe-explorer-api", () => {
             },
             DeferredPromise: MockDeferredPromise,
         },
+        ErrorCorrelator: {
+
+        }
     };
 });
 
@@ -76,6 +79,7 @@ vi.mock("@zowe/zowex-for-zowe-sdk", () => {
         ZSshUtils: {
             buildSession: vi.fn(),
             checkIfOutdated: vi.fn(),
+            lacksWriteAccess: vi.fn().mockResolvedValue(false),
         },
     };
 });

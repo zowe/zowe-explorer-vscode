@@ -11,7 +11,7 @@
 
 import { ExtensionContext } from "vscode";
 import { Utilities } from "../src/Utilities";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 
 vi.mock("vscode", () => ({
@@ -106,6 +106,7 @@ vi.mock("../src/SshClientCache", () => ({
         inst: {
             connect: vi.fn().mockResolvedValue({}),
             end: vi.fn(),
+            isServerDetectedOnPath: vi.fn().mockResolvedValue(false),
         },
     },
 }));
@@ -120,10 +121,15 @@ vi.mock("@zowe/zowex-for-zowe-sdk", () => ({
     ZSshUtils: {
         buildSession: vi.fn().mockReturnValue({ ISshSession: {} }),
         uninstallServer: vi.fn().mockResolvedValue(undefined),
+        lacksWriteAccess: vi.fn().mockResolvedValue(false),
     },
+    ZSshClient: {
+        DEFAULT_SERVER_PATH: "foo",
+    }
 }));
 
 describe("Utilities", () => {
+
     afterEach(() => {
         vi.restoreAllMocks();
     });
@@ -170,6 +176,7 @@ describe("Utilities", () => {
             VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(profile) }));
             const mockedCache = await vi.importMock("../src/SshClientCache");
             vi.spyOn(mockedCache.SshClientCache.inst, "connect").mockResolvedValue({} as any);
+
             const disposeSpy = vi.fn();
             vi.spyOn(mockedExplorer.Gui, "setStatusBarMessage").mockReturnValue({ dispose: disposeSpy } as any);
 
@@ -287,6 +294,7 @@ describe("Utilities", () => {
                 promptForDeployDirectory: vi.fn().mockResolvedValue("/dir"),
             }));
             vi.spyOn(mockedDeploy, "deployWithProgress").mockRejectedValue(new Error("deploy exploded"));
+            const mockedCache = await vi.importMock("../src/SshClientCache");
 
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await expect((Utilities as any).connectCallback(api)).rejects.toThrow("deploy exploded");
@@ -304,6 +312,7 @@ describe("Utilities", () => {
             }));
 
             const connectSpy = vi.spyOn(mockedCache.SshClientCache.inst, "connect").mockResolvedValue({} as any);
+
             const statusSpy = vi.spyOn(mockedExplorer.Gui, "setStatusBarMessage");
 
             const api = mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
