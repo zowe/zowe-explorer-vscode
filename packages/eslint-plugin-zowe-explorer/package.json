@@ -21,8 +21,8 @@
     "package": "echo \"eslint-plugin: nothing to package.\""
   },
   "devDependencies": {
-    "@typescript-eslint/rule-tester": "^6.4.0",
-    "requireindex": "^1.1.0",
+    "@typescript-eslint/rule-tester": "^6.21.0",
+    "requireindex": "^1.2.0",
     "rewire": "^6.0.0",
     "vitest": "^3.2.6"
   },
