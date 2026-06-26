@@ -2415,7 +2415,7 @@
     "sinon": "^19.0.2",
     "ts-node": "^10.9.2",
     "vitest": "^3.2.6",
-    "wdio-vscode-service": "github:cidrblock/wdio-vscode-service#wdio-v9-migration",
+    "wdio-vscode-service": "^8.0.0",
     "wdio-wait-for": "^3.0.11",
     "webdriverio": "^9.27.2"
   },
