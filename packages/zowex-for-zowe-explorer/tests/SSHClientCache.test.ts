@@ -65,9 +65,7 @@ vi.mock("@zowe/zowe-explorer-api", () => {
             },
             DeferredPromise: MockDeferredPromise,
         },
-        ErrorCorrelator: {
-
-        }
+        ErrorCorrelator: {},
     };
 });
 
@@ -95,7 +93,7 @@ vi.mock("../src/ServerDeployment", () => ({
 }));
 
 vi.mock("vscode", () => ({
-    Disposable: class { },
+    Disposable: class {},
     window: {
         showErrorMessage: vi.fn(),
     },
@@ -623,7 +621,7 @@ describe("SshClientCache", () => {
 
         it("should call ZSshClient.create with the correct options and callbacks", async () => {
             const endSpy = vi.spyOn(cache, "end");
-            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => { });
+            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => {});
             await (cache as any).buildClient(mockSession, clientId, mockOpts);
 
             expect(ZSshClient.create).toHaveBeenCalledWith(
@@ -647,11 +645,10 @@ describe("SshClientCache", () => {
         });
     });
 
-
     describe("storeServerPath", () => {
         beforeEach(() => {
             vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({ storeServerPath: vi.fn() } as any);
-        })
+        });
         it("should update the zowex.serverInstallPath setting for the given host", () => {
             const updateSpy = vi.fn();
             const existing: Record<string, string> = { otherHost: "/old" };
@@ -682,7 +679,6 @@ describe("SshClientCache", () => {
         });
 
         it("should initialize an empty map when the setting returns a falsy non-nullish value", () => {
-
             const updateSpy = vi.fn();
             vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
                 get: vi.fn(() => 0),

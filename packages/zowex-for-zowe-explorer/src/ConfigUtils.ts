@@ -14,11 +14,8 @@ import { type IZoweTree, type IZoweTreeNode, type imperative, type IApiExplorerE
 
 export class ConfigUtils {
     public static getServerPath(profile?: imperative.IProfile): string | undefined {
-        const serverPathMap: Record<string, string> = vscode.workspace.getConfiguration("zowe")
-            .get("zowex.serverInstallPath") ?? {};
-        return (profile && serverPathMap[profile?.host])
-            ?? process.env.ZOWE_OPT_SERVER_PATH
-            ?? (profile?.serverPath as string);
+        const serverPathMap: Record<string, string> = vscode.workspace.getConfiguration("zowe").get("zowex.serverInstallPath") ?? {};
+        return (profile && serverPathMap[profile?.host]) ?? process.env.ZOWE_OPT_SERVER_PATH ?? (profile?.serverPath as string);
     }
 
     public static async showSessionInTree(profileName: string, visible: boolean, zoweExplorerApi: IApiExplorerExtender): Promise<void> {

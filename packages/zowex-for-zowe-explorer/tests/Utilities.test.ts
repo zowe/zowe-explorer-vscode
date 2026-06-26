@@ -125,11 +125,10 @@ vi.mock("@zowe/zowex-for-zowe-sdk", () => ({
     },
     ZSshClient: {
         DEFAULT_SERVER_PATH: "foo",
-    }
+    },
 }));
 
 describe("Utilities", () => {
-
     afterEach(() => {
         vi.restoreAllMocks();
     });

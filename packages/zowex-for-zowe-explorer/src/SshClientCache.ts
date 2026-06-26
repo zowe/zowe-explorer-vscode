@@ -18,7 +18,6 @@ import { deployWithProgress } from "./ServerDeployment";
 import { SshErrorHandler } from "./SshErrorHandler";
 import path from "path";
 
-
 class AsyncMutex extends imperative.DeferredPromise<void> implements Disposable {
     public constructor(private onDispose?: () => void) {
         super();
@@ -196,11 +195,10 @@ export class SshClientCache extends vscode.Disposable {
                 }
 
                 if (serverShouldDeploy) {
-                    if (!await ZSshUtils.lacksWriteAccess(session, serverPath)) {
+                    if (!(await ZSshUtils.lacksWriteAccess(session, serverPath))) {
                         await deployWithProgress(session, serverPath);
                     } else {
-                        imperative.Logger.getAppLogger()
-                            .warn("Skipped deploy step as server path '%s' is not writeable by the user", serverPath);
+                        imperative.Logger.getAppLogger().warn("Skipped deploy step as server path '%s' is not writeable by the user", serverPath);
                     }
                 }
                 newClient = await this.buildClient(session, clientId, {

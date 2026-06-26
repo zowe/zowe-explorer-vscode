@@ -57,14 +57,13 @@ export class Utilities {
             return;
         }
         let deployStatus = false;
-        if (!await ZSshUtils.lacksWriteAccess(sshSession, deployDirectory)) {
+        if (!(await ZSshUtils.lacksWriteAccess(sshSession, deployDirectory))) {
             deployStatus = await deployWithProgress(sshSession, deployDirectory);
             if (!deployStatus) {
                 return;
             }
         } else {
-            imperative.Logger.getAppLogger()
-                .info("Skipped deploy step as server path '%s' is not writeable by the user", deployDirectory);
+            imperative.Logger.getAppLogger().info("Skipped deploy step as server path '%s' is not writeable by the user", deployDirectory);
         }
 
         await ConfigUtils.showSessionInTree(profile.name!, true, zoweExplorerApi);
