@@ -44,6 +44,7 @@ overrides:
   "rollup@4": "^4.59.0"
   "tmp": "^0.2.7"
   "underscore": "^1.13.8"
+  "uuid@<11": "^11.1.1"
   "ws": "^8.21.0"
 # Previously set using `pnpm config set network-timeout`
 fetchTimeout: 60000
