@@ -11,7 +11,7 @@
 
 import { ExtensionContext } from "vscode";
 import { Utilities } from "../src/Utilities";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 
 vi.mock("vscode", () => ({
@@ -294,7 +294,6 @@ describe("Utilities", () => {
                 promptForDeployDirectory: vi.fn().mockResolvedValue("/dir"),
             }));
             vi.spyOn(mockedDeploy, "deployWithProgress").mockRejectedValue(new Error("deploy exploded"));
-            const mockedCache = await vi.importMock("../src/SshClientCache");
 
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await expect((Utilities as any).connectCallback(api)).rejects.toThrow("deploy exploded");
