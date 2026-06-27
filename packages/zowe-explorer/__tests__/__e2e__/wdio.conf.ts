@@ -105,6 +105,7 @@ export const config: Options.Testrunner = {
                     "extensions.ignoreRecommendations": true,
                     "window.zoomLevel": process.env.CI ? -2 : 0,
                     "zowe.settings.displayReleaseNotes": false,
+                    "zowe.jobs.confirmSubmission": "Disabled",
                 },
             },
         },

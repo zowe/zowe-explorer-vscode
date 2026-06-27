@@ -467,7 +467,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode);
             expect(sessionNode.getSession()).toEqual(session);
             expect(sessionNode.getProfile()).toEqual(createIProfile());
@@ -484,7 +484,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
             await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
             expect(getSessionMock).toHaveBeenCalled();
@@ -505,7 +505,7 @@ describe("AuthUtils", () => {
             const dummyFn = (_profile) =>
                 ({
                     getSession: () => new imperative.Session({}),
-                } as any);
+                }) as any;
             await AuthUtils.syncSessionNode(dummyFn, sessionNode);
             expect(sessionNode.getSession()).toEqual(initialSession);
             expect(sessionNode.getProfile()).toEqual(initialProfile);
@@ -542,7 +542,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
@@ -566,7 +566,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
 
             const testProfile = {
                 name: "sestest",
@@ -604,7 +604,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
 
             const testProfile = {
                 name: "sestest",
@@ -644,7 +644,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
             sessionNode.tooltip = `Profile: ${sessionNode.label}\nAuth Method: Unknown`;
@@ -668,7 +668,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             const testProfile = {
                 name: "sestest",
                 profile: {
@@ -705,7 +705,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             const testProfile = {
                 name: "sestest",
                 profile: {
@@ -744,7 +744,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             const testProfile = {
                 name: "sestest",
                 profile: {
@@ -783,7 +783,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
@@ -809,7 +809,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
@@ -837,7 +837,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
@@ -865,7 +865,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             const testProfile = {
                 name: "sestest",
                 profile: {
@@ -903,7 +903,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             const testProfile = {
                 name: "sestest",
                 profile: {
@@ -943,7 +943,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             const testProfile = {
                 name: "sestest",
                 profile: {
@@ -983,7 +983,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             const testProfile = {
                 name: "sestest",
                 profile: {
@@ -1023,7 +1023,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             const testProfile = {
                 name: "sestest",
                 profile: {
@@ -1063,7 +1063,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
@@ -1089,7 +1089,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
@@ -1116,7 +1116,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);
@@ -1143,7 +1143,7 @@ describe("AuthUtils", () => {
             const sessionForProfile = (_profile) =>
                 ({
                     getSession: getSessionMock,
-                } as any);
+                }) as any;
             loadNamedProfileMock.mockClear().mockReturnValue(createIProfile());
 
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValueOnce({ ISession: { type: "token" } } as any);

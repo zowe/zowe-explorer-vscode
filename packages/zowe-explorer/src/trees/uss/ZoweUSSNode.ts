@@ -204,7 +204,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public getSessionNode(): IZoweUSSTreeNode {
         ZoweLogger.trace("ZoweUSSNode.getSessionNode called.");
-        return this.session ? this : (this.getParent()?.getSessionNode() as IZoweUSSTreeNode) ?? this;
+        return this.session ? this : ((this.getParent()?.getSessionNode() as IZoweUSSTreeNode) ?? this);
     }
 
     /**
@@ -500,7 +500,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Helper method which sets an icon of node and initiates reloading of tree
      * @param iconPath
      */
-    public setIcon(iconPath: { light: string; dark: string }): void {
+    public setIcon(iconPath: vscode.IconPath): void {
         ZoweLogger.trace("ZoweUSSNode.setIcon called.");
         this.iconPath = iconPath;
         // Use nodeDataChanged instead of refreshElement to avoid collapsing the tree
@@ -560,7 +560,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 .flatMap((group) => group.tabs)
                 .filter((tab) => {
                     const uri = (tab.input as any)?.uri;
-                    if (!uri) {return false;}
+                    if (!uri) {
+                        return false;
+                    }
                     return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
                 });
             if (tabsToClose.length > 0) {

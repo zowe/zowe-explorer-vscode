@@ -770,7 +770,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
     public getSessionNode(): IZoweDatasetTreeNode {
         ZoweLogger.trace("ZoweDatasetNode.getSessionNode called.");
-        return this.session ? this : (this.getParent()?.getSessionNode() as IZoweDatasetTreeNode) ?? this;
+        return this.session ? this : ((this.getParent()?.getSessionNode() as IZoweDatasetTreeNode) ?? this);
     }
     /**
      * Returns the [etag] for this node
@@ -1101,6 +1101,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 }
             }
         } catch (error) {
+            // A 404 means the dataset no longer exists (e.g. deleted while the tree was still showing it).
+            // Return undefined silently — no popup — so the tree can clean up the stale node.
+            if (error instanceof imperative.ImperativeError && Number(error.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
+                return;
+            }
             const updated = await AuthUtils.errorHandling(error, {
                 apiType: ZoweExplorerApiType.Mvs,
                 profile: this.getProfile(),
@@ -1220,7 +1225,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * Helper method which sets an icon of node and initiates reloading of tree
      * @param iconPath
      */
-    public setIcon(iconPath: { light: string; dark: string }): void {
+    public setIcon(iconPath: vscode.IconPath): void {
         ZoweLogger.trace("ZoweDatasetNode.setIcon called.");
         this.iconPath = iconPath;
         vscode.commands.executeCommand("zowe.ds.refreshDataset", this);

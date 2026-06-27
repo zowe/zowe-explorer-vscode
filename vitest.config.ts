@@ -29,6 +29,7 @@ export default defineConfig({
             "packages/zowe-explorer/vitest.config.ts",
             "packages/zowe-explorer-ftp-extension/vitest.config.ts",
             "packages/eslint-plugin-zowe-explorer/vitest.config.ts",
+            "packages/zowex-for-zowe-explorer/vitest.config.ts",
         ],
         coverage: {
             provider: "v8",
@@ -71,17 +72,9 @@ export default defineConfig({
                 "**/src/tree/IZoweTreeNode.ts",
                 "**/src/vscode/doc/BaseProfileAuth.ts",
                 "**/src/vscode/doc/PromptCredentials.ts",
-                // Zero coverage files - zowex package
-                "**/benchmarks/setup.ts",
-                "**/src/ExternalSshHelper.ts",
-                "**/src/Utilities.ts",
-                "**/src/index.ts",
-                "**/src/api/SshCommandApi.ts",
-                "**/src/api/SshCommonApi.ts",
-                "**/src/api/SshJesApi.ts",
-                "**/src/api/SshMvsApi.ts",
-                "**/src/api/SshUssApi.ts",
-                "**/src/api/index.ts",
+                // Barrel files (pure re-exports, no executable logic) - zowex package
+                "**/zowex-for-zowe-explorer/src/index.ts",
+                "**/zowex-for-zowe-explorer/src/api/index.ts",
             ],
         },
     },
