@@ -2078,6 +2078,12 @@
           "description": "%zowe.jobs.confirmSubmission%",
           "scope": "window"
         },
+        "zowe.jobs.confirmDelete": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.jobs.confirmDelete%",
+          "scope": "window"
+        },
         "zowe.commands.useIntegratedTerminals": {
           "type": "boolean",
           "default": false,

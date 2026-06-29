@@ -34,14 +34,17 @@ export class JobActions {
             comment: ["Job name"],
         });
         const deleteButton = vscode.l10n.t("Delete");
-        const result = await Gui.warningMessage(message, {
-            items: [deleteButton],
-            vsCodeOpts: { modal: true },
-        });
-        if (!result || result === "Cancel") {
-            ZoweLogger.debug(vscode.l10n.t("Delete action was canceled."));
-            Gui.showMessage(vscode.l10n.t("Delete action was cancelled."));
-            return;
+        const confirmDelete = vscode.workspace.getConfiguration().get<boolean>("zowe.jobs.confirmDelete", true);
+        if (confirmDelete) {
+            const result = await Gui.warningMessage(message, {
+                items: [deleteButton],
+                vsCodeOpts: { modal: true },
+            });
+            if (!result || result === "Cancel") {
+                ZoweLogger.debug(vscode.l10n.t("Delete action was canceled."));
+                Gui.showMessage(vscode.l10n.t("Delete action was cancelled."));
+                return;
+            }
         }
 
         try {
@@ -72,14 +75,17 @@ export class JobActions {
             args: [jobs.length, displayedJobNames, additionalJobsCount > 0 ? `\n...and ${additionalJobsCount} more` : ""],
             comment: ["Jobs length", "Job names", "Additional jobs count"],
         });
-        const deleteChoice = await Gui.warningMessage(message, {
-            items: [deleteButton],
-            vsCodeOpts: { modal: true },
-        });
-        if (!deleteChoice || deleteChoice === "Cancel") {
-            ZoweLogger.debug(vscode.l10n.t("Delete action was canceled."));
-            Gui.showMessage(vscode.l10n.t("Delete action was cancelled."));
-            return;
+        const confirmDelete = vscode.workspace.getConfiguration().get<boolean>("zowe.jobs.confirmDelete", true);
+        if (confirmDelete) {
+            const deleteChoice = await Gui.warningMessage(message, {
+                items: [deleteButton],
+                vsCodeOpts: { modal: true },
+            });
+            if (!deleteChoice || deleteChoice === "Cancel") {
+                ZoweLogger.debug(vscode.l10n.t("Delete action was canceled."));
+                Gui.showMessage(vscode.l10n.t("Delete action was cancelled."));
+                return;
+            }
         }
         const deletionResult: ReadonlyArray<IZoweJobTreeNode | Error> = await Promise.all(
             jobs.map(async (job) => {

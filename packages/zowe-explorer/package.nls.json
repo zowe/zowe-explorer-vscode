@@ -117,6 +117,7 @@
   "zowe.jobs.default.sort.direction.description": "Default direction to sort jobs",
   "zowe.jobs.default.sort.description": "Default sort order for jobs",
   "zowe.jobs.confirmSubmission": "Require user confirmation before submitting a job",
+  "zowe.jobs.confirmDelete": "Prompt for confirmation before deleting jobs.",
   "zowe.jobs.confirmSubmission.yourJobs": "Your Jobs",
   "zowe.jobs.confirmSubmission.otherUserJobs": "Other user Jobs",
   "zowe.jobs.confirmSubmission.allJobs": "All Jobs",
