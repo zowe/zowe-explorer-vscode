@@ -226,6 +226,14 @@ When("the user pastes the USS file into the new USS directory", async function (
 });
 
 Then("the copied USS file appears in the new USS directory listing", async function () {
+    // The paste copies the file on the mainframe but does not re-fetch the destination
+    // directory's children in the tree. Refresh the directory to pull its contents, then
+    // re-fetch the node (the refresh re-renders it) and confirm the file is listed.
+    await this.copyDstDir.elem.moveTo();
+    await clickContextMenuItem(this.copyDstDir, "Refresh Directory");
+    await browser.pause(3000);
+
+    this.copyDstDir = (await this.ussDir.findChildItem(testInfo.newDir)) as TreeItem;
     await this.copyDstDir.expand();
     await browser.waitUntil(
         async () => (await this.copyDstDir.findChildItem(this.copiedFileName)) != null,
