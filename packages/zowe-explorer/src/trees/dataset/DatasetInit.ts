@@ -256,6 +256,15 @@ export class DatasetInit {
         );
 
         context.subscriptions.push(
+            vscode.commands.registerCommand(
+                "zowe.ds.downloadMembers",
+                async (node: IZoweDatasetTreeNode, nodeList?: IZoweDatasetTreeNode[]): Promise<void> => {
+                    await DatasetActions.downloadMembers(node, nodeList);
+                }
+            )
+        );
+
+        context.subscriptions.push(
             vscode.commands.registerCommand("zowe.ds.downloadDataSet", async (node: IZoweDatasetTreeNode): Promise<void> => {
                 await DatasetActions.downloadDataSet(node);
             })

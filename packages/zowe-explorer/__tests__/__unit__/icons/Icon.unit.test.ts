@@ -78,7 +78,7 @@ describe("Checking icon generator's basics", () => {
 
         expect(resultIcon).toBeDefined();
         expect(resultIcon.id).toBe(IconUtils.IconId.folder);
-        expect(resultIcon.path.dark).toContain("folder-closed.svg");
+        expect((resultIcon.path as { dark: vscode.Uri }).dark.fsPath).toContain("folder-closed.svg");
     });
     it("Testing that you can correctly get Derived Icon By Node", () => {
         const sessionNode = generateTestSessionNode();
@@ -88,7 +88,7 @@ describe("Checking icon generator's basics", () => {
 
         expect(resultIcon).toBeDefined();
         expect(resultIcon.id).toBe(IconUtils.IconId.folderOpen);
-        expect(resultIcon.path.dark).toContain("folder-open.svg");
+        expect((resultIcon.path as { dark: vscode.Uri }).dark.fsPath).toContain("folder-open.svg");
     });
     it("Testing that you can't get Icon using incorrect Node", () => {
         const randomNode = {};

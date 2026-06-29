@@ -6,6 +6,7 @@
   "include": [
     "../__pageobjects__/**/*.ts",
     "./step_definitions/**/*.steps.ts",
+    "./step_definitions/utils/*.ts",
     "../../__common__/*.wdio.ts",
     "../../__common__/*.wdio.conf.ts",
     "./wdio.conf.ts",
