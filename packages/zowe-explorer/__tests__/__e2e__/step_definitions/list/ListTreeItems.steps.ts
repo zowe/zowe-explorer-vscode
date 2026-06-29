@@ -12,6 +12,7 @@
 import { Given, Then, When } from "@cucumber/cucumber";
 import { paneDivForTree } from "../../../__common__/shared.wdio";
 import { Key } from "webdriverio";
+import { ViewItemAction } from "wdio-vscode-service";
 import quickPick from "../../../__pageobjects__/QuickPick";
 import { ProfileNode } from "../../../__pageobjects__/ProfileNode";
 
@@ -24,18 +25,40 @@ const testInfo = {
 };
 
 async function setFilterForProfile(profileNode: ProfileNode, tree: string): Promise<void> {
-    const profileItem = await profileNode.find();
+    let profileItem = await profileNode.find();
 
     // If the profile is already expanded with filter results, skip re-applying the filter.
     // This handles re-runs where the tree state is still set from a previous run.
-    if (await profileItem.isExpanded() && await profileItem.hasChildren()) {
+    if ((await profileItem.isExpanded()) && (await profileItem.hasChildren())) {
         return;
     }
 
-    // Hover and wait for action buttons to appear before querying them
+    // Hover and wait for action buttons to appear before querying them. Re-fetch the node
+    // inside the loop to avoid stale references while the tree settles.
     await profileItem.elem.moveTo();
-    await browser.pause(300);
-    const actionButtons = await profileItem.getActionButtons();
+    await browser.pause(500);
+
+    let actionButtons: ViewItemAction[] = [];
+    await browser.waitUntil(
+        async () => {
+            try {
+                profileItem = await profileNode.find();
+                await profileItem.elem.moveTo();
+                actionButtons = await profileItem.getActionButtons();
+                return actionButtons.length > 0;
+            } catch {
+                return false;
+            }
+        },
+        {
+            timeout: 10000,
+            timeoutMsg: `Action buttons did not appear for the given node.`,
+        }
+    );
+
+    profileItem = await profileNode.find();
+    await profileItem.elem.moveTo();
+    actionButtons = await profileItem.getActionButtons();
 
     // Locate and select the search button on the profile node
     const searchButton = actionButtons[actionButtons.length - 1];

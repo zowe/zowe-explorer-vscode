@@ -42,7 +42,6 @@ async function optionallyClickNotificationButton(buttonTitle: string): Promise<v
     // No notification appeared — file/directory didn't already exist; proceed normally.
 }
 
-
 Then("the USS directory has files listed under it", async function () {
     await expect(this.children.length).toBeGreaterThan(0);
 });
@@ -77,10 +76,10 @@ When("the user deletes the new USS file from the directory", async function () {
 });
 
 Then("the USS file no longer appears in the directory listing", async function () {
-    await browser.waitUntil(
-        async () => (await this.ussDir.findChildItem(testInfo.newFile)) == null,
-        { timeout: 30000, timeoutMsg: `File "${testInfo.newFile}" is still visible after delete` }
-    );
+    await browser.waitUntil(async () => (await this.ussDir.findChildItem(testInfo.newFile)) == null, {
+        timeout: 30000,
+        timeoutMsg: `File "${testInfo.newFile}" is still visible after delete`,
+    });
 });
 
 When("the user creates a new USS directory inside the parent", async function () {
@@ -112,10 +111,10 @@ When("the user deletes the new USS directory from the parent", async function ()
 });
 
 Then("the USS directory no longer appears in the parent listing", async function () {
-    await browser.waitUntil(
-        async () => (await this.ussDir.findChildItem(testInfo.newDir)) == null,
-        { timeout: 30000, timeoutMsg: `Directory "${testInfo.newDir}" is still visible after delete` }
-    );
+    await browser.waitUntil(async () => (await this.ussDir.findChildItem(testInfo.newDir)) == null, {
+        timeout: 30000,
+        timeoutMsg: `Directory "${testInfo.newDir}" is still visible after delete`,
+    });
 });
 
 When("the user renames the new USS file to the renamed file name", async function () {
@@ -140,10 +139,10 @@ Then("the renamed USS file appears in the directory listing", async function () 
 });
 
 Then("the original USS file name no longer appears in the directory listing", async function () {
-    await browser.waitUntil(
-        async () => (await this.ussDir.findChildItem(testInfo.newFile)) == null,
-        { timeout: 15000, timeoutMsg: `Original file "${testInfo.newFile}" still visible after rename` }
-    );
+    await browser.waitUntil(async () => (await this.ussDir.findChildItem(testInfo.newFile)) == null, {
+        timeout: 15000,
+        timeoutMsg: `Original file "${testInfo.newFile}" still visible after rename`,
+    });
 });
 
 When("the user deletes the renamed USS file from the directory", async function () {
@@ -176,10 +175,10 @@ Then("the renamed USS directory appears in the parent listing", async function (
 });
 
 Then("the original USS directory name no longer appears in the parent listing", async function () {
-    await browser.waitUntil(
-        async () => (await this.ussDir.findChildItem(testInfo.newDir)) == null,
-        { timeout: 15000, timeoutMsg: `Original directory "${testInfo.newDir}" still visible after rename` }
-    );
+    await browser.waitUntil(async () => (await this.ussDir.findChildItem(testInfo.newDir)) == null, {
+        timeout: 15000,
+        timeoutMsg: `Original directory "${testInfo.newDir}" still visible after rename`,
+    });
 });
 
 When("the user deletes the renamed USS directory from the parent", async function () {
@@ -235,10 +234,10 @@ Then("the copied USS file appears in the new USS directory listing", async funct
 
     this.copyDstDir = (await this.ussDir.findChildItem(testInfo.newDir)) as TreeItem;
     await this.copyDstDir.expand();
-    await browser.waitUntil(
-        async () => (await this.copyDstDir.findChildItem(this.copiedFileName)) != null,
-        { timeout: 30000, timeoutMsg: `Copied file "${this.copiedFileName}" did not appear in destination directory` }
-    );
+    await browser.waitUntil(async () => (await this.copyDstDir.findChildItem(this.copiedFileName)) != null, {
+        timeout: 30000,
+        timeoutMsg: `Copied file "${this.copiedFileName}" did not appear in destination directory`,
+    });
     const copiedFile = await this.copyDstDir.findChildItem(this.copiedFileName);
     await expect(copiedFile).toBeDefined();
 });
@@ -265,5 +264,4 @@ After(async function () {
             // Artifact absent or already deleted — continue.
         }
     }
-
 });
