@@ -51,7 +51,7 @@ async function setFilterForProfile(profileNode: ProfileNode, tree: string): Prom
             }
         },
         {
-            timeout: 10000,
+            timeout: 5000,
             timeoutMsg: `Action buttons did not appear for the given node.`,
         }
     );
@@ -114,7 +114,7 @@ Given(/the user has a profile in their (.*) tree/, async function (tree: string)
             }
         },
         {
-            timeout: 10000,
+            timeout: 5000,
             timeoutMsg: `${tree} tree did not load within timeout`,
         }
     );
@@ -151,7 +151,7 @@ Given(/the user has a profile in their (.*) tree/, async function (tree: string)
 
         // Wait for the profile to be added and then find it
         await browser.waitUntil((): Promise<boolean> => this.profileNode.exists(), {
-            timeout: 10000,
+            timeout: 5000,
             timeoutMsg: `Profile ${testInfo.profileName} was not found after adding to ${tree} tree`,
         });
     }
@@ -179,7 +179,7 @@ When("a user expands a PDS in the list", async function () {
             this.children = children;
             return true;
         },
-        { timeout: 15000, timeoutMsg: `${testInfo.pds} did not expand with children` }
+        { timeout: 5000, timeoutMsg: `${testInfo.pds} did not expand with children` }
     );
 });
 When("a user expands a USS directory in the list", async function () {
@@ -196,7 +196,7 @@ When("a user expands a USS directory in the list", async function () {
             this.children = children;
             return true;
         },
-        { timeout: 15000, timeoutMsg: `${testInfo.ussDir} did not expand with children` }
+        { timeout: 5000, timeoutMsg: `${testInfo.ussDir} did not expand with children` }
     );
 });
 When("a user expands a Job in the list", async function () {

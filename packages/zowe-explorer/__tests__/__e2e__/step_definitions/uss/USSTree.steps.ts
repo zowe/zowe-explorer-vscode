@@ -60,7 +60,7 @@ Then("the new USS file appears in the directory listing", async function () {
             this.newFile = await this.ussDir.findChildItem(testInfo.newFile);
             return this.newFile != null;
         },
-        { timeout: 30000, timeoutMsg: `New file "${testInfo.newFile}" did not appear in directory listing` }
+        { timeout: 5000, timeoutMsg: `New file "${testInfo.newFile}" did not appear in directory listing` }
     );
     await expect(this.newFile).toBeDefined();
 });
@@ -74,7 +74,7 @@ When("the user deletes the new USS file from the directory", async function () {
 
 Then("the USS file no longer appears in the directory listing", async function () {
     await browser.waitUntil(async () => (await this.ussDir.findChildItem(testInfo.newFile)) == null, {
-        timeout: 30000,
+        timeout: 5000,
         timeoutMsg: `File "${testInfo.newFile}" is still visible after delete`,
     });
 });
@@ -93,7 +93,7 @@ Then("the new USS directory appears in the parent listing", async function () {
             this.newDir = await this.ussDir.findChildItem(testInfo.newDir);
             return this.newDir != null;
         },
-        { timeout: 30000, timeoutMsg: `New directory "${testInfo.newDir}" did not appear in parent listing` }
+        { timeout: 5000, timeoutMsg: `New directory "${testInfo.newDir}" did not appear in parent listing` }
     );
     await expect(this.newDir).toBeDefined();
 });
@@ -107,7 +107,7 @@ When("the user deletes the new USS directory from the parent", async function ()
 
 Then("the USS directory no longer appears in the parent listing", async function () {
     await browser.waitUntil(async () => (await this.ussDir.findChildItem(testInfo.newDir)) == null, {
-        timeout: 30000,
+        timeout: 5000,
         timeoutMsg: `Directory "${testInfo.newDir}" is still visible after delete`,
     });
 });
@@ -127,14 +127,14 @@ Then("the renamed USS file appears in the directory listing", async function () 
             this.renamedFile = await this.ussDir.findChildItem(testInfo.renamedFile);
             return this.renamedFile != null;
         },
-        { timeout: 30000, timeoutMsg: `Renamed file "${testInfo.renamedFile}" did not appear in directory listing` }
+        { timeout: 5000, timeoutMsg: `Renamed file "${testInfo.renamedFile}" did not appear in directory listing` }
     );
     await expect(this.renamedFile).toBeDefined();
 });
 
 Then("the original USS file name no longer appears in the directory listing", async function () {
     await browser.waitUntil(async () => (await this.ussDir.findChildItem(testInfo.newFile)) == null, {
-        timeout: 15000,
+        timeout: 5000,
         timeoutMsg: `Original file "${testInfo.newFile}" still visible after rename`,
     });
 });
@@ -146,7 +146,7 @@ When("the user deletes the renamed USS file from the directory", async function 
     await clickContextMenuItem(fileNode, "Delete");
     // wait for the node to disappear from the tree
     await browser.waitUntil(async () => (await this.ussDir.findChildItem(testInfo.renamedFile)) == null, {
-        timeout: 30000,
+        timeout: 5000,
         timeoutMsg: `Renamed file "${testInfo.renamedFile}" is still visible after delete`,
     });
 });
@@ -166,14 +166,14 @@ Then("the renamed USS directory appears in the parent listing", async function (
             this.renamedDir = await this.ussDir.findChildItem(testInfo.renamedDir);
             return this.renamedDir != null;
         },
-        { timeout: 30000, timeoutMsg: `Renamed directory "${testInfo.renamedDir}" did not appear in parent listing` }
+        { timeout: 5000, timeoutMsg: `Renamed directory "${testInfo.renamedDir}" did not appear in parent listing` }
     );
     await expect(this.renamedDir).toBeDefined();
 });
 
 Then("the original USS directory name no longer appears in the parent listing", async function () {
     await browser.waitUntil(async () => (await this.ussDir.findChildItem(testInfo.newDir)) == null, {
-        timeout: 15000,
+        timeout: 5000,
         timeoutMsg: `Original directory "${testInfo.newDir}" still visible after rename`,
     });
 });
@@ -185,7 +185,7 @@ When("the user deletes the renamed USS directory from the parent", async functio
     await clickContextMenuItem(dirNode, "Delete");
     // wait for the node to disappear from the tree
     await browser.waitUntil(async () => (await this.ussDir.findChildItem(testInfo.renamedDir)) == null, {
-        timeout: 30000,
+        timeout: 5000,
         timeoutMsg: `Renamed directory "${testInfo.renamedDir}" is still visible after delete`,
     });
 });
@@ -202,7 +202,7 @@ Then("the USS file opens in the editor with the specified encoding", async funct
     const editorView = (await browser.getWorkbench()).getEditorView();
     // Wait for the editor tab to open instead of sleeping after selecting the encoding
     await browser.waitUntil(async () => (await editorView.getOpenEditorTitles()).includes(testInfo.ussFile), {
-        timeout: 15000,
+        timeout: 5000,
         timeoutMsg: `Editor for "${testInfo.ussFile}" did not open`,
     });
     this.editorForFile = await editorView.openEditor(testInfo.ussFile);
@@ -237,7 +237,7 @@ Then("the copied USS file appears in the new USS directory listing", async funct
             await this.copyDstDir.expand();
             return (await this.copyDstDir.findChildItem(this.copiedFileName)) != null;
         },
-        { timeout: 30000, interval: 3000, timeoutMsg: `Copied file "${this.copiedFileName}" did not appear in destination directory` }
+        { timeout: 5000, interval: 3000, timeoutMsg: `Copied file "${this.copiedFileName}" did not appear in destination directory` }
     );
     const copiedFile = await this.copyDstDir.findChildItem(this.copiedFileName);
     await expect(copiedFile).toBeDefined();
@@ -258,7 +258,7 @@ After(async function () {
                 await item.elem.moveTo();
                 await clickContextMenuItem(item, "Delete");
                 await browser.waitUntil(async () => (await this.ussDir.findChildItem(name)) == null, {
-                    timeout: 15000,
+                    timeout: 5000,
                     timeoutMsg: `Cleanup: "${name}" still present after delete`,
                 });
             }
