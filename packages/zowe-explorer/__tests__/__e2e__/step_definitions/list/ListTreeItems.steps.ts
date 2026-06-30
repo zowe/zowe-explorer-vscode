@@ -15,6 +15,7 @@ import { Key } from "webdriverio";
 import { ViewItemAction } from "wdio-vscode-service";
 import quickPick from "../../../__pageobjects__/QuickPick";
 import { ProfileNode } from "../../../__pageobjects__/ProfileNode";
+import { ViewItemAction } from "wdio-vscode-service";
 
 const testInfo = {
     profileName: process.env.ZE_TEST_PROFILE_NAME,
@@ -23,6 +24,7 @@ const testInfo = {
     ussFilter: process.env.ZE_TEST_USS_FILTER,
     ussDir: process.env.ZE_TEST_USS_DIR.replace(`${process.env.ZE_TEST_USS_FILTER}/`, ""),
 };
+
 
 async function setFilterForProfile(profileNode: ProfileNode, tree: string): Promise<void> {
     let profileItem = await profileNode.find();
@@ -164,16 +166,38 @@ Then("the profile node will list results of the filter search", async function (
     await this.profileNode.waitUntilHasChildren();
 });
 When("a user expands a PDS in the list", async function () {
-    this.pds = await (await this.profileNode.find()).findChildItem(testInfo.pds);
-    await expect(this.pds).toBeDefined();
-    this.pds = await this.profileNode.revealChildItem(testInfo.pds);
-    this.children = await this.pds.getChildren();
+    await browser.waitUntil(
+        async () => {
+            const pds = await (await this.profileNode.find()).findChildItem(testInfo.pds);
+            if (!pds) return false;
+            await pds.expand();
+            const freshPds = await (await this.profileNode.find()).findChildItem(testInfo.pds);
+            if (!freshPds) return false;
+            const children = await freshPds.getChildren();
+            if (children.length === 0) return false;
+            this.pds = freshPds;
+            this.children = children;
+            return true;
+        },
+        { timeout: 15000, timeoutMsg: `${testInfo.pds} did not expand with children` }
+    );
 });
 When("a user expands a USS directory in the list", async function () {
-    this.ussDir = await (await this.profileNode.find()).findChildItem(testInfo.ussDir);
-    await expect(this.ussDir).toBeDefined();
-    this.ussDir = await this.profileNode.revealChildItem(testInfo.ussDir);
-    this.children = await this.ussDir.getChildren();
+    await browser.waitUntil(
+        async () => {
+            const ussDir = await (await this.profileNode.find()).findChildItem(testInfo.ussDir);
+            if (!ussDir) return false;
+            await ussDir.expand();
+            const freshUssDir = await (await this.profileNode.find()).findChildItem(testInfo.ussDir);
+            if (!freshUssDir) return false;
+            const children = await freshUssDir.getChildren();
+            if (children.length === 0) return false;
+            this.ussDir = freshUssDir;
+            this.children = children;
+            return true;
+        },
+        { timeout: 15000, timeoutMsg: `${testInfo.ussDir} did not expand with children` }
+    );
 });
 When("a user expands a Job in the list", async function () {
     const profileItem = await this.profileNode.find();
@@ -186,9 +210,15 @@ When("a user expands a Job in the list", async function () {
 });
 Then("the node will expand and list its children", async function () {
     if (this.pds) {
-        await expect(await this.pds.isExpanded()).toBe(true);
+        const freshPds = await (await this.profileNode.find()).findChildItem(testInfo.pds);
+        expect(freshPds).toBeDefined();
+        await expect(await freshPds!.isExpanded()).toBe(true);
+        this.pds = freshPds!;
     } else if (this.ussDir) {
-        await expect(await this.ussDir.isExpanded()).toBe(true);
+        const freshUssDir = await (await this.profileNode.find()).findChildItem(testInfo.ussDir);
+        expect(freshUssDir).toBeDefined();
+        await expect(await freshUssDir!.isExpanded()).toBe(true);
+        this.ussDir = freshUssDir!;
     } else {
         await expect(await this.jobNode.isExpanded()).toBe(true);
     }

@@ -19,7 +19,6 @@ temp
 *.vsix
 *.tgz
 .tmp
-temp-wdio-vscode-service
 coverage/
 v8-compile-cache-0/
 dist/
