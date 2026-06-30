@@ -35,11 +35,11 @@ async function optionallyClickNotificationButton(buttonTitle: string): Promise<v
                 return;
             }
         } catch {
-            // Not found yet — keep polling.
+            // keep polling.
         }
         await browser.pause(500);
     }
-    // No notification appeared — file/directory didn't already exist; proceed normally.
+    // file/directory didn't already exist: continue
 }
 
 Then("the USS directory has files listed under it", async function () {
@@ -51,8 +51,6 @@ When("the user creates a new USS file in the directory", async function () {
     await clickContextMenuItem(this.ussDir, "Create File");
     await fillInputBox(testInfo.newFile);
     await optionallyClickNotificationButton("Replace");
-    // Allow time for the remote create to complete and tree to refresh
-    await browser.pause(3000);
 });
 
 Then("the new USS file appears in the directory listing", async function () {
@@ -72,7 +70,6 @@ When("the user deletes the new USS file from the directory", async function () {
     await expect(fileNode).toBeDefined();
     await fileNode.elem.moveTo();
     await clickContextMenuItem(fileNode, "Delete");
-    await browser.pause(3000);
 });
 
 Then("the USS file no longer appears in the directory listing", async function () {
@@ -87,7 +84,6 @@ When("the user creates a new USS directory inside the parent", async function ()
     await clickContextMenuItem(this.ussDir, "Create Directory");
     await fillInputBox(testInfo.newDir);
     await optionallyClickNotificationButton("Replace");
-    await browser.pause(3000);
 });
 
 Then("the new USS directory appears in the parent listing", async function () {
@@ -107,7 +103,6 @@ When("the user deletes the new USS directory from the parent", async function ()
     await expect(dirNode).toBeDefined();
     await dirNode.elem.moveTo();
     await clickContextMenuItem(dirNode, "Delete");
-    await browser.pause(3000);
 });
 
 Then("the USS directory no longer appears in the parent listing", async function () {
@@ -123,7 +118,6 @@ When("the user renames the new USS file to the renamed file name", async functio
     await fileNode.elem.moveTo();
     await clickContextMenuItem(fileNode, "Rename");
     await fillInputBox(testInfo.renamedFile);
-    await browser.pause(3000);
 });
 
 Then("the renamed USS file appears in the directory listing", async function () {
@@ -150,7 +144,11 @@ When("the user deletes the renamed USS file from the directory", async function 
     await expect(fileNode).toBeDefined();
     await fileNode.elem.moveTo();
     await clickContextMenuItem(fileNode, "Delete");
-    await browser.pause(3000);
+    // wait for the node to disappear from the tree
+    await browser.waitUntil(async () => (await this.ussDir.findChildItem(testInfo.renamedFile)) == null, {
+        timeout: 30000,
+        timeoutMsg: `Renamed file "${testInfo.renamedFile}" is still visible after delete`,
+    });
 });
 
 When("the user renames the new USS directory to the renamed directory name", async function () {
@@ -159,7 +157,6 @@ When("the user renames the new USS directory to the renamed directory name", asy
     await dirNode.elem.moveTo();
     await clickContextMenuItem(dirNode, "Rename");
     await fillInputBox(testInfo.renamedDir);
-    await browser.pause(3000);
 });
 
 Then("the renamed USS directory appears in the parent listing", async function () {
@@ -186,7 +183,11 @@ When("the user deletes the renamed USS directory from the parent", async functio
     await expect(dirNode).toBeDefined();
     await dirNode.elem.moveTo();
     await clickContextMenuItem(dirNode, "Delete");
-    await browser.pause(3000);
+    // wait for the node to disappear from the tree
+    await browser.waitUntil(async () => (await this.ussDir.findChildItem(testInfo.renamedDir)) == null, {
+        timeout: 30000,
+        timeoutMsg: `Renamed directory "${testInfo.renamedDir}" is still visible after delete`,
+    });
 });
 
 When("the user opens the USS file with a specific encoding", async function () {
@@ -195,11 +196,15 @@ When("the user opens the USS file with a specific encoding", async function () {
     await ussFile.elem.moveTo();
     await clickContextMenuItem(ussFile, "Open with Encoding");
     await quickPick.selectItemByLabel(testInfo.encoding);
-    await browser.pause(2000);
 });
 
 Then("the USS file opens in the editor with the specified encoding", async function () {
     const editorView = (await browser.getWorkbench()).getEditorView();
+    // Wait for the editor tab to open instead of sleeping after selecting the encoding
+    await browser.waitUntil(async () => (await editorView.getOpenEditorTitles()).includes(testInfo.ussFile), {
+        timeout: 15000,
+        timeoutMsg: `Editor for "${testInfo.ussFile}" did not open`,
+    });
     this.editorForFile = await editorView.openEditor(testInfo.ussFile);
     await expect(this.editorForFile).toBeDefined();
     await this.editorForFile.wait();
@@ -215,36 +220,30 @@ When("the user copies the USS test file", async function () {
 });
 
 When("the user pastes the USS file into the new USS directory", async function () {
-    // The destination is newDir, just created as a direct child of the already-expanded
-    // USS test directory. findChildItem finds it without any scrolling concerns.
+    // findChildItem finds it without any scrolling concerns
     this.copyDstDir = (await this.ussDir.findChildItem(testInfo.newDir)) as TreeItem;
     await expect(this.copyDstDir).toBeDefined();
     await this.copyDstDir.elem.moveTo();
     await clickContextMenuItem(this.copyDstDir, "Paste");
-    await browser.pause(5000);
 });
 
 Then("the copied USS file appears in the new USS directory listing", async function () {
-    // The paste copies the file on the mainframe but does not re-fetch the destination
-    // directory's children in the tree. Refresh the directory to pull its contents, then
-    // re-fetch the node (the refresh re-renders it) and confirm the file is listed.
-    await this.copyDstDir.elem.moveTo();
-    await clickContextMenuItem(this.copyDstDir, "Refresh Directory");
-    await browser.pause(3000);
-
-    this.copyDstDir = (await this.ussDir.findChildItem(testInfo.newDir)) as TreeItem;
-    await this.copyDstDir.expand();
-    await browser.waitUntil(async () => (await this.copyDstDir.findChildItem(this.copiedFileName)) != null, {
-        timeout: 30000,
-        timeoutMsg: `Copied file "${this.copiedFileName}" did not appear in destination directory`,
-    });
+    // Paste does not always refresh the destination, so refresh until the pasted file shows up
+    await browser.waitUntil(
+        async () => {
+            this.copyDstDir = (await this.ussDir.findChildItem(testInfo.newDir)) as TreeItem;
+            await this.copyDstDir.elem.moveTo();
+            await clickContextMenuItem(this.copyDstDir, "Refresh Directory");
+            await this.copyDstDir.expand();
+            return (await this.copyDstDir.findChildItem(this.copiedFileName)) != null;
+        },
+        { timeout: 30000, interval: 3000, timeoutMsg: `Copied file "${this.copiedFileName}" did not appear in destination directory` }
+    );
     const copiedFile = await this.copyDstDir.findChildItem(this.copiedFileName);
     await expect(copiedFile).toBeDefined();
 });
 
-// Runs after every scenario in this feature. Deletes any test artifacts that were created
-// but not cleaned up (e.g. when a scenario failed mid-way). Safe to run even when artifacts
-// do not exist — errors are silently swallowed.
+// Deletes any test artifacts that were created but not cleaned up
 After(async function () {
     if (!this.ussDir) {
         return;
@@ -258,10 +257,13 @@ After(async function () {
             if (item) {
                 await item.elem.moveTo();
                 await clickContextMenuItem(item, "Delete");
-                await browser.pause(1500);
+                await browser.waitUntil(async () => (await this.ussDir.findChildItem(name)) == null, {
+                    timeout: 15000,
+                    timeoutMsg: `Cleanup: "${name}" still present after delete`,
+                });
             }
         } catch {
-            // Artifact absent or already deleted — continue.
+            // artifact not found or already deleted: continue
         }
     }
 });
