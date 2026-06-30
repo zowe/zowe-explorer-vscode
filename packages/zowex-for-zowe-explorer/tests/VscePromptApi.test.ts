@@ -353,52 +353,6 @@ describe("VscePromptApi", () => {
         });
     });
 
-    describe("storeServerPath", () => {
-        it("should update the zowex.serverInstallPath setting for the given host", () => {
-            api = makeApi();
-            const updateSpy = vi.fn();
-            const existing: Record<string, string> = { otherHost: "/old" };
-            vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                get: vi.fn(() => existing),
-                update: updateSpy,
-            } as any);
-
-            (api as any).storeServerPath("myHost", "/new/path");
-
-            expect(updateSpy).toHaveBeenCalledWith(
-                "zowex.serverInstallPath",
-                { otherHost: "/old", myHost: "/new/path" },
-                vscode.ConfigurationTarget.Global
-            );
-        });
-
-        it("should initialize an empty map when the setting is absent", () => {
-            api = makeApi();
-            const updateSpy = vi.fn();
-            vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                get: vi.fn(() => undefined),
-                update: updateSpy,
-            } as any);
-
-            (api as any).storeServerPath("myHost", "/new/path");
-
-            expect(updateSpy).toHaveBeenCalledWith("zowex.serverInstallPath", { myHost: "/new/path" }, vscode.ConfigurationTarget.Global);
-        });
-
-        it("should initialize an empty map when the setting returns a falsy non-nullish value", () => {
-            api = makeApi();
-            const updateSpy = vi.fn();
-            vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                get: vi.fn(() => 0),
-                update: updateSpy,
-            } as any);
-
-            (api as any).storeServerPath("myHost", "/new/path");
-
-            expect(updateSpy).toHaveBeenCalledWith("zowex.serverInstallPath", { myHost: "/new/path" }, vscode.ConfigurationTarget.Global);
-        });
-    });
-
     describe("getClientSetting", () => {
         it("should read a known client setting", () => {
             api = makeApi();

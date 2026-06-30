@@ -11,7 +11,7 @@
 
 import { Gui, imperative, ZoweExplorerApiType, type IApiExplorerExtender } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils } from "./ConfigUtils";
 import { VscePromptApi } from "./VscePromptApi";
 import { SshClientCache } from "./SshClientCache";
@@ -41,22 +41,38 @@ export class Utilities {
         if (!profile?.profile) {
             return;
         }
-        const defaultServerPath = ConfigUtils.getServerPath(profile.profile);
-        const deployDirectory = await vscePromptApi.promptForDeployDirectory(profile.profile.host, defaultServerPath);
+        let configuredServerPath = ConfigUtils.getServerPath(profile.profile);
+        const sshSession = ZSshUtils.buildSession(profile.profile);
+        let serverIsOnPath = false;
+        if (configuredServerPath == null) {
+            serverIsOnPath = await SshClientCache.inst.isServerDetectedOnPath(sshSession, profile.profile);
+            // isServerDetectedOnPath will set the configured server path if a $PATH instance is found
+            configuredServerPath = ConfigUtils.getServerPath(profile.profile) ?? ZSshClient.DEFAULT_SERVER_PATH;
+        }
+
+        const deployDirectory = serverIsOnPath
+            ? configuredServerPath
+            : await vscePromptApi.promptForDeployDirectory(profile.profile.host, configuredServerPath);
         if (!deployDirectory) {
             return;
         }
-
-        const sshSession = ZSshUtils.buildSession(profile.profile);
-        const deployStatus = await deployWithProgress(sshSession, deployDirectory);
-        if (!deployStatus) {
-            return;
+        let deployStatus = false;
+        if (!await ZSshUtils.lacksWriteAccess(sshSession, deployDirectory)) {
+            deployStatus = await deployWithProgress(sshSession, deployDirectory);
+            if (!deployStatus) {
+                return;
+            }
+        } else {
+            imperative.Logger.getAppLogger()
+                .info("Skipped deploy step as server path '%s' is not writeable by the user", deployDirectory);
         }
 
         await ConfigUtils.showSessionInTree(profile.name!, true, zoweExplorerApi);
-        const infoMsg = `Installed Zowe Remote SSH server on ${(profile.profile.host as string) ?? profile.name}`;
-        imperative.Logger.getAppLogger().info(infoMsg);
-        await Gui.showMessage(infoMsg);
+        if (deployStatus) {
+            const infoMsg = `Installed Zowe Remote SSH server on ${(profile.profile.host as string) ?? profile.name}`;
+            imperative.Logger.getAppLogger().info(infoMsg);
+            await Gui.showMessage(infoMsg);
+        }
     }
 
     private static async restartCallback(zoweExplorerApi: IApiExplorerExtender, profName?: string): Promise<void> {
@@ -89,6 +105,10 @@ export class Utilities {
 
         SshClientCache.inst.end(profile);
         const serverPath = ConfigUtils.getServerPath(profile.profile);
+        if (serverPath == null) {
+            return;
+        }
+
         await ConfigUtils.showSessionInTree(profile.name!, false, zoweExplorerApi);
 
         // Create error callback for uninstall operation
