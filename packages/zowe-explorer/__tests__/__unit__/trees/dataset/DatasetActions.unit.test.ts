@@ -4874,7 +4874,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
 
         const existsSpy = vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         const createEntrySpy = vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
-        const fireSoonSpy = vi.spyOn(DatasetFSProvider.instance, "_fireSoon").mockImplementation((() => undefined) as any);
+        const fireSoonSpy = vi.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation((() => undefined) as any);
 
         mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
 
@@ -4948,7 +4948,7 @@ describe("Dataset Actions Unit Tests - Function determineReplacement", () => {
 
         const existsSpy = vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         const createEntrySpy = vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
-        const fireSoonSpy = vi.spyOn(DatasetFSProvider.instance, "_fireSoon").mockImplementation((() => undefined) as any);
+        const fireSoonSpy = vi.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation((() => undefined) as any);
 
         mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
 

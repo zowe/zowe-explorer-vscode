@@ -16,9 +16,9 @@ import * as fs from "node:fs";
 
 // `node:fs` named imports are not configurable for spyOn under ESM, so mock the module.
 vi.mock("node:fs", async (importActual) => {
-    const actual = (await importActual());
+    const actual = await importActual();
     return {
-        ...actual as typeof import("node:fs"),
+        ...(actual as typeof import("node:fs")),
         createReadStream: vi.fn(() => ({}) as any),
         createWriteStream: vi.fn(() => ({}) as any),
     };
@@ -107,7 +107,7 @@ describe("SshUssApi", () => {
         it("should create a write stream to a file when a file path is provided (binary)", async () => {
             const ussApi = new SshUssApi();
             const readFileSpy = vi.fn().mockResolvedValue({ data: "", etag: "etag1" });
-            const createDirsSpy = vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => { });
+            const createDirsSpy = vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => {});
             vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { readFile: readFileSpy } });
             vi.spyOn(ussApi as any, "buildZosFilesResponse");
 
@@ -134,7 +134,7 @@ describe("SshUssApi", () => {
             const ussApi = new SshUssApi();
             const fakeWriteStream = { mock: "writeStream" };
             vi.mocked(fs.createWriteStream).mockReturnValue(fakeWriteStream as any);
-            vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => { });
+            vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => {});
             const readFileSpy = vi.fn().mockImplementation(async (opts: any) => {
                 expect(opts.stream()).toBe(fakeWriteStream);
                 return { data: "", etag: "etag1" };

@@ -1065,7 +1065,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public clearDSFilterFromTree(node: Types.IZoweNodeType): void {
+    public async clearDSFilterFromTree(node: Types.IZoweNodeType): Promise<void> {
         if (!SharedTreeProviders.ds?.mSessionNodes || !SharedTreeProviders.ds?.mSessionNodes.length) {
             return;
         }
@@ -1078,15 +1078,15 @@ export class Profiles extends ProfilesCache {
         dsNode.description &&= "";
         dsNode.pattern &&= "";
         if (SharedTreeProviders.ds.onCollapsibleStateChange) {
-            SharedTreeProviders.ds.onCollapsibleStateChange(dsNode, vscode.TreeItemCollapsibleState.Collapsed);
+            await SharedTreeProviders.ds.onCollapsibleStateChange(dsNode, vscode.TreeItemCollapsibleState.Collapsed);
         } else {
             // eslint-disable-next-line deprecation/deprecation
             SharedTreeProviders.ds.flipState(dsNode, false);
         }
-        SharedTreeProviders.ds.refreshElement(dsNode);
+        await SharedTreeProviders.ds.refreshElement(dsNode);
     }
 
-    public clearUSSFilterFromTree(node: Types.IZoweNodeType): void {
+    public async clearUSSFilterFromTree(node: Types.IZoweNodeType): Promise<void> {
         if (!SharedTreeProviders.uss?.mSessionNodes || !SharedTreeProviders.uss?.mSessionNodes.length) {
             return;
         }
@@ -1099,7 +1099,7 @@ export class Profiles extends ProfilesCache {
         ussNode.description &&= "";
         ussNode.fullPath &&= "";
         if (SharedTreeProviders.uss.onCollapsibleStateChange) {
-            SharedTreeProviders.uss.onCollapsibleStateChange(ussNode, vscode.TreeItemCollapsibleState.Collapsed);
+            await SharedTreeProviders.uss.onCollapsibleStateChange(ussNode, vscode.TreeItemCollapsibleState.Collapsed);
         } else {
             // eslint-disable-next-line deprecation/deprecation
             SharedTreeProviders.uss.flipState(ussNode, false);
@@ -1107,7 +1107,7 @@ export class Profiles extends ProfilesCache {
         SharedTreeProviders.uss.refreshElement(ussNode);
     }
 
-    public clearJobFilterFromTree(node: Types.IZoweNodeType): void {
+    public async clearJobFilterFromTree(node: Types.IZoweNodeType): Promise<void> {
         if (!SharedTreeProviders.job?.mSessionNodes || !SharedTreeProviders.job?.mSessionNodes.length) {
             return;
         }
@@ -1124,7 +1124,7 @@ export class Profiles extends ProfilesCache {
         jobNode.filtered &&= false;
         jobNode.children &&= [];
         if (SharedTreeProviders.job.onCollapsibleStateChange) {
-            SharedTreeProviders.job.onCollapsibleStateChange(jobNode, vscode.TreeItemCollapsibleState.Collapsed);
+            await SharedTreeProviders.job.onCollapsibleStateChange(jobNode, vscode.TreeItemCollapsibleState.Collapsed);
         } else {
             // eslint-disable-next-line deprecation/deprecation
             SharedTreeProviders.job.flipState(jobNode, false);
@@ -1132,17 +1132,17 @@ export class Profiles extends ProfilesCache {
         SharedTreeProviders.job.refreshElement(jobNode);
     }
 
-    public clearFilterFromAllTrees(node: Types.IZoweNodeType): void {
-        this.clearDSFilterFromTree(node);
-        this.clearUSSFilterFromTree(node);
-        this.clearJobFilterFromTree(node);
+    public async clearFilterFromAllTrees(node: Types.IZoweNodeType): Promise<void> {
+        await this.clearDSFilterFromTree(node);
+        await this.clearUSSFilterFromTree(node);
+        await this.clearJobFilterFromTree(node);
     }
 
     public async ssoLogout(node: Types.IZoweNodeType): Promise<void> {
         ZoweLogger.trace("Profiles.ssoLogout called.");
         const serviceProfile = node.getProfile();
         try {
-            this.clearFilterFromAllTrees(node);
+            await this.clearFilterFromAllTrees(node);
             let logoutOk: boolean;
             const zeRegister = ZoweExplorerApiRegister.getInstance();
 

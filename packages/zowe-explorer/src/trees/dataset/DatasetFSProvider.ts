@@ -825,8 +825,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
-            const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            const profileEncoding = entry.encoding ? null : profile.profile?.encoding;
+            const theProfile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+            const profileEncoding = entry.encoding ? null : theProfile.profile?.encoding;
 
             const binary = encoding === "binary" || entry.encoding?.kind === "binary";
 
@@ -933,7 +933,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
                     if (lastGroup && line === lastGroup.end + 1) {
                         lastGroup.end = line;
-                        lastGroup.text += "\n" + text;
+                        lastGroup.text += `\n${text as string}`;
                     } else {
                         groupedLines.push({ start: line, end: line, text: text as string });
                     }

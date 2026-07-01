@@ -543,7 +543,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 profile,
             });
         } catch (err) {
-            handleError(err, (error) => {
+            void handleError(err, (error) => {
                 ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
             });
             return null;
