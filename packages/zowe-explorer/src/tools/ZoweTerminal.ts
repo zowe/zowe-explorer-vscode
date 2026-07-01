@@ -242,7 +242,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
                     const that = this;
                     // ---------------------------------------
                     // Note: `.call(this, ` is intentional since without it, it's possible for VSCode to not remember what `this` is
-                    // eslint-disable-next-line 
+                    // eslint-disable-next-line
                     (isForgetCommand ? that.writeLine : that.write).call(that, that.chalk.italic.yellow("\r\nOperation completed: ") + cmd + "\r\n");
                     if (isAsyncCommand) {
                         that.writeLine.call(that, output.trim().split("\n").join("\r\n"));

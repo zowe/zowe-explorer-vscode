@@ -1362,10 +1362,10 @@ Would you like to do this now?`,
         job.filter = newFilter;
         job.description = newFilter
             ? vscode.l10n.t({
-                message: "Filter: {0}",
-                args: [newFilter],
-                comment: ["The new filter"],
-            })
+                  message: "Filter: {0}",
+                  args: [newFilter],
+                  comment: ["The new filter"],
+              })
             : null;
         this.nodeDataChanged(job);
         if (newFilter === null) {

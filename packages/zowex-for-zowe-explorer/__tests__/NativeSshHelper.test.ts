@@ -17,9 +17,9 @@ import { handleNativeSshSettings } from "../src/NativeSshHelper";
 
 // Mock native fs operations (named imports are not configurable for spyOn under ESM).
 vi.mock("node:fs", async (importActual) => {
-    const actual = (await importActual());
+    const actual = await importActual();
     return {
-        ...actual as typeof import("node:fs"),
+        ...(actual as typeof import("node:fs")),
         existsSync: vi.fn(() => false),
         mkdirSync: vi.fn(),
         writeFileSync: vi.fn(),
