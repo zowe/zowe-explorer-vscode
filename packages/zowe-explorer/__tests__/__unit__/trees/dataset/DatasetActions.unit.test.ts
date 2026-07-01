@@ -4676,7 +4676,7 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         expect(datasetTree.focusOnDsInTree).toHaveBeenCalledWith("MY.PDS", expect.anything());
     });
 
-    it("should show warning if PDS could not be found in tree", async () => {
+    it("should show warning when focusOnDsInTree returns false (filtering failed)", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         setupMocksForZoom(blockMocks, "MY.PDS", "MY.PDS", "", true, true);
@@ -4691,7 +4691,8 @@ describe("Dataset Actions Unit Tests - Function zoom", () => {
         await DatasetActions.zoom();
 
         expect(datasetTree.focusOnDsInTree).toHaveBeenCalledWith("MY.PDS", expect.anything());
-        expect(warningSpy).toHaveBeenCalledWith("PDS {0} could not be found.");
+        // Warning should be shown if focusOnDsInTree returns false (filtering failed)
+        expect(warningSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to filter tree for PDS MY.PDS"));
     });
 
     it("should open the dataset if not a PDS", async () => {
