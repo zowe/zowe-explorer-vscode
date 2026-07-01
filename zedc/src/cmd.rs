@@ -2,6 +2,7 @@
 
 use std::process::Command;
 
+use crate::output::OutputFormat;
 use crate::test::Commands as TestCommands;
 use anyhow::Result;
 use clap::{command, CommandFactory, Parser, Subcommand};
@@ -67,6 +68,22 @@ pub enum RootCommands {
         #[arg(value_enum)]
         shell: clap_complete::Shell,
     },
+    /// Check that installed tool versions satisfy the project's requirements
+    Doctor,
+    /// Fetch a PR, reuse its posted VSIX artifact (or build from source), and launch the sandbox
+    Pr {
+        /// GitHub pull request number
+        pr_number: u64,
+        /// VS Code version to use for the sandbox (default: latest)
+        #[arg(long, value_name = "VERSION")]
+        vsc_version: Option<String>,
+        /// Skip dependency installation (reuse existing node_modules)
+        #[arg(long)]
+        skip_setup: bool,
+        /// Always build from source, ignoring any VSIX artifact posted on the PR
+        #[arg(long)]
+        build: bool,
+    },
 }
 
 /// Command-line arguments for the zedc tool
@@ -75,6 +92,26 @@ pub enum RootCommands {
 pub struct Args {
     #[command(subcommand)]
     pub command: RootCommands,
+
+    /// Output format for command results
+    #[arg(long, value_enum, value_name = "FORMAT", global = true)]
+    pub format: Option<OutputFormat>,
+
+    /// Emit machine-readable JSON (shorthand for `--format json`)
+    #[arg(long, global = true)]
+    pub json: bool,
+}
+
+impl Args {
+    /// Resolves the effective output format, treating `--json` as a shorthand
+    /// for `--format json`. The explicit `--json` flag takes precedence.
+    pub fn output_format(&self) -> OutputFormat {
+        if self.json {
+            OutputFormat::Json
+        } else {
+            self.format.unwrap_or_default()
+        }
+    }
 }
 
 /// Generate shell completion scripts for the specified shell

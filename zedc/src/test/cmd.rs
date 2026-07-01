@@ -1,5 +1,6 @@
 //! Command module for handling `test` commands.
 
+use crate::output::{self, exit};
 use crate::test::{coverage, ghr, local};
 use clap::{command, Subcommand};
 use owo_colors::OwoColorize;
@@ -34,6 +35,12 @@ pub enum Commands {
         verbose: bool,
         #[arg(short, long, help = "Filter tests to a specific package")]
         filter: Option<String>,
+        #[arg(
+            long,
+            value_name = "N",
+            help = "Exit non-zero if patch coverage falls below this percentage (0–100)"
+        )]
+        threshold: Option<f64>,
     },
 }
 
@@ -47,37 +54,46 @@ pub async fn handle_cmd(
     install_cli: Option<String>,
     vsc_version: Option<String>,
     cmd: Commands,
-) -> anyhow::Result<()> {
-    println!("{}\n", "zedc test".bold().blue());
+) -> anyhow::Result<i32> {
+    let json = output::json_enabled();
+    if !json {
+        println!("{}\n", "zedc test".bold().blue());
+    }
 
     // Handle any subcommands.
-    match cmd {
+    let code = match cmd {
         Commands::GhRepo { references } => {
             let crab = octocrab::instance();
             ghr::setup(references, vsc_version, &crab).await?;
+            exit::SUCCESS
         }
         Commands::Local { files } => {
             match local::setup(vsc_version, files).await {
                 Ok(_) => {}
                 Err(_e) => {
-                    return Ok(());
+                    return Ok(exit::SUCCESS);
                 }
             };
+            exit::SUCCESS
         }
-        Commands::Coverage { verbose, filter } => {
-            coverage::run_coverage_check(verbose, filter)?;
-        }
-    }
+        Commands::Coverage {
+            verbose,
+            filter,
+            threshold,
+        } => coverage::run_coverage_check(verbose, filter, threshold)?,
+    };
 
     // Install Zowe CLI if a version was provided.
     if install_cli.is_some() {
         let ver = install_cli.unwrap();
-        println!(
-            "💿 {}",
-            format!("Installing Zowe CLI (version: {})...", ver).blue()
-        );
+        if !json {
+            println!(
+                "💿 {}",
+                format!("Installing Zowe CLI (version: {})...", ver).blue()
+            );
+        }
         super::install_cli(ver)?;
     }
 
-    Ok(())
+    Ok(code)
 }

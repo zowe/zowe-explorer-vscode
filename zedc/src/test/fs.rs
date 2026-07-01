@@ -46,6 +46,7 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
     }
 
     // Install the given extensions using the VS Code CLI.
+    // Must complete before launching so the data/ directory isn't locked by two processes.
     let vsc_bin_path = Path::new(&vsc_bin);
     println!("\n⌛ Installing extensions...");
     let mut cmd = Command::new(vsc_bin_path);
@@ -53,8 +54,12 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
         cmd.args(["--install-extension", file]);
     }
 
-    if let Err(e) = cmd.stdout(Stdio::null()).spawn() {
-        bail!(e);
+    let install_status = cmd
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()?;
+    if !install_status.success() {
+        bail!("VS Code CLI exited with a non-zero status while installing extensions");
     }
 
     // Launch VS Code after installing the given extensions.
@@ -73,6 +78,7 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
             .args([
                 vsc.to_str().unwrap(),
                 "--args",
+                "--new-window",
                 "--disable-updates",
                 sandbox_str,
             ])
@@ -88,8 +94,7 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
         }
     } else {
         match Command::new(vsc)
-            .arg("")
-            .arg(sandbox_str)
+            .args(["--new-window", sandbox_str])
             .env("ZOWE_CLI_HOME", zowe_dir.to_str().unwrap())
             .stdout(Stdio::null())
             .spawn()
