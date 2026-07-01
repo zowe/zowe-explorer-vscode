@@ -51,10 +51,10 @@ vi.mock("@zowe/zowe-explorer-api", () => ({
     },
     imperative: {
         DeferredPromise: class {
-            promise: Promise<unknown>;
-            resolve!: (v?: unknown) => void;
-            reject!: (r?: unknown) => void;
-            constructor() {
+            public promise: Promise<unknown>;
+            public resolve!: (v?: unknown) => void;
+            public reject!: (r?: unknown) => void;
+            public constructor() {
                 this.promise = new Promise((res, rej) => {
                     this.resolve = res;
                     this.reject = rej;
@@ -287,7 +287,7 @@ describe("SshConfigUtils", () => {
                 expect(mockQuickPick.placeholder).toBe("Pick one");
                 expect(mockQuickPick.ignoreFocusOut).toBe(true);
 
-                const onDidHide = (mockQuickPick.onDidHide as any).mock.calls[0][0];
+                const onDidHide = (mockQuickPick.onDidHide).mock.calls[0][0];
                 onDidHide();
 
                 const result = await promise;
@@ -296,7 +296,7 @@ describe("SshConfigUtils", () => {
             it("returns custom item when input starts with >", async () => {
                 const opts = { items: [{ label: "host1", description: "host" }] };
                 const promise = (instance as any).showCustomMenu(opts);
-                const onDidChangeValue = (mockQuickPick.onDidChangeValue as any).mock.calls[0][0];
+                const onDidChangeValue = (mockQuickPick.onDidChangeValue).mock.calls[0][0];
                 onDidChangeValue("customHost");
 
                 expect(mockQuickPick.items[0]).toEqual({
@@ -304,7 +304,7 @@ describe("SshConfigUtils", () => {
                     description: "Custom SSH Host",
                 });
                 mockQuickPick.selectedItems = [mockQuickPick.items[0]];
-                const onDidAccept = (mockQuickPick.onDidAccept as any).mock.calls[0][0];
+                const onDidAccept = (mockQuickPick.onDidAccept).mock.calls[0][0];
                 onDidAccept();
 
                 const result = await promise;
@@ -317,7 +317,7 @@ describe("SshConfigUtils", () => {
             it("returns undefined when quick pick is hidden", async () => {
                 const opts = { items: [] } as any;
                 const promise = (instance as any).showCustomMenu(opts);
-                const onDidHide = (mockQuickPick.onDidHide as any).mock.calls[0][0];
+                const onDidHide = (mockQuickPick.onDidHide).mock.calls[0][0];
                 onDidHide();
                 const result = await promise;
                 expect(result).toBeUndefined();
@@ -331,7 +331,7 @@ describe("SshConfigUtils", () => {
 
                 const promise = (instance as any).showCustomMenu(opts);
                 mockQuickPick.selectedItems = [mockQuickPick.items[0]];
-                const onDidAccept = (mockQuickPick.onDidAccept as any).mock.calls[0][0];
+                const onDidAccept = (mockQuickPick.onDidAccept).mock.calls[0][0];
                 onDidAccept();
 
                 const result = await promise;

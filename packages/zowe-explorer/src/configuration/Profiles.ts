@@ -120,8 +120,8 @@ export class Profiles extends ProfilesCache {
         const teamConfig = (await this.getProfileInfo()).getTeamConfig();
         const profName = teamConfig.api.profiles.getProfilePathFromName(theProfile.name);
 
-        const getCumulativePaths = (profName: string): string[] => {
-            const parts = profName.split(".profiles.");
+        const getCumulativePaths = (pName: string): string[] => {
+            const parts = pName.split(".profiles.");
             return parts.slice(1).reduce(
                 (acc, part) => {
                     const previousPath = acc.length > 0 ? acc[acc.length - 1] : parts[0];
@@ -137,8 +137,8 @@ export class Profiles extends ProfilesCache {
 
         // Add all intermediate paths by working backwards
         const allPaths: string[] = [];
-        for (const path of paths) {
-            const segments = path.split(".profiles.");
+        for (const thePath of paths) {
+            const segments = thePath.split(".profiles.");
             for (let j = 1; j <= segments.length; j++) {
                 const subPath = segments.slice(0, j).join(".profiles.");
                 if (!allPaths.includes(subPath)) {
@@ -155,7 +155,7 @@ export class Profiles extends ProfilesCache {
             allPaths.push(profName);
         }
 
-        return allPaths.some((path) => teamConfig.api.secure.secureFields().includes(path + ".properties.tokenValue"));
+        return allPaths.some((thePath: string) => teamConfig.api.secure.secureFields().includes(thePath + ".properties.tokenValue"));
     }
 
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<Validation.IValidationProfile> {
@@ -190,7 +190,9 @@ export class Profiles extends ProfilesCache {
         let tokenType: string;
         try {
             tokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile).getTokenTypeName();
-        } catch {}
+        } catch {
+            // Ignore error
+        }
 
         if (usingTokenAuth || ((await this.profileHasSecureToken(theProfile)) && tokenType)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
@@ -1075,7 +1077,12 @@ export class Profiles extends ProfilesCache {
         }
         dsNode.description &&= "";
         dsNode.pattern &&= "";
-        SharedTreeProviders.ds.flipState(dsNode, false);
+        if (SharedTreeProviders.ds.onCollapsibleStateChange) {
+            SharedTreeProviders.ds.onCollapsibleStateChange(dsNode, vscode.TreeItemCollapsibleState.Collapsed);
+        } else {
+            // eslint-disable-next-line deprecation/deprecation
+            SharedTreeProviders.ds.flipState(dsNode, false);
+        }
         SharedTreeProviders.ds.refreshElement(dsNode);
     }
 
@@ -1091,7 +1098,12 @@ export class Profiles extends ProfilesCache {
         }
         ussNode.description &&= "";
         ussNode.fullPath &&= "";
-        SharedTreeProviders.uss.flipState(ussNode, false);
+        if (SharedTreeProviders.uss.onCollapsibleStateChange) {
+            SharedTreeProviders.uss.onCollapsibleStateChange(ussNode, vscode.TreeItemCollapsibleState.Collapsed);
+        } else {
+            // eslint-disable-next-line deprecation/deprecation
+            SharedTreeProviders.uss.flipState(ussNode, false);
+        }
         SharedTreeProviders.uss.refreshElement(ussNode);
     }
 
@@ -1111,7 +1123,12 @@ export class Profiles extends ProfilesCache {
         jobNode.status &&= "";
         jobNode.filtered &&= false;
         jobNode.children &&= [];
-        SharedTreeProviders.job.flipState(jobNode, false);
+        if (SharedTreeProviders.job.onCollapsibleStateChange) {
+            SharedTreeProviders.job.onCollapsibleStateChange(jobNode, vscode.TreeItemCollapsibleState.Collapsed);
+        } else {
+            // eslint-disable-next-line deprecation/deprecation
+            SharedTreeProviders.job.flipState(jobNode, false);
+        }
         SharedTreeProviders.job.refreshElement(jobNode);
     }
 
