@@ -451,7 +451,6 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Create job directory if it doesn't exist
         const jobUri = uri.with({ path: `/${metadata.profile.name}/${jobId}` });
-        let jobEntry: JobEntry;
         if (!this.exists(jobUri)) {
             // Fetch job information from the mainframe
             const apiRegister = ZoweExplorerApiRegister.getInstance();
@@ -474,7 +473,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             });
             this.createDirectory(jobUri, { job });
         }
-        jobEntry = this._lookupAsDirectory(jobUri, false) as JobEntry;
+        const jobEntry = this._lookupAsDirectory(jobUri, false) as JobEntry;
 
         // Fetch spool files for the job if not already loaded
         if (jobEntry.entries.size === 0) {

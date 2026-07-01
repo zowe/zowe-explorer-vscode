@@ -279,7 +279,7 @@ export class DatasetActions {
     private static async allocateNewDataSet(
         node: IZoweDatasetTreeNode,
         dsName: string,
-        dsPropsForAPI: {},
+        dsPropsForAPI: Partial<zosfiles.ICreateDataSetOptions>,
         datasetProvider: Types.IZoweDatasetTreeType
     ): Promise<void> {
         const profile = node.getProfile();
@@ -1265,10 +1265,10 @@ export class DatasetActions {
         }
 
         // The names of the nodes that should be deleted
-        const deleteItemName = (node: IZoweDatasetTreeNode) =>
-            SharedContext.isDsMember(node)
-                ? ` ${node.getParent().getLabel().toString()}(${node.getLabel().toString()})`
-                : ` ${node.getLabel().toString()}`;
+        const deleteItemName = (aNode: IZoweDatasetTreeNode): string =>
+            SharedContext.isDsMember(aNode)
+                ? ` ${aNode.getParent().getLabel().toString()}(${aNode.getLabel().toString()})`
+                : ` ${aNode.getLabel().toString()}`;
         const namesToDelete: string[] = nodes.map(deleteItemName).sort((a, b) => a.localeCompare(b));
 
         // The member parent nodes that should be refreshed individually
@@ -1538,7 +1538,7 @@ export class DatasetActions {
         }
         const isMatch = DatasetActions.compareDsProperties(type, datasetProvider);
         // Format properties for use by API
-        const dsPropsForAPI = {};
+        const dsPropsForAPI: Partial<zosfiles.ICreateDataSetOptions> = {};
         DatasetActions.newDSProperties?.forEach((property) => {
             if (property.value) {
                 if (property.key === `dsName`) {
@@ -1743,28 +1743,26 @@ export class DatasetActions {
 <body>
     <div class="attributes-container">
     ${DatasetActions.attributeInfo
-        .map(({ title, reference, keys }) => {
-            const linkedTitle = reference
-                ? `<a href="${reference}" target="_blank" style="text-decoration: none;">
+                    .map(({ title, reference, keys }) => {
+                        const linkedTitle = reference
+                            ? `<a href="${reference}" target="_blank" style="text-decoration: none;">
                     <h2 style="color: var(--vscode-textLink-foreground)">${title}</h2>
                 </a>`
-                : `<h2>${title}</h2>`;
-            const tableRows = Array.from(keys.entries())
-                .filter(([key], _, all) => !(key === "vol" && all.some(([k]) => k === "vols")))
-                .reduce((html, [key, info]) => {
-                    if (info.value === undefined || info.value === null) {
-                        return html;
-                    }
-                    const formattedValue = formatAttributeValue(key, info.value, title);
-                    const isNumeric = typeof info.value === "number";
-                    return html.concat(`
-                        <tr ${
-                            info.displayName || info.description
-                                ? `title="${info.displayName ? `(${key})` : ""}${
-                                      info.description ? (info.displayName ? " " : "") + info.description : ""
-                                  }"`
-                                : ""
-                        }>
+                            : `<h2>${title}</h2>`;
+                        const tableRows = Array.from(keys.entries())
+                            .filter(([key], _, all) => !(key === "vol" && all.some(([k]) => k === "vols")))
+                            .reduce((html, [key, info]) => {
+                                if (info.value === undefined || info.value === null) {
+                                    return html;
+                                }
+                                const formattedValue = formatAttributeValue(key, info.value, title);
+                                const isNumeric = typeof info.value === "number";
+                                return html.concat(`
+                        <tr ${info.displayName || info.description
+                                        ? `title="${info.displayName ? `(${key})` : ""}${info.description ? (info.displayName ? " " : "") + info.description : ""
+                                        }"`
+                                        : ""
+                                    }>
                             <td class="attribute-key">
                                 ${info.displayName || key}:
                             </td>
@@ -1773,9 +1771,9 @@ export class DatasetActions {
                             </td>
                         </tr>
                 `);
-                }, "");
+                            }, "");
 
-            return `
+                        return `
             <div class="attributes-section">
                 ${linkedTitle}
                 <table class="attributes-table">
@@ -1783,8 +1781,8 @@ export class DatasetActions {
                 </table>
             </div>
         `;
-        })
-        .join("")}
+                    })
+                    .join("")}
     </div>
 </body>
 </html>`;
@@ -2318,7 +2316,7 @@ export class DatasetActions {
                             datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
                         }
                         if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
-                            datasetProvider.updateFavorites();
+                            void datasetProvider.updateFavorites();
                         }
                     }
                     datasetProvider.refreshElement(node.getParent());
@@ -2477,7 +2475,7 @@ export class DatasetActions {
                         datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
                     }
                     if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
-                        datasetProvider.updateFavorites();
+                        void datasetProvider.updateFavorites();
                     }
                 }
                 datasetProvider.refreshElement(node.getParent());
@@ -2546,7 +2544,7 @@ export class DatasetActions {
                             datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
                         }
                         if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
-                            datasetProvider.updateFavorites();
+                            void datasetProvider.updateFavorites();
                         }
                     }
                 } else {
@@ -2729,7 +2727,7 @@ export class DatasetActions {
                             }
                         } catch (err) {
                             ZoweLogger.error(err);
-                            handleError(err, (error) => {
+                            void handleError(err, (error) => {
                                 Gui.errorMessage(error.message);
                             });
                         }
@@ -2833,7 +2831,7 @@ export class DatasetActions {
                                 });
                             }
                         } catch (err) {
-                            handleError(err, (error) => {
+                            void handleError(err, (error) => {
                                 Gui.errorMessage(error.message);
                             });
                             return;
@@ -2951,7 +2949,7 @@ export class DatasetActions {
                             await mvsApi.copyDataSetCrossLpar(dsname, undefined, options, sourceProfile);
                         } catch (err) {
                             ZoweLogger.error(err);
-                            handleError(err, (error) => {
+                            void handleError(err, (error) => {
                                 Gui.errorMessage(error.message);
                             });
                             return;
@@ -2966,7 +2964,7 @@ export class DatasetActions {
                             try {
                                 await DatasetActions.createDataSetFromSourceAttributes(sourceProfile, node.getProfile(), lbl, dsname);
                             } catch (err) {
-                                handleError(err, (error) => {
+                                void handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to create {0}: {1}",
@@ -3027,7 +3025,7 @@ export class DatasetActions {
                                 });
                             } catch (err) {
                                 ZoweLogger.error(err);
-                                handleError(err, (error) => {
+                                void handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to copy member {0}: {1}",
@@ -3073,7 +3071,7 @@ export class DatasetActions {
                 if (uri) {
                     if (!DatasetFSProvider.instance.exists(uri)) {
                         DatasetFSProvider.instance.createEntry(uri, DsType.PdsMember);
-                        DatasetFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                        DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
                     }
                 }
                 q = vscode.l10n.t("The data set member already exists.\nDo you want to replace it?");
@@ -3091,7 +3089,7 @@ export class DatasetActions {
                 if (uri) {
                     if (!DatasetFSProvider.instance.exists(uri)) {
                         DatasetFSProvider.instance.createEntry(uri, type === "po" ? DsType.Pds : DsType.Ps);
-                        DatasetFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                        DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
                     }
                 }
                 if (type === "ps") {

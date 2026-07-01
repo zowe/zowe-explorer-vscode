@@ -40,7 +40,7 @@ import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
  * Tree-based data source that uses existing tree nodes
  */
 export class TreeDataSource implements IDataSetSource {
-    public constructor(public treeNode: IZoweDatasetTreeNode) {}
+    public constructor(public treeNode: IZoweDatasetTreeNode) { }
 
     /**
      * Fetches dataset information based on the cached children tree nodes.
@@ -110,9 +110,9 @@ export class TreeDataSource implements IDataSetSource {
         });
 
         if (pdsNode) {
-            const children = await pdsNode.getChildren(false);
+            const theChildren = await pdsNode.getChildren(false);
             return (
-                children
+                theChildren
                     ?.filter((memberNode) => !SharedContext.isInformation(memberNode))
                     .map((memberNode) => this.mapNodeToInfo(memberNode, parentId)) ?? []
             );
@@ -345,7 +345,7 @@ export class PDSMembersDataSource implements IDataSetSource {
         public pdsName: string,
         private pdsUri: string,
         private profile: imperative.IProfileLoaded
-    ) {}
+    ) { }
 
     public async fetchDataSets(): Promise<IDataSetInfo[]> {
         if (this.parentDataSource?.loadChildren && this.parentDataSource instanceof PatternDataSource) {
@@ -1078,14 +1078,11 @@ export class DatasetTableView {
         const sortField = this.mapSortOptionToColumnField(method);
         const sortDirection = direction === Sorting.SortDirection.Ascending ? "asc" : "desc";
 
-        return columnDefs.map((col) => {
+        return columnDefs.map((col): Table.Column => {
             if (col.field === sortField) {
-                return {
-                    ...col,
-                    initialSort: sortDirection,
-                };
+                return { ...col, initialSort: sortDirection } as Table.Column;
             }
-            return { ...col, initialSort: undefined };
+            return { ...col, initialSort: undefined } as Table.Column;
         });
     }
 
@@ -1113,8 +1110,8 @@ export class DatasetTableView {
             // Set the tree column for dataset name when using tree mode
             ...(useTreeMode && field.field === "dsname"
                 ? {
-                      cellRenderer: "TreeCellRenderer",
-                  }
+                    cellRenderer: "TreeCellRenderer",
+                }
                 : {}),
         }));
 
@@ -1135,10 +1132,10 @@ export class DatasetTableView {
             // Enable custom tree mode when needed
             ...(useTreeMode
                 ? {
-                      customTreeMode: true,
-                      customTreeColumnField: "dsname",
-                      customTreeInitialExpansionDepth: 0, // Start with all PDS collapsed
-                  }
+                    customTreeMode: true,
+                    customTreeColumnField: "dsname",
+                    customTreeInitialExpansionDepth: 0, // Start with all PDS collapsed
+                }
                 : {}),
         };
 
