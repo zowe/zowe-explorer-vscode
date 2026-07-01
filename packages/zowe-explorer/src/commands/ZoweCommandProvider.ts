@@ -66,11 +66,11 @@ export abstract class ZoweCommandProvider {
             if (iTerms) {
                 this.pseudoTerminal = new ZoweTerminal(
                     this.terminalName,
-                    async (command: string): Promise<string> => {
+                    async (cmd: string): Promise<string> => {
                         try {
                             // We need to await the response, otherwise we can't catch errors thrown
-                            this.history.addSearchHistory(command);
-                            return await this.runCommand(profile, command);
+                            this.history.addSearchHistory(cmd);
+                            return await this.runCommand(profile, cmd);
                         } catch (error) {
                             if (error instanceof imperative.ImperativeError) {
                                 let formattedError = "";
@@ -107,7 +107,7 @@ export abstract class ZoweCommandProvider {
 
                                 return formattedError;
                             }
-                            return error.message;
+                            return (error as Error).message;
                         }
                     },
                     new AbortController(),
