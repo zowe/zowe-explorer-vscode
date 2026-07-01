@@ -2089,6 +2089,12 @@
           "scope": "application",
           "deprecationMessage": "%zowe.history.deprecationMsg%"
         },
+        "zowe.uss.deleteNode.confirmDeletion": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a confirmation dialog before deleting USS files or directories.",
+          "scope": "window"
+        },
         "zowe.jobs.confirmSubmission": {
           "type": "string",
           "default": "%zowe.jobs.confirmSubmission.allJobs%",

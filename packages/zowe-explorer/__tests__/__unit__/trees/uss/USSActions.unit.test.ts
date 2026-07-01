@@ -1207,6 +1207,12 @@ describe("USS Action Unit Tests - function deleteUSSFilesPrompt", () => {
         [createUSSNode(globalMocks.testSession, createIProfile())],
         createTreeView()
     );
+    beforeEach(() => {
+        Object.defineProperty(vscode.workspace, "getConfiguration", {
+            value: vi.fn().mockReturnValue({ get: (_key: string, defaultVal: any) => defaultVal }),
+            configurable: true,
+        });
+    });
     it("should call deleteUSSNode with false if confirmed", async () => {
         const testNode = createUSSNode(createISession(), createIProfile());
         const nodes = [createUSSNode(createISession(), createIProfile())];
