@@ -557,6 +557,15 @@ export class ZoweVsCodeExtension {
                 prompt: "Enter the user name for the connection." + (options.rePrompt ? "" : " Leave blank to not store."),
                 ignoreFocusOut: true,
                 value: newUser,
+                validateInput: (value) => {
+                    if (!value || value.trim() === "") {
+                        return "User name cannot be empty";
+                    }
+                    if (options.userInputBoxOptions?.validateInput) {
+                        return options.userInputBoxOptions.validateInput(value);
+                    }
+                    return undefined;
+                },
                 ...(options.userInputBoxOptions ?? {}),
             });
         }
