@@ -12,8 +12,10 @@
 import { Given, Then, When } from "@cucumber/cucumber";
 import { paneDivForTree } from "../../../__common__/shared.wdio";
 import { Key } from "webdriverio";
+import { ViewItemAction } from "wdio-vscode-service";
 import quickPick from "../../../__pageobjects__/QuickPick";
 import { ProfileNode } from "../../../__pageobjects__/ProfileNode";
+import { ViewItemAction } from "wdio-vscode-service";
 
 const testInfo = {
     profileName: process.env.ZE_TEST_PROFILE_NAME,
@@ -23,21 +25,53 @@ const testInfo = {
     ussDir: process.env.ZE_TEST_USS_DIR.replace(`${process.env.ZE_TEST_USS_FILTER}/`, ""),
 };
 
-async function setFilterForProfile(profileNode: ProfileNode, tree: string): Promise<void> {
-    await (await profileNode.find()).elem.moveTo();
-    const actionButtons = await (await profileNode.find()).getActionButtons();
 
-    // Locate and select the search button on the profile node
+async function setFilterForProfile(profileNode: ProfileNode, tree: string): Promise<void> {
+    let profileItem = await profileNode.find();
+
+    // if the profile item is already expanded and has children, return
+    if ((await profileItem.isExpanded()) && (await profileItem.hasChildren())) {
+        return;
+    }
+
+    // hover and wait for action buttons to appear
+    await profileItem.elem.moveTo();
+    await browser.pause(500);
+
+    let actionButtons: ViewItemAction[] = [];
+    await browser.waitUntil(
+        async () => {
+            try {
+                profileItem = await profileNode.find();
+                await profileItem.elem.moveTo();
+                actionButtons = await profileItem.getActionButtons();
+                return actionButtons.length > 0;
+            } catch {
+                return false;
+            }
+        },
+        {
+            timeout: 5000,
+            timeoutMsg: `Action buttons did not appear for the given node.`,
+        }
+    );
+
+    profileItem = await profileNode.find();
+    await profileItem.elem.moveTo();
+    actionButtons = await profileItem.getActionButtons();
+
+    // locate and select the search button
     const searchButton = actionButtons[actionButtons.length - 1];
     const isUss = tree.toLowerCase() === "uss" || tree.toLowerCase() === "unix system services (uss)";
     const isJobs = !isUss && tree.toLowerCase() === "jobs";
     await searchButton.wait();
+    await searchButton.elem.waitForClickable({ timeout: 5000 });
     await searchButton.elem.click();
 
-    await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
+    // wait for the quick pick to be displayed
+    await browser.waitUntil((): Promise<boolean> => quickPick.isDisplayed());
 
     if (isJobs) {
-        // Jobs
         const createFilterSelector = await quickPick.findItem("$(plus) Create job search filter");
         await expect(createFilterSelector).toBeClickable();
         await createFilterSelector.click();
@@ -80,7 +114,7 @@ Given(/the user has a profile in their (.*) tree/, async function (tree: string)
             }
         },
         {
-            timeout: 10000,
+            timeout: 5000,
             timeoutMsg: `${tree} tree did not load within timeout`,
         }
     );
@@ -108,16 +142,16 @@ Given(/the user has a profile in their (.*) tree/, async function (tree: string)
         await expect(plusIcon).toBeDefined();
         await plusIcon.elem.click();
         await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
-        const firstProfileEntry = await quickPick.findItemByIndex(2);
-        await expect(firstProfileEntry).toBeClickable();
-        await firstProfileEntry.click();
+        const profileEntry = await quickPick.findItem(`$(home) ${testInfo.profileName}`);
+        await expect(profileEntry).toBeClickable();
+        await profileEntry.click();
         this.yesOpt = await quickPick.findItem("Yes, Apply to all trees");
         await expect(this.yesOpt).toBeClickable();
         await this.yesOpt.click();
 
         // Wait for the profile to be added and then find it
         await browser.waitUntil((): Promise<boolean> => this.profileNode.exists(), {
-            timeout: 10000,
+            timeout: 5000,
             timeoutMsg: `Profile ${testInfo.profileName} was not found after adding to ${tree} tree`,
         });
     }
@@ -132,22 +166,61 @@ Then("the profile node will list results of the filter search", async function (
     await this.profileNode.waitUntilHasChildren();
 });
 When("a user expands a PDS in the list", async function () {
-    this.pds = await (await this.profileNode.find()).findChildItem(testInfo.pds);
-    await expect(this.pds).toBeDefined();
-    this.pds = await this.profileNode.revealChildItem(testInfo.pds);
-    this.children = await this.pds.getChildren();
+    await browser.waitUntil(
+        async () => {
+            const pds = await (await this.profileNode.find()).findChildItem(testInfo.pds);
+            if (!pds) return false;
+            await pds.expand();
+            const freshPds = await (await this.profileNode.find()).findChildItem(testInfo.pds);
+            if (!freshPds) return false;
+            const children = await freshPds.getChildren();
+            if (children.length === 0) return false;
+            this.pds = freshPds;
+            this.children = children;
+            return true;
+        },
+        { timeout: 5000, timeoutMsg: `${testInfo.pds} did not expand with children` }
+    );
 });
 When("a user expands a USS directory in the list", async function () {
-    this.ussDir = await (await this.profileNode.find()).findChildItem(testInfo.ussDir);
-    await expect(this.ussDir).toBeDefined();
-    this.ussDir = await this.profileNode.revealChildItem(testInfo.ussDir);
-    this.children = await this.ussDir.getChildren();
+    await browser.waitUntil(
+        async () => {
+            const ussDir = await (await this.profileNode.find()).findChildItem(testInfo.ussDir);
+            if (!ussDir) return false;
+            await ussDir.expand();
+            const freshUssDir = await (await this.profileNode.find()).findChildItem(testInfo.ussDir);
+            if (!freshUssDir) return false;
+            const children = await freshUssDir.getChildren();
+            if (children.length === 0) return false;
+            this.ussDir = freshUssDir;
+            this.children = children;
+            return true;
+        },
+        { timeout: 5000, timeoutMsg: `${testInfo.ussDir} did not expand with children` }
+    );
+});
+When("a user expands a Job in the list", async function () {
+    const profileItem = await this.profileNode.find();
+    const jobs = await profileItem.getChildren();
+    await expect(jobs.length).toBeGreaterThan(0);
+    this.jobNode = jobs[0];
+    await this.jobNode.expand();
+    await browser.waitUntil(async () => await this.jobNode.hasChildren());
+    this.children = await this.jobNode.getChildren();
 });
 Then("the node will expand and list its children", async function () {
     if (this.pds) {
-        await expect(await this.pds.isExpanded()).toBe(true);
+        const freshPds = await (await this.profileNode.find()).findChildItem(testInfo.pds);
+        expect(freshPds).toBeDefined();
+        await expect(await freshPds!.isExpanded()).toBe(true);
+        this.pds = freshPds!;
+    } else if (this.ussDir) {
+        const freshUssDir = await (await this.profileNode.find()).findChildItem(testInfo.ussDir);
+        expect(freshUssDir).toBeDefined();
+        await expect(await freshUssDir!.isExpanded()).toBe(true);
+        this.ussDir = freshUssDir!;
     } else {
-        await expect(await this.ussDir.isExpanded()).toBe(true);
+        await expect(await this.jobNode.isExpanded()).toBe(true);
     }
 });
 Then("the user can select a child in the list and open it", async function () {

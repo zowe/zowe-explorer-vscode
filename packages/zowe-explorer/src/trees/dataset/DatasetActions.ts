@@ -14,6 +14,7 @@ import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as path from "path";
 import {
     Gui,
+    handleError,
     imperative,
     IZoweDatasetTreeNode,
     Validation,
@@ -49,6 +50,7 @@ import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetTree } from "./DatasetTree";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
+import { DATASET_ATTR_DEFS, MEMBER_ATTR_DEFS } from "./DatasetAttributes";
 
 type ClipboardItem = {
     profileName: string;
@@ -296,9 +298,9 @@ export class DatasetActions {
         } catch (err) {
             const errorMsg = vscode.l10n.t("Error encountered when creating data set.");
             ZoweLogger.error(errorMsg + JSON.stringify(err));
-            if (err instanceof Error) {
-                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile(), scenario: errorMsg });
-            }
+            await handleError(err, async (error) => {
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile(), scenario: errorMsg });
+            });
             throw new Error(err);
         }
 
@@ -445,14 +447,14 @@ export class DatasetActions {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName);
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
                         profile,
                         dsName: newDSName,
                         scenario: vscode.l10n.t("Unable to create data set."),
                     });
-                }
+                });
                 throw err;
             }
         }
@@ -830,6 +832,22 @@ export class DatasetActions {
         );
     }
 
+    private static resolveMemberExtension(datasetName: string, overrideExtension?: string): string {
+        const resolvedExtension = overrideExtension ?? DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+        return resolvedExtension.startsWith(".") ? resolvedExtension.slice(1) : resolvedExtension;
+    }
+
+    private static buildMemberExtensionMap(membersToDownload: string[], uppercaseNames: boolean, extension: string): { [key: string]: string } {
+        const extensionMap: { [key: string]: string } = {};
+        for (let memberName of membersToDownload) {
+            if (!uppercaseNames) {
+                memberName = memberName.toLowerCase();
+            }
+            extensionMap[memberName] = extension;
+        }
+        return extensionMap;
+    }
+
     /**
      * Downloads all the members of a PDS
      */
@@ -909,11 +927,9 @@ export class DatasetActions {
 
                 const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
 
-                const extensionMap = await DatasetUtils.getExtensionMap(
-                    node,
-                    uppercaseNames,
-                    overrideExtension && fileExtension ? fileExtension : undefined
-                );
+                const membersToDownload = children.map((child) => String(child.member ?? ""));
+                const extension = DatasetActions.resolveMemberExtension(datasetName, overrideExtension ? fileExtension : undefined);
+                const extensionMap = DatasetActions.buildMemberExtensionMap(membersToDownload, uppercaseNames, extension);
 
                 const generatedFileDirectory = DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames);
 
@@ -928,7 +944,7 @@ export class DatasetActions {
                     encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
                     overwrite,
                     task,
-                    responseTimeout: profile?.profile?.responseTimeout,
+                    responseTimeout: profile.profile?.responseTimeout,
                     abortDownload: () => token?.isCancellationRequested ?? false,
                 };
 
@@ -941,8 +957,41 @@ export class DatasetActions {
         );
     }
 
+    private static async downloadSingleMember(
+        selectedNode: IZoweDatasetTreeNode,
+        dataSetDownloadOptions: Definitions.DataSetDownloadOptions,
+        extension: string
+    ): Promise<{ response?: any; downloadedPath?: string }> {
+        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath } = dataSetDownloadOptions;
+
+        const profile = selectedNode.getProfile();
+        const parent = selectedNode.getParent() as IZoweDatasetTreeNode;
+        const datasetName = parent.getLabel() as string;
+        const memberName = selectedNode.getLabel() as string;
+        const fullDatasetName = `${datasetName}(${memberName})`;
+        const fileName = uppercaseNames ? memberName : memberName.toLowerCase();
+
+        const targetDirectory = generateDirectory
+            ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
+            : selectedPath.fsPath;
+        const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
+
+        const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
+        const downloadOptions = {
+            file: filePath,
+            binary: encoding?.kind === "binary",
+            record: isRecordEncoding,
+            encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
+            overwrite,
+            responseTimeout: profile?.profile?.responseTimeout,
+        };
+
+        const response = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(fullDatasetName, downloadOptions);
+        return { response, downloadedPath: filePath };
+    }
+
     /**
-     * Downloads a member
+     * Downloads a single member
      */
     public static async downloadMember(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.downloadMember called.");
@@ -958,45 +1007,142 @@ export class DatasetActions {
         if (!dataSetDownloadOptions) {
             return;
         }
-        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath, overrideExtension, fileExtension } = dataSetDownloadOptions;
+
+        const parent = node.getParent() as IZoweDatasetTreeNode;
+        const datasetName = parent.getLabel() as string;
+        const extension = DatasetActions.resolveMemberExtension(
+            datasetName,
+            dataSetDownloadOptions.overrideExtension ? dataSetDownloadOptions.fileExtension : undefined
+        );
 
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading member"),
-            async () => {
-                const parent = node.getParent() as IZoweDatasetTreeNode;
-                const datasetName = parent.getLabel() as string;
-                const memberName = node.getLabel() as string;
-                const fullDatasetName = `${datasetName}(${memberName})`;
-
-                const fileName = uppercaseNames ? memberName : memberName.toLowerCase();
-
-                const extensionMap = await DatasetUtils.getExtensionMap(
-                    parent,
-                    uppercaseNames,
-                    overrideExtension && fileExtension ? fileExtension : undefined
-                );
-                const extension = extensionMap[fileName] ?? DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
-
-                const targetDirectory = generateDirectory
-                    ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
-                    : selectedPath.fsPath;
-                const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
-
-                const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
-                const downloadOptions = {
-                    file: filePath,
-                    binary: encoding?.kind === "binary",
-                    record: isRecordEncoding,
-                    encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
-                    overwrite,
-                    responseTimeout: profile?.profile?.responseTimeout,
-                };
-
-                const response = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(fullDatasetName, downloadOptions);
-                return { response, downloadedPath: filePath };
-            },
+            async () => DatasetActions.downloadSingleMember(node, dataSetDownloadOptions, extension),
             vscode.l10n.t("Data set member"),
             node
+        );
+    }
+
+    /**
+     * Downloads member with multiselect mmode
+     */
+    public static async downloadMembers(node: IZoweDatasetTreeNode, nodeList?: IZoweDatasetTreeNode[]): Promise<void> {
+        ZoweLogger.trace("dataset.actions.downloadMembers called.");
+
+        const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList)
+            .filter((selectedNode) => SharedContext.isDsMember(selectedNode))
+            .map((selectedNode) => selectedNode as IZoweDatasetTreeNode);
+        if (selectedNodes.length === 0) {
+            return;
+        }
+
+        if (selectedNodes.length === 1) {
+            await DatasetActions.downloadMember(selectedNodes[0]);
+            return;
+        }
+
+        const validSelectedNodes: IZoweDatasetTreeNode[] = [];
+        const invalidProfileResponses: string[] = [];
+        for (const selectedNode of selectedNodes) {
+            const profile = selectedNode.getProfile();
+            await Profiles.getInstance().checkCurrentProfile(profile);
+            if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+                const nodeLabel = String(selectedNode.getLabel() ?? "");
+                const profileName = String(profile?.name ?? "");
+                const profileSuffix = profileName ? ` (${profileName})` : "";
+                invalidProfileResponses.push(`Failed to download ${nodeLabel}${profileSuffix}: ${DatasetActions.localizedStrings.profileInvalid}`);
+                continue;
+            }
+
+            validSelectedNodes.push(selectedNode);
+        }
+
+        if (validSelectedNodes.length === 0) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions(validSelectedNodes[0]);
+        if (!dataSetDownloadOptions) {
+            return;
+        }
+
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading members"),
+            async (progress, token) => {
+                const commandResponses: string[] = [...invalidProfileResponses];
+                let hasErrors = invalidProfileResponses.length > 0;
+                let downloadedCount = 0;
+                let processedCount = 0;
+                const totalCount = selectedNodes.length;
+
+                invalidProfileResponses.forEach((_) => {
+                    if (progress) {
+                        Gui.reportProgress(progress, totalCount, processedCount++, "");
+                    }
+                });
+
+                for (const selectedNode of validSelectedNodes) {
+                    if (token?.isCancellationRequested) {
+                        break;
+                    }
+
+                    const profile = selectedNode.getProfile();
+
+                    try {
+                        const parent = selectedNode.getParent() as IZoweDatasetTreeNode;
+                        const datasetName = parent.getLabel() as string;
+                        const extension = DatasetActions.resolveMemberExtension(
+                            datasetName,
+                            dataSetDownloadOptions.overrideExtension ? dataSetDownloadOptions.fileExtension : undefined
+                        );
+                        const { response } = await DatasetActions.downloadSingleMember(selectedNode, dataSetDownloadOptions, extension);
+                        downloadedCount++;
+
+                        if (response?.success === false) {
+                            hasErrors = true;
+                        }
+
+                        if (response?.commandResponse) {
+                            commandResponses.push(response.commandResponse.toString());
+                        }
+                    } catch (e) {
+                        hasErrors = true;
+                        const nodeLabel = String(selectedNode.getLabel() ?? "");
+                        const profileName = String(profile?.name ?? "");
+                        const profileSuffix = profileName ? ` (${profileName})` : "";
+                        const message = e instanceof Error ? e.message : String(e);
+                        commandResponses.push(`Failed to download ${nodeLabel}${profileSuffix}: ${message}`);
+                        ZoweLogger.error(`Error downloading member ${nodeLabel}${profileSuffix}: ${message}`);
+                        await AuthUtils.errorHandling(e as Error, {
+                            apiType: ZoweExplorerApiType.Mvs,
+                            profile,
+                            scenario: vscode.l10n.t("Unable to download data set member."),
+                        });
+                        break;
+                    }
+
+                    if (progress) {
+                        Gui.reportProgress(progress, totalCount, processedCount++, "");
+                    }
+                }
+
+                const response = {
+                    success: !hasErrors,
+                    commandResponse: commandResponses.join("\n"),
+                    apiResponse: {
+                        downloadResult: {
+                            downloaded: downloadedCount,
+                            total: totalCount,
+                        },
+                    },
+                };
+
+                return { response, downloadedPath: dataSetDownloadOptions.selectedPath.fsPath };
+            },
+            vscode.l10n.t("Data set members"),
+            validSelectedNodes[0],
+            true
         );
     }
 
@@ -1270,13 +1416,13 @@ export class DatasetActions {
                     });
                 }
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
                         parentDsName: label,
                         scenario: vscode.l10n.t("Unable to create member."),
                     });
-                }
+                });
                 throw err;
             }
 
@@ -1481,62 +1627,26 @@ export class DatasetActions {
                     );
                 }
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
                         profile: node.getProfile(),
                         scenario: vscode.l10n.t("Unable to list attributes."),
                     });
-                }
+                });
                 throw err;
             }
 
             const attributeRecord: Record<string, unknown> = attributes[0];
-            const datasetAttributeDefinitions: Array<[string, string, string]> = [
-                ["dsname", "Data Set Name", "The name of the dataset"],
-                ["member", "Member Name", "The name of the member"],
-                ["blksz", "Block Size", "The block size of the dataset"],
-                ["catnm", "Catalog Name", "The catalog in which the dataset entry is stored"],
-                ["cdate", "Create Date", "The dataset creation date"],
-                ["dev", "Device Type", "The type of the device the dataset is stored on"],
-                ["dsntp", "Data Set Type", "LIBRARY, (LIBRARY,1), (LIBRARY,2), PDS, HFS, EXTREQ, EXTPREF, BASIC or LARGE"],
-                ["dsorg", "Data Set Organization", "PS, PO, or DA"],
-                ["edate", "Expiration Date", "The dataset expiration date"],
-                ["extx", "Extensions", "The number of extensions the dataset has"],
-                ["lrecl", "Logical Record Length", "The length in bytes of each record"],
-                ["migr", "Migration", "Indicates if automatic migration is active"],
-                ["mvol", "Multivolume", "Whether the dataset is on multiple volumes"],
-                ["ovf", "Space overflow", "Indicates if space overflow was encountered (YES or NO)"],
-                ["rdate", "Reference Date", "Last referenced date"],
-                ["recfm", "Record Format", "Valid values: A, B, D, F, M, S, T, U, V (combinable)"],
-                ["sizex", "Size", "Size of the first extent in tracks"],
-                ["spacu", "Space Unit", "Type of space units measurement"],
-                ["used", "Used Space", "Used space percentage"],
-                ["vol", "Volume", "Volume serial numbers for data set"],
-                ["vols", "Volumes", "Multiple volume serial numbers"],
-            ];
-            const memberAttributeDefinitions: Array<[string, string, string]> = [
-                ["vers", "Version", "Member version number"],
-                ["mod", "Modification Level", "Member modification level"],
-                ["c4date", "Created Date", "Creation date (4-character year format)"],
-                ["m4date", "Modified Date", "Last change date (4-character year format)"],
-                ["mtime", "Modified Time", "Last change time (in format hh:mm)"],
-                ["msec", "Modified Seconds", "Seconds value of the last change time"],
-                ["cnorc", "Current Records", "Current number of records"],
-                ["inorc", "Initial Records", "Initial number of records"],
-                ["mnorc", "Modified Records", "Number of changed records"],
-                ["user", "User", "User ID of last user to change the given member"],
-                ["sclm", "Modified by ISPF/SCLM", "Indicates whether the member was last modified by SCLM or ISPF"],
-            ];
-            const attributeDefinitions = isMemberNode ? [...datasetAttributeDefinitions, ...memberAttributeDefinitions] : datasetAttributeDefinitions;
+            const attributeDefinitions = isMemberNode ? MEMBER_ATTR_DEFS : DATASET_ATTR_DEFS;
 
             const getAttributeValue = (key: string): string | number | boolean | undefined => {
+                const value = attributeRecord[key] as string | number | boolean | undefined;
                 if (isMemberNode) {
-                    if (key === "dsname") {
-                        return (attributeRecord[key] as string | number | boolean | undefined) ?? parentDsName;
-                    }
-                    if (key === "member") {
-                        return (attributeRecord[key] as string | number | boolean | undefined) ?? label;
+                    if (key === "dsname" && value == null) {
+                        return parentDsName;
+                    } else if (key === "member" && value == null) {
+                        return label;
                     }
                 }
                 return attributeRecord[key] as string | number | boolean | undefined;
@@ -1547,12 +1657,12 @@ export class DatasetActions {
                     title: "Zowe Explorer",
                     reference: "https://docs.zowe.org/stable/typedoc/interfaces/_zowe_zos_files_for_zowe_sdk.izosmflistresponse",
                     keys: new Map(
-                        attributeDefinitions.map(([key, displayName, description]) => [
-                            key,
+                        attributeDefinitions.map(({ id, name, description }) => [
+                            id,
                             {
-                                displayName: vscode.l10n.t(displayName),
+                                displayName: vscode.l10n.t(name),
                                 description: description ? vscode.l10n.t(description) : undefined,
-                                value: getAttributeValue(key) as string | number | boolean,
+                                value: getAttributeValue(id) as string | number | boolean,
                             },
                         ])
                     ),
@@ -2167,12 +2277,56 @@ export class DatasetActions {
                 .flatMap((group) => group.tabs)
                 .filter((tab) => {
                     const uri = (tab.input as any)?.uri;
-                    if (!uri) return false;
+                    if (!uri) {
+                        return false;
+                    }
                     return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
                 });
             if (tabsToClose.length > 0) {
                 await vscode.window.tabGroups.close(tabsToClose);
             }
+        }
+    }
+
+    /**
+     * Refreshes a migrated dataset node
+     * @param node The migrated dataset node to refresh
+     */
+    private static async refreshMigratedDataSet(node: IZoweDatasetTreeNode): Promise<void> {
+        const dataSetName = node.label as string;
+        let statusMsg: vscode.Disposable;
+        try {
+            ZoweLogger.info(`Refreshing migrated data set ${dataSetName}`);
+            statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Checking migration status...")}`);
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+            const resp = await mvsApi.dataSet(dataSetName, { attributes: true });
+            statusMsg.dispose();
+            if (resp.success && resp.apiResponse?.items?.[0]) {
+                const item = resp.apiResponse.items[0];
+                const isMigrated = item.migr?.toUpperCase() === "YES";
+                if (!isMigrated) {
+                    const isPds = item.dsorg?.startsWith("PO") ?? (node as ZoweDatasetNode).wasPds ?? false;
+                    (node as ZoweDatasetNode).justRecalled = false;
+                    await (node as ZoweDatasetNode).datasetRecalled(isPds);
+                    const datasetProvider = SharedTreeProviders.ds;
+                    if (datasetProvider) {
+                        const isFav = SharedContext.isFavoriteDescendant(node);
+                        const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
+                        if (equiv) {
+                            equiv.justRecalled = false;
+                            await equiv.datasetRecalled(isPds);
+                            datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                        }
+                        if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                            datasetProvider.updateFavorites();
+                        }
+                    }
+                    datasetProvider.refreshElement(node.getParent());
+                }
+            }
+        } catch (err) {
+            statusMsg?.dispose();
+            await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
         }
     }
 
@@ -2184,7 +2338,12 @@ export class DatasetActions {
     // This is not a UI refresh.
     public static async refreshPS(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.refreshPS called.");
+        if (SharedContext.isMigrated(node)) {
+            await DatasetActions.refreshMigratedDataSet(node);
+            return;
+        }
         let label: string;
+        let statusMsg: vscode.Disposable;
         try {
             switch (true) {
                 // For favorited or non-favorited sequential DS:
@@ -2206,12 +2365,13 @@ export class DatasetActions {
             }
 
             ZoweLogger.info(`Refreshing data set ${label}`);
-            const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Fetching data set...")}`);
+            statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Fetching data set...")}`);
             await DatasetFSProvider.instance.fetchDatasetAtUri(node.resourceUri, {
                 editor: vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path),
             });
             statusMsg.dispose();
         } catch (err) {
+            statusMsg?.dispose();
             if (err.message.includes(vscode.l10n.t("not found"))) {
                 ZoweLogger.error(
                     vscode.l10n.t({
@@ -2300,6 +2460,26 @@ export class DatasetActions {
                     })
                 );
                 const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+                const resourceUri = node.resourceUri;
+                node.datasetMigrated();
+                if (resourceUri) {
+                    DatasetFSProvider.instance.invalidateCache(resourceUri);
+                }
+                if (datasetProvider) {
+                    const isFav = SharedContext.isFavoriteDescendant(node);
+                    const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
+                    if (equiv) {
+                        const equivUri = equiv.resourceUri;
+                        equiv.datasetMigrated();
+                        if (equivUri) {
+                            DatasetFSProvider.instance.invalidateCache(equivUri);
+                        }
+                        datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                    }
+                    if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                        datasetProvider.updateFavorites();
+                    }
+                }
                 datasetProvider.refreshElement(node.getParent());
                 return response;
             } catch (err) {
@@ -2333,6 +2513,52 @@ export class DatasetActions {
                     })
                 );
                 const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+                let isPds = node.wasPds ?? false;
+                let isStillMigrated = true;
+                try {
+                    const dsResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).dataSet(dataSetName, { attributes: true });
+                    if (dsResp.success && dsResp.apiResponse?.items?.[0]) {
+                        const item = dsResp.apiResponse.items[0];
+                        isStillMigrated = item.migr?.toUpperCase() === "YES";
+                        if (!isStillMigrated) {
+                            isPds = item.dsorg?.startsWith("PO") ?? node.wasPds ?? false;
+                        }
+                    }
+                } catch (e) {
+                    ZoweLogger.warn(`Failed to fetch recalled dataset attributes: ${e}`);
+                }
+
+                if (!isStillMigrated) {
+                    node.justRecalled = false;
+                    await node.datasetRecalled(isPds);
+                    if (node.resourceUri) {
+                        DatasetFSProvider.instance.invalidateCache(node.resourceUri);
+                    }
+                    if (datasetProvider) {
+                        const isFav = SharedContext.isFavoriteDescendant(node);
+                        const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
+                        if (equiv) {
+                            equiv.justRecalled = false;
+                            await equiv.datasetRecalled(isPds);
+                            if (equiv.resourceUri) {
+                                DatasetFSProvider.instance.invalidateCache(equiv.resourceUri);
+                            }
+                            datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                        }
+                        if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                            datasetProvider.updateFavorites();
+                        }
+                    }
+                } else {
+                    node.justRecalled = true;
+                    if (datasetProvider) {
+                        const isFav = SharedContext.isFavoriteDescendant(node);
+                        const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
+                        if (equiv) {
+                            equiv.justRecalled = true;
+                        }
+                    }
+                }
                 datasetProvider.refreshElement(node.getParent());
                 return response;
             } catch (err) {
@@ -2431,7 +2657,8 @@ export class DatasetActions {
                         },
                         async () => {
                             try {
-                                return await mvsApi.copyDataSet(lbl, dsname, null, replace === "replace");
+                                const shouldReplace = ["replace", "notFound"].includes(replace);
+                                return await mvsApi.copyDataSet(lbl, dsname, null, shouldReplace);
                             } catch (error) {
                                 Gui.errorMessage(error.message);
                                 return;
@@ -2502,9 +2729,9 @@ export class DatasetActions {
                             }
                         } catch (err) {
                             ZoweLogger.error(err);
-                            if (err instanceof Error) {
-                                Gui.errorMessage(err.message);
-                            }
+                            handleError(err, (error) => {
+                                Gui.errorMessage(error.message);
+                            });
                         }
                     }
                 }
@@ -2606,9 +2833,9 @@ export class DatasetActions {
                                 });
                             }
                         } catch (err) {
-                            if (err instanceof Error) {
-                                Gui.errorMessage(err.message);
-                            }
+                            handleError(err, (error) => {
+                                Gui.errorMessage(error.message);
+                            });
                             return;
                         }
                     }
@@ -2724,9 +2951,9 @@ export class DatasetActions {
                             await mvsApi.copyDataSetCrossLpar(dsname, undefined, options, sourceProfile);
                         } catch (err) {
                             ZoweLogger.error(err);
-                            if (err instanceof Error) {
-                                Gui.errorMessage(err.message);
-                            }
+                            handleError(err, (error) => {
+                                Gui.errorMessage(error.message);
+                            });
                             return;
                         }
                     } else {
@@ -2739,15 +2966,15 @@ export class DatasetActions {
                             try {
                                 await DatasetActions.createDataSetFromSourceAttributes(sourceProfile, node.getProfile(), lbl, dsname);
                             } catch (err) {
-                                if (err instanceof Error) {
+                                handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to create {0}: {1}",
-                                            args: [dsname, err.message],
+                                            args: [dsname, error.message],
                                             comment: ["Data set name", "Error message"],
                                         })
                                     );
-                                }
+                                });
                                 return;
                             }
                         }
@@ -2800,15 +3027,15 @@ export class DatasetActions {
                                 });
                             } catch (err) {
                                 ZoweLogger.error(err);
-                                if (err instanceof Error) {
+                                handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to copy member {0}: {1}",
-                                            args: [child, err.message],
+                                            args: [child, error.message],
                                             comment: ["Member name", "Error message"],
                                         })
                                     );
-                                }
+                                });
                             }
                         }
                     }
@@ -3272,15 +3499,13 @@ export class DatasetActions {
             await datasetProvider.getTreeView().reveal(sessionNode, { select: true, focus: true, expand: true });
 
             if (targetMember && sessionNode.children && sessionNode.children.length > 0) {
-                const pdsNode = sessionNode.children.find((child) => child.label.toString().toUpperCase() === targetPattern) as IZoweDatasetTreeNode;
+                const pdsNode = sessionNode.children.find((child) => child.label.toString().toUpperCase() === targetPattern);
 
                 if (pdsNode && SharedContext.isPds(pdsNode)) {
                     await TreeViewUtils.expandNode(pdsNode, datasetProvider);
 
                     if (pdsNode.children) {
-                        const memberNode = pdsNode.children.find(
-                            (child) => child.label.toString().toUpperCase() === targetMember
-                        ) as IZoweDatasetTreeNode;
+                        const memberNode = pdsNode.children.find((child) => child.label.toString().toUpperCase() === targetMember);
 
                         if (memberNode) {
                             try {

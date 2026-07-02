@@ -13,6 +13,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import {
     BaseProvider,
+    handleError,
     BufferBuilder,
     FsAbstractUtils,
     imperative,
@@ -156,9 +157,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 }
             }
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.error(err.message);
-            }
+            handleError(err, (error) => {
+                ZoweLogger.error(error.message);
+            });
         }
 
         return entry;
@@ -292,7 +293,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 // fileList was called on that file. Otherwise, it's a directory listing.
                 const hasSelfEntry = rawItems.some((item) => item.name === ".");
                 const isSingleFileMatch =
-                    rawItems.length === 1 && rawItems[0].name === uriBasename && !(rawItems[0].mode as string | undefined)?.startsWith("d");
+                    rawItems.length === 1 &&
+                    (rawItems[0].name === uriBasename || rawItems[0].name === ussPath) &&
+                    !(rawItems[0].mode as string | undefined)?.startsWith("d");
                 const isDirectoryResponse =
                     (hasSelfEntry && (rawItems.find((item) => item.name === ".")?.mode as string | undefined)?.startsWith("d")) ||
                     (rawItems.length > 0 && !hasSelfEntry && !isSingleFileMatch) ||
@@ -527,9 +530,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     stream: bufBuilder,
                 });
             } catch (err) {
-                if (err instanceof Error) {
-                    ZoweLogger.error(`[UssFSProvider] fetchFileAtUri failed due to an error. Details: \n${err.message}`);
-                }
+                handleError(err, (error) => {
+                    ZoweLogger.error(`[UssFSProvider] fetchFileAtUri failed due to an error. Details: \n${error.message}`);
+                });
                 if (
                     !(
                         (err instanceof imperative.ImperativeError &&
@@ -805,7 +808,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         } catch (err) {
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 // Some unknown error happened, rollback optimistic entry creation
-                if (isNew && parentDir?.entries.has(fileName)) {
+                if (isNew && parentDir.entries.has(fileName)) {
                     parentDir.entries.delete(fileName);
                     parentDir.size -= 1;
                 }

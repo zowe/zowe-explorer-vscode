@@ -8,8 +8,12 @@
     background-image: linear-gradient(to bottom, rgb(1, 38, 93) 0%, rgba(57, 117, 208, 0.8) 100%), url("../resources/background-img.svg");
     background-size: cover, 400px;
     background-repeat: no-repeat, repeat;
-    background-position: center, right top;
-    animation: waveX 10s linear infinite, waveY 10s linear infinite;
+    background-position:
+        center,
+        right top;
+    animation:
+        waveX 10s linear infinite,
+        waveY 10s linear infinite;
     animation-play-state: paused;
     border-radius: 8px 8px 0 0;
     border-bottom: 1px solid var(--vscode-panel-border);
@@ -63,7 +67,10 @@
 .releaseNotesRoot {
     min-height: 100vh;
     background: var(--vscode-editor-background);
-    font-family: Segoe UI, Arial, sans-serif;
+    font-family:
+        Segoe UI,
+        Arial,
+        sans-serif;
     color: var(--vscode-editor-foreground);
 }
 
@@ -203,7 +210,9 @@
     font-weight: 500;
     color: var(--vscode-editor-foreground);
     border-bottom: 2px solid transparent;
-    transition: border-bottom 0.2s, color 0.2s;
+    transition:
+        border-bottom 0.2s,
+        color 0.2s;
 }
 
 .releaseNotesTab.active {

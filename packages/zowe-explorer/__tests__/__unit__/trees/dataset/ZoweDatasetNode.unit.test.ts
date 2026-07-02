@@ -41,6 +41,7 @@ import { Profiles } from "../../../../src/configuration/Profiles";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { ZoweDatasetNode } from "../../../../src/trees/dataset/ZoweDatasetNode";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
@@ -201,6 +202,34 @@ describe("ZoweDatasetNode Unit Tests", () => {
         subNode.dirty = true;
         const response = await subNode.getChildren();
         expect(response).toEqual([]);
+    });
+
+    it("returns empty children without an error when allMembers throws a 404 ImperativeError", async () => {
+        Object.defineProperty(Profiles, "getInstance", {
+            value: vi.fn(() => ({
+                loadNamedProfile: vi.fn().mockReturnValue(profileOne),
+            })),
+            configurable: true,
+        });
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        const pdsNode = new ZoweDatasetNode({
+            label: "TEST.DELETED.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+        pdsNode.dirty = true;
+        vi.spyOn(zosfiles.List, "allMembers").mockRejectedValueOnce(
+            new imperative.ImperativeError({ msg: "EDC5049I The specified file name could not be located.", errorCode: "404" })
+        );
+        const errorHandlingSpy = vi.spyOn(AuthUtils, "errorHandling").mockResolvedValue(false);
+
+        const children = await pdsNode.getChildren();
+
+        expect(children).toEqual([]);
+        expect(errorHandlingSpy).not.toHaveBeenCalled();
     });
 
     it("Checks that when List.dataSet/allMembers() returns an empty response, it returns a label of 'No data sets found'", async () => {
@@ -1025,7 +1054,7 @@ describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
             contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        const createDirMock = vi.spyOn(vscode.workspace.fs, "createDirectory").mockImplementation((() => undefined) as any);
+        const createDirMock = vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
         await (dsNode as any).datasetRecalled(true);
         expect(createDirMock).toHaveBeenCalledWith(dsNode.resourceUri);
     });
@@ -1038,9 +1067,11 @@ describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
             parentNode: createDatasetSessionNode(createISession(), createIProfile()),
             profile: createIProfile(),
         });
+        const existsSpy = vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         const writeFileMock = vi.spyOn(vscode.workspace.fs, "writeFile").mockImplementation((() => undefined) as any);
         await (dsNode as any).datasetRecalled(false);
         expect(writeFileMock).toHaveBeenCalledWith(dsNode.resourceUri, new Uint8Array());
+        existsSpy.mockRestore();
     });
 
     it("updates the icon to folder - PDS", async () => {
@@ -1148,6 +1179,9 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
                 resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
@@ -1198,6 +1232,9 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
                 resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
@@ -1249,6 +1286,9 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
                 resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
@@ -1296,6 +1336,9 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
                 resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
@@ -1347,6 +1390,9 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
                 resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
@@ -1395,6 +1441,9 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
                 resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
@@ -2574,5 +2623,105 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
 
         const result = await (pdsNode as any).listMembersInRange(undefined, 2);
         expect(result).toStrictEqual({ items: [] });
+    });
+
+    describe("syncNodeMigrationStatus", () => {
+        let dsNode: ZoweDatasetNode;
+        let mockDsTree: any;
+
+        beforeEach(() => {
+            dsNode = new ZoweDatasetNode({
+                label: "TEST.DATASET",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+            });
+            mockDsTree = {
+                findEquivalentNode: vi.fn(),
+                refreshElement: vi.fn(),
+                updateFavorites: vi.fn(),
+            };
+        });
+
+        it("should recall a migrated dataset if migrationStatus is NO", async () => {
+            vi.spyOn(SharedContext, "isMigrated").mockReturnValue(true);
+            vi.spyOn(SharedContext, "isFavoriteDescendant").mockReturnValue(true);
+            const datasetRecalledSpy = vi.spyOn(dsNode, "datasetRecalled").mockResolvedValue(undefined);
+
+            const equivNode = new ZoweDatasetNode({
+                label: "TEST.DATASET",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+            });
+            const equivRecalledSpy = vi.spyOn(equivNode, "datasetRecalled").mockResolvedValue(undefined);
+            vi.spyOn(equivNode, "getParent").mockReturnValue({} as any);
+            mockDsTree.findEquivalentNode.mockReturnValue(equivNode);
+
+            await (dsNode as any).syncNodeMigrationStatus(dsNode, "NO", "PO", mockDsTree);
+
+            expect(datasetRecalledSpy).toHaveBeenCalledWith(true);
+            expect(equivRecalledSpy).toHaveBeenCalledWith(true);
+            expect(mockDsTree.refreshElement).toHaveBeenCalled();
+            expect(mockDsTree.updateFavorites).toHaveBeenCalled();
+        });
+
+        it("should migrate a recalled dataset if migrationStatus is YES", async () => {
+            vi.spyOn(SharedContext, "isMigrated").mockReturnValue(false);
+            vi.spyOn(SharedContext, "isFavoriteDescendant").mockReturnValue(true);
+            const datasetMigratedSpy = vi.spyOn(dsNode, "datasetMigrated").mockImplementation(() => {});
+
+            const equivNode = new ZoweDatasetNode({
+                label: "TEST.DATASET",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+            });
+            const equivMigratedSpy = vi.spyOn(equivNode, "datasetMigrated").mockImplementation(() => {});
+            vi.spyOn(equivNode, "getParent").mockReturnValue({} as any);
+            mockDsTree.findEquivalentNode.mockReturnValue(equivNode);
+
+            await (dsNode as any).syncNodeMigrationStatus(dsNode, "YES", "PS", mockDsTree);
+
+            expect(datasetMigratedSpy).toHaveBeenCalled();
+            expect(equivMigratedSpy).toHaveBeenCalled();
+            expect(mockDsTree.refreshElement).toHaveBeenCalled();
+            expect(mockDsTree.updateFavorites).toHaveBeenCalled();
+        });
+
+        it("should do nothing if migration status matches the node state", async () => {
+            vi.spyOn(SharedContext, "isMigrated").mockReturnValue(true);
+            const datasetRecalledSpy = vi.spyOn(dsNode, "datasetRecalled");
+            const datasetMigratedSpy = vi.spyOn(dsNode, "datasetMigrated");
+
+            await (dsNode as any).syncNodeMigrationStatus(dsNode, "YES", "PS", mockDsTree);
+
+            expect(datasetRecalledSpy).not.toHaveBeenCalled();
+            expect(datasetMigratedSpy).not.toHaveBeenCalled();
+        });
+
+        it("should not migrate if migrationStatus is YES but dsNode.justRecalled is true", async () => {
+            vi.spyOn(SharedContext, "isMigrated").mockReturnValue(false);
+            dsNode.justRecalled = true;
+            const datasetMigratedSpy = vi.spyOn(dsNode, "datasetMigrated");
+
+            await (dsNode as any).syncNodeMigrationStatus(dsNode, "YES", "PS", mockDsTree);
+
+            expect(datasetMigratedSpy).not.toHaveBeenCalled();
+            expect(dsNode.justRecalled).toBe(true);
+        });
+
+        it("should clear justRecalled flag if migrationStatus is NO", async () => {
+            vi.spyOn(SharedContext, "isMigrated").mockReturnValue(false);
+            dsNode.justRecalled = true;
+
+            await (dsNode as any).syncNodeMigrationStatus(dsNode, "NO", "PS", mockDsTree);
+
+            expect(dsNode.justRecalled).toBe(false);
+        });
+
+        it("should fallback to wasPds when recalling if dsorg is undefined", async () => {
+            vi.spyOn(SharedContext, "isMigrated").mockReturnValue(true);
+            dsNode.wasPds = true;
+            const datasetRecalledSpy = vi.spyOn(dsNode, "datasetRecalled").mockResolvedValue(undefined);
+
+            await (dsNode as any).syncNodeMigrationStatus(dsNode, "NO", undefined, mockDsTree);
+
+            expect(datasetRecalledSpy).toHaveBeenCalledWith(true);
+        });
     });
 });

@@ -16,6 +16,7 @@ import * as path from "path";
 import * as fs from "fs";
 import {
     Gui,
+    handleError,
     IZoweTreeNode,
     IZoweDatasetTreeNode,
     IZoweUSSTreeNode,
@@ -676,9 +677,9 @@ export class SharedUtils {
                 const node = (await provider.getChildren()).find((n) => n.label === profile?.name);
                 node?.setProfileToChoice?.(profile);
             } catch (err) {
-                if (err instanceof Error) {
-                    ZoweLogger.error(err.message);
-                }
+                handleError(err, (error) => {
+                    ZoweLogger.error(error.message);
+                });
                 return;
             }
         }
@@ -870,7 +871,9 @@ export class SharedUtils {
             const dstDataset = dstAttr?.apiResponse?.items?.[0];
 
             // if dstDataset dataset doesn't exist, it's not the same.
-            if (!dstDataset || !srcDataset) return false;
+            if (!dstDataset || !srcDataset) {
+                return false;
+            }
 
             // compare names
             const namesAreEqual = srcDataset.dsname === dstDataset.dsname;
@@ -928,9 +931,13 @@ export class SharedUtils {
      * Gets a string property from a node, whether it's a string or an object with that property
      */
     public static getNodeProperty(node: any, prop: string): string | null {
-        if (!node || node[prop] == null) return null;
+        if (!node || node[prop] == null) {
+            return null;
+        }
         const value = node[prop];
-        if (typeof value === "string") return value;
+        if (typeof value === "string") {
+            return value;
+        }
         if (typeof value === "object" && value !== null && typeof value[prop] === "string") {
             return value[prop];
         }

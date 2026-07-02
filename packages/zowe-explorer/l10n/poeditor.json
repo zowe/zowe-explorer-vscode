@@ -105,7 +105,7 @@
     "Edit Member": ""
   },
   "issueMvsCmd": {
-    "Issue MVS Command": ""
+    "Issue Console Command": ""
   },
   "uploadDialog": {
     "Upload Member...": ""
@@ -384,25 +384,25 @@
     "Shows whether persistent settings were successfully migrated to local storage": ""
   },
   "zowe.logger": {
-    "Select the log level for Zowe Explorer.  The default is INFO.": ""
+    "Select the log level for Zowe Explorer. The default is INFO.": ""
   },
   "zowe.logger.trace": {
-    "TRACE": ""
+    "Trace": ""
   },
   "zowe.logger.debug": {
-    "DEBUG": ""
+    "Debug": ""
   },
   "zowe.logger.info": {
-    "INFO": ""
+    "Info": ""
   },
   "zowe.logger.warn": {
-    "WARN": ""
+    "Warn": ""
   },
   "zowe.logger.error": {
-    "ERROR": ""
+    "Error": ""
   },
   "zowe.logger.fatal": {
-    "FATAL": ""
+    "Fatal": ""
   },
   "zowe.logger.trace.description": {
     "Messages about fine details of the application's behaviour.": ""
@@ -426,7 +426,7 @@
     "User has been asked to sync Zowe Explorer log setting with Zowe CLI's environment variable.": ""
   },
   "zowe.commands.mvs.history": {
-    "Toggle if MVS Commands persist locally": ""
+    "Toggle if Console Commands persist locally": ""
   },
   "zowe.commands.tso.history": {
     "Toggle if TSO Commands persist locally": ""
@@ -442,6 +442,15 @@
   },
   "zowe.commands.useIntegratedTerminals": {
     "Allow commands to be executed using integrated terminals": ""
+  },
+  "zowe.commands.zowex.connect": {
+    "Connect to zowex server on host...": ""
+  },
+  "zowe.commands.zowex.restart": {
+    "Restart zowex server on host...": ""
+  },
+  "zowe.commands.zowex.uninstall": {
+    "Uninstall zowex server from host...": ""
   },
   "zowe.automaticProfileValidation": {
     "Allow automatic validation of profiles.": ""
@@ -539,6 +548,9 @@
   "downloadMember": {
     "Download Member...": ""
   },
+  "downloadMembers": {
+    "Download Members...": ""
+  },
   "issueUnixCmd": {
     "Issue Unix Command": ""
   },
@@ -576,7 +588,7 @@
     "The amount of time to wait for a connection to be initiated with the server, in milliseconds.": ""
   },
   "zowe.settings.requestTimeout": {
-    "The amount of time to wait for a REST request to complete, in milliseconds.": ""
+    "The amount of time to wait for a request to complete, in milliseconds.": ""
   },
   "zowe.settings.displayReleaseNotes": {
     "Should display the Zowe Explorer release notes after an update.": ""
@@ -592,6 +604,27 @@
   },
   "zowe.table.hidePinnedRowsWarning": {
     "Hide the warning message when pinning many rows to table views.": ""
+  },
+  "zowe.zowex.keepAliveInterval": {
+    "Number of seconds between keep-alive messages to keep connection active. Set to 0 to disable keep-alive.": ""
+  },
+  "zowe.zowex.serverAutoUpdate": {
+    "Automatically re-deploy the Zowe Remote SSH server if out of date.": ""
+  },
+  "zowe.zowex.serverInstallPath": {
+    "Mapping of SSH hostname to server install path for that host. Defaults to '~/.zowe-server'.": ""
+  },
+  "zowe.zowex.workerCount": {
+    "Number of workers for the Zowe Remote SSH server. Each worker runs as a separate thread within a single address space.": ""
+  },
+  "zowe.zowex.responseTimeout": {
+    "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.": ""
+  },
+  "zowe.zowex.experimentalNativeSsh": {
+    "Use an experimental native SSH client for improved performance. Not yet fully tested.": ""
+  },
+  "zowe.zowex.defaultHandshakeTimeout": {
+    "Time in milliseconds to wait for the SSH handshake to complete.": ""
   },
   "'{0}' not found in directory '{1}'": "",
   "(default)": "",
@@ -727,6 +760,7 @@
   "Added descriptions to data set nodes if filtering and/or sorting is enabled (where applicable).": "",
   "Added Display confirmation dialog when submitting local JCL. <a>#2061</a>": "",
   "Added enhancement to compare 2 files from MVS and/or UNIX System Services views via right click actions, with option to compare in Read-Only mode too.": "",
+  "Added error handling for a \"Could not list members\" error that appears when deleting an expanded PDS using an SSH profile. <a>#768</a>": "",
   "Added error handling for when the default credential manager is unable to initialize. <a>#2811</a>": "",
   "Added expired JSON web token detection for profiles in each tree view (Data Sets, USS, Jobs). When a user performs a search on a profile, they are prompted to log in if their token expired. <a>#3175</a>": "",
   "Added favorite job query to jobs view. <a>#1947</a>": "",
@@ -780,6 +814,7 @@
   "Added support for enabling/disabling validation for a Zowe profile across all trees <a>#2570</a>": "",
   "Added support for encoding profile property when retrieving JCL with z/OSMF. <a>#3877</a>": "",
   "Added support for encoding profile property when retrieving JCL with z/OSMF. For example, include \"encoding\": \"IBM-1147\" in the z/OSMF profile to view JCL with \"IBM-1147\" encoding via the right-click Get JCL job option.": "",
+  "Added support for favoriting migrated data sets and synchronizing their migration/recall status. <a>#4308</a>": "",
   "Added support for fetching virtual workspaces in parallel after Zowe Explorer activation. <a>#3880</a>": "",
   "Added support for hiding a Zowe profile across all trees <a>#2567</a>": "",
   "Added support for jobEncoding profile property when submitting jobs to z/OSMF. <a>#3826</a>": "",
@@ -902,6 +937,7 @@
   "Changes in credential management detected, refreshing Zowe Explorer.": "",
   "Changes in the credential vault detected, refreshing Zowe Explorer.": "",
   "Changing authentication to basic was successful for profile {0}.": "",
+  "Checking migration status...": "",
   "Choose a location to create the {0}": "",
   "Choose Encoding": "",
   "Choose encoding for {0}": "",
@@ -936,6 +972,7 @@
   "Confirm delete": "",
   "Conflict: Remote contents have changed.": "",
   "Connection Name": "",
+  "Console command submitted.": "",
   "Contents": "",
   "Continue": "",
   "Convert existing profiles": "",
@@ -947,9 +984,9 @@
   "copyName was called on USS node {0}, but its fullPath is invalid.": "",
   "Corrected description of the mnorc attribute for PDS members. <a>#4116</a>": "",
   "Create {0}": "",
+  "Create a new console command": "",
   "Create a new filter": "",
   "Create a new filter. For example: HLQ.*, HLQ.aaa.bbb, HLQ.ccc.ddd(member)": "",
-  "Create a new MVS command": "",
   "Create a new TSO command": "",
   "Create Data Set: Edit Attributes": "",
   "Create Data Set: Name": "",
@@ -1032,6 +1069,7 @@
   "Downloading all members": "",
   "Downloading data set": "",
   "Downloading member": "",
+  "Downloading members": "",
   "Downloading USS directory": "",
   "Downloading USS file...": "",
   "Downloads files and directories using uppercase names. When disabled, names are converted to lowercase": "",
@@ -1061,6 +1099,7 @@
   "Encoding History": "",
   "Encoding: {0}": "",
   "Enhanced \"Show Attributes\" feature with improved visual presentation: aligned all attribute table columns consistently across core and extender sections, added thousands separators for numeric values, and automatically appends the % symbol to \"Used Space\" values for better readability. <a>#3927</a>": "",
+  "Enhanced data set member download to allow multiple members - including across unique partitioned data sets - to be selected and downloaded in the same action. <a>#4274</a>": "",
   "Enhanced ID generation for parent tree nodes to ensure uniqueness.": "",
   "Enter a block size": "",
   "Enter a codepage (e.g., 1047, IBM-1047)": "",
@@ -1087,7 +1126,7 @@
   "Enter job prefix": "",
   "Enter job status": "",
   "Enter local filter...": "",
-  "Enter or update the MVS command": "",
+  "Enter or update the console command": "",
   "Enter or update the TSO command": "",
   "Enter or update the Unix command": "",
   "Enter profile name": "",
@@ -1199,6 +1238,7 @@
   "Fixed a bug where renaming a USS file that used to exist but was deleted in z/OS resulted in an error. <a>#3485</a>.": "",
   "Fixed a bug where USS and data set workspace folders accessed via an extender (SSH, FTP, etc) are not loaded until the window is reloaded. <a>#3689</a>": "",
   "Fixed a bug where USS files and data set VS Code editors accessed by an extender (SSH, FTP, etc) are not restored when reloading/reopening a window. <a>#3678</a>": "",
+  "Fixed a localization issue where changing Zowe > Logger in a non-English language would use the localized value instead of the expected internal enum value for setting the log level. <a>#4292</a>": "",
   "Fixed a regression with the AuthUtils.syncSessionNode function that caused Zowe Explorer logic to stop unexpectedly if a session node did not yet have a rich hover tooltip. <a>#3795</a>": "",
   "Fixed a z/OSMF issue for Data Sets and Jobs with special characters in the names. <a>#2175</a>": "",
   "Fixed activation and Refresh Extension issues in web based editors, ie. Theia. <a>#1807</a>": "",
@@ -1213,12 +1253,18 @@
   "Fixed an issue during initialization where the error dialog shown for a broken team configuration file was missing the \"Show Config\" action. <a>#3322</a>": "",
   "Fixed an issue in the Switch Authentication action, where changing from token-based authentication to username and password authentication did not properly invalidate the token. <a>#3654</a>": "",
   "Fixed an issue in USS where a directory could not be expanded if it contained at least one subdirectory that the user did not have access to. <a>#4278</a>": "",
+  "Fixed an issue in the USS tree view that prevented listing a single file path due to a duplicated and invalid URI path construction. <a>#4303</a>": "",
+  "Fixed an issue in USS where a directory could not be expanded if it contained at least one subdirectory that the user did not have access to. <a>#4278</a>": "",
+  "Fixed an issue in USS where a file was incorrectly identified as a directory if the request returned the full path of the file, causing an error when trying to open it in the editor. <a>#4305</a>": "",
+  "Fixed an issue in USS where the search path in the profile node description or filter tooltip became out of sync and did not match the actual listed path after a failed search or a search timeout. <a>#4287</a>": "",
   "Fixed an issue seen where extender favorites not showing in the tree views. <a>#3470</a>": "",
   "Fixed an issue seen with outdated profile information in the z/OS tree view data during upload and download of data set and USS files. <a>#3457</a>": "",
+  "Fixed an issue that caused a rename to fail when removing the rightmost qualifier from a data set name. <a>#4273</a>": "",
   "Fixed an issue that caused a rename to fail when removing the rightmost qualifier from a data set name. <a>#4273</a>": "",
   "Fixed an issue that prevented screen readers from reading Unix file attributes in the Unix file attributes webview, and added clear tags to help users understand how to edit those attributes.<a>#4024</a>": "",
   "Fixed an issue that would allow multiple member-filter on a single dataset search. <a>#2037</a>": "",
   "Fixed an issue to review inconsistent capitalization across translation strings. <a>#2935</a>": "",
+  "Fixed an issue when renaming a data set or member where new extension suffix was not detected. <a>#4142</a>": "",
   "Fixed an issue where a 401 error could occur when opening PDS members after updating credentials within the same user session. <a>#3150</a>": "",
   "Fixed an issue where a 401 Unauthorized error is thrown by the FileSystemProvider implementations when the user cancels or closes an authentication prompt. Now, the filesystem throws a more explicit AuthCancelledError in this scenario. <a>#3662</a>": "",
   "Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. <a>#3294</a>": "",
@@ -1263,8 +1309,10 @@
   "Fixed an issue where loading of virtual workspaces interfered with the activation of some Zowe Explorer extensions. <a>#3923</a>": "",
   "Fixed an issue where loading profiles could wrongly assume token authentication if parent profile defines multiple auth types. <a>#4105</a>": "",
   "Fixed an issue where logical record length truncation detection failed for extenders. <a>#4002</a>": "",
+  "Fixed an issue where member filtering on data sets with qualifier parts with fewer than three characters were ignoring the member filter and returning all members. <a>#4275</a>": "",
   "Fixed an issue where moving a PDS member into the \"No members found\" placeholder of an empty PDS deleted the member without transferring its data. <a>#3950</a>": "",
   "Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. <a>#3590</a>": "",
+  "Fixed an issue where navigating to an invalid or inaccessible path under one USS profile caused file and folder nodes under all profiles to disappear or show outdated results. <a>#4288</a>": "",
   "Fixed an issue where opening a data set with the same starting pattern as an archived data set caused a REST API error (code 500) to appear in the editor. <a>#3407</a>": "",
   "Fixed an issue where opening a PDS member after renaming an expanded PDS resulted in an error. <a>#3314</a>": "",
   "Fixed an issue where opening a USS file would show empty contents when an error occurred while fetching the file from the mainframe, instead of displaying an error message. <a>#3894</a>": "",
@@ -1276,6 +1324,7 @@
   "Fixed an issue where remote changes to a data set member are not detected by Zowe Explorer if the member's resource path ends in an extension. <a>#3555</a>": "",
   "Fixed an issue where remote lookup functionality caused the local side of a conflict to be overwritten with the remote contents. <a>#3085</a>": "",
   "Fixed an issue where renaming a data set with unsaved changes did not cancel the rename operation. Now, when renaming a data set with unsaved changes, you are prompted to resolve them before continuing. <a>#3326</a>": "",
+  "Fixed an issue where renaming a sequential data set with an extension suffix like .jcl would fail. <a>#4326</a>": "",
   "Fixed an issue where renaming or deleting a USS file or data set did not update the opened editor. <a>#3260</a>": "",
   "Fixed an issue where renaming or deleting the team configuration file caused an unhandled exception in Zowe Explorer, causing old, non-existent profiles to remain in the tree views. <a>#3772</a>": "",
   "Fixed an issue where right-click menu for data set shows wrong options after deleting multiple PDS members. <a>#3516</a>": "",
@@ -1292,6 +1341,7 @@
   "Fixed an issue where the \"Paste\" option is shown for a multi-select operation in the \"Data Sets\" view.": "",
   "Fixed an issue where the attributes were not shown for VSAM data sets when using the Show Attributes feature. <a>#3545</a>": "",
   "Fixed an issue where the AuthUtils.syncSessionNode function did not handle errors thrown by the ZoweTreeNode.setSessionToChoice function. Now, when an error occurs, the function returns early and the error message is printed to Zowe Explorer's logs and output channel. <a>#3524</a>": "",
+  "Fixed an issue where the certAccount property was not supported in z/OSMF profiles for authenticating with certificates stored in the OS keychain. <a>#4309</a>": "",
   "Fixed an issue where the contents of an editor did not update when polling spool content or using the \"Pull from Mainframe\" action with jobs. <a>#3249</a>": "",
   "Fixed an issue where the Create Directory and Create File features would continue processing when the first prompt was dismissed, causing an incorrect URI to be generated. <a>#3183</a>": "",
   "Fixed an issue where the Create Directory and Create File features would incorrectly handle user-specified locations with trailing slashes. <a>#3183</a>": "",
@@ -1302,6 +1352,7 @@
   "Fixed an issue where the filesystem continued to use a profile with invalid credentials to fetch resources. Now, after an authentication error occurs for a profile, it cannot be used again in the filesystem until the authentication error is resolved. <a>#3329</a>": "",
   "Fixed an issue where the first change to a Zowe team configuration did not accurately refresh the data set, USS and job trees. <a>#3524</a>": "",
   "Fixed an issue where the job spool pagination code lens was appearing even though the extender did not support pagination. <a>#3714</a>": "",
+  "Fixed an issue where the Jobs FileSystemProvider could not resolve profiles from URIs when opened programmatically, causing errors when extensions tried to open job spool files directly. The Jobs FileSystemProvider now extracts the profile name from the URI and loads it on-demand, matching the behavior of Datasets and USS FileSystemProviders. <a>#4284</a>": "",
   "Fixed an issue where the location prompt for the Create Directory and Create File USS features would appear even when a path is already set for the profile or parent folder. <a>#3183</a>": "",
   "Fixed an issue where the mismatch etag error returned was not triggering the diff editor, resulting in possible loss of data due to the issue. <a>#2277</a>": "",
   "Fixed an issue where the onProfilesUpdate event did not fire after secure credentials were updated. <a>#2822</a>": "",
@@ -1318,6 +1369,7 @@
   "Fixed an issue where user attempts to perform a search on an individual PDS from the Zowe-Explorer extension using the \"Search PDS members\" action and query a search string, it brings out additional dataset as a part of the result.<a>#3682</a>": "",
   "Fixed an issue where user is unable to open a renamed sequential data set from the Data Sets tree view.. <a>#3345</a>": "",
   "Fixed an issue where user would not get prompted when authentication error is thrown. <a>#2334</a>": "",
+  "Fixed an issue where valuable details in error messages were truncated, particularly when using SSH profiles. <a>zowex/#766</a>": "",
   "Fixed an issue where VS Code did not provide all context menu options for a profile node after a multi-select operation. <a>#2108</a>": "",
   "Fixed an issue where Zowe Explorer displayed a \"No Zowe client configurations\" prompt when a project user configuration existed but no global configuration was present. <a>#3168</a>": "",
   "Fixed an issue where Zowe Explorer failed to activate if a VS Code workspace is opened and contains an invalid directory path. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are treated as project-level directories. <a>#4271</a>": "",
@@ -1560,6 +1612,7 @@
   "Job enhancements": "",
   "Job ID": "",
   "Job Name": "",
+  "Job not found: {0}": "",
   "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again.": "",
   "Job search cancelled.": "",
   "Job spool pagination": "",
@@ -1623,7 +1676,6 @@
   "Moving MVS files...": "",
   "Moving USS files...": "",
   "Must be a valid number": "",
-  "MVS command submitted.": "",
   "MVS data set enhancements": "",
   "Name": "",
   "Name of Data Set": "",
@@ -1853,12 +1905,14 @@
   "Rename profile": "",
   "Renamed \"Zowe Explorer z/OS Console\" to \"z/OS Console\". <a>#3445</a>": "",
   "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>": "",
+  "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>": "",
   "Renaming data set {0}": "",
   "Reorder, filter, sort, and choose visible columns": "",
   "Replace": "",
   "Replaced an import of ILocalStorageAccess from \"@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess\" to \"@zowe/zowe-explorer-api\". <a>#3606</a>": "",
   "Replaced keytar dependency with keyring module from <a>@zowe/secrets-for-zowe-sdk</a>. <a>#2358</a> <a>#2348</a>": "",
   "Replaced lodash dependency with es-toolkit to reduce webview bundle size and add technical currency. <a>#3060</a>": "",
+  "Replaced repetitive if (err instanceof Error) patterns with handleError and errorMessage utility functions from @zowe/zowe-explorer-api. <a>#4207</a>": "",
   "Replaced ts-loader dependency with esbuild-loader to improve build speed for developers. <a>#2909</a>": "",
   "Replaced ts-loader with esbuild-loader to improve build speed for developers. <a>#2909</a>": "",
   "Report Issues": "",
@@ -1907,6 +1961,8 @@
   "Select": "",
   "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles": "",
   "Select a certificate and certificate key in PEM format:": "",
+  "Select a console command to run against {0} (An option to edit will follow)": "",
+  "Select a console command to run immediately against {0}": "",
   "Select a data set organization (DSORG)": "",
   "Select a filter": "",
   "Select a filter or type to create a new one": "",
@@ -1924,8 +1980,6 @@
   "Select Allocate Data Set to create now, or Edit Attributes to review values": "",
   "Select an attribute to edit, or select Allocate Data Set to create the data set": "",
   "Select an item before deleting": "",
-  "Select an MVS command to run against {0} (An option to edit will follow)": "",
-  "Select an MVS command to run immediately against {0}": "",
   "Select Authentication Order": "",
   "Select Certificate": "",
   "Select Certificate Key": "",
@@ -1943,8 +1997,8 @@
   "Select the location of the config file to edit": "",
   "Select the location where the config file will be initialized": "",
   "Select the profile to use to open the data set": "",
+  "Select the profile to use to submit the console command": "",
   "Select the profile to use to submit the job": "",
-  "Select the profile to use to submit the MVS command": "",
   "Select the profile to use to submit the TSO command": "",
   "Select the profile to use to submit the Unix command": "",
   "Select the profile to which the original data set belongs": "",
@@ -1978,6 +2032,7 @@
   "Sorting updated for {0}": "",
   "Specify another codepage": "",
   "Specify the data set type (DSNTYPE)": "",
+  "Spool file not found: {0}": "",
   "SSH profile missing connection details. Please update.": "",
   "Starting to poll job {0} for completion.": "",
   "Status": "",
@@ -2060,6 +2115,7 @@
   "Unable to create member.": "",
   "Unable to create node:": "",
   "Unable to delete node: {0}": "",
+  "Unable to download data set member.": "",
   "Unable to find file {0}": "",
   "Unable to find file: {0}": "",
   "Unable to find USS directory contents:": "",
@@ -2193,6 +2249,7 @@
   "Your connection is no longer active for profile '{0}'. Please log in to an authentication service to restore the connection.": "",
   "Your Jobs": "",
   "z/OS default codepage": "",
+  "Zowe Console Command": "",
   "Zowe Explorer": "",
   "Zowe Explorer has activated successfully.": "",
   "Zowe Explorer log level: {0}": "",
@@ -2211,7 +2268,6 @@
   "Zowe Explorer: Stop Polling": "",
   "Zowe Explorer's default credential manager is not supported in your environment. Consider installing a custom solution for your platform. Click Reload to start Zowe Explorer without a credential manager.": "",
   "Zowe home directory is located at {0}": "",
-  "Zowe MVS Command": "",
   "Zowe profiles initialized successfully.": "",
   "Zowe TSO Command": "",
   "Zowe Unix Command": "",

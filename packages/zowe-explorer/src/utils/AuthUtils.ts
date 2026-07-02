@@ -12,6 +12,7 @@
 import * as util from "util";
 import * as vscode from "vscode";
 import {
+    handleError,
     imperative,
     Gui,
     MainframeInteraction,
@@ -100,9 +101,9 @@ export class AuthUtils {
                     AuthHandler.disableSequentialRequests(profile);
                     return callbackValue;
                 } catch (err) {
-                    if (err instanceof Error) {
-                        ZoweLogger.error(err.message);
-                    }
+                    await handleError(err, (error) => {
+                        ZoweLogger.error(error.message);
+                    });
                     if (
                         (err instanceof imperative.ImperativeError &&
                             (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
@@ -407,10 +408,10 @@ export class AuthUtils {
             this.updateNodeToolTip(sessionNode, profile);
             sessionNode.setSessionToChoice(commonApi.getSession());
         } catch (err) {
-            if (err instanceof Error) {
+            void handleError(err, (error) => {
                 // API is not yet registered, or building the session failed for this profile
-                ZoweLogger.error(`Error syncing session for ${profileName}: ${err.message}`);
-            }
+                ZoweLogger.error(`Error syncing session for ${profileName}: ${error.message}`);
+            });
             return;
         }
         if (nodeToRefresh) {

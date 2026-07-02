@@ -201,7 +201,10 @@ export class Session {
 }
 
 export class Profile {
-    constructor(public name: string, public type: string) {}
+    constructor(
+        public name: string,
+        public type: string
+    ) {}
 }
 
 export class ProfileInfo {

@@ -151,6 +151,8 @@ function createGlobalMocks() {
     Object.defineProperty(SharedUtils, "concatChildNodes", { value: vi.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", { value: vi.fn(), configurable: true });
     vi.spyOn(zosfiles.List, "dataSet").mockImplementation();
+    vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+    vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
     Object.defineProperty(vscode, "ProgressLocation", { value: vi.fn(), configurable: true });
     Object.defineProperty(vscode.window, "createWebviewPanel", { value: vi.fn(), configurable: true });
     Object.defineProperty(vscode.env, "clipboard", { value: clipboard, configurable: true });
@@ -448,7 +450,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
         child.contextValue = Constants.DS_MEMBER_CONTEXT + Constants.FAV_SUFFIX;
 
         await DatasetActions.refreshPS(child);
-        
+
         expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(child.resourceUri, { editor: undefined });
     });
     it("Checking favorite PS refresh", async () => {
@@ -464,6 +466,94 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
 
         await DatasetActions.refreshPS(child);
         expect(blockMocks.fetchDsAtUri).toHaveBeenCalledWith(child.resourceUri, { editor: undefined });
+    });
+
+    it("Checking refresh of migrated dataset when it is still migrated", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocksShared();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.MIGRATED",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+
+        blockMocks.mvsApi.dataSet = vi.fn().mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        dsname: "HLQ.TEST.MIGRATED",
+                        migr: "YES",
+                    },
+                ],
+            },
+        });
+
+        await DatasetActions.refreshPS(node);
+
+        expect(blockMocks.mvsApi.dataSet).toHaveBeenCalledWith("HLQ.TEST.MIGRATED", { attributes: true });
+        expect(mocked(Gui.showMessage)).not.toHaveBeenCalled();
+    });
+
+    it("Checking refresh of migrated dataset when it has been recalled", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocksShared();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RECALLED",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+
+        blockMocks.mvsApi.dataSet = vi.fn().mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        dsname: "HLQ.TEST.RECALLED",
+                        migr: "NO",
+                        dsorg: "PO",
+                    },
+                ],
+            },
+        });
+
+        const datasetTreeMock = {
+            findEquivalentNode: vi.fn().mockReturnValue(undefined),
+            updateFavorites: vi.fn(),
+            refreshElement: vi.fn(),
+        };
+        Object.defineProperty(SharedTreeProviders, "ds", { value: datasetTreeMock, configurable: true });
+
+        const datasetRecalledSpy = vi.spyOn(node, "datasetRecalled");
+
+        await DatasetActions.refreshPS(node);
+
+        expect(blockMocks.mvsApi.dataSet).toHaveBeenCalledWith("HLQ.TEST.RECALLED", { attributes: true });
+        expect(datasetRecalledSpy).toHaveBeenCalledWith(true);
+        expect(datasetTreeMock.refreshElement).toHaveBeenCalled();
+        expect(mocked(Gui.showMessage)).not.toHaveBeenCalled();
+    });
+
+    it("Checking refresh of migrated dataset when API call fails", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocksShared();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.FAIL",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+
+        const error = new Error("API error");
+        blockMocks.mvsApi.dataSet = vi.fn().mockRejectedValueOnce(error);
+
+        const errorHandlingSpy = vi.spyOn(AuthUtils, "errorHandling").mockResolvedValue(undefined as any);
+
+        await DatasetActions.refreshPS(node);
+
+        expect(errorHandlingSpy).toHaveBeenCalledWith(error, expect.anything());
     });
 });
 
@@ -1652,6 +1742,44 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
             return Promise.resolve(prm);
         });
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node)).resolves.not.toThrow();
+    });
+
+    it("Testing copySequentialDatasets() calls copyDataSet with replace=true when target does not exist", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_DS_CONTEXT;
+        globalMocks.showInputBox.mockResolvedValueOnce("HLQ.TEST.COPY");
+        const copySpy = vi.spyOn(blockMocks.mvsApi, "copyDataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        vi.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockResolvedValue({
+            success: true,
+            commandResponse: "",
+            apiResponse: {},
+        });
+        vi.spyOn(DatasetActions, "determineReplacement").mockResolvedValueOnce("notFound");
+        mocked(vscode.window.withProgress).mockImplementation((prm, fnc) => {
+            fnc();
+            return Promise.resolve(prm);
+        });
+        await DatasetActions.copySequentialDatasets(
+            [
+                {
+                    dataSetName: "HLQ.TEST.BEFORE.NODE",
+                    profileName: blockMocks.imperativeProfile.name,
+                    contextValue: Constants.DS_DS_CONTEXT,
+                },
+            ],
+            node
+        );
+        expect(copySpy).toHaveBeenCalledWith("HLQ.TEST.BEFORE.NODE", "HLQ.TEST.COPY", null, true);
     });
 
     it("Testing copySequentialDatasets() successfully runs on cross profile", async () => {
@@ -3038,6 +3166,53 @@ describe("Dataset Actions Unit Tests - Function hMigrateDataSet", () => {
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
     });
 
+    it("Checking that hMigrateDataSet synchronizes equivalent and favorite nodes", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.TO.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_DS_CONTEXT;
+        node.resourceUri = vscode.Uri.file("/sestest/HLQ.TEST.TO.NODE");
+
+        const migrateSpy = vi.spyOn(blockMocks.mvsApi, "hMigrateDataSet");
+        migrateSpy.mockResolvedValueOnce({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [],
+            },
+        });
+
+        const equivNode = new ZoweDatasetNode({
+            label: "HLQ.TEST.TO.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        equivNode.resourceUri = vscode.Uri.file("/sestest/HLQ.TEST.TO.NODE-equiv");
+        vi.spyOn(equivNode, "getParent").mockReturnValue({} as any);
+
+        vi.spyOn(node, "datasetMigrated").mockImplementation(() => {});
+        vi.spyOn(equivNode, "datasetMigrated").mockImplementation(() => {});
+
+        vi.spyOn(blockMocks.testDatasetTree, "findEquivalentNode").mockReturnValue(equivNode);
+        vi.spyOn(SharedContext, "isFavoriteDescendant").mockReturnValue(true);
+        const invalidateCacheSpy = vi.spyOn(DatasetFSProvider.instance, "invalidateCache").mockImplementation(() => {});
+        const updateFavoritesSpy = vi.spyOn(blockMocks.testDatasetTree, "updateFavorites").mockImplementation(() => {});
+
+        const nodeUri = node.resourceUri;
+        const equivUri = equivNode.resourceUri;
+
+        await DatasetActions.hMigrateDataSet(blockMocks.testDatasetTree, node);
+
+        expect(invalidateCacheSpy).toHaveBeenCalledWith(nodeUri);
+        expect(invalidateCacheSpy).toHaveBeenCalledWith(equivUri);
+        expect(updateFavoritesSpy).toHaveBeenCalled();
+    });
+
     it("Checking that hMigrateDataSet throws an error if the user is invalid", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -3147,6 +3322,67 @@ describe("Dataset Actions Unit Tests - Function hRecallDataSet", () => {
 
         expect(recallSpy).toHaveBeenCalledWith("HLQ.TEST.TO.NODE");
         expect(mocked(Gui.showMessage)).toHaveBeenCalled();
+    });
+
+    it("Checking that hRecallDataSet synchronizes equivalent and favorite nodes", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.TO.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        node.contextValue = Constants.DS_DS_CONTEXT;
+        node.resourceUri = vscode.Uri.file("/sestest/HLQ.TEST.TO.NODE");
+
+        const recallSpy = vi.spyOn(blockMocks.mvsApi, "hRecallDataSet");
+        recallSpy.mockResolvedValueOnce({
+            success: true,
+            commandResponse: "",
+            apiResponse: {
+                items: [],
+            },
+        });
+
+        const dataSetSpy = vi.spyOn(blockMocks.mvsApi, "dataSet");
+        dataSetSpy.mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [
+                    {
+                        dsname: "HLQ.TEST.TO.NODE",
+                        dsorg: "PO",
+                    },
+                ],
+            },
+        });
+
+        const equivNode = new ZoweDatasetNode({
+            label: "HLQ.TEST.TO.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        equivNode.resourceUri = vscode.Uri.file("/sestest/HLQ.TEST.TO.NODE");
+        vi.spyOn(equivNode, "getParent").mockReturnValue({} as any);
+
+        vi.spyOn(node, "datasetRecalled").mockImplementation(async () => {
+            node.resourceUri = vscode.Uri.parse("zowe-ds:/sestest/HLQ.TEST.TO.NODE");
+        });
+        vi.spyOn(equivNode, "datasetRecalled").mockImplementation(async () => {
+            equivNode.resourceUri = vscode.Uri.parse("zowe-ds:/sestest/HLQ.TEST.TO.NODE-equiv");
+        });
+
+        vi.spyOn(blockMocks.testDatasetTree, "findEquivalentNode").mockReturnValue(equivNode);
+        vi.spyOn(SharedContext, "isFavoriteDescendant").mockReturnValue(true);
+        const invalidateCacheSpy = vi.spyOn(DatasetFSProvider.instance, "invalidateCache").mockImplementation(() => {});
+        const updateFavoritesSpy = vi.spyOn(blockMocks.testDatasetTree, "updateFavorites").mockImplementation(() => {});
+
+        await DatasetActions.hRecallDataSet(blockMocks.testDatasetTree, node);
+
+        expect(invalidateCacheSpy).toHaveBeenCalledWith(node.resourceUri);
+        expect(invalidateCacheSpy).toHaveBeenCalledWith(equivNode.resourceUri);
+        expect(updateFavoritesSpy).toHaveBeenCalled();
     });
 
     it("Checking PS dataset recall for Unverified profile", async () => {
@@ -4095,7 +4331,7 @@ describe("Dataset Actions Unit Tests - Function confirmJobSubmission", () => {
             () =>
                 ({
                     get: () => Constants.JOB_SUBMIT_DIALOG_OPTS[1],
-                } as any)
+                }) as any
         );
         vi.spyOn(Gui, "warningMessage").mockResolvedValue({
             title: "Submit",
@@ -6704,6 +6940,211 @@ describe("DatasetActions - downloading functions", () => {
 
             reportProgressSpy.mockRestore();
         });
+
+        it("should pass abortDownload callback wired to CancellationToken", async () => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            pdsNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            });
+
+            const mockToken = { isCancellationRequested: false, onCancellationRequested: vi.fn() };
+            let capturedOptions: any;
+
+            vi.spyOn(testMocks.mvsApi, "downloadAllMembers").mockImplementation(async (_dsName, opts: any) => {
+                capturedOptions = opts;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockExecuteDownloadWithProgress = new MockedProperty(
+                DatasetActions,
+                "executeDownloadWithProgress" as any,
+                undefined,
+                vi.fn().mockImplementation(async (_title, downloadFn, _downloadType, _node, _cancellable) => {
+                    return await downloadFn(undefined, mockToken);
+                })
+            );
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(capturedOptions.abortDownload).toBeDefined();
+            expect(typeof capturedOptions.abortDownload).toBe("function");
+            expect(capturedOptions.abortDownload()).toBe(false);
+
+            mockToken.isCancellationRequested = true;
+            expect(capturedOptions.abortDownload()).toBe(true);
+        });
+
+        it("should pass abortDownload that returns false when token is undefined", async () => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            pdsNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            });
+
+            let capturedOptions: any;
+
+            vi.spyOn(testMocks.mvsApi, "downloadAllMembers").mockImplementation(async (_dsName, opts: any) => {
+                capturedOptions = opts;
+                return { success: true, commandResponse: "", apiResponse: {} };
+            });
+
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockExecuteDownloadWithProgress = new MockedProperty(
+                DatasetActions,
+                "executeDownloadWithProgress" as any,
+                undefined,
+                vi.fn().mockImplementation(async (_title, downloadFn, _downloadType, _node, _cancellable) => {
+                    return await downloadFn(undefined, undefined);
+                })
+            );
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(capturedOptions.abortDownload()).toBe(false);
+        });
+    });
+
+    describe("downloadSingleMember", () => {
+        let testMocks: ReturnType<typeof createDownloadTestMocks>;
+        let mockGetExtension: MockedProperty;
+        let mockGetDirsFromDataSet: MockedProperty;
+
+        const createMemberNodes = (pdsName: string, memberName: string): { pdsNode: ZoweDatasetNode; memberNode: ZoweDatasetNode } => {
+            const pdsNode = new ZoweDatasetNode({
+                label: pdsName,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            const memberNode = new ZoweDatasetNode({
+                label: memberName,
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNode,
+                profile: defaultTestProfile,
+            });
+
+            memberNode.getParent = vi.fn().mockReturnValue(pdsNode);
+            memberNode.getLabel = vi.fn().mockReturnValue(memberName);
+            memberNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNode.getLabel = vi.fn().mockReturnValue(pdsName);
+            return { pdsNode, memberNode };
+        };
+
+        beforeEach(() => {
+            testMocks = createDownloadTestMocks();
+            mockGetExtension = new MockedProperty(DatasetUtils, "getExtension", undefined, vi.fn().mockReturnValue("txt"));
+            mockGetDirsFromDataSet = new MockedProperty(
+                zosfiles.ZosFilesUtils,
+                "getDirsFromDataSet",
+                undefined,
+                vi.fn().mockReturnValue("test/directory")
+            );
+        });
+
+        afterEach(() => {
+            mockGetExtension[Symbol.dispose]();
+            mockGetDirsFromDataSet[Symbol.dispose]();
+        });
+
+        it("should successfully download a PDS member using default options", async () => {
+            const { memberNode } = createMemberNodes("TEST.PDS", "MEMBER1");
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { etag: "123" },
+            });
+
+            const result = await (DatasetActions as any).downloadSingleMember(memberNode, { ...defaultDownloadOptions }, "txt");
+
+            expect(getContentsSpy).toHaveBeenCalledWith(
+                "TEST.PDS(MEMBER1)",
+                expect.objectContaining({
+                    file: expect.stringMatching(/member1\.txt$/),
+                    binary: false,
+                    encoding: undefined,
+                    overwrite: false,
+                    responseTimeout: 30000,
+                })
+            );
+            expect(result.downloadedPath).toMatch(/member1\.txt$/);
+        });
+
+        it("should handle member with preserve case and generate directory options", async () => {
+            const optionsWithCase = {
+                ...defaultDownloadOptions,
+                uppercaseNames: true,
+                generateDirectory: true,
+                overwrite: true,
+            };
+            const { memberNode } = createMemberNodes("TEST.PDS", "Member1");
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { etag: "123" },
+            });
+
+            const result = await (DatasetActions as any).downloadSingleMember(memberNode, optionsWithCase, "txt");
+
+            expect(getContentsSpy).toHaveBeenCalledWith(
+                "TEST.PDS(Member1)",
+                expect.objectContaining({
+                    file: expect.stringMatching(/Member1\.txt$/),
+                    binary: false,
+                    encoding: undefined,
+                    overwrite: true,
+                    responseTimeout: 30000,
+                })
+            );
+            expect(result.downloadedPath).toMatch(/Member1\.txt$/);
+        });
+
+        it("should handle record codepage by setting record option", async () => {
+            const optionsWithRecord = {
+                ...defaultDownloadOptions,
+                encoding: { kind: "other" as const, codepage: "record" },
+            };
+            const { memberNode } = createMemberNodes("TEST.PDS", "MEMBER1");
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { etag: "123" },
+            });
+
+            await (DatasetActions as any).downloadSingleMember(memberNode, optionsWithRecord, "txt");
+
+            expect(getContentsSpy).toHaveBeenCalledWith(
+                "TEST.PDS(MEMBER1)",
+                expect.objectContaining({
+                    record: true,
+                    encoding: undefined,
+                    binary: false,
+                })
+            );
+        });
     });
 
     describe("downloadMember", () => {
@@ -6712,7 +7153,6 @@ describe("DatasetActions - downloading functions", () => {
         let mockExecuteDownloadWithProgress: MockedProperty;
         let mockErrorMessage: MockedProperty;
         let mockTrace: MockedProperty;
-        let mockGetExtensionMap: MockedProperty;
         let mockGetExtension: MockedProperty;
         let mockGetDirsFromDataSet: MockedProperty;
 
@@ -6735,7 +7175,6 @@ describe("DatasetActions - downloading functions", () => {
 
             mockErrorMessage = new MockedProperty(Gui, "errorMessage", undefined, vi.fn());
             mockTrace = new MockedProperty(ZoweLogger, "trace", undefined, vi.fn());
-            mockGetExtensionMap = new MockedProperty(DatasetUtils, "getExtensionMap", undefined, vi.fn().mockResolvedValue({}));
             mockGetExtension = new MockedProperty(DatasetUtils, "getExtension", undefined, vi.fn().mockReturnValue("txt"));
             mockGetDirsFromDataSet = new MockedProperty(
                 zosfiles.ZosFilesUtils,
@@ -6750,12 +7189,11 @@ describe("DatasetActions - downloading functions", () => {
             mockExecuteDownloadWithProgress[Symbol.dispose]();
             mockErrorMessage[Symbol.dispose]();
             mockTrace[Symbol.dispose]();
-            mockGetExtensionMap[Symbol.dispose]();
             mockGetExtension[Symbol.dispose]();
             mockGetDirsFromDataSet[Symbol.dispose]();
         });
 
-        it("should successfully download a PDS member", async () => {
+        it("should show options and execute single-member progress/finish notifications", async () => {
             const pdsNode = new ZoweDatasetNode({
                 label: "TEST.PDS",
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -6775,7 +7213,7 @@ describe("DatasetActions - downloading functions", () => {
             memberNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
             pdsNode.getLabel = vi.fn().mockReturnValue("TEST.PDS");
 
-            vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
                 success: true,
                 commandResponse: "",
                 apiResponse: {
@@ -6785,13 +7223,14 @@ describe("DatasetActions - downloading functions", () => {
 
             await DatasetActions.downloadMember(memberNode);
 
-            expect(mockGetDataSetDownloadOptions.mock).toHaveBeenCalled();
+            expect(mockGetDataSetDownloadOptions.mock).toHaveBeenCalledWith(memberNode);
             expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalledWith(
                 "Downloading member",
                 expect.any(Function),
                 "Data set member",
                 memberNode
             );
+            expect(getContentsSpy).toHaveBeenCalledTimes(1);
         });
 
         it("should handle invalid profile", async () => {
@@ -6826,33 +7265,107 @@ describe("DatasetActions - downloading functions", () => {
 
             expect(mockExecuteDownloadWithProgress.mock).not.toHaveBeenCalled();
         });
+    });
 
-        it("should handle member with preserve case and generate directory options", async () => {
-            const optionsWithCase = {
-                ...defaultDownloadOptions,
-                uppercaseNames: true,
-                generateDirectory: true,
-                overwrite: true,
-            };
-            mockGetDataSetDownloadOptions.mock.mockResolvedValue(optionsWithCase);
+    describe("downloadMembers", () => {
+        let testMocks: ReturnType<typeof createDownloadTestMocks>;
+        let mockGetDataSetDownloadOptions: MockedProperty;
+        let mockExecuteDownloadWithProgress: MockedProperty;
+        let mockErrorMessage: MockedProperty;
+        let mockTrace: MockedProperty;
+        let mockGetExtension: MockedProperty;
+        let mockGetDirsFromDataSet: MockedProperty;
 
-            const pdsNode = new ZoweDatasetNode({
+        beforeEach(() => {
+            testMocks = createDownloadTestMocks();
+            mockGetDataSetDownloadOptions = new MockedProperty(
+                DatasetActions,
+                "getDataSetDownloadOptions" as any,
+                undefined,
+                vi.fn().mockResolvedValue({ ...defaultDownloadOptions })
+            );
+            mockExecuteDownloadWithProgress = new MockedProperty(
+                DatasetActions,
+                "executeDownloadWithProgress" as any,
+                undefined,
+                vi.fn().mockImplementation(async (_title, downloadFn, _successMessage, _node) => {
+                    await downloadFn();
+                })
+            );
+
+            mockErrorMessage = new MockedProperty(Gui, "errorMessage", undefined, vi.fn());
+            mockTrace = new MockedProperty(ZoweLogger, "trace", undefined, vi.fn());
+            mockGetExtension = new MockedProperty(DatasetUtils, "getExtension", undefined, vi.fn().mockReturnValue("txt"));
+            mockGetDirsFromDataSet = new MockedProperty(
+                zosfiles.ZosFilesUtils,
+                "getDirsFromDataSet",
+                undefined,
+                vi.fn().mockReturnValue("test/directory")
+            );
+        });
+
+        afterEach(() => {
+            mockGetDataSetDownloadOptions[Symbol.dispose]();
+            mockExecuteDownloadWithProgress[Symbol.dispose]();
+            mockErrorMessage[Symbol.dispose]();
+            mockTrace[Symbol.dispose]();
+            mockGetExtension[Symbol.dispose]();
+            mockGetDirsFromDataSet[Symbol.dispose]();
+        });
+
+        it("should return early when selected nodes contain no members", async () => {
+            const nonMemberNode = new ZoweDatasetNode({
                 label: "TEST.PDS",
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
             });
+            nonMemberNode.contextValue = "notMember";
 
-            const memberNode = new ZoweDatasetNode({
-                label: "Member1",
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                parentNode: pdsNode,
+            await DatasetActions.downloadMembers(nonMemberNode, [nonMemberNode]);
+
+            expect(mockGetDataSetDownloadOptions.mock).not.toHaveBeenCalled();
+            expect(mockExecuteDownloadWithProgress.mock).not.toHaveBeenCalled();
+        });
+
+        it("should show options once and execute one multi-member progress/finish notification", async () => {
+            const pdsNodeOne = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            const pdsNodeTwo = new ZoweDatasetNode({
+                label: "TEST.OTHER.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
                 profile: defaultTestProfile,
             });
 
-            memberNode.getParent = vi.fn().mockReturnValue(pdsNode);
-            memberNode.getLabel = vi.fn().mockReturnValue("Member1");
-            memberNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
-            pdsNode.getLabel = vi.fn().mockReturnValue("TEST.PDS");
+            const memberNodeOne = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeOne,
+                profile: defaultTestProfile,
+            });
+            const memberNodeTwo = new ZoweDatasetNode({
+                label: "MEMBER2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeTwo,
+                profile: defaultTestProfile,
+            });
+
+            memberNodeOne.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeTwo.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeOne.getParent = vi.fn().mockReturnValue(pdsNodeOne);
+            memberNodeOne.getLabel = vi.fn().mockReturnValue("MEMBER1");
+            memberNodeOne.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeOne.getLabel = vi.fn().mockReturnValue("TEST.PDS");
+
+            memberNodeTwo.getParent = vi.fn().mockReturnValue(pdsNodeTwo);
+            memberNodeTwo.getLabel = vi.fn().mockReturnValue("MEMBER2");
+            memberNodeTwo.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeTwo.getLabel = vi.fn().mockReturnValue("TEST.OTHER.PDS");
 
             const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
                 success: true,
@@ -6860,47 +7373,60 @@ describe("DatasetActions - downloading functions", () => {
                 apiResponse: { etag: "123" },
             });
 
-            await DatasetActions.downloadMember(memberNode);
+            await DatasetActions.downloadMembers(memberNodeOne, [memberNodeOne, memberNodeTwo]);
 
-            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalled();
-            const downloadFn = mockExecuteDownloadWithProgress.mock.mock.calls[0][1];
-            await downloadFn();
-
-            expect(getContentsSpy).toHaveBeenCalledWith(
-                "TEST.PDS(Member1)",
-                expect.objectContaining({
-                    file: expect.stringMatching(/Member1\.txt$/),
-                    binary: false,
-                    encoding: undefined,
-                    overwrite: true,
-                    responseTimeout: 30000,
-                })
+            expect(mockGetDataSetDownloadOptions.mock).toHaveBeenCalledTimes(1);
+            expect(mockGetDataSetDownloadOptions.mock).toHaveBeenCalledWith(memberNodeOne);
+            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalledTimes(1);
+            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalledWith(
+                "Downloading members",
+                expect.any(Function),
+                "Data set members",
+                memberNodeOne,
+                true
             );
+            expect(getContentsSpy).toHaveBeenCalledTimes(2);
+            expect(getContentsSpy).toHaveBeenNthCalledWith(1, "TEST.PDS(MEMBER1)", expect.any(Object));
+            expect(getContentsSpy).toHaveBeenNthCalledWith(2, "TEST.OTHER.PDS(MEMBER2)", expect.any(Object));
         });
 
-        it("should handle record codepage by setting record option", async () => {
-            const optionsWithRecord = {
+        it("should apply override extension to every selected member under the same parent PDS", async () => {
+            const downloadOptions = {
                 ...defaultDownloadOptions,
-                encoding: { kind: "other" as const, codepage: "record" },
+                overrideExtension: true,
+                fileExtension: "csv",
             };
-            mockGetDataSetDownloadOptions.mock.mockResolvedValue(optionsWithRecord);
+            mockGetDataSetDownloadOptions.mock.mockResolvedValueOnce(downloadOptions);
 
             const pdsNode = new ZoweDatasetNode({
                 label: "TEST.PDS",
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                 parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
             });
 
-            const memberNode = new ZoweDatasetNode({
+            const memberNodeOne = new ZoweDatasetNode({
                 label: "MEMBER1",
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: pdsNode,
                 profile: defaultTestProfile,
             });
+            const memberNodeTwo = new ZoweDatasetNode({
+                label: "MEMBER2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNode,
+                profile: defaultTestProfile,
+            });
 
-            memberNode.getParent = vi.fn().mockReturnValue(pdsNode);
-            memberNode.getLabel = vi.fn().mockReturnValue("MEMBER1");
-            memberNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            memberNodeOne.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeTwo.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeOne.getParent = vi.fn().mockReturnValue(pdsNode);
+            memberNodeOne.getLabel = vi.fn().mockReturnValue("MEMBER1");
+            memberNodeOne.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+
+            memberNodeTwo.getParent = vi.fn().mockReturnValue(pdsNode);
+            memberNodeTwo.getLabel = vi.fn().mockReturnValue("MEMBER2");
+            memberNodeTwo.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
             pdsNode.getLabel = vi.fn().mockReturnValue("TEST.PDS");
 
             const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
@@ -6909,20 +7435,449 @@ describe("DatasetActions - downloading functions", () => {
                 apiResponse: { etag: "123" },
             });
 
-            await DatasetActions.downloadMember(memberNode);
+            await DatasetActions.downloadMembers(memberNodeOne, [memberNodeOne, memberNodeTwo]);
 
-            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalled();
-            const downloadFn = mockExecuteDownloadWithProgress.mock.mock.calls[0][1];
-            await downloadFn();
-
-            expect(getContentsSpy).toHaveBeenCalledWith(
+            expect(getContentsSpy).toHaveBeenCalledTimes(2);
+            expect(getContentsSpy).toHaveBeenNthCalledWith(
+                1,
                 "TEST.PDS(MEMBER1)",
-                expect.objectContaining({
-                    record: true,
-                    encoding: undefined,
-                    binary: false,
-                })
+                expect.objectContaining({ file: expect.stringMatching(/member1\.csv$/) })
             );
+            expect(getContentsSpy).toHaveBeenNthCalledWith(
+                2,
+                "TEST.PDS(MEMBER2)",
+                expect.objectContaining({ file: expect.stringMatching(/member2\.csv$/) })
+            );
+        });
+
+        it("should stop processing after first thrown error and call AuthUtils.errorHandling", async () => {
+            const pdsNodeOne = new ZoweDatasetNode({
+                label: "TEST.PDS.ONE",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            const pdsNodeTwo = new ZoweDatasetNode({
+                label: "TEST.PDS.TWO",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            const memberNodeOne = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeOne,
+                profile: defaultTestProfile,
+            });
+            const memberNodeTwo = new ZoweDatasetNode({
+                label: "MEMBER2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeTwo,
+                profile: defaultTestProfile,
+            });
+
+            memberNodeOne.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeTwo.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeOne.getParent = vi.fn().mockReturnValue(pdsNodeOne);
+            memberNodeOne.getLabel = vi.fn().mockReturnValue("MEMBER1");
+            memberNodeOne.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeOne.getLabel = vi.fn().mockReturnValue("TEST.PDS.ONE");
+
+            memberNodeTwo.getParent = vi.fn().mockReturnValue(pdsNodeTwo);
+            memberNodeTwo.getLabel = vi.fn().mockReturnValue("MEMBER2");
+            memberNodeTwo.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeTwo.getLabel = vi.fn().mockReturnValue("TEST.PDS.TWO");
+
+            const thrownError = new Error("HTTP(S) status 401");
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents");
+            getContentsSpy.mockRejectedValueOnce(thrownError);
+
+            const errorHandlingSpy = vi.spyOn(AuthUtils, "errorHandling").mockResolvedValue(false);
+            let aggregateResult: { response?: any; downloadedPath?: string } | undefined;
+            mockExecuteDownloadWithProgress.mock.mockImplementation(async (_title, downloadFn, _successMessage, _node) => {
+                aggregateResult = await downloadFn();
+            });
+
+            await DatasetActions.downloadMembers(memberNodeOne, [memberNodeOne, memberNodeTwo]);
+
+            expect(getContentsSpy).toHaveBeenCalledTimes(1);
+            expect(getContentsSpy).toHaveBeenCalledWith("TEST.PDS.ONE(MEMBER1)", expect.any(Object));
+            expect(errorHandlingSpy).toHaveBeenCalledWith(
+                thrownError,
+                expect.objectContaining({ apiType: ZoweExplorerApiType.Mvs, profile: defaultTestProfile })
+            );
+            expect(aggregateResult?.response?.success).toBe(false);
+
+            errorHandlingSpy.mockRestore();
+        });
+
+        it("should aggregate command responses when member download responses indicate success false", async () => {
+            const pdsNodeOne = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            const pdsNodeTwo = new ZoweDatasetNode({
+                label: "TEST.OTHER.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            const memberNodeOne = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeOne,
+                profile: defaultTestProfile,
+            });
+            const memberNodeTwo = new ZoweDatasetNode({
+                label: "MEMBER2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeTwo,
+                profile: defaultTestProfile,
+            });
+
+            memberNodeOne.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeTwo.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeOne.getParent = vi.fn().mockReturnValue(pdsNodeOne);
+            memberNodeOne.getLabel = vi.fn().mockReturnValue("MEMBER1");
+            memberNodeOne.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeOne.getLabel = vi.fn().mockReturnValue("TEST.PDS");
+
+            memberNodeTwo.getParent = vi.fn().mockReturnValue(pdsNodeTwo);
+            memberNodeTwo.getLabel = vi.fn().mockReturnValue("MEMBER2");
+            memberNodeTwo.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeTwo.getLabel = vi.fn().mockReturnValue("TEST.OTHER.PDS");
+
+            vi.spyOn(testMocks.mvsApi, "getContents")
+                .mockResolvedValueOnce({
+                    success: false,
+                    commandResponse: "MEMBER1 failed",
+                    apiResponse: { etag: "123" },
+                })
+                .mockResolvedValueOnce({
+                    success: false,
+                    commandResponse: "MEMBER2 failed",
+                    apiResponse: { etag: "456" },
+                });
+
+            let aggregateResult: { response?: any; downloadedPath?: string } | undefined;
+            mockExecuteDownloadWithProgress.mock.mockImplementation(async (_title, downloadFn, _successMessage, _node) => {
+                aggregateResult = await downloadFn();
+            });
+
+            await DatasetActions.downloadMembers(memberNodeOne, [memberNodeOne, memberNodeTwo]);
+
+            expect(aggregateResult?.response?.success).toBe(false);
+            expect(aggregateResult?.response?.commandResponse).toContain("MEMBER1 failed");
+            expect(aggregateResult?.response?.commandResponse).toContain("MEMBER2 failed");
+            expect(aggregateResult?.response?.apiResponse?.downloadResult).toEqual({ downloaded: 2, total: 2 });
+            expect(aggregateResult?.downloadedPath).toBe(defaultDownloadOptions.selectedPath.fsPath);
+        });
+
+        it("should support mixed-profile selections by downloading valid-profile members only", async () => {
+            const validProfile = {
+                ...defaultTestProfile,
+                name: "validProfile",
+            };
+            const invalidProfile = {
+                ...defaultTestProfile,
+                name: "invalidProfile",
+            };
+
+            testMocks.profileInstance.checkCurrentProfile = vi.fn(async (profile) => {
+                testMocks.profileInstance.validProfile =
+                    profile?.name === "invalidProfile" ? Validation.ValidationType.INVALID : Validation.ValidationType.VALID;
+                return { status: "active", name: profile?.name ?? "" };
+            });
+
+            const pdsNodeValid = new ZoweDatasetNode({
+                label: "TEST.VALID.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: validProfile,
+            });
+            const pdsNodeInvalid = new ZoweDatasetNode({
+                label: "TEST.INVALID.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: invalidProfile,
+            });
+
+            const validMemberNode = new ZoweDatasetNode({
+                label: "VALIDM1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeValid,
+                profile: validProfile,
+            });
+            const invalidMemberNode = new ZoweDatasetNode({
+                label: "INVALIDM1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeInvalid,
+                profile: invalidProfile,
+            });
+
+            validMemberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+            invalidMemberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+            validMemberNode.getParent = vi.fn().mockReturnValue(pdsNodeValid);
+            validMemberNode.getLabel = vi.fn().mockReturnValue("VALIDM1");
+            validMemberNode.getProfile = vi.fn().mockReturnValue(validProfile);
+            pdsNodeValid.getLabel = vi.fn().mockReturnValue("TEST.VALID.PDS");
+
+            invalidMemberNode.getParent = vi.fn().mockReturnValue(pdsNodeInvalid);
+            invalidMemberNode.getLabel = vi.fn().mockReturnValue("INVALIDM1");
+            invalidMemberNode.getProfile = vi.fn().mockReturnValue(invalidProfile);
+            pdsNodeInvalid.getLabel = vi.fn().mockReturnValue("TEST.INVALID.PDS");
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { etag: "123" },
+            });
+
+            await DatasetActions.downloadMembers(invalidMemberNode, [invalidMemberNode, validMemberNode]);
+
+            expect(mockGetDataSetDownloadOptions.mock).toHaveBeenCalledTimes(1);
+            expect(mockGetDataSetDownloadOptions.mock).toHaveBeenCalledWith(validMemberNode);
+            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalledTimes(1);
+            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalledWith(
+                "Downloading members",
+                expect.any(Function),
+                "Data set members",
+                validMemberNode,
+                true
+            );
+            expect(getContentsSpy).toHaveBeenCalledTimes(1);
+            expect(getContentsSpy).toHaveBeenCalledWith("TEST.VALID.PDS(VALIDM1)", expect.any(Object));
+            expect(mockErrorMessage.mock).not.toHaveBeenCalled();
+        });
+
+        it("should report progress for invalid and valid selected members when progress is available", async () => {
+            const validProfile = {
+                ...defaultTestProfile,
+                name: "validProfile",
+            };
+            const invalidProfile = {
+                ...defaultTestProfile,
+                name: "invalidProfile",
+            };
+
+            testMocks.profileInstance.checkCurrentProfile = vi.fn(async (profile) => {
+                testMocks.profileInstance.validProfile =
+                    profile?.name === "invalidProfile" ? Validation.ValidationType.INVALID : Validation.ValidationType.VALID;
+                return { status: "active", name: profile?.name ?? "" };
+            });
+
+            const pdsNodeValid = new ZoweDatasetNode({
+                label: "TEST.VALID.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: validProfile,
+            });
+            const pdsNodeInvalid = new ZoweDatasetNode({
+                label: "TEST.INVALID.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: invalidProfile,
+            });
+
+            const validMemberNode = new ZoweDatasetNode({
+                label: "VALIDM1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeValid,
+                profile: validProfile,
+            });
+            const invalidMemberNode = new ZoweDatasetNode({
+                label: "INVALIDM1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeInvalid,
+                profile: invalidProfile,
+            });
+
+            validMemberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+            invalidMemberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+            validMemberNode.getParent = vi.fn().mockReturnValue(pdsNodeValid);
+            validMemberNode.getLabel = vi.fn().mockReturnValue("VALIDM1");
+            validMemberNode.getProfile = vi.fn().mockReturnValue(validProfile);
+            pdsNodeValid.getLabel = vi.fn().mockReturnValue("TEST.VALID.PDS");
+
+            invalidMemberNode.getParent = vi.fn().mockReturnValue(pdsNodeInvalid);
+            invalidMemberNode.getLabel = vi.fn().mockReturnValue("INVALIDM1");
+            invalidMemberNode.getProfile = vi.fn().mockReturnValue(invalidProfile);
+            pdsNodeInvalid.getLabel = vi.fn().mockReturnValue("TEST.INVALID.PDS");
+
+            const reportProgressSpy = vi.spyOn(Gui, "reportProgress").mockImplementation((() => undefined) as any);
+            let aggregateResult: { response?: any; downloadedPath?: string } | undefined;
+            mockExecuteDownloadWithProgress.mock.mockImplementation(async (_title, downloadFn, _successMessage, _node) => {
+                const progress = { report: vi.fn() } as any;
+                aggregateResult = await downloadFn(progress, { isCancellationRequested: false } as vscode.CancellationToken);
+            });
+
+            await DatasetActions.downloadMembers(invalidMemberNode, [invalidMemberNode, validMemberNode]);
+
+            expect(reportProgressSpy).toHaveBeenCalledTimes(2);
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(1, expect.any(Object), 2, 0, "");
+            expect(reportProgressSpy).toHaveBeenNthCalledWith(2, expect.any(Object), 2, 1, "");
+            expect(aggregateResult?.response?.success).toBe(false);
+            reportProgressSpy.mockRestore();
+        });
+
+        it("should stop processing members when cancellation is requested", async () => {
+            const pdsNodeOne = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            const pdsNodeTwo = new ZoweDatasetNode({
+                label: "TEST.OTHER.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            const memberNodeOne = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeOne,
+                profile: defaultTestProfile,
+            });
+            const memberNodeTwo = new ZoweDatasetNode({
+                label: "MEMBER2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeTwo,
+                profile: defaultTestProfile,
+            });
+
+            memberNodeOne.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeTwo.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeOne.getParent = vi.fn().mockReturnValue(pdsNodeOne);
+            memberNodeOne.getLabel = vi.fn().mockReturnValue("MEMBER1");
+            memberNodeOne.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeOne.getLabel = vi.fn().mockReturnValue("TEST.PDS");
+
+            memberNodeTwo.getParent = vi.fn().mockReturnValue(pdsNodeTwo);
+            memberNodeTwo.getLabel = vi.fn().mockReturnValue("MEMBER2");
+            memberNodeTwo.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNodeTwo.getLabel = vi.fn().mockReturnValue("TEST.OTHER.PDS");
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { etag: "123" },
+            });
+
+            let aggregateResult: { response?: any; downloadedPath?: string } | undefined;
+            mockExecuteDownloadWithProgress.mock.mockImplementation(async (_title, downloadFn, _successMessage, _node) => {
+                const progress = { report: vi.fn() } as any;
+                aggregateResult = await downloadFn(progress, { isCancellationRequested: true } as vscode.CancellationToken);
+            });
+
+            await DatasetActions.downloadMembers(memberNodeOne, [memberNodeOne, memberNodeTwo]);
+
+            expect(getContentsSpy).not.toHaveBeenCalled();
+            expect(aggregateResult?.response?.apiResponse?.downloadResult).toEqual({ downloaded: 0, total: 2 });
+            expect(aggregateResult?.response?.commandResponse).toBe("");
+        });
+
+        it("should delegate to downloadMember when one member is selected", async () => {
+            const memberNode = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            memberNode.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+            const downloadMemberSpy = vi.spyOn(DatasetActions, "downloadMember").mockResolvedValue(undefined);
+
+            await DatasetActions.downloadMembers(memberNode, [memberNode]);
+
+            expect(downloadMemberSpy).toHaveBeenCalledWith(memberNode);
+            expect(mockGetDataSetDownloadOptions.mock).not.toHaveBeenCalled();
+            downloadMemberSpy.mockRestore();
+        });
+
+        it("should show one error and stop when all selected profiles are invalid", async () => {
+            const invalidProfileOne = {
+                ...defaultTestProfile,
+                name: "invalidProfileOne",
+            };
+            const invalidProfileTwo = {
+                ...defaultTestProfile,
+                name: "invalidProfileTwo",
+            };
+
+            testMocks.profileInstance.checkCurrentProfile = vi.fn(async (profile) => {
+                testMocks.profileInstance.validProfile = profile?.name?.startsWith("invalid")
+                    ? Validation.ValidationType.INVALID
+                    : Validation.ValidationType.VALID;
+                return { status: "active", name: profile?.name ?? "" };
+            });
+
+            const pdsNodeOne = new ZoweDatasetNode({
+                label: "TEST.INVALID.ONE",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: invalidProfileOne,
+            });
+            const pdsNodeTwo = new ZoweDatasetNode({
+                label: "TEST.INVALID.TWO",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: invalidProfileTwo,
+            });
+
+            const memberNodeOne = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeOne,
+                profile: invalidProfileOne,
+            });
+            const memberNodeTwo = new ZoweDatasetNode({
+                label: "MEMBER2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: pdsNodeTwo,
+                profile: invalidProfileTwo,
+            });
+
+            memberNodeOne.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeTwo.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeOne.getProfile = vi.fn().mockReturnValue(invalidProfileOne);
+            memberNodeTwo.getProfile = vi.fn().mockReturnValue(invalidProfileTwo);
+
+            await DatasetActions.downloadMembers(memberNodeOne, [memberNodeOne, memberNodeTwo]);
+
+            expect(Gui.errorMessage).toHaveBeenCalledTimes(1);
+            expect(Gui.errorMessage).toHaveBeenCalledWith("Profile is invalid, check connection details.");
+            expect(mockGetDataSetDownloadOptions.mock).not.toHaveBeenCalled();
+            expect(mockExecuteDownloadWithProgress.mock).not.toHaveBeenCalled();
+        });
+
+        it("should return early when download options are cancelled", async () => {
+            const memberNodeOne = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            const memberNodeTwo = new ZoweDatasetNode({
+                label: "MEMBER2",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            memberNodeOne.contextValue = Constants.DS_MEMBER_CONTEXT;
+            memberNodeTwo.contextValue = Constants.DS_MEMBER_CONTEXT;
+
+            mockGetDataSetDownloadOptions.mock.mockResolvedValue(undefined);
+
+            await DatasetActions.downloadMembers(memberNodeOne, [memberNodeOne, memberNodeTwo]);
+
+            expect(mockExecuteDownloadWithProgress.mock).not.toHaveBeenCalled();
         });
     });
 
@@ -7198,6 +8153,82 @@ describe("DatasetActions - downloading functions", () => {
                     binary: false,
                 })
             );
+        });
+    });
+
+    describe("executeDownloadWithProgress", () => {
+        const executeDownloadWithProgress = (DatasetActions as any).executeDownloadWithProgress;
+
+        let mockHandleDownloadResponse: MockedProperty;
+        let mockAuthErrorHandling: MockedProperty;
+        let mockNode: any;
+        const mockProfile = { name: "testProfile" };
+        const mockProgress = { report: vi.fn() };
+        const mockToken = { isCancellationRequested: false };
+
+        beforeEach(() => {
+            mockNode = { getProfile: vi.fn().mockReturnValue(mockProfile) };
+            Object.defineProperty(DatasetActions, "executeDownloadWithProgress", {
+                value: executeDownloadWithProgress,
+                configurable: true,
+                writable: true,
+            });
+            (vscode.window.withProgress as vi.Mock).mockImplementation((_options: any, callback: any) => callback(mockProgress, mockToken));
+            mockHandleDownloadResponse = new MockedProperty(SharedUtils, "handleDownloadResponse", undefined, vi.fn().mockResolvedValue(undefined));
+            mockAuthErrorHandling = new MockedProperty(AuthUtils, "errorHandling", undefined, vi.fn().mockResolvedValue(undefined));
+        });
+
+        afterEach(() => {
+            (vscode.window.withProgress as vi.Mock).mockReset();
+            mockHandleDownloadResponse[Symbol.dispose]();
+            mockAuthErrorHandling[Symbol.dispose]();
+        });
+
+        it("should call vscode.window.withProgress with the correct title, location, and cancellable flag", async () => {
+            const downloadFn = vi.fn().mockResolvedValue({ response: { success: true }, downloadedPath: "/path/file" });
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "DS", mockNode, true);
+
+            expect(vscode.window.withProgress).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    title: "test download",
+                    cancellable: true,
+                }),
+                expect.any(Function)
+            );
+        });
+
+        it("should default cancellable to false when not provided", async () => {
+            const downloadFn = vi.fn().mockResolvedValue({ response: { success: true }, downloadedPath: "/path/file" });
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "DS", mockNode);
+
+            expect(vscode.window.withProgress).toHaveBeenCalledWith(expect.objectContaining({ cancellable: false }), expect.any(Function));
+        });
+
+        it("should invoke downloadFn with progress and token, then call handleDownloadResponse on success", async () => {
+            const mockResponse = { success: true, commandResponse: "ok" };
+            const mockDownloadedPath = "/test/path/file.txt";
+            const downloadFn = vi.fn().mockResolvedValue({ response: mockResponse, downloadedPath: mockDownloadedPath });
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "MEMBER", mockNode, false);
+
+            expect(downloadFn).toHaveBeenCalledWith(mockProgress, mockToken);
+            expect(mockHandleDownloadResponse.mock).toHaveBeenCalledWith(mockResponse, "MEMBER", mockDownloadedPath, false);
+            expect(mockAuthErrorHandling.mock).not.toHaveBeenCalled();
+        });
+
+        it("should call AuthUtils.errorHandling when downloadFn throws, and not call handleDownloadResponse", async () => {
+            const error = new Error("Download failed");
+            const downloadFn = vi.fn().mockRejectedValue(error);
+
+            await (DatasetActions as any).executeDownloadWithProgress("test download", downloadFn, "DS", mockNode, false);
+
+            expect(mockAuthErrorHandling.mock).toHaveBeenCalledWith(error, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile: mockProfile,
+            });
+            expect(mockHandleDownloadResponse.mock).not.toHaveBeenCalled();
         });
     });
 });

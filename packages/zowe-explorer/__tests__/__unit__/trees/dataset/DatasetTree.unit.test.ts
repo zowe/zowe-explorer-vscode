@@ -458,6 +458,7 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
             profile: blockMocks.imperativeProfile,
             contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
         });
+        nodeMigrated.wasPds = false;
         const sampleChildren: ZoweDatasetNode[] = [nodeOk, nodeImpError, nodeMigrated];
         vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(testTree);
 
@@ -471,7 +472,16 @@ describe("Dataset Tree Unit Tests - Function getChildren", () => {
         const blockMocks = createBlockMocks();
 
         const mockMvsApi = ZoweExplorerApiRegister.getMvsApi(blockMocks.profile);
-        mockMvsApi.dataSetsMatchingPattern = null;
+        Object.defineProperty(mockMvsApi, "dataSetsMatchingPattern", {
+            value: undefined,
+            writable: true,
+            configurable: true,
+        });
+        Object.defineProperty(mockMvsApi, "getCount", {
+            value: undefined,
+            writable: true,
+            configurable: true,
+        });
         const getMvsApiMock = vi.fn();
         getMvsApiMock.mockReturnValue(mockMvsApi);
         ZoweExplorerApiRegister.getMvsApi = getMvsApiMock.bind(ZoweExplorerApiRegister);
@@ -1965,6 +1975,31 @@ describe("Dataset Tree Unit Tests - Function removeFavorite", () => {
         await testTree.removeFavorite(favVsam);
 
         expect(SharedContext.isFavorite(vsamNode)).toBe(false);
+    });
+
+    it("Checking removeFavorite removes _fav context from migrated DS in search tree", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+        const migratedNode = new ZoweDatasetNode({
+            label: "MY.MIGRATED.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        migratedNode.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+        testTree.mSessionNodes[1].children = [migratedNode];
+
+        await testTree.addFavorite(migratedNode);
+
+        expect(SharedContext.isFavorite(migratedNode)).toBe(true);
+
+        const favMigrated = testTree.mFavorites[0].children[0];
+        await testTree.removeFavorite(favMigrated);
+
+        expect(SharedContext.isFavorite(migratedNode)).toBe(false);
     });
     it("Checking removeFavorite from search-tree session node removes matching saved search", async () => {
         createGlobalMocks();
@@ -3720,6 +3755,23 @@ describe("Dataset Tree Unit Tests - Function datasetFilterPrompt", () => {
             expect(node.inFilterPrompt).toBe(false);
             expect(Gui.showMessage).toHaveBeenCalledWith("You must enter a pattern.");
         });
+
+        it("should return early and not open a prompt if inFilterPrompt is already true", async () => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const node = blockMocks.datasetSessionNode;
+
+            node.inFilterPrompt = true;
+
+            const createQuickPickSpy = vi.spyOn(Gui, "createQuickPick").mockClear();
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockClear();
+
+            await blockMocks.testTree.datasetFilterPrompt(node);
+
+            expect(createQuickPickSpy).not.toHaveBeenCalled();
+            expect(showInputBoxSpy).not.toHaveBeenCalled();
+            expect(node.inFilterPrompt).toBe(true); // Should remain true
+        });
     });
 });
 describe("Dataset Tree Unit Tests - Function editSession", () => {
@@ -4879,6 +4931,67 @@ describe("Dataset Tree Unit Tests - Function rename", () => {
             { overwrite: false }
         );
     });
+
+    it("Tests that rename() of member preserves extension in new URI", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("NEWMEM");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        const node = new ZoweDatasetNode({
+            label: "OLDMEM",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+            contextOverride: Constants.DS_MEMBER_CONTEXT,
+        });
+        node.resourceUri = vscode.Uri.from({
+            scheme: ZoweScheme.DS,
+            path: "/sestest/HLQ.TEST.PDS/OLDMEM.jcl",
+        });
+
+        await testTree.rename(node);
+
+        expect(blockMocks.rename).toHaveBeenLastCalledWith(
+            expect.objectContaining({ path: "/sestest/HLQ.TEST.PDS/OLDMEM.jcl", scheme: ZoweScheme.DS }),
+            expect.objectContaining({ path: "/sestest/HLQ.TEST.PDS/NEWMEM.jcl", scheme: ZoweScheme.DS }),
+            { overwrite: false }
+        );
+    });
+
+    it("Tests that rename() of ps adds extension in new URI", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        mocked(Profiles.getInstance).mockReturnValue(blockMocks.profileInstance);
+        mocked(Gui.showInputBox).mockResolvedValueOnce("HLQ.TEST.RENAME.COBOL");
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        const node = new ZoweDatasetNode({
+            label: "HLQ.TEST.RENAME.NODE",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+            session: blockMocks.session,
+            profile: testTree.mSessionNodes[1].getProfile(),
+        });
+        node.resourceUri = vscode.Uri.from({
+            scheme: ZoweScheme.DS,
+            path: "/sestest/HLQ.TEST.RENAME.NODE",
+        });
+
+        await testTree.rename(node);
+
+        expect(blockMocks.rename).toHaveBeenLastCalledWith(
+            expect.objectContaining({ path: "/sestest/HLQ.TEST.RENAME.NODE", scheme: ZoweScheme.DS }),
+            expect.objectContaining({ path: "/sestest/HLQ.TEST.RENAME.COBOL.cbl", scheme: ZoweScheme.DS }),
+            { overwrite: false }
+        );
+    });
 });
 
 describe("Dataset Tree Unit Tests - Function checkFilterPattern", () => {
@@ -4943,6 +5056,24 @@ describe("Dataset Tree Unit Tests - Function checkFilterPattern", () => {
         testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
         expect(blockMocks.testTree.checkFilterPattern("*SAMPLE*TEST*", "*SAMPLE*TEST*")).toEqual(true);
     });
+
+    it("should return true for single char qualifier", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        expect(blockMocks.testTree.checkFilterPattern("A", "A")).toEqual(true);
+    });
+
+    it("should return true for 4 qualifier dataset name", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        expect(blockMocks.testTree.checkFilterPattern("A.B.C.D", "A.B.C.D")).toEqual(true);
+    });
+
+    it("should return false for wildcard pattern when dataset segment is missing", () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        expect(blockMocks.testTree.checkFilterPattern(undefined as any, "T*")).toEqual(false);
+    });
 });
 
 describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
@@ -4973,6 +5104,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.PO.DS{pds}", "[test]: SAMPLE.PS.DS{ds}", "INVALID*"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -4988,6 +5120,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.DS{ds}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -5007,6 +5140,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}", "[test]: SAMPLE.PS.DS{ds}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -5029,6 +5163,7 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
             readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
@@ -5041,6 +5176,56 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
         const pdsNodeAfterRefresh = blockMocks.testTree.mFavorites[0].children[0] as ZoweDatasetNode;
         expect(pdsNodeAfterRefresh.favoritedMemberNames).toEqual(["MEM1", "MEM2"]);
         expect(pdsNodeAfterRefresh.description).toBeUndefined();
+    });
+
+    it("successfully initializes migrated favorites from the main favorites list", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        vi.spyOn(blockMocks.testTree as any, "mPersistence" as any, "get").mockReturnValue({
+            readFavorites: () => ["[test]: SAMPLE.PS.MIGR{ds_migr}", "[test]: SAMPLE.PDS.MIGR{pds_migr}"],
+            readVsamFavorites: () => [],
+            readMemberFavorites: () => [],
+            readMigratedFavorites: () => [],
+        } as any);
+        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        const profileNode = blockMocks.testTree.mFavorites[0];
+        expect(profileNode.children?.map((item) => item.label)).toEqual(["SAMPLE.PS.MIGR", "SAMPLE.PDS.MIGR"]);
+
+        const dsNode = profileNode.children[0] as ZoweDatasetNode;
+        expect(SharedContext.isMigrated(dsNode)).toBe(true);
+        expect(dsNode.wasPds).toBe(false);
+
+        const pdsNode = profileNode.children[1] as ZoweDatasetNode;
+        expect(SharedContext.isMigrated(pdsNode)).toBe(true);
+        expect(pdsNode.wasPds).toBe(true);
+    });
+
+    it("successfully initializes migrated favorites from the migrated favorites list", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        vi.spyOn(blockMocks.testTree as any, "mPersistence" as any, "get").mockReturnValue({
+            readFavorites: () => [],
+            readVsamFavorites: () => [],
+            readMemberFavorites: () => [],
+            readMigratedFavorites: () => ["[test]: SAMPLE.PS.MIGR{ds_migr}", "[test]: SAMPLE.PDS.MIGR{pds_migr}"],
+        } as any);
+        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+
+        expect(blockMocks.testTree.mFavorites.length).toBe(1);
+        const profileNode = blockMocks.testTree.mFavorites[0];
+        expect(profileNode.children?.map((item) => item.label)).toEqual(["SAMPLE.PS.MIGR", "SAMPLE.PDS.MIGR"]);
+
+        const dsNode = profileNode.children[0] as ZoweDatasetNode;
+        expect(SharedContext.isMigrated(dsNode)).toBe(true);
+        expect(dsNode.wasPds).toBe(false);
+
+        const pdsNode = profileNode.children[1] as ZoweDatasetNode;
+        expect(SharedContext.isMigrated(pdsNode)).toBe(true);
+        expect(pdsNode.wasPds).toBe(true);
     });
 });
 
@@ -5094,6 +5279,7 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
             favorites: [],
             vsamFavorites: [],
             memberFavorites: [`[${profileLabel}]: MY.PDS(MEM1){pds}`, `[${profileLabel}]: MY.PDS(MEM2){pds}`],
+            migratedFavorites: [],
         });
     });
 
@@ -5122,6 +5308,7 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
             favorites: [`[${profileLabel}]: MY.PDS{pds}`],
             vsamFavorites: [],
             memberFavorites: [],
+            migratedFavorites: [],
         });
     });
 
@@ -5161,6 +5348,36 @@ describe("Dataset Tree Unit Tests - Function updateFavorites with member favorit
             favorites: [`[${profileLabel}]: FULL.PDS{pds}`],
             vsamFavorites: [],
             memberFavorites: [`[${profileLabel}]: MEMBER.PDS(MYMEM){pds}`],
+            migratedFavorites: [],
+        });
+    });
+
+    it("persists migrated favorites to the migratedFavorites list", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        mocked(vscode.window.createTreeView).mockReturnValueOnce(blockMocks.treeView);
+        const testTree = new DatasetTree();
+        testTree.mSessionNodes.push(blockMocks.datasetSessionNode);
+
+        const migratedNode = new ZoweDatasetNode({
+            label: "MY.MIGRATED.DS",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: testTree.mSessionNodes[1],
+        });
+        migratedNode.contextValue = Constants.DS_MIGRATED_FILE_CONTEXT;
+
+        await testTree.addFavorite(migratedNode);
+
+        const updateFavSpy = vi.spyOn(testTree["mPersistence"], "updateFavorites");
+        testTree.updateFavorites();
+
+        const profileLabel = blockMocks.datasetSessionNode.label?.toString();
+        expect(updateFavSpy).toHaveBeenCalledWith({
+            favorites: [],
+            vsamFavorites: [],
+            memberFavorites: [],
+            migratedFavorites: [`[${profileLabel}]: MY.MIGRATED.DS{migr}`],
         });
     });
 });
@@ -6711,9 +6928,12 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
     describe("getFavorites", () => {
         it("gets all the favorites from persistent object", () => {
             vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
-                favorites: ["test1", "test2", "test3"],
-            });
-            expect(tree.getFavorites()).toEqual(["test1", "test2", "test3"]);
+                favorites: ["test1"],
+                vsamFavorites: ["test2"],
+                memberFavorites: ["test3"],
+                migratedFavorites: ["test4"],
+            } as any);
+            expect(tree.getFavorites()).toEqual(["test1", "test2", "test3", "test4"]);
         });
     });
 });
@@ -7015,6 +7235,90 @@ describe("Dataset Tree Unit Tests - Function applyPatternsToChildren", () => {
         expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
         expect(SharedContext.isFavorite(fakeChildren[0])).toBe(false);
         expect(fakeChildren[0].contextValue).not.toContain(Constants.FAV_SUFFIX);
+        withProfileMock.mockRestore();
+    });
+
+    it("applies member pattern when dataset has four qualifiers, single char qualifier and wildcard member filter", () => {
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            {
+                label: "HLQ.TEST.JCL.A",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                iconPath: undefined,
+                pattern: "",
+                memberPattern: "",
+            },
+        ];
+        const withProfileMock = vi.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+
+        testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.TEST.JCL.A", member: "M*" }]);
+
+        expect(fakeChildren[0].memberPattern).toBe("M*");
+        expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
+        withProfileMock.mockRestore();
+    });
+
+    it("applies member pattern when dataset has single char trailing qualifier", () => {
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            {
+                label: "HLQ.TEST.TEST.T",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                iconPath: undefined,
+                pattern: "",
+                memberPattern: "",
+            },
+        ];
+        const withProfileMock = vi.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+
+        testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.TEST.TEST.T", member: "BLAH" }]);
+
+        expect(fakeChildren[0].memberPattern).toBe("BLAH");
+        expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
+        withProfileMock.mockRestore();
+    });
+
+    it("applies member pattern when dataset has single char middle qualifier", () => {
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            {
+                label: "HLQ.T.TEST",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                iconPath: undefined,
+                pattern: "",
+                memberPattern: "",
+            },
+        ];
+        const withProfileMock = vi.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+
+        testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "HLQ.T.TEST", member: "BLAH" }]);
+
+        expect(fakeChildren[0].memberPattern).toBe("BLAH");
+        expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(true);
+        withProfileMock.mockRestore();
+    });
+
+    it("does not apply member pattern when wildcard qualifier resolves to missing child segment", () => {
+        const testTree = new DatasetTree();
+        const fakeChildren = [
+            {
+                label: "Z02589.TEST",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: Constants.DS_PDS_CONTEXT,
+                iconPath: undefined,
+                pattern: "",
+                memberPattern: "",
+            },
+        ];
+        const withProfileMock = vi.spyOn(SharedContext, "withProfile").mockImplementation((child) => String(child.contextValue));
+
+        testTree.applyPatternsToChildren(fakeChildren as any[], [{ dsn: "Z02589.TEST.T*", member: "BLAH" }]);
+
+        expect(fakeChildren[0].memberPattern).toBe("");
+        expect(SharedContext.isFilterFolder(fakeChildren[0])).toBe(false);
         withProfileMock.mockRestore();
     });
 });
@@ -7841,5 +8145,95 @@ describe("DatasetTree.crossLparMove", () => {
 
         expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
         expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(srcUri, { recursive: true });
+    });
+});
+
+describe("syncFavoriteMigrationStatus", () => {
+    let tree: DatasetTree;
+    let mockFavorite: any;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        tree = new DatasetTree();
+        mockFavorite = Object.create(ZoweDatasetNode.prototype);
+        mockFavorite.resourceUri = vscode.Uri.file("/sestest/USER.DATA.SET");
+        mockFavorite.label = "USER.DATA.SET";
+        mockFavorite.datasetMigrated = vi.fn();
+        mockFavorite.datasetRecalled = vi.fn().mockResolvedValue(undefined);
+        mockFavorite.wasPds = false;
+
+        vi.spyOn(tree, "updateFavorites").mockImplementation(() => {});
+    });
+
+    it("should return early if favorite has no resourceUri", async () => {
+        mockFavorite.resourceUri = undefined;
+        const statSpy = vi.spyOn(DatasetFSProvider.instance, "stat");
+
+        await (tree as any).syncFavoriteMigrationStatus(mockFavorite);
+
+        expect(statSpy).not.toHaveBeenCalled();
+    });
+
+    it("should migrate favorite if it is migrated on mainframe but not locally", async () => {
+        vi.spyOn(DatasetFSProvider.instance, "stat").mockResolvedValue({} as any);
+        vi.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue({
+            stats: { migr: "YES" },
+        } as any);
+        vi.spyOn(SharedContext, "isMigrated").mockReturnValue(false);
+
+        await (tree as any).syncFavoriteMigrationStatus(mockFavorite);
+
+        expect(mockFavorite.datasetMigrated).toHaveBeenCalled();
+        expect(tree.updateFavorites).toHaveBeenCalled();
+    });
+
+    it("should recall favorite if it is recalled on mainframe but migrated locally", async () => {
+        vi.spyOn(DatasetFSProvider.instance, "stat").mockResolvedValue({} as any);
+        vi.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue({
+            type: vscode.FileType.File,
+            stats: { migr: "NO", dsorg: "PS" },
+        } as any);
+        vi.spyOn(SharedContext, "isMigrated").mockReturnValue(true);
+
+        await (tree as any).syncFavoriteMigrationStatus(mockFavorite);
+
+        expect(mockFavorite.datasetRecalled).toHaveBeenCalledWith(false);
+        expect(tree.updateFavorites).toHaveBeenCalled();
+    });
+
+    it("should handle error gracefully and log warning if stat fails", async () => {
+        vi.spyOn(DatasetFSProvider.instance, "stat").mockRejectedValue(new Error("stat failed"));
+        const warnSpy = vi.spyOn(ZoweLogger, "warn").mockImplementation(() => {});
+
+        await (tree as any).syncFavoriteMigrationStatus(mockFavorite);
+
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to stat favorite"));
+    });
+
+    it("should not migrate favorite if isMigrated is true but favorite.justRecalled is true", async () => {
+        vi.spyOn(DatasetFSProvider.instance, "stat").mockResolvedValue({} as any);
+        vi.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue({
+            stats: { migr: "YES" },
+        } as any);
+        vi.spyOn(SharedContext, "isMigrated").mockReturnValue(false);
+        mockFavorite.justRecalled = true;
+
+        await (tree as any).syncFavoriteMigrationStatus(mockFavorite);
+
+        expect(mockFavorite.datasetMigrated).not.toHaveBeenCalled();
+        expect(mockFavorite.justRecalled).toBe(true);
+    });
+
+    it("should clear justRecalled flag if isMigrated is false", async () => {
+        vi.spyOn(DatasetFSProvider.instance, "stat").mockResolvedValue({} as any);
+        vi.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue({
+            stats: { migr: "NO" },
+        } as any);
+        vi.spyOn(SharedContext, "isMigrated").mockReturnValue(false);
+        mockFavorite.justRecalled = true;
+
+        await (tree as any).syncFavoriteMigrationStatus(mockFavorite);
+
+        expect(mockFavorite.justRecalled).toBe(false);
     });
 });

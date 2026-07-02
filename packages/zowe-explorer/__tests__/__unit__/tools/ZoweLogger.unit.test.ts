@@ -82,6 +82,14 @@ describe("ZoweLogger", () => {
             loggerConfigCopy.log4jsConfig.categories.default.level =
             loggerConfigCopy.log4jsConfig.categories.imperative.level =
                 "INFO";
+        loggerConfigCopy.log4jsConfig.appenders.vscodeOutputChannel = {
+            layout: {
+                pattern: "[%d{yyyy/MM/dd} %d{hh:mm:ss.SSS}] [%p] %m",
+                type: "pattern",
+            },
+            type: { configure: expect.any(Function) },
+        };
+        loggerConfigCopy.log4jsConfig.categories.app.appenders.push("vscodeOutputChannel");
 
         beforeEach(() => {
             initLoggerSpy = vi.spyOn(imperative.Logger, "initLogger").mockReturnValue(logger);
@@ -201,8 +209,6 @@ describe("ZoweLogger", () => {
         let imperativeLoggerSpy: MockInstance;
         let getLogSettingSpy: MockInstance;
         let appendLineSpy: MockInstance;
-        let censorRawDataSpy: MockInstance;
-        let createMessageSpy: MockInstance;
         const storedOutputChannel = ZoweLogger.zeOutputChannel;
 
         function loggerImplementation(message: string, ..._args: any[]): string {
@@ -219,12 +225,6 @@ describe("ZoweLogger", () => {
             imperativeFatalLoggerSpy = vi.spyOn(logger, "fatal").mockImplementation(loggerImplementation);
             imperativeSimpleLoggerSpy = vi.spyOn(logger, "simple").mockImplementation(loggerImplementation);
             getLogSettingSpy = vi.spyOn(ZoweLogger, "getLogSetting").mockReturnValue("TRACE");
-            censorRawDataSpy = vi.spyOn(imperative.Censor, "censorRawData").mockImplementation((message: string) => {
-                return message;
-            });
-            createMessageSpy = vi.spyOn(ZoweLogger as any, "createMessage").mockImplementation((message: string, level: string) => {
-                return `[1970/01/01 12:00:00] [${level}] ${message}`;
-            });
 
             appendLineSpy = vi.fn();
             ZoweLogger.zeOutputChannel = { appendLine: appendLineSpy } as any;
@@ -245,8 +245,6 @@ describe("ZoweLogger", () => {
             expect(imperativeErrorLoggerSpy).toHaveBeenCalledTimes(0);
             expect(imperativeFatalLoggerSpy).toHaveBeenCalledTimes(0);
             expect(imperativeSimpleLoggerSpy).toHaveBeenCalledTimes(0);
-            expect(censorRawDataSpy).toHaveBeenCalledTimes(0);
-            expect(createMessageSpy).toHaveBeenCalledTimes(0);
         });
 
         it("should log trace", () => {
@@ -259,8 +257,6 @@ describe("ZoweLogger", () => {
             expect(imperativeErrorLoggerSpy).toHaveBeenCalledTimes(0);
             expect(imperativeFatalLoggerSpy).toHaveBeenCalledTimes(0);
             expect(imperativeSimpleLoggerSpy).toHaveBeenCalledTimes(0);
-            expect(censorRawDataSpy).toHaveBeenCalledTimes(1);
-            expect(createMessageSpy).toHaveBeenCalledTimes(1);
             expect(imperativeTraceLoggerSpy).toHaveBeenCalledWith("Test Message");
         });
 
@@ -274,8 +270,6 @@ describe("ZoweLogger", () => {
             expect(imperativeErrorLoggerSpy).toHaveBeenCalledTimes(0);
             expect(imperativeFatalLoggerSpy).toHaveBeenCalledTimes(0);
             expect(imperativeSimpleLoggerSpy).toHaveBeenCalledTimes(0);
-            expect(censorRawDataSpy).toHaveBeenCalledTimes(1);
-            expect(createMessageSpy).toHaveBeenCalledTimes(1);
             expect(imperativeDebugLoggerSpy).toHaveBeenCalledWith("Test Message");
         });
 
@@ -289,8 +283,6 @@ describe("ZoweLogger", () => {
             expect(imperativeErrorLoggerSpy).toHaveBeenCalledTimes(0);
             expect(imperativeFatalLoggerSpy).toHaveBeenCalledTimes(0);
             expect(imperativeSimpleLoggerSpy).toHaveBeenCalledTimes(0);
-            expect(censorRawDataSpy).toHaveBeenCalledTimes(1);
-            expect(createMessageSpy).toHaveBeenCalledTimes(1);
             expect(imperativeInfoLoggerSpy).toHaveBeenCalledWith("Test Message");
         });
 
@@ -304,8 +296,6 @@ describe("ZoweLogger", () => {
             expect(imperativeErrorLoggerSpy).toHaveBeenCalledTimes(0);
             expect(imperativeFatalLoggerSpy).toHaveBeenCalledTimes(0);
             expect(imperativeSimpleLoggerSpy).toHaveBeenCalledTimes(0);
-            expect(censorRawDataSpy).toHaveBeenCalledTimes(1);
-            expect(createMessageSpy).toHaveBeenCalledTimes(1);
             expect(imperativeWarnLoggerSpy).toHaveBeenCalledWith("Test Message");
         });
 
@@ -319,8 +309,6 @@ describe("ZoweLogger", () => {
             expect(imperativeErrorLoggerSpy).toHaveBeenCalledTimes(1);
             expect(imperativeFatalLoggerSpy).toHaveBeenCalledTimes(0);
             expect(imperativeSimpleLoggerSpy).toHaveBeenCalledTimes(0);
-            expect(censorRawDataSpy).toHaveBeenCalledTimes(1);
-            expect(createMessageSpy).toHaveBeenCalledTimes(1);
             expect(imperativeErrorLoggerSpy).toHaveBeenCalledWith("Test Message");
         });
 
@@ -334,25 +322,7 @@ describe("ZoweLogger", () => {
             expect(imperativeErrorLoggerSpy).toHaveBeenCalledTimes(0);
             expect(imperativeFatalLoggerSpy).toHaveBeenCalledTimes(1);
             expect(imperativeSimpleLoggerSpy).toHaveBeenCalledTimes(0);
-            expect(censorRawDataSpy).toHaveBeenCalledTimes(1);
-            expect(createMessageSpy).toHaveBeenCalledTimes(1);
             expect(imperativeFatalLoggerSpy).toHaveBeenCalledWith("Test Message");
-        });
-    });
-
-    describe("createMessage", () => {
-        let getDateSpy: MockInstance;
-        let getTimeSpy: MockInstance;
-
-        beforeEach(() => {
-            getDateSpy = vi.spyOn(ZoweLogger as any, "getDate").mockReturnValue("1970/01/01");
-            getTimeSpy = vi.spyOn(ZoweLogger as any, "getTime").mockReturnValue("12:00:00");
-        });
-
-        it("should construct the message", () => {
-            expect((ZoweLogger as any).createMessage("test message", "INFO")).toEqual("[1970/01/01 12:00:00] [INFO] test message");
-            expect(getDateSpy).toHaveBeenCalledTimes(1);
-            expect(getTimeSpy).toHaveBeenCalledTimes(1);
         });
     });
 });

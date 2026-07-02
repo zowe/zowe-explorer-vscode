@@ -54,8 +54,6 @@ function createGlobalMocks(): { [key: string]: any } {
         },
         configurable: true,
     });
-    vi.spyOn(ZoweLogger as any, "getDate").mockReturnValue("2023/1/1");
-    vi.spyOn(ZoweLogger as any, "getTime").mockReturnValue("08:00:00");
     try {
         Object.defineProperty(core, "padLeft", { value: vi.fn(), configurable: true });
     } catch {

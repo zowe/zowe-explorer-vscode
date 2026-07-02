@@ -807,12 +807,10 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
             .spyOn(TreeViewUtils, "addDefaultSession")
             .mockImplementation((treeProvider, profileType) => addedProfTypes.add(profileType) as any);
         await SharedActions.refreshAll();
-        expect(removeSessionSpy).not.toHaveBeenCalled();
-        expect(providers.ds.deleteSession).toHaveBeenCalledTimes(2);
-        expect(providers.uss.deleteSession).toHaveBeenCalledTimes(2);
-        expect(providers.job.deleteSession).toHaveBeenCalledTimes(2);
-        expect(addDefaultSessionSpy).toHaveBeenCalledTimes(3);
-        expect([...addedProfTypes]).toEqual(["zosmf"]);
+        expect(removeSessionSpy).toHaveBeenCalledTimes(6);
+        expect([...removedProfNames]).toEqual(["zosmf", "zosmf2"]);
+        expect(addDefaultSessionSpy).toHaveBeenCalledTimes(6);
+        expect([...addedProfTypes]).toEqual(["zosmf", "ssh"]);
     });
 
     it("should avoid running the refresh logic twice if a refresh is already in progress", async () => {
@@ -831,15 +829,10 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
         const debugSpy = vi.spyOn(ZoweLogger, "debug").mockClear();
         const firstRefresh = SharedActions.refreshAll();
         await SharedActions.refreshAll();
-        expect(debugSpy).toHaveBeenCalledWith("Profile refresh already in progress, skipping");
-        await firstRefresh;
 
-        expect(removeSessionSpy).not.toHaveBeenCalled();
-        expect(providers.ds.deleteSession).toHaveBeenCalledTimes(2);
-        expect(providers.uss.deleteSession).toHaveBeenCalledTimes(2);
-        expect(providers.job.deleteSession).toHaveBeenCalledTimes(2);
-        expect(addDefaultSessionSpy).toHaveBeenCalledTimes(3);
-        expect([...addedProfTypes]).toEqual(["zosmf"]);
+        // expect same amount of assertions even though refresh was called twice
+        expect(removeSessionSpy).toHaveBeenCalledTimes(6);
+        expect(addDefaultSessionSpy).toHaveBeenCalledTimes(6);
     });
 });
 

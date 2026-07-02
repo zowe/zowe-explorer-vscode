@@ -17,6 +17,7 @@ export * from "./ErrorCorrelator";
 export * from "./Poller";
 export * from "./FileManagement";
 export * from "./FeatureFlags";
+export * from "./ErrorUtils";
 
 /**
  * Getter to check dirty flag for nodes opened in the editor.

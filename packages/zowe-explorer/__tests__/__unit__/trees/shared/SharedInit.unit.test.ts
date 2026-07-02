@@ -22,7 +22,7 @@ import { LocalFileManagement } from "../../../../src/management/LocalFileManagem
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { SharedInit } from "../../../../src/trees/shared/SharedInit";
 import { TsoCommandHandler } from "../../../../src/commands/TsoCommandHandler";
-import { MvsCommandHandler } from "../../../../src/commands/MvsCommandHandler";
+import { ConsoleCommandHandler } from "../../../../src/commands/ConsoleCommandHandler";
 import { UnixCommandHandler } from "../../../../src/commands/UnixCommandHandler";
 import { ConfigEditor } from "../../../../src/utils/ConfigEditor";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
@@ -129,6 +129,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:1",
                 mock: [
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: true },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED], ret: false },
@@ -139,6 +140,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:2",
                 mock: [
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: true },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -150,6 +152,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:3",
                 mock: [
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: true },
@@ -163,6 +166,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:4",
                 mock: [
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -174,6 +178,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:5",
                 mock: [
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -186,6 +191,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:6",
                 mock: [
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -203,6 +209,7 @@ describe("Test src/shared/extension", () => {
             {
                 name: "onDidChangeConfiguration:7",
                 mock: [
+                    { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_LOGS_FOLDER_PATH], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.LOGGER_SETTINGS], ret: false },
                     { spy: vi.spyOn(test.value, "affectsConfiguration"), arg: [Constants.SETTINGS_AUTOMATIC_PROFILE_VALIDATION], ret: false },
@@ -370,7 +377,7 @@ describe("Test src/shared/extension", () => {
 
         let zosmfRestClientSetThrottleOptionsSpy: MockInstance;
         beforeAll(() => {
-            vi.spyOn(MvsCommandHandler, "getInstance").mockReturnValue(cmdProviders.mvs as any);
+            vi.spyOn(ConsoleCommandHandler, "getInstance").mockReturnValue(cmdProviders.mvs as any);
             vi.spyOn(TsoCommandHandler, "getInstance").mockReturnValue(cmdProviders.tso as any);
             vi.spyOn(UnixCommandHandler, "getInstance").mockReturnValue(cmdProviders.uss as any);
             vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string, defaultValue?: unknown): unknown => {
@@ -480,7 +487,7 @@ describe("Test src/shared/extension", () => {
                 writable: true,
             });
 
-            vi.spyOn(MvsCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: vi.fn() } as any);
+            vi.spyOn(ConsoleCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: vi.fn() } as any);
             vi.spyOn(TsoCommandHandler, "getInstance").mockReturnValue({ issueTsoCommand: vi.fn() } as any);
             vi.spyOn(UnixCommandHandler, "getInstance").mockReturnValue({ issueUnixCommand: vi.fn() } as any);
 

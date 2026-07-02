@@ -228,7 +228,10 @@ export function buildMemberInfo(member: any, parentUri: string): IDataSetInfo {
  * API-based data source that directly queries the MVS API with a pattern
  */
 export class PatternDataSource implements IDataSetSource {
-    public constructor(public profile: imperative.IProfileLoaded, private pattern: string) {
+    public constructor(
+        public profile: imperative.IProfileLoaded,
+        private pattern: string
+    ) {
         this.pattern = this.pattern.toLocaleUpperCase();
     }
 
@@ -433,7 +436,9 @@ export class DatasetTableView {
             headerName: l10n.t("Creation Date"),
             useDateComparison: true,
             valueFormatter: (params: { value: string }): string => {
-                if (!params.value) return "";
+                if (!params.value) {
+                    return "";
+                }
                 return new Date(params.value).toLocaleDateString(this.userLocale);
             },
         },
@@ -442,7 +447,9 @@ export class DatasetTableView {
             headerName: l10n.t("Modified Date"),
             useDateComparison: true,
             valueFormatter: (params: { value: string }): string => {
-                if (!params.value) return "";
+                if (!params.value) {
+                    return "";
+                }
                 return new Date(params.value).toLocaleString(this.userLocale);
             },
         },
@@ -803,7 +810,7 @@ export class DatasetTableView {
             const [profileName, datasetName, memberName] = uriParts;
 
             // First, try to find in session nodes
-            let profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
+            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
             let foundInSession = false;
 
             if (profileNode) {
@@ -858,7 +865,7 @@ export class DatasetTableView {
             const [profileName, datasetName] = uriParts;
 
             // First, try to find in session nodes
-            let profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
+            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
             let foundInSession = false;
 
             if (profileNode) {
@@ -1371,7 +1378,7 @@ export class DatasetTableView {
             this.originalPattern = selectedNode.pattern;
         } else if (SharedContext.isPds(selectedNode)) {
             const sessionNode = selectedNode.getSessionNode() as IZoweDatasetTreeNode;
-            const profile = sessionNode!.getProfile();
+            const profile = sessionNode.getProfile();
             const uri = selectedNode.resourceUri;
 
             this.currentDataSource = new PDSMembersDataSource(

@@ -26,7 +26,7 @@ enum MockedValueType {
 /**
  *  _Please use this when possible instead of Object.defineProperty!_
  *
- * A safer approach to "mocking" the value for a property that cannot be easily mocked using Jest.\
+ * A safer approach to "mocking" the value for a property that cannot be easily mocked using Vitest.\
  * Uses TypeScript 5.2's Explicit Resource Management to restore the original value for the given object and property key.
  */
 export class MockedProperty {

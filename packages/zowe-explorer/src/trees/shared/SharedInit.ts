@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import {
     FileManagement,
+    handleError,
     Gui,
     CorrelatedError,
     IZoweTree,
@@ -33,7 +34,7 @@ import { SharedTreeProviders } from "./SharedTreeProviders";
 import { JobActions } from "../job/JobActions";
 import { UssFSProvider } from "../uss/UssFSProvider";
 import { Constants } from "../../configuration/Constants";
-import { MvsCommandHandler } from "../../commands/MvsCommandHandler";
+import { ConsoleCommandHandler } from "../../commands/ConsoleCommandHandler";
 import { TsoCommandHandler } from "../../commands/TsoCommandHandler";
 import { UnixCommandHandler } from "../../commands/UnixCommandHandler";
 import { Profiles } from "../../configuration/Profiles";
@@ -57,6 +58,7 @@ import { TroubleshootError } from "../../utils/TroubleshootError";
 import { ReleaseNotes } from "../../utils/ReleaseNotes";
 import { JobFSProvider } from "../job/JobFSProvider";
 import { ZosmfRestClient } from "@zowe/core-for-zowe-sdk";
+import * as zowex from "zowex-for-zowe-explorer";
 
 export class SharedInit {
     public static lastFocusedNode: { provider: IZoweTree<IZoweTreeNode>; node: IZoweTreeNode };
@@ -188,10 +190,18 @@ export class SharedInit {
         context.subscriptions.push(vscode.window.registerWebviewViewProvider("zowe-resources", TableViewProvider.getInstance()));
 
         const commandProviders: Definitions.IZoweCommandProviders = {
-            mvs: MvsCommandHandler.getInstance(),
+            mvs: ConsoleCommandHandler.getInstance(),
             tso: TsoCommandHandler.getInstance(),
             uss: UnixCommandHandler.getInstance(),
         };
+
+        // Zowe Native registrations
+        const zoweExplorerApi = ZoweExplorerApiRegister.getInstance().getExplorerExtenderApi();
+        context.subscriptions.push(...zowex.Utilities.registerCommands(context, zoweExplorerApi));
+        context.subscriptions.push(zowex.SshClientCache.initialize(zoweExplorerApi.getProfilesCache()));
+        zowex.handleNativeSshSettings(context);
+
+        zowex.registerSshErrorCorrelations();
 
         // Webview for editing persistent items on Zowe Explorer
         context.subscriptions.push(
@@ -360,6 +370,9 @@ export class SharedInit {
         // Register functions & event listeners
         context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {
+                if (e.affectsConfiguration(Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH)) {
+                    zowex.handleNativeSshSettings(context);
+                }
                 // If the log folder location has been changed, update current log folder preference
                 if (e.affectsConfiguration(Constants.SETTINGS_LOGS_FOLDER_PATH) || e.affectsConfiguration(Constants.LOGGER_SETTINGS)) {
                     await SharedInit.initZoweLogger(context);
@@ -701,7 +714,7 @@ export class SharedInit {
 
     public static async setupRemoteWorkspaceFolders(e?: vscode.WorkspaceFoldersChangeEvent, profileType?: string): Promise<void> {
         const profInfo = Profiles.getInstance();
-        let uriMap = new Map<string, UriFsInfo>();
+        const uriMap = new Map<string, UriFsInfo>();
         const profileNames = new Set<string>(profInfo.getProfiles(profileType).map((prof) => prof.name));
         // Perform remote lookup for workspace folders that fit the `zowe-ds` or `zowe-uss` schemes.
         const newWorkspaces = (e?.added ?? vscode.workspace.workspaceFolders ?? [])
@@ -724,17 +737,17 @@ export class SharedInit {
                 }
                 readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri));
             } catch (err) {
-                if (err instanceof Error) {
-                    ZoweLogger.error(err.message);
-                }
+                handleError(err, (error) => {
+                    ZoweLogger.error(error.message);
+                });
             }
         }
         try {
             await Promise.all(readDirRequests);
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.error(err.message);
-            }
+            handleError(err, (error) => {
+                ZoweLogger.error(error.message);
+            });
         }
         if (profileType !== "zosmf" && newWorkspaces.length > 0) {
             await vscode.commands.executeCommand("workbench.files.action.refreshFilesExplorer");

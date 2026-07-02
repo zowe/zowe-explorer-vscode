@@ -12,6 +12,7 @@
 import { join } from "path";
 import { diff } from "deep-object-diff";
 import * as fs from "fs";
+import { Logger } from "@zowe/imperative";
 
 import { Table, TableBuilder, WebView, Gui } from "../../../../src";
 import { ConfigurationTarget, env, EventEmitter, Uri, window, workspace } from "vscode";
@@ -548,9 +549,11 @@ describe("Table.View", () => {
     });
 
     describe("evaluateCondition", () => {
-        it("successfully evaluates valid string conditions", async () => {
+        it("logs warning for deprecated string conditions", async () => {
             const globalMocks = createGlobalMocks();
             const view = new Table.View(globalMocks.context as any, false, { title: "Table" } as any);
+            const warnMock = vi.fn();
+            vi.spyOn(Logger, "getImperativeLogger").mockReturnValueOnce({ warn: warnMock } as unknown as Logger);
 
             // Test with valid string condition
             const validCondition = "(data) => data.a > 5";
@@ -560,7 +563,8 @@ describe("Table.View", () => {
 
             const result = await (view as any).evaluateCondition(validCondition, conditionData, actionCommand, defaultValue);
 
-            expect(result).toBe(true);
+            expect(result).toBe(false);
+            expect(warnMock).toHaveBeenCalledWith(expect.stringContaining("deprecated"));
         });
 
         it("successfully evaluates valid function conditions", async () => {
@@ -895,7 +899,7 @@ describe("Table.View", () => {
             });
         });
 
-        it("handles check-condition-for-action with string condition", async () => {
+        it("handles check-condition-for-action with deprecated string condition", async () => {
             const globalMocks = createGlobalMocks();
             const action = {
                 title: "String Condition Action",
@@ -915,6 +919,8 @@ describe("Table.View", () => {
 
             const mockPostMessage = vi.fn();
             (view as any).panel = { webview: { postMessage: mockPostMessage } };
+            const warnMock = vi.fn();
+            vi.spyOn(Logger, "getImperativeLogger").mockReturnValueOnce({ warn: warnMock } as unknown as Logger);
 
             const message = {
                 command: "check-condition-for-action",
@@ -931,8 +937,9 @@ describe("Table.View", () => {
             expect(mockPostMessage).toHaveBeenCalledWith({
                 command: "check-condition-for-action",
                 requestId: "string-test-789",
-                payload: true,
+                payload: false, // Condition would evaluate to true but we fall back to default value
             });
+            expect(warnMock).toHaveBeenCalledWith(expect.stringContaining("deprecated"));
         });
 
         it("handles check-condition-for-action with context menu option", async () => {
