@@ -742,8 +742,13 @@ describe("Test src/shared/extension", () => {
                 return { dispose: vi.fn() } as any;
             });
 
+            // Mock workspace.onDidChangeConfiguration
+            vi.spyOn(vscode.workspace, "onDidChangeConfiguration").mockImplementation(() => {
+                return { dispose: vi.fn() } as any;
+            });
+
             // Mock singletons to avoid initialization errors
-            vi.spyOn(MvsCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: vi.fn() } as any);
+            vi.spyOn(ConsoleCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: vi.fn() } as any);
             vi.spyOn(TsoCommandHandler, "getInstance").mockReturnValue({ issueTsoCommand: vi.fn() } as any);
             vi.spyOn(UnixCommandHandler, "getInstance").mockReturnValue({ issueUnixCommand: vi.fn() } as any);
             vi.spyOn(TableViewProvider, "getInstance").mockReturnValue({} as any);

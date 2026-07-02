@@ -1441,6 +1441,7 @@ export namespace workspace {
         readonly removed: readonly WorkspaceFolder[];
     }
     export const onDidChangeWorkspaceFolders: Event<WorkspaceFoldersChangeEvent> = vi.fn();
+    export function onDidChangeConfiguration<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
 
     export function onDidCloseTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
     export function onDidOpenTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
