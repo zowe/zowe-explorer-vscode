@@ -629,9 +629,9 @@
   "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>": "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>",
   "EBCDIC": "EBCDIC",
   "Edit Attributes": "Edit Attributes",
-  "Edit history": "Edit history",
-  "Edit History": "Edit History",
-  "Edit history allows viewing, deleting, or adding a profile's search/filter history for data sets, USS, and jobs. Right-click a profile and select **Edit History**.": "Edit history allows viewing, deleting, or adding a profile's search/filter history for data sets, USS, and jobs. Right-click a profile and select **Edit History**.",
+  "Edit history": "Edit Local App Storage",
+  "Edit Local App Storage": "Edit Local App Storage",
+  "Edit history allows viewing, deleting, or adding a profile's search/filter history for data sets, USS, and jobs. Right-click a profile and select **Edit Local App Storage**.": "Edit history allows viewing, deleting, or adding a profile's search/filter history for data sets, USS, and jobs. Right-click a profile and select **Edit Local App Storage**.",
   "Edit Options (Case Sensitive: {0}, Regex: {1})/Case SensitiveRegex": {
     "message": "Edit Options (Case Sensitive: {0}, Regex: {1})",
     "comment": [

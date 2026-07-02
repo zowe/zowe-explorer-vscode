@@ -36,7 +36,7 @@
     "Update Profile Configuration Schema": ""
   },
   "zowe.editHistory": {
-    "Edit History": ""
+    "Edit Local App Storage": ""
   },
   "zowe.ds.explorer": {
     "Data Sets": ""
@@ -579,7 +579,7 @@
     "Copy External Link": ""
   },
   "zowe.history.deprecationMsg": {
-    "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.": ""
+    "Changes made here will not be reflected in Zowe Explorer, use right-click Edit Local App Storage option to access information from local storage.": ""
   },
   "zowe.settings.overrideWithEnvironmentVariables": {
     "Indicates if environment variables should override values stored in Zowe configuration profiles on disk.": ""
@@ -1056,8 +1056,8 @@
   "EBCDIC": "",
   "Edit Attributes": "",
   "Edit history": "",
-  "Edit History": "",
-  "Edit history allows viewing, deleting, or adding a profile's search/filter history for data sets, USS, and jobs. Right-click a profile and select **Edit History**.": "",
+  "Edit Local App Storage": "",
+  "Edit history allows viewing, deleting, or adding a profile's search/filter history for data sets, USS, and jobs. Right-click a profile and select **Edit Local App Storage**.": "",
   "Edit Options (Case Sensitive: {0}, Regex: {1})": "",
   "Edit Profile": "",
   "Enable Profile Validation": "",
