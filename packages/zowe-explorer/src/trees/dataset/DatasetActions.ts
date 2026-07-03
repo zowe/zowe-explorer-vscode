@@ -1330,7 +1330,7 @@ export class DatasetActions {
                         }
                         Gui.reportProgress(progress, nodes.length, index, "Deleting");
                         try {
-                            await DatasetActions.deleteDataset(currNode, datasetProvider);
+                            await DatasetActions.deleteDataset(currNode, datasetProvider, true);
                             deletedNames.push(deleteItemName(currNode));
                         } catch (err) {
                             ZoweLogger.error(err);
@@ -2173,7 +2173,7 @@ export class DatasetActions {
      * @param {IZoweDatasetTreeNode} node - The node to be deleted
      * @param {Types.IZoweDatasetTreeType} datasetProvider - the tree which contains the nodes
      */
-    public static async deleteDataset(node: IZoweDatasetTreeNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
+    public static async deleteDataset(node: IZoweDatasetTreeNode, datasetProvider: Types.IZoweDatasetTreeType, skipRefresh?: boolean): Promise<void> {
         ZoweLogger.trace("dataset.actions.deleteDataset called.");
         let label = "";
         let fav = false;
@@ -2258,17 +2258,19 @@ export class DatasetActions {
             await datasetProvider.removeFavorite(node);
         }
 
-        // If the node is a dataset member, go up a level in the node tree
-        // to find the relevant, matching node
-        const nodeOfInterest = isMember ? node.getParent() : node;
-        const parentNode = datasetProvider.findEquivalentNode(nodeOfInterest, fav);
+        if (!skipRefresh) {
+            // If the node is a dataset member, go up a level in the node tree
+            // to find the relevant, matching node
+            const nodeOfInterest = isMember ? node.getParent() : node;
+            const parentNode = datasetProvider.findEquivalentNode(nodeOfInterest, fav);
 
-        if (parentNode != null) {
-            // Refresh the correct node (parent of node to delete) to reflect changes
-            datasetProvider.refreshElement(isMember ? parentNode : parentNode.getParent());
+            if (parentNode != null) {
+                // Refresh the correct node (parent of node to delete) to reflect changes
+                datasetProvider.refreshElement(isMember ? parentNode : parentNode.getParent());
+            }
+
+            datasetProvider.refreshElement(node.getSessionNode());
         }
-
-        datasetProvider.refreshElement(node.getSessionNode());
 
         // Close the editor if the deleted dataset is open
         if (node.resourceUri) {
