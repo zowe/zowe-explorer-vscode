@@ -7807,82 +7807,9 @@ describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
             getChildren: vi.fn(),
             children: [],
         };
+        // Favorites profile node label must match the session profile name
         mockFavNode = {
-            label: "FAV1",
-            children: [],
-        };
-        sessProfile = { name: "SESSION1" };
-        testTree.mSessionNodes = [mockSessionNode];
-        testTree.mFavorites = [mockFavNode];
-    });
-
-    it("returns true and reveals node if dataset is found in session nodes", async () => {
-        const dsNode = { label: "MY.DATA.SET" };
-        mockSessionNode.getChildren.mockResolvedValue([dsNode]);
-        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
-        expect(result).toBe(true);
-        expect(mockTreeView.reveal).toHaveBeenCalledWith(dsNode, { select: true, focus: true, expand: true });
-    });
-
-    it("returns true and reveals node if dataset is found in favorites", async () => {
-        mockSessionNode.getChildren.mockResolvedValue([]);
-        const favChild = { label: "MY.DATA.SET" };
-        mockFavNode.children = [favChild];
-        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
-        expect(result).toBe(true);
-        expect(mockTreeView.reveal).toHaveBeenCalledWith(mockFavNode, { expand: true });
-        expect(mockTreeView.reveal).toHaveBeenCalledWith(favChild, { select: true, focus: true, expand: true });
-    });
-
-    it("sets filter and reveals node if dataset is not found in session or favorites", async () => {
-        mockSessionNode.getChildren.mockResolvedValue([]);
-        mockFavNode.children = [];
-        mockSessionNode.children = [{ label: "MY.DATA.SET" }];
-        vi.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
-        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
-        expect(testTree.filterTreeByPattern).toHaveBeenCalledWith(mockSessionNode, sessProfile, "MY.DATA.SET");
-        expect(mockTreeView.reveal).toHaveBeenCalledWith(mockSessionNode.children[0], { select: true, focus: true, expand: true });
-        expect(result).toBe(true);
-    });
-
-    it("returns false if dataset is not found anywhere", async () => {
-        mockSessionNode.getChildren.mockResolvedValue([]);
-        mockFavNode.children = [];
-        mockSessionNode.children = [];
-        vi.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
-        const result = await testTree.focusOnDsInTree("NOT.FOUND", sessProfile);
-        expect(result).toBe(false);
-    });
-
-    it("returns false if filterTreeByPattern throws", async () => {
-        mockSessionNode.getChildren.mockResolvedValue([]);
-        mockFavNode.children = [];
-        mockSessionNode.children = [];
-        vi.spyOn(testTree, "filterTreeByPattern").mockRejectedValue(new Error("fail"));
-        const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
-        expect(result).toBe(false);
-    });
-});
-
-describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
-    let testTree: DatasetTree;
-    let mockTreeView: any;
-    let mockSessionNode: any;
-    let mockFavNode: any;
-    let sessProfile: any;
-
-    beforeEach(() => {
-        testTree = new DatasetTree();
-        mockTreeView = { reveal: vi.fn().mockResolvedValue(undefined) };
-        vi.spyOn(testTree, "getTreeView").mockReturnValue(mockTreeView);
-
-        mockSessionNode = {
             label: "SESSION1",
-            getChildren: vi.fn(),
-            children: [],
-        };
-        mockFavNode = {
-            label: "FAV1",
             children: [],
         };
         sessProfile = { name: "SESSION1" };
@@ -7935,6 +7862,31 @@ describe("Dataset Tree Unit Tests - Function focusOnDsInTree", () => {
         vi.spyOn(testTree, "filterTreeByPattern").mockRejectedValue(new Error("fail"));
         const result = await testTree.focusOnDsInTree("MY.DATA.SET", sessProfile);
         expect(result).toBe(false);
+    });
+
+    it("does not reveal dataset in a non-matching session node (cross-profile regression)", async () => {
+        // Simulate z/OSMF session node that already has the dataset loaded
+        const zosmfSessionNode = {
+            label: "zosmf",
+            getChildren: vi.fn().mockResolvedValue([{ label: "MY.DATA.SET" }]),
+            children: [{ label: "MY.DATA.SET" }],
+        };
+        // RSE session node without the dataset cached yet
+        const rseSessionNode = {
+            label: "rse",
+            getChildren: vi.fn().mockResolvedValue([]),
+            children: [{ label: "MY.DATA.SET" }],
+        };
+        testTree.mSessionNodes = [zosmfSessionNode, rseSessionNode];
+        testTree.mFavorites = [];
+        vi.spyOn(testTree, "filterTreeByPattern").mockResolvedValue(undefined);
+        const rseProfile = { name: "rse" };
+        const result = await testTree.focusOnDsInTree("MY.DATA.SET", rseProfile);
+        // Should NOT reveal in the zosmf session; should use the rse session node
+        expect(zosmfSessionNode.getChildren).not.toHaveBeenCalled();
+        expect(result).toBe(true);
+        expect(testTree.filterTreeByPattern).toHaveBeenCalledWith(rseSessionNode, rseProfile, "MY.DATA.SET");
+        expect(mockTreeView.reveal).toHaveBeenCalledWith(rseSessionNode.children[0], { select: true, focus: true, expand: true });
     });
 });
 
