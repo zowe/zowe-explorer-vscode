@@ -849,6 +849,25 @@ describe("ZoweVsCodeExtension", () => {
             expect(fakeProfile.password).toBeDefined();
         });
 
+        it("should validate empty username input when rePrompt is true", async () => {
+            const fakeProfile = { user: "fakeUser", password: "fakePass" };
+            vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: vi.fn().mockReturnValue({ profile: fakeProfile }),
+                getProfileInfo: vi.fn().mockReturnValue({ isSecured: vi.fn().mockReturnValue(true), updateProperty: vi.fn() }),
+                refresh: vi.fn(),
+            });
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+            await ZoweVsCodeExtension.updateCredentials(
+                { ...promptCredsOptions, rePrompt: true },
+                undefined as unknown as Types.IApiRegisterClient
+            );
+            const validateInput = showInputBoxSpy.mock.calls[0][0].validateInput;
+            expect(validateInput).toBeDefined();
+            expect(validateInput("")).toBe("User name cannot be empty");
+            expect(validateInput("   ")).toBe("User name cannot be empty");
+            expect(validateInput("valid")).toBeUndefined();
+        });
+
         it("should do nothing if password input is cancelled", async () => {
             const fakeProfile = { user: "fakeUser", password: "fakePass" };
             const mockUpdateProperty = vi.fn();

@@ -558,7 +558,7 @@ export class ZoweVsCodeExtension {
                 ignoreFocusOut: true,
                 value: newUser,
                 validateInput: (value) => {
-                    if (!value || value.trim() === "") {
+                    if (options.rePrompt && (!value || value.trim() === "")) {
                         return "User name cannot be empty";
                     }
                     if (options.userInputBoxOptions?.validateInput) {
