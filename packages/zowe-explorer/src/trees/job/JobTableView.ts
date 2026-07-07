@@ -30,7 +30,7 @@ export class JobTableView {
             },
         },
         displayInTree: {
-            title: l10n.t("Display in Tree"),
+            title: l10n.t("Locate in Tree"),
             command: "display-in-tree",
             callback: {
                 fn: JobTableView.displayInTree,
