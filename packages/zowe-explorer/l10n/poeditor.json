@@ -1197,6 +1197,7 @@
   "Fix refresh job & spool file pull from mainframe doesn't update job status <a>#1936</a>": "",
   "Fix the USS refresh icon (replacing \"download\" with \"refresh\")": "",
   "Fixed \"Allocate Like\" error that prevented proper execution. <a>#1973</a>": "",
+  "Fixed \"Open Selected Data Set\" action opening datasets in the z/OSMF tree instead of the originating extender profile's tree when invoked from a spool file. <a>#4372</a>": "",
   "Fixed a bug where a password prompt appeared when validating SSH profiles even if a valid privateKey is provided. <a>#3645</a>": "",
   "Fixed a bug where edit history does not show the correct information. <a>#3432</a>": "",
   "Fixed a bug where renaming a USS file that used to exist but was deleted in z/OS resulted in an error. <a>#3485</a>.": "",

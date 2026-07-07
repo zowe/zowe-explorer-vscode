@@ -2232,9 +2232,7 @@ Would you like to do this now?`,
      */
     public async focusOnDsInTree(dsName: string, sessProfile: imperative.IProfileLoaded): Promise<boolean> {
         // Only look at the session node that matches the profile used for this action
-        const sessionNode = this.mSessionNodes.find(
-        (session) => session.label?.toString().toUpperCase() === sessProfile.name.toUpperCase()
-        );
+        const sessionNode = this.findMatchingProfileInArray(this.mSessionNodes, sessProfile.name);
         // Try to find in the session node that matches the given profile
         if (sessionNode) {
             const children = await sessionNode.getChildren();
@@ -2246,7 +2244,7 @@ Would you like to do this now?`,
         }
 
         // Try to find in favorites under the matching profile node
-        const favProfileNode = this.mFavorites.find((favNode) => favNode.label?.toString().toUpperCase() === sessProfile.name.toUpperCase());
+        const favProfileNode = this.findMatchingProfileInArray(this.mFavorites, sessProfile.name);
         if (favProfileNode?.children && favProfileNode.children.length > 0) {
             const foundNode = favProfileNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
             if (foundNode) {
