@@ -18,9 +18,9 @@ import { SshClientCache } from "../../src/SshClientCache";
 
 // `node:fs` named imports are not configurable for spyOn under ESM, so mock the module.
 vi.mock("node:fs", async (importActual) => {
-    const actual = (await importActual());
+    const actual = await importActual();
     return {
-        ...actual as typeof import("node:fs"),
+        ...(actual as typeof import("node:fs")),
         createReadStream: vi.fn(() => ({}) as any),
         createWriteStream: vi.fn(() => ({}) as any),
     };
@@ -168,7 +168,7 @@ describe("SshMvsApi", () => {
         it("should create a write stream to a file when a file path is provided", async () => {
             const mvsApi = new SshMvsApi();
             const readDatasetSpy = vi.fn().mockResolvedValue({ data: "", etag: "etag1" });
-            const createDirsSpy = vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => { });
+            const createDirsSpy = vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => {});
             vi.spyOn(mvsApi as any, "buildZosFilesResponse");
             vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { readDataset: readDatasetSpy } });
 
@@ -182,7 +182,7 @@ describe("SshMvsApi", () => {
         it("should forward a custom encoding string when binary is falsy", async () => {
             const mvsApi = new SshMvsApi();
             const readDatasetSpy = vi.fn().mockResolvedValue({ data: "", etag: "etag1" });
-            vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => { });
+            vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => {});
             vi.spyOn(mvsApi as any, "buildZosFilesResponse");
             vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { readDataset: readDatasetSpy } });
 
@@ -195,7 +195,7 @@ describe("SshMvsApi", () => {
             const mvsApi = new SshMvsApi();
             const fakeWriteStream = { mock: "writeStream" };
             vi.mocked(fs.createWriteStream).mockReturnValue(fakeWriteStream as any);
-            vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => { });
+            vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => {});
             const readDatasetSpy = vi.fn().mockImplementation(async (opts: any) => {
                 expect(opts.stream()).toBe(fakeWriteStream);
                 return { data: "", etag: "etag1" };
