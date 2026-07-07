@@ -216,11 +216,11 @@ function createGlobalMocks(): { [key: string]: any } {
         configurable: true,
     });
     Object.defineProperty(vscode.workspace, "openTextDocument", {
-        value: () => { },
+        value: () => {},
         configurable: true,
     });
     Object.defineProperty(vscode.window, "showTextDocument", {
-        value: () => { },
+        value: () => {},
         configurable: true,
     });
 
@@ -2667,7 +2667,7 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
         vi.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
         vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
 
-        expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
+        expect(await Profiles.getInstance().clearFilterFromAllTrees(testNode));
         expect(onCollapsibleStateChangeSpy).toHaveBeenCalledTimes(0);
         expect(refreshElementSpy).toHaveBeenCalledTimes(0);
     });
@@ -2695,7 +2695,7 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
         vi.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
         vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
 
-        expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
+        expect(await Profiles.getInstance().clearFilterFromAllTrees(testNode));
         expect(onCollapsibleStateChangeSpy).toHaveBeenCalledTimes(0);
         expect(refreshElementSpy).toHaveBeenCalledTimes(0);
         expect(getProfileSpy).toHaveBeenCalledTimes(3);

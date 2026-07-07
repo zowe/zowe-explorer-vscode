@@ -437,11 +437,11 @@ export class SharedUtils {
                 comment: ["Node label"],
             }),
             currentEncoding &&
-            vscode.l10n.t({
-                message: "Current encoding is {0}",
-                args: [currentEncoding],
-                comment: ["Encoding name"],
-            })
+                vscode.l10n.t({
+                    message: "Current encoding is {0}",
+                    args: [currentEncoding],
+                    comment: ["Encoding name"],
+                })
         );
 
         return SharedUtils.processEncodingResponse(response, node.label as string);
@@ -917,11 +917,7 @@ export class SharedUtils {
      * @returns Promise resolves to true if the normalized paths match and the target path exists. false otherwise
      */
 
-    public static isLikelySameUssObjectByUris(
-        sourceNode: IZoweUSSTreeNode,
-        targetParent: IZoweUSSTreeNode,
-        droppedLabel: string
-    ): boolean {
+    public static isLikelySameUssObjectByUris(sourceNode: IZoweUSSTreeNode, targetParent: IZoweUSSTreeNode, droppedLabel: string): boolean {
         //normalize paths
         const equal =
             path.posix.normalize(sourceNode.fullPath.replace(/\\/g, "/")) ===
