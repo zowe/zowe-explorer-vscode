@@ -1,6 +1,6 @@
 # 0.3.0
 
-- **Enhancement:** Added a machine-readable output mode (`--json` / `--format json`) available on every command. `doctor`, `status`, and `test coverage` emit their full internal results as JSON (e.g. `{ "coverage": { "patch_pct": 87.5, "baseline_pct": 88.1, "uncovered": [{ "file": "...", "lines": [...] }] }, "passed": false }`), with spinners, colors, and hyperlinks suppressed so agents and CI can consume results without scraping terminal output.
+- **Enhancement:** Added a machine-readable output mode (`--json` / `--format json`) available on every command. `doctor`, `status`, and `test coverage` emit their full internal results as JSON (for example, `{ "coverage": { "patch_pct": 87.5, "baseline_pct": 88.1, "uncovered": [{ "file": "...", "lines": [...] }] }, "passed": false }`), with spinners, colors, and hyperlinks suppressed so agents and CI can consume results without scraping terminal output.
 - **Enhancement:** Added stable, documented process exit codes (`0` success, `1` failure, `3` tests failed, `4` coverage below threshold) so automation can branch on the result without parsing output.
 
 # 0.2.1
