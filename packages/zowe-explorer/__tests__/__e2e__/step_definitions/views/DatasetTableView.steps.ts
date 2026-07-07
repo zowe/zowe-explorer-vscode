@@ -425,9 +425,9 @@ When("the user right-clicks on a member row", async function () {
     );
 });
 
-When('selects "Display in Tree" from the context menu', async function () {
+When('selects "Locate in Tree" from the context menu', async function () {
     const page = await getTableViewPage(this);
-    await page.clickContextMenuItem("Display in Tree");
+    await page.clickContextMenuItem("Locate in Tree");
 });
 
 Then("the dataset is revealed and focused in the Data Sets tree", async function () {
