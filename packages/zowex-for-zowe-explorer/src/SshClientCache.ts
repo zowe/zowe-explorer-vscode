@@ -99,7 +99,7 @@ export class SshClientCache extends vscode.Disposable {
 
         if (!this.mClientSessionMap.has(clientId)) {
             using _lock = this.acquireProfileLock(clientId);
-            const sshConfigHost = profile?.type === "ssh-config" ? profile.name : undefined;
+            const sshConfigHost = profile?.type === "ssh-config" ? profile.profile?.sshLink : undefined;
             const session = ZSshUtils.buildSession(profile.profile!, sshConfigHost);
             const serverPath = ConfigUtils.getServerPath(profile.profile);
             const vsceConfig = vscode.workspace.getConfiguration("zowe");

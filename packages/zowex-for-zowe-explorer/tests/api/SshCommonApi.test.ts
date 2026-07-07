@@ -86,7 +86,7 @@ describe("SshCommonApi", () => {
 
             expect(sess).toEqual(mockSession);
             expect(buildSessionSpy).toHaveBeenCalledTimes(1);
-            expect(buildSessionSpy).toHaveBeenCalledWith({ data: "fake" });
+            expect(buildSessionSpy).toHaveBeenCalledWith({ data: "fake" }, undefined);
         });
 
         it("should fall back to this.profile when no profile argument is provided", () => {
@@ -98,7 +98,40 @@ describe("SshCommonApi", () => {
             const sess = commonApi.getSshSession();
 
             expect(sess).toEqual(mockSession);
-            expect(buildSessionSpy).toHaveBeenCalledWith({ name: "profileInstance" });
+            expect(buildSessionSpy).toHaveBeenCalledWith({ name: "profileInstance" }, undefined);
+        });
+
+        it("should pass the sshLink property as the ssh config host for ssh-config profiles", () => {
+            const mockSession: SshSession = { mISshSession: {}, ISshSession: {}, buildSession: vi.fn() };
+            const mockProfile = {
+                type: "ssh-config",
+                message: "test",
+                failNotFound: true,
+                profile: { sshLink: "myhost", user: "someuser" },
+            } as any;
+            const buildSessionSpy = vi.spyOn(ZSshUtils, "buildSession").mockReturnValue(mockSession);
+            const commonApi = new SshCommonApi();
+
+            const sess = commonApi.getSshSession(mockProfile);
+
+            expect(sess).toEqual(mockSession);
+            expect(buildSessionSpy).toHaveBeenCalledWith({ sshLink: "myhost", user: "someuser" }, "myhost");
+        });
+
+        it("should not pass a ssh config host for non ssh-config profiles even when sshLink is present", () => {
+            const mockSession: SshSession = { mISshSession: {}, ISshSession: {}, buildSession: vi.fn() };
+            const mockProfile = {
+                type: "ssh",
+                message: "test",
+                failNotFound: true,
+                profile: { sshLink: "myhost" },
+            } as any;
+            const buildSessionSpy = vi.spyOn(ZSshUtils, "buildSession").mockReturnValue(mockSession);
+            const commonApi = new SshCommonApi();
+
+            commonApi.getSshSession(mockProfile);
+
+            expect(buildSessionSpy).toHaveBeenCalledWith({ sshLink: "myhost" }, undefined);
         });
     });
 

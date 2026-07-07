@@ -20,12 +20,12 @@ import { SshErrorHandler } from "../SshErrorHandler";
 export class SshCommonApi implements MainframeInteraction.ICommon {
     public profile: imperative.IProfileLoaded | undefined;
 
-    private profileType: string;
+    private profileType?: string;
 
-    public constructor(profileOrProfType: imperative.IProfileLoaded | string) {
+    public constructor(profileOrProfType?: imperative.IProfileLoaded | string) {
         if (typeof profileOrProfType === "string") {
             this.profileType = profileOrProfType;
-        } else {
+        } else if (profileOrProfType) {
             this.profile = profileOrProfType;
             this.profileType = profileOrProfType.type;
         }
@@ -113,7 +113,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
 
     public getSshSession(profile?: imperative.IProfileLoaded): SshSession {
         const theProfile = profile ?? this.profile;
-        const sshConfigHost = theProfile?.type === "ssh-config" ? theProfile.name : undefined;
+        const sshConfigHost = theProfile?.type === "ssh-config" ? theProfile.profile?.sshLink : undefined;
         const session = ZSshUtils.buildSession(theProfile?.profile!, sshConfigHost);
         return session;
     }

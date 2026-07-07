@@ -223,11 +223,23 @@ describe("SshClientCache", () => {
 
             expect(client).toBeDefined();
             expect(ZSshClient.create).toHaveBeenCalled();
-            expect(ZSshUtils.buildSession).toHaveBeenCalledWith(mockProfile.profile);
+            expect(ZSshUtils.buildSession).toHaveBeenCalledWith(mockProfile.profile, undefined);
 
             // Verify it was added to the map
             const map = (cache as any).mClientSessionMap;
             expect(map.has(clientId)).toBe(true);
+        });
+
+        it("should pass the sshLink property as the ssh config host for ssh-config profiles", async () => {
+            const sshConfigProfile: imperative.IProfileLoaded = {
+                name: "myhost",
+                type: "ssh-config",
+                profile: { sshLink: "myhost" },
+            } as any;
+
+            await cache.connect(sshConfigProfile);
+
+            expect(ZSshUtils.buildSession).toHaveBeenCalledWith(sshConfigProfile.profile, "myhost");
         });
 
         it("should restart the client if restart flag is true", async () => {
