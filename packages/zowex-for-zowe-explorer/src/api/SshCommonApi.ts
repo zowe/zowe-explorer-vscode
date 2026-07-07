@@ -18,10 +18,18 @@ import { SshClientCache } from "../SshClientCache";
 import { SshErrorHandler } from "../SshErrorHandler";
 
 export class SshCommonApi implements MainframeInteraction.ICommon {
-    public constructor(
-        public profile?: imperative.IProfileLoaded,
-        private profileType?: string
-    ) {}
+    public profile: imperative.IProfileLoaded | undefined;
+
+    private profileType: string;
+
+    public constructor(profileOrProfType: imperative.IProfileLoaded | string) {
+        if (typeof profileOrProfType === "string") {
+            this.profileType = profileOrProfType;
+        } else {
+            this.profile = profileOrProfType;
+            this.profileType = profileOrProfType.type;
+        }
+    }
 
     public getProfileTypeName(): string {
         return this.profileType ?? ZosUssProfile.type;

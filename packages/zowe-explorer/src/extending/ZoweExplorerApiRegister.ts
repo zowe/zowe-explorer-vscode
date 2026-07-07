@@ -131,10 +131,10 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
         this.registerCommandApi(new ZoweExplorerZosmf.CommandApi());
 
         for (const profType of ["ssh", "ssh-config"]) {
-            this.registerMvsApi(new zowex.SshMvsApi(undefined, profType));
-            this.registerUssApi(new zowex.SshUssApi(undefined, profType));
-            this.registerJesApi(new zowex.SshJesApi(undefined, profType));
-            this.registerCommandApi(new zowex.SshCommandApi(undefined, profType));
+            this.registerMvsApi(new zowex.SshMvsApi(profType));
+            this.registerUssApi(new zowex.SshUssApi(profType));
+            this.registerJesApi(new zowex.SshJesApi(profType));
+            this.registerCommandApi(new zowex.SshCommandApi(profType));
         }
     }
 

@@ -131,6 +131,7 @@ export class ZoweVsCodeExtension {
         const creds = await ZoweVsCodeExtension.promptUserPass({ session: loadSession, ...options });
 
         if (creds && creds.length > 0) {
+            const oldUser = loadSession.user;
             loadProfile.profile.user = loadSession.user = creds[0];
             loadProfile.profile.password = loadSession.password = creds[1];
 
@@ -143,7 +144,9 @@ export class ZoweVsCodeExtension {
             if (shouldSave) {
                 // write changes to the file, autoStore value determines if written to file
                 const upd = { profileName: loadProfile.name, profileType: loadProfile.type };
-                await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure });
+                if (!(loadProfile.type === "ssh-config" && loadSession.user == oldUser)) {
+                    await profInfo.updateProperty({ ...upd, property: "user", value: creds[0], setSecure });
+                }
                 await profInfo.updateProperty({ ...upd, property: "password", value: creds[1], setSecure });
             }
             cache.updateCachedProfile(loadProfile, undefined, apiRegister);
