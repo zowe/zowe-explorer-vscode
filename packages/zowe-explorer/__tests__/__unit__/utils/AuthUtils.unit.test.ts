@@ -1180,7 +1180,7 @@ describe("AuthUtils", () => {
             isProfileLockedMock.mockReturnValue(false);
             wasAuthCancelledMock.mockReturnValue(false);
 
-            await AuthUtils.ensureAuthNotCancelled(profile);
+            AuthUtils.ensureAuthNotCancelled(profile);
 
             expect(handleProfileAuthOnErrorMock).not.toHaveBeenCalled();
         });
@@ -1189,7 +1189,7 @@ describe("AuthUtils", () => {
             isProfileLockedMock.mockReturnValue(true);
             wasAuthCancelledMock.mockReturnValue(false);
 
-            await AuthUtils.ensureAuthNotCancelled(profile);
+            AuthUtils.ensureAuthNotCancelled(profile);
 
             expect(handleProfileAuthOnErrorMock).not.toHaveBeenCalled();
         });

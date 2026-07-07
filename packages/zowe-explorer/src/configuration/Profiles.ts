@@ -1082,7 +1082,7 @@ export class Profiles extends ProfilesCache {
         // Given that the providers defined in `SharedTreeProviders` (e.g. ds, uss, job) extend `ZoweTreeProvider`,
         // we are guaranteed to have implemented the `onCollapsibleStateChange` function.
         // Thus it is safe to ignore the compiler warning about using an optional function defined in `IZoweTree`
-        await SharedTreeProviders.ds.onCollapsibleStateChange!(dsNode, vscode.TreeItemCollapsibleState.Collapsed);
+        await SharedTreeProviders.ds.onCollapsibleStateChange(dsNode, vscode.TreeItemCollapsibleState.Collapsed);
         // ---------------------------------------------------------------
 
         SharedTreeProviders.ds.refreshElement(dsNode);
@@ -1105,7 +1105,7 @@ export class Profiles extends ProfilesCache {
         // Given that the providers defined in `SharedTreeProviders` (e.g. ds, uss, job) extend `ZoweTreeProvider`,
         // we are guaranteed to have implemented the `onCollapsibleStateChange` function.
         // Thus it is safe to ignore the compiler warning about using an optional function defined in `IZoweTree`
-        await SharedTreeProviders.uss.onCollapsibleStateChange!(ussNode, vscode.TreeItemCollapsibleState.Collapsed);
+        await SharedTreeProviders.uss.onCollapsibleStateChange(ussNode, vscode.TreeItemCollapsibleState.Collapsed);
         // ---------------------------------------------------------------
 
         SharedTreeProviders.uss.refreshElement(ussNode);
@@ -1132,7 +1132,7 @@ export class Profiles extends ProfilesCache {
         // Given that the providers defined in `SharedTreeProviders` (e.g. ds, uss, job) extend `ZoweTreeProvider`,
         // we are guaranteed to have implemented the `onCollapsibleStateChange` function.
         // Thus it is safe to ignore the compiler warning about using an optional function defined in `IZoweTree`
-        await SharedTreeProviders.job.onCollapsibleStateChange!(jobNode, vscode.TreeItemCollapsibleState.Collapsed);
+        await SharedTreeProviders.job.onCollapsibleStateChange(jobNode, vscode.TreeItemCollapsibleState.Collapsed);
         // ---------------------------------------------------------------
 
         SharedTreeProviders.job.refreshElement(jobNode);

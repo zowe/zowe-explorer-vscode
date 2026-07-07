@@ -23,6 +23,7 @@ import {
     ZoweExplorerApiType,
     ZosEncoding,
     MessageSeverity,
+    IZoweTreeNode,
 } from "@zowe/zowe-explorer-api";
 import { isBinaryFileSync } from "isbinaryfile";
 import { USSAttributeView } from "./USSAttributeView";
@@ -920,7 +921,7 @@ export class USSActions {
         ussFileProvider: Types.IZoweUSSTreeType
     ): Promise<void> {
         ZoweLogger.trace("uss.actions.deleteUSSFilesPrompt called.");
-        let selectedNodes;
+        let selectedNodes: readonly IZoweTreeNode[];
         if (node || nodeList) {
             selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
         } else {

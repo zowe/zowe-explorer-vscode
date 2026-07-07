@@ -118,7 +118,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             registeredTypes: apiRegister.registeredJesApiTypes(),
         });
 
-        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
+        AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
         await AuthHandler.waitForUnlock(uriInfo.profile);
         try {
             if (FsAbstractUtils.isFilterEntry(fsEntry)) {
@@ -238,7 +238,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             apiName: vscode.l10n.t("JES API"),
             registeredTypes: apiRegister.registeredJesApiTypes(),
         });
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(metadata.profile);
         const query = new URLSearchParams(uri.query);
         let recordRange = "";
@@ -380,7 +380,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const parent = this.lookupParentDirectory(uri, false);
         const profInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         try {
-            await AuthUtils.ensureAuthNotCancelled(profInfo.profile);
+            AuthUtils.ensureAuthNotCancelled(profInfo.profile);
             await AuthHandler.waitForUnlock(profInfo.profile);
             const apiRegister = ZoweExplorerApiRegister.getInstance();
             await FsAbstractUtils.getApiOrThrowUnavailable(profInfo.profile, () => apiRegister.getJesApi(profInfo.profile), {
@@ -459,7 +459,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 registeredTypes: apiRegister.registeredJesApiTypes(),
             });
 
-            await AuthUtils.ensureAuthNotCancelled(metadata.profile);
+            AuthUtils.ensureAuthNotCancelled(metadata.profile);
             await AuthHandler.waitForUnlock(metadata.profile);
 
             // Get job by job ID
