@@ -131,6 +131,11 @@ describe("Test src/dataset/extension", () => {
                 mock: [{ spy: vi.spyOn(DatasetActions, "downloadMember"), arg: [test.value] }],
             },
             {
+                name: "zowe.ds.downloadMembers",
+                parm: [test.value, [test.value]],
+                mock: [{ spy: vi.spyOn(DatasetActions, "downloadMembers"), arg: [test.value, [test.value]] }],
+            },
+            {
                 name: "zowe.ds.downloadDataSet",
                 mock: [{ spy: vi.spyOn(DatasetActions, "downloadDataSet"), arg: [test.value] }],
             },

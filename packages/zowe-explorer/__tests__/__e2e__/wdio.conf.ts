@@ -106,6 +106,7 @@ export const config: Options.Testrunner = {
                     "window.zoomLevel": process.env.CI ? -2 : 0,
                     "zowe.settings.displayReleaseNotes": false,
                     "zowe.jobs.confirmSubmission": "Disabled",
+                    "zowe.uss.deleteNode.confirmDeletion": false,
                 },
             },
         },
