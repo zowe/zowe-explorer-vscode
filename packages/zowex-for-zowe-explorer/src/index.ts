@@ -16,3 +16,4 @@ export * from "./SshClientCache";
 export * from "./SshErrorCorrelations";
 export * from "./Utilities";
 export * from "./VscePromptApi";
+export { SshConfigUtils, type ISshConfigExt } from "@zowe/zowex-for-zowe-sdk";

@@ -130,10 +130,12 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
         this.registerJesApi(new ZoweExplorerZosmf.JesApi());
         this.registerCommandApi(new ZoweExplorerZosmf.CommandApi());
 
-        this.registerMvsApi(new zowex.SshMvsApi());
-        this.registerUssApi(new zowex.SshUssApi());
-        this.registerJesApi(new zowex.SshJesApi());
-        this.registerCommandApi(new zowex.SshCommandApi());
+        for (const profType of ["ssh", "ssh-config"]) {
+            this.registerMvsApi(new zowex.SshMvsApi(undefined, profType));
+            this.registerUssApi(new zowex.SshUssApi(undefined, profType));
+            this.registerJesApi(new zowex.SshJesApi(undefined, profType));
+            this.registerCommandApi(new zowex.SshCommandApi(undefined, profType));
+        }
     }
 
     // TODO: the redundant functions that follow could be done with generics, but as we are using

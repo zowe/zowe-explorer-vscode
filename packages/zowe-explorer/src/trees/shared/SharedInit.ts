@@ -9,6 +9,7 @@
  *
  */
 
+import * as os from "os";
 import * as vscode from "vscode";
 import {
     FileManagement,
@@ -548,6 +549,17 @@ export class SharedInit {
                 }, 100) // eslint-disable-line no-magic-numbers
             );
         });
+
+        const sshConfigWatcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(os.homedir(), ".ssh/config"));
+        context.subscriptions.push(sshConfigWatcher);
+        const handleSshConfigChange = SharedUtils.debounceAsync(async () => {
+            ZoweLogger.info(vscode.l10n.t("SSH config file updated, refreshing Zowe Explorer."));
+            await SharedActions.refreshAll();
+            ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
+        }, 100); // eslint-disable-line no-magic-numbers
+        sshConfigWatcher.onDidCreate(handleSshConfigChange);
+        sshConfigWatcher.onDidChange(handleSshConfigChange);
+        sshConfigWatcher.onDidDelete(handleSshConfigChange);
 
         try {
             const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {

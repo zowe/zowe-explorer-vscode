@@ -99,7 +99,8 @@ export class SshClientCache extends vscode.Disposable {
 
         if (!this.mClientSessionMap.has(clientId)) {
             using _lock = this.acquireProfileLock(clientId);
-            const session = ZSshUtils.buildSession(profile.profile!);
+            const sshConfigHost = profile?.type === "ssh-config" ? profile.name : undefined;
+            const session = ZSshUtils.buildSession(profile.profile!, sshConfigHost);
             const serverPath = ConfigUtils.getServerPath(profile.profile);
             const vsceConfig = vscode.workspace.getConfiguration("zowe");
             const keepAliveInterval = vsceConfig.get<number>("zowex.keepAliveInterval");

@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
+import * as zowex from "zowex-for-zowe-explorer";
 import {
     Gui,
     imperative,
@@ -166,7 +167,6 @@ export class Profiles extends ProfilesCache {
         let usingTokenAuth: boolean = false;
 
         let iSessFromProf: imperative.ISession;
-        const usingPrivateKey = theProfile.type === "ssh" && theProfile.profile.privateKey;
         try {
             iSessFromProf = AuthHandler.getSessFromProfile(theProfile).ISession;
         } catch (error) {
@@ -186,6 +186,7 @@ export class Profiles extends ProfilesCache {
                 usingCertAuth = true;
                 break;
         }
+        const usingPrivateKey = theProfile.type.startsWith("ssh") && (iSessFromProf as any).privateKey != null;
 
         let tokenType: string;
         try {
@@ -502,6 +503,37 @@ export class Profiles extends ProfilesCache {
             items.push(new FilterItem({ text: pName, icon: this.getProfileIcon(osLocInfo)[0] }));
         }
 
+        const registeredProfileTypesForTree = ((): string[] => {
+            switch (zoweFileProvider.getTreeType()) {
+                case PersistenceSchemaEnum.USS:
+                    return ZoweExplorerApiRegister.getInstance().registeredUssApiTypes();
+                case PersistenceSchemaEnum.Dataset:
+                    return ZoweExplorerApiRegister.getInstance().registeredMvsApiTypes();
+                case PersistenceSchemaEnum.Job:
+                    return ZoweExplorerApiRegister.getInstance().registeredJesApiTypes();
+                default:
+                    return [];
+            }
+        })();
+        // Offer SSH hosts discovered in ~/.ssh/config that aren't already team config profiles
+        const sshHostsByName = new Map<string, zowex.ISshConfigExt>();
+        if (registeredProfileTypesForTree.includes("ssh") && mProfileInfo.getTeamConfig().exists) {
+            try {
+                const existingProfileNames = new Set(profAllAttrs.map((p) => p.profName));
+                const migratedHosts = await zowex.SshConfigUtils.migrateSshConfig();
+                for (const host of migratedHosts) {
+                    if (host.name && !existingProfileNames.has(host.name)) {
+                        sshHostsByName.set(host.name, host);
+                    }
+                }
+            } catch (err) {
+                ZoweLogger.warn(err);
+            }
+        }
+        for (const hostName of sshHostsByName.keys()) {
+            items.push(new FilterItem({ text: hostName, description: vscode.l10n.t("SSH Config Host"), icon: "$(cloud-download)" }));
+        }
+
         const quickpick = Gui.createQuickPick();
         let addProfilePlaceholder = "";
         const createNewInstruction = vscode.l10n.t(
@@ -576,6 +608,17 @@ export class Profiles extends ProfilesCache {
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
         } else if (chosenProfile) {
+            if (sshHostsByName.has(chosenProfile)) {
+                const sshHost = sshHostsByName.get(chosenProfile);
+                const sanitizedName = chosenProfile.replace(/\./g, "_");
+                const newProfile = await new zowex.VscePromptApi(mProfileInfo).createProfileFromSshConfigHost(sshHost);
+                if (!newProfile) {
+                    ZoweLogger.debug(debugMsg);
+                    return;
+                }
+                await this.refresh();
+                chosenProfile = sanitizedName;
+            }
             ZoweLogger.info(
                 vscode.l10n.t({
                     message: `The profile {0} has been added to the {1} tree.`,

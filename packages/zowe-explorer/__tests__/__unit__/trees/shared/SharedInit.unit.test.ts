@@ -812,6 +812,21 @@ describe("Test src/shared/extension", () => {
             expect(spyRefreshAll).toHaveBeenCalled();
         });
 
+        it.each(["onDidCreate", "onDidChange", "onDidDelete"] as const)(
+            "should watch ~/.ssh/config and refresh Zowe Explorer when %s fires",
+            async (handlerName) => {
+                const spyRefreshAll = vi.spyOn(SharedActions, "refreshAll").mockImplementation((() => undefined) as any);
+                SharedInit.watchConfigProfile(context);
+
+                // The ssh config watcher is registered after the team config watchers, so its handler is the last one registered.
+                const sshConfigCallback = watcher[handlerName].mock.calls.at(-1)[0];
+                await sshConfigCallback();
+
+                expect(spyRefreshAll).toHaveBeenCalledTimes(1);
+                expect(mockEmitter).toHaveBeenCalledTimes(1);
+            }
+        );
+
         it("should handle errors when watching for vault or credMgr changes", async () => {
             const testError = "__TEST_ERROR__";
             const spyWatcher = vi.spyOn(imperative.EventOperator, "getWatcher").mockImplementation(() => {

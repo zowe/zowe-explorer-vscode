@@ -18,10 +18,13 @@ import { SshClientCache } from "../SshClientCache";
 import { SshErrorHandler } from "../SshErrorHandler";
 
 export class SshCommonApi implements MainframeInteraction.ICommon {
-    public constructor(public profile?: imperative.IProfileLoaded) {}
+    public constructor(
+        public profile?: imperative.IProfileLoaded,
+        private profileType?: string
+    ) {}
 
     public getProfileTypeName(): string {
-        return ZosUssProfile.type;
+        return this.profileType ?? ZosUssProfile.type;
     }
 
     public getSession(profile?: imperative.IProfileLoaded): imperative.Session {
@@ -29,7 +32,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
     }
 
     public async getStatus(profile: imperative.IProfileLoaded, profileType?: string): Promise<string> {
-        if (profileType === ZosUssProfile.type) {
+        if (profileType === this.getProfileTypeName()) {
             try {
                 await SshClientCache.inst.connect(profile);
                 return "active";
@@ -101,7 +104,10 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
     }
 
     public getSshSession(profile?: imperative.IProfileLoaded): SshSession {
-        return ZSshUtils.buildSession((profile ?? this.profile)?.profile!);
+        const theProfile = profile ?? this.profile;
+        const sshConfigHost = theProfile?.type === "ssh-config" ? theProfile.name : undefined;
+        const session = ZSshUtils.buildSession(theProfile?.profile!, sshConfigHost);
+        return session;
     }
 
     /**

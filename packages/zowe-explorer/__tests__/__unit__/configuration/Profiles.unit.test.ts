@@ -58,6 +58,7 @@ import { FilterDescriptor } from "../../../src/management/FilterManagement";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../../src/trees/uss/USSTree";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
+import * as zowex from "zowex-for-zowe-explorer";
 
 vi.mock("child_process");
 vi.mock("fs");
@@ -489,6 +490,99 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         expect(errorSpy).toHaveBeenCalledTimes(1);
         expect(errorSpy).toHaveBeenCalledWith(Error("test error"));
         errorSpy.mockClear();
+    });
+
+    describe("SSH config host discovery", () => {
+        function createQuickPickMock() {
+            return { items: [] as any[], show: vi.fn(), hide: vi.fn(), ignoreFocusOut: false, placeholder: "", title: "" };
+        }
+
+        beforeEach(() => {
+            // Some other tests in this file leave an unconsumed queued value on this spy (e.g. when their code
+            // path returns before calling resolveQuickPick), which would otherwise leak into these tests.
+            vi.spyOn(Gui, "resolveQuickPick").mockReset();
+        });
+
+        it("lists SSH config hosts that aren't already team config profiles, excluding those that are", async () => {
+            const globalMocks = createGlobalMocks();
+            vi.spyOn(ZoweExplorerApiRegister.getInstance(), "registeredUssApiTypes").mockReturnValue(["zosmf", "ssh"]);
+            vi.spyOn(zowex.SshConfigUtils, "migrateSshConfig").mockResolvedValue([
+                { name: "profile1", hostname: "existing.example.com" },
+                { name: "newhost", hostname: "new.example.com" },
+            ] as any);
+            const quickPick = createQuickPickMock();
+            vi.spyOn(Gui, "createQuickPick").mockReturnValue(quickPick as any);
+            vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
+
+            await Profiles.getInstance().createZoweSession(globalMocks.testUSSTree);
+
+            const labels = quickPick.items.map((item: any) => item.label as string);
+            expect(labels.some((label) => label.includes("newhost"))).toBe(true);
+            expect(labels.some((label) => label.includes("profile1"))).toBe(false);
+        });
+
+        it("does not query SSH config hosts when the ssh API type isn't registered for the tree", async () => {
+            const globalMocks = createGlobalMocks();
+            vi.spyOn(ZoweExplorerApiRegister.getInstance(), "registeredUssApiTypes").mockReturnValue(["zosmf"]);
+            const migrateSpy = vi.spyOn(zowex.SshConfigUtils, "migrateSshConfig").mockResolvedValue([{ name: "newhost", hostname: "x" }] as any);
+            const quickPick = createQuickPickMock();
+            vi.spyOn(Gui, "createQuickPick").mockReturnValue(quickPick as any);
+            vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
+
+            await Profiles.getInstance().createZoweSession(globalMocks.testUSSTree);
+
+            expect(migrateSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not query SSH config hosts when no team config exists", async () => {
+            const globalMocks = createGlobalMocks();
+            vi.spyOn(ZoweExplorerApiRegister.getInstance(), "registeredUssApiTypes").mockReturnValue(["zosmf", "ssh"]);
+            const profileInfo = createInstanceOfProfileInfo();
+            vi.spyOn(profileInfo, "getTeamConfig").mockReturnValue({ ...profileInfo.getTeamConfig(), exists: false });
+            vi.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce(profileInfo);
+            const migrateSpy = vi.spyOn(zowex.SshConfigUtils, "migrateSshConfig").mockResolvedValue([{ name: "newhost", hostname: "x" }] as any);
+            const quickPick = createQuickPickMock();
+            vi.spyOn(Gui, "createQuickPick").mockReturnValue(quickPick as any);
+            vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
+
+            await Profiles.getInstance().createZoweSession(globalMocks.testUSSTree);
+
+            expect(migrateSpy).not.toHaveBeenCalled();
+        });
+
+        it("creates an ssh profile and adds the session when a migrated ssh host is selected", async () => {
+            const globalMocks = createGlobalMocks();
+            vi.spyOn(ZoweExplorerApiRegister.getInstance(), "registeredUssApiTypes").mockReturnValue(["zosmf", "ssh"]);
+            vi.spyOn(zowex.SshConfigUtils, "migrateSshConfig").mockResolvedValue([{ name: "my.host", hostname: "example.com" }] as any);
+            const quickPick = createQuickPickMock();
+            vi.spyOn(Gui, "createQuickPick").mockReturnValue(quickPick as any);
+            vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: "$(cloud-download) my.host" } as any);
+            const createProfileSpy = vi
+                .spyOn(zowex.VscePromptApi.prototype, "createProfileFromSshConfigHost")
+                .mockResolvedValue({ name: "my_host" } as any);
+            const refreshSpy = vi.spyOn(Profiles.getInstance(), "refresh").mockResolvedValue(undefined);
+            vi.spyOn(Profiles, "handleChangeForAllTrees").mockResolvedValue(false);
+
+            await Profiles.getInstance().createZoweSession(globalMocks.testUSSTree);
+
+            expect(createProfileSpy).toHaveBeenCalledWith(expect.objectContaining({ name: "my.host" }), "my_host");
+            expect(refreshSpy).toHaveBeenCalled();
+            expect(globalMocks.testUSSTree.addSession).toHaveBeenCalledWith(expect.objectContaining({ sessionName: "my_host" }));
+        });
+
+        it("does not add a session when ssh profile creation is cancelled", async () => {
+            const globalMocks = createGlobalMocks();
+            vi.spyOn(ZoweExplorerApiRegister.getInstance(), "registeredUssApiTypes").mockReturnValue(["zosmf", "ssh"]);
+            vi.spyOn(zowex.SshConfigUtils, "migrateSshConfig").mockResolvedValue([{ name: "my.host", hostname: "example.com" }] as any);
+            const quickPick = createQuickPickMock();
+            vi.spyOn(Gui, "createQuickPick").mockReturnValue(quickPick as any);
+            vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce({ label: "$(cloud-download) my.host" } as any);
+            vi.spyOn(zowex.VscePromptApi.prototype, "createProfileFromSshConfigHost").mockResolvedValue(undefined);
+
+            await Profiles.getInstance().createZoweSession(globalMocks.testUSSTree);
+
+            expect(globalMocks.testUSSTree.addSession).not.toHaveBeenCalled();
+        });
     });
 });
 

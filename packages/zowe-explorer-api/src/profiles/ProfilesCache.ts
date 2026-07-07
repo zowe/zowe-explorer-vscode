@@ -246,6 +246,7 @@ export class ProfilesCache {
         const mProfileInfo = await this.getProfileInfo();
         const allTypes = new Set(this.getAllProfileTypes(apiRegister?.registeredApiTypes() ?? []));
         allTypes.add("ssh");
+        allTypes.add("ssh-config");
         allTypes.add("base");
         for (const type of allTypes) {
             const tmpAllProfiles: imperative.IProfileLoaded[] = [];
@@ -504,13 +505,13 @@ export class ProfilesCache {
     }
 
     public getCoreProfileTypes(): imperative.IProfileTypeConfiguration[] {
-        return [ZosmfProfile, ZosTsoProfile, ZosUssProfile];
+        return [ZosmfProfile, ZosTsoProfile, ZosUssProfile, { ...ZosUssProfile, type: "ssh-config" }];
     }
 
     protected getMergedAttrs(mProfileInfo: imperative.ProfileInfo, profAttrs: imperative.IProfAttrs): imperative.IProfile {
         const profile: imperative.IProfile = {};
         if (profAttrs != null) {
-            const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true });
+            const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true, doNotMerge: profAttrs.profType === "ssh-config" });
             for (const arg of mergedArgs.knownArgs) {
                 profile[arg.argName] = arg.argValue;
             }
