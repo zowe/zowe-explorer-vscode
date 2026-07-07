@@ -220,6 +220,9 @@ export class Profiles extends ProfilesCache {
             }
         } else if (!usingTokenAuth && !usingBasicAuth && !usingCertAuth && !usingPrivateKey) {
             ZoweLogger.debug(`Profile ${theProfile.name} is using basic auth, prompting for missing credentials`);
+            if (theProfile.type === "ssh-config" && theProfile.profile.user == null) {
+                theProfile.profile.user = iSessFromProf.user;
+            }
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
                 (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")
@@ -517,12 +520,13 @@ export class Profiles extends ProfilesCache {
         })();
         // Offer SSH hosts discovered in ~/.ssh/config that aren't already team config profiles
         const sshHostsByName = new Map<string, zowex.ISshConfigExt>();
-        if (registeredProfileTypesForTree.includes("ssh") && mProfileInfo.getTeamConfig().exists) {
+        if (registeredProfileTypesForTree.includes("ssh")) {
             try {
                 const existingProfileNames = new Set(profAllAttrs.map((p) => p.profName));
                 const migratedHosts = await zowex.SshConfigUtils.migrateSshConfig();
                 for (const host of migratedHosts) {
-                    if (host.name && !existingProfileNames.has(host.name)) {
+                    const sanitizedName = host.name?.replace(/\./g, "_");
+                    if (host.name && !existingProfileNames.has(sanitizedName)) {
                         sshHostsByName.set(host.name, host);
                     }
                 }
