@@ -296,9 +296,8 @@ export class Profiles extends ProfilesCache {
         if (configFileIndex === -1) {
             toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")}`);
         } else {
-            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
-                layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
-            }`;
+            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
+                }`;
         }
 
         const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
@@ -1077,13 +1076,15 @@ export class Profiles extends ProfilesCache {
         }
         dsNode.description &&= "";
         dsNode.pattern &&= "";
-        if (SharedTreeProviders.ds.onCollapsibleStateChange) {
-            await SharedTreeProviders.ds.onCollapsibleStateChange(dsNode, vscode.TreeItemCollapsibleState.Collapsed);
-        } else {
-            // eslint-disable-next-line deprecation/deprecation
-            SharedTreeProviders.ds.flipState(dsNode, false);
-        }
-        await SharedTreeProviders.ds.refreshElement(dsNode);
+
+        // ---------------------------------------------------------------
+        // Given that the providers defined in `SharedTreeProviders` (e.g. ds, uss, job) extend `ZoweTreeProvider`,
+        // we are guaranteed to have implemented the `onCollapsibleStateChange` function.
+        // Thus it is safe to ignore the compiler warning about using an optional function defined in `IZoweTree`
+        await SharedTreeProviders.ds.onCollapsibleStateChange!(dsNode, vscode.TreeItemCollapsibleState.Collapsed);
+        // ---------------------------------------------------------------
+
+        SharedTreeProviders.ds.refreshElement(dsNode);
     }
 
     public async clearUSSFilterFromTree(node: Types.IZoweNodeType): Promise<void> {
@@ -1098,12 +1099,14 @@ export class Profiles extends ProfilesCache {
         }
         ussNode.description &&= "";
         ussNode.fullPath &&= "";
-        if (SharedTreeProviders.uss.onCollapsibleStateChange) {
-            await SharedTreeProviders.uss.onCollapsibleStateChange(ussNode, vscode.TreeItemCollapsibleState.Collapsed);
-        } else {
-            // eslint-disable-next-line deprecation/deprecation
-            SharedTreeProviders.uss.flipState(ussNode, false);
-        }
+
+        // ---------------------------------------------------------------
+        // Given that the providers defined in `SharedTreeProviders` (e.g. ds, uss, job) extend `ZoweTreeProvider`,
+        // we are guaranteed to have implemented the `onCollapsibleStateChange` function.
+        // Thus it is safe to ignore the compiler warning about using an optional function defined in `IZoweTree`
+        await SharedTreeProviders.uss.onCollapsibleStateChange!(ussNode, vscode.TreeItemCollapsibleState.Collapsed);
+        // ---------------------------------------------------------------
+
         SharedTreeProviders.uss.refreshElement(ussNode);
     }
 
@@ -1123,12 +1126,14 @@ export class Profiles extends ProfilesCache {
         jobNode.status &&= "";
         jobNode.filtered &&= false;
         jobNode.children &&= [];
-        if (SharedTreeProviders.job.onCollapsibleStateChange) {
-            await SharedTreeProviders.job.onCollapsibleStateChange(jobNode, vscode.TreeItemCollapsibleState.Collapsed);
-        } else {
-            // eslint-disable-next-line deprecation/deprecation
-            SharedTreeProviders.job.flipState(jobNode, false);
-        }
+
+        // ---------------------------------------------------------------
+        // Given that the providers defined in `SharedTreeProviders` (e.g. ds, uss, job) extend `ZoweTreeProvider`,
+        // we are guaranteed to have implemented the `onCollapsibleStateChange` function.
+        // Thus it is safe to ignore the compiler warning about using an optional function defined in `IZoweTree`
+        await SharedTreeProviders.job.onCollapsibleStateChange!(jobNode, vscode.TreeItemCollapsibleState.Collapsed);
+        // ---------------------------------------------------------------
+
         SharedTreeProviders.job.refreshElement(jobNode);
     }
 
