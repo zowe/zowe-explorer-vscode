@@ -58,7 +58,7 @@ jobs:
 
       - name: Unlock Keyring
         id: unlock-keyring
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.node-version == 'lts/-1' && matrix.os == 'ubuntu-22.04'
         uses: t1m0thyj/unlock-keyring@v1
 
       - name: Integration tests
@@ -70,7 +70,7 @@ jobs:
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
-        if: always() && steps.build.outcome == 'success' && matrix.os == 'ubuntu-22.04'
+        if: always() && steps.build.outcome == 'success' && matrix.node-version == 'lts/-1' && matrix.os == 'ubuntu-22.04'
         with:
           name: zowe-explorer-results
           path: |
@@ -79,7 +79,7 @@ jobs:
 
       - name: Upload API test results
         uses: actions/upload-artifact@v4
-        if: always() && steps.build.outcome == 'success' && matrix.os == 'ubuntu-22.04'
+        if: always() && steps.build.outcome == 'success' && matrix.node-version == 'lts/-1' && matrix.os == 'ubuntu-22.04'
         with:
           name: zowe-explorer-api-results
           path: packages/zowe-explorer-api/results/
@@ -91,12 +91,12 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Package VSIX
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.node-version == 'lts/-1' && matrix.os == 'ubuntu-22.04'
         run: pnpm package
         working-directory: packages/zowe-explorer
 
       - name: Archive VSIX artifact
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.node-version == 'lts/-1' && matrix.os == 'ubuntu-22.04'
         uses: actions/upload-artifact@v4
         with:
           name: zowe-explorer-vsix
