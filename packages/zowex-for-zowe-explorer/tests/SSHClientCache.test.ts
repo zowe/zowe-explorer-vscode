@@ -9,7 +9,7 @@
  *
  */
 
-import { imperative, ZoweVsCodeExtension, ErrorCorrelator, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { imperative, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
 import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
