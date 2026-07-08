@@ -54,7 +54,16 @@ describe("ServerDeployment", () => {
 
             await deployWithProgress(fakeSession, "/server/path");
 
-            expect(createErrorCallbackSpy).toHaveBeenCalledWith(ZoweExplorerApiType.All, "Server installation");
+            expect(createErrorCallbackSpy).toHaveBeenCalledWith(ZoweExplorerApiType.All, "Server installation", undefined);
+        });
+
+        it("should forward the given profile name to the error callback", async () => {
+            vi.mocked(ZSshUtils.installServer).mockResolvedValue(true);
+            const createErrorCallbackSpy = vi.spyOn(SshErrorHandler.getInstance(), "createErrorCallback");
+
+            await deployWithProgress(fakeSession, "/server/path", "myProfile");
+
+            expect(createErrorCallbackSpy).toHaveBeenCalledWith(ZoweExplorerApiType.All, "Server installation", "myProfile");
         });
 
         it("should forward progress increments to the VS Code progress reporter", async () => {

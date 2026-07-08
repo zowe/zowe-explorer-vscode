@@ -258,7 +258,13 @@ describe("SshCommonApi", () => {
 
             const status = await commonApi.getStatus(noInnerProfile, "ssh");
 
-            expect(handleErrorSpy).toHaveBeenCalledWith(expect.any(Error), ZoweExplorerApiType.All, "SSH connection status check failed", false);
+            expect(handleErrorSpy).toHaveBeenCalledWith(
+                expect.any(Error),
+                ZoweExplorerApiType.All,
+                "SSH connection status check failed",
+                false,
+                "sshProf"
+            );
             expect(status).toEqual("inactive");
         });
 
@@ -273,7 +279,13 @@ describe("SshCommonApi", () => {
 
             const status = await commonApi.getStatus(bothAuthProfile, "ssh");
 
-            expect(handleErrorSpy).toHaveBeenCalledWith(expect.any(Error), ZoweExplorerApiType.All, "SSH connection status check failed", false);
+            expect(handleErrorSpy).toHaveBeenCalledWith(
+                expect.any(Error),
+                ZoweExplorerApiType.All,
+                "SSH connection status check failed",
+                false,
+                "sshProf"
+            );
             expect(status).toEqual("inactive");
         });
     });

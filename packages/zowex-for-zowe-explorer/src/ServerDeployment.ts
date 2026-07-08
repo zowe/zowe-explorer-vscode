@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 import { SshErrorHandler } from "./SshErrorHandler";
 import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 
-export function deployWithProgress(session: SshSession, serverPath: string): Thenable<boolean> {
+export function deployWithProgress(session: SshSession, serverPath: string, profileName?: string): Thenable<boolean> {
     return Gui.withProgress(
         {
             location: vscode.ProgressLocation.Notification,
@@ -12,7 +12,7 @@ export function deployWithProgress(session: SshSession, serverPath: string): The
         },
         async (progress) => {
             // Create error callback that uses error correlations
-            const errorCallback = SshErrorHandler.getInstance().createErrorCallback(ZoweExplorerApiType.All, "Server installation");
+            const errorCallback = SshErrorHandler.getInstance().createErrorCallback(ZoweExplorerApiType.All, "Server installation", profileName);
 
             // Pass callbacks for both progress and error handling
             return await ZSshUtils.installServer(session, serverPath, {

@@ -83,7 +83,8 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                         err as Error,
                         ZoweExplorerApiType.All,
                         "SSH connection status check failed",
-                        false
+                        false,
+                        profile.name
                     );
                 }
 

@@ -48,7 +48,7 @@ export class Utilities {
         }
 
         const sshSession = ZSshUtils.buildSession(profile.profile);
-        const deployStatus = await deployWithProgress(sshSession, deployDirectory);
+        const deployStatus = await deployWithProgress(sshSession, deployDirectory, profile.name);
         if (!deployStatus) {
             return;
         }
@@ -92,7 +92,7 @@ export class Utilities {
         await ConfigUtils.showSessionInTree(profile.name!, false, zoweExplorerApi);
 
         // Create error callback for uninstall operation
-        const errorCallback = SshErrorHandler.getInstance().createErrorCallback(ZoweExplorerApiType.All, "Server uninstall");
+        const errorCallback = SshErrorHandler.getInstance().createErrorCallback(ZoweExplorerApiType.All, "Server uninstall", profile.name);
         await ZSshUtils.uninstallServer(ZSshUtils.buildSession(profile.profile), serverPath, {
             onError: errorCallback,
         });

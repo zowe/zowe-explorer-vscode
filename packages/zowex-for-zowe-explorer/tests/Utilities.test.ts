@@ -209,7 +209,7 @@ describe("Utilities", () => {
             expect(promptForProfile).toHaveBeenCalledWith("myProf", { prioritizeProjectLevelConfig: false });
             expect(promptForDeployDirectory).toHaveBeenCalledWith("myHost", "/default/path");
             expect(buildSessionSpy).toHaveBeenCalledWith(profile.profile);
-            expect(deploySpy).toHaveBeenCalledWith({ ISshSession: {} }, "/deploy/dir");
+            expect(deploySpy).toHaveBeenCalledWith({ ISshSession: {} }, "/deploy/dir", "myProf");
             expect(showSessionSpy).toHaveBeenCalledWith("myProf", true, api);
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
         });

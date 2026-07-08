@@ -32,18 +32,21 @@ export class SshErrorHandler {
      * @param apiType The API type where the error occurred
      * @param context Additional context about the operation
      * @param allowRetry Whether to allow retrying the operation
+     * @param profileName The name of the profile in use, for error message templating
      * @returns The user's response ("Retry", "Troubleshoot", etc.)
      */
     public async handleError(
         error: Error | string,
         apiType: ZoweExplorerApiType,
         context?: string,
-        allowRetry: boolean = false
+        allowRetry: boolean = false,
+        profileName?: string
     ): Promise<string | undefined> {
         const result = await ErrorCorrelator.getInstance().displayError(apiType, error, {
             profileType: "ssh",
             additionalContext: context,
             allowRetry,
+            templateArgs: { profileName: profileName ?? "" },
         });
         return result.userResponse;
     }
@@ -107,12 +110,17 @@ export class SshErrorHandler {
      * Creates an error callback for use with SDK functions like installServer
      * @param apiType The API type for error correlation
      * @param context Additional context for the operation
+     * @param profileName The name of the profile in use, for error message templating
      * @returns An error callback function that handles errors with correlation
      */
-    public createErrorCallback(apiType: ZoweExplorerApiType, context?: string): (error: Error, operationContext: string) => Promise<boolean> {
+    public createErrorCallback(
+        apiType: ZoweExplorerApiType,
+        context?: string,
+        profileName?: string
+    ): (error: Error, operationContext: string) => Promise<boolean> {
         return async (error: Error, operationContext: string): Promise<boolean> => {
             const fullContext = context ? `${context} (${operationContext})` : operationContext;
-            const userResponse = await SshErrorHandler.getInstance().handleError(error, apiType, fullContext, true);
+            const userResponse = await SshErrorHandler.getInstance().handleError(error, apiType, fullContext, true, profileName);
 
             // Return true if user chose to retry, false otherwise
             return userResponse === "Retry";

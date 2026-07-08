@@ -74,6 +74,7 @@ describe("SshErrorHandler", () => {
                 profileType: "ssh",
                 additionalContext: "SSH connection",
                 allowRetry: true,
+                templateArgs: { profileName: "" },
             });
             expect(result).toBe("Retry");
         });
@@ -90,6 +91,7 @@ describe("SshErrorHandler", () => {
                 profileType: "ssh",
                 additionalContext: undefined,
                 allowRetry: false,
+                templateArgs: { profileName: "" },
             });
             expect(result).toBe("Troubleshoot");
         });
@@ -117,6 +119,7 @@ describe("SshErrorHandler", () => {
                 profileType: "ssh",
                 additionalContext: undefined,
                 allowRetry: false,
+                templateArgs: { profileName: "" },
             });
             expect(result).toBeUndefined();
         });
@@ -133,6 +136,21 @@ describe("SshErrorHandler", () => {
                 profileType: "ssh",
                 additionalContext: "Test context",
                 allowRetry: false,
+                templateArgs: { profileName: "" },
+            });
+        });
+
+        it("should pass the given profile name as a template arg", async () => {
+            const testError = new Error("Invalid credentials");
+            mockErrorCorrelator.displayError.mockResolvedValue({ userResponse: "Troubleshoot" });
+
+            await errorHandler.handleError(testError, ZoweExplorerApiType.All, "SSH connection", false, "myProfile");
+
+            expect(mockErrorCorrelator.displayError).toHaveBeenCalledWith(ZoweExplorerApiType.All, testError, {
+                profileType: "ssh",
+                additionalContext: "SSH connection",
+                allowRetry: false,
+                templateArgs: { profileName: "myProfile" },
             });
         });
     });
@@ -235,8 +253,23 @@ describe("SshErrorHandler", () => {
                 profileType: "ssh",
                 additionalContext: "Upload operation (file transfer)",
                 allowRetry: true,
+                templateArgs: { profileName: "" },
             });
             expect(shouldRetry).toBe(true);
+        });
+
+        it("should forward the given profile name as a template arg", async () => {
+            const testError = new Error("Test error");
+            mockErrorCorrelator.displayError.mockResolvedValue({ userResponse: "Retry" });
+
+            const callback = errorHandler.createErrorCallback(ZoweExplorerApiType.All, "Upload operation", "myProfile");
+            await callback(testError, "file transfer");
+
+            expect(mockErrorCorrelator.displayError).toHaveBeenCalledWith(
+                ZoweExplorerApiType.All,
+                testError,
+                expect.objectContaining({ templateArgs: { profileName: "myProfile" } })
+            );
         });
 
         it("should return false when user chooses not to retry", async () => {
