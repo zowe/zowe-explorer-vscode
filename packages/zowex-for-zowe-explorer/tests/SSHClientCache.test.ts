@@ -9,7 +9,7 @@
  *
  */
 
-import { imperative, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { imperative, ZoweVsCodeExtension, ErrorCorrelator, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
 import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
@@ -66,7 +66,7 @@ vi.mock("@zowe/zowe-explorer-api", () => {
             DeferredPromise: MockDeferredPromise,
         },
         ErrorCorrelator: {
-            getInstance: vi.fn().mockReturnValue({
+            getInstance: () => ({
                 displayError: vi.fn().
                     mockResolvedValue({ userResponse: 'Hello tests' })
             }),
