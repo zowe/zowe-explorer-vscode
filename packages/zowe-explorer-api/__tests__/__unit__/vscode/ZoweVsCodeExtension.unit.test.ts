@@ -868,6 +868,29 @@ describe("ZoweVsCodeExtension", () => {
             expect(validateInput("valid")).toBeUndefined();
         });
 
+        it("should call fallback validateInput if provided in userInputBoxOptions", async () => {
+            const fakeProfile = { user: "", password: "fakePass" };
+            vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
+                getLoadedProfConfig: vi.fn().mockReturnValue({ profile: fakeProfile }),
+                getProfileInfo: vi.fn().mockReturnValue({ 
+                    isSecured: vi.fn().mockReturnValue(true), 
+                    updateProperty: vi.fn(),
+                    getTeamConfig: vi.fn().mockReturnValue({ properties: { autoStore: false } })
+                }),
+                refresh: vi.fn(),
+            });
+            const fallbackValidate = vi.fn().mockReturnValue("Fallback error");
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+            await ZoweVsCodeExtension.updateCredentials(
+                { ...promptCredsOptions, rePrompt: false, userInputBoxOptions: { validateInput: fallbackValidate } },
+                undefined as unknown as Types.IApiRegisterClient
+            );
+            const validateInput = showInputBoxSpy.mock.calls[0][0].validateInput;
+            expect(validateInput).toBeDefined();
+            expect(validateInput("valid")).toBe("Fallback error");
+            expect(fallbackValidate).toHaveBeenCalledWith("valid");
+        });
+
         it("should do nothing if password input is cancelled", async () => {
             const fakeProfile = { user: "fakeUser", password: "fakePass" };
             const mockUpdateProperty = vi.fn();
