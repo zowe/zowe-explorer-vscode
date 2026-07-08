@@ -113,7 +113,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
 
     public getSshSession(profile?: imperative.IProfileLoaded): SshSession {
         const theProfile = profile ?? this.profile;
-        const sshConfigHost = theProfile?.type === "ssh-config" ? theProfile.profile?.sshLink : undefined;
+        const sshConfigHost = theProfile?.type === "ssh-config" ? theProfile.profile?.extends : undefined;
         const session = ZSshUtils.buildSession(theProfile?.profile!, sshConfigHost);
         return session;
     }
