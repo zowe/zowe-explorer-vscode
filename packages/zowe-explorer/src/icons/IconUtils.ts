@@ -46,7 +46,7 @@ export namespace IconUtils {
     export interface IIconItem {
         id: IconId;
         type: IconHierarchyType;
-        path: vscode.IconPath;
+        path: { light: vscode.Uri; dark: vscode.Uri };
         check: (node: TreeNode) => boolean;
     }
 }

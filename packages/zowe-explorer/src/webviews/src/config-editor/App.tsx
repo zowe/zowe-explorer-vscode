@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 
 import "./App.css";
+import "./help/help-styles.css";
 
 import {
   Tabs,
@@ -15,6 +16,7 @@ import {
   RenderProfileDetails,
   RenderDefaults,
   WizardManager,
+  TutorialOverlay,
 } from "./components";
 
 import { flattenKeys, flattenProfiles, getAllQualifiedProfileKeys, resolveOriginalProfileKeyFromRenames } from "./utils";
@@ -137,6 +139,11 @@ function AppContent() {
 
   const [pendingPropertyDeletion, setPendingPropertyDeletion] = useState<string | null>(null);
   const [pendingProfileDeletion, setPendingProfileDeletion] = useState<string | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
+  // tutorialSeen: configPath → true once the user has seen the tutorial for that config.
+  // Populated from globalState via the CONFIGURATIONS message; persisted via SET_LOCAL_STORAGE_VALUE.
+  const [tutorialSeen, setTutorialSeen] = useState<Record<string, boolean>>({});
+  const tutorialSeenRef = useRef<Record<string, boolean>>({});
 
   const { handleChange, handleDefaultsChange, handleDeleteProperty, confirmDeleteProperty, handleUnlinkMergedProperty, handleAddNewProfileKey } =
     usePropertyHandlers({
@@ -160,6 +167,20 @@ function AppContent() {
 
   const { formatPendingChanges, hasPendingChanges } = useProfileUtils();
   const { setWizardModalOpen, wizardModalOpen, setWizardProfileNameValidation } = useWizardContext();
+
+  // Keep tutorialSeenRef in sync so the effect below can read it without a stale closure.
+  useEffect(() => {
+    tutorialSeenRef.current = tutorialSeen;
+  }, [tutorialSeen]);
+
+  // Show the tutorial for any config whose path is not yet marked as seen.
+  useEffect(() => {
+    if (configurations.length === 0) return;
+    const currentConfigPath = configurations[selectedTab ?? 0]?.configPath;
+    if (currentConfigPath && !tutorialSeenRef.current[currentConfigPath]) {
+      setShowTutorial(true);
+    }
+  }, [configurations, selectedTab]);
 
   useEffect(() => {
     if (selectedTab !== null && configurations[selectedTab]) {
@@ -421,6 +442,7 @@ function AppContent() {
     setWizardProfileNameValidation,
     setRenames,
     setConfigParseErrors,
+    setTutorialSeen,
     configurationsRef,
     mergedPropertiesLatestRequestSeqRef,
     pendingSaveSelection,
@@ -445,6 +467,7 @@ function AppContent() {
         onToggleAutostore={handleAutostoreToggle}
       />
       <Panels
+        onOpenRawFile={handleOpenRawJson}
         renderProfiles={(profilesObj) => (
           <RenderProfiles
             profilesObj={profilesObj}
@@ -598,6 +621,25 @@ function AppContent() {
         }}
         onCancel={() => setRenameProfileModalOpen(false)}
       />
+
+      {showTutorial && (
+        <TutorialOverlay
+          onClose={() => {
+            const configPath = configurations[selectedTab ?? 0]?.configPath;
+            if (configPath) {
+              const updated = { ...tutorialSeenRef.current, [configPath]: true };
+              tutorialSeenRef.current = updated;
+              setTutorialSeen(updated);
+              vscodeApi.postMessage({
+                command: "SET_LOCAL_STORAGE_VALUE",
+                key: "zowe.configEditor.tutorialSeen",
+                value: updated,
+              });
+            }
+            setShowTutorial(false);
+          }}
+        />
+      )}
     </div>
   );
 }

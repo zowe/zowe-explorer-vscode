@@ -206,6 +206,7 @@ export namespace Definitions {
         DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
         DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
         CONFIG_EDITOR_SETTINGS = "zowe.configEditor.settings",
+        CONFIG_EDITOR_TUTORIAL_SEEN = "zowe.configEditor.tutorialSeen",
         DS_DOWNLOAD_OPTIONS = "zowe.dsDownloadOptions",
         USS_DOWNLOAD_OPTIONS = "zowe.ussDownloadOptions",
     }

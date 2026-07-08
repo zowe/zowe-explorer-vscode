@@ -438,13 +438,14 @@ div:has(> .vscode-panel) {
 
 .config-label {
     font-weight: 500;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     margin-right: 8px;
     color: var(--vscode-editor-foreground);
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 100%;
+    min-width: 0;
+    flex-shrink: 0;
 }
 
 .config-input {
@@ -487,7 +488,7 @@ select.config-input.config-input-inherited:disabled,
 
 .config-item-container {
     display: grid;
-    grid-template-columns: 150px 1fr auto;
+    grid-template-columns: minmax(150px, max-content) 1fr auto;
     gap: 8px;
     align-items: center;
     max-width: 100%;

@@ -1225,7 +1225,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * Helper method which sets an icon of node and initiates reloading of tree
      * @param iconPath
      */
-    public setIcon(iconPath: vscode.IconPath): void {
+    public setIcon(iconPath: { light: vscode.Uri; dark: vscode.Uri }): void {
         ZoweLogger.trace("ZoweDatasetNode.setIcon called.");
         this.iconPath = iconPath;
         vscode.commands.executeCommand("zowe.ds.refreshDataset", this);

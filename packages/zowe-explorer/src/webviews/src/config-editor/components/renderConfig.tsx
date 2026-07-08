@@ -14,6 +14,8 @@ import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
 import { SortDropdown } from "./SortDropdown";
 import { EnvVarAutocomplete } from "./EnvVarAutocomplete";
+import { InfoIcon } from "./InfoIcon";
+import { getFieldHelp } from "../help/FieldHelpContent";
 import {
   flattenProfiles,
   extractProfileKeyFromPath,
@@ -744,6 +746,11 @@ export const RenderConfig = ({
 
           const inheritedInputClass = isFromMergedProps && !isDeletedMergedProperty ? " config-input-inherited" : "";
 
+          const currentProfileTypeForHelp = extractProfileKeyFromPath(path)
+            ? getProfileType({ profileKey: extractProfileKeyFromPath(path), selectedTab, configurations, pendingChanges, renames })
+            : null;
+          const fieldHelp = displayKey && currentProfileTypeForHelp ? getFieldHelp(currentProfileTypeForHelp, displayKey) : null;
+
           const readOnlyContainer = (
             <div
               className="config-item-container "
@@ -763,6 +770,7 @@ export const RenderConfig = ({
                 }
               >
                 {displayKey}
+                {fieldHelp && displayKey && <InfoIcon fieldKey={displayKey} helpContent={fieldHelp} />}
               </span>
               {displayKey === "type" && path[path.length - 1] !== "properties" ? (
                 <div style={{ position: "relative", width: "100%" }}>

@@ -59,6 +59,7 @@ export interface MessageHandlerProps {
     setWizardProfileNameValidation: React.Dispatch<React.SetStateAction<{ isValid: boolean; message?: string }>>;
     setRenames: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [originalKey: string]: string } }>>;
     setConfigParseErrors: React.Dispatch<React.SetStateAction<ConfigParseError[]>>;
+    setTutorialSeen: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
 
     // Refs
     configurationsRef: React.MutableRefObject<Configuration[]>;
@@ -81,6 +82,7 @@ interface ConfigurationsMessagePayload {
     contents: ConfigurationWithSchema[];
     parseErrors?: ConfigParseError[];
     secureValuesAllowed?: boolean;
+    tutorialSeen?: Record<string, boolean>;
 }
 
 // Handle CONFIGURATIONS message
@@ -108,7 +110,10 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
         setConfigParseErrors,
     } = props;
 
-    const { contents, secureValuesAllowed, parseErrors } = data;
+    const { contents, secureValuesAllowed, parseErrors, tutorialSeen } = data;
+    if (tutorialSeen !== undefined) {
+        props.setTutorialSeen(tutorialSeen);
+    }
     const parseErrorList: ConfigParseError[] = parseErrors ?? [];
     setConfigParseErrors(parseErrorList);
     const previousConfigurations = configurationsRef.current;

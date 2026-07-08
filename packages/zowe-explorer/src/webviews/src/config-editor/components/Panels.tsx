@@ -19,6 +19,7 @@ interface PanelsProps {
   renderProfileDetails: () => React.ReactNode;
   onProfileWizard: () => void;
   onViewModeToggle: () => void;
+  onOpenRawFile: (filePath: string) => void;
   onClearChanges: () => void;
   onSaveAll: () => void;
   hasPendingChanges: boolean;
@@ -30,6 +31,7 @@ export function Panels({
   renderProfileDetails,
   onProfileWizard,
   onViewModeToggle,
+  onOpenRawFile,
   onClearChanges,
   onSaveAll,
   hasPendingChanges,
@@ -68,7 +70,8 @@ export function Panels({
                     alignItems: "center",
                     justifyContent: "flex-start",
                     gap: "8px",
-                    width: "100%",
+                    flex: "1 1 auto",
+                    minWidth: 0,
                     padding: "6px 0",
                     background: "none",
                     border: "none",
@@ -81,6 +84,15 @@ export function Panels({
                 >
                   <span className={`codicon ${profilesCollapsed ? "codicon-chevron-right" : "codicon-chevron-down"}`}></span>
                   <h2 style={{ margin: 0, fontSize: "16px" }}>{l10n.t("Profiles")}</h2>
+                </button>
+                <button
+                  className="ce-icon-button"
+                  title={l10n.t("Open zowe.config.json")}
+                  onClick={() => onOpenRawFile(config.configPath)}
+                  data-testid="open-config-file"
+                  style={{ flexShrink: 0 }}
+                >
+                  <span className="codicon codicon-go-to-file"></span>
                 </button>
                 {!profilesCollapsed && (
                   <>

@@ -36,6 +36,27 @@ export class ConfigEditorMessageHandlers {
         private profileOperations: ConfigEditorProfileOperations
     ) {}
 
+    /**
+     * Returns the tutorial-seen map, pruned of any config paths that are no longer present.
+     * Keys are config file paths; value is true once the user has dismissed the tutorial for that config.
+     */
+    public getPrunedTutorialSeenMap(activeConfigPaths: string[]): Record<string, boolean> {
+        const stored =
+            LocalStorageAccess.getValue<Record<string, boolean>>(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN) ?? {};
+        const activePaths = new Set(activeConfigPaths);
+        const pruned: Record<string, boolean> = {};
+        for (const [k, v] of Object.entries(stored)) {
+            if (activePaths.has(k)) {
+                pruned[k] = v;
+            }
+        }
+        // Persist the pruned version so deleted configs are cleaned up immediately.
+        if (Object.keys(pruned).length !== Object.keys(stored).length) {
+            void LocalStorageAccess.setValue(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN, pruned);
+        }
+        return pruned;
+    }
+
     async handleGetProfiles(): Promise<void> {
         try {
             await ConfigUtils.createProfileInfoAndLoad();
@@ -43,11 +64,13 @@ export class ConfigEditorMessageHandlers {
 
         const { configs, parseErrors } = await this.getLocalConfigs();
         const secureValuesAllowed = await this.areSecureValuesAllowed();
+        const tutorialSeen = this.getPrunedTutorialSeenMap(configs.map((c) => c.configPath));
         await this.panel.webview.postMessage({
             command: "CONFIGURATIONS",
             contents: configs,
             parseErrors,
             secureValuesAllowed,
+            tutorialSeen,
         });
     }
 

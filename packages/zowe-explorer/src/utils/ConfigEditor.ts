@@ -235,12 +235,14 @@ export class ConfigEditor extends WebView {
     private async initializeWebview(): Promise<void> {
         const { configs, parseErrors } = await this.getLocalConfigs();
         const secureValuesAllowed = await this.areSecureValuesAllowed();
+        const tutorialSeen = this.messageHandlers.getPrunedTutorialSeenMap(configs.map((c) => c.configPath));
 
         await this.panel.webview.postMessage({
             command: "CONFIGURATIONS",
             contents: configs,
             parseErrors,
             secureValuesAllowed,
+            tutorialSeen,
         });
     }
 

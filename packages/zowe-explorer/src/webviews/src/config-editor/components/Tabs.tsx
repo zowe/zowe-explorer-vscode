@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import * as l10n from "@vscode/l10n";
 import { useConfigContext } from "../context/ConfigContext";
 
-interface TabsProps {
+export interface TabsProps {
   onTabChange: (index: number) => void;
   onOpenRawFile: (filePath: string) => void;
   onRevealInFinder: (filePath: string) => void;

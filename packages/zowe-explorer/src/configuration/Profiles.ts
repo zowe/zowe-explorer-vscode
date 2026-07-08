@@ -484,9 +484,11 @@ export class Profiles extends ProfilesCache {
 
         const createNewConfig = "Create a New Team Configuration File";
         const editConfig = "Edit Team Configuration File";
+        const openConfigJson = "Open zowe.config.json";
 
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
         const configEdit = new FilterDescriptor("\u270F " + editConfig);
+        const configOpen = new FilterDescriptor("\u{1F4C4} " + openConfigJson);
         const items: vscode.QuickPickItem[] = [];
         let mProfileInfo: imperative.ProfileInfo;
         try {
@@ -531,9 +533,9 @@ export class Profiles extends ProfilesCache {
                 });
         }
         if (allProfiles.length > 0) {
-            quickpick.items = [configPick, configEdit, ...items];
+            quickpick.items = [configPick, configEdit, configOpen, ...items];
         } else {
-            quickpick.items = [configPick, ...items];
+            quickpick.items = [configPick, configOpen, ...items];
         }
         quickpick.placeholder = addProfilePlaceholder;
         quickpick.title = vscode.l10n.t("Add Profile to Tree");
@@ -553,6 +555,16 @@ export class Profiles extends ProfilesCache {
         }
         if (choice === configEdit) {
             await this.editZoweConfigFile(true);
+            return;
+        }
+        if (choice === configOpen) {
+            const allProfileAttrs = mProfileInfo.getAllProfiles();
+            if (allProfileAttrs.length > 0) {
+                const firstProfile = await this.getProfileFromConfig(allProfileAttrs[0].profName);
+                if (firstProfile?.profLoc?.osLoc?.[0]) {
+                    await this.openConfigFile(firstProfile.profLoc.osLoc[0]);
+                }
+            }
             return;
         }
         let chosenProfile: string = "";

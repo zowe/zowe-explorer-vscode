@@ -492,6 +492,156 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
     });
 });
 
+describe("Profiles Unit Tests - createZoweSession - Open zowe.config.json option", () => {
+    function createBlockMocks(globalMocks) {
+        const newMocks = {
+            treeView: createTreeView(),
+            testDatasetSessionNode: null as any as ZoweDatasetNode,
+            testDatasetTree: null as any as IZoweTree<IZoweTreeNode>,
+        };
+        newMocks.testDatasetSessionNode = createDatasetSessionNode(newMocks.session ?? createISession(), globalMocks.mockProfileInstance);
+        newMocks.testDatasetTree = createDatasetTree(newMocks.testDatasetSessionNode, newMocks.treeView);
+        return newMocks;
+    }
+
+    beforeEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("Tests that createZoweSession includes 'Open zowe.config.json' in quick pick items when profiles exist", async () => {
+        createGlobalMocks();
+        const quickPick = {
+            items: [] as vscode.QuickPickItem[],
+            placeholder: "",
+            title: "",
+            show: vi.fn(),
+            hide: vi.fn(),
+            ignoreFocusOut: false,
+        } as any;
+
+        vi.spyOn(Gui, "createQuickPick").mockReturnValue(quickPick);
+        vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
+
+        const treeProvider = {
+            getTreeType: vi.fn().mockReturnValue(PersistenceSchemaEnum.Dataset),
+            mSessionNodes: [],
+            addSession: vi.fn(),
+        } as any;
+
+        await Profiles.getInstance().createZoweSession(treeProvider);
+
+        const labels = quickPick.items.map((item: vscode.QuickPickItem) => item.label);
+        expect(labels.some((l: string) => l.includes("Open zowe.config.json"))).toBe(true);
+    });
+
+    it("Tests that createZoweSession includes 'Open zowe.config.json' when no profiles exist", async () => {
+        const globalMocks = createGlobalMocks();
+        // Override allProfiles to empty so allProfiles.length === 0
+        Object.defineProperty(globalMocks.mockProfileInstance, "allProfiles", {
+            value: [],
+            configurable: true,
+        });
+
+        const quickPick = {
+            items: [] as vscode.QuickPickItem[],
+            placeholder: "",
+            title: "",
+            show: vi.fn(),
+            hide: vi.fn(),
+            ignoreFocusOut: false,
+        } as any;
+
+        vi.spyOn(Gui, "createQuickPick").mockReturnValue(quickPick);
+        vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(undefined);
+
+        const treeProvider = {
+            getTreeType: vi.fn().mockReturnValue(PersistenceSchemaEnum.Dataset),
+            mSessionNodes: [],
+            addSession: vi.fn(),
+        } as any;
+
+        await Profiles.getInstance().createZoweSession(treeProvider);
+
+        const labels = quickPick.items.map((item: vscode.QuickPickItem) => item.label);
+        expect(labels.some((l: string) => l.includes("Open zowe.config.json"))).toBe(true);
+        // "Edit Team Configuration File" should NOT appear when there are no profiles
+        expect(labels.some((l: string) => l.includes("Edit Team Configuration File"))).toBe(false);
+    });
+
+    it("Tests that selecting 'Open zowe.config.json' calls openConfigFile with the config path", async () => {
+        createGlobalMocks();
+        const openConfigFileSpy = vi.spyOn(Profiles.getInstance(), "openConfigFile").mockResolvedValue(undefined);
+        const profileInfo = createInstanceOfProfileInfo();
+        vi.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce(profileInfo as any);
+        vi.spyOn(Profiles.getInstance(), "getProfileFromConfig").mockResolvedValueOnce({
+            profLoc: { osLoc: ["/home/user/.zowe/zowe.config.json"] },
+        } as any);
+
+        const quickPick = {
+            items: [] as vscode.QuickPickItem[],
+            placeholder: "",
+            title: "",
+            show: vi.fn(),
+            hide: vi.fn(),
+            ignoreFocusOut: false,
+        } as any;
+
+        vi.spyOn(Gui, "createQuickPick").mockReturnValue(quickPick);
+
+        // Capture the configOpen descriptor after items are set, then resolve with it
+        let configOpenItem: vscode.QuickPickItem | undefined;
+        vi.spyOn(Gui, "resolveQuickPick").mockImplementation(async () => {
+            configOpenItem = quickPick.items.find((item: vscode.QuickPickItem) => item.label.includes("Open zowe.config.json"));
+            return configOpenItem;
+        });
+
+        const treeProvider = {
+            getTreeType: vi.fn().mockReturnValue(PersistenceSchemaEnum.Dataset),
+            mSessionNodes: [],
+            addSession: vi.fn(),
+        } as any;
+
+        await Profiles.getInstance().createZoweSession(treeProvider);
+
+        expect(openConfigFileSpy).toHaveBeenCalledWith("/home/user/.zowe/zowe.config.json");
+    });
+
+    it("Tests that selecting 'Open zowe.config.json' does nothing when no profiles are available in profileInfo", async () => {
+        createGlobalMocks();
+        const openConfigFileSpy = vi.spyOn(Profiles.getInstance(), "openConfigFile").mockResolvedValue(undefined);
+
+        // Return a profileInfo with empty getAllProfiles
+        const emptyProfileInfo = { ...createInstanceOfProfileInfo(), getAllProfiles: () => [] };
+        vi.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce(emptyProfileInfo as any);
+
+        const quickPick = {
+            items: [] as vscode.QuickPickItem[],
+            placeholder: "",
+            title: "",
+            show: vi.fn(),
+            hide: vi.fn(),
+            ignoreFocusOut: false,
+        } as any;
+
+        vi.spyOn(Gui, "createQuickPick").mockReturnValue(quickPick);
+        vi.spyOn(Gui, "resolveQuickPick").mockImplementation(async () => {
+            return quickPick.items.find((item: vscode.QuickPickItem) => item.label.includes("Open zowe.config.json"));
+        });
+
+        const treeProvider = {
+            getTreeType: vi.fn().mockReturnValue(PersistenceSchemaEnum.Dataset),
+            mSessionNodes: [],
+            addSession: vi.fn(),
+        } as any;
+
+        await Profiles.getInstance().createZoweSession(treeProvider);
+
+        expect(openConfigFileSpy).not.toHaveBeenCalled();
+    });
+});
+
+
+
 describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
     it("Tests that editZoweConfigFile presents correct message when escaping selection of quickpick", async () => {
         const globalMocks = createGlobalMocks();
