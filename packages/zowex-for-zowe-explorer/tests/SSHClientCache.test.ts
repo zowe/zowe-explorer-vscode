@@ -15,6 +15,7 @@ import * as vscode from "vscode";
 import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { SshClientCache } from "../src/SshClientCache";
 import { deployWithProgress } from "../src/ServerDeployment";
+import { ConfigUtils } from "../src/ConfigUtils";
 
 vi.mock("@zowe/zowe-explorer-api", () => {
     class MockDeferredPromise {
@@ -343,6 +344,34 @@ describe("SshClientCache", () => {
             // The lock is released once the build completes.
             expect((cache as any).mMutexMap.has(clientId)).toBe(false);
         });
+
+        it("should not call isServerDetectedOnPath if the user has a configured serverPath", async () => {
+            const isServerDetectedOnPath = vi.fn().mockRejectedValue(new Error("Do not call me!"));
+            cache.isServerDetectedOnPath = isServerDetectedOnPath;
+            // ConfigUtils.getServerPath is mocked above 
+            const client = await cache.connect(mockProfile);
+
+            expect(client).toBeDefined();
+            expect(ZSshClient.create).toHaveBeenCalled();
+            expect(ZSshUtils.buildSession).toHaveBeenCalledWith(mockProfile.profile);
+
+            expect(cache.isServerDetectedOnPath).not.toHaveBeenCalled();
+        })
+
+        it("should call isServerDetectedOnPath if the user does not have a configured serverPath and the default path is not found", async () => {
+            const isServerDetectedOnPath = vi.fn().mockResolvedValue(true);
+            cache.isServerDetectedOnPath = isServerDetectedOnPath;
+            vi.mocked(ZSshClient.create)
+                .mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }))
+                .mockResolvedValueOnce({ dispose: vi.fn() } as any);
+            ConfigUtils.getServerPath = vi.fn().mockReturnValue(undefined);
+            const client = await cache.connect(mockProfile);
+
+            expect(client).toBeDefined();
+            expect(ZSshClient.create).toHaveBeenCalled();
+            expect(ZSshUtils.buildSession).toHaveBeenCalledWith(mockProfile.profile);
+            expect(cache.isServerDetectedOnPath).toHaveBeenCalled();
+        })
     });
 
     describe("end()", () => {
