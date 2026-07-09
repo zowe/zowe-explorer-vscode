@@ -1161,6 +1161,7 @@
   "Fix refresh job & spool file pull from mainframe doesn't update job status <a>#1936</a>": "",
   "Fix the USS refresh icon (replacing \"download\" with \"refresh\")": "",
   "Fixed \"Allocate Like\" error that prevented proper execution. <a>#1973</a>": "",
+  "Fixed \"Open Selected Data Set\" action opening data sets in the z/OSMF tree instead of the originating extender profile's tree when invoked from a spool file. <a>#4372</a>": "",
   "Fixed JSON errors being ignored when zowe.config.json files change on disk and are reloaded. <a>#3066</a> <a>#3074</a>": "",
   "Fixed PDS members and USS files not being supported as drop targets when resources are drag-and-dropped. <a>#3999</a>": "",
   "Fixed VSC Compare function, not working with Favorites from Zowe Explorer. <a>#2549</a>": "",
