@@ -146,7 +146,7 @@ export function findRecoveredFiles(): void {
         return tempNode;
     };
     for (const document of vscode.workspace.textDocuments) {
-        if (document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
+        if (document.fileName.toUpperCase().startsWith(globals.DS_DIR.toUpperCase())) {
             const pathSegments = document.fileName.slice(globals.DS_DIR.length + 1).split(path.sep);
             const treeOpts: IZoweDatasetTreeOpts = {
                 label: checkForAddedSuffix(pathSegments[1]) ? path.parse(pathSegments[1]).name : pathSegments[1],
@@ -155,7 +155,7 @@ export function findRecoveredFiles(): void {
             };
             LocalFileManagement.addRecoveredFile(document, treeOpts);
             LocalFileManagement.loadFileInfo(injectProfile(new ZoweDatasetNode(treeOpts)), document.fileName);
-        } else if (document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
+        } else if (document.fileName.toUpperCase().startsWith(globals.USS_DIR.toUpperCase())) {
             const pathSegments = document.fileName.slice(globals.USS_DIR.length + 1).split(path.sep);
             const treeOpts: IZoweUssTreeOpts = {
                 label: pathSegments[pathSegments.length - 1],

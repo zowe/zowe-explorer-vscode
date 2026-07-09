@@ -1826,13 +1826,13 @@
           "type": "boolean",
           "default": false,
           "description": "%zowe.files.temporaryDownloadsFolder.hide%",
-          "scope": "window"
+          "scope": "machine"
         },
         "zowe.files.temporaryDownloadsFolder.cleanup": {
           "type": "boolean",
           "default": true,
           "description": "%zowe.files.temporaryDownloadsFolder.cleanup%",
-          "scope": "window"
+          "scope": "machine"
         },
         "zowe.ds.default.binary": {
           "default": {

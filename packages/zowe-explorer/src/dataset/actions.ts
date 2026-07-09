@@ -1550,7 +1550,7 @@ export async function saveFile(doc: vscode.TextDocument, datasetProvider: api.IZ
     // Check if file is a data set, instead of some other file
     const docPath = path.join(doc.fileName, "..");
     ZoweLogger.debug(localize("saveFile.requestSave", "Requested to save data set {0}", doc.fileName));
-    if (docPath.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) === -1) {
+    if (!docPath.toUpperCase().startsWith(globals.DS_DIR.toUpperCase())) {
         ZoweLogger.error(
             localize("saveFile.log.debug.path", "path.relative returned a non-blank directory.") +
                 localize("saveFile.log.debug.directory", " Assuming we are not in the DS_DIR directory: ") +

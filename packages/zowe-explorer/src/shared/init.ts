@@ -159,10 +159,10 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                         globals.USS_DIR
                     )
                 );
-                if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
+                if (savedFile.fileName.toUpperCase().startsWith(globals.DS_DIR.toUpperCase())) {
                     ZoweLogger.debug(localize("onDidSaveTextDocument.isDataSet", "File is a data set -- saving"));
                     ZoweSaveQueue.push({ uploadRequest: saveFile, savedFile, fileProvider: providers.ds });
-                } else if (savedFile.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
+                } else if (savedFile.fileName.toUpperCase().startsWith(globals.USS_DIR.toUpperCase())) {
                     ZoweLogger.debug(localize("onDidSaveTextDocument.isUSSFile", "File is a USS file -- saving"));
                     ZoweSaveQueue.push({ uploadRequest: saveUSSFile, savedFile, fileProvider: providers.uss });
                 } else {
