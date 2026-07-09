@@ -52,6 +52,8 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
         fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
         fs.mkdirSync(globals.USS_DIR);
         fs.mkdirSync(globals.DS_DIR);
+        imperative.IO.giveAccessOnlyToOwner(globals.USS_DIR);
+        imperative.IO.giveAccessOnlyToOwner(globals.DS_DIR);
     } catch (err) {
         if (err instanceof Error) {
             await errorHandling(err, null, localize("moveTempFolder.error", "Error encountered when creating temporary folder!"));
@@ -81,28 +83,6 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
 }
 
 /**
- * Recursively deletes directory
- *
- * @param directory path to directory to be deleted
- */
-export function cleanDir(directory: string): void {
-    ZoweLogger.trace("TempFolder.cleanDir called.");
-    if (!fs.existsSync(directory)) {
-        return;
-    }
-    fs.readdirSync(directory).forEach((file) => {
-        const fullpath = path.join(directory, file);
-        const lstat = fs.lstatSync(fullpath);
-        if (lstat.isFile()) {
-            fs.unlinkSync(fullpath);
-        } else {
-            cleanDir(fullpath);
-        }
-    });
-    fs.rmdirSync(directory);
-}
-
-/**
  * Cleans up local temp directory
  *
  * @export
@@ -116,7 +96,10 @@ export function cleanTempDir(): Promise<void> {
         return;
     }
     try {
-        cleanDir(globals.ZOWETEMPFOLDER);
+        fs.rmSync(globals.USS_DIR, { force: true });
+        fs.rmSync(globals.DS_DIR, { force: true });
+        fs.rmdirSync(globals.ZOWE_TMP_FOLDER);
+        fs.rmdirSync(globals.ZOWETEMPFOLDER);
         ZoweLocalStorage.setValue(LocalStorageKey.FILE_INFO_CACHE, undefined);
     } catch (err) {
         ZoweLogger.error(err);
