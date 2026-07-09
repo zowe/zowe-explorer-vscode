@@ -86,7 +86,7 @@ describe("FtpMvsApi", () => {
 
     it("should view dataset content.", async () => {
         const tmpDir = ensureTmpDirExists("/tmp");
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
+        const localFile = tmp.fileSync({ tmpdir: tmpDir }).name;
         const response = TestUtils.getSingleLineStream();
         DataSetUtils.downloadDataSet = jest.fn().mockReturnValue(response);
 
@@ -108,9 +108,9 @@ describe("FtpMvsApi", () => {
 
     it("should upload content to dataset.", async () => {
         const tmpDir = ensureTmpDirExists("/tmp");
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
-        const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
-        const rmSyncSpy = jest.spyOn(fs, "rmSync");
+        const localFile = tmp.fileSync({ tmpdir: tmpDir }).name;
+        const mockRmCallback = jest.fn();
+        const tmpFileSyncSpy = jest.spyOn(tmp, "fileSync").mockReturnValue({ removeCallback: mockRmCallback });
 
         fs.writeFileSync(localFile, "hello");
         const response = TestUtils.getSingleLineStream();
@@ -133,13 +133,13 @@ describe("FtpMvsApi", () => {
         expect(DataSetUtils.uploadDataSet).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
         // check that correct function is called from node-tmp
-        expect(tmpNameSyncSpy).toHaveBeenCalled();
-        expect(rmSyncSpy).toHaveBeenCalled();
+        expect(tmpFileSyncSpy).toHaveBeenCalled();
+        expect(mockRmCallback).toHaveBeenCalled();
     });
 
     it("should upload single space to dataset when secureFtp is true and contents are empty", async () => {
         const tmpDir = ensureTmpDirExists("/tmp");
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
+        const localFile = tmp.fileSync({ tmpdir: tmpDir }).name;
 
         fs.writeFileSync(localFile, "");
         const response = TestUtils.getSingleLineStream();
@@ -342,7 +342,7 @@ describe("FtpMvsApi", () => {
             })
         );
         const tmpDir = ensureTmpDirExists("/tmp");
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
+        const localFile = tmp.fileSync({ tmpdir: tmpDir }).name;
         const mockParams = {
             inputFilePath: localFile,
             dataSetName: "IBMUSER.DS2",

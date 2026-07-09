@@ -72,7 +72,7 @@ describe("FtpUssApi", () => {
 
     it("should view uss files.", async () => {
         const tmpDir = ensureTmpDirExists(tmpdir());
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
+        const localFile = tmp.fileSync({ tmpdir: tmpDir }).name;
         const response = TestUtils.getSingleLineStream();
         UssUtils.downloadFile = jest.fn().mockReturnValue(response);
 
@@ -103,11 +103,11 @@ describe("FtpUssApi", () => {
 
     it("should upload uss files.", async () => {
         const tmpDir = ensureTmpDirExists(tmpdir());
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
+        const localFile = tmp.fileSync({ tmpdir: tmpDir });
         const response = TestUtils.getSingleLineStream();
         UssUtils.uploadFile = jest.fn().mockReturnValue(response);
-        const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
-        const rmSyncSpy = jest.spyOn(fs, "rmSync");
+        const mockRmCallback = jest.fn();
+        const tmpFileSyncSpy = jest.spyOn(tmp, "fileSync").mockReturnValue({ removeCallback: mockRmCallback });
         jest.spyOn(UssApi, "getContents").mockResolvedValue({ apiResponse: { etag: "test" } } as any);
         const mockParams = {
             inputFilePath: localFile,
@@ -125,8 +125,8 @@ describe("FtpUssApi", () => {
         expect(UssUtils.uploadFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
         // check that correct function is called from node-tmp
-        expect(tmpNameSyncSpy).toHaveBeenCalled();
-        expect(rmSyncSpy).toHaveBeenCalled();
+        expect(tmpFileSyncSpy).toHaveBeenCalled();
+        expect(mockRmCallback).toHaveBeenCalled();
     });
 
     it("should call putContents when calling putContent", async () => {
@@ -241,7 +241,7 @@ describe("FtpUssApi", () => {
             throw new Error("Download file failed.");
         });
         const tmpDir = ensureTmpDirExists(tmpdir());
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
+        const localFile = tmp.fileSync({ tmpdir: tmpDir }).name;
         const mockParams = {
             ussFilePath: "/a/b/d.txt",
             options: {
