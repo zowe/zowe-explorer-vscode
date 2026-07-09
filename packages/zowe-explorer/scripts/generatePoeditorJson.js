@@ -35,6 +35,8 @@ if (process.argv.includes("--strip")) {
             l10nBundle[k] = l10nBundle[k].message;
         }
     }
-    l10nBundle = Object.fromEntries(Object.entries(l10nBundle).sort(([a], [b]) => a.localeCompare(b)));
+    // Use ordinal comparison instead of localeCompare, which is locale/ICU-dependent
+    // and can order punctuation differently across platforms, producing a non-deterministic diff.
+    l10nBundle = Object.fromEntries(Object.entries(l10nBundle).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
     fs.writeFileSync(jsonFilePath, JSON.stringify(l10nBundle, null, 2) + "\n");
 }
