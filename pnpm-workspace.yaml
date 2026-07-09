@@ -17,6 +17,7 @@ allowBuilds:
   ssh2: true
 overrides:
   "@tootallnate/once": "^3.0.1"
+  "@xhmikosr/decompress": "^10.2.1"
   "ajv@6": "^6.14.0"
   "ajv@8": "^8.18.0"
   "basic-ftp@5": "^5.3.1"
