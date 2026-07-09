@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Restricted permissions of the temporary folders where USS files and data sets are stored. [#4387](https://github.com/zowe/zowe-explorer-vscode/pull/4387)
+
 ## `2.18.4`
 
 ### Bug fixes
