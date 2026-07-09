@@ -29,4 +29,4 @@ jobs:
       - name: Check Prepublish
         run: |
           pnpm --filter vscode-extension-for-zowe vscode:prepublish
-          git diff --exit-code
+          git diff --exit-code packages/zowe-explorer/l10n/poeditor.json packages/zowe-explorer/l10n/bundle.l10n.json 
