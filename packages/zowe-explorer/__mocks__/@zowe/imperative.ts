@@ -402,3 +402,7 @@ export class TextUtils {
 export namespace SessConstants {
     export declare const AUTH_TYPE_TOKEN = "token";
 }
+
+export class IO {
+    public static giveAccessOnlyToOwner(filename: string) {}
+}

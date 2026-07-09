@@ -18,19 +18,18 @@ import * as ProfileUtils from "../../../src/utils/ProfilesUtils";
 import * as vscode from "vscode";
 import * as TempFolder from "../../../src/utils/TempFolder";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
-import { Gui } from "@zowe/zowe-explorer-api";
+import { Gui, imperative } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import { Profiles } from "../../../src/Profiles";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
+import { ZoweLocalStorage } from "../../../src/utils/ZoweLocalStorage";
 
 jest.mock("fs");
 jest.mock("fs", () => ({
     existsSync: jest.fn(() => true),
     mkdirSync: jest.fn(),
-    readdirSync: jest.fn(),
-    lstatSync: jest.fn(),
-    unlinkSync: jest.fn(),
+    rmSync: jest.fn(),
     rmdirSync: jest.fn(),
 }));
 jest.mock("fs-extra");
@@ -52,7 +51,9 @@ describe("TempFolder Unit Tests", () => {
             unixPath2: "testpath123/temp",
             addRecoveredFile: jest.spyOn(LocalFileManagement, "addRecoveredFile").mockImplementation(),
             loadFileInfo: jest.spyOn(LocalFileManagement, "loadFileInfo").mockImplementation(),
+            giveAccessOnlyToOwner: jest.spyOn(imperative.IO, "giveAccessOnlyToOwner").mockImplementation(),
         };
+        globals.defineGlobals(__dirname);
         Object.defineProperty(vscode.workspace, "getConfiguration", {
             value: jest.fn(),
             configurable: true,
@@ -94,6 +95,9 @@ describe("TempFolder Unit Tests", () => {
         const expectedPath1 = process.platform === "win32" ? blockMocks.winPath : blockMocks.unixPath.split(path.sep).join(path.posix.sep);
         const expectedPath2 = process.platform === "win32" ? blockMocks.winPath2 : blockMocks.unixPath2.split(path.sep).join(path.posix.sep);
         expect(moveSyncSpy).toBeCalledWith(expectedPath1, expectedPath2, { overwrite: true });
+        expect(blockMocks.giveAccessOnlyToOwner).toBeCalledTimes(2);
+        expect(blockMocks.giveAccessOnlyToOwner).toBeCalledWith(globals.USS_DIR);
+        expect(blockMocks.giveAccessOnlyToOwner).toBeCalledWith(globals.DS_DIR);
     });
 
     it("moveTempFolder should catch the error upon running moveSync", async () => {
@@ -130,30 +134,50 @@ describe("TempFolder Unit Tests", () => {
         await expect(TempFolder.moveTempFolder("", "testpath123")).resolves.toEqual(undefined);
     });
 
-    it("cleanDir should throw an error when a filesystem exception occurs", async () => {
+    it("cleanTempDir should remove the USS dir, DS dir, and temp folder", () => {
         createBlockMocks();
-        jest.spyOn(fs, "mkdirSync").mockImplementation((val) => {
-            throw new Error("example cleanDir error");
-        });
-        jest.spyOn(SettingsConfig, "getDirectValue").mockImplementationOnce((val) => true);
+        jest.spyOn(fs, "existsSync").mockReturnValue(true);
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+        const rmSyncSpy = jest.spyOn(fs, "rmSync").mockImplementation();
+        const rmdirSyncSpy = jest.spyOn(fs, "rmdirSync").mockImplementation();
+        const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
 
-        try {
-            await TempFolder.cleanTempDir();
-        } catch (err) {
-            expect(globals.LOG.error).toHaveBeenCalledWith(err);
-            expect(Gui.showMessage).toHaveBeenCalledWith("Unable to delete temporary folder. example cleanDir error");
-        }
+        TempFolder.cleanTempDir();
+
+        expect(rmSyncSpy).toBeCalledTimes(2);
+        expect(rmSyncSpy).toBeCalledWith(globals.USS_DIR, { force: true });
+        expect(rmSyncSpy).toBeCalledWith(globals.DS_DIR, { force: true });
+        expect(rmdirSyncSpy).toBeCalledTimes(2);
+        expect(rmdirSyncSpy).toBeCalledWith(globals.ZOWE_TMP_FOLDER);
+        expect(rmdirSyncSpy).toBeCalledWith(globals.ZOWETEMPFOLDER);
+        expect(setValueSpy).toBeCalledTimes(1);
     });
 
-    it("cleanDir should run readDirSync once", async () => {
+    it("cleanTempDir should do nothing when temp folder cleanup is disabled", () => {
+        createBlockMocks();
         jest.spyOn(fs, "existsSync").mockReturnValue(true);
-        const readdirSyncSpy = jest.spyOn(fs, "readdirSync").mockReturnValue(["./test1", "./test2"] as any);
-        jest.spyOn(fs, "lstatSync").mockReturnValue({
-            isFile: () => true,
-        } as any);
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
+        const rmSyncSpy = jest.spyOn(fs, "rmSync").mockImplementation();
 
-        TempFolder.cleanDir("./sampleDir");
-        expect(readdirSyncSpy).toBeCalledTimes(1);
+        TempFolder.cleanTempDir();
+
+        expect(rmSyncSpy).not.toHaveBeenCalled();
+    });
+
+    it("cleanTempDir should log and display an error when a filesystem exception occurs", () => {
+        createBlockMocks();
+        jest.spyOn(fs, "existsSync").mockReturnValue(true);
+        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+        jest.spyOn(fs, "rmSync").mockImplementation(() => {
+            throw new Error("example cleanTempDir error");
+        });
+        const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation();
+        const zoweLoggerErrorSpy = jest.spyOn(ZoweLogger, "error").mockImplementation();
+
+        TempFolder.cleanTempDir();
+
+        expect(zoweLoggerErrorSpy).toHaveBeenCalled();
+        expect(errorMessageSpy).toHaveBeenCalledWith("Unable to delete temporary folder. example cleanTempDir error");
     });
 
     it("hideTempFolder should hide local directory from workspace", async () => {
@@ -165,7 +189,6 @@ describe("TempFolder Unit Tests", () => {
 
     it("findRecoveredFiles should recover data sets and USS files that were left open", () => {
         const blockMocks = createBlockMocks();
-        globals.defineGlobals(__dirname);
         blockMocks.addRecoveredFile.mockImplementation(() => {
             LocalFileManagement.recoveredFileCount++;
         });
