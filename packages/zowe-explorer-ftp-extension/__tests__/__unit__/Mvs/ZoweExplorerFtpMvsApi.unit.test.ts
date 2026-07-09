@@ -110,7 +110,7 @@ describe("FtpMvsApi", () => {
         const tmpDir = ensureTmpDirExists("/tmp");
         const localFile = tmp.fileSync({ tmpdir: tmpDir }).name;
         const mockRmCallback = jest.fn();
-        const tmpFileSyncSpy = jest.spyOn(tmp, "fileSync").mockReturnValue({ removeCallback: mockRmCallback });
+        const tmpFileSyncSpy = jest.spyOn(tmp, "fileSync").mockReturnValue({ removeCallback: mockRmCallback } as unknown as tmp.FileResult);
 
         fs.writeFileSync(localFile, "hello");
         const response = TestUtils.getSingleLineStream();

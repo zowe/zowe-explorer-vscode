@@ -103,11 +103,11 @@ describe("FtpUssApi", () => {
 
     it("should upload uss files.", async () => {
         const tmpDir = ensureTmpDirExists(tmpdir());
-        const localFile = tmp.fileSync({ tmpdir: tmpDir });
+        const localFile = tmp.fileSync({ tmpdir: tmpDir }).name;
         const response = TestUtils.getSingleLineStream();
         UssUtils.uploadFile = jest.fn().mockReturnValue(response);
         const mockRmCallback = jest.fn();
-        const tmpFileSyncSpy = jest.spyOn(tmp, "fileSync").mockReturnValue({ removeCallback: mockRmCallback });
+        const tmpFileSyncSpy = jest.spyOn(tmp, "fileSync").mockReturnValue({ removeCallback: mockRmCallback } as unknown as tmp.FileResult);
         jest.spyOn(UssApi, "getContents").mockResolvedValue({ apiResponse: { etag: "test" } } as any);
         const mockParams = {
             inputFilePath: localFile,
