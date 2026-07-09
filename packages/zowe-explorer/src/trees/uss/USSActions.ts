@@ -953,7 +953,7 @@ export class USSActions {
             });
         }
         for (const item of selectedNodes) {
-            await item.deleteUSSNode(ussFileProvider, "", cancelled);
+            await (item as IZoweUSSTreeNode).deleteUSSNode(ussFileProvider, "", cancelled);
         }
     }
 
