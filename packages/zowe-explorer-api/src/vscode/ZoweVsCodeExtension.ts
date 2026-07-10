@@ -552,7 +552,9 @@ export class ZoweVsCodeExtension {
     private static async promptUserPass(options: PromptCredentialsOptions.UserPassOptions): Promise<string[] | undefined> {
         let newUser = options.session.user;
         if (!newUser || options.rePrompt) {
-            const fallbackValidateInput = options.userInputBoxOptions?.validateInput;
+            const fallbackValidateInput = options.userInputBoxOptions?.validateInput
+                ? (value: string): string | undefined => options.userInputBoxOptions.validateInput(value)
+                : undefined;
             newUser = await Gui.showInputBox({
                 placeHolder: "User Name",
                 prompt: "Enter the user name for the connection." + (options.rePrompt ? "" : " Leave blank to not store."),
