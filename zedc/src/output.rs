@@ -39,6 +39,11 @@ pub fn json_enabled() -> bool {
     format() == OutputFormat::Json
 }
 
+/// Convenience predicate for text-only progress/status output.
+pub fn text_enabled() -> bool {
+    !json_enabled()
+}
+
 /// Serializes `value` as pretty-printed JSON to stdout.
 ///
 /// Serialization is infallible for the report structs used here; on the

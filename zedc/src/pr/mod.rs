@@ -4,11 +4,25 @@ use anyhow::{bail, Context, Result};
 use octocrab::{models::ArtifactId, params::actions::ArchiveFormat, Octocrab};
 use owo_colors::OwoColorize;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use zip::ZipArchive;
 
 const OWNER: &str = "zowe";
 const REPO: &str = "zowe-explorer-vscode";
+
+macro_rules! text_println {
+    ($($arg:tt)*) => {
+        if crate::output::text_enabled() {
+            println!($($arg)*);
+        }
+    };
+}
+
+fn silence_if_json(command: &mut Command) {
+    if crate::output::json_enabled() {
+        command.stdout(Stdio::null()).stderr(Stdio::null());
+    }
+}
 
 /// Summary information about a pull request needed to fetch artifacts and check it out.
 struct PrInfo {
@@ -28,14 +42,14 @@ async fn fetch_pr_info(pr_number: u64) -> Result<PrInfo> {
         .with_context(|| format!("Failed to fetch PR #{} from GitHub", pr_number))?;
 
     if let Some(title) = &pr.title {
-        println!("  {} {}", "Title:".dimmed(), title.bold());
+        text_println!("  {} {}", "Title:".dimmed(), title.bold());
     }
     let branch = pr.head.ref_field.clone();
-    println!("  {} {}", "Branch:".dimmed(), branch.bold());
+    text_println!("  {} {}", "Branch:".dimmed(), branch.bold());
     if let Some(user) = &pr.user {
-        println!("  {} {}", "Author:".dimmed(), user.login.bold());
+        text_println!("  {} {}", "Author:".dimmed(), user.login.bold());
     }
-    println!();
+    text_println!();
 
     Ok(PrInfo {
         branch,
@@ -59,7 +73,7 @@ fn current_branch(ze_dir: &Path) -> Result<Option<String>> {
 /// Uses `refs/pull/<N>/head` so fork PRs work without adding the fork as a remote.
 /// If the branch is already checked out, pulls the latest commits instead.
 fn checkout_pr_branch(ze_dir: &Path, pr_number: u64, branch: &str) -> Result<()> {
-    println!("{}", "Checking out branch...".underline());
+    text_println!("{}", "Checking out branch...".underline());
 
     // Refuse to proceed when there are uncommitted changes.
     let clean = Command::new("git")
@@ -86,19 +100,21 @@ fn checkout_pr_branch(ze_dir: &Path, pr_number: u64, branch: &str) -> Result<()>
         // git refuses to update a branch ref that is currently checked out via the
         // `refs/pull/<N>/head:<branch>` refspec.  Fetch into FETCH_HEAD and fast-forward instead.
         let fetch_refspec = format!("refs/pull/{}/head", pr_number);
-        let fetched = Command::new("git")
+        let mut fetch = Command::new("git");
+        fetch
             .args(["fetch", "origin", &fetch_refspec])
-            .current_dir(ze_dir)
-            .status()
-            .context("Failed to run git fetch")?;
+            .current_dir(ze_dir);
+        silence_if_json(&mut fetch);
+        let fetched = fetch.status().context("Failed to run git fetch")?;
         if !fetched.success() {
             bail!("git fetch failed for PR #{}", pr_number);
         }
-        let merged = Command::new("git")
+        let mut merge = Command::new("git");
+        merge
             .args(["merge", "--ff-only", "FETCH_HEAD"])
-            .current_dir(ze_dir)
-            .status()
-            .context("Failed to run git merge")?;
+            .current_dir(ze_dir);
+        silence_if_json(&mut merge);
+        let merged = merge.status().context("Failed to run git merge")?;
         if !merged.success() {
             bail!(
                 "Could not fast-forward '{}' to the PR head — your local branch has diverged.\n\
@@ -110,32 +126,33 @@ fn checkout_pr_branch(ze_dir: &Path, pr_number: u64, branch: &str) -> Result<()>
         // Fetch the PR head directly into a local branch name.
         // -f allows overwriting an existing local ref that isn't checked out.
         let fetch_refspec = format!("refs/pull/{}/head:{}", pr_number, branch);
-        let fetched = Command::new("git")
+        let mut fetch = Command::new("git");
+        fetch
             .args(["fetch", "-f", "origin", &fetch_refspec])
-            .current_dir(ze_dir)
-            .status()
-            .context("Failed to run git fetch")?;
+            .current_dir(ze_dir);
+        silence_if_json(&mut fetch);
+        let fetched = fetch.status().context("Failed to run git fetch")?;
         if !fetched.success() {
             bail!("git fetch failed for PR #{}", pr_number);
         }
 
-        let checked_out = Command::new("git")
-            .args(["checkout", branch])
-            .current_dir(ze_dir)
-            .status()
-            .context("Failed to run git checkout")?;
+        let mut checkout = Command::new("git");
+        checkout.args(["checkout", branch]).current_dir(ze_dir);
+        silence_if_json(&mut checkout);
+        let checked_out = checkout.status().context("Failed to run git checkout")?;
         if !checked_out.success() {
             bail!("git checkout '{}' failed", branch);
         }
     }
 
-    println!("✔️  On branch '{}'", branch.bold());
+    text_println!("✔️  On branch '{}'", branch.bold());
     Ok(())
 }
 
 /// Runs the package manager's `install` step to refresh dependencies.
 async fn install_deps(ze_dir: &Path) -> Result<()> {
-    println!("\n{}", "Installing dependencies...".underline());
+    text_println!("\n{}", "Installing dependencies...".underline());
+    crate::setup::clean_node_modules(ze_dir).await?;
 
     let pkg_mgr = crate::pm::detect_pkg_mgr(ze_dir)?;
     let mut pm = crate::pm::pkg_mgr(&pkg_mgr);
@@ -143,6 +160,7 @@ async fn install_deps(ze_dir: &Path) -> Result<()> {
     if pkg_mgr != "yarn" {
         pm.arg("install");
     }
+    silence_if_json(&mut pm);
 
     let status = pm
         .status()
@@ -152,7 +170,7 @@ async fn install_deps(ze_dir: &Path) -> Result<()> {
         bail!("`{} install` failed", pkg_mgr);
     }
 
-    println!("✔️  Dependencies installed");
+    text_println!("✔️  Dependencies installed");
     Ok(())
 }
 
@@ -160,7 +178,7 @@ async fn install_deps(ze_dir: &Path) -> Result<()> {
 ///
 /// VSIXes are written to `dist/` at the repo root by each package's `mv-pack.js` post-step.
 fn build_vsix(ze_dir: &Path) -> Result<Vec<String>> {
-    println!("\n{}", "Building VSIXes...".underline());
+    text_println!("\n{}", "Building VSIXes...".underline());
 
     // Wipe any stale .vsix files so we only collect what this build produces.
     let dist_dir = ze_dir.join("dist");
@@ -176,9 +194,10 @@ fn build_vsix(ze_dir: &Path) -> Result<Vec<String>> {
     }
 
     let pkg_mgr = crate::pm::detect_pkg_mgr(ze_dir)?;
-    let status = crate::pm::pkg_mgr(&pkg_mgr)
-        .arg("package")
-        .current_dir(ze_dir)
+    let mut package = crate::pm::pkg_mgr(&pkg_mgr);
+    package.arg("package").current_dir(ze_dir);
+    silence_if_json(&mut package);
+    let status = package
         .status()
         .with_context(|| format!("Failed to run `{} package`", pkg_mgr))?;
 
@@ -191,7 +210,7 @@ fn build_vsix(ze_dir: &Path) -> Result<Vec<String>> {
         let entry = entry?;
         let path = entry.path();
         if path.extension().map_or(false, |e| e == "vsix") {
-            println!(
+            text_println!(
                 "  📦 {}",
                 path.file_name().unwrap().to_string_lossy().bold()
             );
@@ -206,7 +225,7 @@ fn build_vsix(ze_dir: &Path) -> Result<Vec<String>> {
         );
     }
 
-    println!("✔️  Built {} VSIX(es)", vsix_paths.len());
+    text_println!("✔️  Built {} VSIX(es)", vsix_paths.len());
     Ok(vsix_paths)
 }
 
@@ -258,7 +277,7 @@ fn parse_artifact_comment(body: &str) -> Option<ArtifactComment> {
 
 /// Downloads and extracts the given artifact ID, returning paths to the contained `.vsix` files.
 async fn download_artifact_vsixes(gh: &Octocrab, artifact_id: u64) -> Result<Vec<String>> {
-    println!("\n{}", "Downloading artifact...".underline());
+    text_println!("\n{}", "Downloading artifact...".underline());
 
     let raw_artifact = gh
         .actions()
@@ -292,7 +311,7 @@ async fn download_artifact_vsixes(gh: &Octocrab, artifact_id: u64) -> Result<Vec
     for entry in std::fs::read_dir(&vsix_dir)? {
         let path = entry?.path();
         if path.extension().map_or(false, |e| e == "vsix") {
-            println!(
+            text_println!(
                 "  📦 {}",
                 path.file_name().unwrap().to_string_lossy().bold()
             );
@@ -304,7 +323,7 @@ async fn download_artifact_vsixes(gh: &Octocrab, artifact_id: u64) -> Result<Vec
         bail!("Artifact did not contain any .vsix files");
     }
 
-    println!("✔️  Downloaded {} VSIX(es)", vsix_paths.len());
+    text_println!("✔️  Downloaded {} VSIX(es)", vsix_paths.len());
     Ok(vsix_paths)
 }
 
@@ -316,14 +335,14 @@ async fn download_artifact_vsixes(gh: &Octocrab, artifact_id: u64) -> Result<Vec
 async fn try_use_artifact(pr_number: u64, head_sha: &str) -> Result<Option<Vec<String>>> {
     // Downloading workflow artifacts requires authentication.
     if std::env::var("ZEDC_PAT").is_err() {
-        println!(
+        text_println!(
             "{}",
             "ZEDC_PAT not set — skipping artifact lookup, building from source.".dimmed()
         );
         return Ok(None);
     }
 
-    println!("{}", "Checking for a posted VSIX artifact...".underline());
+    text_println!("{}", "Checking for a posted VSIX artifact...".underline());
     let gh = octocrab::instance();
 
     let first_page = gh
@@ -350,14 +369,14 @@ async fn try_use_artifact(pr_number: u64, head_sha: &str) -> Result<Option<Vec<S
     let artifact = match artifact {
         Some(a) => a,
         None => {
-            println!("  No VSIX artifact comment found — building from source.");
+            text_println!("  No VSIX artifact comment found — building from source.");
             return Ok(None);
         }
     };
 
     // Up-to-date check: the artifact must have been built from the current PR head commit.
     if !artifact.pr_commit.eq_ignore_ascii_case(head_sha) {
-        println!(
+        text_println!(
             "  {} Posted artifact is for commit {} but PR head is {} — building from source.",
             "⚠️".yellow(),
             short_sha(&artifact.pr_commit),
@@ -366,7 +385,7 @@ async fn try_use_artifact(pr_number: u64, head_sha: &str) -> Result<Option<Vec<S
         return Ok(None);
     }
 
-    println!(
+    text_println!(
         "✔️  Found up-to-date artifact for commit {}",
         short_sha(head_sha)
     );
@@ -375,7 +394,7 @@ async fn try_use_artifact(pr_number: u64, head_sha: &str) -> Result<Option<Vec<S
     match download_artifact_vsixes(&gh, artifact.artifact_id).await {
         Ok(paths) => Ok(Some(paths)),
         Err(e) => {
-            println!(
+            text_println!(
                 "  {} Could not download artifact ({}) — building from source.",
                 "⚠️".yellow(),
                 e
@@ -400,7 +419,7 @@ async fn build_from_source(
     checkout_pr_branch(ze_dir, pr_number, branch)?;
 
     if skip_setup {
-        println!("⏭️  Skipping dependency install (--skip-setup)");
+        text_println!("⏭️  Skipping dependency install (--skip-setup)");
     } else {
         install_deps(ze_dir).await?;
     }
@@ -415,19 +434,19 @@ pub async fn handle_cmd(
     skip_setup: bool,
     build: bool,
 ) -> Result<()> {
-    if !crate::output::json_enabled() {
+    if crate::output::text_enabled() {
         println!("{}\n", format!("zedc pr #{}", pr_number).bold());
     }
 
     let ze_dir = crate::util::find_dir_match(&["package.json"])?
         .context("Could not find a repo root containing package.json")?;
 
-    println!("{}", "Fetching PR info from GitHub...".underline());
+    text_println!("{}", "Fetching PR info from GitHub...".underline());
     let pr_info = fetch_pr_info(pr_number).await?;
 
     // Prefer the artifact posted on the PR (fast path) unless the user forced a build.
     let vsix_paths = if build {
-        println!("{}", "Building from source (--build).".dimmed());
+        text_println!("{}", "Building from source (--build).".dimmed());
         build_from_source(&ze_dir, pr_number, &pr_info.branch, skip_setup).await?
     } else {
         match try_use_artifact(pr_number, &pr_info.head_sha).await? {

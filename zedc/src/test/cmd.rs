@@ -2,7 +2,7 @@
 
 use crate::output::{self, exit};
 use crate::test::{coverage, ghr, local};
-use clap::{command, Subcommand};
+use clap::Subcommand;
 use owo_colors::OwoColorize;
 
 #[derive(Subcommand)]
@@ -61,11 +61,11 @@ pub async fn handle_cmd(
     }
 
     // Handle any subcommands.
-    let code = match cmd {
+    let (code, action_command) = match cmd {
         Commands::GhRepo { references } => {
             let crab = octocrab::instance();
             ghr::setup(references, vsc_version, &crab).await?;
-            exit::SUCCESS
+            (exit::SUCCESS, Some("test gh-repo"))
         }
         Commands::Local { files } => {
             match local::setup(vsc_version, files).await {
@@ -74,25 +74,38 @@ pub async fn handle_cmd(
                     return Ok(exit::SUCCESS);
                 }
             };
-            exit::SUCCESS
+            (exit::SUCCESS, Some("test local"))
         }
         Commands::Coverage {
             verbose,
             filter,
             threshold,
-        } => coverage::run_coverage_check(verbose, filter, threshold)?,
+        } => (
+            coverage::run_coverage_check(verbose, filter, threshold)?,
+            None,
+        ),
     };
+
+    if code != exit::SUCCESS {
+        return Ok(code);
+    }
 
     // Install Zowe CLI if a version was provided.
     if install_cli.is_some() {
         let ver = install_cli.unwrap();
-        if !json {
+        if output::text_enabled() {
             println!(
                 "💿 {}",
                 format!("Installing Zowe CLI (version: {})...", ver).blue()
             );
         }
         super::install_cli(ver)?;
+    }
+
+    if json {
+        if let Some(command) = action_command {
+            output::emit_action_result(command, true);
+        }
     }
 
     Ok(code)

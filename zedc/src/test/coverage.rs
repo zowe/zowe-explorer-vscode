@@ -9,7 +9,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::fs;
 use std::io::{BufRead, BufReader};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::process::Stdio;
 use std::sync::{Arc, Mutex};
@@ -89,6 +89,7 @@ pub fn run_coverage_check(
     threshold: Option<f64>,
 ) -> Result<i32> {
     let json = output::json_enabled();
+    let verbose = verbose && output::text_enabled();
 
     let repo_root_pathbuf = match util::find_dir_match(&["package.json"]) {
         Ok(Some(d)) => d,
@@ -1181,16 +1182,42 @@ fn process_file_statements(
     }
 }
 
-/// Stash uncommitted changes, run tests on main, restore — returns baseline patch coverage %.
-///
-/// Returns `None` when there are no uncommitted changes to stash (e.g., CI where all changes
-/// are already committed), when stashing fails, or when the main branch tests fail.
-fn get_main_baseline_coverage(
-    changed_lines: &HashMap<String, Vec<usize>>,
-    repo_root_pathbuf: &PathBuf,
-    filter: &Option<String>,
-    verbose: bool,
-) -> Option<f64> {
+fn current_stash_sha(repo_root: &Path) -> Option<String> {
+    let out = Command::new("git")
+        .args(["rev-parse", "--verify", "--quiet", "refs/stash"])
+        .current_dir(repo_root)
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+
+    let sha = String::from_utf8_lossy(&out.stdout).trim().to_owned();
+    if sha.is_empty() {
+        None
+    } else {
+        Some(sha)
+    }
+}
+
+fn find_stash_ref(repo_root: &Path, stash_sha: &str) -> Option<String> {
+    let out = Command::new("git")
+        .args(["stash", "list", "--format=%H"])
+        .current_dir(repo_root)
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .position(|sha| sha.trim() == stash_sha)
+        .map(|index| format!("stash@{{{}}}", index))
+}
+
+fn stash_uncommitted_changes(repo_root: &Path, verbose: bool) -> Option<String> {
+    let before_stash = current_stash_sha(repo_root);
     let stash_output = Command::new("git")
         .args([
             "stash",
@@ -1199,6 +1226,7 @@ fn get_main_baseline_coverage(
             "-m",
             "zedc-cov-baseline",
         ])
+        .current_dir(repo_root)
         .output()
         .ok()?;
 
@@ -1212,15 +1240,60 @@ fn get_main_baseline_coverage(
         return None;
     }
 
-    let stash_msg = String::from_utf8_lossy(&stash_output.stdout);
-    if stash_msg.contains("No local changes to save") {
+    let after_stash = current_stash_sha(repo_root);
+    if after_stash == before_stash {
         if verbose {
             println!("Debug - No uncommitted changes to stash; baseline skipped.");
         }
         return None;
     }
 
-    if !output::json_enabled() {
+    after_stash
+}
+
+fn restore_created_stash(repo_root: &Path, stash_sha: &str) {
+    let Some(stash_ref) = find_stash_ref(repo_root, stash_sha) else {
+        eprintln!(
+            "{}",
+            format!(
+                "Warning: baseline stash {} was not found; restore your changes manually if needed.",
+                &stash_sha[..stash_sha.len().min(7)]
+            )
+            .yellow()
+        );
+        return;
+    };
+
+    let pop = Command::new("git")
+        .args(["stash", "pop", "--index", &stash_ref])
+        .current_dir(repo_root)
+        .output();
+    match pop {
+        Ok(o) if o.status.success() => {}
+        _ => eprintln!(
+            "{}",
+            format!(
+                "Warning: 'git stash pop --index {}' failed; restore your changes manually if needed.",
+                stash_ref
+            )
+            .yellow()
+        ),
+    }
+}
+
+/// Stash uncommitted changes, run tests on main, restore — returns baseline patch coverage %.
+///
+/// Returns `None` when there are no uncommitted changes to stash (e.g., CI where all changes
+/// are already committed), when stashing fails, or when the main branch tests fail.
+fn get_main_baseline_coverage(
+    changed_lines: &HashMap<String, Vec<usize>>,
+    repo_root_pathbuf: &PathBuf,
+    filter: &Option<String>,
+    verbose: bool,
+) -> Option<f64> {
+    let stash_sha = stash_uncommitted_changes(repo_root_pathbuf, verbose)?;
+
+    if output::text_enabled() {
         let display_text = match filter {
             Some(pkg) => format!("Getting main branch baseline for package '{}'...", pkg),
             None => "Getting main branch baseline coverage...".to_string(),
@@ -1246,14 +1319,7 @@ fn get_main_baseline_coverage(
         Some(covered as f64 / total as f64 * 100.0)
     })();
 
-    let pop = Command::new("git").args(["stash", "pop"]).output();
-    match pop {
-        Ok(o) if o.status.success() => {}
-        _ => eprintln!(
-            "{}",
-            "Warning: 'git stash pop' failed — run it manually to restore your changes.".yellow()
-        ),
-    }
+    restore_created_stash(repo_root_pathbuf, &stash_sha);
 
     baseline_pct
 }

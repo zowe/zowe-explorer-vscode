@@ -5,7 +5,7 @@ use std::process::Command;
 use crate::output::OutputFormat;
 use crate::test::Commands as TestCommands;
 use anyhow::Result;
-use clap::{command, CommandFactory, Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, Shell};
 
 /// Configuration options for test commands
@@ -90,9 +90,6 @@ pub enum RootCommands {
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
-    #[command(subcommand)]
-    pub command: RootCommands,
-
     /// Output format for command results
     #[arg(long, value_enum, value_name = "FORMAT", global = true)]
     pub format: Option<OutputFormat>,
@@ -100,6 +97,9 @@ pub struct Args {
     /// Emit machine-readable JSON (shorthand for `--format json`)
     #[arg(long, global = true)]
     pub json: bool,
+
+    #[command(subcommand)]
+    pub command: RootCommands,
 }
 
 impl Args {

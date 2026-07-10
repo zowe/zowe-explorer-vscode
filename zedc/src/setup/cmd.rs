@@ -1,6 +1,6 @@
 //! Command module for handling `setup` commands.
 
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use super::setup_pkg_mgr;
 use anyhow::bail;
@@ -12,7 +12,8 @@ use owo_colors::OwoColorize;
 /// # Arguments
 /// * `reference` - (optional) A reference to checkout using Git before performing the setup.
 pub async fn handle_cmd(reference: Option<String>) -> anyhow::Result<()> {
-    if !crate::output::json_enabled() {
+    let text = crate::output::text_enabled();
+    if text {
         println!("{}\n", "zedc setup".bold());
     }
 
@@ -44,28 +45,28 @@ pub async fn handle_cmd(reference: Option<String>) -> anyhow::Result<()> {
             .current_dir(&ze_dir)
             .output()
         {
-            Ok(_o) => println!("🔀 Switched to Git ref '{}'", r),
+            Ok(_o) => {
+                if text {
+                    println!("🔀 Switched to Git ref '{}'", r);
+                }
+            }
             Err(_) => {
-                println!(
-                    "⚠️ {}",
-                    format!(
-                        "Could not checkout Git ref '{}', using current working tree",
-                        r
+                if text {
+                    println!(
+                        "⚠️ {}",
+                        format!(
+                            "Could not checkout Git ref '{}', using current working tree",
+                            r
+                        )
+                        .italic()
                     )
-                    .italic()
-                );
+                }
             }
         }
     }
 
     // Clean `node_modules` between calls to the `setup` command.
-    let node_modules_dir = ze_dir.join("node_modules");
-    if node_modules_dir.exists() {
-        println!("🧹 Cleaning node_modules...");
-        let _ = tokio::fs::remove_dir_all(node_modules_dir).await;
-        let _ =
-            tokio::fs::remove_dir_all(ze_dir.join("packages").join("*").join("node_modules")).await;
-    }
+    super::clean_node_modules(&ze_dir).await?;
 
     // Run the install command for the corresponding package manager to grab dependencies.
     let setup_pkg_mgr = setup_pkg_mgr(ze_dir).await?;
@@ -74,16 +75,26 @@ pub async fn handle_cmd(reference: Option<String>) -> anyhow::Result<()> {
     if pkg_mgr_name != "yarn" {
         pm.arg("install");
     }
+    if !text {
+        pm.stdout(Stdio::null()).stderr(Stdio::null());
+    }
     match pm.status() {
+        Ok(status) if status.success() => {
+            if text {
+                println!("✔️  Setup complete");
+            }
+        }
         Ok(_) => {
-            println!("✔️  Setup complete");
+            bail!("{} install exited with a non-zero status", pkg_mgr_name);
         }
         Err(e) => {
-            println!("{:?}", e);
-            println!(
-                "❌ Failed to run {} - ensure it has been installed and try again.",
-                pkg_mgr_name
-            );
+            if text {
+                println!("{:?}", e);
+                println!(
+                    "❌ Failed to run {} - ensure it has been installed and try again.",
+                    pkg_mgr_name
+                );
+            }
             bail!("Error when using the package manager");
         }
     }
