@@ -216,11 +216,11 @@ function createGlobalMocks(): { [key: string]: any } {
         configurable: true,
     });
     Object.defineProperty(vscode.workspace, "openTextDocument", {
-        value: () => {},
+        value: () => { },
         configurable: true,
     });
     Object.defineProperty(vscode.window, "showTextDocument", {
-        value: () => {},
+        value: () => { },
         configurable: true,
     });
 
@@ -2645,7 +2645,7 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
         vi.restoreAllMocks();
     });
 
-    it("should fail to clear filter if no session nodes are available", async () => {
+    it("should fail to clear filter if no session nodes are available", () => {
         const globalMocks = createGlobalMocks();
         const testNode = new (ZoweTreeNode as any)(
             "fake",
@@ -2667,12 +2667,12 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
         vi.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
         vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
 
-        expect(await Profiles.getInstance().clearFilterFromAllTrees(testNode));
+        expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
         expect(onCollapsibleStateChangeSpy).toHaveBeenCalledTimes(0);
         expect(refreshElementSpy).toHaveBeenCalledTimes(0);
     });
 
-    it("should fail to clear filters if the session node is not listed in the tree", async () => {
+    it("should fail to clear filters if the session node is not listed in the tree", () => {
         const globalMocks = createGlobalMocks();
         const testNode = new (ZoweTreeNode as any)(
             "fake",
@@ -2695,7 +2695,7 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
         vi.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
         vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
 
-        expect(await Profiles.getInstance().clearFilterFromAllTrees(testNode));
+        expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
         expect(onCollapsibleStateChangeSpy).toHaveBeenCalledTimes(0);
         expect(refreshElementSpy).toHaveBeenCalledTimes(0);
         expect(getProfileSpy).toHaveBeenCalledTimes(3);

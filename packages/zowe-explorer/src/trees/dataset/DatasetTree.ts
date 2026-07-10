@@ -2232,9 +2232,11 @@ Would you like to do this now?`,
      * @returns {boolean} - True if the data set was found and focused
      */
     public async focusOnDsInTree(dsName: string, sessProfile: imperative.IProfileLoaded): Promise<boolean> {
-        // Try to find in session nodes
-        for (const session of this.mSessionNodes) {
-            const children = await session.getChildren();
+        // Only look at the session node that matches the profile used for this action
+        const sessionNode = this.findMatchingProfileInArray(this.mSessionNodes, sessProfile.name);
+        // Try to find in the session node that matches the given profile
+        if (sessionNode) {
+            const children = await sessionNode.getChildren();
             const foundNode = children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
             if (foundNode) {
                 await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
@@ -2242,21 +2244,19 @@ Would you like to do this now?`,
             }
         }
 
-        // Try to find in favorites
-        for (const favNode of this.mFavorites) {
-            if (favNode.children && favNode.children.length > 0) {
-                const foundNode = favNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
-                if (foundNode) {
-                    // Cannot just reveal foundNode as it will not expand out fully
-                    await this.getTreeView().reveal(favNode, { expand: true });
-                    await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
-                    return true;
-                }
+        // Try to find in favorites under the matching profile node
+        const favProfileNode = this.findMatchingProfileInArray(this.mFavorites, sessProfile.name);
+        if (favProfileNode?.children && favProfileNode.children.length > 0) {
+            const foundNode = favProfileNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+            if (foundNode) {
+                // Cannot just reveal foundNode as it will not expand out fully
+                await this.getTreeView().reveal(favProfileNode, { expand: true });
+                await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
+                return true;
             }
         }
 
         // Not found: set filter on the session node and reveal
-        const sessionNode = this.mSessionNodes.find((session) => session.label?.toString().toUpperCase() === sessProfile.name.toUpperCase());
         if (sessionNode) {
             sessionNode.pattern = dsName.toUpperCase();
             sessionNode.dirty = true;

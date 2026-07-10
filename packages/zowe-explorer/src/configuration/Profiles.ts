@@ -296,9 +296,8 @@ export class Profiles extends ProfilesCache {
         if (configFileIndex === -1) {
             toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")}`);
         } else {
-            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
-                layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
-            }`;
+            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
+                }`;
         }
 
         const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
@@ -1065,7 +1064,7 @@ export class Profiles extends ProfilesCache {
         }
     }
 
-    public async clearDSFilterFromTree(node: Types.IZoweNodeType): Promise<void> {
+    public clearDSFilterFromTree(node: Types.IZoweNodeType): void {
         if (!SharedTreeProviders.ds?.mSessionNodes || !SharedTreeProviders.ds?.mSessionNodes.length) {
             return;
         }
@@ -1082,13 +1081,13 @@ export class Profiles extends ProfilesCache {
         // Given that the providers defined in `SharedTreeProviders` (e.g. ds, uss, job) extend `ZoweTreeProvider`,
         // we are guaranteed to have implemented the `onCollapsibleStateChange` function.
         // Thus it is safe to ignore the compiler warning about using an optional function defined in `IZoweTree`
-        await SharedTreeProviders.ds.onCollapsibleStateChange(dsNode, vscode.TreeItemCollapsibleState.Collapsed);
+        void SharedTreeProviders.ds.onCollapsibleStateChange!(dsNode, vscode.TreeItemCollapsibleState.Collapsed);
         // ---------------------------------------------------------------
 
         SharedTreeProviders.ds.refreshElement(dsNode);
     }
 
-    public async clearUSSFilterFromTree(node: Types.IZoweNodeType): Promise<void> {
+    public clearUSSFilterFromTree(node: Types.IZoweNodeType): void {
         if (!SharedTreeProviders.uss?.mSessionNodes || !SharedTreeProviders.uss?.mSessionNodes.length) {
             return;
         }
@@ -1105,13 +1104,13 @@ export class Profiles extends ProfilesCache {
         // Given that the providers defined in `SharedTreeProviders` (e.g. ds, uss, job) extend `ZoweTreeProvider`,
         // we are guaranteed to have implemented the `onCollapsibleStateChange` function.
         // Thus it is safe to ignore the compiler warning about using an optional function defined in `IZoweTree`
-        await SharedTreeProviders.uss.onCollapsibleStateChange(ussNode, vscode.TreeItemCollapsibleState.Collapsed);
+        void SharedTreeProviders.uss.onCollapsibleStateChange!(ussNode, vscode.TreeItemCollapsibleState.Collapsed);
         // ---------------------------------------------------------------
 
         SharedTreeProviders.uss.refreshElement(ussNode);
     }
 
-    public async clearJobFilterFromTree(node: Types.IZoweNodeType): Promise<void> {
+    public clearJobFilterFromTree(node: Types.IZoweNodeType): void {
         if (!SharedTreeProviders.job?.mSessionNodes || !SharedTreeProviders.job?.mSessionNodes.length) {
             return;
         }
@@ -1132,23 +1131,23 @@ export class Profiles extends ProfilesCache {
         // Given that the providers defined in `SharedTreeProviders` (e.g. ds, uss, job) extend `ZoweTreeProvider`,
         // we are guaranteed to have implemented the `onCollapsibleStateChange` function.
         // Thus it is safe to ignore the compiler warning about using an optional function defined in `IZoweTree`
-        await SharedTreeProviders.job.onCollapsibleStateChange(jobNode, vscode.TreeItemCollapsibleState.Collapsed);
+        void SharedTreeProviders.job.onCollapsibleStateChange!(jobNode, vscode.TreeItemCollapsibleState.Collapsed);
         // ---------------------------------------------------------------
 
         SharedTreeProviders.job.refreshElement(jobNode);
     }
 
-    public async clearFilterFromAllTrees(node: Types.IZoweNodeType): Promise<void> {
-        await this.clearDSFilterFromTree(node);
-        await this.clearUSSFilterFromTree(node);
-        await this.clearJobFilterFromTree(node);
+    public clearFilterFromAllTrees(node: Types.IZoweNodeType): void {
+        this.clearDSFilterFromTree(node);
+        this.clearUSSFilterFromTree(node);
+        this.clearJobFilterFromTree(node);
     }
 
     public async ssoLogout(node: Types.IZoweNodeType): Promise<void> {
         ZoweLogger.trace("Profiles.ssoLogout called.");
         const serviceProfile = node.getProfile();
         try {
-            await this.clearFilterFromAllTrees(node);
+            this.clearFilterFromAllTrees(node);
             let logoutOk: boolean;
             const zeRegister = ZoweExplorerApiRegister.getInstance();
 
