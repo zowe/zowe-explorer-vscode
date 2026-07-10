@@ -37,6 +37,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue when renaming a data set or member where new extension suffix was not detected. [#4142](https://github.com/zowe/zowe-explorer-vscode/issues/4142)
 - Fixed an issue where renaming a sequential data set with an extension suffix like `.jcl` would fail. [#4326](https://github.com/zowe/zowe-explorer-vscode/pull/4326)
 - Fixed an issue where member filtering on data sets with qualifier parts with fewer than three characters were ignoring the member filter and returning all members. [#4275](https://github.com/zowe/zowe-explorer-vscode/issues/4275)
+- Fixed an issue where opening a highlighted PDS name present within the job spool files using the **Open selected data set** option showed an unnecessary warning message even when the PDS was successfully filtered and displayed in the tree. [#4230](https://github.com/zowe/zowe-explorer-vscode/issues/4230)
 
 ## `3.5.0`
 
