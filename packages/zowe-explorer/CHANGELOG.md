@@ -11,8 +11,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Renamed 'Display in Tree' to 'Locate in Tree' in table views to improve clarity. [#3771](https://github.com/zowe/zowe-explorer-vscode/issues/3771)
 - Added error handling for a "Could not list members" error that appears when deleting an expanded PDS using an SSH profile. [#768](https://github.com/zowe/zowex/issues/768)
 - Fixed an issue where valuable details in error messages were truncated, particularly when using SSH profiles. [zowex/#766](https://github.com/zowe/zowex/issues/766)
+- Fixed "Open Selected Data Set" action opening data sets in the z/OSMF tree instead of the originating extender profile's tree when invoked from a spool file. [#4372](https://github.com/zowe/zowe-explorer-vscode/issues/4372)
 
 ## `3.5.1`
 
@@ -35,6 +37,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue when renaming a data set or member where new extension suffix was not detected. [#4142](https://github.com/zowe/zowe-explorer-vscode/issues/4142)
 - Fixed an issue where renaming a sequential data set with an extension suffix like `.jcl` would fail. [#4326](https://github.com/zowe/zowe-explorer-vscode/pull/4326)
 - Fixed an issue where member filtering on data sets with qualifier parts with fewer than three characters were ignoring the member filter and returning all members. [#4275](https://github.com/zowe/zowe-explorer-vscode/issues/4275)
+- Fixed an issue where opening a highlighted PDS name present within the job spool files using the **Open selected data set** option showed an unnecessary warning message even when the PDS was successfully filtered and displayed in the tree. [#4230](https://github.com/zowe/zowe-explorer-vscode/issues/4230)
 
 ## `3.5.0`
 

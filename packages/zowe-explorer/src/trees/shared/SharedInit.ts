@@ -506,7 +506,7 @@ export class SharedInit {
         );
     }
 
-    public static isDocumentASpool(uri: vscode.Uri): Boolean {
+    public static isDocumentASpool(uri: vscode.Uri): boolean {
         const entry = JobFSProvider.instance.lookup(uri, false);
         return FsJobsUtils.isSpoolEntry(entry);
     }

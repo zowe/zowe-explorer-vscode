@@ -2464,7 +2464,7 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
     it("should logout successfully and refresh zowe explorer", async () => {
         const mockTreeProvider = {
             mSessionNodes: [testNode],
-            flipState: vi.fn(),
+            onCollapsibleStateChange: vi.fn(),
             refreshElement: vi.fn(),
         } as any;
         vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
@@ -2655,12 +2655,12 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
             globalMocks.testProfile
         );
 
-        const flipStateSpy = vi.fn();
+        const onCollapsibleStateChangeSpy = vi.fn();
         const refreshElementSpy = vi.fn();
 
         const mockTreeProvider = {
             mSessionNodes: [],
-            flipState: flipStateSpy,
+            onCollapsibleStateChange: onCollapsibleStateChangeSpy,
             refreshElement: refreshElementSpy,
         } as any;
         vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
@@ -2668,7 +2668,7 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
         vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
 
         expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
-        expect(flipStateSpy).toHaveBeenCalledTimes(0);
+        expect(onCollapsibleStateChangeSpy).toHaveBeenCalledTimes(0);
         expect(refreshElementSpy).toHaveBeenCalledTimes(0);
     });
 
@@ -2682,13 +2682,13 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
             globalMocks.testProfile
         );
 
-        const flipStateSpy = vi.fn();
+        const onCollapsibleStateChangeSpy = vi.fn();
         const refreshElementSpy = vi.fn();
         const getProfileSpy = vi.fn(() => ({ name: "test" }));
 
         const mockTreeProvider = {
             mSessionNodes: [{ getProfile: getProfileSpy }],
-            flipState: flipStateSpy,
+            onCollapsibleStateChange: onCollapsibleStateChangeSpy,
             refreshElement: refreshElementSpy,
         } as any;
         vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
@@ -2696,7 +2696,7 @@ describe("Profiles Unit Tests - function clearFilterFromAllTrees", () => {
         vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
 
         expect(Profiles.getInstance().clearFilterFromAllTrees(testNode));
-        expect(flipStateSpy).toHaveBeenCalledTimes(0);
+        expect(onCollapsibleStateChangeSpy).toHaveBeenCalledTimes(0);
         expect(refreshElementSpy).toHaveBeenCalledTimes(0);
         expect(getProfileSpy).toHaveBeenCalledTimes(3);
     });

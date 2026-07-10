@@ -2228,47 +2228,100 @@ Would you like to do this now?`,
      *
      * @param dsName - The name of the data set to focus on
      * @param sessProfile - The session profile to use for the operation
-     * @returns {boolean} - True if the data set was found and focused
+     * @returns {boolean} - True if the data set was found or successfully filtered (even if expansion fails), false only if filtering fails
      */
     public async focusOnDsInTree(dsName: string, sessProfile: imperative.IProfileLoaded): Promise<boolean> {
-        // Try to find in session nodes
-        for (const session of this.mSessionNodes) {
-            const children = await session.getChildren();
+        // Only look at the session node that matches the profile used for this action
+        const sessionNode = this.findMatchingProfileInArray(this.mSessionNodes, sessProfile.name);
+        // Try to find in the session node that matches the given profile
+        if (sessionNode) {
+            const children = await sessionNode.getChildren();
             const foundNode = children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
             if (foundNode) {
-                await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
+                try {
+                    await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
+                } catch (error) {
+                    ZoweLogger.warn(
+                        vscode.l10n.t({
+                            message: "Failed to expand PDS {0}: {1}",
+                            args: [dsName, error.message],
+                            comment: ["PDS name", "Error message"],
+                        })
+                    );
+                    // Still return true as the node was found and revealed, even if expansion failed
+                }
                 return true;
             }
         }
 
-        // Try to find in favorites
-        for (const favNode of this.mFavorites) {
-            if (favNode.children && favNode.children.length > 0) {
-                const foundNode = favNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
-                if (foundNode) {
+        // Try to find in favorites under the matching profile node
+        const favProfileNode = this.findMatchingProfileInArray(this.mFavorites, sessProfile.name);
+        if (favProfileNode?.children && favProfileNode.children.length > 0) {
+            const foundNode = favProfileNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+            if (foundNode) {
+                try {
                     // Cannot just reveal foundNode as it will not expand out fully
-                    await this.getTreeView().reveal(favNode, { expand: true });
+                    await this.getTreeView().reveal(favProfileNode, { expand: true });
                     await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
-                    return true;
+                } catch (error) {
+                    ZoweLogger.warn(
+                        vscode.l10n.t({
+                            message: "Failed to expand PDS {0} in favorites: {1}",
+                            args: [dsName, error.message],
+                            comment: ["PDS name", "Error message"],
+                        })
+                    );
+                    // Still return true as the node was found and revealed, even if expansion failed
                 }
+                return true;
             }
         }
 
         // Not found: set filter on the session node and reveal
-        const sessionNode = this.mSessionNodes.find((session) => session.label?.toString().toUpperCase() === sessProfile.name.toUpperCase());
         if (sessionNode) {
             sessionNode.pattern = dsName.toUpperCase();
             sessionNode.dirty = true;
             try {
                 await this.filterTreeByPattern(sessionNode, sessProfile, dsName);
             } catch (error) {
+                ZoweLogger.error(
+                    vscode.l10n.t({
+                        message: "Failed to filter tree for PDS {0}: {1}",
+                        args: [dsName, error.message],
+                        comment: ["PDS name", "Error message"],
+                    })
+                );
                 return false;
             }
-            const pdsNode = sessionNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+
+            // Wait for children to be loaded after filtering
+            const children = await sessionNode.getChildren();
+            const pdsNode = children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
             if (pdsNode) {
-                await this.getTreeView().reveal(pdsNode, { select: true, focus: true, expand: true });
+                try {
+                    await this.getTreeView().reveal(pdsNode, { select: true, focus: true, expand: true });
+                } catch (error) {
+                    ZoweLogger.warn(
+                        vscode.l10n.t({
+                            message: "PDS {0} was filtered successfully but failed to expand: {1}. This may occur with large PDSs.",
+                            args: [dsName, error.message],
+                            comment: ["PDS name", "Error message"],
+                        })
+                    );
+                    // Return true because filtering succeeded - the PDS is now visible in the tree
+                    // even if we couldn't expand it (common with large PDSs with 10k+ members)
+                }
                 return true;
             }
+            // Filtering succeeded but node not found in children after loading
+            // This can happen if the dataset doesn't exist or doesn't match the filter
+            ZoweLogger.debug(
+                vscode.l10n.t({
+                    message: "PDS {0} was not found after filtering. The dataset may not exist or may not match the filter criteria.",
+                    args: [dsName],
+                    comment: ["PDS name"],
+                })
+            );
         }
         return false;
     }
