@@ -36,9 +36,7 @@ After(async function () {
         await deleteDsOrMember(`/${process.env.ZE_TEST_PROFILE_NAME}/${copiedPsName}`).catch(() => {});
     }
     if (this.copyTestMemberName) {
-        await deleteCopiedMember(
-            `/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${copiedMemberName}`
-        ).catch(() => {});
+        await deleteCopiedMember(`/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${copiedMemberName}`).catch(() => {});
     }
     await browser.pause(4000);
 });
@@ -86,9 +84,7 @@ Then("the copied sequential dataset should appear in the Data Sets list", async 
 });
 
 Given("a test PDS member has been created for copying", async function () {
-    await deleteCopiedMember(
-        `/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${copiedMemberName}`
-    );
+    await deleteCopiedMember(`/${process.env.ZE_TEST_PROFILE_NAME}/${process.env.ZE_TEST_PDS}/${copiedMemberName}`);
     await browser.pause(1000);
 
     await browser.waitUntil(

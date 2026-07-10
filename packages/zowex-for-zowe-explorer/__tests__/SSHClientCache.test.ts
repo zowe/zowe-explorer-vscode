@@ -22,7 +22,7 @@ vi.mock("@zowe/zowe-explorer-api", () => {
         public promise: Promise<unknown>;
         public resolve!: (value?: unknown) => void;
         public reject!: (reason?: unknown) => void;
-        constructor() {
+        public constructor() {
             this.promise = new Promise((resolve, reject) => {
                 this.resolve = resolve;
                 this.reject = reject;
@@ -58,8 +58,8 @@ vi.mock("@zowe/zowe-explorer-api", () => {
             },
 
             ImperativeError: class extends Error {
-                errorCode: string;
-                constructor(msg: string) {
+                public errorCode: string;
+                public constructor(msg: string) {
                     super(msg);
                     this.errorCode = "ENOTFOUND";
                 }
