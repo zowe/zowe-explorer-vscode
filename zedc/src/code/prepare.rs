@@ -3,11 +3,8 @@
 
 use std::{
     path::{Path, PathBuf},
-    process::Command,
+    process::{Command, Stdio},
 };
-
-#[cfg(target_os = "macos")]
-use std::process::Stdio;
 
 use anyhow::bail;
 cfg_if::cfg_if! {
