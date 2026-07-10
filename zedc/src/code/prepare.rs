@@ -281,7 +281,9 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
                 "com.apple.quarantine",
                 vsc_path.join("Visual Studio Code.app").to_str().unwrap(),
             ])
-            .spawn();
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status();
     }
 
     Ok(code_cli_binary(&vsc_path).to_str().unwrap().to_owned())

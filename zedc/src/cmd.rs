@@ -35,33 +35,6 @@ pub struct TestConfig {
 /// Root commands available in the Zowe Explorer development CLI
 #[derive(Subcommand)]
 pub enum RootCommands {
-    /// Set up the development environment
-    Setup {
-        /// Git reference to use for setup
-        #[arg(short, long)]
-        reference: Option<String>,
-    },
-    /// Run tests
-    Test {
-        #[command(subcommand)]
-        subcommand: TestCommands,
-        #[command(flatten)]
-        config: TestConfig,
-    },
-    /// Print version information
-    Version,
-    /// Run package manager commands
-    PkgMgr {
-        /// Arguments to pass to the package manager
-        #[arg(trailing_var_arg = true)]
-        args: Vec<String>,
-    },
-    /// Show development environment status
-    Status {
-        /// Show verbose output
-        #[arg(short, long)]
-        verbose: bool,
-    },
     /// Generate shell completions
     Completions {
         /// Shell to generate completions for
@@ -70,6 +43,12 @@ pub enum RootCommands {
     },
     /// Check that installed tool versions satisfy the project's requirements
     Doctor,
+    /// Run package manager commands
+    PkgMgr {
+        /// Arguments to pass to the package manager
+        #[arg(trailing_var_arg = true)]
+        args: Vec<String>,
+    },
     /// Fetch a PR, reuse its posted VSIX artifact (or build from source), and launch the sandbox
     Pr {
         /// GitHub pull request number
@@ -84,6 +63,27 @@ pub enum RootCommands {
         #[arg(long)]
         build: bool,
     },
+    /// Set up the development environment
+    Setup {
+        /// Git reference to use for setup
+        #[arg(short, long)]
+        reference: Option<String>,
+    },
+    /// Show development environment status
+    Status {
+        /// Show verbose output
+        #[arg(short, long)]
+        verbose: bool,
+    },
+    /// Run tests
+    Test {
+        #[command(subcommand)]
+        subcommand: TestCommands,
+        #[command(flatten)]
+        config: TestConfig,
+    },
+    /// Print version information
+    Version,
 }
 
 /// Command-line arguments for the zedc tool

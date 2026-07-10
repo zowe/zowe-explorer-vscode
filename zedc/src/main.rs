@@ -39,24 +39,13 @@ async fn dispatch(command: RootCommands) -> Result<i32> {
     let json = output::json_enabled();
 
     match command {
-        RootCommands::Setup { reference } => {
-            setup::handle_cmd(reference).await?;
-            if json {
-                output::emit_action_result("setup", true);
-            }
+        // Completions always print the raw shell script; `--json` is ignored
+        // here since wrapping a completion script in JSON would break it.
+        RootCommands::Completions { shell } => {
+            generate_completions(shell)?;
             Ok(exit::SUCCESS)
         }
-        RootCommands::Test { subcommand, config } => {
-            test::handle_cmd(config.install_cli, config.vsc_version, subcommand).await
-        }
-        RootCommands::Version => {
-            if json {
-                output::emit_json(&serde_json::json!({ "zedc": env!("CARGO_PKG_VERSION") }));
-            } else {
-                println!("zedc {}", env!("CARGO_PKG_VERSION"));
-            }
-            Ok(exit::SUCCESS)
-        }
+        RootCommands::Doctor => doctor::handle_cmd().await,
         RootCommands::PkgMgr { args } => match pm::handle_cmd(args) {
             Ok(out) => {
                 if json {
@@ -77,14 +66,6 @@ async fn dispatch(command: RootCommands) -> Result<i32> {
                 Ok(exit::FAILURE)
             }
         },
-        RootCommands::Doctor => doctor::handle_cmd().await,
-        RootCommands::Status { verbose } => status::handle_cmd(verbose).await,
-        // Completions always print the raw shell script; `--json` is ignored
-        // here since wrapping a completion script in JSON would break it.
-        RootCommands::Completions { shell } => {
-            generate_completions(shell)?;
-            Ok(exit::SUCCESS)
-        }
         RootCommands::Pr {
             pr_number,
             vsc_version,
@@ -94,6 +75,25 @@ async fn dispatch(command: RootCommands) -> Result<i32> {
             pr::handle_cmd(pr_number, vsc_version, skip_setup, build).await?;
             if json {
                 output::emit_action_result("pr", true);
+            }
+            Ok(exit::SUCCESS)
+        }
+        RootCommands::Setup { reference } => {
+            setup::handle_cmd(reference).await?;
+            if json {
+                output::emit_action_result("setup", true);
+            }
+            Ok(exit::SUCCESS)
+        }
+        RootCommands::Status { verbose } => status::handle_cmd(verbose).await,
+        RootCommands::Test { subcommand, config } => {
+            test::handle_cmd(config.install_cli, config.vsc_version, subcommand).await
+        }
+        RootCommands::Version => {
+            if json {
+                output::emit_json(&serde_json::json!({ "zedc": env!("CARGO_PKG_VERSION") }));
+            } else {
+                println!("zedc {}", env!("CARGO_PKG_VERSION"));
             }
             Ok(exit::SUCCESS)
         }
