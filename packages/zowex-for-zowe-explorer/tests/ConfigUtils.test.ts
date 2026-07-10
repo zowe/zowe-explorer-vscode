@@ -471,7 +471,7 @@ describe("SshConfigUtils", () => {
                             inst: {
                                 connect: vi.fn().mockResolvedValue({}),
                                 end: vi.fn(),
-                                isServerDetectedOnPath: vi.fn().mockResolvedValue(false),
+                                detectServerOnPath: vi.fn().mockResolvedValue(undefined),
                                 // patch in the original storeServerPath so that we can still test that VS Code config methods are called
                                 storeServerPath: original.SshClientCache.prototype.storeServerPath
                             },

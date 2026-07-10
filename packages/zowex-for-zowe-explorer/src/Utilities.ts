@@ -43,14 +43,13 @@ export class Utilities {
         }
         let configuredServerPath = ConfigUtils.getServerPath(profile.profile);
         const sshSession = ZSshUtils.buildSession(profile.profile);
-        let serverIsOnPath = false;
+        let onEnvPathServer: string | undefined = undefined;
         if (configuredServerPath == null) {
-            serverIsOnPath = await SshClientCache.inst.isServerDetectedOnPath(sshSession, profile.profile);
-            // isServerDetectedOnPath will set the configured server path if a $PATH instance is found
-            configuredServerPath = ConfigUtils.getServerPath(profile.profile) ?? ZSshClient.DEFAULT_SERVER_PATH;
+            onEnvPathServer = await SshClientCache.inst.detectServerOnPath(sshSession, profile.profile);
+            configuredServerPath = onEnvPathServer ?? ZSshClient.DEFAULT_SERVER_PATH;
         }
 
-        const deployDirectory = serverIsOnPath
+        const deployDirectory = onEnvPathServer
             ? configuredServerPath
             : await vscePromptApi.promptForDeployDirectory(profile.profile.host, configuredServerPath);
         if (!deployDirectory) {

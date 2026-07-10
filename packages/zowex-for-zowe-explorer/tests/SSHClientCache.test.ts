@@ -255,7 +255,7 @@ describe("SshClientCache", () => {
             vi.mocked(ZSshClient.create)
                 .mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }))
                 .mockResolvedValueOnce({ dispose: vi.fn() } as any);
-
+            cache.detectServerOnPath = vi.fn().mockResolvedValue(undefined);
             await cache.connect(mockProfile);
 
             expect(deployWithProgress).toHaveBeenCalledWith(expect.anything(), "/mock/server/path");
@@ -345,32 +345,31 @@ describe("SshClientCache", () => {
             expect((cache as any).mMutexMap.has(clientId)).toBe(false);
         });
 
-        it("should not call isServerDetectedOnPath if the user has a configured serverPath", async () => {
-            const isServerDetectedOnPath = vi.fn().mockRejectedValue(new Error("Do not call me!"));
-            cache.isServerDetectedOnPath = isServerDetectedOnPath;
+        it("should not call detectServerOnPath if the user has a configured serverPath", async () => {
+            const detectServerOnPath = vi.fn().mockRejectedValue(new Error("Do not call me!"));
+            cache.detectServerOnPath = detectServerOnPath;
             // ConfigUtils.getServerPath is mocked above 
             const client = await cache.connect(mockProfile);
 
             expect(client).toBeDefined();
             expect(ZSshClient.create).toHaveBeenCalled();
             expect(ZSshUtils.buildSession).toHaveBeenCalledWith(mockProfile.profile);
-
-            expect(cache.isServerDetectedOnPath).not.toHaveBeenCalled();
+            expect(cache.detectServerOnPath).not.toHaveBeenCalled();
         })
 
-        it("should call isServerDetectedOnPath if the user does not have a configured serverPath and the default path is not found", async () => {
-            const isServerDetectedOnPath = vi.fn().mockResolvedValue(true);
-            cache.isServerDetectedOnPath = isServerDetectedOnPath;
+        it("should call detectServerOnPath if the user does not have a configured serverPath and the default path is not found", async () => {
+            const mockedPath = '/my/wonderful/env/path';
+            const detectServerOnPath = vi.fn().mockResolvedValue(mockedPath);
+            cache.detectServerOnPath = detectServerOnPath;
             vi.mocked(ZSshClient.create)
                 .mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }))
                 .mockResolvedValueOnce({ dispose: vi.fn() } as any);
+
             ConfigUtils.getServerPath = vi.fn().mockReturnValue(undefined);
             const client = await cache.connect(mockProfile);
-
+            expect(cache.detectServerOnPath).toHaveBeenCalled();
             expect(client).toBeDefined();
             expect(ZSshClient.create).toHaveBeenCalled();
-            expect(ZSshUtils.buildSession).toHaveBeenCalledWith(mockProfile.profile);
-            expect(cache.isServerDetectedOnPath).toHaveBeenCalled();
         })
     });
 

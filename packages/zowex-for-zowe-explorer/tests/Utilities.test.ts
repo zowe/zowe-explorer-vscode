@@ -106,7 +106,7 @@ vi.mock("../src/SshClientCache", () => ({
         inst: {
             connect: vi.fn().mockResolvedValue({}),
             end: vi.fn(),
-            isServerDetectedOnPath: vi.fn().mockResolvedValue(false),
+            detectServerOnPath: vi.fn().mockResolvedValue(false),
         },
     },
 }));
