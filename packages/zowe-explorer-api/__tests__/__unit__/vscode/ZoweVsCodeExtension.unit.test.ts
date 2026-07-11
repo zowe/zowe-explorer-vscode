@@ -857,10 +857,7 @@ describe("ZoweVsCodeExtension", () => {
                 refresh: vi.fn(),
             });
             const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
-            await ZoweVsCodeExtension.updateCredentials(
-                { ...promptCredsOptions, rePrompt: true },
-                undefined as unknown as Types.IApiRegisterClient
-            );
+            await ZoweVsCodeExtension.updateCredentials({ ...promptCredsOptions, rePrompt: true }, undefined as unknown as Types.IApiRegisterClient);
             const validateInput = showInputBoxSpy.mock.calls[0][0].validateInput;
             expect(validateInput).toBeDefined();
             expect(validateInput("")).toBe("User name cannot be empty");
@@ -872,10 +869,10 @@ describe("ZoweVsCodeExtension", () => {
             const fakeProfile = { user: "", password: "fakePass" };
             vi.spyOn(ZoweVsCodeExtension as any, "profilesCache", "get").mockReturnValue({
                 getLoadedProfConfig: vi.fn().mockReturnValue({ profile: fakeProfile }),
-                getProfileInfo: vi.fn().mockReturnValue({ 
-                    isSecured: vi.fn().mockReturnValue(true), 
+                getProfileInfo: vi.fn().mockReturnValue({
+                    isSecured: vi.fn().mockReturnValue(true),
                     updateProperty: vi.fn(),
-                    getTeamConfig: vi.fn().mockReturnValue({ properties: { autoStore: false } })
+                    getTeamConfig: vi.fn().mockReturnValue({ properties: { autoStore: false } }),
                 }),
                 refresh: vi.fn(),
             });
