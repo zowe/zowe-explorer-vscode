@@ -937,6 +937,17 @@ export const RenderConfig = ({
                     );
                   }
                 })()
+              ) : pendingValue === null || pendingValue === undefined ? (
+                <span
+                  style={{
+                    fontFamily: "monospace",
+                    fontStyle: "italic",
+                    color: "var(--vscode-disabledForeground)",
+                    opacity: 0.7,
+                  }}
+                >
+                  null
+                </span>
               ) : (
                 <span>{"{...}"}</span>
               )}
