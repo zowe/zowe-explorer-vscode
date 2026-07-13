@@ -211,7 +211,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 );
             } catch (err) {
                 // If the write fails, we cannot move to the next file
-                handleError(err, (error) => {
+                void handleError(err, (error) => {
                     Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, error.message));
                 });
                 return;
@@ -264,8 +264,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 const srcMembersResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(srcDsn, { attributes: true });
                 const tgtMembersResp = await ZoweExplorerApiRegister.getMvsApi(target.getProfile()).allMembers(srcDsn, { attributes: true }); //using the same dsn, but checking against target
 
-                const srcNames = (srcMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
-                const tgtNames = (tgtMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
+                const srcNames = (srcMembersResp.apiResponse?.items ?? []).map((m: { name: string }) => m.name).filter(Boolean);
+                const tgtNames = (tgtMembersResp.apiResponse?.items ?? []).map((m: { name: string }) => m.name).filter(Boolean);
 
                 if (SharedUtils.hasNameCollision(srcNames, tgtNames)) {
                     Gui.errorMessage(
@@ -543,7 +543,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 profile,
             });
         } catch (err) {
-            handleError(err, (error) => {
+            void handleError(err, (error) => {
                 ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
             });
             return null;
@@ -838,7 +838,7 @@ Would you like to do this now?`,
                 }
             }
         } catch (error) {
-            ZoweLogger.warn(`Failed to stat favorite ${favorite.label}: ${error}`);
+            ZoweLogger.warn(`Failed to stat favorite ${favorite.label.toString()}: ${error}`);
         }
     }
 
@@ -1473,6 +1473,7 @@ Would you like to do this now?`,
                         await (sourceForMembers as ZoweDatasetNode).listMembers(responses);
                         allMembers = responses
                             .filter((r) => r.success)
+                            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                             .flatMap((r) => (r.apiResponse?.items ?? r.apiResponse) as any[])
                             .filter((item) => item?.member)
                             .map((item) => item.member as string)

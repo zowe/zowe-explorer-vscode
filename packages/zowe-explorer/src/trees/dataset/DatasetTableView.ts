@@ -110,9 +110,9 @@ export class TreeDataSource implements IDataSetSource {
         });
 
         if (pdsNode) {
-            const children = await pdsNode.getChildren(false);
+            const theChildren = await pdsNode.getChildren(false);
             return (
-                children
+                theChildren
                     ?.filter((memberNode) => !SharedContext.isInformation(memberNode))
                     .map((memberNode) => this.mapNodeToInfo(memberNode, parentId)) ?? []
             );
@@ -566,6 +566,7 @@ export class DatasetTableView {
         try {
             pinnedRows = await this.table.getPinnedRows();
         } catch (error) {
+            // eslint-disable-next-line no-console
             console.warn("Failed to get pinned rows:", error);
         }
 
@@ -638,6 +639,7 @@ export class DatasetTableView {
                 try {
                     await this.table.setPinnedRows(this.previousTableData.pinnedRows);
                 } catch (error) {
+                    // eslint-disable-next-line no-console
                     console.warn("Failed to restore pinned rows:", error);
                 }
             }
@@ -1078,14 +1080,11 @@ export class DatasetTableView {
         const sortField = this.mapSortOptionToColumnField(method);
         const sortDirection = direction === Sorting.SortDirection.Ascending ? "asc" : "desc";
 
-        return columnDefs.map((col) => {
+        return columnDefs.map((col): Table.Column => {
             if (col.field === sortField) {
-                return {
-                    ...col,
-                    initialSort: sortDirection,
-                };
+                return { ...col, initialSort: sortDirection } as Table.Column;
             }
-            return { ...col, initialSort: undefined };
+            return { ...col, initialSort: undefined } as Table.Column;
         });
     }
 
