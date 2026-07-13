@@ -283,6 +283,8 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             procstep: "",
         };
     }
+
+    // TODO: Pull from imperative once new SDK version is compatible
     public static containsBacktrack(element: string): boolean {
         if (process.platform === "win32") {
             element = element.replace(/\\/g, "/");
