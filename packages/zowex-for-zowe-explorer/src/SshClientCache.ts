@@ -114,7 +114,7 @@ export class SshClientCache extends vscode.Disposable {
                 imperative.Logger.getAppLogger().debug("Skipping deploy, since a usable instance of the server exists on the user's PATH");
                 // path.resolve(): remove binary from the full path to set serverPath to the parent directory,
                 // the same as a user would configure the path manually
-                const parentDir = path.posix.dirname(pathServer.serverPath)
+                const parentDir = path.posix.dirname(pathServer.serverPath);
                 SshClientCache.inst.storeServerPath(profile.host, parentDir);
                 return parentDir;
             }
@@ -195,8 +195,9 @@ export class SshClientCache extends vscode.Disposable {
                             imperative.Logger.getAppLogger().info(`Launching the server found at the user's $PATH at ${onEnvPathServer}`);
                             serverShouldDeploy = await launchServer();
                         } catch (err) {
-                            imperative.Logger.getAppLogger()
-                                .error(`Failed to launch server for profile ${profile.name} after detecting it on the user's $PATH: ${err}`);
+                            imperative.Logger.getAppLogger().error(
+                                `Failed to launch server for profile ${profile.name} after detecting it on the user's $PATH: ${err}`
+                            );
                             throw err;
                         }
                     }

@@ -68,8 +68,7 @@ vi.mock("@zowe/zowe-explorer-api", () => {
         },
         ErrorCorrelator: {
             getInstance: () => ({
-                displayError: vi.fn().
-                    mockResolvedValue({ userResponse: 'Hello tests' })
+                displayError: vi.fn().mockResolvedValue({ userResponse: "Hello tests" }),
             }),
         },
     };
@@ -99,7 +98,7 @@ vi.mock("../src/ServerDeployment", () => ({
 }));
 
 vi.mock("vscode", () => ({
-    Disposable: class { },
+    Disposable: class {},
     window: {
         showErrorMessage: vi.fn(),
     },
@@ -348,17 +347,17 @@ describe("SshClientCache", () => {
         it("should not call detectServerOnPath if the user has a configured serverPath", async () => {
             const detectServerOnPath = vi.fn().mockRejectedValue(new Error("Do not call me!"));
             cache.detectServerOnPath = detectServerOnPath;
-            // ConfigUtils.getServerPath is mocked above 
+            // ConfigUtils.getServerPath is mocked above
             const client = await cache.connect(mockProfile);
 
             expect(client).toBeDefined();
             expect(ZSshClient.create).toHaveBeenCalled();
             expect(ZSshUtils.buildSession).toHaveBeenCalledWith(mockProfile.profile);
             expect(cache.detectServerOnPath).not.toHaveBeenCalled();
-        })
+        });
 
         it("should call detectServerOnPath if the user does not have a configured serverPath and the default path is not found", async () => {
-            const mockedPath = '/my/wonderful/env/path';
+            const mockedPath = "/my/wonderful/env/path";
             const detectServerOnPath = vi.fn().mockResolvedValue(mockedPath);
             cache.detectServerOnPath = detectServerOnPath;
             vi.mocked(ZSshClient.create)
@@ -370,7 +369,7 @@ describe("SshClientCache", () => {
             expect(cache.detectServerOnPath).toHaveBeenCalled();
             expect(client).toBeDefined();
             expect(ZSshClient.create).toHaveBeenCalled();
-        })
+        });
     });
 
     describe("end()", () => {
@@ -654,7 +653,7 @@ describe("SshClientCache", () => {
 
         it("should call ZSshClient.create with the correct options and callbacks", async () => {
             const endSpy = vi.spyOn(cache, "end");
-            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => { });
+            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => {});
             await (cache as any).buildClient(mockSession, clientId, mockOpts);
 
             expect(ZSshClient.create).toHaveBeenCalledWith(
