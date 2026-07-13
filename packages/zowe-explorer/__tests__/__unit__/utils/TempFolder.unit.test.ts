@@ -175,7 +175,7 @@ describe("TempFolder Unit Tests", () => {
         const readdirSyncSpy = jest
             .spyOn(fs, "readdirSync")
             .mockReturnValueOnce(["./test1", "./test2"] as any)
-            .mockReturnValueOnce(["./test3"])
+            .mockReturnValueOnce(["./test3"] as any)
             .mockReturnValue([]);
         jest.spyOn(fs, "lstatSync").mockReturnValue({
             isDirectory: () => true,
