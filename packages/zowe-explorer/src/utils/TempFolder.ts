@@ -82,11 +82,11 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
 }
 
 /**
- * Safely deletes directory without recursing
+ * Safely deletes directory without recursing symlinks
  *
  * @param directory path to directory to be deleted
  */
-export function cleanDir(directory: string): void {
+export function cleanDir(directory: string, recursive = false): void {
     ZoweLogger.trace("TempFolder.cleanDir called.");
     if (!fs.existsSync(directory)) {
         return;
@@ -94,8 +94,10 @@ export function cleanDir(directory: string): void {
     fs.readdirSync(directory).forEach((file) => {
         const fullpath = path.join(directory, file);
         const lstat = fs.lstatSync(fullpath);
-        if (lstat.isFile()) {
+        if (!lstat.isDirectory()) {
             fs.unlinkSync(fullpath);
+        } else if (recursive) {
+            cleanDir(fullpath, true);
         }
     });
     fs.rmdirSync(directory);
@@ -115,7 +117,10 @@ export function cleanTempDir(): Promise<void> {
         return;
     }
     try {
-        [globals.USS_DIR, globals.DS_DIR, globals.ZOWE_TMP_FOLDER, globals.ZOWETEMPFOLDER].forEach(cleanDir);
+        cleanDir(globals.USS_DIR, true);
+        cleanDir(globals.DS_DIR, true);
+        cleanDir(globals.ZOWE_TMP_FOLDER);
+        cleanDir(globals.ZOWETEMPFOLDER);
         ZoweLocalStorage.setValue(LocalStorageKey.FILE_INFO_CACHE, undefined);
     } catch (err) {
         ZoweLogger.error(err);
