@@ -185,6 +185,25 @@ describe("FtpJesApi", () => {
         }).rejects.toThrow(ZoweFtpExtensionError);
     });
 
+    it("should throw error when download spool contents path contains backtrack.", async () => {
+        const jobDetails = { jobid: "123", jobname: "JOB1", spoolFiles: [{ id: "1" }] };
+        JobUtils.findJobByID = jest.fn().mockReturnValue(jobDetails);
+        JobUtils.getSpoolFiles = jest.fn().mockReturnValue(jobDetails.spoolFiles);
+        DownloadJobs.getSpoolDownloadFile = jest.fn().mockReturnValue("/a/b/../../etc/file1");
+        imperative.IO.writeFile = jest.fn();
+        const mockParams = {
+            parms: { jobname: "JOB1", jobid: "123", outDir: "/a/b/c" },
+        };
+
+        await expect(async () => {
+            await JesApi.downloadSpoolContent(mockParams.parms);
+        }).rejects.toThrow(ZoweFtpExtensionError);
+        await expect(async () => {
+            await JesApi.downloadSpoolContent(mockParams.parms);
+        }).rejects.toThrow("Path contains backtrack, target folder is outside of the download folder.");
+        expect(imperative.IO.writeFile).not.toBeCalled();
+    });
+
     it("should throw error when get spool contents by id failed.", async () => {
         jest.spyOn(JobUtils, "getSpoolFileContent").mockImplementationOnce(
             jest.fn((_val) => {
