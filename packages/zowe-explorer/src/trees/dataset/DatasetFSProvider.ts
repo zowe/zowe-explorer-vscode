@@ -132,7 +132,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const dsPath = (entry.metadata as DsEntryMetadata).extensionRemovedFromPath();
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
+        AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
         await AuthHandler.waitForUnlock(uriInfo.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -220,7 +220,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profileEntry = this._lookupAsDirectory(uri, false) as FilterEntry;
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
+        AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
         await AuthHandler.waitForUnlock(uriInfo.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -296,7 +296,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let members: IZosFilesResponse;
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
 
         await AuthHandler.waitForUnlock(entry.metadata.profile);
 
@@ -386,7 +386,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             pdsMember = uriPath.length === this.EXPECTED_MEMBER_LENGTH;
 
             // Wait for any ongoing authentication process to complete
-            await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
+            AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
 
             await AuthHandler.waitForUnlock(uriInfo.profile);
 
@@ -587,7 +587,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             // Wait for any ongoing authentication process to complete
-            await AuthUtils.ensureAuthNotCancelled(profile);
+            AuthUtils.ensureAuthNotCancelled(profile);
 
             await AuthHandler.waitForUnlock(metadata.profile);
 
@@ -819,14 +819,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         let resp: IZosFilesResponse;
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
 
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
 
         await AuthHandler.waitForUnlock(entry.metadata.profile);
 
         try {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile);
-            const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            const profileEncoding = entry.encoding ? null : profile.profile?.encoding;
+            const theProfile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+            const profileEncoding = entry.encoding ? null : theProfile.profile?.encoding;
 
             const binary = encoding === "binary" || entry.encoding?.kind === "binary";
 
@@ -933,7 +933,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
                     if (lastGroup && line === lastGroup.end + 1) {
                         lastGroup.end = line;
-                        lastGroup.text += "\n" + text;
+                        lastGroup.text += `\n${text as string}`;
                     } else {
                         groupedLines.push({ start: line, end: line, text: text as string });
                     }
@@ -1008,7 +1008,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            await AuthUtils.ensureAuthNotCancelled(profile);
+            AuthUtils.ensureAuthNotCancelled(profile);
             await AuthHandler.waitForUnlock(entry.metadata.profile);
             await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).deleteDataSet(fullName, {
                 volume: entry.stats?.["vol"],
@@ -1052,7 +1052,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         try {
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            await AuthUtils.ensureAuthNotCancelled(profile);
+            AuthUtils.ensureAuthNotCancelled(profile);
             await AuthHandler.waitForUnlock(entry.metadata.profile);
             if (FsDatasetsUtils.isPdsEntry(entry) || !entry.isMember) {
                 await ZoweExplorerApiRegister.getMvsApi(entry.metadata.profile).renameDataSet(

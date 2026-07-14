@@ -254,7 +254,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 if (SharedContext.isSession(this)) {
                     const profile = this.getProfile();
                     const toolTipList: string[] = [];
-                    toolTipList.push(`${vscode.l10n.t("Profile: ")}${this.label}`);
+                    toolTipList.push(`${vscode.l10n.t("Profile: ")}${this.label.toString()}`);
                     toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${profile.type}`);
                     this.tooltip = toolTipList.join("\n");
                 }
@@ -322,7 +322,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 profile: cachedProfile,
                 encoding: isDir ? undefined : this.getEncodingInMap(`${itemParentPath}/${itemName}`),
             });
-            const createParentDirs = (uri: vscode.Uri) => {
+            const createParentDirs = (uri: vscode.Uri): void => {
                 const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
                 if (parentUri.path !== uri.path && parentUri.path !== "/" && !UssFSProvider.instance.exists(parentUri)) {
                     createParentDirs(parentUri);
@@ -518,7 +518,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             await vscode.workspace.fs.delete(this.resourceUri, { recursive: this.isFolder });
         } catch (err) {
             ZoweLogger.error(err);
-            handleError(err, (error) => {
+            void handleError(err, (error) => {
                 Gui.errorMessage(
                     vscode.l10n.t({
                         message: "Unable to delete node: {0}",

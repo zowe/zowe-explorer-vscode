@@ -25,7 +25,6 @@ const testInfo = {
     ussDir: process.env.ZE_TEST_USS_DIR.replace(`${process.env.ZE_TEST_USS_FILTER}/`, ""),
 };
 
-
 async function setFilterForProfile(profileNode: ProfileNode, tree: string): Promise<void> {
     let profileItem = await profileNode.find();
 

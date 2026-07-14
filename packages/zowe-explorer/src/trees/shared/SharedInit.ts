@@ -506,7 +506,7 @@ export class SharedInit {
         );
     }
 
-    public static isDocumentASpool(uri: vscode.Uri): Boolean {
+    public static isDocumentASpool(uri: vscode.Uri): boolean {
         const entry = JobFSProvider.instance.lookup(uri, false);
         return FsJobsUtils.isSpoolEntry(entry);
     }
@@ -625,7 +625,7 @@ export class SharedInit {
                 }
                 readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri));
             } catch (err) {
-                handleError(err, (error) => {
+                void handleError(err, (error) => {
                     ZoweLogger.error(error.message);
                 });
             }
@@ -633,7 +633,7 @@ export class SharedInit {
         try {
             await Promise.all(readDirRequests);
         } catch (err) {
-            handleError(err, (error) => {
+            void handleError(err, (error) => {
                 ZoweLogger.error(error.message);
             });
         }
@@ -677,7 +677,9 @@ export class SharedInit {
      * @param context @deprecated
      */
     public static registerZosConsoleView(context: vscode.ExtensionContext): void {
+        // eslint-disable-next-line deprecation/deprecation
         const provider = new ZosConsoleViewProvider(context.extensionUri);
+        // eslint-disable-next-line deprecation/deprecation
         context.subscriptions.push(vscode.window.registerWebviewViewProvider(ZosConsoleViewProvider.viewType, provider));
     }
 
