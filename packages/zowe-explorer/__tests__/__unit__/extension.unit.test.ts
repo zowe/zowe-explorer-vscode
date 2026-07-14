@@ -587,7 +587,7 @@ describe("Extension Unit Tests - THEIA", () => {
         await extension.activate(globalMocks.mockExtension);
 
         expect(globals.ISTHEIA).toEqual(true);
-        expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(6);
+        expect(globalMocks.mockMkdirSync.mock.calls.length).toBe(5);
         expect(globalMocks.mockRegisterCommand.mock.calls.length).toBe(globals.COMMAND_COUNT);
         globalMocks.mockRegisterCommand.mock.calls.forEach((call, i) => {
             expect(call[0]).toStrictEqual(globalMocks.expectedCommands[i]);

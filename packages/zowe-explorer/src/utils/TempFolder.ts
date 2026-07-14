@@ -49,10 +49,9 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
 
     try {
         fs.mkdirSync(globals.ZOWETEMPFOLDER);
-        fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
         fs.mkdirSync(globals.USS_DIR);
         fs.mkdirSync(globals.DS_DIR);
-        imperative.IO.giveAccessOnlyToOwner(globals.ZOWE_TMP_FOLDER);
+        imperative.IO.giveAccessOnlyToOwner(globals.ZOWETEMPFOLDER);
     } catch (err) {
         if (err instanceof Error) {
             await errorHandling(err, null, localize("moveTempFolder.error", "Error encountered when creating temporary folder!"));
@@ -119,7 +118,6 @@ export function cleanTempDir(): Promise<void> {
     try {
         cleanDir(globals.USS_DIR, true);
         cleanDir(globals.DS_DIR, true);
-        cleanDir(globals.ZOWE_TMP_FOLDER);
         cleanDir(globals.ZOWETEMPFOLDER);
         ZoweLocalStorage.setValue(LocalStorageKey.FILE_INFO_CACHE, undefined);
     } catch (err) {

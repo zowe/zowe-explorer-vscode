@@ -96,7 +96,7 @@ describe("TempFolder Unit Tests", () => {
         const expectedPath2 = process.platform === "win32" ? blockMocks.winPath2 : blockMocks.unixPath2.split(path.sep).join(path.posix.sep);
         expect(moveSyncSpy).toBeCalledWith(expectedPath1, expectedPath2, { overwrite: true });
         expect(blockMocks.giveAccessOnlyToOwner).toBeCalledTimes(1);
-        expect(blockMocks.giveAccessOnlyToOwner).toBeCalledWith(globals.ZOWE_TMP_FOLDER);
+        expect(blockMocks.giveAccessOnlyToOwner).toBeCalledWith(globals.ZOWETEMPFOLDER);
     });
 
     it("moveTempFolder should catch the error upon running moveSync", async () => {
