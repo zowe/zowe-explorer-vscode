@@ -273,7 +273,7 @@ export class FtpUssApi extends AbstractFtpApi implements ZoweExplorerApi.IUss {
     }
 
     private async getContentsTag(ussFilePath: string): Promise<string> {
-        const tmpobj = tmp.fileSync();
+        const tmpobj = tmp.fileSync({ discardDescriptor: true });
         try {
             const options: zowe.IDownloadOptions = {
                 binary: false,
