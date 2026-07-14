@@ -14,7 +14,9 @@ const childProcess = require("child_process");
 const fs = require("fs");
 
 const privateUrl = process.argv[2] ||
-    childProcess.execSync("npm config get registry").toString().trim();
+    childProcess.execSync("npm config get registry", {
+        env: { ...process.env, npm_config_registry: "" }
+    }).toString().trim();
 const publicUrls = [
     "https://registry.npmjs.org/",
     "https://registry.yarnpkg.com/"
@@ -34,7 +36,11 @@ replaceRegistryHost(publicUrls, privateUrl);
 
 try {
     childProcess.execSync("yarn install", {
-        env: { ...process.env, YARN_REGISTRY: privateUrl },
+        env: {
+            ...process.env,
+            npm_config_registry: privateUrl,
+            npm_config_always_auth: "true"
+        },
         stdio: "inherit"
     });
 } finally {
