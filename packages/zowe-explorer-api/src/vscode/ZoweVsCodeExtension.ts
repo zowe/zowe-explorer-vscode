@@ -553,7 +553,7 @@ export class ZoweVsCodeExtension {
         let newUser = options.session.user;
         if (!newUser || options.rePrompt) {
             const fallbackValidateInput = options.userInputBoxOptions?.validateInput
-                ? (value: string): string | undefined => options.userInputBoxOptions.validateInput(value)
+                ? (value: string) => options.userInputBoxOptions.validateInput!(value)
                 : undefined;
             newUser = await Gui.showInputBox({
                 placeHolder: "User Name",
