@@ -279,7 +279,7 @@ export class DatasetActions {
     private static async allocateNewDataSet(
         node: IZoweDatasetTreeNode,
         dsName: string,
-        dsPropsForAPI: {},
+        dsPropsForAPI: Partial<zosfiles.ICreateDataSetOptions>,
         datasetProvider: Types.IZoweDatasetTreeType
     ): Promise<void> {
         const profile = node.getProfile();
@@ -1265,10 +1265,10 @@ export class DatasetActions {
         }
 
         // The names of the nodes that should be deleted
-        const deleteItemName = (node: IZoweDatasetTreeNode) =>
-            SharedContext.isDsMember(node)
-                ? ` ${node.getParent().getLabel().toString()}(${node.getLabel().toString()})`
-                : ` ${node.getLabel().toString()}`;
+        const deleteItemName = (aNode: IZoweDatasetTreeNode): string =>
+            SharedContext.isDsMember(aNode)
+                ? ` ${aNode.getParent().getLabel().toString()}(${aNode.getLabel().toString()})`
+                : ` ${aNode.getLabel().toString()}`;
         const namesToDelete: string[] = nodes.map(deleteItemName).sort((a, b) => a.localeCompare(b));
 
         // The member parent nodes that should be refreshed individually
@@ -1538,7 +1538,7 @@ export class DatasetActions {
         }
         const isMatch = DatasetActions.compareDsProperties(type, datasetProvider);
         // Format properties for use by API
-        const dsPropsForAPI = {};
+        const dsPropsForAPI: Partial<zosfiles.ICreateDataSetOptions> = {};
         DatasetActions.newDSProperties?.forEach((property) => {
             if (property.value) {
                 if (property.key === `dsName`) {
@@ -2326,7 +2326,7 @@ export class DatasetActions {
                             datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
                         }
                         if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
-                            datasetProvider.updateFavorites();
+                            void datasetProvider.updateFavorites();
                         }
                     }
                     datasetProvider.refreshElement(node.getParent());
@@ -2485,7 +2485,7 @@ export class DatasetActions {
                         datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
                     }
                     if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
-                        datasetProvider.updateFavorites();
+                        void datasetProvider.updateFavorites();
                     }
                 }
                 datasetProvider.refreshElement(node.getParent());
@@ -2554,7 +2554,7 @@ export class DatasetActions {
                             datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
                         }
                         if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
-                            datasetProvider.updateFavorites();
+                            void datasetProvider.updateFavorites();
                         }
                     }
                 } else {
@@ -2737,7 +2737,7 @@ export class DatasetActions {
                             }
                         } catch (err) {
                             ZoweLogger.error(err);
-                            handleError(err, (error) => {
+                            void handleError(err, (error) => {
                                 Gui.errorMessage(error.message);
                             });
                         }
@@ -2841,7 +2841,7 @@ export class DatasetActions {
                                 });
                             }
                         } catch (err) {
-                            handleError(err, (error) => {
+                            void handleError(err, (error) => {
                                 Gui.errorMessage(error.message);
                             });
                             return;
@@ -2959,7 +2959,7 @@ export class DatasetActions {
                             await mvsApi.copyDataSetCrossLpar(dsname, undefined, options, sourceProfile);
                         } catch (err) {
                             ZoweLogger.error(err);
-                            handleError(err, (error) => {
+                            void handleError(err, (error) => {
                                 Gui.errorMessage(error.message);
                             });
                             return;
@@ -2974,7 +2974,7 @@ export class DatasetActions {
                             try {
                                 await DatasetActions.createDataSetFromSourceAttributes(sourceProfile, node.getProfile(), lbl, dsname);
                             } catch (err) {
-                                handleError(err, (error) => {
+                                void handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to create {0}: {1}",
@@ -3035,7 +3035,7 @@ export class DatasetActions {
                                 });
                             } catch (err) {
                                 ZoweLogger.error(err);
-                                handleError(err, (error) => {
+                                void handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to copy member {0}: {1}",
@@ -3081,7 +3081,7 @@ export class DatasetActions {
                 if (uri) {
                     if (!DatasetFSProvider.instance.exists(uri)) {
                         DatasetFSProvider.instance.createEntry(uri, DsType.PdsMember);
-                        DatasetFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                        DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
                     }
                 }
                 q = vscode.l10n.t("The data set member already exists.\nDo you want to replace it?");
@@ -3099,7 +3099,7 @@ export class DatasetActions {
                 if (uri) {
                     if (!DatasetFSProvider.instance.exists(uri)) {
                         DatasetFSProvider.instance.createEntry(uri, type === "po" ? DsType.Pds : DsType.Ps);
-                        DatasetFSProvider.instance._fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                        DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
                     }
                 }
                 if (type === "ps") {

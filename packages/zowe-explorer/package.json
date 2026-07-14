@@ -2376,7 +2376,7 @@
     "watch:webviews": "pnpm --filter webviews dev",
     "compile": "tsc -b",
     "markdown": "markdownlint CHANGELOG.md README.md",
-    "lint": "concurrently -n \"_eslint_,prettier,markdown\" \"pnpm lint:pretty\" \"pnpm markdown\"",
+    "lint": "concurrently -n \"_eslint_,prettier,markdown\" \"pnpm lint:src\" \"pnpm lint:pretty\" \"pnpm markdown\"",
     "lint:all": "pnpm run \"/^lint:[st].*/\"",
     "lint:pretty": "prettier --write . && prettier --check .",
     "lint:src": "eslint --format stylish \"src/**/*.ts\"",

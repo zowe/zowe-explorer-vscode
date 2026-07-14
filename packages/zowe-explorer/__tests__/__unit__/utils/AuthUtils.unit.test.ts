@@ -1176,27 +1176,27 @@ describe("AuthUtils", () => {
             vi.restoreAllMocks();
         });
 
-        it("should do nothing if profile is unlocked and auth was not cancelled", async () => {
+        it("should do nothing if profile is unlocked and auth was not cancelled", () => {
             isProfileLockedMock.mockReturnValue(false);
             wasAuthCancelledMock.mockReturnValue(false);
 
-            await AuthUtils.ensureAuthNotCancelled(profile);
+            AuthUtils.ensureAuthNotCancelled(profile);
 
             expect(handleProfileAuthOnErrorMock).not.toHaveBeenCalled();
         });
 
-        it("should do nothing if profile is locked and auth was not cancelled", async () => {
+        it("should do nothing if profile is locked and auth was not cancelled", () => {
             isProfileLockedMock.mockReturnValue(true);
             wasAuthCancelledMock.mockReturnValue(false);
 
-            await AuthUtils.ensureAuthNotCancelled(profile);
+            AuthUtils.ensureAuthNotCancelled(profile);
 
             expect(handleProfileAuthOnErrorMock).not.toHaveBeenCalled();
         });
 
-        it("should throw auth cancelled error if user just cancelled auth prompt", async () => {
+        it("should throw auth cancelled error if user just cancelled auth prompt", () => {
             wasAuthCancelledMock.mockReturnValue(true);
-            await expect(AuthUtils.ensureAuthNotCancelled(profile)).rejects.toThrow("User cancelled previous authentication");
+            expect(() => AuthUtils.ensureAuthNotCancelled(profile)).toThrow("User cancelled previous authentication");
         });
     });
 
