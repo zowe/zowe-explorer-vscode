@@ -40,9 +40,17 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  * @param {moreInfo} - additional/customized error messages
  *************************************************************************************************************/
 export async function errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<boolean> {
-    // Use util.inspect instead of JSON.stringify to handle circular references
+    const errorMessage = imperative.LoggerUtils.censorRawData(errorDetails.toString());
+    moreInfo = moreInfo !== undefined ? imperative.LoggerUtils.censorRawData(moreInfo) : moreInfo;
+    let logDetails: unknown = errorDetails;
+    if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
+        const imperativeError = errorDetails as imperative.ImperativeError;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { headers: _h, auth: _a, base64EncodedAuth: _b, password: _p, tokenValue: _tv, ...safeMDetails } = imperativeError.mDetails as any;
+        logDetails = { message: imperativeError.message, mDetails: safeMDetails };
+    }
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null }));
+    ZoweLogger.error(`${errorMessage}\n` + util.inspect({ errorDetails: logDetails, label, moreInfo }, { depth: null }));
     if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
         const imperativeError: imperative.ImperativeError = errorDetails as imperative.ImperativeError;
         const httpErrorCode = Number(imperativeError.mDetails.errorCode);
@@ -114,12 +122,12 @@ export async function errorHandling(errorDetails: Error | string, label?: string
     }
 
     if (moreInfo === undefined) {
-        moreInfo = errorDetails.toString().includes("Error") ? "" : "Error: ";
+        moreInfo = errorMessage.includes("Error") ? "" : "Error: ";
     } else {
         moreInfo += " ";
     }
     // Try to keep message readable since VS Code doesn't support newlines in error messages
-    Gui.errorMessage(moreInfo + errorDetails.toString().replace(/\n/g, " | "));
+    Gui.errorMessage(moreInfo + errorMessage.replace(/\n/g, " | "));
     return false;
 }
 
