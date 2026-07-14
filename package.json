@@ -71,6 +71,7 @@
     "test": "yarn workspaces run test",
     "package": "yarn workspaces run package",
     "pretest:integration": "ts-node ./scripts/create-env.ts",
-    "posttest:integration": "ts-node ./scripts/clean-env.ts"
+    "posttest:integration": "ts-node ./scripts/clean-env.ts",
+    "install-private": "node scripts/installPrivate.js"
   }
 }

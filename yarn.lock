@@ -2877,7 +2877,7 @@
 
 "@zowe/cli@^7.29.21":
   version "7.29.21"
-  resolved "https://registry.yarnpkg.com/@zowe/cli/-/cli-7.29.21.tgz#159a23147d96887a5fc77068ddeaab762b9c1267"
+  resolved "https://registry.npmjs.org/@zowe/cli/-/cli-7.29.21.tgz#159a23147d96887a5fc77068ddeaab762b9c1267"
   integrity sha512-ME3HHH8GP5Z7GW5RgTNiUlkRt6yJnzp1M6h1vcPBVDGqoXucd00w2MX0Yf9NXqIl32yUY1jL68cNfCwRvg/OtA==
   dependencies:
     "@zowe/core-for-zowe-sdk" "7.29.20"
@@ -10570,7 +10570,7 @@ tar-stream@^2.1.4:
 
 tar@7.5.7:
   version "7.5.7"
-  resolved "https://registry.yarnpkg.com/tar/-/tar-7.5.7.tgz#adf99774008ba1c89819f15dbd6019c630539405"
+  resolved "https://registry.npmjs.org/tar/-/tar-7.5.7.tgz#adf99774008ba1c89819f15dbd6019c630539405"
   integrity sha512-fov56fJiRuThVFXD6o6/Q354S7pnWMJIVlDBYijsTNx6jKSE4pvrDTs6lUnmGvNyfJwFQQwWy3owKz1ucIhveQ==
   dependencies:
     "@isaacs/fs-minipass" "^4.0.0"
