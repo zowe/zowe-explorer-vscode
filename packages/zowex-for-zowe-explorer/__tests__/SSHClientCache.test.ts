@@ -100,7 +100,7 @@ vi.mock("../src/ServerDeployment", () => ({
 }));
 
 vi.mock("vscode", () => ({
-    Disposable: class {},
+    Disposable: class { },
     window: {
         showErrorMessage: vi.fn(),
     },
@@ -272,7 +272,7 @@ describe("SshClientCache", () => {
             expect(ZSshClient.create).toHaveBeenCalledTimes(2); // Initial try + post-deploy try
         });
 
-        it("should NOT deploy a new server if the current one is outdated by lacksWriteAccess", async () => {
+        it("should NOT deploy a new server if the current one is outdated but the user lacks write access", async () => {
             vi.mocked(ZSshUtils.checkIfOutdated).mockResolvedValueOnce(true);
             vi.mocked(ZSshUtils.lacksWriteAccess).mockResolvedValueOnce(true);
 
@@ -678,7 +678,7 @@ describe("SshClientCache", () => {
 
         it("should call ZSshClient.create with the correct options and callbacks", async () => {
             const endSpy = vi.spyOn(cache, "end");
-            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => {});
+            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => { });
             await (cache as any).buildClient(mockSession, clientId, mockOpts);
 
             expect(ZSshClient.create).toHaveBeenCalledWith(
