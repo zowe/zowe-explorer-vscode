@@ -100,7 +100,7 @@ vi.mock("../src/ServerDeployment", () => ({
 }));
 
 vi.mock("vscode", () => ({
-    Disposable: class { },
+    Disposable: class {},
     window: {
         showErrorMessage: vi.fn(),
     },
@@ -665,7 +665,7 @@ describe("SshClientCache", () => {
 
         it("should call ZSshClient.create with the correct options and callbacks", async () => {
             const endSpy = vi.spyOn(cache, "end");
-            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => { });
+            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => {});
             await (cache as any).buildClient(mockSession, clientId, mockOpts);
 
             expect(ZSshClient.create).toHaveBeenCalledWith(
@@ -696,23 +696,19 @@ describe("SshClientCache", () => {
 
         it("should return a parentDir if the server is successfully located on the $PATH and is executable", async () => {
             const binary = "/my/wonderful/dir/zowex";
-            vi.mocked(ZSshUtils.detectServerOnPath).mockResolvedValue(
-                { serverPath: binary, hasExecutePermission: true });
+            vi.mocked(ZSshUtils.detectServerOnPath).mockResolvedValue({ serverPath: binary, hasExecutePermission: true });
             const envServerPath = await (cache as any).detectServerOnPath({}, mockProfile);
             expect(envServerPath).toEqual("/my/wonderful/dir");
         });
 
         it("should NOT return a parentDir if the server is successfully located on the $PATH but is NOT executable", async () => {
             const binary = "/my/wonderful/dir/zowex";
-            vi.mocked(ZSshUtils.detectServerOnPath).mockResolvedValue(
-                { serverPath: binary, hasExecutePermission: false });
+            vi.mocked(ZSshUtils.detectServerOnPath).mockResolvedValue({ serverPath: binary, hasExecutePermission: false });
             const envServerPath = await (cache as any).detectServerOnPath({}, mockProfile);
             expect(envServerPath).toEqual(undefined);
-
         });
         it("should  return undefined if no error is encountered but no server is located on the $PATH", async () => {
-            vi.mocked(ZSshUtils.detectServerOnPath).mockResolvedValue(
-                { serverPath: undefined, hasExecutePermission: false });
+            vi.mocked(ZSshUtils.detectServerOnPath).mockResolvedValue({ serverPath: undefined, hasExecutePermission: false });
             const envServerPath = await (cache as any).detectServerOnPath({}, mockProfile);
             expect(envServerPath).toEqual(undefined);
         });
@@ -725,5 +721,5 @@ describe("SshClientCache", () => {
             expect(SshErrorHandler.getInstance().handleError).toHaveBeenCalledWith(mockError, ZoweExplorerApiType.All, "Detecting server on $PATH");
             expect(envServerPath).toEqual(undefined);
         });
-    })
+    });
 });
