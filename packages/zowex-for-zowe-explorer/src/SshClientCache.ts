@@ -164,8 +164,8 @@ export class SshClientCache extends vscode.Disposable {
                     requests: replayRequests,
                     useNativeSsh,
                 });
-                imperative.Logger.getAppLogger().debug(`Server checksums: ${JSON.stringify(newClient!.serverChecksums)}`);
-                if (await ZSshUtils.checkIfOutdated(newClient!.serverChecksums)) {
+                imperative.Logger.getAppLogger().debug(`Server checksums: ${JSON.stringify(newClient.serverChecksums)}`);
+                if (await ZSshUtils.checkIfOutdated(newClient.serverChecksums)) {
                     if (autoUpdate) {
                         imperative.Logger.getAppLogger().info(`Server is out of date, deploying to ${profile.name} at %s`, serverPath);
                         return true;
@@ -196,7 +196,8 @@ export class SshClientCache extends vscode.Disposable {
                             serverShouldDeploy = await launchServer();
                         } catch (err) {
                             imperative.Logger.getAppLogger().error(
-                                `Failed to launch server for profile ${profile.name} after detecting it on the user's $PATH: ${err}`
+                                `Failed to launch server for profile ${profile.name} after detecting it on the user's $PATH:`,
+                                err
                             );
                             throw err;
                         }

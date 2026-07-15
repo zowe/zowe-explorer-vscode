@@ -382,6 +382,19 @@ describe("SshClientCache", () => {
             expect(client).toBeDefined();
             expect(ZSshClient.create).toHaveBeenCalled();
         });
+
+        it("should re-throw an exception if one is encountered after trying to start a server that was detected on the user's $PATH", async () => {
+            const mockedPath = "/my/wonderful/env/path";
+            const detectServerOnPath = vi.fn().mockResolvedValue(mockedPath);
+            cache.detectServerOnPath = detectServerOnPath;
+            const secondError = new imperative.ImperativeError({ msg: "Failed to start your $PATH server. Oops!" });
+            vi.mocked(ZSshClient.create)
+                .mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }))
+                .mockRejectedValueOnce(secondError);
+
+            ConfigUtils.getServerPath = vi.fn().mockReturnValue(undefined);
+            await expect(cache.connect(mockProfile)).rejects.toThrow(secondError);
+        });
     });
 
     describe("end()", () => {
