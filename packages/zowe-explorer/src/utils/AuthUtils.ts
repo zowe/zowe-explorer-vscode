@@ -150,7 +150,7 @@ export class AuthUtils {
      * @param {label} - additional information such as profile name, credentials, messageID etc
      * @param {moreInfo} - additional/customized error messages
      *************************************************************************************************************/
-    public static async errorHandling(errorDetails: Error | string, moreInfo?: ErrorContext): Promise<boolean> {
+    public static async errorHandling(errorDetails: Error | string, moreInfo: ErrorContext = {}): Promise<boolean> {
         // Use util.inspect instead of JSON.stringify to handle circular references
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, ...{ ...moreInfo, profile: undefined } }, { depth: null }));
