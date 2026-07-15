@@ -575,7 +575,7 @@
   "Enter command here...": "Enter command here...",
   "Enter file extension (e.g. csv)": "Enter file extension (e.g. csv)",
   "Enter job owner ID": "Enter job owner ID",
-  "Enter job prefix": "Enter job prefix",
+  "Enter job prefix, use a comma to separate multiple prefixes": "Enter job prefix, use a comma to separate multiple prefixes",
   "Enter job status": "Enter job status",
   "Enter local filter...": "Enter local filter...",
   "Enter or update the TSO command": "Enter or update the TSO command",
