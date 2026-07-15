@@ -169,6 +169,7 @@
   "Added support for adding VSAM datasets to favorites. <a>#4103</a>": "Added support for adding VSAM datasets to favorites. <a>#4103</a>",
   "Added support for adding a Zowe profile across all trees <a>#2603</a>": "Added support for adding a Zowe profile across all trees <a>#2603</a>",
   "Added support for asynchronous operations when using integrated terminals. <a>#3640</a>": "Added support for asynchronous operations when using integrated terminals. <a>#3640</a>",
+  "Added support for comma-separated job prefixes in the Jobs tree filter, matching existing dataset filter behaviour. <a>#4395</a>": "Added support for comma-separated job prefixes in the Jobs tree filter, matching existing dataset filter behaviour. <a>#4395</a>",
   "Added support for consoleName property in z/OSMF profiles when issuing MVS commands <a>#1667</a>": "Added support for consoleName property in z/OSMF profiles when issuing MVS commands <a>#1667</a>",
   "Added support for consoleName property in z/OSMF profiles when issuing MVS commands. <a>#1667</a>": "Added support for consoleName property in z/OSMF profiles when issuing MVS commands. <a>#1667</a>",
   "Added support for copying data sets from multiple source LPARs at once in the cross-LPAR copy/paste functionality. <a>#3945</a>": "Added support for copying data sets from multiple source LPARs at once in the cross-LPAR copy/paste functionality. <a>#3945</a>",
