@@ -201,11 +201,11 @@ export function getDocumentFilePath(label: string, node: IZoweTreeNode): string 
     const dsDir = globals.DS_DIR || "";
     const profName = node.getProfileName();
 
-    if (!new RegExp(MVS_DS_NAME_PATTERN).test(label.toUpperCase())) {
-        throw new imperative.ImperativeError({
-            msg: localize("getDocumentFilePath.invalidLabel", "Invalid dataset name: ") + label,
-        });
-    }
+    imperative.ImperativeExpect.toMatchRegExp(
+        label.toUpperCase(),
+        MVS_DS_NAME_PATTERN,
+        localize("getDocumentFilePath.invalidLabel", "Invalid dataset name: ") + label
+    );
 
     const suffix = appendSuffix(label);
     const resolvedPath = path.join(dsDir, profName || "", suffix);
