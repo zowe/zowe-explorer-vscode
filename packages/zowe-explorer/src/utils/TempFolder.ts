@@ -34,11 +34,11 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-// /**
-//  * Moves temp folder to user defined location in preferences
-//  * @param previousTempPath Zowe temp folder value before updated by user
-//  * @param currentTempPath temp path settings value after updated by user
-//  */
+/**
+ * Moves temp folder to user defined location in preferences
+ * @param previousTempPath Zowe temp folder value before updated by user
+ * @param currentTempPath temp path settings value after updated by user
+ */
 export async function moveTempFolder(previousTempPath: string, currentTempPath: string): Promise<void> {
     ZoweLogger.trace("TempFolder.moveTempFolder called.");
     // Re-define globals with updated path
@@ -72,6 +72,7 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
         }
 
         moveSync(previousTempPath, globals.ZOWETEMPFOLDER, { overwrite: true });
+        imperative.IO.giveAccessOnlyToOwner(globals.ZOWETEMPFOLDER);
     } catch (err) {
         ZoweLogger.error("Error moving temporary folder! " + JSON.stringify(err));
         if (err instanceof Error) {

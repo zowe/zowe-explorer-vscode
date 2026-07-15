@@ -70,7 +70,7 @@
   "pasteMember.inputBox.placeHolder": "Name of Data Set Member",
   "member.validation": "Enter valid member name",
   "saveFile.requestSave": "Requested to save data set {0}",
-  "saveFile.log.debug.path": "path.relative returned a non-blank directory.",
+  "saveFile.log.debug.path": "File path is not under the DS temp directory.",
   "saveFile.log.debug.directory": " Assuming we are not in the DS_DIR directory: ",
   "saveFile.session.error": "Could not locate session when saving data set.",
   "saveFile.missingSessionNode": "Could not find session node",

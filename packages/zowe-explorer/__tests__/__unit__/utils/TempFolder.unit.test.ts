@@ -95,7 +95,7 @@ describe("TempFolder Unit Tests", () => {
         const expectedPath1 = process.platform === "win32" ? blockMocks.winPath : blockMocks.unixPath.split(path.sep).join(path.posix.sep);
         const expectedPath2 = process.platform === "win32" ? blockMocks.winPath2 : blockMocks.unixPath2.split(path.sep).join(path.posix.sep);
         expect(moveSyncSpy).toBeCalledWith(expectedPath1, expectedPath2, { overwrite: true });
-        expect(blockMocks.giveAccessOnlyToOwner).toBeCalledTimes(1);
+        expect(blockMocks.giveAccessOnlyToOwner).toBeCalledTimes(2);
         expect(blockMocks.giveAccessOnlyToOwner).toBeCalledWith(globals.ZOWETEMPFOLDER);
     });
 

@@ -263,7 +263,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     const docPath = path.join(doc.fileName, "..");
     if (!imperative.IO.isSubPath(globals.USS_DIR.toUpperCase(), docPath.toUpperCase())) {
         ZoweLogger.error(
-            localize("saveUSSFile.log.debug.path", "path.relative returned a non-blank directory.") +
+            localize("saveUSSFile.log.debug.path", "File path is not under the USS temp directory.") +
                 localize("saveUSSFile.log.debug.directory", " Assuming we are not in the USS_DIR directory: ") +
                 path.relative(docPath, globals.USS_DIR)
         );

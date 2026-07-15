@@ -405,4 +405,8 @@ export namespace SessConstants {
 
 export class IO {
     public static giveAccessOnlyToOwner(filename: string) {}
+
+    public static isSubPath(parent: string, child: string): boolean {
+        return child.startsWith(parent);
+    }
 }
