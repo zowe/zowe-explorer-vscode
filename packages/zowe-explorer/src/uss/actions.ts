@@ -261,7 +261,7 @@ export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZo
     ZoweLogger.trace("uss.actions.saveUSSFile called.");
     ZoweLogger.debug(localize("saveUSSFile.log.debug.saveRequest", "save requested for USS file ") + doc.fileName);
     const docPath = path.join(doc.fileName, "..");
-    if (!docPath.toUpperCase().startsWith(globals.USS_DIR.toUpperCase())) {
+    if (!imperative.IO.isSubPath(globals.USS_DIR.toUpperCase(), docPath.toUpperCase())) {
         ZoweLogger.error(
             localize("saveUSSFile.log.debug.path", "path.relative returned a non-blank directory.") +
                 localize("saveUSSFile.log.debug.directory", " Assuming we are not in the USS_DIR directory: ") +
