@@ -187,6 +187,9 @@ export function getAppName(isTheia: boolean): "Theia" | "VS Code" {
     return isTheia ? "Theia" : "VS Code";
 }
 
+// MVS dataset-name alphabet: allows [A-Z0-9$#@.-()], max 44 chars; excludes path separators.
+const MVS_DS_NAME_PATTERN = "^[A-Z0-9$#@.()\\-]{1,44}$";
+
 /**
  * Returns the file path for the IZoweTreeNode
  *
@@ -197,8 +200,25 @@ export function getAppName(isTheia: boolean): "Theia" | "VS Code" {
 export function getDocumentFilePath(label: string, node: IZoweTreeNode): string {
     const dsDir = globals.DS_DIR || "";
     const profName = node.getProfileName();
+
+    if (!new RegExp(MVS_DS_NAME_PATTERN).test(label.toUpperCase())) {
+        throw new imperative.ImperativeError({
+            msg: localize("getDocumentFilePath.invalidLabel", "Invalid dataset name: ") + label,
+        });
+    }
+
     const suffix = appendSuffix(label);
-    return path.join(dsDir, profName || "", suffix);
+    const resolvedPath = path.join(dsDir, profName || "", suffix);
+
+    const resolvedDsDir = path.resolve(dsDir);
+    const resolvedFilePath = path.resolve(resolvedPath);
+    if (!resolvedFilePath.startsWith(resolvedDsDir + path.sep)) {
+        throw new imperative.ImperativeError({
+            msg: localize("getDocumentFilePath.pathTraversal", "Path traversal detected in dataset name: ") + label,
+        });
+    }
+
+    return resolvedPath;
 }
 
 /**
