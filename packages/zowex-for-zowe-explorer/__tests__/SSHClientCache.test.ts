@@ -9,13 +9,14 @@
  *
  */
 
-import { imperative, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { imperative, ZoweExplorerApiType, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
 import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { SshClientCache } from "../src/SshClientCache";
 import { deployWithProgress } from "../src/ServerDeployment";
 import { ConfigUtils } from "../src/ConfigUtils";
+import { SshErrorHandler } from "../src/SshErrorHandler";
 
 vi.mock("@zowe/zowe-explorer-api", () => {
     class MockDeferredPromise {
@@ -81,6 +82,7 @@ vi.mock("@zowe/zowex-for-zowe-sdk", () => {
         },
         ZSshUtils: {
             buildSession: vi.fn(),
+            detectServerOnPath: vi.fn(),
             checkIfOutdated: vi.fn(),
             lacksWriteAccess: vi.fn(),
         },
@@ -98,7 +100,7 @@ vi.mock("../src/ServerDeployment", () => ({
 }));
 
 vi.mock("vscode", () => ({
-    Disposable: class {},
+    Disposable: class { },
     window: {
         showErrorMessage: vi.fn(),
     },
@@ -268,6 +270,16 @@ describe("SshClientCache", () => {
 
             expect(deployWithProgress).toHaveBeenCalled();
             expect(ZSshClient.create).toHaveBeenCalledTimes(2); // Initial try + post-deploy try
+        });
+
+        it("should NOT deploy a new server if the current one is outdated by lacksWriteAccess", async () => {
+            vi.mocked(ZSshUtils.checkIfOutdated).mockResolvedValueOnce(true);
+            vi.mocked(ZSshUtils.lacksWriteAccess).mockResolvedValueOnce(true);
+
+            await cache.connect(mockProfile);
+
+            expect(deployWithProgress).not.toHaveBeenCalled();
+            expect(ZSshClient.create).toHaveBeenCalledTimes(2);
         });
 
         it("should skip the update and warn when the server is outdated but autoUpdate is false", async () => {
@@ -653,7 +665,7 @@ describe("SshClientCache", () => {
 
         it("should call ZSshClient.create with the correct options and callbacks", async () => {
             const endSpy = vi.spyOn(cache, "end");
-            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => {});
+            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => { });
             await (cache as any).buildClient(mockSession, clientId, mockOpts);
 
             expect(ZSshClient.create).toHaveBeenCalledWith(
@@ -676,4 +688,42 @@ describe("SshClientCache", () => {
             expect(handleErrorSpy).toHaveBeenCalledWith(clientId, fakeError);
         });
     });
+
+    describe("detectServerOnPath()", () => {
+        beforeEach(() => {
+            cache.storeServerPath = vi.fn();
+        });
+
+        it("should return a parentDir if the server is successfully located on the $PATH and is executable", async () => {
+            const binary = "/my/wonderful/dir/zowex";
+            vi.mocked(ZSshUtils.detectServerOnPath).mockResolvedValue(
+                { serverPath: binary, hasExecutePermission: true });
+            const envServerPath = await (cache as any).detectServerOnPath({}, mockProfile);
+            expect(envServerPath).toEqual("/my/wonderful/dir");
+        });
+
+        it("should NOT return a parentDir if the server is successfully located on the $PATH but is NOT executable", async () => {
+            const binary = "/my/wonderful/dir/zowex";
+            vi.mocked(ZSshUtils.detectServerOnPath).mockResolvedValue(
+                { serverPath: binary, hasExecutePermission: false });
+            const envServerPath = await (cache as any).detectServerOnPath({}, mockProfile);
+            expect(envServerPath).toEqual(undefined);
+
+        });
+        it("should  return undefined if no error is encountered but no server is located on the $PATH", async () => {
+            vi.mocked(ZSshUtils.detectServerOnPath).mockResolvedValue(
+                { serverPath: undefined, hasExecutePermission: false });
+            const envServerPath = await (cache as any).detectServerOnPath({}, mockProfile);
+            expect(envServerPath).toEqual(undefined);
+        });
+
+        it("should catch errors encounted in ZsshUtils and handle them with  SshErrorHandler", async () => {
+            const mockError = new Error("Bad error");
+            vi.mocked(ZSshUtils.detectServerOnPath).mockRejectedValue(mockError);
+            SshErrorHandler.getInstance().handleError = vi.fn();
+            const envServerPath = await (cache as any).detectServerOnPath({}, mockProfile);
+            expect(SshErrorHandler.getInstance().handleError).toHaveBeenCalledWith(mockError, ZoweExplorerApiType.All, "Detecting server on $PATH");
+            expect(envServerPath).toEqual(undefined);
+        });
+    })
 });
