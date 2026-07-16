@@ -207,8 +207,8 @@ export class SshClientCache extends vscode.Disposable {
 
                 if (serverShouldDeploy) {
                     if (!(await ZSshUtils.lacksWriteAccess(session, serverPath))) {
-                        newClient?.dispose();
                         await deployWithProgress(session, serverPath);
+                        newClient?.dispose();
                         newClient = await this.buildClient(session, clientId, {
                             serverPath,
                             keepAliveInterval,
