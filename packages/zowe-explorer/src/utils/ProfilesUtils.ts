@@ -41,10 +41,9 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
  *************************************************************************************************************/
 export async function errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<boolean> {
     const errorMessage = imperative.LoggerUtils.censorRawData(errorDetails.toString());
-    moreInfo = moreInfo !== undefined ? imperative.LoggerUtils.censorRawData(moreInfo) : moreInfo;
-    const logDetails: unknown = errorDetails;
+    let safeMoreInfo = moreInfo !== undefined ? imperative.LoggerUtils.censorRawData(moreInfo) : moreInfo;
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    ZoweLogger.error(`${errorMessage}\n` + util.inspect({ errorDetails: logDetails, label, moreInfo }, { depth: null }));
+    ZoweLogger.error(`${errorMessage}\n` + util.inspect({ label, moreInfo: safeMoreInfo }, { depth: null }));
     if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
         const imperativeError: imperative.ImperativeError = errorDetails as imperative.ImperativeError;
         const httpErrorCode = Number(imperativeError.mDetails.errorCode);
@@ -115,13 +114,13 @@ export async function errorHandling(errorDetails: Error | string, label?: string
         }
     }
 
-    if (moreInfo === undefined) {
-        moreInfo = errorMessage.includes("Error") ? "" : "Error: ";
+    if (safeMoreInfo === undefined) {
+        safeMoreInfo = errorMessage.includes("Error") ? "" : "Error: ";
     } else {
-        moreInfo += " ";
+        safeMoreInfo += " ";
     }
     // Try to keep message readable since VS Code doesn't support newlines in error messages
-    Gui.errorMessage(moreInfo + errorMessage.replace(/\n/g, " | "));
+    Gui.errorMessage(safeMoreInfo + errorMessage.replace(/\n/g, " | "));
     return false;
 }
 

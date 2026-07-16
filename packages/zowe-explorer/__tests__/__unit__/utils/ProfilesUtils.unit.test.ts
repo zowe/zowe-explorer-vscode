@@ -89,7 +89,7 @@ describe("ProfilesUtils unit tests", () => {
             await profUtils.errorHandling(errorDetails, label, moreInfo);
             expect(Gui.errorMessage).toBeCalledWith(moreInfo + ` Error: ${errorDetails.message}`);
             expect(ZoweLogger.error).toBeCalledWith(
-                `${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
+                `${errorDetails.toString()}\n` + util.inspect({ label, moreInfo }, { depth: null })
             );
         });
 
@@ -106,7 +106,7 @@ describe("ProfilesUtils unit tests", () => {
             await profUtils.errorHandling(errorDetails, label, moreInfo as unknown as string);
             expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
             expect(ZoweLogger.error).toBeCalledWith(
-                `Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
+                `Error: ${errorDetails.message}\n` + util.inspect({ label, moreInfo }, { depth: null })
             );
         });
 
