@@ -798,17 +798,18 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
         createGlobalMocks();
         const providers = createTreeProviders();
         vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(providers);
-        const removedProfNames = new Set<string>();
         const addedProfTypes = new Set<string>();
-        const removeSessionSpy = vi
-            .spyOn(TreeViewUtils, "removeSession")
-            .mockImplementation((treeProvider, profileName) => removedProfNames.add(profileName) as any);
+        const removeSessionSpy = vi.spyOn(TreeViewUtils, "removeSession");
         const addDefaultSessionSpy = vi
             .spyOn(TreeViewUtils, "addDefaultSession")
             .mockImplementation((treeProvider, profileType) => addedProfTypes.add(profileType) as any);
         await SharedActions.refreshAll();
-        expect(removeSessionSpy).toHaveBeenCalledTimes(6);
-        expect([...removedProfNames]).toEqual(["zosmf", "zosmf2"]);
+        // Orphan session nodes are removed via treeProvider.deleteSession, not TreeViewUtils.removeSession
+        // (removeSession strips favorites for that profile name — see SharedActions.refreshProvider).
+        expect(removeSessionSpy).not.toHaveBeenCalled();
+        expect(providers.ds.deleteSession).toHaveBeenCalledTimes(2);
+        expect(providers.uss.deleteSession).toHaveBeenCalledTimes(2);
+        expect(providers.job.deleteSession).toHaveBeenCalledTimes(2);
         expect(addDefaultSessionSpy).toHaveBeenCalledTimes(6);
         expect([...addedProfTypes]).toEqual(["zosmf", "ssh"]);
     });
@@ -817,11 +818,7 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
         createGlobalMocks();
         const providers = createTreeProviders();
         vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(providers);
-        const removedProfNames = new Set<string>();
         const addedProfTypes = new Set<string>();
-        const removeSessionSpy = vi
-            .spyOn(TreeViewUtils, "removeSession")
-            .mockImplementation((treeProvider, profileName) => removedProfNames.add(profileName) as any);
         const addDefaultSessionSpy = vi
             .spyOn(TreeViewUtils, "addDefaultSession")
             .mockClear()
@@ -829,9 +826,12 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
         const debugSpy = vi.spyOn(ZoweLogger, "debug").mockClear();
         const firstRefresh = SharedActions.refreshAll();
         await SharedActions.refreshAll();
+        await firstRefresh;
 
         // expect same amount of assertions even though refresh was called twice
-        expect(removeSessionSpy).toHaveBeenCalledTimes(6);
+        expect(providers.ds.deleteSession).toHaveBeenCalledTimes(2);
+        expect(providers.uss.deleteSession).toHaveBeenCalledTimes(2);
+        expect(providers.job.deleteSession).toHaveBeenCalledTimes(2);
         expect(addDefaultSessionSpy).toHaveBeenCalledTimes(6);
     });
 });
