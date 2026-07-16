@@ -6,6 +6,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Updated the USS paste action to validate clipboard contents and to evaluate the newly santized USS clipboard path. [#4397](https://github.com/zowe/zowe-explorer-vscode/pull/4397)
+
+### Bug fixes
+
 ## `2.18.4`
 
 ### Bug fixes
