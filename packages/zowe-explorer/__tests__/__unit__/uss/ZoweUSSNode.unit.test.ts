@@ -34,6 +34,7 @@ import * as ussUtils from "../../../src/uss/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+import * as profileUtils from "../../../src/utils/ProfilesUtils";
 
 jest.mock("fs");
 jest.mock("path");
@@ -1592,5 +1593,38 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockRejectedValueOnce(blockMocks.fileResponse);
 
         await blockMocks.testNode.pasteUssTree();
+    });
+
+    it("Tests node.pasteUssTree() rejects clipboard contents that are not a valid USS file structure", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const errorHandlingSpy = jest.spyOn(profileUtils, "errorHandling").mockResolvedValue(undefined);
+        const pasteSpy = jest.spyOn(blockMocks.testNode, "paste");
+        pasteSpy.mockClear();
+
+        // Well-formed JSON, but the children are not valid UssFileTree nodes (attacker-controlled shape).
+        globalMocks.readText.mockResolvedValueOnce(JSON.stringify({ children: [{ ussPath: 5, type: "File", localPath: "/etc/passwd" }] }));
+
+        await blockMocks.testNode.pasteUssTree();
+
+        expect(pasteSpy).not.toHaveBeenCalled();
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
+        expect(errorHandlingSpy.mock.calls[0][0]).toBeInstanceOf(Error);
+        expect((errorHandlingSpy.mock.calls[0][0] as Error).message).toContain("not a valid USS file structure");
+    });
+
+    it("Tests node.pasteUssTree() rejects clipboard contents whose top-level children is not an array", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const errorHandlingSpy = jest.spyOn(profileUtils, "errorHandling").mockResolvedValue(undefined);
+        const pasteSpy = jest.spyOn(blockMocks.testNode, "paste");
+        pasteSpy.mockClear();
+
+        globalMocks.readText.mockResolvedValueOnce(JSON.stringify({ children: "not-an-array" }));
+
+        await blockMocks.testNode.pasteUssTree();
+
+        expect(pasteSpy).not.toHaveBeenCalled();
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
     });
 });

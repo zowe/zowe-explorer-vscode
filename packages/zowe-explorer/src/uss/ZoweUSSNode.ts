@@ -671,11 +671,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         } else {
             // Never trust the clipboard-supplied localPath: recompute it from the
             // destination profile and USS path, and require it to stay inside USS_DIR.
-            console.log("DEBUG profileName", this.getSessionNode().getProfileName(), "ussPath", uss.tree.ussPath, "USS_DIR", globals.USS_DIR);
             const localPath = UssFileUtils.resolveLocalPath(this.getSessionNode().getProfileName(), uss.tree.ussPath);
-            console.log("DEBUG localPath", localPath);
             const existsLocally = fs.existsSync(localPath);
-            console.log("DEBUG existsLocally", existsLocally);
             switch (uss.tree.type) {
                 case UssFileType.Directory:
                     if (!existsLocally) {
