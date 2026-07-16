@@ -380,7 +380,8 @@ describe("SshClientCache", () => {
             const client = await cache.connect(mockProfile);
             expect(cache.detectServerOnPath).toHaveBeenCalled();
             expect(client).toBeDefined();
-            expect(ZSshClient.create).toHaveBeenCalled();
+            // 3 times : launchServer() helper called twice and then buildClient() after deploying
+            expect(ZSshClient.create).toHaveBeenCalledTimes(3);
         });
 
         it("should re-throw an exception if one is encountered after trying to start a server that was detected on the user's $PATH", async () => {
