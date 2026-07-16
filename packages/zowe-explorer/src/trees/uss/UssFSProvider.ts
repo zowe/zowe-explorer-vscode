@@ -121,7 +121,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             // Wait for any ongoing authentication process to complete
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            await AuthUtils.ensureAuthNotCancelled(profile);
+            AuthUtils.ensureAuthNotCancelled(profile);
             await AuthHandler.waitForUnlock(entry.metadata.profile);
 
             // Check if the profile is locked (indicating an auth error is being handled)
@@ -157,7 +157,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 }
             }
         } catch (err) {
-            handleError(err, (error) => {
+            void handleError(err, (error) => {
                 ZoweLogger.error(error.message);
             });
         }
@@ -229,7 +229,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         try {
             await AuthUtils.retryRequest(info.profile, async () => {
-                await AuthUtils.ensureAuthNotCancelled(info.profile);
+                AuthUtils.ensureAuthNotCancelled(info.profile);
                 await AuthHandler.waitForUnlock(info.profile);
                 await ussApi.move(oldInfo.path, info.path);
             });
@@ -255,7 +255,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const ussPath = queryParams.has("searchPath") ? queryParams.get("searchPath") : uri.path.substring(uri.path.indexOf("/", 1));
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -344,7 +344,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
+        AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
         await AuthHandler.waitForUnlock(uriInfo.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -511,7 +511,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profileEncoding = file.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(file.metadata.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -530,7 +530,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     stream: bufBuilder,
                 });
             } catch (err) {
-                handleError(err, (error) => {
+                void handleError(err, (error) => {
                     ZoweLogger.error(`[UssFSProvider] fetchFileAtUri failed due to an error. Details: \n${error.message}`);
                 });
                 if (
@@ -587,7 +587,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(entry.metadata.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -704,7 +704,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(entry.metadata.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -870,7 +870,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
 
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(entry.metadata.profile);
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
@@ -940,7 +940,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(parent.metadata.profile.name);
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(parent.metadata.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -1031,7 +1031,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const sourceInfo = this._getInfoFromUri(source);
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(destInfo.profile);
+        AuthUtils.ensureAuthNotCancelled(destInfo.profile);
         await AuthHandler.waitForUnlock(destInfo.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)

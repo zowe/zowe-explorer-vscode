@@ -677,7 +677,7 @@ export class SharedUtils {
                 const node = (await provider.getChildren()).find((n) => n.label === profile?.name);
                 node?.setProfileToChoice?.(profile);
             } catch (err) {
-                handleError(err, (error) => {
+                void handleError(err, (error) => {
                     ZoweLogger.error(error.message);
                 });
                 return;
@@ -744,6 +744,7 @@ export class SharedUtils {
         }
 
         if (response.apiResponse && Array.isArray(response.apiResponse)) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             const failedItems = response.apiResponse.filter((item: any) => item.error || item.status === "failed");
             if (failedItems.length > 0) {
                 hasErrors = true;
@@ -915,11 +916,8 @@ export class SharedUtils {
      * @param droppedLabel - name of the dropped item
      * @returns Promise resolves to true if the normalized paths match and the target path exists. false otherwise
      */
-    public static async isLikelySameUssObjectByUris(
-        sourceNode: IZoweUSSTreeNode,
-        targetParent: IZoweUSSTreeNode,
-        droppedLabel: string
-    ): Promise<boolean> {
+
+    public static isLikelySameUssObjectByUris(sourceNode: IZoweUSSTreeNode, targetParent: IZoweUSSTreeNode, droppedLabel: string): boolean {
         //normalize paths
         const equal =
             path.posix.normalize(sourceNode.fullPath.replace(/\\/g, "/")) ===

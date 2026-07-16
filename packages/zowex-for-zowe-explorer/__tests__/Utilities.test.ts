@@ -37,8 +37,8 @@ vi.mock("vscode", () => ({
 
 vi.mock("@zowe/zowe-explorer-api", () => {
     class MockDeferredPromise {
-        promise = Promise.resolve();
-        resolve = vi.fn();
+        public promise = Promise.resolve();
+        public resolve = vi.fn();
     }
     return {
         Gui: {
@@ -74,8 +74,8 @@ vi.mock("@zowe/zowe-explorer-api", () => {
                 }),
             },
             ImperativeError: class extends Error {
-                errorCode: string;
-                constructor(msg: string) {
+                public errorCode: string;
+                public constructor(msg: string) {
                     super(msg);
                     this.errorCode = "ENOTFOUND";
                 }
