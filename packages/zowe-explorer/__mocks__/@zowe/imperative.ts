@@ -404,7 +404,6 @@ export namespace SessConstants {
 }
 
 export class LoggerUtils {
-    static readonly CENSOR_RESPONSE = "****";
     static censorRawData(data: string, _category?: string): string {
         return data;
     }
