@@ -2222,7 +2222,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode({
-            label: "HLQ.TEST.TO.NODE",
+            label: "TESTMBR",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.pdsSessionNode,
             profile: blockMocks.imperativeProfile,
