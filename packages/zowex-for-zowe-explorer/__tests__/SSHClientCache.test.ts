@@ -100,7 +100,7 @@ vi.mock("../src/ServerDeployment", () => ({
 }));
 
 vi.mock("vscode", () => ({
-    Disposable: class { },
+    Disposable: class {},
     window: {
         showErrorMessage: vi.fn(),
     },
@@ -682,7 +682,7 @@ describe("SshClientCache", () => {
 
         it("should call ZSshClient.create with the correct options and callbacks", async () => {
             const endSpy = vi.spyOn(cache, "end");
-            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => { });
+            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => {});
             await (cache as any).buildClient(mockSession, clientId, mockOpts);
 
             expect(ZSshClient.create).toHaveBeenCalledWith(
