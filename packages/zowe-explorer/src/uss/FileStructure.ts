@@ -45,10 +45,9 @@ export interface UssFileTree {
 }
 
 /**
- * Type guard that validates an untrusted value (e.g. parsed from the clipboard)
+ * Type guard that validates an untrusted value (ie parsed from the clipboard)
  * has the shape of a `UssFileTree` node before it is used anywhere else.
- * Does not validate `localPath`/trust it for anything - that value is always
- * recomputed locally, never taken from the (potentially attacker-controlled) input.
+ * path value is always recomputed locally, never taken from the input
  */
 export function isValidUssFileTree(node: unknown): node is UssFileTree {
     if (typeof node !== "object" || node === null) {
@@ -70,10 +69,8 @@ export function isValidUssFileTree(node: unknown): node is UssFileTree {
     if (tree.binary != null && typeof tree.binary !== "boolean") {
         return false;
     }
-    if (tree.children != null) {
-        if (!Array.isArray(tree.children) || !tree.children.every((child) => isValidUssFileTree(child))) {
-            return false;
-        }
+    if (tree.children != null && (!Array.isArray(tree.children) || !tree.children.every((child) => isValidUssFileTree(child)))) {
+        return false;
     }
     return true;
 }
@@ -100,7 +97,7 @@ export class UssFileUtils {
 
     /**
      * Recomputes the local file system path for a USS path that is about to be
-     * pasted, ignoring any `localPath` supplied by the (untrusted) clipboard
+     * pasted, ignoring any `localPath` supplied by the clipboard
      * contents. The resulting path is guaranteed to live inside `globals.USS_DIR`.
      *
      * @param profileName The name of the profile that owns the paste destination
