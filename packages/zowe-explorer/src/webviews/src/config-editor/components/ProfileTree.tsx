@@ -1,95 +1,86 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo } from "react";
 import { getOriginalProfileKeyWithNested } from "../utils/profileUtils";
+import { useIsLightTheme } from "../hooks/useIsLightTheme";
+import { useScrollToSelected } from "../hooks/useScrollToSelected";
+import { ProfileTypeBadge } from "./ProfileTypeBadge";
+import { DefaultStarButton } from "./DefaultStarButton";
 
-// Color map for profile types
-const profileTypeColorMap = new Map<string, string>();
+// Re-exported for backward compatibility with existing importers (e.g. ProfileList, tests).
+export { getColorForProfileType, PROFILE_TYPE_COLORS, coreTypeColors, coreColors } from "../utils/profileColors";
+export { useIsLightTheme };
 
-export const PROFILE_TYPE_COLORS: string[] = [
-  "#810D49",
-  "#00735C",
-  "#AB0D61",
-  "#009175",
-  "#D80D7B",
-  "#00CBA7",
-  "#FF78AD",
-  "#00EBC1",
-  "#00489E",
-  "#8E06CD",
-  "#0079FA",
-  "#ED0DFD",
-  "#00C2F9",
-  "#86081C",
-  "#B20725",
-  "#DE0D2E",
-  "#FF4235",
-  "#FF8735",
-  "#00F407",
-  "#FFB935",
-  "#AFFF2A",
-];
+/**
+ * Given a proposed profile key for a drag-drop rename, return a non-conflicting key. If the
+ * proposed key already exists (and isn't part of the dragged profile's own rename chain), a
+ * numeric suffix is appended until the key is unique.
+ */
+function resolveDropTargetKey(params: {
+  proposedKey: string;
+  draggedProfile: string;
+  profileKeys: string[];
+  pendingProfiles: { [key: string]: any };
+  renames?: { [configPath: string]: { [originalKey: string]: string } };
+  configurations?: any[];
+  selectedTab?: number | null;
+  findOriginalKey: (currentKey: string) => string;
+}): string {
+  const { proposedKey, draggedProfile, profileKeys, pendingProfiles, renames, configurations, selectedTab, findOriginalKey } = params;
 
-export const coreTypeColors: { [key: string]: string } = {
-  zosmf: "#DE0D2E",
-  tso: "#00F407",
-  ssh: "#FF8735",
-  base: "#0079FA",
-};
+  // Get all current profile keys (including pending profiles and targets of pending renames)
+  const allCurrentProfileKeys = [...profileKeys, ...Object.keys(pendingProfiles)];
 
-export const coreColors = new Set(Object.values(coreTypeColors));
-
-// Get available colors (non-core colors) as a sorted array for deterministic selection
-const getAvailableColors = (): string[] => {
-  return PROFILE_TYPE_COLORS.filter((color) => !coreColors.has(color)).sort();
-};
-
-// Simple hash function to convert string to number deterministically
-const hashString = (str: string): number => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  return Math.abs(hash);
-};
-
-export const getColorForProfileType = (profileType: string): string => {
-  // Check if it's a core type first
-  if (coreTypeColors[profileType]) {
-    return coreTypeColors[profileType];
+  // Add profiles that are targets of pending renames to avoid conflicts
+  if (renames && configurations && selectedTab !== null && selectedTab !== undefined) {
+    const configPath = configurations[selectedTab]?.configPath;
+    if (configPath && renames[configPath]) {
+      const configRenames = renames[configPath];
+      const renameTargets = Object.values(configRenames);
+      allCurrentProfileKeys.push(...renameTargets);
+    }
   }
 
-  if (!profileTypeColorMap.has(profileType)) {
-    // Get available colors (non-core colors)
-    const availableColors = getAvailableColors();
-    // Use hash of profile type to deterministically select a color
-    const hash = hashString(profileType);
-    const colorIndex = hash % availableColors.length;
-    const color = availableColors[colorIndex];
+  // Check if the new profile key already exists and is not the dragged profile itself
+  if (allCurrentProfileKeys.includes(proposedKey) && proposedKey !== draggedProfile) {
+    // Find the original key for the dragged profile to get all names in its rename chain
+    const originalKey = findOriginalKey(draggedProfile);
 
-    profileTypeColorMap.set(profileType, color);
+    // Get all names that are part of the current rename chain for this profile
+    const namesInRenameChain = new Set<string>();
+    if (renames && configurations && selectedTab !== null && selectedTab !== undefined) {
+      const configPath = configurations[selectedTab]?.configPath;
+      if (configPath && renames[configPath]) {
+        const configRenames = renames[configPath];
+
+        // Add the original key
+        namesInRenameChain.add(originalKey);
+
+        // Follow the rename chain to collect all intermediate names
+        let currentKey = originalKey;
+        const visited = new Set<string>();
+        while (configRenames[currentKey] && !visited.has(currentKey)) {
+          visited.add(currentKey);
+          namesInRenameChain.add(configRenames[currentKey]);
+          currentKey = configRenames[currentKey];
+        }
+      }
+    }
+
+    // Only create a unique name if the conflict is not with a name in our rename chain
+    if (!namesInRenameChain.has(proposedKey)) {
+      // Find a unique name by appending a number
+      let counter = 1;
+      let uniqueNewProfileKey = `${proposedKey}_${counter}`;
+
+      while (allCurrentProfileKeys.includes(uniqueNewProfileKey)) {
+        counter++;
+        uniqueNewProfileKey = `${proposedKey}_${counter}`;
+      }
+
+      return uniqueNewProfileKey;
+    }
   }
-  return profileTypeColorMap.get(profileType)!;
-};
 
-export function useIsLightTheme(): boolean {
-  const [isLight, setIsLight] = useState("vscode-light" === document.body.getAttribute("data-vscode-theme-kind"));
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      const newIsLight = "vscode-light" === document.body.getAttribute("data-vscode-theme-kind");
-      setIsLight(newIsLight);
-    });
-
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ["data-vscode-theme-kind"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  return isLight;
+  return proposedKey;
 }
 
 interface ProfileTreeProps {
@@ -152,7 +143,7 @@ export function ProfileTree({
   // Drag and drop state
   const [draggedProfile, setDraggedProfile] = useState<string | null>(null);
   const [dragOverProfile, setDragOverProfile] = useState<string | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useScrollToSelected(selectedProfileKey);
 
   // Memoized helper function to find the original key from a current profile key
   const findOriginalKey = useMemo(() => {
@@ -190,41 +181,6 @@ export function ProfileTree({
 
     return autoExpanded;
   };
-
-  useEffect(() => {
-    if (selectedProfileKey && scrollContainerRef.current) {
-      const scrollToSelected = () => {
-        const selectedElement = scrollContainerRef.current?.querySelector(`[data-profile-key="${selectedProfileKey}"]`);
-        if (selectedElement && scrollContainerRef.current) {
-          const container = scrollContainerRef.current;
-          const containerRect = container.getBoundingClientRect();
-          const elementRect = selectedElement.getBoundingClientRect();
-
-          const isElementVisible = elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
-
-          if (!isElementVisible || elementRect.top < containerRect.top + 50 || elementRect.bottom > containerRect.bottom - 50) {
-            selectedElement.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-              inline: "nearest",
-            });
-            return true;
-          }
-        }
-        return false;
-      };
-
-      if (!scrollToSelected()) {
-        const timeouts = [
-          setTimeout(() => scrollToSelected(), 100),
-          setTimeout(() => scrollToSelected(), 300),
-          setTimeout(() => scrollToSelected(), 500),
-        ];
-
-        return () => timeouts.forEach(clearTimeout);
-      }
-    }
-  }, [selectedProfileKey]);
 
   const buildTree = (keys: string[]): ProfileNode[] => {
     const nodes: ProfileNode[] = [];
@@ -365,60 +321,17 @@ export function ProfileTree({
       newProfileKey = `${targetProfileKey}.${draggedProfileName}`;
     }
 
-    // Check if the new profile key would conflict with an existing profile
-    // Get all current profile keys (including pending profiles and targets of pending renames)
-    const allCurrentProfileKeys = [...profileKeys, ...Object.keys(pendingProfiles)];
-
-    // Add profiles that are targets of pending renames to avoid conflicts
-    if (renames && configurations && selectedTab !== null && selectedTab !== undefined) {
-      const configPath = configurations[selectedTab]?.configPath;
-      if (configPath && renames[configPath]) {
-        const configRenames = renames[configPath];
-        const renameTargets = Object.values(configRenames);
-        allCurrentProfileKeys.push(...renameTargets);
-      }
-    }
-
-    // Check if the new profile key already exists and is not the dragged profile itself
-    if (allCurrentProfileKeys.includes(newProfileKey) && newProfileKey !== draggedProfile) {
-      // Find the original key for the dragged profile to get all names in its rename chain
-      const originalKey = findOriginalKey(draggedProfile);
-
-      // Get all names that are part of the current rename chain for this profile
-      const namesInRenameChain = new Set<string>();
-      if (renames && configurations && selectedTab !== null && selectedTab !== undefined) {
-        const configPath = configurations[selectedTab]?.configPath;
-        if (configPath && renames[configPath]) {
-          const configRenames = renames[configPath];
-
-          // Add the original key
-          namesInRenameChain.add(originalKey);
-
-          // Follow the rename chain to collect all intermediate names
-          let currentKey = originalKey;
-          const visited = new Set<string>();
-          while (configRenames[currentKey] && !visited.has(currentKey)) {
-            visited.add(currentKey);
-            namesInRenameChain.add(configRenames[currentKey]);
-            currentKey = configRenames[currentKey];
-          }
-        }
-      }
-
-      // Only create a unique name if the conflict is not with a name in our rename chain
-      if (!namesInRenameChain.has(newProfileKey)) {
-        // Find a unique name by appending a number
-        let counter = 1;
-        let uniqueNewProfileKey = `${newProfileKey}_${counter}`;
-
-        while (allCurrentProfileKeys.includes(uniqueNewProfileKey)) {
-          counter++;
-          uniqueNewProfileKey = `${newProfileKey}_${counter}`;
-        }
-
-        newProfileKey = uniqueNewProfileKey;
-      }
-    }
+    // Check if the new profile key would conflict with an existing profile and resolve to a unique key
+    newProfileKey = resolveDropTargetKey({
+      proposedKey: newProfileKey,
+      draggedProfile,
+      profileKeys,
+      pendingProfiles,
+      renames,
+      configurations,
+      selectedTab,
+      findOriginalKey,
+    });
 
     if (draggedProfile !== newProfileKey) {
       const originalKey = findOriginalKey(draggedProfile);
@@ -525,8 +438,8 @@ export function ProfileTree({
               isDragOver && canDrop
                 ? "var(--vscode-button-hoverBackground)"
                 : isDragging
-                ? "var(--vscode-button-secondaryHoverBackground)"
-                : "var(--vscode-input-background)",
+                  ? "var(--vscode-button-secondaryHoverBackground)"
+                  : "var(--vscode-input-background)",
             display: "flex",
             alignItems: "center",
             gap: "6px",
@@ -587,163 +500,30 @@ export function ProfileTree({
           {/* Default profile indicator */}
           <div className="config-editor-flex-gap-sm">
             {getProfileType(node.key) && (
-              <span
-                onClick={(e) => {
-                  e.stopPropagation();
+              <ProfileTypeBadge
+                profileType={getProfileType(node.key)!}
+                isLightTheme={isLightTheme}
+                filterActive={filterType === getProfileType(node.key)}
+                onToggleFilter={() => {
                   const profileType = getProfileType(node.key);
                   if (profileType && onFilterChange) {
                     // If clicking on the same type that's already filtered, clear the filter
-                    if (filterType === profileType) {
-                      onFilterChange(null);
-                    } else {
-                      onFilterChange(profileType);
-                    }
+                    onFilterChange(filterType === profileType ? null : profileType);
                   }
                 }}
-                style={
-                  isLightTheme
-                    ? (() => {
-                        const profileType = getProfileType(node.key);
-                        const bgColor = getColorForProfileType(profileType!);
-
-                        // Determine text color based on background luminance
-                        const getTextColor = (hex: string): string => {
-                          const cleanHex = hex.replace("#", "");
-                          const r = parseInt(cleanHex.substring(0, 2), 16);
-                          const g = parseInt(cleanHex.substring(2, 4), 16);
-                          const b = parseInt(cleanHex.substring(4, 6), 16);
-
-                          // Convert to 0-1 range and apply gamma correction
-                          const rsRGB = r / 255;
-                          const gsRGB = g / 255;
-                          const bsRGB = b / 255;
-
-                          const rLinear = rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4);
-                          const gLinear = gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4);
-                          const bLinear = bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4);
-
-                          // Calculate relative luminance
-                          const luminance = 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
-
-                          return luminance <= 0.22 ? "white" : "black";
-                        };
-
-                        return {
-                          fontSize: "11px",
-                          color: getTextColor(bgColor),
-                          backgroundColor: bgColor,
-                          border: `1px solid ${bgColor}`,
-                          padding: "2px 6px",
-                          borderRadius: "10px",
-                          fontWeight: "600",
-                          whiteSpace: "nowrap",
-                          flexShrink: 0,
-                          cursor: "pointer",
-                          transition: "opacity 0.2s ease",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          lineHeight: "1",
-                        };
-                      })()
-                    : (() => {
-                        const profileType = getProfileType(node.key);
-                        const bgColor = getColorForProfileType(profileType!);
-
-                        // For dark theme, lighten or darken the text color based on the original color's brightness
-                        const adjustColorForDarkTheme = (color: string) => {
-                          const hex = color.replace("#", "");
-                          const r = parseInt(hex.substr(0, 2), 16);
-                          const g = parseInt(hex.substr(2, 2), 16);
-                          const b = parseInt(hex.substr(4, 2), 16);
-
-                          // Calculate relative luminance
-                          const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
-                          if (luminance > 0.7) {
-                            // Darken bright colors by 30%
-                            return `rgb(${Math.round(r * 0.7)}, ${Math.round(g * 0.7)}, ${Math.round(b * 0.7)})`;
-                          } else if (luminance < 0.3) {
-                            // Lighten dark colors by adding 40%
-                            return `rgb(${Math.min(255, Math.round(r + (255 - r) * 0.4))}, ${Math.min(
-                              255,
-                              Math.round(g + (255 - g) * 0.4)
-                            )}, ${Math.min(255, Math.round(b + (255 - b) * 0.4))})`;
-                          }
-                          return color;
-                        };
-
-                        const textColor = adjustColorForDarkTheme(bgColor);
-
-                        return {
-                          fontSize: "12px",
-                          color: textColor,
-                          backgroundColor: `${bgColor}22`,
-                          border: `1px solid ${bgColor}66`,
-                          padding: "0 7px",
-                          borderRadius: "2em",
-                          fontWeight: "500",
-                          whiteSpace: "nowrap",
-                          flexShrink: 0,
-                          cursor: "pointer",
-                          transition: "background-color 0.2s ease, border-color 0.2s ease",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          lineHeight: "20px",
-                          height: "22px",
-                        };
-                      })()
-                }
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = "0.8";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = "1";
-                }}
-                title={
-                  filterType === getProfileType(node.key)
-                    ? `Click to clear ${getProfileType(node.key)} filter`
-                    : `Click to filter by ${getProfileType(node.key)} type`
-                }
-              >
-                {getProfileType(node.key)}
-              </span>
+              />
             )}
             {getProfileType(node.key) && (
-              <button
-                className="profile-star-button profile-tree-icon-button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const profileType = getProfileType(node.key);
-                  if (!profileType) return; // Don't allow interaction if no type
-
-                  if (isDefault) {
-                    // If already default, deselect it by setting to empty
-                    if (profileType && setPendingDefaults && configurations && selectedTab !== null && selectedTab !== undefined) {
-                      const configPath = configurations[selectedTab]!.configPath;
-                      setPendingDefaults((prev) => ({
-                        ...prev,
-                        [configPath]: {
-                          ...prev[configPath],
-                          [profileType]: { value: "", path: [profileType] },
-                        },
-                      }));
-                    }
-                  } else if (onSetAsDefault) {
-                    // Set as default
-                    onSetAsDefault(node.key);
-                  }
-                }}
-                draggable={false}
-                title={isDefault ? "Click to remove default" : "Set as default"}
-              >
-                <span
-                  className={`codicon codicon-${isDefault ? "star-full" : "star-empty"} profile-tree-default-star ${
-                    isDefault ? "profile-tree-default-star--active" : "profile-tree-default-star--inactive"
-                  }`}
-                />
-              </button>
+              <DefaultStarButton
+                variant="tree"
+                profileKey={node.key}
+                profileType={getProfileType(node.key)}
+                isDefault={isDefault}
+                configurations={configurations}
+                selectedTab={selectedTab}
+                setPendingDefaults={setPendingDefaults}
+                onSetAsDefault={onSetAsDefault}
+              />
             )}
           </div>
         </div>
@@ -817,61 +597,17 @@ export function ProfileTree({
           // Extract only the profile name (last part) from the dragged profile
           const draggedProfileName = draggedProfile.split(".").pop() || draggedProfile;
 
-          // Check if the new profile key would conflict with an existing profile
-          // Get all current profile keys (including pending profiles and targets of pending renames)
-          const allCurrentProfileKeys = [...profileKeys, ...Object.keys(pendingProfiles)];
-
-          // Add profiles that are targets of pending renames to avoid conflicts
-          if (renames && configurations && selectedTab !== null && selectedTab !== undefined) {
-            const configPath = configurations[selectedTab]?.configPath;
-            if (configPath && renames[configPath]) {
-              const configRenames = renames[configPath];
-              const renameTargets = Object.values(configRenames);
-              allCurrentProfileKeys.push(...renameTargets);
-            }
-          }
-
-          // Check if the new profile key already exists and is not the dragged profile itself
-          let newProfileKey = draggedProfileName;
-          if (allCurrentProfileKeys.includes(newProfileKey) && newProfileKey !== draggedProfile) {
-            // Find the original key for the dragged profile to get all names in its rename chain
-            const originalKey = findOriginalKey(draggedProfile);
-
-            // Get all names that are part of the current rename chain for this profile
-            const namesInRenameChain = new Set<string>();
-            if (renames && configurations && selectedTab !== null && selectedTab !== undefined) {
-              const configPath = configurations[selectedTab]?.configPath;
-              if (configPath && renames[configPath]) {
-                const configRenames = renames[configPath];
-
-                // Add the original key
-                namesInRenameChain.add(originalKey);
-
-                // Follow the rename chain to collect all intermediate names
-                let currentKey = originalKey;
-                const visited = new Set<string>();
-                while (configRenames[currentKey] && !visited.has(currentKey)) {
-                  visited.add(currentKey);
-                  namesInRenameChain.add(configRenames[currentKey]);
-                  currentKey = configRenames[currentKey];
-                }
-              }
-            }
-
-            // Only create a unique name if the conflict is not with a name in our rename chain
-            if (!namesInRenameChain.has(newProfileKey)) {
-              // Find a unique name by appending a number
-              let counter = 1;
-              let uniqueNewProfileKey = `${newProfileKey}_${counter}`;
-
-              while (allCurrentProfileKeys.includes(uniqueNewProfileKey)) {
-                counter++;
-                uniqueNewProfileKey = `${newProfileKey}_${counter}`;
-              }
-
-              newProfileKey = uniqueNewProfileKey;
-            }
-          }
+          // Check if the new profile key would conflict with an existing profile and resolve to a unique key
+          const newProfileKey = resolveDropTargetKey({
+            proposedKey: draggedProfileName,
+            draggedProfile,
+            profileKeys,
+            pendingProfiles,
+            renames,
+            configurations,
+            selectedTab,
+            findOriginalKey,
+          });
 
           // Call the rename handler to move to root
           const originalKey = findOriginalKey(draggedProfile);

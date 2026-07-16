@@ -9,8 +9,8 @@
  *
  */
 
-import * as l10n from "@vscode/l10n";
 import type { RenderConfigCtx } from "./context";
+import { ConfirmableDeleteButton } from "../ConfirmableDeleteButton";
 
 interface SecureArrayPropertyProps {
   ctx: RenderConfigCtx;
@@ -72,24 +72,13 @@ export function SecureArrayProperty({ ctx, fullKey, displayKey, path, currentPat
                 />
                 {(() => {
                   const secureFullKey = fullKey.replace("secure", "properties") + "." + item;
-                  return pendingPropertyDeletion === secureFullKey ? (
-                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                      <button
-                        className="action-button"
-                        onClick={() => confirmDeleteProperty(secureFullKey, true)}
-                        title={l10n.t("Confirm delete")}
-                        style={{ color: "var(--vscode-errorForeground)" }}
-                      >
-                        <span className="codicon codicon-check"></span>
-                      </button>
-                      <button className="action-button" onClick={() => setPendingPropertyDeletion(null)} title={l10n.t("Cancel")}>
-                        <span className="codicon codicon-close"></span>
-                      </button>
-                    </div>
-                  ) : (
-                    <button className="action-button" onClick={() => handleDeleteProperty(secureFullKey, true)}>
-                      <span className="codicon codicon-trash"></span>
-                    </button>
+                  return (
+                    <ConfirmableDeleteButton
+                      isConfirming={pendingPropertyDeletion === secureFullKey}
+                      onRequestDelete={() => handleDeleteProperty(secureFullKey, true)}
+                      onConfirmDelete={() => confirmDeleteProperty(secureFullKey, true)}
+                      onCancel={() => setPendingPropertyDeletion(null)}
+                    />
                   );
                 })()}
               </div>

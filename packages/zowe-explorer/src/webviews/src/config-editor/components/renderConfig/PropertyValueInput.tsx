@@ -13,6 +13,7 @@ import * as l10n from "@vscode/l10n";
 import { stringifyValueByType, getPropertyTypeForConfigEditor } from "../../utils";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 import type { RenderConfigCtx } from "./context";
+import { MERGED_DISABLED_INPUT_STYLE } from "./styles";
 
 interface PropertyValueInputProps {
   ctx: RenderConfigCtx;
@@ -115,8 +116,8 @@ export function PropertyValueInput({
     if (isSecureProperty || isLocalSecureProperty || isSecureForSorting) {
       const storedInKeyring = !isFromMergedProps && displayKey && mergedProps?.[displayKey] !== undefined;
       const secureDisplayValue = isFromMergedProps && !isDeletedMergedProperty ? "••••••••" : stringifyValueByType(pendingValue);
-      const isCredentialDisabled = !secureValuesAllowed && (isSecureProperty || isLocalSecureProperty);
       const isMergedDisabled = isFromMergedProps && !isDeletedMergedProperty;
+      const isCredentialDisabled = !isMergedDisabled && !secureValuesAllowed && (isSecureProperty || isLocalSecureProperty);
       const credentialDisabledTitle = l10n.t("A credential manager is not available. Click to open VS Code settings to enable secure credentials.");
       return (
         <input
@@ -161,16 +162,7 @@ export function PropertyValueInput({
           value={stringifyValueByType(pendingValue)}
           onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
           disabled={isFromMergedProps && !isDeletedMergedProperty}
-          style={
-            isFromMergedProps && !isDeletedMergedProperty
-              ? {
-                  backgroundColor: "var(--vscode-input-disabledBackground)",
-                  color: "var(--vscode-disabledForeground)",
-                  cursor: "pointer",
-                  pointerEvents: "none",
-                }
-              : {}
-          }
+          style={isFromMergedProps && !isDeletedMergedProperty ? MERGED_DISABLED_INPUT_STYLE : {}}
           data-property-key={displayKey}
         >
           <option value="true">true</option>
@@ -193,16 +185,7 @@ export function PropertyValueInput({
           })()}
           onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
           disabled={isFromMergedProps && !isDeletedMergedProperty}
-          style={
-            isFromMergedProps && !isDeletedMergedProperty
-              ? {
-                  backgroundColor: "var(--vscode-input-disabledBackground)",
-                  color: "var(--vscode-disabledForeground)",
-                  cursor: "pointer",
-                  pointerEvents: "none",
-                }
-              : {}
-          }
+          style={isFromMergedProps && !isDeletedMergedProperty ? MERGED_DISABLED_INPUT_STYLE : {}}
           data-property-key={displayKey}
         />
       );
@@ -223,16 +206,7 @@ export function PropertyValueInput({
           className={`config-input${inheritedInputClass}`}
           placeholder=""
           disabled={isFromMergedProps && !isDeletedMergedProperty}
-          style={
-            isFromMergedProps && !isDeletedMergedProperty
-              ? {
-                  backgroundColor: "var(--vscode-input-disabledBackground)",
-                  color: "var(--vscode-disabledForeground)",
-                  cursor: "pointer",
-                  pointerEvents: "none",
-                }
-              : {}
-          }
+          style={isFromMergedProps && !isDeletedMergedProperty ? MERGED_DISABLED_INPUT_STYLE : {}}
           vscodeApi={vscodeApi}
           dataPropertyKey={displayKey}
         />

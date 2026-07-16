@@ -114,7 +114,7 @@ div:has(> .vscode-panel) {
     align-items: center;
     justify-content: center;
     min-width: 90px;
-    max-width: 115px;
+    flex-shrink: 0;
     height: 100%;
     padding: 0 12px;
     cursor: pointer;
@@ -124,8 +124,6 @@ div:has(> .vscode-panel) {
     border-bottom: 1px solid var(--vscode-tab-border);
     font-size: 13px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     transition: all 0.2s ease;
     position: relative;
     user-select: none;
@@ -191,10 +189,7 @@ div:has(> .vscode-panel) {
 }
 
 .tab .tab-label {
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
-    width: 100%;
 }
 
 .panels {
@@ -767,6 +762,10 @@ ul {
     display: flex;
     align-items: center;
     gap: 6px;
+}
+
+.tab-label-text {
+    white-space: nowrap;
 }
 
 .codicon-size-14 {

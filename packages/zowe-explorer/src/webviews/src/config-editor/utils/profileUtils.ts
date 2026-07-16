@@ -998,8 +998,8 @@ export function handleToggleSecure(params: HandleToggleSecureParams): void {
         currentPendingChange?.value !== undefined
             ? currentPendingChange.value
             : value !== undefined
-            ? (value as string | number | boolean | Record<string, any>)
-            : "";
+              ? (value as string | number | boolean | Record<string, any>)
+              : "";
 
     setPendingChanges((prev) => ({
         ...prev,

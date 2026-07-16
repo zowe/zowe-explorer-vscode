@@ -13,6 +13,7 @@ import * as l10n from "@vscode/l10n";
 import { stringifyValueByType } from "../../utils";
 import { isFileProperty } from "../../utils/propertyUtils";
 import type { RenderConfigCtx } from "./context";
+import { ConfirmableDeleteButton } from "../ConfirmableDeleteButton";
 
 interface PropertyActionButtonsProps {
   ctx: RenderConfigCtx;
@@ -120,26 +121,14 @@ export function PropertyActionButtons({ ctx, displayKey, path, fullKey, pendingV
               <span className="codicon codicon-lock" style={{ opacity: 0.5, position: "relative", top: "-1px" }}></span>
             </button>
           ))}
-        {showDeleteButton &&
-          (pendingPropertyDeletion === fullKey ? (
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              <button
-                className="action-button"
-                onClick={() => confirmDeleteProperty(fullKey)}
-                title={l10n.t("Confirm delete")}
-                style={{ color: "var(--vscode-errorForeground)" }}
-              >
-                <span className="codicon codicon-check"></span>
-              </button>
-              <button className="action-button" onClick={() => setPendingPropertyDeletion(null)} title={l10n.t("Cancel")}>
-                <span className="codicon codicon-close"></span>
-              </button>
-            </div>
-          ) : (
-            <button className="action-button" onClick={() => handleDeleteProperty(fullKey)}>
-              <span className="codicon codicon-trash"></span>
-            </button>
-          ))}
+        {showDeleteButton && (
+          <ConfirmableDeleteButton
+            isConfirming={pendingPropertyDeletion === fullKey}
+            onRequestDelete={() => handleDeleteProperty(fullKey)}
+            onConfirmDelete={() => confirmDeleteProperty(fullKey)}
+            onCancel={() => setPendingPropertyDeletion(null)}
+          />
+        )}
         {showUnlinkButton && (
           <button
             className="action-button"

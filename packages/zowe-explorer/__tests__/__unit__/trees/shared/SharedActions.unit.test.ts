@@ -823,7 +823,6 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
             .spyOn(TreeViewUtils, "addDefaultSession")
             .mockClear()
             .mockImplementation((treeProvider, profileType) => addedProfTypes.add(profileType) as any);
-        const debugSpy = vi.spyOn(ZoweLogger, "debug").mockClear();
         const firstRefresh = SharedActions.refreshAll();
         await SharedActions.refreshAll();
         await firstRefresh;
