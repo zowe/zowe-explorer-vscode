@@ -188,7 +188,6 @@ export function getAppName(isTheia: boolean): "Theia" | "VS Code" {
 }
 
 // MVS dataset name: up to 44 chars, plus an optional (MEMBER) suffix up to 8 chars.
-// Alphabet allows [A-Z0-9$#@.-]; excludes path separators so path traversal can't slip through.
 const MVS_DS_NAME_PATTERN = "^[A-Z0-9$#@.\\-]{1,44}(\\([A-Z0-9$#@]{1,8}\\))?$";
 
 /**
