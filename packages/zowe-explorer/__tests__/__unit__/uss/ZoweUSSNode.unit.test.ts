@@ -1466,6 +1466,13 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
             })
         );
         globalMocks.basePath.mockResolvedValue("/temp");
+        // The __mocks__/path.ts stub does not implement path.resolve/path.sep, which
+        // UssFileUtils.resolveLocalPath relies on. That method is unit-tested against the
+        // real "path" module in FileStructure.unit.test.ts, so here we stub it to a
+        // deterministic local path and keep these tests focused on paste orchestration.
+        jest.spyOn(UssFileUtils, "resolveLocalPath").mockImplementation(
+            (profileName: string, ussPath: string) => `/local/${profileName ?? ""}${ussPath}`
+        );
         return newMocks;
     }
 
@@ -1599,6 +1606,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const errorHandlingSpy = jest.spyOn(profileUtils, "errorHandling").mockResolvedValue(undefined);
+        errorHandlingSpy.mockClear();
         const pasteSpy = jest.spyOn(blockMocks.testNode, "paste");
         pasteSpy.mockClear();
 
@@ -1617,6 +1625,7 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const errorHandlingSpy = jest.spyOn(profileUtils, "errorHandling").mockResolvedValue(undefined);
+        errorHandlingSpy.mockClear();
         const pasteSpy = jest.spyOn(blockMocks.testNode, "paste");
         pasteSpy.mockClear();
 
