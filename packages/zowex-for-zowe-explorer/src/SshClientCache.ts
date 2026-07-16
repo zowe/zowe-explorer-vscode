@@ -155,6 +155,7 @@ export class SshClientCache extends vscode.Disposable {
             let serverNotFound = false;
             let serverShouldDeploy = true;
             const launchServer = async (): Promise<boolean> => {
+                newClient?.dispose();
                 newClient = await this.buildClient(session, clientId, {
                     serverPath,
                     keepAliveInterval,
@@ -206,6 +207,7 @@ export class SshClientCache extends vscode.Disposable {
 
                 if (serverShouldDeploy) {
                     if (!(await ZSshUtils.lacksWriteAccess(session, serverPath))) {
+                        newClient?.dispose();
                         await deployWithProgress(session, serverPath);
                         newClient = await this.buildClient(session, clientId, {
                             serverPath,
