@@ -105,10 +105,8 @@ describe("ProfilesUtils unit tests", () => {
             const moreInfo = "Task failed successfully";
             await profUtils.errorHandling(errorDetails, label, moreInfo as unknown as string);
             expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
-            const safeMDetails = { msg: "Circular reference", causeErrors: errorJson };
             expect(ZoweLogger.error).toBeCalledWith(
-                `Error: ${errorDetails.message}\n` +
-                    util.inspect({ errorDetails: { message: errorDetails.message, mDetails: safeMDetails }, label, moreInfo }, { depth: null })
+                `Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
             );
         });
 

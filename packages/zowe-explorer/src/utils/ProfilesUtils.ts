@@ -42,13 +42,7 @@ const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 export async function errorHandling(errorDetails: Error | string, label?: string, moreInfo?: string): Promise<boolean> {
     const errorMessage = imperative.LoggerUtils.censorRawData(errorDetails.toString());
     moreInfo = moreInfo !== undefined ? imperative.LoggerUtils.censorRawData(moreInfo) : moreInfo;
-    let logDetails: unknown = errorDetails;
-    if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
-        const imperativeError = errorDetails as imperative.ImperativeError;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { headers: _h, ...safeMDetails } = imperativeError.mDetails as any;
-        logDetails = { message: imperativeError.message, mDetails: safeMDetails };
-    }
+    const logDetails: unknown = errorDetails;
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     ZoweLogger.error(`${errorMessage}\n` + util.inspect({ errorDetails: logDetails, label, moreInfo }, { depth: null }));
     if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
