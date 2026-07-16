@@ -374,6 +374,7 @@ describe("SshClientCache", () => {
             cache.detectServerOnPath = detectServerOnPath;
             vi.mocked(ZSshClient.create)
                 .mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }))
+                .mockResolvedValueOnce({ dispose: vi.fn() } as any)
                 .mockResolvedValueOnce({ dispose: vi.fn() } as any);
 
             ConfigUtils.getServerPath = vi.fn().mockReturnValue(undefined);
