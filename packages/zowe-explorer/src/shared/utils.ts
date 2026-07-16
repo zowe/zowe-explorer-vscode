@@ -188,7 +188,7 @@ export function getAppName(isTheia: boolean): "Theia" | "VS Code" {
 }
 
 // MVS dataset name: up to 44 chars, plus an optional (MEMBER) suffix up to 8 chars.
-const MVS_DS_NAME_PATTERN = "^[A-Z0-9$#@.\\-]{1,44}(\\([A-Z0-9$#@.\\-]{1,44}\\))?$";
+const MVS_DS_NAME_PATTERN = "^[A-Z0-9$#@.\\-]{1,44}(\\([A-Z0-9$#@.\\-]{1,8}\\))?$";
 
 /**
  * Returns the file path for the IZoweTreeNode

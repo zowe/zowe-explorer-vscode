@@ -180,8 +180,8 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         });
 
         const mySpy = mocked(vscode.window.showInputBox).mockImplementation((options) => {
-            options.validateInput("testMember");
-            return Promise.resolve("testMember");
+            options.validateInput("TESTMBR");
+            return Promise.resolve("TESTMBR");
         });
 
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => callback());
@@ -190,7 +190,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         mocked(zowe.Upload.bufferToDataSet).mockResolvedValueOnce(testFilesResponse as any);
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        const newNode = parent.children.find((node) => node.label === "TESTMEMBER");
+        const newNode = parent.children.find((node) => node.label === "TESTMBR");
         expect(newNode).toBeDefined();
         expect(newNode?.contextValue).toBe(globals.DS_MEMBER_CONTEXT);
         expect(newNode?.command.command).toBe("zowe.ds.ZoweNode.openPS");
@@ -198,7 +198,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             placeHolder: "Name of Member",
             validateInput: expect.any(Function),
         });
-        expect(mocked(zowe.Upload.bufferToDataSet)).toHaveBeenCalledWith(blockMocks.zosmfSession, Buffer.from(""), parent.label + "(TESTMEMBER)", {
+        expect(mocked(zowe.Upload.bufferToDataSet)).toHaveBeenCalledWith(blockMocks.zosmfSession, Buffer.from(""), parent.label + "(TESTMBR)", {
             responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
             returnEtag: true,
         });
@@ -213,7 +213,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             session: blockMocks.session,
         });
 
-        mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
+        mocked(vscode.window.showInputBox).mockResolvedValue("TESTMBR");
         mocked(zowe.Upload.bufferToDataSet).mockRejectedValueOnce(Error("test"));
 
         try {
@@ -258,22 +258,17 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         parent.label = `${parent.label}`;
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
-        const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
+        const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("TESTMBR");
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => callback());
         globalMocks.getContentsSpy.mockResolvedValueOnce(testFilesResponse);
         mocked(zowe.Upload.bufferToDataSet).mockResolvedValueOnce(testFilesResponse as any);
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
         expect(mySpy).toHaveBeenCalledWith({ placeHolder: "Name of Member", validateInput: expect.any(Function) });
-        expect(mocked(zowe.Upload.bufferToDataSet)).toHaveBeenCalledWith(
-            blockMocks.zosmfSession,
-            Buffer.from(""),
-            nonFavoriteLabel + "(TESTMEMBER)",
-            {
-                responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
-                returnEtag: true,
-            }
-        );
+        expect(mocked(zowe.Upload.bufferToDataSet)).toHaveBeenCalledWith(blockMocks.zosmfSession, Buffer.from(""), nonFavoriteLabel + "(TESTMBR)", {
+            responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
+            returnEtag: true,
+        });
     });
     it("should not replace existing member when user cancels the replacement prompt", async () => {
         const blockMocks = createBlockMocksShared();
@@ -284,18 +279,18 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             session: blockMocks.session,
         });
 
-        parent.children = [{ ...parent, label: "TESTMEMBER" } as any] as any;
+        parent.children = [{ ...parent, label: "TESTMBR" } as any] as any;
 
         const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers");
         allMembersSpy.mockResolvedValueOnce({
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [createDSMemberAttributes("TESTMEMBER")],
+                items: [createDSMemberAttributes("TESTMBR")],
             },
         });
 
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMEMBER");
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMBR");
         mocked(Gui.showMessage).mockResolvedValueOnce("Cancel");
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
@@ -307,7 +302,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [createDSMemberAttributes("TESTMEMBER")],
+                items: [createDSMemberAttributes("TESTMBR")],
                 etag: "123",
             },
         };
@@ -319,12 +314,12 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             session: blockMocks.session,
         });
 
-        parent.children = [{ ...parent, label: "TESTMEMBER" } as any] as any;
+        parent.children = [{ ...parent, label: "TESTMBR" } as any] as any;
 
         const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers");
         allMembersSpy.mockResolvedValueOnce(testFilesResponse);
 
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMEMBER");
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMBR");
         mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
         mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(fs.unlinkSync).mockImplementation(() => {
