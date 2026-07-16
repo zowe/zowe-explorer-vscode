@@ -279,7 +279,7 @@ describe("SshClientCache", () => {
             await cache.connect(mockProfile);
 
             expect(deployWithProgress).not.toHaveBeenCalled();
-            expect(ZSshClient.create).toHaveBeenCalledTimes(2);
+            expect(ZSshClient.create).toHaveBeenCalledTimes(1);
         });
 
         it("should skip the update and warn when the server is outdated but autoUpdate is false", async () => {
@@ -372,10 +372,12 @@ describe("SshClientCache", () => {
             const mockedPath = "/my/wonderful/env/path";
             const detectServerOnPath = vi.fn().mockResolvedValue(mockedPath);
             cache.detectServerOnPath = detectServerOnPath;
+            vi.mocked(ZSshUtils.lacksWriteAccess).mockResolvedValueOnce(false);
             vi.mocked(ZSshClient.create)
                 .mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }))
                 .mockResolvedValueOnce({ dispose: vi.fn() } as any)
                 .mockResolvedValueOnce({ dispose: vi.fn() } as any);
+            vi.mocked(ZSshUtils.checkIfOutdated).mockResolvedValue(true);
 
             ConfigUtils.getServerPath = vi.fn().mockReturnValue(undefined);
             const client = await cache.connect(mockProfile);
