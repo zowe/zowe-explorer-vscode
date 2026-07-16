@@ -96,9 +96,18 @@ export class UssFileUtils {
     }
 
     /**
+     * Builds the uniform,  error for a rejected USS paste path
+     */
+    private static invalidPathError(ussPath?: string): Error {
+        return ussPath != null && ussPath.length > 0
+            ? new Error(`Cannot paste: missing or invalid USS path "${ussPath}".`)
+            : new Error("Cannot paste: missing or invalid USS path.");
+    }
+
+    /**
      * Recomputes the local file system path for a USS path that is about to be
-     * pasted, ignoring any `localPath` supplied by the clipboard
-     * contents. The resulting path is guaranteed to live inside `globals.USS_DIR`.
+     * pasted, ignoring any `localPath` supplied by the clipboard.
+     * The resulting path is guaranteed to live inside `globals.USS_DIR`.
      *
      * @param profileName The name of the profile that owns the paste destination
      * @param ussPath The remote USS path taken from the (untrusted) file tree node
@@ -108,7 +117,7 @@ export class UssFileUtils {
     public static resolveLocalPath(profileName: string, ussPath: string): string {
         ZoweLogger.trace("UssFileUtils.resolveLocalPath called.");
         if (typeof ussPath !== "string" || ussPath.length === 0) {
-            throw new Error("Cannot paste: missing or invalid USS path.");
+            throw UssFileUtils.invalidPathError();
         }
 
         // Treat the USS path as relative to the local USS directory: strip any
@@ -117,13 +126,13 @@ export class UssFileUtils {
         const segments = ussPath.split(/[/\\]+/).filter((segment) => segment.length > 0 && segment !== ".");
         const isUnsafeSegment = (segment: string): boolean => segment === ".." || /^[a-zA-Z]:$/.test(segment);
         if (segments.some(isUnsafeSegment)) {
-            throw new Error(`Cannot paste: unsafe USS path "${ussPath}".`);
+            throw UssFileUtils.invalidPathError(ussPath);
         }
 
         const ussDir = path.resolve(globals.USS_DIR);
         const localPath = path.resolve(ussDir, profileName ?? "", ...segments);
         if (localPath !== ussDir && !localPath.startsWith(ussDir + path.sep)) {
-            throw new Error(`Cannot paste: resolved path for "${ussPath}" escapes the local USS directory.`);
+            throw UssFileUtils.invalidPathError(ussPath);
         }
 
         return localPath;
