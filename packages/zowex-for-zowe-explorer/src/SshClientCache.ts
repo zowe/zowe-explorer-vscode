@@ -106,7 +106,7 @@ export class SshClientCache extends vscode.Disposable {
      * @param profile - the SSH profile used to connect
      * @returns true if a usable version of the SSH backend server is detected on the user's path
      */
-    public async detectServerOnPath(session: SshSession, profile: imperative.IProfile): Promise<string | undefined> {
+    public async detectServerOnPath(session: SshSession, profile: imperative.IProfileLoaded): Promise<string | undefined> {
         try {
             const pathServer = await ZSshUtils.detectServerOnPath(session);
             imperative.Logger.getAppLogger().debug("detectServerOnPath return value: %s", JSON.stringify(pathServer));
