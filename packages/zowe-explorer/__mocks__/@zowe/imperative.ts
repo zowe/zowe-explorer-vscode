@@ -413,6 +413,6 @@ export namespace SessConstants {
 
 export class LoggerUtils {
     static censorRawData(data: string, _category?: string): string {
-        return data;
+        return jest.requireActual("@zowe/imperative").LoggerUtils.censorRawData(data, _category);
     }
 }
