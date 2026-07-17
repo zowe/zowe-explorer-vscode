@@ -149,4 +149,4 @@ const webConfig = (mode) => ({
     plugins: [new webpack.BannerPlugin(fs.readFileSync("../../scripts/LICENSE_HEADER", "utf-8"))],
 });
 
-module.exports = (_, { mode, watch }) => (watch ? nodeConfig(mode) : [nodeConfig(mode), webConfig(mode)]);
+module.exports = (_, { mode }) => [nodeConfig(mode), webConfig(mode)];
