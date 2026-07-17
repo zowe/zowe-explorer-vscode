@@ -31,12 +31,10 @@ describe("FileStructure unit tests - function isValidUssFileTree", () => {
         expect(isValidUssFileTree(node)).toBe(true);
     });
 
-    it.each([
-        ["null", null],
-        ["a non-object", "not an object"],
-        ["a number", 42],
-    ])("rejects %s", (_desc, value) => {
-        expect(isValidUssFileTree(value)).toBe(false);
+    it("rejects values that are not objects", () => {
+        expect(isValidUssFileTree(null)).toBe(false);
+        expect(isValidUssFileTree("not an object")).toBe(false);
+        expect(isValidUssFileTree(42)).toBe(false);
     });
 
     it("rejects a node with a missing or non-string ussPath", () => {
