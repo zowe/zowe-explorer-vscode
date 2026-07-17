@@ -107,9 +107,8 @@ export class UssFileUtils {
      */
     public static resolveLocalPath(profileName: string, ussPath: string): string {
         ZoweLogger.trace("UssFileUtils.resolveLocalPath called.");
-        const invalidPathMsg = "Cannot paste: missing or invalid USS path";
         if (typeof ussPath !== "string" || ussPath.length === 0) {
-            throw new Error(`${invalidPathMsg}.`);
+            throw new Error("Cannot paste: missing or invalid USS path.");
         }
 
         // Treat the USS path as relative to the local USS directory: strip any
@@ -118,13 +117,13 @@ export class UssFileUtils {
         const segments = ussPath.split(/[/\\]+/).filter((segment) => segment.length > 0 && segment !== ".");
         const isUnsafeSegment = (segment: string): boolean => segment === ".." || /^[a-zA-Z]:$/.test(segment);
         if (segments.some(isUnsafeSegment)) {
-            throw new Error(`${invalidPathMsg} "${ussPath}".`);
+            throw new Error(`Cannot paste: unsafe USS path "${ussPath}".`);
         }
 
         const ussDir = path.resolve(globals.USS_DIR);
         const localPath = path.resolve(ussDir, profileName ?? "", ...segments);
         if (localPath !== ussDir && !localPath.startsWith(ussDir + path.sep)) {
-            throw new Error(`${invalidPathMsg} "${ussPath}".`);
+            throw new Error(`Cannot paste: resolved path for USS path "${ussPath}" escapes the local USS directory.`);
         }
 
         return localPath;
