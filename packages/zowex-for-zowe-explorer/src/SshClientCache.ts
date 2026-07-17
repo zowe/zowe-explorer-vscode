@@ -115,7 +115,7 @@ export class SshClientCache extends vscode.Disposable {
                 // path.resolve(): remove binary from the full path to set serverPath to the parent directory,
                 // the same as a user would configure the path manually
                 const parentDir = path.posix.dirname(pathServer.serverPath);
-                SshClientCache.inst.storeServerPath(profile.profile.host, parentDir);
+                SshClientCache.inst.storeServerPath(profile.profile!.host, parentDir);
                 return parentDir;
             }
         } catch (e) {
