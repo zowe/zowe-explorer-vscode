@@ -117,13 +117,13 @@ export class UssFileUtils {
         const segments = ussPath.split(/[/\\]+/).filter((segment) => segment.length > 0 && segment !== ".");
         const isUnsafeSegment = (segment: string): boolean => segment === ".." || /^[a-zA-Z]:$/.test(segment);
         if (segments.some(isUnsafeSegment)) {
-            throw new Error(`Cannot paste: unsafe USS path "${ussPath}".`);
+            throw new Error(`Cannot paste: missing or invalid USS path "${ussPath}".`);
         }
 
         const ussDir = path.resolve(globals.USS_DIR);
         const localPath = path.resolve(ussDir, profileName ?? "", ...segments);
         if (localPath !== ussDir && !localPath.startsWith(ussDir + path.sep)) {
-            throw new Error(`Cannot paste: resolved path for USS path "${ussPath}" escapes the local USS directory.`);
+            throw new Error(`Cannot paste: missing or invalid USS path "${ussPath}".`);
         }
 
         return localPath;
