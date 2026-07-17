@@ -118,7 +118,7 @@ export class SshClientCache extends vscode.Disposable {
                 return parentDir;
             }
         } catch (e) {
-            imperative.Logger.getAppLogger().error(`Error detecting server on user's $PATH:`, e);
+            imperative.Logger.getAppLogger().error(`Error detecting server on user's $PATH: ${(e as Error).toString()}`);
             await SshErrorHandler.getInstance().handleError(e as Error, ZoweExplorerApiType.All, "Detecting server on $PATH");
         }
         return undefined;
