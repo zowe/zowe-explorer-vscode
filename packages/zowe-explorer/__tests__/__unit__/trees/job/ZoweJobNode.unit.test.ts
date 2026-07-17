@@ -1231,6 +1231,81 @@ describe("ZosJobsProvider - getJobs", () => {
         expect(warnLoggerSpy).toHaveBeenCalledWith("[ZoweJobNode.getJobs] Session undefined for profile sestest");
         jesApiMock.mockRestore();
     });
+
+    it("should issue one API call per comma-separated prefix and merge results", async () => {
+        const globalMocks = await createGlobalMocks();
+        const job1 = { ...globalMocks.testIJob, jobname: "ABC001", jobid: "JOB00001" };
+        const job2 = { ...globalMocks.testIJob, jobname: "DEF001", jobid: "JOB00002" };
+        const getJobsByParametersMock = vi.fn().mockResolvedValueOnce([job1]).mockResolvedValueOnce([job2]);
+        vi.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            getJobsByParameters: getJobsByParametersMock,
+            getSession: () => globalMocks.testSession,
+        } as any);
+        const result = await globalMocks.testJobNode.getJobs("*", "ABC*,DEF*", "", "*");
+        expect(getJobsByParametersMock).toHaveBeenCalledTimes(2);
+        expect(getJobsByParametersMock).toHaveBeenCalledWith({ owner: "*", prefix: "ABC*", status: "*", execData: true });
+        expect(getJobsByParametersMock).toHaveBeenCalledWith({ owner: "*", prefix: "DEF*", status: "*", execData: true });
+        expect(result).toHaveLength(2);
+        expect(result.map((j) => j.jobid)).toEqual(["JOB00001", "JOB00002"]);
+    });
+
+    it("should deduplicate jobs returned by multiple prefix API calls", async () => {
+        const globalMocks = await createGlobalMocks();
+        const job1 = { ...globalMocks.testIJob, jobname: "ABC001", jobid: "JOB00001" };
+        const getJobsByParametersMock = vi.fn().mockResolvedValue([job1]);
+        vi.spyOn(ZoweExplorerApiRegister, "getJesApi").mockReturnValue({
+            getJobsByParameters: getJobsByParametersMock,
+            getSession: () => globalMocks.testSession,
+        } as any);
+        // Both prefix calls return the same job — should be deduplicated
+        const result = await globalMocks.testJobNode.getJobs("*", "ABC*,AB*", "", "*");
+        expect(result).toHaveLength(1);
+        expect(result[0].jobid).toBe("JOB00001");
+    });
+});
+
+describe("ZoweJobNode - prefix setter", () => {
+    it("stores a bare prefix unchanged", async () => {
+        const globalMocks = await createGlobalMocks();
+        const node = globalMocks.testJobNode;
+        node.prefix = "ABC";
+        expect(node.prefix).toBe("ABC");
+    });
+
+    it("stores a wildcarded prefix unchanged", async () => {
+        const globalMocks = await createGlobalMocks();
+        const node = globalMocks.testJobNode;
+        node.prefix = "ABC*";
+        expect(node.prefix).toBe("ABC*");
+    });
+
+    it("stores a full 8-char prefix unchanged", async () => {
+        const globalMocks = await createGlobalMocks();
+        const node = globalMocks.testJobNode;
+        node.prefix = "BAQBANKZ";
+        expect(node.prefix).toBe("BAQBANKZ");
+    });
+
+    it("trims whitespace around each comma-separated part", async () => {
+        const globalMocks = await createGlobalMocks();
+        const node = globalMocks.testJobNode;
+        node.prefix = "ABC , DEF*";
+        expect(node.prefix).toBe("ABC,DEF*");
+    });
+
+    it("stores comma-separated prefixes as-is (no wildcards injected)", async () => {
+        const globalMocks = await createGlobalMocks();
+        const node = globalMocks.testJobNode;
+        node.prefix = "ABC,DEF*,BAQBANKZ";
+        expect(node.prefix).toBe("ABC,DEF*,BAQBANKZ");
+    });
+
+    it("resets to '*' when an empty string is assigned", async () => {
+        const globalMocks = await createGlobalMocks();
+        const node = globalMocks.testJobNode;
+        node.prefix = "";
+        expect(node.prefix).toBe("*");
+    });
 });
 
 describe("Job - sortJobs", () => {

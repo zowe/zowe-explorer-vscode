@@ -406,7 +406,11 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             if (newPrefix.length === 0) {
                 this._prefix = "*";
             } else {
-                this._prefix = newPrefix;
+                // Normalise whitespace around each comma-separated part.
+                this._prefix = newPrefix
+                    .split(",")
+                    .map((p) => p.trim())
+                    .join(",");
             }
         }
     }
@@ -437,12 +441,20 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     ZoweLogger.warn(`[ZoweJobNode.getJobs] Session undefined for profile ${cachedProfile.name}`);
                     return undefined;
                 }
-                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
-                    owner,
-                    prefix,
-                    status,
-                    execData: true,
-                });
+                // Support comma-separated prefixes by issuing one API call per prefix value
+                // and merging the results.
+                const prefixParts = prefix.split(",").map((p) => p.trim()).filter(Boolean);
+                const allJobs = await Promise.all(
+                    prefixParts.map((p) =>
+                        ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
+                            owner,
+                            prefix: p,
+                            status,
+                            execData: true,
+                        })
+                    )
+                );
+                jobsInternal = allJobs.flat();
 
                 /**
                  *    Note: Temporary fix
