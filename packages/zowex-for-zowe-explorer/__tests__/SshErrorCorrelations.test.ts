@@ -386,6 +386,7 @@ describe("SshErrorCorrelations", () => {
                 "FOTS4154",
                 "FOTS4150",
                 "FOTS4312",
+                "UNRECOGNIZED_COMMAND",
             ];
 
             // Sanity check: the curated list should match the SDK's full set of registered codes.

@@ -748,6 +748,7 @@
   "Added feature to copy datasets (pds, sequential, members across pds) with multi-select capabilities. <a>#1150</a>": "",
   "Added file association for zowe.config.json and zowe.config.user.json to automatically detect them as JSON with Comments. <a>#1997</a>": "",
   "Added filtered and partitioned data set search history. <a>#3455</a>": "",
+  "Added functionality to automatically detect the backend SSH server on the user's $PATH on USS, and use it by default if no serverPath exists in your configuration. Also updated the plug-in to avoid deploying the SSH server binary to directories to which the user does not have write access. <a>#4367</a>": "",
   "Added hostname validation to prevent encountering a VS Code Proxy bug that occurs when attempting to connect to a z/OSMF server with the protocol specified as part of the hostname. <a>#3364</a>": "",
   "Added integrated terminals for z/OS Unix, TSO, and MVS commands which can be enabled via the Zowe › Commands: Use Integrated Terminals setting. <a>#3079</a>": "",
   "Added integration and end-to-end test framework to verify extension behavior and catch issues during Zowe Explorer development. <a>#2322</a>": "",
