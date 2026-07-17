@@ -87,10 +87,8 @@ describe("ProfilesUtils unit tests", () => {
             const label = "test";
             const moreInfo = "Task failed successfully";
             await profUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(Gui.errorMessage).toBeCalledWith(moreInfo + ` Error: ${errorDetails.message}`);
-            expect(ZoweLogger.error).toBeCalledWith(
-                `${errorDetails.toString()}\n` + util.inspect({ label, moreInfo }, { depth: null })
-            );
+            expect(Gui.errorMessage).toHaveBeenCalledWith(moreInfo + ` Error: ${errorDetails.message}`);
+            expect(ZoweLogger.error).toHaveBeenCalledWith(`${errorDetails.toString()}\n` + util.inspect({ label, moreInfo }, { depth: null }));
         });
 
         it("should log error details for object with circular reference", async () => {
@@ -104,10 +102,8 @@ describe("ProfilesUtils unit tests", () => {
             const label = "test";
             const moreInfo = "Task failed successfully";
             await profUtils.errorHandling(errorDetails, label, moreInfo as unknown as string);
-            expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
-            expect(ZoweLogger.error).toBeCalledWith(
-                `Error: ${errorDetails.message}\n` + util.inspect({ label, moreInfo }, { depth: null })
-            );
+            expect(Gui.errorMessage).toHaveBeenCalledWith(`${moreInfo} ` + errorDetails);
+            expect(ZoweLogger.error).toHaveBeenCalledWith(`Error: ${errorDetails.message}\n` + util.inspect({ label, moreInfo }, { depth: null }));
         });
 
         it("should handle error and open config file", async () => {
