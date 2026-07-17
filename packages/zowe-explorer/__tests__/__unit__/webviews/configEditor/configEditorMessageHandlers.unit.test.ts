@@ -272,7 +272,32 @@ describe("ConfigEditorMessageHandlers", () => {
                 profileName: "testProfile",
                 configPath: "testPath",
                 profileType: "zosmf",
+                propertyKey: undefined,
             });
+        });
+
+        it("should forward propertyKey when present in the message", () => {
+            const mockSetInitialSelection = vi.fn();
+            const mockMessage = { profileName: "zosmf", configPath: "/path/to/zowe.config.json", profileType: "zosmf", propertyKey: "host" };
+
+            messageHandlers.handleInitialSelection(mockMessage, mockSetInitialSelection);
+
+            expect(mockSetInitialSelection).toHaveBeenCalledWith({
+                profileName: "zosmf",
+                configPath: "/path/to/zowe.config.json",
+                profileType: "zosmf",
+                propertyKey: "host",
+            });
+        });
+
+        it("should set propertyKey to undefined when not included in the message", () => {
+            const mockSetInitialSelection = vi.fn();
+            const mockMessage = { profileName: "testProfile", configPath: "testPath", profileType: "zosmf" };
+
+            messageHandlers.handleInitialSelection(mockMessage, mockSetInitialSelection);
+
+            const calledWith = mockSetInitialSelection.mock.calls[0][0];
+            expect(calledWith.propertyKey).toBeUndefined();
         });
     });
 
@@ -288,6 +313,23 @@ describe("ConfigEditorMessageHandlers", () => {
                 profileName: "testProfile",
                 configPath: "testPath",
                 profileType: "zosmf",
+                propertyKey: undefined,
+            });
+            expect(mockSetInitialSelection).toHaveBeenCalledWith(undefined);
+        });
+
+        it("should include propertyKey in INITIAL_SELECTION when present in initialSelection", async () => {
+            const mockSetInitialSelection = vi.fn();
+            const initialSelection = { profileName: "zosmf", configPath: "/path/zowe.config.json", profileType: "zosmf", propertyKey: "host" };
+
+            await messageHandlers.handleConfigurationsReady(initialSelection, mockSetInitialSelection);
+
+            expect(mockPanel.webview.postMessage).toHaveBeenCalledWith({
+                command: "INITIAL_SELECTION",
+                profileName: "zosmf",
+                configPath: "/path/zowe.config.json",
+                profileType: "zosmf",
+                propertyKey: "host",
             });
             expect(mockSetInitialSelection).toHaveBeenCalledWith(undefined);
         });

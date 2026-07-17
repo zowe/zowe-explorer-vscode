@@ -1245,3 +1245,89 @@ describe("Shared Actions Unit Tests - Function updateSchemaCommand", () => {
         expect(blockMocks.updateSpy).not.toHaveBeenCalled();
     });
 });
+
+describe("Shared Actions Unit Tests - refreshProvider: isFavProfile branch", () => {
+    // Import SharedContext for isFavProfile spy
+    let SharedContext: typeof import("../../../../src/trees/shared/SharedContext").SharedContext;
+
+    beforeEach(async () => {
+        SharedContext = (await import("../../../../src/trees/shared/SharedContext")).SharedContext;
+        vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("calls refreshFavorites when orphan node is a favourite-profile node", async () => {
+        const sessionNode = createDatasetSessionNode(createISession(), createIProfile());
+        const refreshFavorites = vi.fn().mockResolvedValue(undefined);
+        const deleteSession = vi.fn();
+        const addDefaultSessionMock = vi.spyOn(TreeViewUtils, "addDefaultSession").mockResolvedValueOnce(undefined);
+        vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
+            registeredApiTypes: vi.fn().mockReturnValue([]),
+        } as any);
+        vi.spyOn(SharedActions, "updateSessionNodeTooltips").mockResolvedValueOnce(undefined);
+
+        const treeProvider: any = {
+            mSessionNodes: [sessionNode],
+            mFavorites: [],
+            refresh: vi.fn(),
+            refreshElement: vi.fn(),
+            refreshFavorites,
+            deleteSession,
+        };
+
+        vi.spyOn(Profiles, "getInstance").mockReturnValue({
+            allProfiles: [], // empty → node is orphan
+            profilesForValidation: [],
+            checkCurrentProfile: vi.fn().mockResolvedValue(undefined),
+        } as any);
+
+        vi.spyOn(SharedActions, "refreshProfiles").mockResolvedValueOnce(undefined);
+
+        // Mark the session node as a favourite-profile node
+        vi.spyOn(SharedContext, "isFavProfile").mockReturnValue(true);
+
+        await SharedActions.refreshProvider(treeProvider, true);
+
+        expect(refreshFavorites).toHaveBeenCalled();
+        expect(deleteSession).not.toHaveBeenCalled();
+    });
+
+    it("calls deleteSession when orphan node is NOT a favourite-profile node", async () => {
+        const sessionNode = createDatasetSessionNode(createISession(), createIProfile());
+        const refreshFavorites = vi.fn().mockResolvedValue(undefined);
+        const deleteSession = vi.fn();
+        vi.spyOn(TreeViewUtils, "addDefaultSession").mockResolvedValueOnce(undefined);
+        vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
+            registeredApiTypes: vi.fn().mockReturnValue([]),
+        } as any);
+        vi.spyOn(SharedActions, "updateSessionNodeTooltips").mockResolvedValueOnce(undefined);
+
+        const treeProvider: any = {
+            mSessionNodes: [sessionNode],
+            mFavorites: [],
+            refresh: vi.fn(),
+            refreshElement: vi.fn(),
+            refreshFavorites,
+            deleteSession,
+        };
+
+        vi.spyOn(Profiles, "getInstance").mockReturnValue({
+            allProfiles: [],
+            profilesForValidation: [],
+            checkCurrentProfile: vi.fn().mockResolvedValue(undefined),
+        } as any);
+
+        vi.spyOn(SharedActions, "refreshProfiles").mockResolvedValueOnce(undefined);
+
+        // Not a favourite-profile node
+        vi.spyOn(SharedContext, "isFavProfile").mockReturnValue(false);
+
+        await SharedActions.refreshProvider(treeProvider, true);
+
+        expect(deleteSession).toHaveBeenCalledWith(sessionNode);
+        expect(refreshFavorites).not.toHaveBeenCalled();
+    });
+});

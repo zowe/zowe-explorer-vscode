@@ -718,6 +718,51 @@ describe("Profiles Unit Tests - Function editZoweConfigFile", () => {
         expect(spyOpenFile).toHaveBeenCalledWith("projectPath");
         spyOpenFile.mockClear();
     });
+
+    it("Tests that editZoweConfigFile(openInEditor=true) opens config editor when Global is selected", async () => {
+        const globalMocks = createGlobalMocks();
+        const spyQuickPick = vi.spyOn(Gui, "showQuickPick");
+        spyQuickPick.mockResolvedValueOnce("Global: in the Zowe home directory" as any);
+        vi.spyOn(FileManagement, "getZoweDir").mockReturnValue("file://globalPath/.zowe");
+        const executeCommandSpy = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+        await Profiles.getInstance().editZoweConfigFile(true);
+        expect(spyQuickPick).toHaveBeenCalled();
+        expect(executeCommandSpy).toHaveBeenCalledWith("zowe.configEditorWithProfile", "", "file://globalPath/.zowe/zowe.config.json", "");
+        // Should NOT show the manual edit message when openInEditor=true
+        expect(globalMocks.mockShowInformationMessage).not.toHaveBeenCalled();
+        spyQuickPick.mockClear();
+    });
+
+    it("Tests that editZoweConfigFile(openInEditor=true) opens config editor when Project is selected", async () => {
+        createGlobalMocks();
+        const spyQuickPick = vi.spyOn(Gui, "showQuickPick");
+        spyQuickPick.mockResolvedValueOnce("Project: in the current working directory" as any);
+        const executeCommandSpy = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+        await Profiles.getInstance().editZoweConfigFile(true);
+        expect(spyQuickPick).toHaveBeenCalled();
+        expect(executeCommandSpy).toHaveBeenCalledWith("zowe.configEditorWithProfile", "", "file://projectPath/zowe.config.user.json", "");
+        spyQuickPick.mockClear();
+    });
+
+    it("Tests that editZoweConfigFile(openInEditor=true) opens config editor when only one layer is available", async () => {
+        const globalMocks = createGlobalMocks();
+        globalMocks.mockConfigLoad.load.mockResolvedValueOnce({
+            layers: [
+                {
+                    path: "globalPath",
+                    exists: true,
+                    properties: undefined,
+                    global: true,
+                    user: false,
+                },
+            ],
+        } as any);
+        const executeCommandSpy = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+        await Profiles.getInstance().editZoweConfigFile(true);
+        expect(executeCommandSpy).toHaveBeenCalledWith("zowe.configEditorWithProfile", "", "globalPath", "");
+        // manualEditMsg should NOT be shown
+        expect(globalMocks.mockShowInformationMessage).not.toHaveBeenCalled();
+    });
 });
 
 describe("Profiles Unit Tests - Function createZoweSchema", () => {
