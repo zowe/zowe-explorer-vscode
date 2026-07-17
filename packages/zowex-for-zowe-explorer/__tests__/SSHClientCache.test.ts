@@ -717,9 +717,8 @@ describe("SshClientCache", () => {
             async () => {
                 const binary = "/my/wonderful/dir/zowex";
                 const expectedHost = "expected-host";
-                const profileWithHost = { ...mockProfile, profile: { ...mockProfile.profile, host: expectedHost } };
                 vi.mocked(ZSshUtils.detectServerOnPath).mockResolvedValue({ serverPath: binary, hasExecutePermission: true });
-                const envServerPath = await (cache as any).detectServerOnPath({}, profileWithHost);
+                const envServerPath = await (cache as any).detectServerOnPath({ ISshSession: { hostname: expectedHost } });
                 expect(envServerPath).toEqual("/my/wonderful/dir");
                 expect(cache.storeServerPath).toHaveBeenCalledWith(expectedHost, "/my/wonderful/dir");
             }
