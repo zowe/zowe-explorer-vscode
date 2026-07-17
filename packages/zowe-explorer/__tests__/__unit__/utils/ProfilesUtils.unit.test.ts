@@ -87,10 +87,9 @@ describe("ProfilesUtils unit tests", () => {
             const label = "test";
             const moreInfo = "Task failed successfully";
             await profUtils.errorHandling(errorDetails, label, moreInfo);
-            expect(Gui.errorMessage).toBeCalledWith(moreInfo + ` Error: ${errorDetails.message}`);
-            expect(ZoweLogger.error).toBeCalledWith(
-                `${errorDetails.toString()}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
-            );
+            const censored = zowe.imperative.LoggerUtils.CENSOR_RESPONSE;
+            expect(Gui.errorMessage).toHaveBeenCalledWith(`${censored} ${censored}`);
+            expect(ZoweLogger.error).toHaveBeenCalledWith(`${censored}\n` + util.inspect({ label, moreInfo: censored }, { depth: null }));
         });
 
         it("should log error details for object with circular reference", async () => {
@@ -104,10 +103,9 @@ describe("ProfilesUtils unit tests", () => {
             const label = "test";
             const moreInfo = "Task failed successfully";
             await profUtils.errorHandling(errorDetails, label, moreInfo as unknown as string);
-            expect(Gui.errorMessage).toBeCalledWith(`${moreInfo} ` + errorDetails);
-            expect(ZoweLogger.error).toBeCalledWith(
-                `Error: ${errorDetails.message}\n` + util.inspect({ errorDetails, label, moreInfo }, { depth: null })
-            );
+            const censored = zowe.imperative.LoggerUtils.CENSOR_RESPONSE;
+            expect(Gui.errorMessage).toHaveBeenCalledWith(`${censored} ${censored}`);
+            expect(ZoweLogger.error).toHaveBeenCalledWith(`${censored}\n` + util.inspect({ label, moreInfo: censored }, { depth: null }));
         });
 
         it("should handle error and open config file", async () => {
@@ -624,7 +622,7 @@ describe("ProfilesUtils unit tests", () => {
             await profUtils.ProfilesUtils.initializeZoweProfiles();
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
-            expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(testError.message));
+            expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining(zowe.imperative.LoggerUtils.CENSOR_RESPONSE));
         });
 
         it("should handle JSON parse error thrown on read config from disk", async () => {

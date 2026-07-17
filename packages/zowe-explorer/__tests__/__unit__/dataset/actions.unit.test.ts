@@ -222,7 +222,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             // Prevent exception from failing test
         }
 
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Unable to create member. Error: test");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("**** ****");
         mocked(zowe.Upload.bufferToDataSet).mockReset();
     });
     it("Checking of attempt to create member without name", async () => {
@@ -442,7 +442,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
                 returnEtag: true,
             })
         );
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error: ****");
     });
     it("Checking favorite empty PDS refresh", async () => {
         globals.defineGlobals("");
@@ -942,7 +942,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         deleteSpy.mockRejectedValueOnce(Error(""));
 
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error(""));
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error: ****");
     });
     it("Checking Favorite PDS dataset deletion", async () => {
         globals.defineGlobals("");
@@ -1772,9 +1772,7 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
         await expect(dsActions.showAttributes(node, blockMocks.testDatasetTree)).rejects.toEqual(
             Error("No matching names found for query: AUSER.A1557332.A996850.TEST1")
         );
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith(
-            "Unable to list attributes. Error: No matching names found for query: AUSER.A1557332.A996850.TEST1"
-        );
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("**** ****");
         expect(mocked(vscode.window.createWebviewPanel)).not.toBeCalled();
     });
 });
@@ -2017,7 +2015,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
         expect(allocSpy).toHaveBeenCalled();
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("****");
     });
     it("Checking copy of partitioned datasets", async () => {
         globals.defineGlobals("");
@@ -2090,7 +2088,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
         expect(allocSpy).toHaveBeenCalled();
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("****");
     });
     it("Checking copy the label of a favorite member to the clipboard", async () => {
         globals.defineGlobals("");
@@ -2243,7 +2241,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         await dsActions.refreshDataset(blockMocks.pdsSessionNode, blockMocks.testDatasetTree);
         expect(refreshSpy).toHaveBeenCalled();
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("****");
     });
 
     it("Should ask to replace the sequential and partitioned dataset if it already exists", async () => {
@@ -3123,7 +3121,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             // do nothing
         }
 
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error encountered when creating data set. Error: Generic Error");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("**** ****");
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",
