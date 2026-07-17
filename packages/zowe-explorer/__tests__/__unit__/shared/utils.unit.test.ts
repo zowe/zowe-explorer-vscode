@@ -686,6 +686,36 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
             path.join(path.sep, "test", "path", "temp", "_D_", "sestest", "AUSER.TEST.SPFLOG1.log")
         );
     });
+
+    it("Rejects a label that contains a path separator and would escape DS_DIR", () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
+        globals.defineGlobals("/test/path/");
+
+        const maliciousLabels = ["../../etc/passwd", "../ESCAPE", "VALID/../../ESCAPE", "VALID\\ESCAPE", "/etc/passwd", "A:B"];
+
+        for (const label of maliciousLabels) {
+            const node = new ZoweDatasetNode({
+                label,
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: blockMocks.datasetSessionNode,
+            });
+            expect(() => sharedUtils.getDocumentFilePath(label, node)).toThrow();
+        }
+    });
+
+    it("Rejects a double-dot label that would traverse out of DS_DIR", () => {
+        createGlobalMocks();
+        blockMocks = createBlockMocks();
+        globals.defineGlobals("/test/path/");
+
+        const node = new ZoweDatasetNode({
+            label: "..",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: blockMocks.datasetSessionNode,
+        });
+        expect(() => sharedUtils.getDocumentFilePath("..", node)).toThrow();
+    });
 });
 
 describe("Shared Utils Unit Tests - Function getSelectedNodeList", () => {
