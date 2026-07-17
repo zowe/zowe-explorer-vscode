@@ -692,14 +692,7 @@ describe("Shared Utils Unit Tests - Function getDocumentFilePath", () => {
         blockMocks = createBlockMocks();
         globals.defineGlobals("/test/path/");
 
-        const maliciousLabels = [
-            "../../etc/passwd",
-            "../ESCAPE",
-            "VALID/../../ESCAPE",
-            "VALID\\ESCAPE",
-            "/etc/passwd",
-            "A:B",
-        ];
+        const maliciousLabels = ["../../etc/passwd", "../ESCAPE", "VALID/../../ESCAPE", "VALID\\ESCAPE", "/etc/passwd", "A:B"];
 
         for (const label of maliciousLabels) {
             const node = new ZoweDatasetNode({
