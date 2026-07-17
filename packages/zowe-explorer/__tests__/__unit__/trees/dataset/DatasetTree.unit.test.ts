@@ -5192,15 +5192,15 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
 
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
         const profileNode = blockMocks.testTree.mFavorites[0];
-        expect(profileNode.children?.map((item) => item.label)).toEqual(["SAMPLE.PS.MIGR", "SAMPLE.PDS.MIGR"]);
+        expect(profileNode.children?.map((item) => item.label)).toEqual(["SAMPLE.PDS.MIGR", "SAMPLE.PS.MIGR"]);
 
-        const dsNode = profileNode.children[0] as ZoweDatasetNode;
-        expect(SharedContext.isMigrated(dsNode)).toBe(true);
-        expect(dsNode.wasPds).toBe(false);
-
-        const pdsNode = profileNode.children[1] as ZoweDatasetNode;
+        const pdsNode = profileNode.children[0] as ZoweDatasetNode;
         expect(SharedContext.isMigrated(pdsNode)).toBe(true);
         expect(pdsNode.wasPds).toBe(true);
+
+        const dsNode = profileNode.children[1] as ZoweDatasetNode;
+        expect(SharedContext.isMigrated(dsNode)).toBe(true);
+        expect(dsNode.wasPds).toBe(false);
     });
 
     it("successfully initializes migrated favorites from the migrated favorites list", async () => {
@@ -5217,15 +5217,15 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
 
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
         const profileNode = blockMocks.testTree.mFavorites[0];
-        expect(profileNode.children?.map((item) => item.label)).toEqual(["SAMPLE.PS.MIGR", "SAMPLE.PDS.MIGR"]);
+        expect(profileNode.children?.map((item) => item.label)).toEqual(["SAMPLE.PDS.MIGR", "SAMPLE.PS.MIGR"]);
 
-        const dsNode = profileNode.children[0] as ZoweDatasetNode;
-        expect(SharedContext.isMigrated(dsNode)).toBe(true);
-        expect(dsNode.wasPds).toBe(false);
-
-        const pdsNode = profileNode.children[1] as ZoweDatasetNode;
+        const pdsNode = profileNode.children[0] as ZoweDatasetNode;
         expect(SharedContext.isMigrated(pdsNode)).toBe(true);
         expect(pdsNode.wasPds).toBe(true);
+
+        const dsNode = profileNode.children[1] as ZoweDatasetNode;
+        expect(SharedContext.isMigrated(dsNode)).toBe(true);
+        expect(dsNode.wasPds).toBe(false);
     });
 });
 
