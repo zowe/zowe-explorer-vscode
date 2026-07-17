@@ -97,14 +97,14 @@ describe("SshConfigUtils", () => {
             const result = ConfigUtils.getServerPath(profile);
             expect(result).toBe("/env/path");
         });
-        it("returns default path if nothing else is set", () => {
+        it("returns undefined if nothing else is set", () => {
             const profile: IProfile = { host: "testHost" } as IProfile;
             vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
                 get: vi.fn().mockReturnValue({}),
             } as any);
 
             const result = ConfigUtils.getServerPath(profile);
-            expect(result).toBe(defaultPath);
+            expect(result).toBe(undefined);
         });
         it("returns profile.serverPath if set and no mapping/env", () => {
             const profile: IProfile = { host: "testHost", serverPath: "/profile/path" } as IProfile;
@@ -116,7 +116,7 @@ describe("SshConfigUtils", () => {
             expect(result).toBe("/profile/path");
         });
 
-        it("returns default path if serverPathMap is undefined", () => {
+        it("returns undefined if serverPathMap is undefined", () => {
             const profile: IProfile = { host: "testHost" } as IProfile;
             vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
                 get: vi.fn().mockReturnValue(undefined),
@@ -124,7 +124,7 @@ describe("SshConfigUtils", () => {
             delete process.env.ZOWE_OPT_SERVER_PATH;
 
             const result = ConfigUtils.getServerPath(profile);
-            expect(result).toBe(defaultPath);
+            expect(result).toBe(undefined);
         });
     });
     describe("showSessionInTree", () => {
@@ -464,6 +464,20 @@ describe("SshConfigUtils", () => {
             beforeEach(() => {
                 mockGet = vi.fn();
                 mockUpdate = vi.fn();
+                vi.mock("../src/SshClientCache", async (importOriginal) => {
+                    const original: any = await importOriginal();
+                    return {
+                        SshClientCache: {
+                            inst: {
+                                connect: vi.fn().mockResolvedValue({}),
+                                end: vi.fn(),
+                                detectServerOnPath: vi.fn().mockResolvedValue(undefined),
+                                // patch in the original storeServerPath so that we can still test that VS Code config methods are called
+                                storeServerPath: original.SshClientCache.prototype.storeServerPath,
+                            },
+                        },
+                    };
+                });
                 vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
                     get: mockGet,
                     update: mockUpdate,
