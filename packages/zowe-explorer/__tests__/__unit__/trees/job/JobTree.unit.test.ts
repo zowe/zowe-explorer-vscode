@@ -1120,7 +1120,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 label: `Job Prefix`,
                 value: "job*",
                 show: true,
-                placeHolder: `Enter job prefix`,
+                placeHolder: `Enter job prefix, use a comma to separate multiple prefixes`,
                 validateInput: (text) => SharedUtils.jobStringValidator(text, "prefix"),
             },
             {
