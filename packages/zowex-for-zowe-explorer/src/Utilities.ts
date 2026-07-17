@@ -45,7 +45,7 @@ export class Utilities {
         const sshSession = ZSshUtils.buildSession(profile.profile);
         let onEnvPathServer: string | undefined = undefined;
         if (configuredServerPath == null) {
-            onEnvPathServer = await SshClientCache.inst.detectServerOnPath(sshSession, profile.profile);
+            onEnvPathServer = await SshClientCache.inst.detectServerOnPath(sshSession, profile);
             configuredServerPath = onEnvPathServer ?? ZSshClient.DEFAULT_SERVER_PATH;
         }
 

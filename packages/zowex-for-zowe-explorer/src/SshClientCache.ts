@@ -111,7 +111,7 @@ export class SshClientCache extends vscode.Disposable {
             const pathServer = await ZSshUtils.detectServerOnPath(session);
             imperative.Logger.getAppLogger().debug("detectServerOnPath return value: %s", JSON.stringify(pathServer));
             if (pathServer.serverPath && pathServer.hasExecutePermission) {
-                imperative.Logger.getAppLogger().debug("Skipping deploy, since a usable instance of the server exists on the user's PATH");
+                imperative.Logger.getAppLogger().debug("A usable instance of the server exists on the user's PATH");
                 // path.resolve(): remove binary from the full path to set serverPath to the parent directory,
                 // the same as a user would configure the path manually
                 const parentDir = path.posix.dirname(pathServer.serverPath);
@@ -119,7 +119,7 @@ export class SshClientCache extends vscode.Disposable {
                 return parentDir;
             }
         } catch (e) {
-            imperative.Logger.getAppLogger().error("Error detecting server on user's $PATH: %s", e);
+            imperative.Logger.getAppLogger().error(`Error detecting server on user's $PATH:`, e);
             await SshErrorHandler.getInstance().handleError(e as Error, ZoweExplorerApiType.All, "Detecting server on $PATH");
         }
         return undefined;
