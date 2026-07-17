@@ -9,7 +9,7 @@
  *
  */
 
-import { FormattedChange, RenameChange, RenamesMap } from "../types";
+import { FormattedChange, RenameChange, RenamesMap, FormattedPendingChanges, PendingChangesMap, PendingDefaultsMap, DeletionsMap } from "../types";
 
 export const updateChangesForRenames = (changes: FormattedChange[], renames: RenameChange[]) => {
     if (!renames || renames.length === 0) {
@@ -200,6 +200,60 @@ export const updateChangesForRenames = (changes: FormattedChange[], renames: Ren
     });
 };
 
+interface FormatPendingChangesParams {
+    pendingChanges: PendingChangesMap;
+    deletions: DeletionsMap;
+    pendingDefaults: PendingDefaultsMap;
+    defaultsDeletions: DeletionsMap;
+    renames: RenamesMap;
+}
+
+/**
+ * Serializes the pending-changes state (edits, deletions, defaults, renames) into the flat
+ * payload shape used both for the merged-properties request and for SAVE_CHANGES.
+ */
+export function buildFormattedPendingChanges(params: FormatPendingChangesParams): FormattedPendingChanges {
+    const { pendingChanges, deletions, pendingDefaults, defaultsDeletions, renames } = params;
+
+    const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
+        Object.keys(changesForPath).map((key) => {
+            const { value, path, profile, secure } = changesForPath[key];
+            return { key, value, path, profile, configPath, secure };
+        })
+    );
+
+    const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
+
+    const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
+        Object.keys(changesForPath).map((key) => {
+            const { value, path } = changesForPath[key];
+            return { key, value, path, configPath, secure: false };
+        })
+    );
+
+    const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) =>
+        keys.map((key) => ({ key, configPath, secure: false }))
+    );
+
+    const renamesData = Object.entries(renames).flatMap(([configPath, configRenames]) =>
+        Object.entries(configRenames).map(([originalKey, newKey]) => ({
+            originalKey,
+            newKey,
+            configPath,
+        }))
+    );
+
+    const updatedChanges = updateChangesForRenames(changes, renamesData);
+
+    return {
+        changes: updatedChanges,
+        deletions: deleteKeys,
+        defaultsChanges,
+        defaultsDeleteKeys,
+        renames: renamesData,
+    };
+}
+
 const extractProfileFromKey = (key: string): string => {
     const parts = key.split(".");
     const profileParts: string[] = [];
@@ -212,46 +266,6 @@ const extractProfileFromKey = (key: string): string => {
     }
 
     return profileParts.join(".");
-};
-
-export const getProfileNameForMergedProperties = (profileKey: string, configPath: string, renames: RenamesMap): string => {
-    let effectiveProfileKey = profileKey;
-
-    // Apply reverse renames step by step
-    if (renames[configPath] && Object.keys(renames[configPath]).length > 0) {
-        const configRenames = renames[configPath];
-        // Convert to array and sort by newKey length (longest first) to handle nested renames correctly
-        const sortedRenames = Object.entries(configRenames).sort(([, a], [, b]) => b.length - a.length);
-
-        let changed = true;
-        let iterations = 0;
-        const maxIterations = 20;
-
-        // Keep applying reverse renames until no more changes (guard against cyclic renames)
-        while (changed && iterations < maxIterations) {
-            changed = false;
-            iterations++;
-
-            // Process renames from longest to shortest to handle nested cases
-            for (const [originalKey, newKey] of sortedRenames) {
-                // Check for exact match
-                if (effectiveProfileKey === newKey) {
-                    effectiveProfileKey = originalKey;
-                    changed = true;
-                    break;
-                }
-
-                // Check for partial matches (parent renames affecting children)
-                if (effectiveProfileKey.startsWith(newKey + ".")) {
-                    effectiveProfileKey = effectiveProfileKey.replace(newKey + ".", originalKey + ".");
-                    changed = true;
-                    break;
-                }
-            }
-        }
-    }
-
-    return effectiveProfileKey;
 };
 
 export const consolidateRenames = (
@@ -577,35 +591,6 @@ export const consolidateConflictingRenames = (renames: { [originalKey: string]: 
     }
 
     return finalConsolidated;
-};
-
-export const getCurrentEffectiveName = (profileKey: string, configPath: string, renames: RenamesMap): string => {
-    const currentRenames = renames[configPath] || {};
-    let effectiveName = profileKey;
-
-    // Apply renames iteratively to handle chained renames
-    let changed = true;
-    let iteration = 0;
-    while (changed && iteration < 10) {
-        // Safety limit to prevent infinite loops
-        changed = false;
-        iteration++;
-
-        for (const [originalKey, newKey] of Object.entries(currentRenames)) {
-            if (effectiveName === originalKey) {
-                effectiveName = newKey;
-                changed = true;
-                break;
-            }
-            if (effectiveName.startsWith(originalKey + ".")) {
-                const newEffectiveName = effectiveName.replace(originalKey + ".", newKey + ".");
-                effectiveName = newEffectiveName;
-                changed = true;
-                break;
-            }
-        }
-    }
-    return effectiveName;
 };
 
 export const detectClosedLoops = (renames: { [originalKey: string]: string }): string[][] => {

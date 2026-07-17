@@ -18,10 +18,8 @@ import {
 } from "./components";
 
 import { flattenKeys, flattenProfiles, getAllQualifiedProfileKeys, resolveOriginalProfileKeyFromRenames } from "./utils";
-import { getProfileType } from "./utils/profileUtils";
+import { getProfileType, getOriginalProfileKeyWithNested } from "./utils/profileUtils";
 import { getPropertyTypeForAddProfile, fetchTypeOptions, getPropertyDescriptions } from "./utils/propertyUtils";
-
-import { getProfileNameForMergedProperties } from "./utils/renameUtils";
 import { usePropertyHandlers, useConfigHandlers, useProfileUtils, useHandlerContext } from "./hooks";
 import { usePanelResizer } from "./hooks/usePanelResizer";
 import { useMessageHandler } from "./hooks/useMessageHandler";
@@ -195,7 +193,7 @@ function AppContent() {
 
     mergedPropertiesLatestRequestSeqRef.current += 1;
     const seq = mergedPropertiesLatestRequestSeqRef.current;
-    const profileNameForMergedProperties = getProfileNameForMergedProperties(selectedProfileKey, configPath, renames);
+    const profileNameForMergedProperties = getOriginalProfileKeyWithNested(selectedProfileKey, configPath, renames);
     const changes = formatPendingChanges();
     vscodeApi.postMessage({
       command: "GET_MERGED_PROPERTIES",
