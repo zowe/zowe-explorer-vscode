@@ -8,17 +8,18 @@
  * Copyright Contributors to the Zowe Project.
  *
  * Info icon with a click-to-show tooltip for Config Editor field help.
+ * The description text comes from zowe.schema.json (via schemaValidations → propertyDescriptions).
  */
 
 import { useState, useRef, useEffect } from "react";
-import type { FieldHelp } from "../help/FieldHelpContent";
 
 interface InfoIconProps {
   fieldKey: string;
-  helpContent: FieldHelp;
+  description: string;
+  defaultValue?: unknown;
 }
 
-export function InfoIcon({ fieldKey, helpContent }: InfoIconProps) {
+export function InfoIcon({ fieldKey, description, defaultValue }: InfoIconProps) {
   const [visible, setVisible] = useState(false);
   const [style, setStyle] = useState<React.CSSProperties>({});
   const iconRef = useRef<HTMLButtonElement>(null);
@@ -59,7 +60,12 @@ export function InfoIcon({ fieldKey, helpContent }: InfoIconProps) {
     if (!visible) return;
 
     const handleClickOutside = (e: MouseEvent) => {
-      if (iconRef.current && !iconRef.current.contains(e.target as Node) && tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
+      if (
+        iconRef.current &&
+        !iconRef.current.contains(e.target as Node) &&
+        tooltipRef.current &&
+        !tooltipRef.current.contains(e.target as Node)
+      ) {
         setVisible(false);
       }
     };
@@ -87,26 +93,12 @@ export function InfoIcon({ fieldKey, helpContent }: InfoIconProps) {
       {visible && (
         <div ref={tooltipRef} className="field-help-tooltip" style={style} role="tooltip">
           <div className="help-section">
-            <p>{helpContent.description}</p>
+            <p>{description}</p>
           </div>
-
-          {helpContent.exampleValue && (
+          {defaultValue !== undefined && (
             <div className="help-section">
-              <strong>Example</strong>
-              <code>{helpContent.exampleValue}</code>
-            </div>
-          )}
-
-          {helpContent.validationRules && (
-            <div className="help-section">
-              <strong>Notes</strong>
-              <p>{helpContent.validationRules}</p>
-            </div>
-          )}
-
-          {helpContent.required && (
-            <div className="help-required">
-              <strong>Required field</strong>
+              <strong>Default</strong>
+              <code>{String(defaultValue)}</code>
             </div>
           )}
         </div>

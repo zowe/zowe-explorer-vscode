@@ -484,7 +484,7 @@ export class Profiles extends ProfilesCache {
 
         const createNewConfig = "Create a New Team Configuration File";
         const editConfig = "Edit Team Configuration File";
-        const openConfigJson = "Open zowe.config.json";
+        const openConfigJson = "Open Config File";
 
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
         const configEdit = new FilterDescriptor("\u270F " + editConfig);
@@ -558,12 +558,22 @@ export class Profiles extends ProfilesCache {
             return;
         }
         if (choice === configOpen) {
-            const allProfileAttrs = mProfileInfo.getAllProfiles();
-            if (allProfileAttrs.length > 0) {
-                const firstProfile = await this.getProfileFromConfig(allProfileAttrs[0].profName);
-                if (firstProfile?.profLoc?.osLoc?.[0]) {
-                    await this.openConfigFile(firstProfile.profLoc.osLoc[0]);
-                }
+            const existingLayers = await this.uniqueExistingLayers();
+            if (existingLayers.length === 0) {
+                // No config files on disk — mirror what editZoweConfigFile does in this state (no-op).
+                return;
+            }
+            const layerItems = existingLayers.map((layer) => ({
+                label: path.basename(layer.path),
+                description: path.dirname(layer.path),
+                detail: layer.path,
+            }));
+            const picked = await Gui.showQuickPick(layerItems, {
+                placeHolder: vscode.l10n.t("Select the config file to open"),
+                ignoreFocusOut: true,
+            });
+            if (picked?.detail) {
+                await vscode.commands.executeCommand("zowe.configEditor", vscode.Uri.file(picked.detail));
             }
             return;
         }

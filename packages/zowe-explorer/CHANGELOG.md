@@ -11,7 +11,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Renamed 'Display in Tree' to 'Locate in Tree' in table views to improve clarity. [#3771](https://github.com/zowe/zowe-explorer-vscode/issues/3771)
+- Renamed the 'Display in Tree' option in table views to 'Locate in Tree' to improve clarity. [#3771](https://github.com/zowe/zowe-explorer-vscode/issues/3771)
 - Added error handling for a "Could not list members" error that appears when deleting an expanded PDS using an SSH profile. [#768](https://github.com/zowe/zowex/issues/768)
 - Fixed an issue where valuable details in error messages were truncated, particularly when using SSH profiles. [zowex/#766](https://github.com/zowe/zowex/issues/766)
 

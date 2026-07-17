@@ -129,6 +129,19 @@ vi.mock("../../../../src/webviews/src/config-editor/utils/MoveUtils", () => ({
     simulateDefaultsUpdateAfterRename: vi.fn(),
 }));
 
+vi.mock("../../../../src/tools/ZoweLocalStorage", () => ({
+    LocalStorageAccess: {
+        getValue: vi.fn().mockReturnValue(undefined),
+        setValue: vi.fn().mockResolvedValue(undefined),
+    },
+    ZoweLocalStorage: {
+        globalState: { get: vi.fn().mockReturnValue(undefined), update: vi.fn().mockResolvedValue(undefined) },
+        workspaceState: undefined,
+        getValue: vi.fn().mockReturnValue(undefined),
+        setValue: vi.fn().mockResolvedValue(undefined),
+    },
+}));
+
 // Mock the WebView panel to include the reveal method
 const mockWebviewPanel = {
     reveal: vi.fn(),
@@ -2050,6 +2063,8 @@ describe("configEditor", () => {
                 parseErrors: [],
             });
             const areSecureValuesAllowedSpy = vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
+            // getTutorialSeen reads from ZoweLocalStorage.globalState which is undefined in unit tests
+            vi.spyOn((configEditor as any).messageHandlers, "getTutorialSeen").mockReturnValue(false);
             const postMessageSpy = vi.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
@@ -2061,6 +2076,7 @@ describe("configEditor", () => {
                 contents: expect.any(Array),
                 parseErrors: [],
                 secureValuesAllowed: true,
+                tutorialSeen: false,
             });
         });
 

@@ -140,10 +140,13 @@ function AppContent() {
   const [pendingPropertyDeletion, setPendingPropertyDeletion] = useState<string | null>(null);
   const [pendingProfileDeletion, setPendingProfileDeletion] = useState<string | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
-  // tutorialSeen: configPath → true once the user has seen the tutorial for that config.
+  // tutorialSeen: true once the user has dismissed the tutorial at least once.
   // Populated from globalState via the CONFIGURATIONS message; persisted via SET_LOCAL_STORAGE_VALUE.
-  const [tutorialSeen, setTutorialSeen] = useState<Record<string, boolean>>({});
-  const tutorialSeenRef = useRef<Record<string, boolean>>({});
+  const [tutorialSeen, setTutorialSeen] = useState(false);
+  const tutorialSeenRef = useRef(false);
+  // highlightPropertyKey: property key to blink in the details panel after "Edit in zowe config webview"
+  // context menu action with cursor on a specific property.
+  const [highlightPropertyKey, setHighlightPropertyKey] = useState<string | null>(null);
 
   const { handleChange, handleDefaultsChange, handleDeleteProperty, confirmDeleteProperty, handleUnlinkMergedProperty, handleAddNewProfileKey } =
     usePropertyHandlers({
@@ -168,19 +171,23 @@ function AppContent() {
   const { formatPendingChanges, hasPendingChanges } = useProfileUtils();
   const { setWizardModalOpen, wizardModalOpen, setWizardProfileNameValidation } = useWizardContext();
 
-  // Keep tutorialSeenRef in sync so the effect below can read it without a stale closure.
+  // Keep tutorialSeenRef in sync so other callbacks can read it without stale closures.
   useEffect(() => {
     tutorialSeenRef.current = tutorialSeen;
   }, [tutorialSeen]);
 
-  // Show the tutorial for any config whose path is not yet marked as seen.
+  // Show the tutorial automatically whenever configurations first become non-empty
+  // and the user has not yet dismissed it.
+  // Depends on both 'configurations' and 'tutorialSeen' so it re-evaluates correctly
+  // when either changes (e.g. tutorialSeen arrives in the same batch as configurations).
   useEffect(() => {
     if (configurations.length === 0) return;
-    const currentConfigPath = configurations[selectedTab ?? 0]?.configPath;
-    if (currentConfigPath && !tutorialSeenRef.current[currentConfigPath]) {
+    if (!tutorialSeen) {
       setShowTutorial(true);
     }
-  }, [configurations, selectedTab]);
+  }, [configurations, tutorialSeen]);
+
+  const handleOpenTutorial = () => setShowTutorial(true);
 
   useEffect(() => {
     if (selectedTab !== null && configurations[selectedTab]) {
@@ -443,6 +450,7 @@ function AppContent() {
     setRenames,
     setConfigParseErrors,
     setTutorialSeen,
+    setHighlightPropertyKey,
     configurationsRef,
     mergedPropertiesLatestRequestSeqRef,
     pendingSaveSelection,
@@ -460,11 +468,11 @@ function AppContent() {
     <div className="app-container" data-testid="config-editor-app" data-config-count={configurations.length} data-selected-tab={selectedTab}>
       <Tabs
         onTabChange={handleTabChange}
-        onOpenRawFile={handleOpenRawJson}
         onRevealInFinder={handleRevealInFinder}
         onOpenSchemaFile={handleOpenSchemaFile}
         onAddNewConfig={handleAddNewConfig}
         onToggleAutostore={handleAutostoreToggle}
+        onShowTutorial={handleOpenTutorial}
       />
       <Panels
         onOpenRawFile={handleOpenRawJson}
@@ -499,6 +507,8 @@ function AppContent() {
             handleUnlinkMergedProperty={handleUnlinkMergedProperty}
             handleNavigateToSource={handleNavigateToSource}
             openAddProfileModalAtPath={openAddProfileModalAtPath}
+            highlightPropertyKey={highlightPropertyKey}
+            onHighlightPropertyKeyConsumed={() => setHighlightPropertyKey(null)}
           />
         )}
         renderDefaults={(defaults) => <RenderDefaults defaults={defaults} handleDefaultsChange={handleDefaultsChange} />}
@@ -625,17 +635,13 @@ function AppContent() {
       {showTutorial && (
         <TutorialOverlay
           onClose={() => {
-            const configPath = configurations[selectedTab ?? 0]?.configPath;
-            if (configPath) {
-              const updated = { ...tutorialSeenRef.current, [configPath]: true };
-              tutorialSeenRef.current = updated;
-              setTutorialSeen(updated);
-              vscodeApi.postMessage({
-                command: "SET_LOCAL_STORAGE_VALUE",
-                key: "zowe.configEditor.tutorialSeen",
-                value: updated,
-              });
-            }
+            tutorialSeenRef.current = true;
+            setTutorialSeen(true);
+            vscodeApi.postMessage({
+              command: "SET_LOCAL_STORAGE_VALUE",
+              key: "zowe.configEditor.tutorialSeen",
+              value: true,
+            });
             setShowTutorial(false);
           }}
         />

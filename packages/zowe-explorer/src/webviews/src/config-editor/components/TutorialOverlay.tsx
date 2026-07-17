@@ -11,42 +11,49 @@
  */
 
 import { useState } from "react";
-import { markTutorialCompleted, markTutorialSkipped } from "../utils/FirstTimeUserDetector";
+import * as l10n from "@vscode/l10n";
 
 interface TutorialStep {
   title: string;
   description: string;
 }
 
-const STEPS: TutorialStep[] = [
-  {
-    title: "Welcome to the Config Editor",
-    description:
-      "This editor lets you manage your Zowe team configuration file visually. " +
-      "You can add, edit, and delete profiles without manually editing JSON.",
-  },
-  {
-    title: "Profiles Panel",
-    description: "The left panel lists all profiles in your config. " + "Click any profile to view and edit its properties on the right.",
-  },
-  {
-    title: "Profile Properties",
-    description:
-      "Fields shown here map directly to your zowe.config.json. " + "Click the ⓘ icon next to a field name for a description and example values.",
-  },
-  {
-    title: "Defaults",
-    description: "The Defaults section lets you choose which profile is the default for each connection type (zosmf, ssh, rse, etc.).",
-  },
-  {
-    title: "Saving Changes",
-    description: "After editing, click Save to write your changes to disk. " + "Use Refresh to discard unsaved changes and reload from the file.",
-  },
-  {
-    title: "You're all set!",
-    description: "Start by selecting a profile on the left. Click the ⓘ icons for contextual help on any field.",
-  },
-];
+function getSteps(): TutorialStep[] {
+  return [
+    {
+      title: l10n.t("Welcome to the Zowe Config Editor"),
+      description: l10n.t(
+        "This editor lets you manage your Zowe team configuration file visually. You can add, edit, and delete profiles without manually editing JSON."
+      ),
+    },
+    {
+      title: l10n.t("Profiles Panel"),
+      description: l10n.t("The left panel lists all profiles in your config. Click any profile to view and edit its properties on the right."),
+    },
+    {
+      title: l10n.t("Profile Properties"),
+      description: l10n.t(
+        "Fields shown here map directly to your zowe.config.json. Click the \u24D8 icon next to a field name for a description and default value."
+      ),
+    },
+    {
+      title: l10n.t("Defaults"),
+      description: l10n.t(
+        "The Defaults section lets you choose which profile is the default for each connection type (zosmf, ssh, etc.)."
+      ),
+    },
+    {
+      title: l10n.t("Saving Changes"),
+      description: l10n.t(
+        "After editing, click Save to write your changes to disk. Use Refresh to discard unsaved changes and reload from the file."
+      ),
+    },
+    {
+      title: l10n.t("You're all set!"),
+      description: l10n.t("Start by selecting a profile on the left. Click the \u24D8 icons for contextual help on any field."),
+    },
+  ];
+}
 
 interface TutorialOverlayProps {
   onClose: () => void;
@@ -54,28 +61,27 @@ interface TutorialOverlayProps {
 
 export function TutorialOverlay({ onClose }: TutorialOverlayProps) {
   const [step, setStep] = useState(0);
-  const total = STEPS.length;
-  const current = STEPS[step];
+  const steps = getSteps();
+  const total = steps.length;
+  const current = steps[step];
   const isLast = step === total - 1;
 
   const handleFinish = () => {
-    markTutorialCompleted();
     onClose();
   };
 
   const handleSkip = () => {
-    markTutorialSkipped();
     onClose();
   };
 
   return (
     <>
       <div className="tutorial-overlay-backdrop" onClick={handleSkip} />
-      <div className="tutorial-overlay-modal" role="dialog" aria-modal="true" aria-label="Config Editor Tutorial">
+      <div className="tutorial-overlay-modal" role="dialog" aria-modal="true" aria-label={l10n.t("Config Editor Tutorial")}>
         {/* Header */}
         <div className="tutorial-header">
           <h2>{current.title}</h2>
-          <button className="tutorial-close-button" onClick={handleSkip} aria-label="Close tutorial">
+          <button className="tutorial-close-button" onClick={handleSkip} aria-label={l10n.t("Close tutorial")}>
             <span className="codicon codicon-close"></span>
           </button>
         </div>
@@ -85,9 +91,7 @@ export function TutorialOverlay({ onClose }: TutorialOverlayProps) {
           <div className="tutorial-progress-bar">
             <div className="tutorial-progress-fill" style={{ width: `${((step + 1) / total) * 100}%` }} />
           </div>
-          <p className="tutorial-progress-text">
-            Step {step + 1} of {total}
-          </p>
+          <p className="tutorial-progress-text">{l10n.t("Step {0} of {1}", step + 1, total)}</p>
           <div className="tutorial-description">
             <p>{current.description}</p>
           </div>
@@ -97,24 +101,24 @@ export function TutorialOverlay({ onClose }: TutorialOverlayProps) {
         <div className="tutorial-footer">
           <div className="tutorial-footer-left">
             <button className="tutorial-button tutorial-button-secondary" onClick={handleSkip}>
-              Skip
+              {l10n.t("Skip")}
             </button>
           </div>
           <div className="tutorial-footer-right">
             {step > 0 && (
               <button className="tutorial-button tutorial-button-secondary" onClick={() => setStep((s) => s - 1)}>
                 <span className="codicon codicon-arrow-left"></span>
-                Back
+                {l10n.t("Back")}
               </button>
             )}
             {isLast ? (
               <button className="tutorial-button tutorial-button-primary" onClick={handleFinish}>
-                Finish
+                {l10n.t("Finish")}
                 <span className="codicon codicon-check"></span>
               </button>
             ) : (
               <button className="tutorial-button tutorial-button-primary" onClick={() => setStep((s) => s + 1)}>
-                Next
+                {l10n.t("Next")}
                 <span className="codicon codicon-arrow-right"></span>
               </button>
             )}

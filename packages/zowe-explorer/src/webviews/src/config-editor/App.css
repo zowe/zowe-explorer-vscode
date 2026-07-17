@@ -6,6 +6,22 @@ body {
     overflow: hidden;
 }
 
+/* Property highlight blink animation — triggered when opening webview from editor cursor context */
+@keyframes property-blink {
+    0%   { background-color: transparent; }
+    25%  { background-color: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 200, 0, 0.35)); }
+    50%  { background-color: transparent; }
+    75%  { background-color: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 200, 0, 0.35)); }
+    100% { background-color: transparent; }
+}
+
+.property-highlight-blink {
+    animation: property-blink 0.9s ease-in-out forwards;
+    border-radius: 3px;
+}
+
+
+
 /* Drag and drop styles */
 .profile-tree-item.dragging {
     opacity: 0.5;
@@ -444,8 +460,15 @@ div:has(> .vscode-panel) {
     margin-right: 8px;
     color: var(--vscode-editor-foreground);
     white-space: nowrap;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.config-label-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     min-width: 0;
-    flex-shrink: 0;
 }
 
 .config-input {
@@ -488,7 +511,7 @@ select.config-input.config-input-inherited:disabled,
 
 .config-item-container {
     display: grid;
-    grid-template-columns: minmax(150px, max-content) 1fr auto;
+    grid-template-columns: 150px 1fr auto;
     gap: 8px;
     align-items: center;
     max-width: 100%;

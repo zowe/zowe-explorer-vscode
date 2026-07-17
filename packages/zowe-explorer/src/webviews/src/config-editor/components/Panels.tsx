@@ -92,7 +92,7 @@ export function Panels({
                   data-testid="open-config-file"
                   style={{ flexShrink: 0 }}
                 >
-                  <span className="codicon codicon-go-to-file"></span>
+                  <span className="codicon codicon-settings"></span>
                 </button>
                 {!profilesCollapsed && (
                   <>

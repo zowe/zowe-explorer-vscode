@@ -235,7 +235,7 @@ export class ConfigEditor extends WebView {
     private async initializeWebview(): Promise<void> {
         const { configs, parseErrors } = await this.getLocalConfigs();
         const secureValuesAllowed = await this.areSecureValuesAllowed();
-        const tutorialSeen = this.messageHandlers.getPrunedTutorialSeenMap(configs.map((c) => c.configPath));
+        const tutorialSeen = this.messageHandlers.getTutorialSeen();
 
         await this.panel.webview.postMessage({
             command: "CONFIGURATIONS",
@@ -537,11 +537,13 @@ export class ConfigEditor extends WebView {
                 const result = await this.fileOperations.createNewConfig(message as unknown as CreateNewConfigMessage);
                 if (result && result.configs.length > 0) {
                     const secureValuesAllowed = await this.areSecureValuesAllowed();
+                    const tutorialSeen = this.messageHandlers.getTutorialSeen();
                     await this.panel.webview.postMessage({
                         command: "CONFIGURATIONS",
                         contents: result.configs,
                         parseErrors: result.parseErrors,
                         secureValuesAllowed,
+                        tutorialSeen,
                     });
                 }
                 break;

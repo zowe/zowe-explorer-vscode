@@ -130,6 +130,9 @@ describe("ConfigEditorMessageHandlers", () => {
 
     describe("handleGetProfiles", () => {
         it("should get profiles and post configurations message", async () => {
+            // tutorialSeen is a single global boolean; default is false when not set
+            (LocalStorageAccess.getValue as any).mockReturnValue(undefined);
+
             await messageHandlers.handleGetProfiles();
 
             expect(ProfileInfo).toHaveBeenCalledWith("zowe", {
@@ -146,97 +149,43 @@ describe("ConfigEditorMessageHandlers", () => {
                 ],
                 parseErrors: [],
                 secureValuesAllowed: true,
-                tutorialSeen: {},
+                tutorialSeen: false,
             });
         });
 
-        it("should include tutorialSeen map with seen entries in CONFIGURATIONS message", async () => {
-            (LocalStorageAccess.getValue as any).mockReturnValue({
-                "/path/to/config1.json": true,
-                "/path/to/config2.json": false,
-            });
+        it("should send tutorialSeen: true when the user has previously dismissed the tutorial", async () => {
+            (LocalStorageAccess.getValue as any).mockReturnValue(true);
 
             await messageHandlers.handleGetProfiles();
 
             const call = mockPanel.webview.postMessage.mock.calls[0][0];
-            expect(call.tutorialSeen).toEqual({
-                "/path/to/config1.json": true,
-                "/path/to/config2.json": false,
-            });
+            expect(call.tutorialSeen).toBe(true);
         });
 
-        it("should prune deleted config paths from tutorialSeen before sending", async () => {
-            // stored map has an extra path that is no longer an active config
-            (LocalStorageAccess.getValue as any).mockReturnValue({
-                "/path/to/config1.json": true,
-                "/path/to/deleted.json": true,   // no longer active
-            });
+        it("should send tutorialSeen: false when the user has not yet dismissed the tutorial", async () => {
+            (LocalStorageAccess.getValue as any).mockReturnValue(false);
 
             await messageHandlers.handleGetProfiles();
 
             const call = mockPanel.webview.postMessage.mock.calls[0][0];
-            expect(call.tutorialSeen).toEqual({ "/path/to/config1.json": true });
-            // Deleted path should be persisted-out immediately
-            expect(LocalStorageAccess.setValue).toHaveBeenCalledWith(
-                "zowe.configEditor.tutorialSeen",
-                { "/path/to/config1.json": true }
-            );
+            expect(call.tutorialSeen).toBe(false);
         });
     });
 
-    describe("getPrunedTutorialSeenMap", () => {
-        it("returns empty map when no tutorial-seen data is stored", () => {
+    describe("getTutorialSeen", () => {
+        it("returns false when no value is stored in globalState", () => {
             (LocalStorageAccess.getValue as any).mockReturnValue(undefined);
-            const result = messageHandlers.getPrunedTutorialSeenMap(["/a/zowe.config.json"]);
-            expect(result).toEqual({});
+            expect(messageHandlers.getTutorialSeen()).toBe(false);
         });
 
-        it("keeps only paths present in activeConfigPaths", () => {
-            (LocalStorageAccess.getValue as any).mockReturnValue({
-                "/a/zowe.config.json": true,
-                "/b/zowe.config.json": true,
-                "/c/zowe.config.json": false,
-            });
-            const result = messageHandlers.getPrunedTutorialSeenMap(["/a/zowe.config.json"]);
-            expect(result).toEqual({ "/a/zowe.config.json": true });
+        it("returns true when globalState has true", () => {
+            (LocalStorageAccess.getValue as any).mockReturnValue(true);
+            expect(messageHandlers.getTutorialSeen()).toBe(true);
         });
 
-        it("does NOT call setValue when no pruning is needed", () => {
-            (LocalStorageAccess.getValue as any).mockReturnValue({
-                "/a/zowe.config.json": true,
-            });
-            messageHandlers.getPrunedTutorialSeenMap(["/a/zowe.config.json"]);
-            expect(LocalStorageAccess.setValue).not.toHaveBeenCalled();
-        });
-
-        it("calls setValue to persist the pruned map when stale paths are removed", () => {
-            (LocalStorageAccess.getValue as any).mockReturnValue({
-                "/a/zowe.config.json": true,
-                "/stale/zowe.config.json": true,
-            });
-            const result = messageHandlers.getPrunedTutorialSeenMap(["/a/zowe.config.json"]);
-            expect(result).toEqual({ "/a/zowe.config.json": true });
-            expect(LocalStorageAccess.setValue).toHaveBeenCalledWith(
-                "zowe.configEditor.tutorialSeen",
-                { "/a/zowe.config.json": true }
-            );
-        });
-
-        it("returns empty map when activeConfigPaths is empty", () => {
-            (LocalStorageAccess.getValue as any).mockReturnValue({ "/a/zowe.config.json": true });
-            const result = messageHandlers.getPrunedTutorialSeenMap([]);
-            expect(result).toEqual({});
-            expect(LocalStorageAccess.setValue).toHaveBeenCalledWith("zowe.configEditor.tutorialSeen", {});
-        });
-
-        it("preserves false values for unseen configs", () => {
-            (LocalStorageAccess.getValue as any).mockReturnValue({
-                "/a/zowe.config.json": false,
-                "/b/zowe.config.json": true,
-            });
-            const result = messageHandlers.getPrunedTutorialSeenMap(["/a/zowe.config.json", "/b/zowe.config.json"]);
-            expect(result).toEqual({ "/a/zowe.config.json": false, "/b/zowe.config.json": true });
-            expect(LocalStorageAccess.setValue).not.toHaveBeenCalled();
+        it("returns false when globalState has false", () => {
+            (LocalStorageAccess.getValue as any).mockReturnValue(false);
+            expect(messageHandlers.getTutorialSeen()).toBe(false);
         });
     });
 

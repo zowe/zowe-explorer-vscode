@@ -37,24 +37,11 @@ export class ConfigEditorMessageHandlers {
     ) {}
 
     /**
-     * Returns the tutorial-seen map, pruned of any config paths that are no longer present.
-     * Keys are config file paths; value is true once the user has dismissed the tutorial for that config.
+     * Returns whether the user has ever dismissed the tutorial.
+     * A single global boolean — not per config file path.
      */
-    public getPrunedTutorialSeenMap(activeConfigPaths: string[]): Record<string, boolean> {
-        const stored =
-            LocalStorageAccess.getValue<Record<string, boolean>>(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN) ?? {};
-        const activePaths = new Set(activeConfigPaths);
-        const pruned: Record<string, boolean> = {};
-        for (const [k, v] of Object.entries(stored)) {
-            if (activePaths.has(k)) {
-                pruned[k] = v;
-            }
-        }
-        // Persist the pruned version so deleted configs are cleaned up immediately.
-        if (Object.keys(pruned).length !== Object.keys(stored).length) {
-            void LocalStorageAccess.setValue(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN, pruned);
-        }
-        return pruned;
+    public getTutorialSeen(): boolean {
+        return LocalStorageAccess.getValue<boolean>(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN) ?? false;
     }
 
     async handleGetProfiles(): Promise<void> {
@@ -64,7 +51,7 @@ export class ConfigEditorMessageHandlers {
 
         const { configs, parseErrors } = await this.getLocalConfigs();
         const secureValuesAllowed = await this.areSecureValuesAllowed();
-        const tutorialSeen = this.getPrunedTutorialSeenMap(configs.map((c) => c.configPath));
+        const tutorialSeen = this.getTutorialSeen();
         await this.panel.webview.postMessage({
             command: "CONFIGURATIONS",
             contents: configs,
@@ -119,6 +106,7 @@ export class ConfigEditorMessageHandlers {
             profileName: message.profileName,
             configPath: message.configPath,
             profileType: message.profileType,
+            propertyKey: message.propertyKey,
         });
     }
 
@@ -132,6 +120,7 @@ export class ConfigEditorMessageHandlers {
                 profileName: initialSelection.profileName,
                 configPath: initialSelection.configPath,
                 profileType: initialSelection.profileType,
+                propertyKey: initialSelection.propertyKey,
             });
             setInitialSelection(undefined);
         }

@@ -508,7 +508,7 @@ describe("Profiles Unit Tests - createZoweSession - Open zowe.config.json option
         vi.restoreAllMocks();
     });
 
-    it("Tests that createZoweSession includes 'Open zowe.config.json' in quick pick items when profiles exist", async () => {
+    it("Tests that createZoweSession includes 'Open Config File' in quick pick items when profiles exist", async () => {
         createGlobalMocks();
         const quickPick = {
             items: [] as vscode.QuickPickItem[],
@@ -531,10 +531,10 @@ describe("Profiles Unit Tests - createZoweSession - Open zowe.config.json option
         await Profiles.getInstance().createZoweSession(treeProvider);
 
         const labels = quickPick.items.map((item: vscode.QuickPickItem) => item.label);
-        expect(labels.some((l: string) => l.includes("Open zowe.config.json"))).toBe(true);
+        expect(labels.some((l: string) => l.includes("Open Config File"))).toBe(true);
     });
 
-    it("Tests that createZoweSession includes 'Open zowe.config.json' when no profiles exist", async () => {
+    it("Tests that createZoweSession includes 'Open Config File' when no profiles exist", async () => {
         const globalMocks = createGlobalMocks();
         // Override allProfiles to empty so allProfiles.length === 0
         Object.defineProperty(globalMocks.mockProfileInstance, "allProfiles", {
@@ -563,38 +563,41 @@ describe("Profiles Unit Tests - createZoweSession - Open zowe.config.json option
         await Profiles.getInstance().createZoweSession(treeProvider);
 
         const labels = quickPick.items.map((item: vscode.QuickPickItem) => item.label);
-        expect(labels.some((l: string) => l.includes("Open zowe.config.json"))).toBe(true);
+        expect(labels.some((l: string) => l.includes("Open Config File"))).toBe(true);
         // "Edit Team Configuration File" should NOT appear when there are no profiles
         expect(labels.some((l: string) => l.includes("Edit Team Configuration File"))).toBe(false);
     });
 
-    it("Tests that selecting 'Open zowe.config.json' calls openConfigFile with the config path", async () => {
+    it("Tests that selecting 'Open Config File' opens the config editor for the chosen layer", async () => {
         createGlobalMocks();
-        const openConfigFileSpy = vi.spyOn(Profiles.getInstance(), "openConfigFile").mockResolvedValue(undefined);
-        const profileInfo = createInstanceOfProfileInfo();
-        vi.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce(profileInfo as any);
-        vi.spyOn(Profiles.getInstance(), "getProfileFromConfig").mockResolvedValueOnce({
-            profLoc: { osLoc: ["/home/user/.zowe/zowe.config.json"] },
+        // Mock getConfigLayers so uniqueExistingLayers returns one layer
+        vi.spyOn(Profiles.getInstance(), "getConfigLayers").mockResolvedValue([
+            { path: "/home/user/.zowe/zowe.config.json", exists: true, global: true, user: false, properties: {} as any },
+        ]);
+        const executeCommandSpy = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+
+        const quickPick = {
+            items: [] as vscode.QuickPickItem[],
+            placeholder: "",
+            title: "",
+            show: vi.fn(),
+            hide: vi.fn(),
+            ignoreFocusOut: false,
+        } as any;
+
+        vi.spyOn(Gui, "createQuickPick").mockReturnValue(quickPick);
+
+        // First resolveQuickPick call: user picks "Open Config File" from the profile picker
+        // Second call (showQuickPick): user picks the single layer item
+        vi.spyOn(Gui, "resolveQuickPick").mockImplementation(async () => {
+            return quickPick.items.find((item: vscode.QuickPickItem) => item.label.includes("Open Config File"));
+        });
+        vi.spyOn(Gui, "showQuickPick").mockResolvedValueOnce({
+            label: "zowe.config.json",
+            description: "/home/user/.zowe",
+            detail: "/home/user/.zowe/zowe.config.json",
         } as any);
 
-        const quickPick = {
-            items: [] as vscode.QuickPickItem[],
-            placeholder: "",
-            title: "",
-            show: vi.fn(),
-            hide: vi.fn(),
-            ignoreFocusOut: false,
-        } as any;
-
-        vi.spyOn(Gui, "createQuickPick").mockReturnValue(quickPick);
-
-        // Capture the configOpen descriptor after items are set, then resolve with it
-        let configOpenItem: vscode.QuickPickItem | undefined;
-        vi.spyOn(Gui, "resolveQuickPick").mockImplementation(async () => {
-            configOpenItem = quickPick.items.find((item: vscode.QuickPickItem) => item.label.includes("Open zowe.config.json"));
-            return configOpenItem;
-        });
-
         const treeProvider = {
             getTreeType: vi.fn().mockReturnValue(PersistenceSchemaEnum.Dataset),
             mSessionNodes: [],
@@ -603,16 +606,17 @@ describe("Profiles Unit Tests - createZoweSession - Open zowe.config.json option
 
         await Profiles.getInstance().createZoweSession(treeProvider);
 
-        expect(openConfigFileSpy).toHaveBeenCalledWith("/home/user/.zowe/zowe.config.json");
+        expect(executeCommandSpy).toHaveBeenCalledWith(
+            "zowe.configEditor",
+            expect.objectContaining({ fsPath: "/home/user/.zowe/zowe.config.json" })
+        );
     });
 
-    it("Tests that selecting 'Open zowe.config.json' does nothing when no profiles are available in profileInfo", async () => {
+    it("Tests that selecting 'Open Config File' does nothing when no layers exist on disk", async () => {
         createGlobalMocks();
-        const openConfigFileSpy = vi.spyOn(Profiles.getInstance(), "openConfigFile").mockResolvedValue(undefined);
-
-        // Return a profileInfo with empty getAllProfiles
-        const emptyProfileInfo = { ...createInstanceOfProfileInfo(), getAllProfiles: () => [] };
-        vi.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValueOnce(emptyProfileInfo as any);
+        // No existing layers
+        vi.spyOn(Profiles.getInstance(), "getConfigLayers").mockResolvedValue([]);
+        const executeCommandSpy = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
 
         const quickPick = {
             items: [] as vscode.QuickPickItem[],
@@ -625,7 +629,7 @@ describe("Profiles Unit Tests - createZoweSession - Open zowe.config.json option
 
         vi.spyOn(Gui, "createQuickPick").mockReturnValue(quickPick);
         vi.spyOn(Gui, "resolveQuickPick").mockImplementation(async () => {
-            return quickPick.items.find((item: vscode.QuickPickItem) => item.label.includes("Open zowe.config.json"));
+            return quickPick.items.find((item: vscode.QuickPickItem) => item.label.includes("Open Config File"));
         });
 
         const treeProvider = {
@@ -636,7 +640,7 @@ describe("Profiles Unit Tests - createZoweSession - Open zowe.config.json option
 
         await Profiles.getInstance().createZoweSession(treeProvider);
 
-        expect(openConfigFileSpy).not.toHaveBeenCalled();
+        expect(executeCommandSpy).not.toHaveBeenCalled();
     });
 });
 
