@@ -412,7 +412,8 @@ export namespace SessConstants {
 }
 
 export class LoggerUtils {
-    static censorRawData(data: string, _category?: string): string {
-        return jest.requireActual("@zowe/imperative").LoggerUtils.censorRawData(data, _category);
+    static readonly CENSOR_RESPONSE = "****";
+    static censorRawData(_data: string, _category?: string): string {
+        return LoggerUtils.CENSOR_RESPONSE;
     }
 }
