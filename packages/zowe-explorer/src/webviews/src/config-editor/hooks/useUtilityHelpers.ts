@@ -131,6 +131,30 @@ export function useUtilityHelpers() {
 
             hasPendingSecureChanges: (configPath: string) => hasPendingSecureChanges(configPath, pendingChanges),
 
+            /**
+             * Returns true if there is at least one property-level deletion recorded for the
+             * given profile key in the given config.
+             */
+            hasPendingPropertyDeletions: (profileKey: string, configPath: string): boolean => {
+                const keys = deletions[configPath];
+                if (!keys || keys.length === 0) return false;
+                return keys.some((delKey) => {
+                    const parts = delKey.split(".");
+                    // Must start with "profiles" and have at least 3 segments
+                    if (parts[0] !== "profiles" || parts.length < 3) return false;
+                    // Build the qualified profile key by collecting every non-"profiles" segment
+                    // except the last one (which is the property/field name or "properties" segment).
+                    const profileParts: string[] = [];
+                    for (let i = 1; i < parts.length - 1; i++) {
+                        if (parts[i] !== "profiles" && parts[i] !== "properties") {
+                            profileParts.push(parts[i]);
+                        }
+                    }
+                    const derivedProfileKey = profileParts.join(".");
+                    return derivedProfileKey === profileKey;
+                });
+            },
+
             extractPendingProfiles: (configPath: string) => {
                 const profileNames = extractPendingProfiles(pendingChanges, configPath);
                 const result: { [key: string]: Record<string, unknown> } = {};

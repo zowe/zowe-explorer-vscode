@@ -67,6 +67,7 @@ export const RenderProfiles = ({
     getRenamedProfileKeyWithNested: getRenamedProfileKeyWithNestedHelper,
     getProfileType,
     hasPendingSecureChanges,
+    hasPendingPropertyDeletions,
     hasPendingRename,
     isProfileDefault,
     sortProfilesAtLevel,
@@ -277,7 +278,10 @@ export const RenderProfiles = ({
           isProfileDefault={isProfileDefault}
           getProfileType={(profileKey: string) => getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames)}
           viewMode={viewMode}
-          hasPendingSecureChanges={hasPendingSecureChanges}
+          hasPendingSecureChanges={(profileKey: string) =>
+            hasPendingSecureChanges(configurations[selectedTab!]?.configPath || "") ||
+            hasPendingPropertyDeletions(profileKey, configurations[selectedTab!]?.configPath || "")
+          }
           hasPendingRename={(profileKey: string) => hasPendingRename(profileKey, configurations[selectedTab!]?.configPath || "", renames)}
           searchTerm={profileSearchTerm}
           filterType={profileFilterType}
@@ -313,6 +317,7 @@ export const RenderProfiles = ({
       getProfileType,
       viewMode,
       hasPendingSecureChanges,
+      hasPendingPropertyDeletions,
       profileSearchTerm,
       profileFilterType,
       setProfileSearchTerm,
