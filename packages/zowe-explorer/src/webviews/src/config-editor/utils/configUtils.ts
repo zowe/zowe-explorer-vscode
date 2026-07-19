@@ -19,7 +19,7 @@ export function flattenKeys(obj: { [key: string]: any }, parentKey: string = "")
         const newKey = parentKey ? `${parentKey}.${key}` : key;
         const newPath = parentKey ? [...parentKey.split("."), key] : [key];
 
-        if (typeof value === "object") {
+        if (typeof value === "object" && value !== null) {
             const nestedObject = flattenKeys(value, newKey);
             result = { ...result, ...nestedObject };
         } else {

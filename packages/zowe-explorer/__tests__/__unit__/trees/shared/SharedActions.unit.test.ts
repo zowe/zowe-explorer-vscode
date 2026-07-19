@@ -803,12 +803,15 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
         } as any);
         vi.spyOn(SharedActions, "updateSessionNodeTooltips").mockResolvedValue(undefined);
         const addedProfTypes = new Set<string>();
+        const removeSessionSpy = vi.spyOn(TreeViewUtils, "removeSession");
         const addDefaultSessionSpy = vi
             .spyOn(TreeViewUtils, "addDefaultSession")
             .mockImplementation((treeProvider, profileType) => addedProfTypes.add(profileType) as any);
         await SharedActions.refreshAll();
         // Each provider has 2 orphan session nodes (zosmf, zosmf2) — neither is in allProfiles["sestest"].
-        // The new logic calls treeProvider.deleteSession() instead of TreeViewUtils.removeSession().
+        // Orphan session nodes are removed via treeProvider.deleteSession, not TreeViewUtils.removeSession
+        // (removeSession strips favorites for that profile name — see SharedActions.refreshProvider).
+        expect(removeSessionSpy).not.toHaveBeenCalled();
         expect(providers.ds.deleteSession).toHaveBeenCalledTimes(2);
         expect(providers.uss.deleteSession).toHaveBeenCalledTimes(2);
         expect(providers.job.deleteSession).toHaveBeenCalledTimes(2);
