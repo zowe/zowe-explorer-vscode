@@ -9,6 +9,7 @@ import {
     canPropertyBeSecure,
     handleToggleSecure,
     hasPendingSecureChanges,
+    hasPendingSecureChangesForProfile,
     extractPendingProfiles,
     isProfileOrParentDeleted,
     getAvailableProfilesByType,
@@ -130,6 +131,9 @@ export function useUtilityHelpers() {
             },
 
             hasPendingSecureChanges: (configPath: string) => hasPendingSecureChanges(configPath, pendingChanges),
+
+            hasPendingSecureChangesForProfile: (profileKey: string, configPath: string) =>
+                hasPendingSecureChangesForProfile(profileKey, configPath, pendingChanges),
 
             /**
              * Returns true if there is at least one property-level deletion recorded for the

@@ -337,6 +337,13 @@ export function hasPendingSecureChanges(configPath: string, pendingChanges: Pend
     return Object.values(configPendingChanges).some((change) => change.secure === true);
 }
 
+export function hasPendingSecureChangesForProfile(profileKey: string, configPath: string, pendingChanges: PendingChangesMap): boolean {
+    const configPendingChanges = pendingChanges[configPath];
+    if (!configPendingChanges) return false;
+
+    return Object.values(configPendingChanges).some((change) => change.secure === true && change.profile === profileKey);
+}
+
 interface FilterSecurePropertiesParams {
     value: Record<string, unknown>;
     combinedConfig: Record<string, unknown>;

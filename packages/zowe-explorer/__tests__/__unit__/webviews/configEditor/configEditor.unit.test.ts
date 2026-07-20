@@ -426,12 +426,10 @@ describe("configEditor", () => {
             profilesCacheSpy.mockRestore();
         });
 
-        it("should return true when credential manager is in app settings", async () => {
+        it("should return true when profile info reports secured credentials", async () => {
             const mockProfilesCache = {
                 getProfileInfo: vi.fn().mockResolvedValue({
-                    mCredentials: {
-                        isCredentialManagerInAppSettings: vi.fn().mockReturnValue(true),
-                    },
+                    isSecured: vi.fn().mockReturnValue(true),
                 }),
             };
 

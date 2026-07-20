@@ -65,6 +65,7 @@ export {
     isPropertySecure,
     handleToggleSecure,
     hasPendingSecureChanges,
+    hasPendingSecureChangesForProfile,
     extractPendingProfiles,
     isProfileOrParentDeleted,
     getAvailableProfilesByType,

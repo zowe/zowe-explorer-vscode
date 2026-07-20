@@ -253,7 +253,7 @@ export class ConfigEditor extends WebView {
             return false;
         }
         try {
-            return (((await profilesCache.getProfileInfo()) as any).mCredentials.isCredentialManagerInAppSettings() ?? false) as boolean;
+            return ((await profilesCache.getProfileInfo()) as ProfileInfo).isSecured();
         } catch (_err) {
             return false;
         }

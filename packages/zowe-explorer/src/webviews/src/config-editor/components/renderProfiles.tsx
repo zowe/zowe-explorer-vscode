@@ -66,7 +66,7 @@ export const RenderProfiles = ({
     extractPendingProfiles,
     getRenamedProfileKeyWithNested: getRenamedProfileKeyWithNestedHelper,
     getProfileType,
-    hasPendingSecureChanges,
+    hasPendingSecureChangesForProfile,
     hasPendingPropertyDeletions,
     hasPendingRename,
     isProfileDefault,
@@ -279,7 +279,7 @@ export const RenderProfiles = ({
           getProfileType={(profileKey: string) => getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames)}
           viewMode={viewMode}
           hasPendingSecureChanges={(profileKey: string) =>
-            hasPendingSecureChanges(configurations[selectedTab!]?.configPath || "") ||
+            hasPendingSecureChangesForProfile(profileKey, configurations[selectedTab!]?.configPath || "") ||
             hasPendingPropertyDeletions(profileKey, configurations[selectedTab!]?.configPath || "")
           }
           hasPendingRename={(profileKey: string) => hasPendingRename(profileKey, configurations[selectedTab!]?.configPath || "", renames)}
@@ -316,7 +316,7 @@ export const RenderProfiles = ({
       isProfileDefault,
       getProfileType,
       viewMode,
-      hasPendingSecureChanges,
+      hasPendingSecureChangesForProfile,
       hasPendingPropertyDeletions,
       profileSearchTerm,
       profileFilterType,
