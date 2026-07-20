@@ -22,6 +22,7 @@ import {
     DataSetTableEventType,
     Sorting,
     PersistenceSchemaEnum,
+    ZoweScheme,
 } from "@zowe/zowe-explorer-api";
 import { commands, Event, EventEmitter, ExtensionContext, l10n, Uri } from "vscode";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -543,7 +544,12 @@ export class DatasetTableView {
     private static async openInEditor(this: void, _view: Table.View, rows: Record<number, Table.RowData>): Promise<void> {
         const allRows = Object.values(rows);
         for (const row of allRows) {
-            await commands.executeCommand("vscode.open", Uri.parse(row.uri as string), { preview: false });
+            const uri = Uri.parse(row.uri as string);
+            // Guard against a webview-supplied URI pointing at a scheme other than the one this table is meant to open.
+            if (uri.scheme !== ZoweScheme.DS) {
+                continue;
+            }
+            await commands.executeCommand("vscode.open", uri, { preview: false });
         }
     }
 

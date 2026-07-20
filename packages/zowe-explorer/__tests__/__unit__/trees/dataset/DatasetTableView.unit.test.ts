@@ -1100,6 +1100,18 @@ describe("DatasetTableView", () => {
 
             expect(executeCommandSpy).not.toHaveBeenCalled();
         });
+
+        it("should ignore rows whose URI scheme is not the data set scheme", async () => {
+            const rows: Record<number, Table.RowData> = {
+                0: { uri: "file:///etc/passwd" },
+                1: { uri: "zowe-ds:/profile/DATA.SET.NAME" },
+            };
+
+            await (DatasetTableView as any).openInEditor(null, rows);
+
+            expect(executeCommandSpy).toHaveBeenCalledTimes(1);
+            expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME"), { preview: false });
+        });
     });
 
     describe("displayInTree", () => {
