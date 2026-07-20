@@ -926,9 +926,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         const response = await blockMocks.childNode.getChildren();
         expect(response).toEqual([]);
         expect(globalMocks.showErrorMessage.mock.calls.length).toEqual(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual(
-            "Retrieving response from USS list API Error: Throwing an error to check error handling for unit tests!"
-        );
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toEqual("**** ****");
     });
 
     it("Tests that when passing a session node that is not dirty the node.getChildren() method is exited early", async () => {
@@ -1137,7 +1135,7 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.openTextDocument.mock.calls[0][0]).toBe(child.getUSSDocumentFilePath());
         expect(globalMocks.mockShowTextDocument.mock.calls.length).toBe(1);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(1);
-        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: testError");
+        expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: ****");
     });
 
     it("Tests that node.openUSS() executes successfully for favorited file", async () => {
@@ -1265,7 +1263,31 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
         expect(globalMocks.ussFile.mock.calls.length).toBe(0);
         expect(globalMocks.showErrorMessage.mock.calls.length).toBe(2);
         expect(globalMocks.showErrorMessage.mock.calls[0][0]).toBe("open() called from invalid node.");
-        expect(globalMocks.showErrorMessage.mock.calls[1][0]).toBe("Error: open() called from invalid node.");
+        expect(globalMocks.showErrorMessage.mock.calls[1][0]).toBe("Error: ****");
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - Function node.getUSSDocumentFilePath()", () => {
+    it("Tests that node.getUSSDocumentFilePath() throws an error if fullPath contains a backtrack", () => {
+        const globalMocks = createGlobalMocks();
+
+        const rootNode = new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode({
+            label: "node",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: rootNode,
+            profile: globalMocks.profileOne,
+        });
+        testNode.fullPath = "test/../../bad/path";
+        jest.spyOn(zowe.imperative.IO, "containsBacktrack").mockReturnValueOnce(true);
+
+        expect(() => testNode.getUSSDocumentFilePath()).toThrow("Path contains backtrack, target folder is outside of the zowe tmp directory");
     });
 });
 

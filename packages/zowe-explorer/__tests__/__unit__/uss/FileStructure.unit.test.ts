@@ -93,22 +93,22 @@ describe("FileStructure unit tests - function UssFileUtils.resolveLocalPath", ()
     });
 
     it("rejects '..' traversal segments that would escape USS_DIR", () => {
-        expect(() => UssFileUtils.resolveLocalPath("sestest", "/../../../../etc/passwd")).toThrow(/unsafe USS path/);
-        expect(() => UssFileUtils.resolveLocalPath("sestest", "a/../../b")).toThrow(/unsafe USS path/);
+        expect(() => UssFileUtils.resolveLocalPath("sestest", "/../../../../etc/passwd")).toThrow(/missing or invalid USS path/);
+        expect(() => UssFileUtils.resolveLocalPath("sestest", "a/../../b")).toThrow(/missing or invalid USS path/);
     });
 
     it("rejects backslash-separated '..' traversal segments", () => {
-        expect(() => UssFileUtils.resolveLocalPath("sestest", "..\\..\\Windows\\System32")).toThrow(/unsafe USS path/);
+        expect(() => UssFileUtils.resolveLocalPath("sestest", "..\\..\\Windows\\System32")).toThrow(/missing or invalid USS path/);
     });
 
     it("rejects drive-letter / absolute-path roots supplied via the USS path", () => {
-        expect(() => UssFileUtils.resolveLocalPath("sestest", "C:/Windows/System32")).toThrow(/unsafe USS path/);
-        expect(() => UssFileUtils.resolveLocalPath("sestest", "/D:/data")).toThrow(/unsafe USS path/);
+        expect(() => UssFileUtils.resolveLocalPath("sestest", "C:/Windows/System32")).toThrow(/missing or invalid USS path/);
+        expect(() => UssFileUtils.resolveLocalPath("sestest", "/D:/data")).toThrow(/missing or invalid USS path/);
     });
 
     it("never lets a hostile profile name escape USS_DIR", () => {
         // Even if a caller passes traversal via the profile name, the containment
         // assertion must reject the resolved path.
-        expect(() => UssFileUtils.resolveLocalPath("../../..", "/file")).toThrow(/escapes the local USS directory/);
+        expect(() => UssFileUtils.resolveLocalPath("../../..", "/file")).toThrow(/missing or invalid USS path/);
     });
 });
