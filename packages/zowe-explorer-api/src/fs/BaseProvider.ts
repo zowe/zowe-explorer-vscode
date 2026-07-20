@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import * as imperative from "@zowe/imperative";
 import { DirEntry, FileEntry, IFileSystemEntry, FS_PROVIDER_DELAY, ConflictViewSelection, DeleteMetadata, HandleErrorOpts } from "./types";
 import * as path from "path";
 import { FsAbstractUtils } from "./utils";
@@ -46,9 +47,16 @@ export class BaseProvider {
 
     /**
      * Action for overwriting the remote contents with local data from the provider.
-     * @param remoteUri The "remote conflict" URI shown in the diff view
+     * @param uri The URI shown in the diff view
      */
-    public async diffOverwrite(uri: vscode.Uri): Promise<void> {
+    public async diffOverwrite(uri: vscode.Uri): Promise<void>;
+    /**
+     * Action for overwriting the remote contents with local data from the provider.
+     * @param uri The URI shown in the diff view
+     * @param closeEditor Whether to close the editor after overwriting
+     */
+    public async diffOverwrite(uri: vscode.Uri, closeEditor: boolean): Promise<void>;
+    public async diffOverwrite(uri: vscode.Uri, closeEditor: boolean = true): Promise<void> {
         const fsEntry = this._lookupAsFile(uri);
         if (fsEntry == null) {
             return;
@@ -63,7 +71,11 @@ export class BaseProvider {
             this.FS_PROVIDER_UI_TIMEOUT
         );
         fsEntry.conflictData = null;
-        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+        if (closeEditor) {
+            vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+
+            await this._revertDirtyDocument(uri);
+        }
     }
 
     /**
@@ -92,6 +104,8 @@ export class BaseProvider {
         );
         fsEntry.conflictData = null;
         vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+
+        await this._revertDirtyDocument(uri);
     }
 
     public exists(uri: vscode.Uri): boolean {
@@ -115,7 +129,7 @@ export class BaseProvider {
         }
 
         parentEntry.entries.delete(entryName);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri.with({ query: "" }) });
         return true;
     }
 
@@ -158,6 +172,30 @@ export class BaseProvider {
         entry.entries.clear();
         this.lookupParentDirectory(uri).entries.delete(entry.name);
         return true;
+    }
+
+    /**
+     * Updates the profile reference for all cached entries matching the profile name and type.
+     * Called when a profile is updated (reactivated, credentials changed, etc.)
+     * @param updatedProfile The updated profile object
+     */
+    public updateProfile(updatedProfile: imperative.IProfileLoaded): void {
+        this._updateProfileRecursive(this.root, updatedProfile);
+    }
+
+    private _updateProfileRecursive(entry: IFileSystemEntry, updatedProfile: imperative.IProfileLoaded): void {
+        if (!entry) return;
+
+        if (entry.metadata?.profile?.name === updatedProfile.name && entry.metadata?.profile?.type === updatedProfile.type) {
+            entry.metadata.profile = updatedProfile;
+        }
+
+        if ("entries" in entry && entry.entries) {
+            const dirEntry = entry as DirEntry;
+            for (const child of dirEntry.entries.values()) {
+                this._updateProfileRecursive(child, updatedProfile);
+            }
+        }
     }
 
     /**
@@ -273,7 +311,7 @@ export class BaseProvider {
         }
         // delete entry from old parent
         oldParent.entries.delete(entry.name);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri.with({ query: "" }) });
         if (isFile) {
             return this._reopenEditorForRelocatedUri(oldUri, newUri);
         }
@@ -353,14 +391,26 @@ export class BaseProvider {
         }
 
         // User selected "Overwrite"
-        await this.diffOverwrite(uri);
+        // For backwards compatibility with extensions that expect _handleConflict to perform the overwrite,
+        // we still call diffOverwrite here. However, this means internal providers (like DatasetFSProvider)
+        // must NOT perform the overwrite themselves if they call this method, otherwise it will double-save.
+        await this.diffOverwrite(uri, false);
         return ConflictViewSelection.Overwrite;
     }
 
+    //TODO (v4): rename _fireSoon -> fireSoon since it is no longer private
     /**
+     * @deprecated Use `fireSoon` instead. This method will be removed in v4.
      * Internal VSCode function for the FileSystemProvider to fire events from the event queue
      */
-    protected _fireSoon(...events: vscode.FileChangeEvent[]): void {
+    public _fireSoon(...events: vscode.FileChangeEvent[]): void {
+        this.fireSoon(...events);
+    }
+
+    /**
+     * VSCode function for the FileSystemProvider to fire events from the event queue
+     */
+    public fireSoon(...events: vscode.FileChangeEvent[]): void {
         this._bufferedEvents.push(...events);
 
         if (this._fireSoonHandle) {
@@ -468,7 +518,7 @@ export class BaseProvider {
         const profInfo = { ...parent.metadata, path: filePath };
         entry.metadata = profInfo;
         parent.entries.set(basename, entry);
-        this._fireSoon({ type: vscode.FileChangeType.Created, uri });
+        this.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
         return entry;
     }
 
@@ -594,5 +644,18 @@ export class BaseProvider {
         this.requestCache.set(keyToUse, requestPromise);
 
         return requestPromise;
+    }
+
+    /**
+     * Reverts a dirty document if it exists and is open in the workspace.
+     * @param uri The URI to check for a dirty document
+     */
+    private async _revertDirtyDocument(uri: vscode.Uri): Promise<void> {
+        const mainUri = uri.with({ query: "" });
+        const doc = vscode.workspace.textDocuments.find((d) => d.uri.toString() === mainUri.toString());
+        if (doc && doc.isDirty) {
+            await vscode.window.showTextDocument(doc);
+            await vscode.commands.executeCommand("workbench.action.files.revert");
+        }
     }
 }

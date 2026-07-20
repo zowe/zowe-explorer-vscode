@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosjobs from "@zowe/zos-jobs-for-zowe-sdk";
-import { Gui, IZoweJobTreeNode, Sorting, Types, ZoweExplorerApiType, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { Gui, handleError, IZoweJobTreeNode, Sorting, Types, ZoweExplorerApiType, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweJobNode } from "./ZoweJobNode";
 import { JobTree } from "./JobTree";
 import { JobUtils } from "./JobUtils";
@@ -478,9 +478,9 @@ export class JobActions {
                     sessionNodes.add(sesNode);
                 }
             } catch (err) {
-                if (err instanceof Error) {
-                    failedJobs.push({ job: jobNode.job, error: err.message });
-                }
+                void handleError(err, (error) => {
+                    failedJobs.push({ job: jobNode.job, error: error.message });
+                });
             }
         }
 

@@ -45,13 +45,13 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private static instance: UnixCommandHandler;
     private nodeProfile: imperative.IProfileLoaded = undefined;
     private unixCmdMsgs = {
-        issueCmdNotSupportedMsg: (profileType: string) =>
+        issueCmdNotSupportedMsg: (profileType: string): string =>
             vscode.l10n.t({
                 message: "Issuing commands is not supported for this profile type, {0}.",
                 args: [profileType],
                 comment: ["Profile type"],
             }),
-        issueUnixCmdNotSupportedMsg: (profileType: string) =>
+        issueUnixCmdNotSupportedMsg: (profileType: string): string =>
             vscode.l10n.t({
                 message: "Issuing UNIX commands is not supported for this profile type, {0}.",
                 args: [profileType],
@@ -237,7 +237,9 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     }
 
     private async validateSshConnection(prof: imperative.IProfileLoaded, type: string): Promise<string> {
-        if (type !== "ssh" || prof.profile.host !== this.sshSession.ISshSession.hostname) return "unverified";
+        if (type !== "ssh" || prof.profile.host !== this.sshSession.ISshSession.hostname) {
+            return "unverified";
+        }
         if (this.sshSession.ISshSession.privateKey == null) {
             const tempProfile = await ZoweVsCodeExtension.updateCredentials({ profile: this.sshProfile }, ZoweExplorerApiRegister.getInstance());
             if (!tempProfile) {

@@ -1,7 +1,7 @@
 # Zowe Explorer for Visual Studio Code
 
-[![version](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)
-[![downloads](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)
+[![version](https://img.shields.io/open-vsx/v/Zowe/vscode-extension-for-zowe?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=Zowe.vscode-extension-for-zowe)
+[![downloads](https://img.shields.io/badge/downloads-233k-brightgreen)](https://marketplace.visualstudio.com/items?itemName=Zowe.vscode-extension-for-zowe)
 [![codecov](https://codecov.io/gh/zowe/zowe-explorer-vscode/branch/main/graph/badge.svg)](https://codecov.io/gh/zowe/zowe-explorer-vscode)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
@@ -54,7 +54,6 @@ Before you use Zowe Explorer, ensure that you meet the following prerequisites:
 ### Server side requirements
 
 - IBM z/OSMF is configured and running.
-
   - See [z/OSMF REST services for Zowe clients](https://docs.zowe.org/stable/user-guide/systemrequirements-zosmf.md#zosmf-rest-services-for-zowe-clients) for a list of services that need configuration.
 
 - If using IBM CICS or IBM z/OS FTP: Applicable plug-in services are configured and running on the mainframe.
@@ -68,8 +67,10 @@ Use various services to communicate with system resources and extract system dat
 
 - z/OSMF
   - See [z/OSMF documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=guide-using-zosmf-rest-services) for more information.
+- SSH
+  - This connection option is integrated out-of-the-box, powered by [Zowe Remote SSH](https://github.com/zowe/zowex).
+  - See [SSH documentation](https://docs.zowe.org/stable/user-guide/ze-profiles) for more information.
 - FTP
-
   - This connection is available with the [Zowe Explorer FTP Extension](https://docs.zowe.org/stable/user-guide/ze-ftp-using-ze-ftp-ext).
   - See [FTP documentation](https://www.ibm.com/docs/en/zos/3.1.0?topic=applications-transferring-files-using-ftp) for more information.
 
@@ -84,7 +85,6 @@ Use various services to communicate with system resources and extract system dat
 Team configuration stores connection information to access the mainframe. Check that you have your team configuration in place.
 
 - Your team configuration is in place when:
-
   - Selecting the **+** icon in the headers of the **DATA SETS**, **UNIX SYSTEM SERVICES**, or **JOBS** tree views presents options in the **Quick Pick** to edit your configuration file or, if available, use an existing profile.
 
 - You do not have team configuration when:

@@ -16,6 +16,7 @@ import * as path from "path";
 import * as fs from "fs";
 import {
     Gui,
+    handleError,
     IZoweTreeNode,
     IZoweDatasetTreeNode,
     IZoweUSSTreeNode,
@@ -146,17 +147,22 @@ export class SharedUtils {
     }
 
     /**
-     * Function that validates job prefix
-     * @param {string} text - prefix text
-     * @returns undefined | string
+     * Function that validates job owner or prefix input.
+     * For prefix, comma-separated values are supported; each individual value must be at most
+     * {@link Constants.JOBS_MAX_PREFIX} characters long.
+     * @param {string} text - owner or prefix text
+     * @returns null when valid, otherwise a localised error string
      */
     public static jobStringValidator(text: string, localizedParam: "owner" | "prefix"): string | null {
         switch (localizedParam) {
             case "owner":
                 return text.length > Constants.JOBS_MAX_PREFIX ? vscode.l10n.t("Invalid job owner") : null;
             case "prefix":
-            default:
-                return text.length > Constants.JOBS_MAX_PREFIX ? vscode.l10n.t("Invalid job prefix") : null;
+            default: {
+                const parts = text.split(",").map((p) => p.trim());
+                const invalid = parts.some((p) => p.length === 0 || p.length > Constants.JOBS_MAX_PREFIX);
+                return invalid ? vscode.l10n.t("Invalid job prefix") : null;
+            }
         }
     }
 
@@ -676,9 +682,9 @@ export class SharedUtils {
                 const node = (await provider.getChildren()).find((n) => n.label === profile?.name);
                 node?.setProfileToChoice?.(profile);
             } catch (err) {
-                if (err instanceof Error) {
-                    ZoweLogger.error(err.message);
-                }
+                void handleError(err, (error) => {
+                    ZoweLogger.error(error.message);
+                });
                 return;
             }
         }
@@ -690,8 +696,9 @@ export class SharedUtils {
      * @param response The response from the download API
      * @param downloadType The type of download (File, Directory, Data set, etc.)
      * @param downloadedPath The path to the downloaded file or directory (optional)
+     * @param wasCancelled Whether the download was cancelled by the user (optional)
      */
-    public static async handleDownloadResponse(response: any, downloadType: string, downloadedPath?: string): Promise<void> {
+    public static async handleDownloadResponse(response: any, downloadType: string, downloadedPath?: string, wasCancelled?: boolean): Promise<void> {
         ZoweLogger.trace("SharedUtils.handleDownloadResponse called.");
 
         if (!response) {
@@ -705,7 +712,17 @@ export class SharedUtils {
         let hasErrors = false;
         const detailedInfo: string[] = [];
 
-        if (response.success === false) {
+        if (wasCancelled) {
+            const downloadResult = response.apiResponse?.downloadResult;
+            // downloadResult may come from IDownloadAmResult (downloaded: number, total) or IDownloadUssDirResult (downloaded: string[], totalCount)
+            const downloadedCount = Array.isArray(downloadResult?.downloaded) ? downloadResult.downloaded.length : downloadResult?.downloaded;
+            const totalCount = downloadResult?.total ?? downloadResult?.totalCount;
+            if (downloadedCount != null && totalCount != null) {
+                message = vscode.l10n.t("{0} download was cancelled. {1} of {2} item(s) were downloaded.", downloadType, downloadedCount, totalCount);
+            } else {
+                message = vscode.l10n.t("{0} download was cancelled.", downloadType);
+            }
+        } else if (response.success === false) {
             hasErrors = true;
             message = vscode.l10n.t("{0} download completed with errors.", downloadType);
         } else {
@@ -715,14 +732,16 @@ export class SharedUtils {
         if (response.commandResponse) {
             const commandResponse = response.commandResponse.toString();
 
-            if (commandResponse.includes("already exists") || commandResponse.includes("skipped")) {
-                hasWarnings = true;
-                detailedInfo.push("Some files were skipped because they already exist.");
-            }
+            if (!wasCancelled) {
+                if (commandResponse.includes("already exists") || commandResponse.includes("skipped")) {
+                    hasWarnings = true;
+                    detailedInfo.push("Some files were skipped because they already exist.");
+                }
 
-            if (commandResponse.includes("failed") || commandResponse.includes("error")) {
-                hasErrors = true;
-                detailedInfo.push("Some files failed to download due to errors.");
+                if (commandResponse.includes("failed") || commandResponse.includes("error")) {
+                    hasErrors = true;
+                    detailedInfo.push("Some files failed to download due to errors.");
+                }
             }
 
             ZoweLogger.info(`Download response details: ${String(commandResponse)}`);
@@ -730,6 +749,7 @@ export class SharedUtils {
         }
 
         if (response.apiResponse && Array.isArray(response.apiResponse)) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             const failedItems = response.apiResponse.filter((item: any) => item.error || item.status === "failed");
             if (failedItems.length > 0) {
                 hasErrors = true;
@@ -857,7 +877,9 @@ export class SharedUtils {
             const dstDataset = dstAttr?.apiResponse?.items?.[0];
 
             // if dstDataset dataset doesn't exist, it's not the same.
-            if (!dstDataset || !srcDataset) return false;
+            if (!dstDataset || !srcDataset) {
+                return false;
+            }
 
             // compare names
             const namesAreEqual = srcDataset.dsname === dstDataset.dsname;
@@ -899,11 +921,8 @@ export class SharedUtils {
      * @param droppedLabel - name of the dropped item
      * @returns Promise resolves to true if the normalized paths match and the target path exists. false otherwise
      */
-    public static async isLikelySameUssObjectByUris(
-        sourceNode: IZoweUSSTreeNode,
-        targetParent: IZoweUSSTreeNode,
-        droppedLabel: string
-    ): Promise<boolean> {
+
+    public static isLikelySameUssObjectByUris(sourceNode: IZoweUSSTreeNode, targetParent: IZoweUSSTreeNode, droppedLabel: string): boolean {
         //normalize paths
         const equal =
             path.posix.normalize(sourceNode.fullPath.replace(/\\/g, "/")) ===
@@ -915,9 +934,13 @@ export class SharedUtils {
      * Gets a string property from a node, whether it's a string or an object with that property
      */
     public static getNodeProperty(node: any, prop: string): string | null {
-        if (!node || node[prop] == null) return null;
+        if (!node || node[prop] == null) {
+            return null;
+        }
         const value = node[prop];
-        if (typeof value === "string") return value;
+        if (typeof value === "string") {
+            return value;
+        }
         if (typeof value === "object" && value !== null && typeof value[prop] === "string") {
             return value[prop];
         }

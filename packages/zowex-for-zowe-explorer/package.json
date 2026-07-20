@@ -1,0 +1,58 @@
+{
+  "name": "zowex-for-zowe-explorer",
+  "displayName": "Zowe Remote SSH",
+  "description": "Zowe Remote SSH VS Code APIs for Zowe Explorer",
+  "version": "0.4.0",
+  "publisher": "Zowe",
+  "repository": "https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowex-for-zowe-explorer",
+  "license": "EPL-2.0",
+  "private": true,
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "@zowe:bundler": "./src/index.ts",
+      "default": "./lib/index.js"
+    }
+  },
+  "files": [
+    "lib"
+  ],
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc -p ./ && pnpm madge",
+    "clean": "rimraf bin lib coverage",
+    "license": "node ../../scripts/updateLicenses.mjs",
+    "link:zowex": "node ../../scripts/linkZowex.js",
+    "lint": "concurrently -n \"_eslint_,prettier\" \"pnpm lint:all\" \"pnpm lint:pretty\"",
+    "lint:all": "pnpm run \"/^lint:[hst].*/\"",
+    "lint:html": "(mkdir -p \"results\" || true) && eslint ./src --format html > results/eslint.html",
+    "lint:pretty": "prettier --write . && prettier --check .",
+    "lint:src": "eslint --format stylish \"src/**/*.ts\"",
+    "lint:test": "eslint --format stylish \"__tests__/**/*.ts\"",
+    "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
+    "package": "echo 'zowex: nothing to package.'",
+    "test": "vitest run --coverage",
+    "test:ui": "vitest --ui --coverage",
+    "test:watch": "vitest --watch",
+    "watch": "tsc --watch -p ./"
+  },
+  "dependencies": {
+    "@zowe/core-for-zowe-sdk": "^8.32.0",
+    "@zowe/zowe-explorer-api": "workspace:*",
+    "@zowe/zowex-for-zowe-sdk": "^0.6.1",
+    "ssh2": "^1.17.0"
+  },
+  "devDependencies": {
+    "@types/ssh2": "^1.15.5",
+    "@zowe/zos-files-for-zowe-sdk": "^8.32.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.32.0",
+    "@zowe/zos-uss-for-zowe-sdk": "^8.32.0"
+  },
+  "madge": {
+    "detectiveOptions": {
+      "ts": {
+        "skipTypeImports": true
+      }
+    }
+  }
+}

@@ -32,3 +32,4 @@ package.nls.*.json
 bundle.l10n.*.json
 bundle.l10n.json.template
 zedc/target
+packages/zowe-explorer/bin

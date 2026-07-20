@@ -110,9 +110,9 @@ export class TreeDataSource implements IDataSetSource {
         });
 
         if (pdsNode) {
-            const children = await pdsNode.getChildren(false);
+            const theChildren = await pdsNode.getChildren(false);
             return (
-                children
+                theChildren
                     ?.filter((memberNode) => !SharedContext.isInformation(memberNode))
                     .map((memberNode) => this.mapNodeToInfo(memberNode, parentId)) ?? []
             );
@@ -228,7 +228,10 @@ export function buildMemberInfo(member: any, parentUri: string): IDataSetInfo {
  * API-based data source that directly queries the MVS API with a pattern
  */
 export class PatternDataSource implements IDataSetSource {
-    public constructor(public profile: imperative.IProfileLoaded, private pattern: string) {
+    public constructor(
+        public profile: imperative.IProfileLoaded,
+        private pattern: string
+    ) {
         this.pattern = this.pattern.toLocaleUpperCase();
     }
 
@@ -395,7 +398,7 @@ export class DatasetTableView {
     private PAGE_SIZE_OPTIONS = [10, 25, 50, 100, 500, 1000];
     private contextOptions: Record<string, Table.ContextMenuOption> = {
         displayInTree: {
-            title: l10n.t("Display in Tree"),
+            title: l10n.t("Locate in Tree"),
             command: "display-in-tree",
             callback: {
                 fn: DatasetTableView.displayInTree,
@@ -433,7 +436,9 @@ export class DatasetTableView {
             headerName: l10n.t("Creation Date"),
             useDateComparison: true,
             valueFormatter: (params: { value: string }): string => {
-                if (!params.value) return "";
+                if (!params.value) {
+                    return "";
+                }
                 return new Date(params.value).toLocaleDateString(this.userLocale);
             },
         },
@@ -442,7 +447,9 @@ export class DatasetTableView {
             headerName: l10n.t("Modified Date"),
             useDateComparison: true,
             valueFormatter: (params: { value: string }): string => {
-                if (!params.value) return "";
+                if (!params.value) {
+                    return "";
+                }
                 return new Date(params.value).toLocaleString(this.userLocale);
             },
         },
@@ -559,6 +566,7 @@ export class DatasetTableView {
         try {
             pinnedRows = await this.table.getPinnedRows();
         } catch (error) {
+            // eslint-disable-next-line no-console
             console.warn("Failed to get pinned rows:", error);
         }
 
@@ -631,6 +639,7 @@ export class DatasetTableView {
                 try {
                     await this.table.setPinnedRows(this.previousTableData.pinnedRows);
                 } catch (error) {
+                    // eslint-disable-next-line no-console
                     console.warn("Failed to restore pinned rows:", error);
                 }
             }
@@ -803,7 +812,7 @@ export class DatasetTableView {
             const [profileName, datasetName, memberName] = uriParts;
 
             // First, try to find in session nodes
-            let profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
+            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
             let foundInSession = false;
 
             if (profileNode) {
@@ -858,7 +867,7 @@ export class DatasetTableView {
             const [profileName, datasetName] = uriParts;
 
             // First, try to find in session nodes
-            let profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
+            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
             let foundInSession = false;
 
             if (profileNode) {
@@ -1071,14 +1080,11 @@ export class DatasetTableView {
         const sortField = this.mapSortOptionToColumnField(method);
         const sortDirection = direction === Sorting.SortDirection.Ascending ? "asc" : "desc";
 
-        return columnDefs.map((col) => {
+        return columnDefs.map((col): Table.Column => {
             if (col.field === sortField) {
-                return {
-                    ...col,
-                    initialSort: sortDirection,
-                };
+                return { ...col, initialSort: sortDirection } as Table.Column;
             }
-            return { ...col, initialSort: undefined };
+            return { ...col, initialSort: undefined } as Table.Column;
         });
     }
 
@@ -1371,7 +1377,7 @@ export class DatasetTableView {
             this.originalPattern = selectedNode.pattern;
         } else if (SharedContext.isPds(selectedNode)) {
             const sessionNode = selectedNode.getSessionNode() as IZoweDatasetTreeNode;
-            const profile = sessionNode!.getProfile();
+            const profile = sessionNode.getProfile();
             const uri = selectedNode.resourceUri;
 
             this.currentDataSource = new PDSMembersDataSource(

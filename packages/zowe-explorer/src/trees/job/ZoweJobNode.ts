@@ -225,7 +225,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 if (job.retcode) {
                     nodeTitle =
                         job["exec-member"] !== undefined && job["exec-member"] !== ""
-                            ? `${job.jobname}(${job.jobid}) - ${job["exec-member"] as string} - ${job.retcode}`
+                            ? `${job.jobname}(${job.jobid}) - ${job["exec-member"]} - ${job.retcode}`
                             : `${job.jobname}(${job.jobid}) - ${job.retcode}`;
                 } else {
                     nodeTitle = `${job.jobname}(${job.jobid}) - ${job.status}`;
@@ -323,7 +323,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
 
     public getSessionNode(): IZoweJobTreeNode {
         ZoweLogger.trace("ZoweJobNode.getSessionNode called.");
-        return this.session ? this : this.getParent()?.getSessionNode() ?? this;
+        return this.session ? this : (this.getParent()?.getSessionNode() ?? this);
     }
 
     /**
@@ -406,7 +406,11 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             if (newPrefix.length === 0) {
                 this._prefix = "*";
             } else {
-                this._prefix = newPrefix;
+                // Normalise whitespace around each comma-separated part.
+                this._prefix = newPrefix
+                    .split(",")
+                    .map((p) => p.trim())
+                    .join(",");
             }
         }
     }
@@ -437,12 +441,20 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                     ZoweLogger.warn(`[ZoweJobNode.getJobs] Session undefined for profile ${cachedProfile.name}`);
                     return undefined;
                 }
-                jobsInternal = await ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
-                    owner,
-                    prefix,
-                    status,
-                    execData: true,
-                });
+                // Support comma-separated prefixes by issuing one API call per prefix value
+                // and merging the results.
+                const prefixParts = prefix.split(",").map((p) => p.trim()).filter(Boolean);
+                const allJobs = await Promise.all(
+                    prefixParts.map((p) =>
+                        ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
+                            owner,
+                            prefix: p,
+                            status,
+                            execData: true,
+                        })
+                    )
+                );
+                jobsInternal = allJobs.flat();
 
                 /**
                  *    Note: Temporary fix

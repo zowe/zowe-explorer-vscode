@@ -14,6 +14,7 @@ import * as path from "path";
 import { IJob } from "@zowe/zos-jobs-for-zowe-sdk";
 import {
     Gui,
+    handleError,
     Validation,
     imperative,
     IZoweJobTreeNode,
@@ -69,7 +70,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             label: `Job Prefix`,
             value: "*",
             show: true,
-            placeHolder: vscode.l10n.t("Enter job prefix"),
+            placeHolder: vscode.l10n.t("Enter job prefix, use a comma to separate multiple prefixes"),
             validateInput: (text: string): string | null => SharedUtils.jobStringValidator(text, "prefix"),
         },
         {
@@ -308,9 +309,9 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 profile,
             });
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.warn(`Skipping creation of favorited profile. ${err.toString()}`);
-            }
+            void handleError(err, (error) => {
+                ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
+            });
             return null;
         }
 
@@ -591,7 +592,7 @@ Would you like to do this now?`,
                 favoritesArray.push(favoriteEntry);
             });
         });
-        this.mPersistence.updateFavorites(favoritesArray);
+        this.mPersistence.updateFavorites({ favorites: favoritesArray });
     }
 
     /**
@@ -1412,9 +1413,7 @@ Would you like to do this now?`,
             query = query.toUpperCase();
             job["children"] = actual_jobs.filter((item) =>
                 item["job"]["exec-member"]
-                    ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"] as string} - ${item["job"].retcode}`.includes(
-                          query
-                      )
+                    ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"]} - ${item["job"].retcode}`.includes(query)
                     : `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query)
             );
             SharedTreeProviders.job.refresh();

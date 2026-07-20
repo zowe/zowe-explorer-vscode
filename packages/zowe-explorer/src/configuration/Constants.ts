@@ -16,7 +16,7 @@ import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
 export class Constants {
-    public static readonly COMMAND_COUNT = 129;
+    public static readonly COMMAND_COUNT = 133;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
     public static readonly MAX_DISPLAYED_DELETE_NAMES = 10;
@@ -30,6 +30,7 @@ export class Constants {
     public static readonly ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT = 300000;
     public static readonly CONTEXT_PREFIX = "_";
     public static readonly FAV_SUFFIX = Constants.CONTEXT_PREFIX + "fav";
+    public static readonly FILTER_SAVED = Constants.CONTEXT_PREFIX + "filterFav";
     public static readonly HOME_SUFFIX = Constants.CONTEXT_PREFIX + "home";
     public static readonly FAV_PROFILE_CONTEXT = "profile_fav";
     public static readonly RC_SUFFIX = Constants.CONTEXT_PREFIX + "rc=";
@@ -61,6 +62,7 @@ export class Constants {
     public static readonly JOBS_SPOOL_CONTEXT = "spool";
     public static readonly POLL_CONTEXT = Constants.CONTEXT_PREFIX + "polling";
     public static readonly VSAM_CONTEXT = "vsam";
+    public static readonly VSAM_FAV_CONTEXT = "vsam_fav";
     public static readonly INACTIVE_CONTEXT = Constants.CONTEXT_PREFIX + "Inactive";
     public static readonly ACTIVE_CONTEXT = Constants.CONTEXT_PREFIX + "Active";
     public static readonly UNVERIFIED_CONTEXT = Constants.CONTEXT_PREFIX + "Unverified";
@@ -70,6 +72,7 @@ export class Constants {
     public static readonly VSCODE_APPNAME: string[] = ["Visual Studio Code", "VSCodium"];
     public static ROOTPATH = path.join(__dirname, "..", "..");
     public static readonly SETTINGS_LOGS_FOLDER_PATH = "zowe.files.logsFolder.path";
+    public static readonly SETTINGS_EXPERIMENTAL_NATIVE_SSH = "zowe.zowex.experimentalNativeSsh";
     public static readonly SETTINGS_DS_DEFAULT_BINARY = "zowe.ds.default.binary";
     public static readonly SETTINGS_DS_DEFAULT_C = "zowe.ds.default.c";
     public static readonly SETTINGS_DS_DEFAULT_CLASSIC = "zowe.ds.default.classic";
@@ -114,7 +117,7 @@ export class Constants {
         "Zowe-Default-Datasets-PDS": Constants.SETTINGS_DS_DEFAULT_PDS,
         "Zowe-Default-Datasets-Extended": Constants.SETTINGS_DS_DEFAULT_EXTENDED,
         "Zowe-Default-Datasets-PS": Constants.SETTINGS_DS_DEFAULT_PS,
-        "Zowe MVS Commands: History": PersistenceSchemaEnum.MvsCommands,
+        "Zowe Console Commands: History": PersistenceSchemaEnum.MvsCommands,
         "Zowe TSO Commands: History": PersistenceSchemaEnum.TsoCommands,
         "Zowe Unix Commands: History": PersistenceSchemaEnum.UssCommands,
         "Zowe Commands: Always edit": Constants.SETTINGS_COMMANDS_ALWAYS_EDIT,
@@ -276,9 +279,9 @@ export class Constants {
     };
     public static JOB_SUBMIT_DIALOG_OPTS = [
         vscode.l10n.t("Disabled"),
-        vscode.l10n.t("Your jobs"),
-        vscode.l10n.t("Other user jobs"),
-        vscode.l10n.t("All jobs"),
+        vscode.l10n.t("Your Jobs"),
+        vscode.l10n.t("Other user Jobs"),
+        vscode.l10n.t("All Jobs"),
     ];
     public static SORT_DIRS: string[] = [vscode.l10n.t("Ascending"), vscode.l10n.t("Descending")];
     public static HISTORY_VIEW_TABS = {

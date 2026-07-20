@@ -9,6 +9,8 @@
  *
  */
 
+import { Mock, MockInstance } from "vitest";
+
 import * as vscode from "vscode";
 import { BaseProvider, ConflictViewSelection, DirEntry, FileEntry, ZoweScheme } from "../../../src/fs";
 import { Gui } from "../../../src/globals";
@@ -43,10 +45,10 @@ function getGlobalMocks(): { [key: string]: any } {
 const globalMocks = getGlobalMocks();
 
 describe("diffOverwrite", () => {
-    function getBlockMocks(): { [key: string]: jest.SpyInstance<any> } {
+    function getBlockMocks(): { [key: string]: MockInstance<any> } {
         return {
-            lookupAsFileMock: jest.spyOn((BaseProvider as any).prototype, "_lookupAsFile"),
-            writeFileMock: jest.spyOn(vscode.workspace.fs, "writeFile").mockImplementation(),
+            lookupAsFileMock: vi.spyOn((BaseProvider as any).prototype, "_lookupAsFile"),
+            writeFileMock: vi.spyOn(vscode.workspace.fs, "writeFile").mockImplementation((() => undefined) as any),
         };
     }
 
@@ -60,7 +62,7 @@ describe("diffOverwrite", () => {
                 size: 3,
             },
         };
-        const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockImplementation();
+        const statusBarMsgMock = vi.spyOn(Gui, "setStatusBarMessage").mockImplementation((() => undefined) as any);
         blockMocks.lookupAsFileMock.mockReturnValueOnce(fsEntry);
 
         const prov = new (BaseProvider as any)();
@@ -86,13 +88,73 @@ describe("diffOverwrite", () => {
         expect(blockMocks.lookupAsFileMock).toHaveBeenCalledWith(globalMocks.testFileUri);
         expect(blockMocks.writeFileMock).not.toHaveBeenCalled();
     });
+
+    it("calls writeFile with closeEditor=true by default (single parameter overload)", async () => {
+        const blockMocks = getBlockMocks();
+        const fsEntry = {
+            ...globalMocks.fileFsEntry,
+            conflictData: {
+                contents: new Uint8Array([4, 5, 6]),
+                etag: undefined,
+                size: 3,
+            },
+        };
+        const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
+        blockMocks.lookupAsFileMock.mockReturnValueOnce(fsEntry);
+
+        const prov = new (BaseProvider as any)();
+        await prov.diffOverwrite(globalMocks.testFileUri); // Single parameter - should close editor
+
+        expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
+        executeCommandMock.mockRestore();
+    });
+
+    it("calls writeFile with closeEditor=false when explicitly set (two parameter overload)", async () => {
+        const blockMocks = getBlockMocks();
+        const fsEntry = {
+            ...globalMocks.fileFsEntry,
+            conflictData: {
+                contents: new Uint8Array([4, 5, 6]),
+                etag: undefined,
+                size: 3,
+            },
+        };
+        const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
+        blockMocks.lookupAsFileMock.mockReturnValueOnce(fsEntry);
+
+        const prov = new (BaseProvider as any)();
+        await prov.diffOverwrite(globalMocks.testFileUri, false); // Two parameters - should NOT close editor
+
+        expect(executeCommandMock).not.toHaveBeenCalledWith("workbench.action.closeActiveEditor");
+        executeCommandMock.mockRestore();
+    });
+
+    it("calls writeFile with closeEditor=true when explicitly set (two parameter overload)", async () => {
+        const blockMocks = getBlockMocks();
+        const fsEntry = {
+            ...globalMocks.fileFsEntry,
+            conflictData: {
+                contents: new Uint8Array([4, 5, 6]),
+                etag: undefined,
+                size: 3,
+            },
+        };
+        const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
+        blockMocks.lookupAsFileMock.mockReturnValueOnce(fsEntry);
+
+        const prov = new (BaseProvider as any)();
+        await prov.diffOverwrite(globalMocks.testFileUri, true); // Two parameters - should close editor
+
+        expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
+        executeCommandMock.mockRestore();
+    });
 });
 
 describe("diffUseRemote", () => {
-    function getBlockMocks(prov): { [key: string]: jest.SpyInstance<any> } {
+    function getBlockMocks(prov): { [key: string]: MockInstance<any> } {
         return {
-            lookupAsFileMock: jest.spyOn(prov, "_lookupAsFile"),
-            writeFileMock: jest.spyOn(vscode.workspace.fs, "writeFile").mockImplementation(),
+            lookupAsFileMock: vi.spyOn(prov, "_lookupAsFile"),
+            writeFileMock: vi.spyOn(vscode.workspace.fs, "writeFile").mockImplementation((() => undefined) as any),
         };
     }
 
@@ -106,8 +168,8 @@ describe("diffUseRemote", () => {
                 size: 3,
             },
         };
-        const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockImplementation();
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
+        const statusBarMsgMock = vi.spyOn(Gui, "setStatusBarMessage").mockImplementation((() => undefined) as any);
+        const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
 
         const prov = new (BaseProvider as any)();
         const blockMocks = getBlockMocks(prov);
@@ -122,7 +184,7 @@ describe("diffUseRemote", () => {
             conflictArr
         );
         blockMocks.writeFileMock.mockClear();
-        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for file.txt");
+        expect(statusBarMsgMock).toHaveBeenCalledWith(expect.stringContaining("Used remote content for file.txt"), expect.anything());
         expect(fsEntry.conflictData).toBeNull();
         expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
     });
@@ -136,8 +198,8 @@ describe("diffUseRemote", () => {
                 size: 3,
             },
         };
-        const statusBarMsgMock = jest.spyOn(Gui, "setStatusBarMessage").mockImplementation();
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
+        const statusBarMsgMock = vi.spyOn(Gui, "setStatusBarMessage").mockImplementation((() => undefined) as any);
+        const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
 
         const prov = new (BaseProvider as any)();
         const blockMocks = getBlockMocks(prov);
@@ -146,7 +208,7 @@ describe("diffUseRemote", () => {
 
         expect(blockMocks.lookupAsFileMock).toHaveBeenCalled();
         expect(blockMocks.writeFileMock).not.toHaveBeenCalled();
-        expect(statusBarMsgMock.mock.calls[0][0]).toBe("$(check) Overwrite applied for file.txt");
+        expect(statusBarMsgMock).toHaveBeenCalledWith(expect.stringContaining("Used remote content for file.txt"), expect.anything());
         expect(fsEntry.conflictData).toBeNull();
         expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.closeActiveEditor");
     });
@@ -162,9 +224,9 @@ describe("diffUseRemote", () => {
 });
 
 describe("exists", () => {
-    function getBlockMocks(): { [key: string]: jest.SpyInstance<any> } {
+    function getBlockMocks(): { [key: string]: MockInstance<any> } {
         return {
-            lookupMock: jest.spyOn((BaseProvider as any).prototype, "lookup"),
+            lookupMock: vi.spyOn((BaseProvider as any).prototype, "lookup"),
         };
     }
 
@@ -193,7 +255,7 @@ describe("getEncodingForFile", () => {
     it("gets the encoding for a file entry", () => {
         const prov = new (BaseProvider as any)();
         const fileEntry = { ...globalMocks.fileFsEntry, encoding: { kind: "text" } };
-        const _lookupAsFileMock = jest.spyOn(prov, "lookup").mockReturnValueOnce(fileEntry);
+        const _lookupAsFileMock = vi.spyOn(prov, "lookup").mockReturnValueOnce(fileEntry);
         expect(prov.getEncodingForFile(globalMocks.testFileUri)).toStrictEqual({ kind: "text" });
         _lookupAsFileMock.mockRestore();
     });
@@ -216,7 +278,7 @@ describe("removeEntry", () => {
     });
 
     it("returns early if it could not find the parent directory of the item to remove", () => {
-        const parentDirMock = jest.spyOn(BaseProvider.prototype as any, "_lookupParentDirectory").mockReturnValue(undefined);
+        const parentDirMock = vi.spyOn(BaseProvider.prototype as any, "_lookupParentDirectory").mockReturnValue(undefined);
         const prov = new (BaseProvider as any)();
         expect(prov.removeEntry(globalMocks.testFileUri)).toBe(false);
         parentDirMock.mockRestore();
@@ -234,7 +296,7 @@ describe("cacheOpenedUri", () => {
 describe("invalidateFileAtUri", () => {
     it("returns true if it was able to invalidate the URI", () => {
         const fileEntry = { ...globalMocks.fileFsEntry };
-        jest.spyOn((BaseProvider as any).prototype, "lookup").mockReturnValueOnce(fileEntry);
+        vi.spyOn((BaseProvider as any).prototype, "lookup").mockReturnValueOnce(fileEntry);
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.entries.set("file.txt", fileEntry);
@@ -257,7 +319,7 @@ describe("invalidateFileAtUri", () => {
 describe("invalidateDirAtUri", () => {
     it("returns true if it was able to invalidate the URI", () => {
         const folderEntry = { ...globalMocks.folderFsEntry };
-        jest.spyOn((BaseProvider as any).prototype, "lookup").mockReturnValueOnce(folderEntry);
+        vi.spyOn((BaseProvider as any).prototype, "lookup").mockReturnValueOnce(folderEntry);
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.entries.set("folder", folderEntry);
@@ -282,7 +344,7 @@ describe("setEncodingForFile", () => {
     it("sets the encoding for a file entry", () => {
         const prov = new (BaseProvider as any)();
         const fileEntry = { ...globalMocks.fileFsEntry, encoding: undefined };
-        const _lookupAsFileMock = jest.spyOn(prov, "lookup").mockReturnValueOnce(fileEntry);
+        const _lookupAsFileMock = vi.spyOn(prov, "lookup").mockReturnValueOnce(fileEntry);
         prov.setEncodingForFile(globalMocks.testFileUri, { kind: "text" });
         expect(fileEntry.encoding).toStrictEqual({ kind: "text" });
         _lookupAsFileMock.mockRestore();
@@ -299,7 +361,7 @@ describe("_updateResourceInEditor", () => {
             wasAccessed: true,
             type: vscode.FileType.File,
         });
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined);
+        const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined);
         await prov._updateResourceInEditor(globalMocks.testFileUri);
         expect(executeCommandMock).toHaveBeenCalledWith("vscode.open", globalMocks.testFileUri);
         expect(executeCommandMock).toHaveBeenCalledWith("workbench.action.files.revert");
@@ -309,7 +371,7 @@ describe("_updateResourceInEditor", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
 
-        const executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand").mockClear();
+        const executeCommandSpy = vi.spyOn(vscode.commands, "executeCommand").mockClear();
         await prov._updateResourceInEditor(globalMocks.testFolderUri);
         expect(executeCommandSpy).not.toHaveBeenCalled();
     });
@@ -373,7 +435,7 @@ describe("_lookupParentDirectory", () => {
         prov.root = new DirEntry("");
         prov.root.entries.set("folder", { ...globalMocks.folderFsEntry });
 
-        const lookupAsDirSpy = jest.spyOn((BaseProvider as any).prototype, "_lookupAsDirectory");
+        const lookupAsDirSpy = vi.spyOn((BaseProvider as any).prototype, "_lookupAsDirectory");
         expect(prov._lookupParentDirectory(globalMocks.testFolderUri)).toBe(prov.root);
         expect(lookupAsDirSpy).toHaveBeenCalledWith(
             vscode.Uri.from({
@@ -382,6 +444,9 @@ describe("_lookupParentDirectory", () => {
             }),
             false
         );
+        // Restore the prototype-level spy so it does not leak into subsequent
+        // tests in this file (Vitest does not auto-restore by default).
+        lookupAsDirSpy.mockRestore();
     });
 });
 
@@ -468,19 +533,19 @@ describe("_createFile", () => {
             path: "/file.txt",
         };
         prov.root.entries.set("file.txt", dirEntry);
-        jest.spyOn((BaseProvider as any).prototype, "_lookupParentDirectory").mockReturnValueOnce(prov.root);
+        vi.spyOn((BaseProvider as any).prototype, "_lookupParentDirectory").mockReturnValueOnce(prov.root);
         expect((): unknown => prov._createFile(globalMocks.testFileUri)).toThrow("file is a directory");
     });
 });
 
-describe("_fireSoon", () => {
-    jest.useFakeTimers();
+describe("fireSoon", () => {
+    vi.useFakeTimers();
 
     it("adds to bufferedEvents and calls setTimeout", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
-        jest.spyOn(global, "setTimeout");
-        prov._fireSoon({
+        vi.spyOn(global, "setTimeout");
+        prov.fireSoon({
             type: vscode.FileChangeType.Deleted,
             uri: globalMocks.testFileUri,
         });
@@ -491,16 +556,16 @@ describe("_fireSoon", () => {
     it("calls clearTimeout if fireSoonHandle is defined", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
-        jest.spyOn(global, "setTimeout");
-        jest.spyOn(global, "clearTimeout");
-        prov._fireSoon({
+        vi.spyOn(global, "setTimeout");
+        vi.spyOn(global, "clearTimeout");
+        prov.fireSoon({
             type: vscode.FileChangeType.Deleted,
             uri: globalMocks.testFileUri,
         });
         expect(prov._bufferedEvents.length).toBe(1);
         expect(setTimeout).toHaveBeenCalled();
 
-        prov._fireSoon({
+        prov.fireSoon({
             type: vscode.FileChangeType.Created,
             uri: globalMocks.testFileUri,
         });
@@ -510,16 +575,16 @@ describe("_fireSoon", () => {
 
 describe("_handleConflict", () => {
     it("returns 'ConflictViewSelection.UserDismissed' when user dismisses conflict prompt", async () => {
-        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce(undefined);
+        vi.spyOn(Gui, "errorMessage").mockResolvedValueOnce(undefined);
         const prov = new (BaseProvider as any)();
         expect(await prov._handleConflict(globalMocks.testFileUri, globalMocks.fileFsEntry)).toBe(ConflictViewSelection.UserDismissed);
     });
 
     it("returns 'ConflictViewSelection.Compare' when user selects 'Compare'", async () => {
-        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Compare");
+        vi.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Compare");
         const prov = new (BaseProvider as any)();
-        const onDidCloseTextDocMock = jest.spyOn(vscode.workspace, "onDidCloseTextDocument");
-        const executeCmdMock = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
+        const onDidCloseTextDocMock = vi.spyOn(vscode.workspace, "onDidCloseTextDocument");
+        const executeCmdMock = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
         expect(await prov._handleConflict(globalMocks.testFileUri, globalMocks.fileFsEntry)).toBe(ConflictViewSelection.Compare);
         expect(onDidCloseTextDocMock).toHaveBeenCalled();
         expect(executeCmdMock).toHaveBeenCalledWith(
@@ -536,16 +601,19 @@ describe("_handleConflict", () => {
     });
 
     it("returns 'ConflictViewSelection.Overwrite' when user selects 'Overwrite'", async () => {
-        jest.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Overwrite");
+        vi.spyOn(Gui, "errorMessage").mockResolvedValueOnce("Overwrite");
         const prov = new (BaseProvider as any)();
-        const diffOverwriteMock = jest.spyOn(prov, "diffOverwrite").mockImplementation();
+        // Use mockResolvedValue (not bare mockImplementation()) — under Vitest the
+        // no-arg mockImplementation can leave the spy invoking the original method
+        // when it's defined on the prototype.
+        const diffOverwriteMock = vi.spyOn(prov, "diffOverwrite").mockResolvedValue(undefined as never);
         expect(await prov._handleConflict(globalMocks.testFileUri, globalMocks.fileFsEntry)).toBe(ConflictViewSelection.Overwrite);
-        expect(diffOverwriteMock).toHaveBeenCalledWith(globalMocks.testFileUri);
+        expect(diffOverwriteMock).toHaveBeenCalledWith(globalMocks.testFileUri, false);
     });
 });
 describe("_handleError", () => {
     it("calls ErrorCorrelator.displayError to display error to user - no options provided", () => {
-        const displayErrorMock = jest.spyOn(ErrorCorrelator.prototype, "displayError").mockReturnValue(new Promise((_res, _rej) => {}));
+        const displayErrorMock = vi.spyOn(ErrorCorrelator.prototype, "displayError").mockReturnValue(new Promise((_res, _rej) => {}));
         const prov = new (BaseProvider as any)();
         prov._handleError(new Error("example"));
         expect(displayErrorMock).toHaveBeenCalledWith(ZoweExplorerApiType.All, new Error("example"), {
@@ -556,7 +624,7 @@ describe("_handleError", () => {
         });
     });
     it("calls ErrorCorrelator.displayError to display error to user - options provided", () => {
-        const displayErrorMock = jest.spyOn(ErrorCorrelator.prototype, "displayError").mockReturnValue(new Promise((_res, _rej) => {}));
+        const displayErrorMock = vi.spyOn(ErrorCorrelator.prototype, "displayError").mockReturnValue(new Promise((_res, _rej) => {}));
         const prov = new (BaseProvider as any)();
         prov._handleError(new Error("example"), {
             additionalContext: "Failed to list data sets",
@@ -577,7 +645,7 @@ describe("_relocateEntry", () => {
     it("returns early if the entry does not exist in the file system", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
-        const lookupAsDirMock = jest.spyOn(prov, "_lookupAsDirectory").mockReturnValueOnce(undefined);
+        const lookupAsDirMock = vi.spyOn(prov, "_lookupAsDirectory").mockReturnValueOnce(undefined);
         lookupAsDirMock.mockClear();
 
         prov._relocateEntry(
@@ -594,10 +662,10 @@ describe("_relocateEntry", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.entries.set("file.txt", { ...globalMocks.fileFsEntry });
-        const writeFileMock = jest.spyOn(vscode.workspace.fs, "writeFile");
-        const createDirMock = jest.spyOn(vscode.workspace.fs, "createDirectory");
+        const writeFileMock = vi.spyOn(vscode.workspace.fs, "writeFile");
+        const createDirMock = vi.spyOn(vscode.workspace.fs, "createDirectory");
         createDirMock.mockClear();
-        const lookupAsDirMock = jest.spyOn(prov, "_lookupAsDirectory").mockReturnValueOnce(globalMocks.folderFsEntry).mockReturnValueOnce(undefined);
+        const lookupAsDirMock = vi.spyOn(prov, "_lookupAsDirectory").mockReturnValueOnce(globalMocks.folderFsEntry).mockReturnValueOnce(undefined);
         lookupAsDirMock.mockClear();
 
         await prov._relocateEntry(
@@ -617,12 +685,12 @@ describe("_relocateEntry", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
         prov.root.entries.set("file.txt", { ...globalMocks.fileFsEntry });
-        const deleteEntrySpy = jest.spyOn(prov.root.entries, "delete");
-        const fireSoonSpy = jest.spyOn(prov, "_fireSoon");
-        const writeFileMock = jest.spyOn(vscode.workspace.fs, "writeFile");
-        const createDirMock = jest.spyOn(vscode.workspace.fs, "createDirectory");
-        const reopenEditorMock = jest.spyOn(prov, "_reopenEditorForRelocatedUri").mockResolvedValueOnce(undefined);
-        jest.spyOn(prov, "_lookupAsFile").mockReturnValueOnce({
+        const deleteEntrySpy = vi.spyOn(prov.root.entries, "delete");
+        const fireSoonSpy = vi.spyOn(prov, "fireSoon");
+        const writeFileMock = vi.spyOn(vscode.workspace.fs, "writeFile");
+        const createDirMock = vi.spyOn(vscode.workspace.fs, "createDirectory");
+        const reopenEditorMock = vi.spyOn(prov, "_reopenEditorForRelocatedUri").mockResolvedValueOnce(undefined);
+        vi.spyOn(prov, "_lookupAsFile").mockReturnValueOnce({
             ...globalMocks.fileFsEntry,
             metadata: { ...globalMocks.fileFsEntry.metadata, path: "/file2.txt" },
         });
@@ -653,8 +721,8 @@ describe("_reopenEditorForRelocatedUri", () => {
                 tabs: [tab],
             },
         ]);
-        const closeTabMock = jest.spyOn(vscode.window.tabGroups, "close").mockImplementation();
-        const executeCmdMock = jest.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
+        const closeTabMock = vi.spyOn(vscode.window.tabGroups, "close").mockImplementation((() => undefined) as any);
+        const executeCmdMock = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValueOnce(undefined);
         const oldUri = globalMocks.testFileUri;
         const newUri = globalMocks.testFileUri.with({
             path: "/file2.txt",
@@ -689,7 +757,7 @@ describe("_reopenEditorForRelocatedUri", () => {
 
 describe("onCloseEvent", () => {
     it("disposes the event if all visible text editors are not in a conflict", () => {
-        const fakeProvider = { _lookupAsFile: jest.fn(), onDocClosedEventDisposable: { dispose: jest.fn() } };
+        const fakeProvider = { _lookupAsFile: vi.fn(), onDocClosedEventDisposable: { dispose: vi.fn() } };
         const visibleTextEditorsMock = new MockedProperty(vscode.window, "visibleTextEditors", undefined, [
             { document: { uri: vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/DATA.SET.TWO" }) } },
         ]);
@@ -728,18 +796,117 @@ describe("getQueryKey", () => {
     });
 });
 
+describe("updateProfile", () => {
+    let prov: any;
+
+    beforeEach(() => {
+        prov = new (BaseProvider as any)();
+    });
+
+    it("should update the profile for entries matching the profile name", () => {
+        prov.root = new DirEntry("");
+        const oldProfile = { name: "testProfile", type: "zowe" };
+        const newProfile = { name: "testProfile", type: "zowe", updated: true };
+
+        prov.root.entries.set("file.txt", {
+            name: "file.txt",
+            type: vscode.FileType.File,
+            metadata: {
+                path: "/file.txt",
+                profile: oldProfile,
+            },
+        });
+
+        prov.updateProfile(newProfile);
+
+        const entry = prov.root.entries.get("file.txt");
+        expect(entry.metadata.profile).toEqual(newProfile);
+    });
+
+    it("should update profiles recursively in nested directories", () => {
+        prov.root = new DirEntry("");
+        const oldProfile = { name: "testProfile", type: "zowe" };
+        const newProfile = { name: "testProfile", type: "zowe", updated: true };
+
+        const subDir = new DirEntry("subdir");
+        subDir.metadata = { path: "/subdir", profile: oldProfile };
+        subDir.entries.set("nested.txt", {
+            name: "nested.txt",
+            type: vscode.FileType.File,
+            metadata: {
+                path: "/subdir/nested.txt",
+                profile: oldProfile,
+            },
+        });
+        prov.root.entries.set("subdir", subDir);
+
+        prov.updateProfile(newProfile);
+
+        expect(subDir.metadata.profile).toEqual(newProfile);
+        const nestedEntry = subDir.entries.get("nested.txt");
+        expect(nestedEntry.metadata.profile).toEqual(newProfile);
+    });
+
+    it("should not update entries with different profile names", () => {
+        prov.root = new DirEntry("");
+        const otherProfile = { name: "otherProfile", type: "zowe" };
+        const newProfile = { name: "testProfile", type: "zowe", updated: true };
+
+        prov.root.entries.set("file.txt", {
+            name: "file.txt",
+            type: vscode.FileType.File,
+            metadata: {
+                path: "/file.txt",
+                profile: otherProfile,
+            },
+        });
+
+        prov.updateProfile(newProfile);
+
+        const entry = prov.root.entries.get("file.txt");
+        expect(entry.metadata.profile).toEqual(otherProfile);
+    });
+
+    it("should not update entries with same profile name but different type", () => {
+        prov.root = new DirEntry("");
+        const otherProfile = { name: "testProfile", type: "ssh" };
+        const newProfile = { name: "testProfile", type: "zosmf", updated: true };
+
+        prov.root.entries.set("file.txt", {
+            name: "file.txt",
+            type: vscode.FileType.File,
+            metadata: {
+                path: "/file.txt",
+                profile: otherProfile,
+            },
+        });
+
+        prov.updateProfile(newProfile);
+
+        const entry = prov.root.entries.get("file.txt");
+        expect(entry.metadata.profile).toEqual(otherProfile);
+    });
+
+    it("should handle null or undefined entries gracefully", () => {
+        prov.root = new DirEntry("");
+        const newProfile = { name: "testProfile", type: "zowe" };
+
+        expect(() => prov.updateProfile(newProfile)).not.toThrow();
+    });
+});
+
 describe("executeWithReuse", () => {
     let prov: any;
-    let keyGenSpy: jest.Mock;
-    let checkLocalSpy: jest.Mock;
-    let executeSpy: jest.Mock;
+    let keyGenSpy: Mock;
+    let checkLocalSpy: Mock;
+    let executeSpy: Mock;
     let testUri: vscode.Uri;
 
     beforeEach(() => {
         prov = new (BaseProvider as any)();
-        keyGenSpy = jest.fn((uri: vscode.Uri) => uri.toString());
-        checkLocalSpy = jest.fn(() => false);
-        executeSpy = jest.fn().mockResolvedValue("result");
+        keyGenSpy = vi.fn((uri: vscode.Uri) => uri.toString());
+        checkLocalSpy = vi.fn(() => false);
+        executeSpy = vi.fn().mockResolvedValue("result");
         testUri = vscode.Uri.from({ scheme: "zowe", path: "/test" });
     });
 

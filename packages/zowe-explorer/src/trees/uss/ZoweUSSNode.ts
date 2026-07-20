@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import {
     Gui,
+    handleError,
     imperative,
     IZoweUSSTreeNode,
     ZoweTreeNode,
@@ -62,6 +63,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     public onUpdateEmitter: vscode.EventEmitter<IZoweUSSTreeNode>;
     private parentPath: string;
     private etag?: string;
+    public lastValidPath?: string;
+    public lastValidTooltip?: string | vscode.MarkdownString;
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -130,6 +133,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 UssFSProvider.instance.makeEmptyFileWithEncoding(this.resourceUri, opts.encoding);
             }
         }
+        this.lastValidPath = this.fullPath;
+        this.lastValidTooltip = this.tooltip;
     }
     public getBaseName(): string {
         return path.basename(this.resourceUri.path);
@@ -199,7 +204,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public getSessionNode(): IZoweUSSTreeNode {
         ZoweLogger.trace("ZoweUSSNode.getSessionNode called.");
-        return this.session ? this : (this.getParent()?.getSessionNode() as IZoweUSSTreeNode) ?? this;
+        return this.session ? this : ((this.getParent()?.getSessionNode() as IZoweUSSTreeNode) ?? this);
     }
 
     /**
@@ -235,8 +240,39 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const cachedProfile = Profiles.getInstance().loadNamedProfile(this.getProfileName());
         const response = await this.getUssFiles(cachedProfile);
         if (!response.success) {
-            return [];
+            if (this.lastValidPath !== undefined) {
+                this.fullPath = this.lastValidPath;
+                if (!SharedContext.isFavorite(this)) {
+                    this.description = this.lastValidPath;
+                }
+                if (this.lastValidTooltip !== undefined) {
+                    this.tooltip = this.lastValidTooltip;
+                }
+            } else {
+                this.fullPath = undefined;
+                this.description = undefined;
+                if (SharedContext.isSession(this)) {
+                    const profile = this.getProfile();
+                    const toolTipList: string[] = [];
+                    toolTipList.push(`${vscode.l10n.t("Profile: ")}${this.label.toString()}`);
+                    toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${profile.type}`);
+                    this.tooltip = toolTipList.join("\n");
+                }
+                this.children = [];
+                const placeholder = new ZoweUSSNode({
+                    label: vscode.l10n.t("Use the Search button to list USS files"),
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: this,
+                    contextOverride: Constants.INFORMATION_CONTEXT,
+                });
+                return (this.children = [placeholder]);
+            }
+            this.dirty = false;
+            return this.children;
         }
+
+        this.lastValidPath = this.fullPath;
+        this.lastValidTooltip = this.tooltip;
 
         // If search path has changed, invalidate all children
         if (this.resourceUri.path !== this.fullPath) {
@@ -250,7 +286,17 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const responseNodes: IZoweUSSTreeNode[] = [];
         for (const item of response.apiResponse.items) {
             // ".", "..", and "..." have already been filtered out
-            let ussNode = existingItems[`${this.fullPath}/${item.name as string}`];
+            let itemName = item.name as string;
+            let itemParentPath = this.fullPath;
+
+            // If the item name is an absolute path, it means the API returned the full path
+            // instead of just the file name (which can happen when listing a single file directly).
+            if (itemName.startsWith("/")) {
+                itemParentPath = path.posix.dirname(itemName);
+                itemName = path.posix.basename(itemName);
+            }
+
+            let ussNode = existingItems[`${itemParentPath}/${itemName}`];
 
             // The child node already exists. Use that node for the list instead, and update the file attributes in case they've changed
             if (ussNode != null) {
@@ -269,22 +315,32 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             const isDir = item.mode.startsWith("d");
             const collapseState = isDir ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
             ussNode = new ZoweUSSNode({
-                label: item.name,
+                label: itemName,
                 collapsibleState: collapseState,
                 parentNode: this,
-                parentPath: this.fullPath,
+                parentPath: itemParentPath,
                 profile: cachedProfile,
-                encoding: isDir ? undefined : this.getEncodingInMap(`${this.fullPath}/${item.name as string}`),
+                encoding: isDir ? undefined : this.getEncodingInMap(`${itemParentPath}/${itemName}`),
             });
+            const createParentDirs = (uri: vscode.Uri): void => {
+                const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
+                if (parentUri.path !== uri.path && parentUri.path !== "/" && !UssFSProvider.instance.exists(parentUri)) {
+                    createParentDirs(parentUri);
+                    UssFSProvider.instance.createDirectory(parentUri);
+                }
+            };
+
             if (isDir) {
                 // Create an entry for the USS folder if it doesn't exist.
                 if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
-                    await vscode.workspace.fs.createDirectory(ussNode.resourceUri);
+                    createParentDirs(ussNode.resourceUri);
+                    UssFSProvider.instance.createDirectory(ussNode.resourceUri);
                 }
             } else {
                 // Create an entry for the USS file if it doesn't exist.
                 if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
-                    await vscode.workspace.fs.writeFile(ussNode.resourceUri, new Uint8Array());
+                    createParentDirs(ussNode.resourceUri);
+                    UssFSProvider.instance.createEntry(ussNode.resourceUri, "file");
                 }
             }
             ussNode.setAttributes({
@@ -444,7 +500,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Helper method which sets an icon of node and initiates reloading of tree
      * @param iconPath
      */
-    public setIcon(iconPath: { light: string; dark: string }): void {
+    public setIcon(iconPath: vscode.IconPath): void {
         ZoweLogger.trace("ZoweUSSNode.setIcon called.");
         this.iconPath = iconPath;
         // Use nodeDataChanged instead of refreshElement to avoid collapsing the tree
@@ -462,15 +518,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             await vscode.workspace.fs.delete(this.resourceUri, { recursive: this.isFolder });
         } catch (err) {
             ZoweLogger.error(err);
-            if (err instanceof Error) {
+            void handleError(err, (error) => {
                 Gui.errorMessage(
                     vscode.l10n.t({
                         message: "Unable to delete node: {0}",
-                        args: [err.message],
+                        args: [error.message],
                         comment: ["Error message"],
                     })
                 );
-            }
+            });
             throw err;
         }
 
@@ -504,7 +560,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 .flatMap((group) => group.tabs)
                 .filter((tab) => {
                     const uri = (tab.input as any)?.uri;
-                    if (!uri) return false;
+                    if (!uri) {
+                        return false;
+                    }
                     return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
                 });
             if (tabsToClose.length > 0) {

@@ -9,34 +9,35 @@
  *
  */
 
+import { vi } from "vitest";
+
 import * as extension from "../../src/extension";
 import * as vscode from "vscode";
-import { AuthHandler, Gui } from "@zowe/zowe-explorer-api";
-import { ZoweVsCodeExtension } from "../../__mocks__/@zowe/zowe-explorer-api";
+import { AuthHandler, Gui, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 
 describe("Extension Unit Tests - function registerFtpApis", () => {
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it("should register the ftp API's", () => {
-        const registerUssApiMock = jest.fn();
-        const registerJesApiMock = jest.fn();
-        const registerMvsApiMock = jest.fn();
+        const registerUssApiMock = vi.fn();
+        const registerJesApiMock = vi.fn();
+        const registerMvsApiMock = vi.fn();
 
-        jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+        vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
             registerUssApi: registerUssApiMock,
             registerJesApi: registerJesApiMock,
             registerMvsApi: registerMvsApiMock,
             getExplorerExtenderApi: () => ({
-                initForZowe: jest.fn(),
-                reloadProfiles: jest.fn(),
+                initForZowe: vi.fn(),
+                reloadProfiles: vi.fn(),
             }),
         });
 
-        const enableLocksForTypeSpy = jest.spyOn(AuthHandler, "enableLocksForType");
+        const enableLocksForTypeSpy = vi.spyOn(AuthHandler, "enableLocksForType");
 
-        jest.spyOn(Gui, "showMessage").mockImplementation();
+        vi.spyOn(Gui, "showMessage").mockImplementation((() => undefined) as any);
         expect(
             extension.activate({
                 subscriptions: [],
@@ -53,8 +54,8 @@ describe("Extension Unit Tests - function registerFtpApis", () => {
     });
 
     it("should display error if zoweExplorerApi was not found", () => {
-        jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue(null);
-        const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation();
+        vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue(null);
+        const showMessageSpy = vi.spyOn(Gui, "showMessage").mockImplementation((() => undefined) as any);
         expect(
             extension.activate({
                 subscriptions: [],

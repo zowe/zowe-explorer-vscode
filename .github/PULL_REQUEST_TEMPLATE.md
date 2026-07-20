@@ -1,3 +1,7 @@
+<!-- 
+**NOTE:** The team reserves the right to close pull requests that fail to meet quality standards or lack human contribution.
+-->
+
 ## Proposed changes
 
 <!-- Describe the big picture of your changes here to communicate to the maintainers why we should accept this pull request. If it fixes a bug or resolves a feature request, be sure to link to that issue. -->
@@ -40,13 +44,15 @@ Changelog:
 **Code coverage**
 
 - [ ] There is coverage for the code that I have added
-- [ ] I have added new test cases and they are passing
+- [ ] I have added new unit test cases and they are passing
+- [ ] I have added at least one end-to-end test for new features to validate behavior (if applicable)
 - [ ] I have manually tested the changes
 
 **Deployment**
 
 - [ ] I have tested new functionality with the FTP extension and profile verifying no extender profile type breakages introduced
 - [ ] I have added developer documentation (if applicable)
+- [ ] I have verified that all dependency updates (such as Zowe SDKs) in this pull request are compatible
 - [ ] Documentation should be added to Zowe Docs
   - If you're an outside contributor, please post in the [#zowe-doc Slack channel](https://openmainframeproject.slack.com/archives/CC961JYMQ) to coordinate documentation.
   - Otherwise, please check with the rest of the squad about any needed documentation before merging.
