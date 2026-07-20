@@ -38,6 +38,7 @@ import { initializeFileOpening, updateOpenFiles } from "../shared/utils";
 import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
 import { TreeProviders } from "../shared/TreeProviders";
 import { LocalFileManagement } from "../utils/LocalFileManagement";
+import * as zowe from "@zowe/cli";
 
 // Set up localization
 nls.config({
@@ -622,6 +623,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public getUSSDocumentFilePath(): string {
         ZoweLogger.trace("ZoweUSSNode.getUSSDocumentFilePath called.");
+        if (zowe.imperative.IO.containsBacktrack(this.fullPath)) {
+            throw new Error(`Path contains backtrack, target folder is outside of the zowe tmp directory: ${this.fullPath}`);
+        }
         return path.join(globals.USS_DIR || "", this.getSessionNode().getProfileName() || "", this.fullPath);
     }
 
