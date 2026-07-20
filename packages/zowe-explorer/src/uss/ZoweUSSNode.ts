@@ -32,7 +32,7 @@ import { autoDetectEncoding, fileExistsCaseSensitiveSync, injectAdditionalDataTo
 import * as contextually from "../shared/context";
 import { closeOpenedTextFile } from "../utils/workspace";
 import * as nls from "vscode-nls";
-import { UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
+import { isValidUssFileTree, UssFileTree, UssFileType, UssFileUtils } from "./FileStructure";
 import { ZoweLogger } from "../utils/LoggerUtils";
 import { initializeFileOpening, updateOpenFiles } from "../shared/utils";
 import { IZoweUssTreeOpts } from "../shared/IZoweTreeOpts";
@@ -673,12 +673,15 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 recursive: uss.tree.type === UssFileType.Directory,
             });
         } else {
-            const existsLocally = fs.existsSync(uss.tree.localPath);
+            // Never trust the clipboard-supplied localPath: recompute it from the
+            // destination profile and USS path, and require it to stay inside USS_DIR.
+            const localPath = UssFileUtils.resolveLocalPath(this.getSessionNode().getProfileName(), uss.tree.ussPath);
+            const existsLocally = fs.existsSync(localPath);
             switch (uss.tree.type) {
                 case UssFileType.Directory:
                     if (!existsLocally) {
                         // We will need to build the file structure locally, to pull files down if needed
-                        fs.mkdirSync(uss.tree.localPath, { recursive: true });
+                        fs.mkdirSync(localPath, { recursive: true });
                     }
                     // Not all APIs respect the recursive option, so it's best to
                     // recurse within this operation to avoid missing files/folders
@@ -692,14 +695,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 case UssFileType.File:
                     if (!existsLocally) {
                         await uss.api.getContents(uss.tree.ussPath, {
-                            file: uss.tree.localPath,
+                            file: localPath,
                             binary: uss.tree.binary,
                             returnEtag: true,
                             encoding: this.profile.profile?.encoding,
                             responseTimeout: this.profile.profile?.responseTimeout,
                         });
                     }
-                    await uss.api.putContent(uss.tree.localPath, outputPath, uss.options);
+                    await uss.api.putContent(localPath, outputPath, uss.options);
                     break;
             }
         }
@@ -717,7 +720,16 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         const prof = this.getProfile();
         try {
-            const fileTreeToPaste: UssFileTree = JSON.parse(clipboardContents);
+            const parsedClipboardContents: unknown = JSON.parse(clipboardContents);
+            if (
+                typeof parsedClipboardContents !== "object" ||
+                parsedClipboardContents === null ||
+                !Array.isArray((parsedClipboardContents as { children?: unknown }).children) ||
+                !(parsedClipboardContents as { children: unknown[] }).children.every((child) => isValidUssFileTree(child))
+            ) {
+                throw new Error("Cannot paste: clipboard contents are not a valid USS file structure.");
+            }
+            const fileTreeToPaste = parsedClipboardContents as UssFileTree;
             const api = ZoweExplorerApiRegister.getUssApi(this.profile);
             const sessionName = this.getSessionNode().getLabel() as string;
 
