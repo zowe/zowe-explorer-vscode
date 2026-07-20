@@ -162,7 +162,7 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                         ),
                     };
                     const destinationFile = DownloadJobs.getSpoolDownloadFile(mockJobFile, parms.omitJobidDirectory, parms.outDir);
-                    if (FtpJesApi.containsBacktrack(destinationFile)) {
+                    if (zowe.imperative.IO.containsBacktrack(destinationFile)) {
                         throw new ZoweFtpExtensionError("Path contains backtrack, target folder is outside of the download folder.");
                     }
 
@@ -282,13 +282,5 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
             stepname: "",
             procstep: "",
         };
-    }
-
-    // TODO: Pull from imperative once new SDK version is compatible
-    public static containsBacktrack(element: string): boolean {
-        if (process.platform === "win32") {
-            element = element.replace(/\\/g, "/");
-        }
-        return element.split("/")?.includes("..");
     }
 }
