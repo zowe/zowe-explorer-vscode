@@ -1267,6 +1267,30 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
     });
 });
 
+describe("ZoweUSSNode Unit Tests - Function node.getUSSDocumentFilePath()", () => {
+    it("Tests that node.getUSSDocumentFilePath() throws an error if fullPath contains a backtrack", () => {
+        const globalMocks = createGlobalMocks();
+
+        const rootNode = new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode({
+            label: "node",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: rootNode,
+            profile: globalMocks.profileOne,
+        });
+        testNode.fullPath = "test/../../bad/path";
+        jest.spyOn(zowe.imperative.IO, "containsBacktrack").mockReturnValueOnce(true);
+
+        expect(() => testNode.getUSSDocumentFilePath()).toThrow("Path contains backtrack, target folder is outside of the zowe tmp directory");
+    });
+});
+
 describe("ZoweUSSNode Unit Tests - Function node.isDirtyInEditor()", () => {
     it("Tests that node.isDirtyInEditor() returns true if the file is open", async () => {
         const globalMocks = createGlobalMocks();
