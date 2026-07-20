@@ -180,8 +180,8 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         });
 
         const mySpy = mocked(vscode.window.showInputBox).mockImplementation((options) => {
-            options.validateInput("testMember");
-            return Promise.resolve("testMember");
+            options.validateInput("TESTMBR");
+            return Promise.resolve("TESTMBR");
         });
 
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => callback());
@@ -190,7 +190,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         mocked(zowe.Upload.bufferToDataSet).mockResolvedValueOnce(testFilesResponse as any);
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
-        const newNode = parent.children.find((node) => node.label === "TESTMEMBER");
+        const newNode = parent.children.find((node) => node.label === "TESTMBR");
         expect(newNode).toBeDefined();
         expect(newNode?.contextValue).toBe(globals.DS_MEMBER_CONTEXT);
         expect(newNode?.command.command).toBe("zowe.ds.ZoweNode.openPS");
@@ -198,7 +198,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             placeHolder: "Name of Member",
             validateInput: expect.any(Function),
         });
-        expect(mocked(zowe.Upload.bufferToDataSet)).toHaveBeenCalledWith(blockMocks.zosmfSession, Buffer.from(""), parent.label + "(TESTMEMBER)", {
+        expect(mocked(zowe.Upload.bufferToDataSet)).toHaveBeenCalledWith(blockMocks.zosmfSession, Buffer.from(""), parent.label + "(TESTMBR)", {
             responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
             returnEtag: true,
         });
@@ -213,7 +213,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             session: blockMocks.session,
         });
 
-        mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
+        mocked(vscode.window.showInputBox).mockResolvedValue("TESTMBR");
         mocked(zowe.Upload.bufferToDataSet).mockRejectedValueOnce(Error("test"));
 
         try {
@@ -222,7 +222,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             // Prevent exception from failing test
         }
 
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Unable to create member. Error: test");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("**** ****");
         mocked(zowe.Upload.bufferToDataSet).mockReset();
     });
     it("Checking of attempt to create member without name", async () => {
@@ -258,22 +258,17 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
         parent.label = `${parent.label}`;
         parent.contextValue = globals.DS_PDS_CONTEXT + globals.FAV_SUFFIX;
 
-        const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("testMember");
+        const mySpy = mocked(vscode.window.showInputBox).mockResolvedValue("TESTMBR");
         mocked(vscode.window.withProgress).mockImplementation((progLocation, callback) => callback());
         globalMocks.getContentsSpy.mockResolvedValueOnce(testFilesResponse);
         mocked(zowe.Upload.bufferToDataSet).mockResolvedValueOnce(testFilesResponse as any);
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
 
         expect(mySpy).toHaveBeenCalledWith({ placeHolder: "Name of Member", validateInput: expect.any(Function) });
-        expect(mocked(zowe.Upload.bufferToDataSet)).toHaveBeenCalledWith(
-            blockMocks.zosmfSession,
-            Buffer.from(""),
-            nonFavoriteLabel + "(TESTMEMBER)",
-            {
-                responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
-                returnEtag: true,
-            }
-        );
+        expect(mocked(zowe.Upload.bufferToDataSet)).toHaveBeenCalledWith(blockMocks.zosmfSession, Buffer.from(""), nonFavoriteLabel + "(TESTMBR)", {
+            responseTimeout: blockMocks.imperativeProfile.profile?.responseTimeout,
+            returnEtag: true,
+        });
     });
     it("should not replace existing member when user cancels the replacement prompt", async () => {
         const blockMocks = createBlockMocksShared();
@@ -284,18 +279,18 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             session: blockMocks.session,
         });
 
-        parent.children = [{ ...parent, label: "TESTMEMBER" } as any] as any;
+        parent.children = [{ ...parent, label: "TESTMBR" } as any] as any;
 
         const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers");
         allMembersSpy.mockResolvedValueOnce({
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [createDSMemberAttributes("TESTMEMBER")],
+                items: [createDSMemberAttributes("TESTMBR")],
             },
         });
 
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMEMBER");
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMBR");
         mocked(Gui.showMessage).mockResolvedValueOnce("Cancel");
 
         await dsActions.createMember(parent, blockMocks.testDatasetTree);
@@ -307,7 +302,7 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             success: true,
             commandResponse: "",
             apiResponse: {
-                items: [createDSMemberAttributes("TESTMEMBER")],
+                items: [createDSMemberAttributes("TESTMBR")],
                 etag: "123",
             },
         };
@@ -319,12 +314,12 @@ describe("Dataset Actions Unit Tests - Function createMember", () => {
             session: blockMocks.session,
         });
 
-        parent.children = [{ ...parent, label: "TESTMEMBER" } as any] as any;
+        parent.children = [{ ...parent, label: "TESTMBR" } as any] as any;
 
         const allMembersSpy = jest.spyOn(blockMocks.mvsApi, "allMembers");
         allMembersSpy.mockResolvedValueOnce(testFilesResponse);
 
-        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMEMBER");
+        mocked(vscode.window.showInputBox).mockResolvedValueOnce("TESTMBR");
         mocked(Gui.showMessage).mockResolvedValueOnce("Replace");
         mocked(fs.existsSync).mockReturnValueOnce(true);
         mocked(fs.unlinkSync).mockImplementation(() => {
@@ -447,7 +442,7 @@ describe("Dataset Actions Unit Tests - Function refreshPS", () => {
                 returnEtag: true,
             })
         );
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error: ****");
     });
     it("Checking favorite empty PDS refresh", async () => {
         globals.defineGlobals("");
@@ -947,7 +942,7 @@ describe("Dataset Actions Unit Tests - Function deleteDataset", () => {
         deleteSpy.mockRejectedValueOnce(Error(""));
 
         await expect(dsActions.deleteDataset(node, blockMocks.testDatasetTree)).rejects.toEqual(Error(""));
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error: ****");
     });
     it("Checking Favorite PDS dataset deletion", async () => {
         globals.defineGlobals("");
@@ -1777,9 +1772,7 @@ describe("Dataset Actions Unit Tests - Function showAttributes", () => {
         await expect(dsActions.showAttributes(node, blockMocks.testDatasetTree)).rejects.toEqual(
             Error("No matching names found for query: AUSER.A1557332.A996850.TEST1")
         );
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith(
-            "Unable to list attributes. Error: No matching names found for query: AUSER.A1557332.A996850.TEST1"
-        );
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("**** ****");
         expect(mocked(vscode.window.createWebviewPanel)).not.toBeCalled();
     });
 });
@@ -2022,7 +2015,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
         expect(allocSpy).toHaveBeenCalled();
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("****");
     });
     it("Checking copy of partitioned datasets", async () => {
         globals.defineGlobals("");
@@ -2095,7 +2088,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         await dsActions.copyDataSets(child, null, blockMocks.testDatasetTree);
         expect(allocSpy).toHaveBeenCalled();
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("****");
     });
     it("Checking copy the label of a favorite member to the clipboard", async () => {
         globals.defineGlobals("");
@@ -2227,7 +2220,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
         const node = new ZoweDatasetNode({
-            label: "HLQ.TEST.TO.NODE",
+            label: "TESTMBR",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.pdsSessionNode,
             profile: blockMocks.imperativeProfile,
@@ -2248,7 +2241,7 @@ describe("Dataset Actions Unit Tests - Function copyDataSets", () => {
         await dsActions.refreshDataset(blockMocks.pdsSessionNode, blockMocks.testDatasetTree);
         expect(refreshSpy).toHaveBeenCalled();
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("****");
     });
 
     it("Should ask to replace the sequential and partitioned dataset if it already exists", async () => {
@@ -3128,7 +3121,7 @@ describe("Dataset Actions Unit Tests - Function createFile", () => {
             // do nothing
         }
 
-        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error encountered when creating data set. Error: Generic Error");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("**** ****");
         expect(mocked(vscode.workspace.getConfiguration)).lastCalledWith(globals.SETTINGS_DS_DEFAULT_PS);
         expect(createDataSetSpy).toHaveBeenCalledWith(zowe.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "TEST", {
             alcunit: "CYL",

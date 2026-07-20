@@ -272,6 +272,14 @@ export class ProfileInfo {
     }
 }
 
+export class ImperativeExpect {
+    static toMatchRegExp(value: any, myRegex: string, msg?: string): void {
+        if (!new RegExp(myRegex).test(value)) {
+            throw new ImperativeError({ msg: msg ?? `Value "${value}" does not match the pattern "${myRegex}"` });
+        }
+    }
+}
+
 export class ImperativeError extends Error {
     private msg: string;
     constructor(public mDetails: IImperativeError) {
@@ -401,4 +409,11 @@ export class TextUtils {
 
 export namespace SessConstants {
     export declare const AUTH_TYPE_TOKEN = "token";
+}
+
+export class LoggerUtils {
+    static readonly CENSOR_RESPONSE = "****";
+    static censorRawData(_data: string, _category?: string): string {
+        return LoggerUtils.CENSOR_RESPONSE;
+    }
 }

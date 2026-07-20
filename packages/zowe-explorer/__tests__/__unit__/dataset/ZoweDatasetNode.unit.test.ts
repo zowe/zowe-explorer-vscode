@@ -711,7 +711,7 @@ describe("ZoweDatasetNode Unit Tests - Function node.openDs()", () => {
             // do nothing
         }
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: testError");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error: ****");
     });
 
     it("Check for invalid/null response when contents are already fetched", async () => {
