@@ -12,6 +12,7 @@
 import { useCallback } from "react";
 
 import { RenderConfig } from "./renderConfig";
+import { ConfirmableDeleteButton } from "./ConfirmableDeleteButton";
 import { flattenProfiles, ensureProfileProperties, isMergedPropertySecure, getOriginalProfileKey } from "../utils";
 import { getPropertyDescriptions } from "../utils/propertyUtils";
 import * as l10n from "@vscode/l10n";
@@ -33,6 +34,10 @@ interface RenderProfileDetailsProps {
   handleUnlinkMergedProperty: (propertyKey: string | undefined, fullKey: string) => void;
   handleNavigateToSource: (jsonLoc: string, osLoc?: string[]) => void;
   openAddProfileModalAtPath: (path: string[], key?: string, value?: string) => void;
+  /** Property key to blink in the details panel (comes from editor cursor context). */
+  highlightPropertyKey?: string | null;
+  /** Called once the blink animation has started so the key can be cleared. */
+  onHighlightPropertyKeyConsumed?: () => void;
 }
 
 export const RenderProfileDetails = ({
@@ -50,6 +55,8 @@ export const RenderProfileDetails = ({
   handleUnlinkMergedProperty,
   handleNavigateToSource,
   openAddProfileModalAtPath,
+  highlightPropertyKey,
+  onHighlightPropertyKeyConsumed,
 }: RenderProfileDetailsProps) => {
   const {
     selectedProfileKey,
@@ -147,8 +154,8 @@ export const RenderProfileDetails = ({
                   isCurrentProfileUntyped()
                     ? l10n.t("Cannot set as default: Profile must have a valid type")
                     : isProfileDefault(selectedProfileKey)
-                    ? l10n.t("Click to remove default")
-                    : l10n.t("Set as default")
+                      ? l10n.t("Click to remove default")
+                      : l10n.t("Set as default")
                 }
                 style={{
                   opacity: isCurrentProfileUntyped() ? 0.5 : 1,
@@ -177,30 +184,16 @@ export const RenderProfileDetails = ({
               >
                 <span className="codicon codicon-edit"></span>
               </button>
-              {pendingProfileDeletion === selectedProfileKey ? (
-                <div className="config-editor-flex-gap">
-                  <button
-                    className="profile-action-button"
-                    onClick={() => confirmDeleteProfile(selectedProfileKey)}
-                    title={l10n.t("Confirm delete")}
-                    style={{ color: "var(--vscode-errorForeground)" }}
-                  >
-                    <span className="codicon codicon-check"></span>
-                  </button>
-                  <button className="profile-action-button" onClick={() => setPendingProfileDeletion(null)} title={l10n.t("Cancel")}>
-                    <span className="codicon codicon-close"></span>
-                  </button>
-                </div>
-              ) : (
-                <button
-                  className="profile-action-button"
-                  id="delete-profile"
-                  onClick={() => handleDeleteProfile(selectedProfileKey)}
-                  title={l10n.t("Delete profile")}
-                >
-                  <span className="codicon codicon-trash"></span>
-                </button>
-              )}
+              <ConfirmableDeleteButton
+                isConfirming={pendingProfileDeletion === selectedProfileKey}
+                buttonClassName="profile-action-button"
+                confirmWrapperClassName="config-editor-flex-gap"
+                deleteId="delete-profile"
+                deleteTitle={l10n.t("Delete profile")}
+                onRequestDelete={() => handleDeleteProfile(selectedProfileKey)}
+                onConfirmDelete={() => confirmDeleteProfile(selectedProfileKey)}
+                onCancel={() => setPendingProfileDeletion(null)}
+              />
             </div>
           )}
         </div>
@@ -298,6 +291,8 @@ export const RenderProfileDetails = ({
                   isPropertySecure={isPropertySecure}
                   canPropertyBeSecure={canPropertyBeSecure}
                   isMergedPropertySecure={isMergedPropertySecure}
+                  highlightPropertyKey={highlightPropertyKey ?? null}
+                  onHighlightPropertyKeyConsumed={onHighlightPropertyKeyConsumed}
                 />
               </div>
             );

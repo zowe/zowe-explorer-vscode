@@ -12,7 +12,7 @@
 import { useCallback } from "react";
 import { useConfigContext } from "../context/ConfigContext";
 import { useUtilityHelpers } from "./useUtilityHelpers";
-import { updateChangesForRenames } from "../utils/renameUtils";
+import { buildFormattedPendingChanges } from "../utils/renameUtils";
 import { flattenProfiles, getRenamedProfileKeyWithNested, sortProfilesAtLevel } from "../utils";
 import type { FormattedPendingChanges, ProfileData } from "../types";
 
@@ -34,47 +34,10 @@ export function useProfileUtils() {
 
     const utilityHelpers = useUtilityHelpers();
 
-    const formatPendingChanges = useCallback((): FormattedPendingChanges => {
-        const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
-            Object.keys(changesForPath).map((key) => {
-                const { value, path, profile, secure } = changesForPath[key];
-                return { key, value, path, profile, configPath, secure };
-            })
-        );
-
-        const deleteKeys = Object.entries(deletions).flatMap(([configPath, keys]) => keys.map((key) => ({ key, configPath, secure: false })));
-
-        const defaultsChanges = Object.entries(pendingDefaults).flatMap(([configPath, changesForPath]) =>
-            Object.keys(changesForPath).map((key) => {
-                const { value, path } = changesForPath[key];
-                return { key, value, path, configPath, secure: false };
-            })
-        );
-
-        const defaultsDeleteKeys = Object.entries(defaultsDeletions).flatMap(([configPath, keys]) =>
-            keys.map((key) => ({ key, configPath, secure: false }))
-        );
-
-        const renamesData = Object.entries(renames).flatMap(([configPath, configRenames]) =>
-            Object.entries(configRenames).map(([originalKey, newKey]) => ({
-                originalKey,
-                newKey,
-                configPath,
-            }))
-        );
-
-        const updatedChanges = updateChangesForRenames(changes, renamesData);
-
-        const result = {
-            changes: updatedChanges,
-            deletions: deleteKeys,
-            defaultsChanges,
-            defaultsDeleteKeys: defaultsDeleteKeys,
-            renames: renamesData,
-        };
-
-        return result;
-    }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, renames]);
+    const formatPendingChanges = useCallback(
+        (): FormattedPendingChanges => buildFormattedPendingChanges({ pendingChanges, deletions, pendingDefaults, defaultsDeletions, renames }),
+        [pendingChanges, deletions, pendingDefaults, defaultsDeletions, renames]
+    );
 
     const getAvailableProfiles = useCallback(() => {
         if (selectedTab === null) return ["root"];

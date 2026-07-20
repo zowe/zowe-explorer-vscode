@@ -11,7 +11,8 @@
 
 import { useCallback } from "react";
 import { useConfigContext } from "../context/ConfigContext";
-import { updateChangesForRenames, getProfileNameForMergedProperties } from "../utils/renameUtils";
+import { buildFormattedPendingChanges } from "../utils/renameUtils";
+import { getOriginalProfileKeyWithNested } from "../utils/profileUtils";
 import { useProfileUtils } from "./useProfileUtils";
 
 interface ConfigHandlersParams {
@@ -69,27 +70,19 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
             tab: selectedTab,
             profile: selectedProfileKey,
         });
-        const changes = Object.entries(pendingChangesRef.current).flatMap(([configPath, changesForPath]) =>
-            Object.keys(changesForPath).map((key) => {
-                const { value, path, profile, secure } = changesForPath[key];
-                return { key, value, path, profile, configPath, secure };
-            })
-        );
-
-        const deleteKeys = Object.entries(deletionsRef.current).flatMap(([configPath, keys]) =>
-            keys.map((key) => ({ key, configPath, secure: false }))
-        );
-
-        const defaultsChanges = Object.entries(pendingDefaultsRef.current).flatMap(([configPath, changesForPath]) =>
-            Object.keys(changesForPath).map((key) => {
-                const { value, path } = changesForPath[key];
-                return { key, value, path, configPath, secure: false };
-            })
-        );
-
-        const defaultsDeleteKeys = Object.entries(defaultsDeletionsRef.current).flatMap(([configPath, keys]) =>
-            keys.map((key) => ({ key, configPath, secure: false }))
-        );
+        const {
+            changes,
+            deletions: deleteKeys,
+            defaultsChanges,
+            defaultsDeleteKeys,
+            renames: renamesData,
+        } = buildFormattedPendingChanges({
+            pendingChanges: pendingChangesRef.current,
+            deletions: deletionsRef.current,
+            pendingDefaults: pendingDefaultsRef.current,
+            defaultsDeletions: defaultsDeletionsRef.current,
+            renames: renamesRef.current,
+        });
 
         const otherChanges = Object.entries(autostoreChangesRef.current).map(([configPath, value]) => ({
             type: "autostore",
@@ -97,22 +90,12 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
             configPath,
         }));
 
-        const renamesData = Object.entries(renamesRef.current).flatMap(([configPath, configRenames]) =>
-            Object.entries(configRenames).map(([originalKey, newKey]) => ({
-                originalKey,
-                newKey,
-                configPath,
-            }))
-        );
-
-        const updatedChanges = updateChangesForRenames(changes, renamesData);
-
         vscodeApi.postMessage({
             command: "SAVE_CHANGES",
-            changes: updatedChanges,
+            changes,
             deletions: deleteKeys,
             defaultsChanges,
-            defaultsDeleteKeys: defaultsDeleteKeys,
+            defaultsDeleteKeys,
             otherChanges,
             renames: renamesData,
         });
@@ -167,7 +150,7 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
         if (currentSelectedProfileKey && currentSelectedTab !== null) {
             const configPath = configurations[currentSelectedTab]?.configPath;
             if (configPath) {
-                originalSelectedProfileKey = getProfileNameForMergedProperties(currentSelectedProfileKey, configPath, renames);
+                originalSelectedProfileKey = getOriginalProfileKeyWithNested(currentSelectedProfileKey, configPath, renames);
             }
         }
 

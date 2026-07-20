@@ -1,5 +1,5 @@
 import * as l10n from "@vscode/l10n";
-import { useModalClickOutside, useModalFocus } from "../../hooks";
+import { ModalShell } from "../ModalShell";
 
 interface AddConfigModalProps {
   isOpen: boolean;
@@ -10,9 +10,6 @@ interface AddConfigModalProps {
 }
 
 export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, onCancel }: AddConfigModalProps) {
-  const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
-  const modalRef = useModalFocus(isOpen, "button:not([disabled])");
-
   if (!isOpen) return null;
 
   const getAllConfigTypes = () => {
@@ -48,10 +45,10 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
         reason: hasProjectTeam
           ? "Already exists"
           : currentConfigs >= 4
-          ? "Maximum configurations reached"
-          : !hasWorkspace
-          ? "No current workspace"
-          : null,
+            ? "Maximum configurations reached"
+            : !hasWorkspace
+              ? "No current workspace"
+              : null,
       },
       {
         id: "global:false,user:true",
@@ -62,10 +59,10 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
         reason: hasProjectUser
           ? "Already exists"
           : currentConfigs >= 4
-          ? "Maximum configurations reached"
-          : !hasWorkspace
-          ? "No current workspace"
-          : null,
+            ? "Maximum configurations reached"
+            : !hasWorkspace
+              ? "No current workspace"
+              : null,
       },
     ];
 
@@ -75,158 +72,151 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
   const allConfigTypes = getAllConfigTypes();
   const availableTypes = allConfigTypes.filter((type) => !type.disabled);
 
-  const handleKeyDown = (e: any) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
       const firstAvailableType = availableTypes[0];
       if (firstAvailableType) {
         onAdd(firstAvailableType.value);
       }
-    } else if (e.key === "Escape") {
-      onCancel();
     }
   };
 
   return (
-    <div
-      className="config-editor-modal-overlay"
-      onMouseDown={handleBackdropMouseDown}
-      onClick={handleBackdropClick}
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onCancel}
+      initialFocusSelector="button:not([disabled])"
+      titleId="add-config-modal-title"
+      overlayClassName="config-editor-modal-overlay"
+      panelClassName="config-editor-modal-panel config-editor-modal-panel--add-config"
       onKeyDown={handleKeyDown}
-      tabIndex={-1}
     >
-      <div ref={modalRef} className="config-editor-modal-panel config-editor-modal-panel--add-config" onClick={(e) => e.stopPropagation()}>
-        <h2 className="config-editor-modal-title">{l10n.t("Add New Configuration File")}</h2>
+      <h2 id="add-config-modal-title" className="config-editor-modal-title">
+        {l10n.t("Add New Configuration File")}
+      </h2>
 
-        {configurations.length >= 4 ? (
-          <div style={{ color: "var(--vscode-errorForeground)", marginBottom: "16px" }}>
-            {l10n.t("Maximum of 4 configuration files allowed. Please remove an existing configuration before adding a new one.")}
-          </div>
-        ) : (
-          <>
-            {availableTypes.length === 0 && (
-              <div
-                style={{
-                  color: "var(--vscode-warningForeground)",
-                  marginBottom: "16px",
-                  padding: "8px 12px",
-                  backgroundColor: "var(--vscode-inputValidation-warningBackground)",
-                  border: "1px solid var(--vscode-inputValidation-warningBorder)",
-                  borderRadius: "4px",
-                  fontSize: "13px",
-                }}
-              >
-                {l10n.t(
-                  "All configuration types are currently unavailable. Remove existing configurations or open a workspace to enable more options."
-                )}
-              </div>
-            )}
-
-            <p
+      {configurations.length >= 4 ? (
+        <div style={{ color: "var(--vscode-errorForeground)", marginBottom: "16px" }}>
+          {l10n.t("Maximum of 4 configuration files allowed. Please remove an existing configuration before adding a new one.")}
+        </div>
+      ) : (
+        <>
+          {availableTypes.length === 0 && (
+            <div
               style={{
-                margin: "0 0 16px 0",
-                fontSize: "14px",
-                color: "var(--vscode-descriptionForeground)",
-                fontStyle: "italic",
+                color: "var(--vscode-warningForeground)",
+                marginBottom: "16px",
+                padding: "8px 12px",
+                backgroundColor: "var(--vscode-inputValidation-warningBackground)",
+                border: "1px solid var(--vscode-inputValidation-warningBorder)",
+                borderRadius: "4px",
+                fontSize: "13px",
               }}
             >
-              {l10n.t("Warning: Creation/deletion of configuration files are immediately written to disk and cannot be undone by refreshing")}
-            </p>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
-              {allConfigTypes.map((type) => (
-                <button
-                  key={type.value}
-                  id={type.id}
-                  onClick={() => !type.disabled && onAdd(type.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !type.disabled) {
-                      onAdd(type.value);
-                    } else if (e.key === "Escape") {
-                      onCancel();
-                    }
-                  }}
-                  disabled={type.disabled}
-                  style={{
-                    padding: "12px",
-                    border: "1px solid var(--vscode-button-border)",
-                    borderRadius: "4px",
-                    backgroundColor: type.disabled ? "var(--vscode-input-disabledBackground)" : "var(--vscode-button-secondaryBackground)",
-                    color: type.disabled ? "var(--vscode-disabledForeground)" : "var(--vscode-button-secondaryForeground)",
-                    cursor: type.disabled ? "not-allowed" : "pointer",
-                    textAlign: "left",
-                    fontSize: "14px",
-                    transition: "all 0.2s ease",
-                    opacity: type.disabled ? 0.6 : 1,
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!type.disabled) {
-                      e.currentTarget.style.backgroundColor = "var(--vscode-button-secondaryHoverBackground)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!type.disabled) {
-                      e.currentTarget.style.backgroundColor = "var(--vscode-button-secondaryBackground)";
-                    }
-                  }}
-                >
-                  <div
-                    style={{
-                      fontWeight: "500",
-                      marginBottom: "4px",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span>{type.label}</span>
-                    {type.disabled && type.reason && (
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          color: "var(--vscode-errorForeground)",
-                          fontWeight: "normal",
-                        }}
-                      >
-                        {type.reason}
-                      </span>
-                    )}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: type.disabled ? "var(--vscode-disabledForeground)" : "var(--vscode-descriptionForeground)",
-                    }}
-                  >
-                    {type.description}
-                  </div>
-                </button>
-              ))}
+              {l10n.t(
+                "All configuration types are currently unavailable. Remove existing configurations or open a workspace to enable more options."
+              )}
             </div>
-          </>
-        )}
+          )}
 
-        <div className="modal-actions">
-          <button
-            onClick={onCancel}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                onCancel();
-              }
-            }}
+          <p
             style={{
-              padding: "8px 16px",
-              border: "1px solid var(--vscode-button-border)",
-              borderRadius: "4px",
-              backgroundColor: "var(--vscode-button-secondaryBackground)",
-              color: "var(--vscode-button-secondaryForeground)",
-              cursor: "pointer",
+              margin: "0 0 16px 0",
               fontSize: "14px",
+              color: "var(--vscode-descriptionForeground)",
+              fontStyle: "italic",
             }}
           >
-            {l10n.t("Cancel")}
-          </button>
-        </div>
+            {l10n.t("Warning: Creation/deletion of configuration files are immediately written to disk and cannot be undone by refreshing")}
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+            {allConfigTypes.map((type) => (
+              <button
+                key={type.value}
+                id={type.id}
+                onClick={() => !type.disabled && onAdd(type.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !type.disabled) {
+                    onAdd(type.value);
+                  }
+                }}
+                disabled={type.disabled}
+                style={{
+                  padding: "12px",
+                  border: "1px solid var(--vscode-button-border)",
+                  borderRadius: "4px",
+                  backgroundColor: type.disabled ? "var(--vscode-input-disabledBackground)" : "var(--vscode-button-secondaryBackground)",
+                  color: type.disabled ? "var(--vscode-disabledForeground)" : "var(--vscode-button-secondaryForeground)",
+                  cursor: type.disabled ? "not-allowed" : "pointer",
+                  textAlign: "left",
+                  fontSize: "14px",
+                  transition: "all 0.2s ease",
+                  opacity: type.disabled ? 0.6 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (!type.disabled) {
+                    e.currentTarget.style.backgroundColor = "var(--vscode-button-secondaryHoverBackground)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!type.disabled) {
+                    e.currentTarget.style.backgroundColor = "var(--vscode-button-secondaryBackground)";
+                  }
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: "500",
+                    marginBottom: "4px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span>{type.label}</span>
+                  {type.disabled && type.reason && (
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        color: "var(--vscode-errorForeground)",
+                        fontWeight: "normal",
+                      }}
+                    >
+                      {type.reason}
+                    </span>
+                  )}
+                </div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: type.disabled ? "var(--vscode-disabledForeground)" : "var(--vscode-descriptionForeground)",
+                  }}
+                >
+                  {type.description}
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="modal-actions">
+        <button
+          onClick={onCancel}
+          style={{
+            padding: "8px 16px",
+            border: "1px solid var(--vscode-button-border)",
+            borderRadius: "4px",
+            backgroundColor: "var(--vscode-button-secondaryBackground)",
+            color: "var(--vscode-button-secondaryForeground)",
+            cursor: "pointer",
+            fontSize: "14px",
+          }}
+        >
+          {l10n.t("Cancel")}
+        </button>
       </div>
-    </div>
+    </ModalShell>
   );
 }

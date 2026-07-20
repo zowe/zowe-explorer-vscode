@@ -115,6 +115,7 @@ export interface InitialSelectionPayload {
     profileName: string;
     configPath: string;
     profileType?: string;
+    propertyKey?: string;
 }
 
 export interface LocalStorageKeyMessage {

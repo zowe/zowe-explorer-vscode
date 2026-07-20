@@ -798,17 +798,24 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
         createGlobalMocks();
         const providers = createTreeProviders();
         vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(providers);
-        const removedProfNames = new Set<string>();
+        vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            registeredApiTypes: vi.fn().mockReturnValue(["zosmf", "ssh"]),
+        } as any);
+        vi.spyOn(SharedActions, "updateSessionNodeTooltips").mockResolvedValue(undefined);
         const addedProfTypes = new Set<string>();
-        const removeSessionSpy = vi
-            .spyOn(TreeViewUtils, "removeSession")
-            .mockImplementation((treeProvider, profileName) => removedProfNames.add(profileName) as any);
+        const removeSessionSpy = vi.spyOn(TreeViewUtils, "removeSession");
         const addDefaultSessionSpy = vi
             .spyOn(TreeViewUtils, "addDefaultSession")
             .mockImplementation((treeProvider, profileType) => addedProfTypes.add(profileType) as any);
         await SharedActions.refreshAll();
-        expect(removeSessionSpy).toHaveBeenCalledTimes(6);
-        expect([...removedProfNames]).toEqual(["zosmf", "zosmf2"]);
+        // Each provider has 2 orphan session nodes (zosmf, zosmf2) — neither is in allProfiles["sestest"].
+        // Orphan session nodes are removed via treeProvider.deleteSession, not TreeViewUtils.removeSession
+        // (removeSession strips favorites for that profile name — see SharedActions.refreshProvider).
+        expect(removeSessionSpy).not.toHaveBeenCalled();
+        expect(providers.ds.deleteSession).toHaveBeenCalledTimes(2);
+        expect(providers.uss.deleteSession).toHaveBeenCalledTimes(2);
+        expect(providers.job.deleteSession).toHaveBeenCalledTimes(2);
+        // addDefaultSession called once per registered type per provider: 3 providers × 2 types = 6
         expect(addDefaultSessionSpy).toHaveBeenCalledTimes(6);
         expect([...addedProfTypes]).toEqual(["zosmf", "ssh"]);
     });
@@ -817,21 +824,24 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
         createGlobalMocks();
         const providers = createTreeProviders();
         vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue(providers);
-        const removedProfNames = new Set<string>();
+        vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+            registeredApiTypes: vi.fn().mockReturnValue(["zosmf", "ssh"]),
+        } as any);
+        vi.spyOn(SharedActions, "updateSessionNodeTooltips").mockResolvedValue(undefined);
         const addedProfTypes = new Set<string>();
-        const removeSessionSpy = vi
-            .spyOn(TreeViewUtils, "removeSession")
-            .mockImplementation((treeProvider, profileName) => removedProfNames.add(profileName) as any);
         const addDefaultSessionSpy = vi
             .spyOn(TreeViewUtils, "addDefaultSession")
             .mockClear()
             .mockImplementation((treeProvider, profileType) => addedProfTypes.add(profileType) as any);
-        const debugSpy = vi.spyOn(ZoweLogger, "debug").mockClear();
+        // Fire two refreshes concurrently; the second should be a no-op due to the in-progress guard.
         const firstRefresh = SharedActions.refreshAll();
-        await SharedActions.refreshAll();
+        await SharedActions.refreshAll(); // returns immediately (guard)
+        await firstRefresh;               // wait for the first run to complete
 
-        // expect same amount of assertions even though refresh was called twice
-        expect(removeSessionSpy).toHaveBeenCalledTimes(6);
+        // Work should have happened exactly once (from the first call only).
+        expect(providers.ds.deleteSession).toHaveBeenCalledTimes(2);
+        expect(providers.uss.deleteSession).toHaveBeenCalledTimes(2);
+        expect(providers.job.deleteSession).toHaveBeenCalledTimes(2);
         expect(addDefaultSessionSpy).toHaveBeenCalledTimes(6);
     });
 });
@@ -1236,5 +1246,91 @@ describe("Shared Actions Unit Tests - Function updateSchemaCommand", () => {
         expect(blockMocks.guiSpy).toHaveBeenCalled();
         expect(blockMocks.opCancelledSpy).toHaveBeenCalledWith("Operation cancelled");
         expect(blockMocks.updateSpy).not.toHaveBeenCalled();
+    });
+});
+
+describe("Shared Actions Unit Tests - refreshProvider: isFavProfile branch", () => {
+    // Import SharedContext for isFavProfile spy
+    let SharedContext: typeof import("../../../../src/trees/shared/SharedContext").SharedContext;
+
+    beforeEach(async () => {
+        SharedContext = (await import("../../../../src/trees/shared/SharedContext")).SharedContext;
+        vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("calls refreshFavorites when orphan node is a favourite-profile node", async () => {
+        const sessionNode = createDatasetSessionNode(createISession(), createIProfile());
+        const refreshFavorites = vi.fn().mockResolvedValue(undefined);
+        const deleteSession = vi.fn();
+        const addDefaultSessionMock = vi.spyOn(TreeViewUtils, "addDefaultSession").mockResolvedValueOnce(undefined);
+        vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
+            registeredApiTypes: vi.fn().mockReturnValue([]),
+        } as any);
+        vi.spyOn(SharedActions, "updateSessionNodeTooltips").mockResolvedValueOnce(undefined);
+
+        const treeProvider: any = {
+            mSessionNodes: [sessionNode],
+            mFavorites: [],
+            refresh: vi.fn(),
+            refreshElement: vi.fn(),
+            refreshFavorites,
+            deleteSession,
+        };
+
+        vi.spyOn(Profiles, "getInstance").mockReturnValue({
+            allProfiles: [], // empty → node is orphan
+            profilesForValidation: [],
+            checkCurrentProfile: vi.fn().mockResolvedValue(undefined),
+        } as any);
+
+        vi.spyOn(SharedActions, "refreshProfiles").mockResolvedValueOnce(undefined);
+
+        // Mark the session node as a favourite-profile node
+        vi.spyOn(SharedContext, "isFavProfile").mockReturnValue(true);
+
+        await SharedActions.refreshProvider(treeProvider, true);
+
+        expect(refreshFavorites).toHaveBeenCalled();
+        expect(deleteSession).not.toHaveBeenCalled();
+    });
+
+    it("calls deleteSession when orphan node is NOT a favourite-profile node", async () => {
+        const sessionNode = createDatasetSessionNode(createISession(), createIProfile());
+        const refreshFavorites = vi.fn().mockResolvedValue(undefined);
+        const deleteSession = vi.fn();
+        vi.spyOn(TreeViewUtils, "addDefaultSession").mockResolvedValueOnce(undefined);
+        vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValueOnce({
+            registeredApiTypes: vi.fn().mockReturnValue([]),
+        } as any);
+        vi.spyOn(SharedActions, "updateSessionNodeTooltips").mockResolvedValueOnce(undefined);
+
+        const treeProvider: any = {
+            mSessionNodes: [sessionNode],
+            mFavorites: [],
+            refresh: vi.fn(),
+            refreshElement: vi.fn(),
+            refreshFavorites,
+            deleteSession,
+        };
+
+        vi.spyOn(Profiles, "getInstance").mockReturnValue({
+            allProfiles: [],
+            profilesForValidation: [],
+            checkCurrentProfile: vi.fn().mockResolvedValue(undefined),
+        } as any);
+
+        vi.spyOn(SharedActions, "refreshProfiles").mockResolvedValueOnce(undefined);
+
+        // Not a favourite-profile node
+        vi.spyOn(SharedContext, "isFavProfile").mockReturnValue(false);
+
+        await SharedActions.refreshProvider(treeProvider, true);
+
+        expect(deleteSession).toHaveBeenCalledWith(sessionNode);
+        expect(refreshFavorites).not.toHaveBeenCalled();
     });
 });

@@ -170,7 +170,7 @@
       },
       {
         "command": "zowe.configEditor",
-        "title": "Edit Zowe Config Files",
+        "title": "Edit in zowe config webview",
         "category": "Zowe Explorer"
       },
       {
@@ -835,6 +835,11 @@
           "when": "editorHasSelection && editorFocus",
           "command": "zowe.ds.zoom",
           "group": "000_zowe_dsMainframeInteraction@2"
+        },
+        {
+          "when": "editorFocus && resourceFilename =~ /zowe\\.config.*\\.json$/",
+          "command": "zowe.configEditor",
+          "group": "000_zowe_dsMainframeInteraction@3"
         }
       ],
       "explorer/context": [
@@ -842,6 +847,11 @@
           "when": "!explorerResourceIsFolder && !listMultiSelection",
           "command": "zowe.ds.submitJcl",
           "group": "000_zowe_dsMainframeInteraction@1"
+        },
+        {
+          "when": "!explorerResourceIsFolder && !listMultiSelection && resourceFilename =~ /zowe\\.config.*\\.json$/",
+          "command": "zowe.configEditor",
+          "group": "000_zowe_dsMainframeInteraction@2"
         }
       ],
       "editor/title": [

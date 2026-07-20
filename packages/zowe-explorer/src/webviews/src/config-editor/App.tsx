@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 
 import "./App.css";
+import "./help/help-styles.css";
 
 import {
   Tabs,
@@ -15,13 +16,12 @@ import {
   RenderProfileDetails,
   RenderDefaults,
   WizardManager,
+  TutorialOverlay,
 } from "./components";
 
 import { flattenKeys, flattenProfiles, getAllQualifiedProfileKeys, resolveOriginalProfileKeyFromRenames } from "./utils";
-import { getProfileType } from "./utils/profileUtils";
+import { getProfileType, getOriginalProfileKeyWithNested } from "./utils/profileUtils";
 import { getPropertyTypeForAddProfile, fetchTypeOptions, getPropertyDescriptions } from "./utils/propertyUtils";
-
-import { getProfileNameForMergedProperties } from "./utils/renameUtils";
 import { usePropertyHandlers, useConfigHandlers, useProfileUtils, useHandlerContext } from "./hooks";
 import { usePanelResizer } from "./hooks/usePanelResizer";
 import { useMessageHandler } from "./hooks/useMessageHandler";
@@ -137,6 +137,14 @@ function AppContent() {
 
   const [pendingPropertyDeletion, setPendingPropertyDeletion] = useState<string | null>(null);
   const [pendingProfileDeletion, setPendingProfileDeletion] = useState<string | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
+  // tutorialSeen: true once the user has dismissed the tutorial at least once.
+  // Populated from globalState via the CONFIGURATIONS message; persisted via SET_LOCAL_STORAGE_VALUE.
+  const [tutorialSeen, setTutorialSeen] = useState(false);
+  const tutorialSeenRef = useRef(false);
+  // highlightPropertyKey: property key to blink in the details panel after "Edit in zowe config webview"
+  // context menu action with cursor on a specific property.
+  const [highlightPropertyKey, setHighlightPropertyKey] = useState<string | null>(null);
 
   const { handleChange, handleDefaultsChange, handleDeleteProperty, confirmDeleteProperty, handleUnlinkMergedProperty, handleAddNewProfileKey } =
     usePropertyHandlers({
@@ -160,6 +168,24 @@ function AppContent() {
 
   const { formatPendingChanges, hasPendingChanges } = useProfileUtils();
   const { setWizardModalOpen, wizardModalOpen, setWizardProfileNameValidation } = useWizardContext();
+
+  // Keep tutorialSeenRef in sync so other callbacks can read it without stale closures.
+  useEffect(() => {
+    tutorialSeenRef.current = tutorialSeen;
+  }, [tutorialSeen]);
+
+  // Show the tutorial automatically whenever configurations first become non-empty
+  // and the user has not yet dismissed it.
+  // Depends on both 'configurations' and 'tutorialSeen' so it re-evaluates correctly
+  // when either changes (e.g. tutorialSeen arrives in the same batch as configurations).
+  useEffect(() => {
+    if (configurations.length === 0) return;
+    if (!tutorialSeen) {
+      setShowTutorial(true);
+    }
+  }, [configurations, tutorialSeen]);
+
+  const handleOpenTutorial = () => setShowTutorial(true);
 
   useEffect(() => {
     if (selectedTab !== null && configurations[selectedTab]) {
@@ -195,7 +221,7 @@ function AppContent() {
 
     mergedPropertiesLatestRequestSeqRef.current += 1;
     const seq = mergedPropertiesLatestRequestSeqRef.current;
-    const profileNameForMergedProperties = getProfileNameForMergedProperties(selectedProfileKey, configPath, renames);
+    const profileNameForMergedProperties = getOriginalProfileKeyWithNested(selectedProfileKey, configPath, renames);
     const changes = formatPendingChanges();
     vscodeApi.postMessage({
       command: "GET_MERGED_PROPERTIES",
@@ -421,6 +447,8 @@ function AppContent() {
     setWizardProfileNameValidation,
     setRenames,
     setConfigParseErrors,
+    setTutorialSeen,
+    setHighlightPropertyKey,
     configurationsRef,
     mergedPropertiesLatestRequestSeqRef,
     pendingSaveSelection,
@@ -438,13 +466,14 @@ function AppContent() {
     <div className="app-container" data-testid="config-editor-app" data-config-count={configurations.length} data-selected-tab={selectedTab}>
       <Tabs
         onTabChange={handleTabChange}
-        onOpenRawFile={handleOpenRawJson}
         onRevealInFinder={handleRevealInFinder}
         onOpenSchemaFile={handleOpenSchemaFile}
         onAddNewConfig={handleAddNewConfig}
         onToggleAutostore={handleAutostoreToggle}
+        onShowTutorial={handleOpenTutorial}
       />
       <Panels
+        onOpenRawFile={handleOpenRawJson}
         renderProfiles={(profilesObj) => (
           <RenderProfiles
             profilesObj={profilesObj}
@@ -476,6 +505,8 @@ function AppContent() {
             handleUnlinkMergedProperty={handleUnlinkMergedProperty}
             handleNavigateToSource={handleNavigateToSource}
             openAddProfileModalAtPath={openAddProfileModalAtPath}
+            highlightPropertyKey={highlightPropertyKey}
+            onHighlightPropertyKeyConsumed={() => setHighlightPropertyKey(null)}
           />
         )}
         renderDefaults={(defaults) => <RenderDefaults defaults={defaults} handleDefaultsChange={handleDefaultsChange} />}
@@ -598,6 +629,21 @@ function AppContent() {
         }}
         onCancel={() => setRenameProfileModalOpen(false)}
       />
+
+      {showTutorial && (
+        <TutorialOverlay
+          onClose={() => {
+            tutorialSeenRef.current = true;
+            setTutorialSeen(true);
+            vscodeApi.postMessage({
+              command: "SET_LOCAL_STORAGE_VALUE",
+              key: "zowe.configEditor.tutorialSeen",
+              value: true,
+            });
+            setShowTutorial(false);
+          }}
+        />
+      )}
     </div>
   );
 }

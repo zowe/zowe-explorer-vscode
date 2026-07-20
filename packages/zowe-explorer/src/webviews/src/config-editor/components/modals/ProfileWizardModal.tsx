@@ -1,5 +1,5 @@
 import * as l10n from "@vscode/l10n";
-import { useModalClickOutside, useModalFocus } from "../../hooks";
+import { ModalShell } from "../ModalShell";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { isFileProperty } from "../../utils/propertyUtils";
@@ -207,9 +207,6 @@ export function ProfileWizardModal() {
     return authMethods.every((method) => validAuthTypes.includes(method));
   };
 
-  const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
-  const modalRef = useModalFocus(isOpen, "input[type='text']");
-
   if (!isOpen) return null;
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -217,653 +214,657 @@ export function ProfileWizardModal() {
       if (wizardProfileName.trim() && !isProfileNameTakenValue) {
         onCreateProfile();
       }
-    } else if (e.key === "Escape") {
-      onCancel();
     }
   };
 
   return (
-    <div className="modal-backdrop" onMouseDown={handleBackdropMouseDown} onClick={handleBackdropClick} onKeyDown={handleKeyDown} tabIndex={-1}>
-      <div className="modal wizard-modal" ref={modalRef} onClick={(e) => e.stopPropagation()} id="profile-wizard-modal">
-        <h3 className="wizard-title" id="profile-wizard-title">
-          {l10n.t("Profile Wizard")}
-        </h3>
-        <div className="wizard-content">
-          {/* Left Column */}
-          <div className="wizard-left-column">
-            {/* Parent Profile Selection */}
-            <div>
-              <label className="wizard-label" id="parent-profile-label">
-                {l10n.t("Parent Profile")}
-              </label>
-              <div className="wizard-parent-profile-container" ref={parentProfileDropdownRef}>
-                <input
-                  id="parent-profile-search"
-                  type="text"
-                  value={parentProfileSearch}
-                  onChange={(e) => handleParentProfileSearchChange((e.target as HTMLInputElement).value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      if (filteredParentProfiles.length > 0) {
-                        handleParentProfileSelect(filteredParentProfiles[0]);
-                      }
-                    } else if (e.key === "Escape") {
-                      setShowParentProfileDropdown(false);
-                      if (wizardRootProfile) {
-                        setParentProfileSearch(wizardRootProfile === "root" ? "/ (root)" : wizardRootProfile);
-                      } else {
-                        setParentProfileSearch("");
-                      }
-                    } else if (e.key === "ArrowDown") {
-                      setShowParentProfileDropdown(true);
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onCancel}
+      initialFocusSelector="input[type='text']"
+      titleId="profile-wizard-title"
+      overlayClassName="modal-backdrop"
+      panelClassName="modal wizard-modal"
+      panelId="profile-wizard-modal"
+      onKeyDown={handleKeyDown}
+    >
+      <h3 className="wizard-title" id="profile-wizard-title">
+        {l10n.t("Profile Wizard")}
+      </h3>
+      <div className="wizard-content">
+        {/* Left Column */}
+        <div className="wizard-left-column">
+          {/* Parent Profile Selection */}
+          <div>
+            <label className="wizard-label" id="parent-profile-label">
+              {l10n.t("Parent Profile")}
+            </label>
+            <div className="wizard-parent-profile-container" ref={parentProfileDropdownRef}>
+              <input
+                id="parent-profile-search"
+                type="text"
+                value={parentProfileSearch}
+                onChange={(e) => handleParentProfileSearchChange((e.target as HTMLInputElement).value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    if (filteredParentProfiles.length > 0) {
+                      handleParentProfileSelect(filteredParentProfiles[0]);
                     }
-                  }}
-                  onClick={handleParentProfileFocus}
-                  onFocus={(e) => (e.target as HTMLInputElement).select()}
-                  className={`modal-input wizard-input ${isParentProfileInvalid ? "error" : ""}`}
-                  placeholder={l10n.t("Select parent profile...")}
-                />
-                {showParentProfileDropdown && (
-                  <ul className="dropdown-list" id="parent-profile-dropdown">
-                    {filteredParentProfiles.map((profile: string, index: number) => (
-                      <li
-                        key={profile}
-                        id={`parent-profile-option-${index}`}
-                        className="dropdown-item"
-                        onMouseDown={() => handleParentProfileSelect(profile)}
-                      >
-                        {profile === "root" ? "/ (root)" : profile}
-                      </li>
-                    ))}
-                    {filteredParentProfiles.length === 0 && <li className="dropdown-item disabled">{l10n.t("No profiles found")}</li>}
+                  } else if (e.key === "Escape") {
+                    setShowParentProfileDropdown(false);
+                    if (wizardRootProfile) {
+                      setParentProfileSearch(wizardRootProfile === "root" ? "/ (root)" : wizardRootProfile);
+                    } else {
+                      setParentProfileSearch("");
+                    }
+                  } else if (e.key === "ArrowDown") {
+                    setShowParentProfileDropdown(true);
+                  }
+                }}
+                onClick={handleParentProfileFocus}
+                onFocus={(e) => (e.target as HTMLInputElement).select()}
+                className={`modal-input wizard-input ${isParentProfileInvalid ? "error" : ""}`}
+                placeholder={l10n.t("Select parent profile...")}
+              />
+              {showParentProfileDropdown && (
+                <ul className="dropdown-list" id="parent-profile-dropdown">
+                  {filteredParentProfiles.map((profile: string, index: number) => (
+                    <li
+                      key={profile}
+                      id={`parent-profile-option-${index}`}
+                      className="dropdown-item"
+                      onMouseDown={() => handleParentProfileSelect(profile)}
+                    >
+                      {profile === "root" ? "/ (root)" : profile}
+                    </li>
+                  ))}
+                  {filteredParentProfiles.length === 0 && <li className="dropdown-item disabled">{l10n.t("No profiles found")}</li>}
+                </ul>
+              )}
+              {isParentProfileInvalid && (
+                <div className="wizard-error" id="parent-profile-error">
+                  {l10n.t("Invalid parent profile selection. This would create a circular reference or invalid hierarchy.")}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Profile Name */}
+          <div>
+            <label className="wizard-label" id="profile-name-label">
+              {l10n.t("Profile Name")}{" "}
+              <span className="wizard-required-mark" aria-hidden="true">
+                *
+              </span>
+            </label>
+            <input
+              id="profile-name-input"
+              type="text"
+              value={wizardProfileName}
+              aria-required="true"
+              required
+              onKeyDown={(e) => {
+                // Handle Enter key to create profile
+                if (e.key === "Enter") {
+                  if (wizardProfileName.trim() && !isProfileNameTakenValue) {
+                    onCreateProfile();
+                  }
+                  return;
+                }
+                // Handle Escape key to close modal
+                if (e.key === "Escape") {
+                  onCancel();
+                  return;
+                }
+                // Allow: backspace, delete, tab, escape, enter, and navigation keys
+                if ([8, 9, 27, 13, 46, 37, 38, 39, 40].includes(e.keyCode)) {
+                  return;
+                }
+                // Allow: alphanumeric characters and underscore
+                if (/^[a-zA-Z0-9_]$/.test(e.key)) {
+                  return;
+                }
+                // Prevent all other keys
+                e.preventDefault();
+              }}
+              onChange={(e) => onProfileNameChange((e.target as HTMLInputElement).value)}
+              className={`modal-input wizard-input ${isProfileNameTakenValue ? "error" : ""}`}
+              placeholder={l10n.t("Enter profile name")}
+            />
+            {isProfileNameTakenValue ? (
+              <div className="wizard-error" id="profile-name-error">
+                {l10n.t("Profile name already exists under this root")}
+              </div>
+            ) : !wizardProfileName.trim() ? (
+              <div className="wizard-hint" id="profile-name-required-hint">
+                {l10n.t("A profile name is required to create a profile.")}
+              </div>
+            ) : null}
+          </div>
+
+          {/* Type Selection with Populate Defaults Button */}
+          <div>
+            <label className="wizard-label" id="profile-type-label">
+              {l10n.t("Profile Type")}
+            </label>
+            <div style={{ display: "flex", gap: "8px", alignItems: "stretch" }}>
+              <select
+                id="profile-type-select"
+                value={wizardSelectedType}
+                onChange={(e) => onSelectedTypeChange((e.target as HTMLSelectElement).value)}
+                onKeyDown={handleKeyDown}
+                className="modal-input wizard-select"
+                style={{ flex: 1 }}
+              >
+                <option value="">{l10n.t("Select a type")}</option>
+                {typeOptions.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+              <button
+                id="populate-defaults-button"
+                onClick={onPopulateDefaults}
+                disabled={!wizardSelectedType}
+                className="wizard-button secondary"
+                style={{
+                  padding: "4px 8px",
+                  fontSize: "12px",
+                  minWidth: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "1px solid var(--vscode-button-border)",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                title="Populate defaults"
+              >
+                <span className="codicon codicon-sparkle"></span>
+              </button>
+            </div>
+          </div>
+
+          {/* Add New Property */}
+          <div className="wizard-add-property-section" id="add-property-section">
+            <label className="wizard-label" id="add-property-label">
+              {l10n.t("Add Property")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}
+            </label>
+            <div className="wizard-property-form">
+              <div className="wizard-property-input-container">
+                <div style={{ position: "relative" }}>
+                  <input
+                    id="new-property-key-input"
+                    type="text"
+                    value={wizardNewPropertyKey}
+                    onChange={(e) => {
+                      onNewPropertyKeyChange((e.target as HTMLInputElement).value);
+                      onShowKeyDropdownChange(true);
+                    }}
+                    onFocus={() => onShowKeyDropdownChange(true)}
+                    onBlur={() => setTimeout(() => onShowKeyDropdownChange(false), 100)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        onAddProperty();
+                      } else if (e.key === "Escape") {
+                        onCancel();
+                      }
+                    }}
+                    className={`modal-input wizard-input ${
+                      wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) ? "error" : ""
+                    }`}
+                    placeholder={l10n.t("Property key")}
+                    style={{ paddingRight: "2rem" }}
+                  />
+                  {wizardNewPropertyKey && (
+                    <button
+                      id="clear-property-key-button"
+                      onClick={() => onNewPropertyKeyChange("")}
+                      className="profile-clear-button"
+                      title="Clear input"
+                    >
+                      <span
+                        className="codicon codicon-chrome-close"
+                        style={{
+                          fontSize: "12px",
+                          lineHeight: 1,
+                        }}
+                      />
+                    </button>
+                  )}
+                </div>
+                {wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) && (
+                  <div className="wizard-error" id="property-key-exists-error">
+                    {l10n.t("Property key already exists")}
+                  </div>
+                )}
+                {wizardShowKeyDropdown && (
+                  <ul className="dropdown-list" id="property-key-dropdown">
+                    {propertyOptions
+                      .filter((opt) => opt.toLowerCase().includes(wizardNewPropertyKey.toLowerCase()))
+                      .map((option, index) => (
+                        <li
+                          key={index}
+                          id={`property-key-option-${index}`}
+                          className="dropdown-item"
+                          title={propertyDescriptions[option] || ""}
+                          onMouseDown={() => {
+                            onNewPropertyKeyChange(option);
+                            onShowKeyDropdownChange(false);
+                          }}
+                        >
+                          {option}
+                        </li>
+                      ))}
                   </ul>
                 )}
-                {isParentProfileInvalid && (
-                  <div className="wizard-error" id="parent-profile-error">
-                    {l10n.t("Invalid parent profile selection. This would create a circular reference or invalid hierarchy.")}
-                  </div>
-                )}
               </div>
-            </div>
 
-            {/* Profile Name */}
-            <div>
-              <label className="wizard-label" id="profile-name-label">
-                {l10n.t("Profile Name")}{" "}
-                <span className="wizard-required-mark" aria-hidden="true">
-                  *
-                </span>
-              </label>
-              <input
-                id="profile-name-input"
-                type="text"
-                value={wizardProfileName}
-                aria-required="true"
-                required
-                onKeyDown={(e) => {
-                  // Handle Enter key to create profile
-                  if (e.key === "Enter") {
-                    if (wizardProfileName.trim() && !isProfileNameTakenValue) {
-                      onCreateProfile();
-                    }
-                    return;
-                  }
-                  // Handle Escape key to close modal
-                  if (e.key === "Escape") {
-                    onCancel();
-                    return;
-                  }
-                  // Allow: backspace, delete, tab, escape, enter, and navigation keys
-                  if ([8, 9, 27, 13, 46, 37, 38, 39, 40].includes(e.keyCode)) {
-                    return;
-                  }
-                  // Allow: alphanumeric characters and underscore
-                  if (/^[a-zA-Z0-9_]$/.test(e.key)) {
-                    return;
-                  }
-                  // Prevent all other keys
-                  e.preventDefault();
-                }}
-                onChange={(e) => onProfileNameChange((e.target as HTMLInputElement).value)}
-                className={`modal-input wizard-input ${isProfileNameTakenValue ? "error" : ""}`}
-                placeholder={l10n.t("Enter profile name")}
-              />
-              {isProfileNameTakenValue ? (
-                <div className="wizard-error" id="profile-name-error">
-                  {l10n.t("Profile name already exists under this root")}
-                </div>
-              ) : !wizardProfileName.trim() ? (
-                <div className="wizard-hint" id="profile-name-required-hint">
-                  {l10n.t("A profile name is required to create a profile.")}
-                </div>
-              ) : null}
-            </div>
-
-            {/* Type Selection with Populate Defaults Button */}
-            <div>
-              <label className="wizard-label" id="profile-type-label">
-                {l10n.t("Profile Type")}
-              </label>
-              <div style={{ display: "flex", gap: "8px", alignItems: "stretch" }}>
-                <select
-                  id="profile-type-select"
-                  value={wizardSelectedType}
-                  onChange={(e) => onSelectedTypeChange((e.target as HTMLSelectElement).value)}
-                  onKeyDown={handleKeyDown}
-                  className="modal-input wizard-select"
-                  style={{ flex: 1 }}
-                >
-                  <option value="">{l10n.t("Select a type")}</option>
-                  {typeOptions.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  id="populate-defaults-button"
-                  onClick={onPopulateDefaults}
-                  disabled={!wizardSelectedType}
-                  className="wizard-button secondary"
-                  style={{
-                    padding: "4px 8px",
-                    fontSize: "12px",
-                    minWidth: "32px",
-                    height: "32px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: "1px solid var(--vscode-button-border)",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                  }}
-                  title="Populate defaults"
-                >
-                  <span className="codicon codicon-sparkle"></span>
-                </button>
-              </div>
-            </div>
-
-            {/* Add New Property */}
-            <div className="wizard-add-property-section" id="add-property-section">
-              <label className="wizard-label" id="add-property-label">
-                {l10n.t("Add Property")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}
-              </label>
-              <div className="wizard-property-form">
-                <div className="wizard-property-input-container">
-                  <div style={{ position: "relative" }}>
-                    <input
-                      id="new-property-key-input"
-                      type="text"
-                      value={wizardNewPropertyKey}
-                      onChange={(e) => {
-                        onNewPropertyKeyChange((e.target as HTMLInputElement).value);
-                        onShowKeyDropdownChange(true);
-                      }}
-                      onFocus={() => onShowKeyDropdownChange(true)}
-                      onBlur={() => setTimeout(() => onShowKeyDropdownChange(false), 100)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          onAddProperty();
-                        } else if (e.key === "Escape") {
-                          onCancel();
-                        }
-                      }}
-                      className={`modal-input wizard-input ${
-                        wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) ? "error" : ""
-                      }`}
-                      placeholder={l10n.t("Property key")}
-                      style={{ paddingRight: "2rem" }}
-                    />
-                    {wizardNewPropertyKey && (
-                      <button
-                        id="clear-property-key-button"
-                        onClick={() => onNewPropertyKeyChange("")}
-                        className="profile-clear-button"
-                        title="Clear input"
-                      >
-                        <span
-                          className="codicon codicon-chrome-close"
-                          style={{
-                            fontSize: "12px",
-                            lineHeight: 1,
-                          }}
-                        />
-                      </button>
-                    )}
-                  </div>
-                  {wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) && (
-                    <div className="wizard-error" id="property-key-exists-error">
-                      {l10n.t("Property key already exists")}
-                    </div>
-                  )}
-                  {wizardShowKeyDropdown && (
-                    <ul className="dropdown-list" id="property-key-dropdown">
-                      {propertyOptions
-                        .filter((opt) => opt.toLowerCase().includes(wizardNewPropertyKey.toLowerCase()))
-                        .map((option, index) => (
-                          <li
-                            key={index}
-                            id={`property-key-option-${index}`}
-                            className="dropdown-item"
-                            title={propertyDescriptions[option] || ""}
-                            onMouseDown={() => {
-                              onNewPropertyKeyChange(option);
-                              onShowKeyDropdownChange(false);
-                            }}
-                          >
-                            {option}
-                          </li>
-                        ))}
-                    </ul>
-                  )}
-                </div>
-
-                {/* Auth Order Buttons */}
-                {isAuthOrderProperty(wizardNewPropertyKey.trim()) && (
-                  <div className="auth-order-buttons" id="auth-order-buttons">
-                    <label className="auth-order-label" id="auth-order-label">
-                      {l10n.t("Select Authentication Order")}
-                    </label>
-                    <div className="auth-order-button-container" id="auth-order-button-container">
-                      {["token", "basic", "bearer", "cert-pem"].map((authMethod) => {
-                        const isSelected = isAuthMethodAlreadyAdded(authMethod);
-                        let iconClass = "";
-                        switch (authMethod) {
-                          case "basic":
-                            iconClass = "codicon-account";
-                            break;
-                          case "token":
-                            iconClass = "codicon-key";
-                            break;
-                          case "bearer":
-                            iconClass = "codicon-shield";
-                            break;
-                          case "cert-pem":
-                            iconClass = "codicon-verified";
-                            break;
-                        }
-                        return (
-                          <button
-                            key={authMethod}
-                            id={`auth-method-${authMethod}-button`}
-                            type="button"
-                            onClick={() => handleAuthMethodClick(authMethod)}
-                            className={`auth-order-button ${isSelected ? "selected" : ""}`}
-                            title={`${getAuthMethodTooltip(authMethod)} (${isSelected ? "Click to remove" : "Click to add"})`}
-                          >
-                            <span className={`codicon ${iconClass}`} style={{ marginRight: "4px" }}></span>
-                            {authMethod}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {!isValidAuthOrder(wizardNewPropertyValue) && (
-                      <div className="auth-order-error" id="auth-order-error">
-                        {l10n.t("Invalid format. Use: basic, token, bearer, cert-pem")}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="wizard-property-value-row">
-                  {(() => {
-                    const propertyType = getPropertyType(wizardNewPropertyKey.trim());
-                    if (wizardNewPropertySecure) {
+              {/* Auth Order Buttons */}
+              {isAuthOrderProperty(wizardNewPropertyKey.trim()) && (
+                <div className="auth-order-buttons" id="auth-order-buttons">
+                  <label className="auth-order-label" id="auth-order-label">
+                    {l10n.t("Select Authentication Order")}
+                  </label>
+                  <div className="auth-order-button-container" id="auth-order-button-container">
+                    {["token", "basic", "bearer", "cert-pem"].map((authMethod) => {
+                      const isSelected = isAuthMethodAlreadyAdded(authMethod);
+                      let iconClass = "";
+                      switch (authMethod) {
+                        case "basic":
+                          iconClass = "codicon-account";
+                          break;
+                        case "token":
+                          iconClass = "codicon-key";
+                          break;
+                        case "bearer":
+                          iconClass = "codicon-shield";
+                          break;
+                        case "cert-pem":
+                          iconClass = "codicon-verified";
+                          break;
+                      }
                       return (
-                        <input
-                          id="new-property-value-input"
-                          type="password"
-                          value={wizardNewPropertyValue}
-                          onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              onAddProperty();
-                            } else if (e.key === "Escape") {
-                              onCancel();
-                            }
-                          }}
-                          className="modal-input wizard-property-value-input"
-                          placeholder="••••••••"
-                        />
-                      );
-                    } else if (propertyType === "boolean") {
-                      return (
-                        <select
-                          id="new-property-value-select"
-                          value={wizardNewPropertyValue}
-                          onChange={(e) => onNewPropertyValueChange((e.target as HTMLSelectElement).value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              onAddProperty();
-                            } else if (e.key === "Escape") {
-                              onCancel();
-                            }
-                          }}
-                          className="modal-input wizard-property-value-input"
-                        >
-                          <option value="true">true</option>
-                          <option value="false">false</option>
-                        </select>
-                      );
-                    } else if (propertyType === "number") {
-                      return (
-                        <input
-                          id="new-property-value-number"
-                          type="number"
-                          value={wizardNewPropertyValue}
-                          onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              onAddProperty();
-                            } else if (e.key === "Escape") {
-                              onCancel();
-                            }
-                          }}
-                          className="modal-input wizard-property-value-input"
-                          placeholder={l10n.t("Property value")}
-                        />
-                      );
-                    } else {
-                      const isAuthOrder = isAuthOrderProperty(wizardNewPropertyKey.trim());
-                      const hasValidationError = isAuthOrder && !isValidAuthOrder(wizardNewPropertyValue);
-
-                      return (
-                        <EnvVarAutocomplete
-                          value={wizardNewPropertyValue}
-                          onChange={onNewPropertyValueChange}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              onAddProperty();
-                            } else if (e.key === "Escape") {
-                              onCancel();
-                            }
-                          }}
-                          className={`modal-input wizard-property-value-input ${hasValidationError ? "error" : ""}`}
-                          placeholder={isAuthOrder ? l10n.t("e.g., basic, token") : l10n.t("Property value")}
-                          vscodeApi={vscodeApi}
-                        />
-                      );
-                    }
-                  })()}
-                  <div className="wizard-property-buttons">
-                    {wizardNewPropertyKey && isFileProperty(wizardNewPropertyKey.trim()) && (
-                      <button
-                        id="file-picker-button"
-                        onClick={() => {
-                          if (vscodeApi) {
-                            vscodeApi.postMessage({
-                              command: "SELECT_FILE",
-                              propertyIndex: -1,
-                              isNewProperty: true,
-                              source: "wizard",
-                            });
-                          } else {
-                            const input = document.createElement("input");
-                            input.type = "file";
-                            input.accept = "*";
-
-                            input.onchange = (event) => {
-                              const target = event.target as HTMLInputElement;
-                              if (target.files && target.files.length > 0) {
-                                const file = target.files[0];
-                                const fileName = file.name;
-                                const filePath = (file as any).webkitRelativePath || fileName;
-                                onNewPropertyValueChange(filePath);
-                              }
-                            };
-
-                            input.click();
-                          }
-                        }}
-                        className="wizard-file-picker"
-                        title="Select file"
-                      >
-                        <span className="codicon codicon-folder-opened"></span>
-                      </button>
-                    )}
-                    {canPropertyBeSecureForWizard(wizardNewPropertyKey, wizardSelectedType) ? (
-                      secureValuesAllowed ? (
                         <button
-                          id="secure-toggle-button"
-                          onClick={onNewPropertySecureToggle}
-                          className={`wizard-secure-toggle ${wizardNewPropertySecure ? "active" : "inactive"}`}
-                          title={wizardNewPropertySecure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
+                          key={authMethod}
+                          id={`auth-method-${authMethod}-button`}
+                          type="button"
+                          onClick={() => handleAuthMethodClick(authMethod)}
+                          className={`auth-order-button ${isSelected ? "selected" : ""}`}
+                          title={`${getAuthMethodTooltip(authMethod)} (${isSelected ? "Click to remove" : "Click to add"})`}
                         >
-                          <span className={`codicon ${wizardNewPropertySecure ? "codicon-lock" : "codicon-unlock"}`}></span>
+                          <span className={`codicon ${iconClass}`} style={{ marginRight: "4px" }}></span>
+                          {authMethod}
                         </button>
-                      ) : (
-                        <button
-                          id="secure-settings-button"
-                          onClick={() => {
-                            vscodeApi.postMessage({
-                              command: "OPEN_VSCODE_SETTINGS",
-                              searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
-                            });
-                          }}
-                          className="wizard-secure-toggle inactive"
-                          title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
-                        >
-                          <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
-                        </button>
-                      )
-                    ) : null}
-                  </div>
-                </div>
-                <button
-                  id="add-property-button"
-                  onClick={onAddProperty}
-                  disabled={
-                    !wizardNewPropertyKey.trim() ||
-                    wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) ||
-                    (isAuthOrderProperty(wizardNewPropertyKey.trim()) && !isValidAuthOrder(wizardNewPropertyValue))
-                  }
-                  className="wizard-add-property-button"
-                >
-                  {l10n.t("Add Property")}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Properties List */}
-          <div className="wizard-right-column" id="properties-column">
-            <label className="wizard-label" id="properties-label">
-              {l10n.t("Properties")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}
-            </label>
-            <div className="wizard-properties-container" id="properties-container">
-              {/* Combined Properties - User properties take precedence over inherited ones */}
-              {(() => {
-                // Get user property keys to check for overrides
-                const userPropertyKeys = new Set(wizardProperties.map((prop) => prop.key));
-
-                // Get schema properties for the selected type
-                const schemaProperties = wizardSelectedType ? propertyOptions || [] : [];
-
-                // Filter inherited properties to only show ones not overridden by user AND that exist in the schema
-                const filteredInheritedProperties =
-                  wizardSelectedType && Object.keys(wizardMergedProperties).length > 0
-                    ? Object.entries(wizardMergedProperties).filter(([key]) => !userPropertyKeys.has(key) && schemaProperties.includes(key))
-                    : [];
-                return (
-                  <>
-                    {/* Inherited Properties (not overridden) */}
-                    {filteredInheritedProperties.map(([key, propData]) => {
-                      // Extract logical profile path from jsonLoc (e.g., "profiles.lpar1.profiles.zosmf.profiles.w.properties.host" -> "lpar1.zosmf.w")
-                      const jsonLocParts = propData.argLoc?.jsonLoc?.split(".") || [];
-                      const profilePathParts = jsonLocParts.slice(1, -2); // Remove "profiles" prefix and "properties" + property name suffix
-                      const profilePath =
-                        profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".") ||
-                        "unknown profile";
-
-                      // Extract full normalized config path from osLoc
-                      const fullConfigPath = propData.argLoc?.osLoc?.[0] || "unknown config";
-
-                      return (
-                        <div
-                          key={`inherited-${key}`}
-                          id={`inherited-property-${key}`}
-                          className="wizard-property-item inherited"
-                          title={`Inherited from: ${profilePath} (${fullConfigPath})`}
-                        >
-                          <span className="wizard-property-key">{key}</span>
-                          <div className="wizard-property-value-container">
-                            {propData.secure ? (
-                              <span className="wizard-property-value-display">********</span>
-                            ) : (
-                              <span className="wizard-property-value-display">
-                                {typeof propData.value === "object" ? JSON.stringify(propData.value) : String(propData.value)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
                       );
                     })}
-
-                    {/* User-added Properties */}
-                    {wizardProperties.length > 0
-                      ? wizardProperties.map((prop, index) => {
-                          const propertyType = getPropertyType(prop.key);
-                          return (
-                            <div key={index} id={`user-property-${index}`} className="wizard-property-item">
-                              <span title={propertyDescriptions[prop.key] || ""} className="wizard-property-key">
-                                {prop.key}
-                              </span>
-                              <div className="wizard-property-actions">
-                                <div className="wizard-property-value-container">
-                                  {prop.secure ? (
-                                    <input
-                                      id={`property-value-input-${index}`}
-                                      type="password"
-                                      value={stringifyValueByType(prop.value)}
-                                      onChange={(e) => onPropertyValueChange(index, (e.target as HTMLInputElement).value)}
-                                      className="modal-input wizard-property-value-input-small"
-                                      placeholder="••••••••"
-                                    />
-                                  ) : propertyType === "boolean" ? (
-                                    <select
-                                      id={`property-value-select-${index}`}
-                                      value={stringifyValueByType(prop.value)}
-                                      onChange={(e) => onPropertyValueChange(index, (e.target as HTMLSelectElement).value)}
-                                      className="modal-input wizard-property-value-input-small"
-                                    >
-                                      <option value="true">true</option>
-                                      <option value="false">false</option>
-                                    </select>
-                                  ) : propertyType === "number" ? (
-                                    <input
-                                      id={`property-value-number-${index}`}
-                                      type="number"
-                                      value={stringifyValueByType(prop.value)}
-                                      onChange={(e) => onPropertyValueChange(index, (e.target as HTMLInputElement).value)}
-                                      className="modal-input wizard-property-value-input-small"
-                                    />
-                                  ) : (
-                                    <EnvVarAutocomplete
-                                      value={stringifyValueByType(prop.value)}
-                                      onChange={(value) => onPropertyValueChange(index, value)}
-                                      className="modal-input wizard-property-value-input-small"
-                                      vscodeApi={vscodeApi}
-                                    />
-                                  )}
-                                </div>
-                                {canPropertyBeSecureForWizard(prop.key, wizardSelectedType) ? (
-                                  secureValuesAllowed ? (
-                                    <button
-                                      id={`property-secure-toggle-${index}`}
-                                      onClick={() => onPropertySecureToggle(index)}
-                                      className={`wizard-property-secure-toggle ${prop.secure ? "active" : "inactive"}`}
-                                      title={prop.secure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
-                                    >
-                                      <span className={`codicon ${prop.secure ? "codicon-lock" : "codicon-unlock"}`}></span>
-                                    </button>
-                                  ) : (
-                                    <button
-                                      id={`property-secure-settings-${index}`}
-                                      onClick={() => {
-                                        vscodeApi.postMessage({
-                                          command: "OPEN_VSCODE_SETTINGS",
-                                          searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
-                                        });
-                                      }}
-                                      className="wizard-property-secure-toggle inactive"
-                                      title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
-                                    >
-                                      <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
-                                    </button>
-                                  )
-                                ) : null}
-                                <button
-                                  id={`remove-property-button-${index}`}
-                                  onClick={() => onRemoveProperty(index)}
-                                  className="wizard-button secondary"
-                                  style={{
-                                    padding: "4px 8px",
-                                    fontSize: "12px",
-                                    minWidth: "32px",
-                                    height: "28px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                  }}
-                                  title="Remove property"
-                                >
-                                  <span className="codicon codicon-trash"></span>
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })
-                      : null}
-                  </>
-                );
-              })()}
-
-              {/* Show "No properties added yet" when there are no properties at all */}
-              {(() => {
-                const userPropertyKeys = new Set(wizardProperties.map((prop) => prop.key));
-                const schemaProperties = wizardSelectedType ? propertyOptions || [] : [];
-                const filteredInheritedProperties =
-                  wizardSelectedType && Object.keys(wizardMergedProperties).length > 0
-                    ? Object.entries(wizardMergedProperties).filter(([key]) => !userPropertyKeys.has(key) && schemaProperties.includes(key))
-                    : [];
-
-                const hasAnyProperties = wizardProperties.length > 0 || filteredInheritedProperties.length > 0;
-
-                return !hasAnyProperties ? (
-                  <div className="wizard-no-properties" id="no-properties-message">
-                    {l10n.t("No properties added yet")}
                   </div>
-                ) : null;
-              })()}
+                  {!isValidAuthOrder(wizardNewPropertyValue) && (
+                    <div className="auth-order-error" id="auth-order-error">
+                      {l10n.t("Invalid format. Use: basic, token, bearer, cert-pem")}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="wizard-property-value-row">
+                {(() => {
+                  const propertyType = getPropertyType(wizardNewPropertyKey.trim());
+                  if (wizardNewPropertySecure) {
+                    return (
+                      <input
+                        id="new-property-value-input"
+                        type="password"
+                        value={wizardNewPropertyValue}
+                        onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            onAddProperty();
+                          } else if (e.key === "Escape") {
+                            onCancel();
+                          }
+                        }}
+                        className="modal-input wizard-property-value-input"
+                        placeholder="••••••••"
+                      />
+                    );
+                  } else if (propertyType === "boolean") {
+                    return (
+                      <select
+                        id="new-property-value-select"
+                        value={wizardNewPropertyValue}
+                        onChange={(e) => onNewPropertyValueChange((e.target as HTMLSelectElement).value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            onAddProperty();
+                          } else if (e.key === "Escape") {
+                            onCancel();
+                          }
+                        }}
+                        className="modal-input wizard-property-value-input"
+                      >
+                        <option value="true">true</option>
+                        <option value="false">false</option>
+                      </select>
+                    );
+                  } else if (propertyType === "number") {
+                    return (
+                      <input
+                        id="new-property-value-number"
+                        type="number"
+                        value={wizardNewPropertyValue}
+                        onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            onAddProperty();
+                          } else if (e.key === "Escape") {
+                            onCancel();
+                          }
+                        }}
+                        className="modal-input wizard-property-value-input"
+                        placeholder={l10n.t("Property value")}
+                      />
+                    );
+                  } else {
+                    const isAuthOrder = isAuthOrderProperty(wizardNewPropertyKey.trim());
+                    const hasValidationError = isAuthOrder && !isValidAuthOrder(wizardNewPropertyValue);
+
+                    return (
+                      <EnvVarAutocomplete
+                        value={wizardNewPropertyValue}
+                        onChange={onNewPropertyValueChange}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            onAddProperty();
+                          } else if (e.key === "Escape") {
+                            onCancel();
+                          }
+                        }}
+                        className={`modal-input wizard-property-value-input ${hasValidationError ? "error" : ""}`}
+                        placeholder={isAuthOrder ? l10n.t("e.g., basic, token") : l10n.t("Property value")}
+                        vscodeApi={vscodeApi}
+                      />
+                    );
+                  }
+                })()}
+                <div className="wizard-property-buttons">
+                  {wizardNewPropertyKey && isFileProperty(wizardNewPropertyKey.trim()) && (
+                    <button
+                      id="file-picker-button"
+                      onClick={() => {
+                        if (vscodeApi) {
+                          vscodeApi.postMessage({
+                            command: "SELECT_FILE",
+                            propertyIndex: -1,
+                            isNewProperty: true,
+                            source: "wizard",
+                          });
+                        } else {
+                          const input = document.createElement("input");
+                          input.type = "file";
+                          input.accept = "*";
+
+                          input.onchange = (event) => {
+                            const target = event.target as HTMLInputElement;
+                            if (target.files && target.files.length > 0) {
+                              const file = target.files[0];
+                              const fileName = file.name;
+                              const filePath = (file as any).webkitRelativePath || fileName;
+                              onNewPropertyValueChange(filePath);
+                            }
+                          };
+
+                          input.click();
+                        }
+                      }}
+                      className="wizard-file-picker"
+                      title="Select file"
+                    >
+                      <span className="codicon codicon-folder-opened"></span>
+                    </button>
+                  )}
+                  {canPropertyBeSecureForWizard(wizardNewPropertyKey, wizardSelectedType) ? (
+                    secureValuesAllowed ? (
+                      <button
+                        id="secure-toggle-button"
+                        onClick={onNewPropertySecureToggle}
+                        className={`wizard-secure-toggle ${wizardNewPropertySecure ? "active" : "inactive"}`}
+                        title={wizardNewPropertySecure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
+                      >
+                        <span className={`codicon ${wizardNewPropertySecure ? "codicon-lock" : "codicon-unlock"}`}></span>
+                      </button>
+                    ) : (
+                      <button
+                        id="secure-settings-button"
+                        onClick={() => {
+                          vscodeApi.postMessage({
+                            command: "OPEN_VSCODE_SETTINGS",
+                            searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
+                          });
+                        }}
+                        className="wizard-secure-toggle inactive"
+                        title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
+                      >
+                        <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+                      </button>
+                    )
+                  ) : null}
+                </div>
+              </div>
+              <button
+                id="add-property-button"
+                onClick={onAddProperty}
+                disabled={
+                  !wizardNewPropertyKey.trim() ||
+                  wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) ||
+                  (isAuthOrderProperty(wizardNewPropertyKey.trim()) && !isValidAuthOrder(wizardNewPropertyValue))
+                }
+                className="wizard-add-property-button"
+              >
+                {l10n.t("Add Property")}
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="wizard-actions" id="wizard-actions">
-          <button id="cancel-button" onClick={onCancel} className="wizard-button secondary">
-            {l10n.t("Cancel")}
-          </button>
-          <button
-            id="create-profile-button"
-            onClick={onCreateProfile}
-            disabled={!wizardProfileName.trim() || isProfileNameTakenValue || isParentProfileInvalid}
-            className="wizard-button primary"
-            title={
-              !wizardProfileName.trim()
-                ? l10n.t("Enter a profile name to create the profile.")
-                : isProfileNameTakenValue
-                ? l10n.t("Profile name already exists under this root.")
-                : isParentProfileInvalid
-                ? l10n.t("Invalid parent profile selection.")
-                : undefined
-            }
-          >
-            {l10n.t("Create Profile")}
-          </button>
+        {/* Right Column - Properties List */}
+        <div className="wizard-right-column" id="properties-column">
+          <label className="wizard-label" id="properties-label">
+            {l10n.t("Properties")} {wizardSelectedType ? `(${wizardSelectedType})` : ""}
+          </label>
+          <div className="wizard-properties-container" id="properties-container">
+            {/* Combined Properties - User properties take precedence over inherited ones */}
+            {(() => {
+              // Get user property keys to check for overrides
+              const userPropertyKeys = new Set(wizardProperties.map((prop) => prop.key));
+
+              // Get schema properties for the selected type
+              const schemaProperties = wizardSelectedType ? propertyOptions || [] : [];
+
+              // Filter inherited properties to only show ones not overridden by user AND that exist in the schema
+              const filteredInheritedProperties =
+                wizardSelectedType && Object.keys(wizardMergedProperties).length > 0
+                  ? Object.entries(wizardMergedProperties).filter(([key]) => !userPropertyKeys.has(key) && schemaProperties.includes(key))
+                  : [];
+              return (
+                <>
+                  {/* Inherited Properties (not overridden) */}
+                  {filteredInheritedProperties.map(([key, propData]) => {
+                    // Extract logical profile path from jsonLoc (e.g., "profiles.lpar1.profiles.zosmf.profiles.w.properties.host" -> "lpar1.zosmf.w")
+                    const jsonLocParts = propData.argLoc?.jsonLoc?.split(".") || [];
+                    const profilePathParts = jsonLocParts.slice(1, -2); // Remove "profiles" prefix and "properties" + property name suffix
+                    const profilePath =
+                      profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".") || "unknown profile";
+
+                    // Extract full normalized config path from osLoc
+                    const fullConfigPath = propData.argLoc?.osLoc?.[0] || "unknown config";
+
+                    return (
+                      <div
+                        key={`inherited-${key}`}
+                        id={`inherited-property-${key}`}
+                        className="wizard-property-item inherited"
+                        title={`Inherited from: ${profilePath} (${fullConfigPath})`}
+                      >
+                        <span className="wizard-property-key">{key}</span>
+                        <div className="wizard-property-value-container">
+                          {propData.secure ? (
+                            <span className="wizard-property-value-display">********</span>
+                          ) : (
+                            <span className="wizard-property-value-display">
+                              {typeof propData.value === "object" ? JSON.stringify(propData.value) : String(propData.value)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* User-added Properties */}
+                  {wizardProperties.length > 0
+                    ? wizardProperties.map((prop, index) => {
+                        const propertyType = getPropertyType(prop.key);
+                        return (
+                          <div key={index} id={`user-property-${index}`} className="wizard-property-item">
+                            <span title={propertyDescriptions[prop.key] || ""} className="wizard-property-key">
+                              {prop.key}
+                            </span>
+                            <div className="wizard-property-actions">
+                              <div className="wizard-property-value-container">
+                                {prop.secure ? (
+                                  <input
+                                    id={`property-value-input-${index}`}
+                                    type="password"
+                                    value={stringifyValueByType(prop.value)}
+                                    onChange={(e) => onPropertyValueChange(index, (e.target as HTMLInputElement).value)}
+                                    className="modal-input wizard-property-value-input-small"
+                                    placeholder="••••••••"
+                                  />
+                                ) : propertyType === "boolean" ? (
+                                  <select
+                                    id={`property-value-select-${index}`}
+                                    value={stringifyValueByType(prop.value)}
+                                    onChange={(e) => onPropertyValueChange(index, (e.target as HTMLSelectElement).value)}
+                                    className="modal-input wizard-property-value-input-small"
+                                  >
+                                    <option value="true">true</option>
+                                    <option value="false">false</option>
+                                  </select>
+                                ) : propertyType === "number" ? (
+                                  <input
+                                    id={`property-value-number-${index}`}
+                                    type="number"
+                                    value={stringifyValueByType(prop.value)}
+                                    onChange={(e) => onPropertyValueChange(index, (e.target as HTMLInputElement).value)}
+                                    className="modal-input wizard-property-value-input-small"
+                                  />
+                                ) : (
+                                  <EnvVarAutocomplete
+                                    value={stringifyValueByType(prop.value)}
+                                    onChange={(value) => onPropertyValueChange(index, value)}
+                                    className="modal-input wizard-property-value-input-small"
+                                    vscodeApi={vscodeApi}
+                                  />
+                                )}
+                              </div>
+                              {canPropertyBeSecureForWizard(prop.key, wizardSelectedType) ? (
+                                secureValuesAllowed ? (
+                                  <button
+                                    id={`property-secure-toggle-${index}`}
+                                    onClick={() => onPropertySecureToggle(index)}
+                                    className={`wizard-property-secure-toggle ${prop.secure ? "active" : "inactive"}`}
+                                    title={prop.secure ? "Secure (click to unsecure)" : "Unsecure (click to secure)"}
+                                  >
+                                    <span className={`codicon ${prop.secure ? "codicon-lock" : "codicon-unlock"}`}></span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    id={`property-secure-settings-${index}`}
+                                    onClick={() => {
+                                      vscodeApi.postMessage({
+                                        command: "OPEN_VSCODE_SETTINGS",
+                                        searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
+                                      });
+                                    }}
+                                    className="wizard-property-secure-toggle inactive"
+                                    title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
+                                  >
+                                    <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+                                  </button>
+                                )
+                              ) : null}
+                              <button
+                                id={`remove-property-button-${index}`}
+                                onClick={() => onRemoveProperty(index)}
+                                className="wizard-button secondary"
+                                style={{
+                                  padding: "4px 8px",
+                                  fontSize: "12px",
+                                  minWidth: "32px",
+                                  height: "28px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                                title="Remove property"
+                              >
+                                <span className="codicon codicon-trash"></span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    : null}
+                </>
+              );
+            })()}
+
+            {/* Show "No properties added yet" when there are no properties at all */}
+            {(() => {
+              const userPropertyKeys = new Set(wizardProperties.map((prop) => prop.key));
+              const schemaProperties = wizardSelectedType ? propertyOptions || [] : [];
+              const filteredInheritedProperties =
+                wizardSelectedType && Object.keys(wizardMergedProperties).length > 0
+                  ? Object.entries(wizardMergedProperties).filter(([key]) => !userPropertyKeys.has(key) && schemaProperties.includes(key))
+                  : [];
+
+              const hasAnyProperties = wizardProperties.length > 0 || filteredInheritedProperties.length > 0;
+
+              return !hasAnyProperties ? (
+                <div className="wizard-no-properties" id="no-properties-message">
+                  {l10n.t("No properties added yet")}
+                </div>
+              ) : null;
+            })()}
+          </div>
         </div>
       </div>
-    </div>
+
+      <div className="wizard-actions" id="wizard-actions">
+        <button id="cancel-button" onClick={onCancel} className="wizard-button secondary">
+          {l10n.t("Cancel")}
+        </button>
+        <button
+          id="create-profile-button"
+          onClick={onCreateProfile}
+          disabled={!wizardProfileName.trim() || isProfileNameTakenValue || isParentProfileInvalid}
+          className="wizard-button primary"
+          title={
+            !wizardProfileName.trim()
+              ? l10n.t("Enter a profile name to create the profile.")
+              : isProfileNameTakenValue
+                ? l10n.t("Profile name already exists under this root.")
+                : isParentProfileInvalid
+                  ? l10n.t("Invalid parent profile selection.")
+                  : undefined
+          }
+        >
+          {l10n.t("Create Profile")}
+        </button>
+      </div>
+    </ModalShell>
   );
 }

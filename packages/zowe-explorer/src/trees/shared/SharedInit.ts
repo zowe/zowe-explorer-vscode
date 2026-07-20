@@ -266,15 +266,40 @@ export class SharedInit {
         );
 
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.configEditor", async (opts) => {
+            vscode.commands.registerCommand("zowe.configEditor", async (opts?: vscode.Uri) => {
+                // When invoked from the editor/explorer context menu, opts is the clicked config file's URI.
+                const configPath = opts instanceof vscode.Uri ? opts.fsPath : undefined;
+
+                // Attempt to resolve profile/property from the editor cursor position
+                const cursorContext = configPath ? SharedInit.resolveZoweConfigCursorContext(configPath) : undefined;
+                const profileName = cursorContext?.profileName ?? "";
+                const profileType = cursorContext?.profileType ?? "";
+                const propertyKey = cursorContext?.propertyKey;
+
                 // Check if there's already an open ConfigEditor
                 if (existingConfigEditor && existingConfigEditor.panel) {
                     // Reuse existing ConfigEditor
                     existingConfigEditor.panel.reveal();
+
+                    if (configPath) {
+                        existingConfigEditor.initialSelection = { profileName, configPath, profileType, propertyKey };
+                        await existingConfigEditor.panel.webview.postMessage({
+                            command: "INITIAL_SELECTION",
+                            profileName,
+                            configPath,
+                            profileType,
+                            propertyKey,
+                        });
+                    }
+
                     return existingConfigEditor;
                 } else {
                     // Create new ConfigEditor
                     const configEditor = new ConfigEditor(context);
+
+                    if (configPath) {
+                        configEditor.initialSelection = { profileName, configPath, profileType, propertyKey };
+                    }
 
                     // Track this instance
                     existingConfigEditor = configEditor;
@@ -805,5 +830,171 @@ export class SharedInit {
         await SettingsConfig.standardizeSettings();
         ZoweLogger.info(vscode.l10n.t(`Zowe Explorer has activated successfully.`));
         Constants.ACTIVATED = true;
+    }
+
+    /**
+     * Resolves the profile name, profile type, and property key at the editor's current cursor
+     * position inside a zowe.config*.json file.
+     *
+     * Scans the text above the cursor line to find:
+     *   - the nearest enclosing "profiles" > "<name>" block  → profileName
+     *   - optionally the "properties" > "<key>" line         → propertyKey
+     * Then reads the parsed JSON for the profile's type.
+     *
+     * @param configPath The fsPath of the config file (used to match the active editor).
+     * @returns `{ profileName, profileType, propertyKey? }` or `undefined` when the cursor
+     *          is not inside a profiles block.
+     */
+    public static resolveZoweConfigCursorContext(
+        configPath: string
+    ): { profileName: string; profileType: string; propertyKey?: string } | undefined {
+        // Find the active text editor regardless of path-separator style.
+        const normalize = (p: string) => p.replace(/\\/g, "/").toLowerCase();
+        const editor = vscode.window.visibleTextEditors.find(
+            (e) => normalize(e.document.uri.fsPath) === normalize(configPath)
+        ) ?? vscode.window.activeTextEditor;
+
+        if (!editor) return undefined;
+        if (normalize(editor.document.uri.fsPath) !== normalize(configPath)) return undefined;
+
+        const text = editor.document.getText();
+        const cursorLine = editor.selection.active.line; // 0-based
+
+        // Parse the full JSON once to look up types.
+        let json: Record<string, any>;
+        try {
+            json = JSON.parse(text);
+        } catch {
+            return undefined;
+        }
+
+        // Split into lines; we scan upward from the cursor to find enclosing keys.
+        const lines = text.split("\n");
+
+        // We track brace depth relative to where we find context keys.
+        // Strategy: scan every line from the cursor upward, tracking brace/bracket balance,
+        // looking for the pattern:   "<key>": {
+        // When we find one at a depth that encloses our cursor, that's our context key.
+
+        // First pass: find all "key": { positions and their char offsets.
+        // We represent each as { line, key, openBraceOffset }.
+        interface KeyEntry { line: number; col: number; key: string }
+        const keyEntries: KeyEntry[] = [];
+        // Match lines like:    "someKey": {   or   "someKey": [
+        const keyLineRe = /^\s*"([^"\\]*)"\s*:\s*[{[]/;
+        for (let ln = 0; ln < lines.length; ln++) {
+            const m = keyLineRe.exec(lines[ln]);
+            if (m) {
+                keyEntries.push({ line: ln, col: lines[ln].indexOf('"'), key: m[1] });
+            }
+        }
+
+        // Compute char offset of the cursor position.
+        const cursorOffset = editor.document.offsetAt(editor.selection.active);
+
+        // Also detect the property key on the cursor's own line or the line of a "key": value pair.
+        // Pattern:  "someKey": <primitive>   — the cursor sits on this line.
+        const cursorLineText = lines[cursorLine] ?? "";
+        const propLineRe = /^\s*"([^"\\]*)"\s*:/;
+        const propMatch = propLineRe.exec(cursorLineText);
+        const cursorLineKey = propMatch ? propMatch[1] : undefined;
+
+        // To find the enclosing structural keys we need brace counting.
+        // Build a map: charOffset → brace depth.
+        // Then for each key entry, its "scope" is from its open-brace to its matching close-brace.
+        // We find all key entries whose scope contains the cursor offset,
+        // and take the deepest-nested ones in order.
+
+        // Build charOffset → brace depth array (skip characters inside strings).
+        const braceDepthAt: number[] = new Array(text.length + 1).fill(0);
+        // Also record, for each open-brace offset, the offset of its matching close-brace.
+        const closeBraceOf: Map<number, number> = new Map();
+        const openStack: number[] = [];
+        let depth = 0;
+        let inStr = false;
+        let escaped = false;
+        for (let ci = 0; ci < text.length; ci++) {
+            const ch = text[ci];
+            braceDepthAt[ci] = depth;
+            if (escaped) { escaped = false; continue; }
+            if (ch === "\\" && inStr) { escaped = true; continue; }
+            if (ch === '"') { inStr = !inStr; continue; }
+            if (inStr) continue;
+            if (ch === "{" || ch === "[") {
+                openStack.push(ci);
+                depth++;
+            } else if (ch === "}" || ch === "]") {
+                depth--;
+                const openPos = openStack.pop();
+                if (openPos !== undefined) {
+                    closeBraceOf.set(openPos, ci);
+                }
+            }
+        }
+        braceDepthAt[text.length] = depth;
+
+        // For each "key": { entry, find the exact open-brace offset.
+        // The key truly encloses the cursor only when:
+        //   openOffset < cursorOffset < closeBraceOffset
+        interface ScopedKey { key: string; depthAtOpen: number; openOffset: number }
+        const enclosingKeys: ScopedKey[] = [];
+
+        for (const entry of keyEntries) {
+            const lineStart = lines.slice(0, entry.line).reduce((sum, l) => sum + l.length + 1, 0);
+            const lineText = lines[entry.line];
+            const openIdx = lineText.search(/[{[]/);
+            if (openIdx === -1) continue;
+            const openOffset = lineStart + openIdx;
+
+            if (openOffset >= cursorOffset) continue; // opener is after cursor
+
+            const closeOffset = closeBraceOf.get(openOffset);
+            if (closeOffset === undefined || closeOffset <= cursorOffset) continue; // closer is at/before cursor
+
+            const depthInside = braceDepthAt[openOffset] + 1;
+            enclosingKeys.push({ key: entry.key, depthAtOpen: depthInside, openOffset });
+        }
+
+        // Sort by depth (shallowest first) so we get root → ... → deepest ancestor.
+        enclosingKeys.sort((a, b) => a.depthAtOpen - b.depthAtOpen);
+
+        // Build the logical path: we want entries matching
+        //   profiles > <name> [> properties > <key>]
+        // Extract them from the sorted enclosing keys.
+        const profilesIdx = enclosingKeys.findIndex((k) => k.key === "profiles");
+        if (profilesIdx === -1) return undefined;
+
+        // The profile name is the key immediately after "profiles"
+        const profileNameEntry = enclosingKeys[profilesIdx + 1];
+        if (!profileNameEntry) return undefined;
+        const profileName = profileNameEntry.key;
+
+        // Resolve profile type from parsed JSON.
+        const profileData = json?.profiles?.[profileName];
+        const profileType: string = typeof profileData?.type === "string" ? profileData.type : "";
+
+        // Check if we're inside a "properties" block.
+        const afterName = enclosingKeys.slice(profilesIdx + 2);
+        const propertiesIdx = afterName.findIndex((k) => k.key === "properties");
+
+        let propertyKey: string | undefined;
+        if (propertiesIdx !== -1) {
+            // If there's a deeper enclosing key after "properties", that's a sub-object.
+            // But if the cursor is directly on a property line, use cursorLineKey.
+            const deeperKey = afterName[propertiesIdx + 1];
+            if (deeperKey) {
+                // Cursor is inside a sub-object value — use the sub-object's key name.
+                propertyKey = deeperKey.key;
+            } else if (cursorLineKey && cursorLineKey !== "properties") {
+                // Cursor is on a direct property line inside "properties": { }
+                propertyKey = cursorLineKey;
+            }
+        } else if (cursorLineKey && cursorLineKey !== "type" && cursorLineKey !== "secure" && cursorLineKey !== "profiles") {
+            // Cursor is on e.g. "type": "rse" or other profile-level keys — not a property.
+            // But if the user clicks directly on a "properties" child without entering its block,
+            // this branch won't fire.  Leave propertyKey undefined.
+        }
+
+        return { profileName, profileType, propertyKey };
     }
 }

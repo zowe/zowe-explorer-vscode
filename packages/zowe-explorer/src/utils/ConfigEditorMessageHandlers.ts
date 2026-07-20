@@ -36,6 +36,14 @@ export class ConfigEditorMessageHandlers {
         private profileOperations: ConfigEditorProfileOperations
     ) {}
 
+    /**
+     * Returns whether the user has ever dismissed the tutorial.
+     * A single global boolean — not per config file path.
+     */
+    public getTutorialSeen(): boolean {
+        return LocalStorageAccess.getValue<boolean>(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN) ?? false;
+    }
+
     async handleGetProfiles(): Promise<void> {
         try {
             await ConfigUtils.createProfileInfoAndLoad();
@@ -43,11 +51,13 @@ export class ConfigEditorMessageHandlers {
 
         const { configs, parseErrors } = await this.getLocalConfigs();
         const secureValuesAllowed = await this.areSecureValuesAllowed();
+        const tutorialSeen = this.getTutorialSeen();
         await this.panel.webview.postMessage({
             command: "CONFIGURATIONS",
             contents: configs,
             parseErrors,
             secureValuesAllowed,
+            tutorialSeen,
         });
     }
 
@@ -96,6 +106,7 @@ export class ConfigEditorMessageHandlers {
             profileName: message.profileName,
             configPath: message.configPath,
             profileType: message.profileType,
+            propertyKey: message.propertyKey,
         });
     }
 
@@ -109,6 +120,7 @@ export class ConfigEditorMessageHandlers {
                 profileName: initialSelection.profileName,
                 configPath: initialSelection.configPath,
                 profileType: initialSelection.profileType,
+                propertyKey: initialSelection.propertyKey,
             });
             setInitialSelection(undefined);
         }
