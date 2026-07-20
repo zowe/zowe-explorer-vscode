@@ -793,6 +793,27 @@ describe("Table.View", () => {
         });
     });
 
+    describe("trackRows", () => {
+        it("appends rows to the internal data structure without notifying the webview", () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, false, { rows: [{ uri: "a" }], title: "Table" } as any);
+
+            view.trackRows({ uri: "b" }, { uri: "c" });
+
+            expect(view.getContent()).toStrictEqual([{ uri: "a" }, { uri: "b" }, { uri: "c" }]);
+            expect(globalMocks.updateWebviewMock).not.toHaveBeenCalled();
+        });
+
+        it("does not duplicate rows whose URI is already tracked", () => {
+            const globalMocks = createGlobalMocks();
+            const view = new Table.View(globalMocks.context as any, false, { rows: [{ uri: "a" }], title: "Table" } as any);
+
+            view.trackRows({ uri: "a" }, { uri: "b" });
+
+            expect(view.getContent()).toStrictEqual([{ uri: "a" }, { uri: "b" }]);
+        });
+    });
+
     describe("updateRow", () => {
         it("updates the rows on the internal data structure and calls updateWebview", async () => {
             const globalMocks = createGlobalMocks();

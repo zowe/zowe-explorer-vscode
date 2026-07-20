@@ -23,11 +23,13 @@ import {
     Sorting,
     PersistenceSchemaEnum,
     ZoweScheme,
+    FsDatasetsUtils,
 } from "@zowe/zowe-explorer-api";
 import { commands, Event, EventEmitter, ExtensionContext, l10n, Uri } from "vscode";
 import { SharedUtils } from "../shared/SharedUtils";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
+import { DatasetUtils } from "./DatasetUtils";
 import { ProfileManagement } from "../../management/ProfileManagement";
 import { Definitions } from "../../configuration/Definitions";
 import { Profiles } from "../../configuration/Profiles";
@@ -205,7 +207,11 @@ export function buildMemberInfo(member: any, parentUri: string): IDataSetInfo {
         }
     }
 
-    const memberUri = `${parentUri}/${member.member as string}`;
+    // The virtual filesystem keys PDS members by name plus the extension inferred from the PDS's own
+    // qualifiers (e.g. ".jcl" for a `*.JCL.*`-style dataset) - the URI must match that or opening the member fails.
+    const pdsName = parentUri.substring(parentUri.lastIndexOf("/") + 1);
+    const extension = DatasetUtils.getExtension(pdsName) ?? "";
+    const memberUri = `${parentUri}/${member.member as string}${extension}`;
 
     return {
         name: member.member,
@@ -541,11 +547,17 @@ export class DatasetTableView {
         DATASET: 2,
     };
 
-    private static async openInEditor(this: void, _view: Table.View, rows: Record<number, Table.RowData>): Promise<void> {
+    private static async openInEditor(this: void, view: Table.View, rows: Record<number, Table.RowData>): Promise<void> {
+        // Look up each row against the table's own row data instead of trusting the webview's copy verbatim.
+        const trustedRows = view.getContent();
         const allRows = Object.values(rows);
         for (const row of allRows) {
-            const uri = Uri.parse(row.uri as string);
-            // Guard against a webview-supplied URI pointing at a scheme other than the one this table is meant to open.
+            const trustedRow = trustedRows.find((r) => r.uri === row.uri);
+            if (trustedRow == null) {
+                continue;
+            }
+
+            const uri = Uri.parse(trustedRow.uri as string);
             if (uri.scheme !== ZoweScheme.DS) {
                 continue;
             }
@@ -815,7 +827,10 @@ export class DatasetTableView {
             // For members, we need to find or create the PDS node in the tree
             const uri = data.row.uri as string;
             const uriParts = uri.substring(uri.indexOf("/") + 1).split("/");
-            const [profileName, datasetName, memberName] = uriParts;
+            const [profileName, datasetName, rawMemberName] = uriParts;
+            // Member rows carry a synthetic extension (e.g. ".jcl") in their URI for editor language detection,
+            // but tree node labels never include it - strip it before comparing against labels.
+            const memberName = FsDatasetsUtils.trimExtension(rawMemberName);
 
             // First, try to find in session nodes
             const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
@@ -870,7 +885,10 @@ export class DatasetTableView {
             // For dataset nodes, try to find in tree or expand session
             const uri = data.row.uri as string;
             const uriParts = uri.substring(uri.indexOf("/") + 1).split("/");
-            const [profileName, datasetName] = uriParts;
+            const [profileName, rawDatasetName] = uriParts;
+            // PS dataset rows carry a synthetic extension in their URI for editor language detection,
+            // but tree node labels never include it - strip it before comparing against labels.
+            const datasetName = FsDatasetsUtils.trimExtension(rawDatasetName);
 
             // First, try to find in session nodes
             const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
@@ -1246,6 +1264,10 @@ export class DatasetTableView {
             if (this.currentDataSource.loadChildren) {
                 const memberRows = await this.currentDataSource.loadChildren(nodeId);
                 const tableRows = memberRows.map((info) => this.mapDatasetInfoToRowWithTree(info));
+
+                // Record the newly-loaded rows as known table content so that later lookups
+                // (e.g. openInEditor validating a row against the table's own data) recognize them.
+                this.table.trackRows(...tableRows);
 
                 // Send the loaded children back to the webview
                 await ((this.table as any).panel ?? (this.table as any).view).webview.postMessage({
