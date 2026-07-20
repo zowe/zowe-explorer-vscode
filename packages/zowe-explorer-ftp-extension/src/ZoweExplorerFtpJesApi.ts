@@ -162,6 +162,10 @@ export class FtpJesApi extends AbstractFtpApi implements ZoweExplorerApi.IJes {
                         ),
                     };
                     const destinationFile = DownloadJobs.getSpoolDownloadFile(mockJobFile, parms.omitJobidDirectory, parms.outDir);
+                    if (zowe.imperative.IO.containsBacktrack(destinationFile)) {
+                        throw new ZoweFtpExtensionError("Path contains backtrack, target folder is outside of the download folder.");
+                    }
+
                     zowe.imperative.IO.createDirsSyncFromFilePath(destinationFile);
                     zowe.imperative.IO.writeFile(destinationFile, spoolFileToDownload.contents);
                 }
