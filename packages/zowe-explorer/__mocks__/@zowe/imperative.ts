@@ -410,3 +410,10 @@ export class TextUtils {
 export namespace SessConstants {
     export declare const AUTH_TYPE_TOKEN = "token";
 }
+
+export class LoggerUtils {
+    static readonly CENSOR_RESPONSE = "****";
+    static censorRawData(_data: string, _category?: string): string {
+        return LoggerUtils.CENSOR_RESPONSE;
+    }
+}
