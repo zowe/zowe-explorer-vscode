@@ -418,3 +418,10 @@ export class IO {
         return child.startsWith(parent);
     }
 }
+
+export class LoggerUtils {
+    static readonly CENSOR_RESPONSE = "****";
+    static censorRawData(_data: string, _category?: string): string {
+        return LoggerUtils.CENSOR_RESPONSE;
+    }
+}

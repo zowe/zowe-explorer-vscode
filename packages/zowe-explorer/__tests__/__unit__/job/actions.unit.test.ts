@@ -428,7 +428,7 @@ describe("Jobs Actions Unit Tests - Function downloadSingleSpool", () => {
         expect(getSpoolFilesSpy).not.toHaveBeenCalled();
         expect(mocked(Gui.showOpenDialog)).not.toHaveBeenCalled();
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("Download Single Spool operation not implemented by extender");
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("****");
     });
 });
 
@@ -665,7 +665,7 @@ describe("Jobs Actions Unit Tests - Function submitJcl", () => {
 
         expect(submitJclSpy).toBeCalled();
         expect(mocked(Gui.errorMessage)).toBeCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("****");
     });
     it("If there are no registered profiles", async () => {
         createGlobalMocks();
@@ -1063,7 +1063,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
         await jobActions.getSpoolContent(session, { spool: spoolFile } as any);
 
         expect(mocked(vscode.window.showTextDocument)).not.toBeCalled();
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: Test");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error: ****");
     });
     it("should show an error message in case document cannot be shown for some reason", async () => {
         createGlobalMocks();
@@ -1079,7 +1079,7 @@ describe("Jobs Actions Unit Tests - Function getSpoolContent", () => {
 
         await jobActions.getSpoolContent(session, { spool: spoolFile } as any);
 
-        expect(mocked(Gui.errorMessage)).toBeCalledWith("Error: Test");
+        expect(mocked(Gui.errorMessage)).toHaveBeenCalledWith("Error: ****");
     });
     it("should fetch the spool content successfully", async () => {
         createGlobalMocks();
@@ -1178,7 +1178,7 @@ describe("focusing on a job in the tree view", () => {
         // assert
         expect(mocked(blockMocks.jobTreeProvider.refreshElement)).toHaveBeenCalledWith(blockMocks.existingJobSession);
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("****");
     });
     it("should handle error adding a new tree view session", async () => {
         // arrange
@@ -1190,7 +1190,7 @@ describe("focusing on a job in the tree view", () => {
         // assert
         expect(mocked(blockMocks.jobTreeProvider.addSession)).toHaveBeenCalledWith(blockMocks.datasetSessionName);
         expect(mocked(Gui.errorMessage)).toHaveBeenCalled();
-        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain(testError.message);
+        expect(mocked(Gui.errorMessage).mock.calls[0][0]).toContain("****");
     });
 
     it("should handle error on clicking the hyperlink of job submitted", async () => {

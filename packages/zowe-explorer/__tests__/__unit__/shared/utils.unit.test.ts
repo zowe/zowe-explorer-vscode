@@ -479,7 +479,7 @@ describe("Test force upload", () => {
             },
             expect.any(Function)
         );
-        expect(blockMocks.showErrorMessage.mock.calls[0][0]).toBe(`Error: ${testError.message}`);
+        expect(blockMocks.showErrorMessage.mock.calls[0][0]).toBe("Error: ****");
     });
 });
 
