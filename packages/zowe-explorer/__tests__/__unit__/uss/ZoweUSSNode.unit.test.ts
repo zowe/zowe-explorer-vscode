@@ -1284,6 +1284,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getUSSDocumentFilePath()", () =
             profile: globalMocks.profileOne,
         });
         testNode.fullPath = "test/../../bad/path";
+        jest.spyOn(zowe.imperative.IO, "containsBacktrack").mockReturnValueOnce(true);
 
         expect(() => testNode.getUSSDocumentFilePath()).toThrow("Path contains backtrack, target folder is outside of the zowe tmp directory");
     });
