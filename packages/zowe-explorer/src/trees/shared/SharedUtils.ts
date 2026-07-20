@@ -147,17 +147,22 @@ export class SharedUtils {
     }
 
     /**
-     * Function that validates job prefix
-     * @param {string} text - prefix text
-     * @returns undefined | string
+     * Function that validates job owner or prefix input.
+     * For prefix, comma-separated values are supported; each individual value must be at most
+     * {@link Constants.JOBS_MAX_PREFIX} characters long.
+     * @param {string} text - owner or prefix text
+     * @returns null when valid, otherwise a localised error string
      */
     public static jobStringValidator(text: string, localizedParam: "owner" | "prefix"): string | null {
         switch (localizedParam) {
             case "owner":
                 return text.length > Constants.JOBS_MAX_PREFIX ? vscode.l10n.t("Invalid job owner") : null;
             case "prefix":
-            default:
-                return text.length > Constants.JOBS_MAX_PREFIX ? vscode.l10n.t("Invalid job prefix") : null;
+            default: {
+                const parts = text.split(",").map((p) => p.trim());
+                const invalid = parts.some((p) => p.length === 0 || p.length > Constants.JOBS_MAX_PREFIX);
+                return invalid ? vscode.l10n.t("Invalid job prefix") : null;
+            }
         }
     }
 

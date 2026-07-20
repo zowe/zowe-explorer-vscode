@@ -2262,3 +2262,49 @@ describe("SharedUtils helpers", () => {
         });
     });
 });
+
+describe("Shared utils unit tests - jobStringValidator", () => {
+    describe("owner validation", () => {
+        it("returns null for a valid owner (≤8 chars)", () => {
+            expect(SharedUtils.jobStringValidator("MYUSER", "owner")).toBeNull();
+        });
+
+        it("returns an error for an owner exceeding 8 chars", () => {
+            expect(SharedUtils.jobStringValidator("TOOLONGOWNER", "owner")).not.toBeNull();
+        });
+    });
+
+    describe("prefix validation", () => {
+        it("returns null for a simple valid prefix", () => {
+            expect(SharedUtils.jobStringValidator("ABC*", "prefix")).toBeNull();
+        });
+
+        it("returns null for a prefix without wildcard (bare name, ≤8 chars)", () => {
+            expect(SharedUtils.jobStringValidator("ABC", "prefix")).toBeNull();
+        });
+
+        it("returns an error for a prefix exceeding 8 chars", () => {
+            expect(SharedUtils.jobStringValidator("TOOLONGPR", "prefix")).not.toBeNull();
+        });
+
+        it("returns null for comma-separated prefixes where each part is ≤8 chars", () => {
+            expect(SharedUtils.jobStringValidator("ABC*, DEF*", "prefix")).toBeNull();
+        });
+
+        it("returns null for comma-separated prefixes without wildcards", () => {
+            expect(SharedUtils.jobStringValidator("ABC,DEF,GHI", "prefix")).toBeNull();
+        });
+
+        it("returns an error when any comma-separated part exceeds 8 chars", () => {
+            expect(SharedUtils.jobStringValidator("ABC*, TOOLONGPREFIX", "prefix")).not.toBeNull();
+        });
+
+        it("returns an error for an empty part (trailing comma)", () => {
+            expect(SharedUtils.jobStringValidator("ABC,", "prefix")).not.toBeNull();
+        });
+
+        it("returns an error for an empty part (leading comma)", () => {
+            expect(SharedUtils.jobStringValidator(",ABC", "prefix")).not.toBeNull();
+        });
+    });
+});
