@@ -826,6 +826,19 @@ export namespace Table {
             return this.data.rows;
         }
 
+        /**
+         * Records rows as known content of the table without notifying the webview.
+         * Use this for rows that were already delivered to the webview through a separate
+         * message (e.g. lazily-loaded tree children), so that later lookups against
+         * {@link getContent} recognize them, without triggering a full re-render of the table.
+         *
+         * @param rows The rows to record
+         */
+        public trackRows(...rows: RowData[]): void {
+            const knownUris = new Set(this.data.rows.map((row) => row.uri));
+            this.data.rows.push(...rows.filter((row) => !knownUris.has(row.uri)));
+        }
+
         public async getPageSize(): Promise<number> {
             return this.request<number>("get-page-size");
         }
