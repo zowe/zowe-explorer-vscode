@@ -84,7 +84,7 @@ const config = {
             },
             {
                 test: /\.js$/,
-                include: /agent-base|https?-proxy-agent|htmlparser2/,
+                include: /agent-base|https?-proxy-agent|htmlparser2|sanitize-html/,
                 use: {
                     loader: "babel-loader",
                     options: {
