@@ -12,7 +12,7 @@
 /**
  * This interface defines the options that can be sent into the download data set function
  */
-
+import * as path from "path";
 const log4js = require("log4js");
 
 /**
@@ -415,7 +415,7 @@ export class IO {
     public static giveAccessOnlyToOwner(filename: string) {}
 
     public static isSubPath(parent: string, child: string): boolean {
-        return child.startsWith(parent);
+        return child.startsWith(parent + path.sep);
     }
 }
 
