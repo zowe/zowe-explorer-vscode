@@ -31,7 +31,7 @@
   ],
   "main": "./out/src/main.extension",
   "l10n": "./l10n",
-  "browser": "./out/src/main.extension",
+  "browser": "./out/src/web.extension.js",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
