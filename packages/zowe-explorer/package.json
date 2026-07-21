@@ -910,7 +910,7 @@
           "group": "inline"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(directory.*|(?!.*_fav.*)ussSession.*isFilterSearch)/ && !listMultiSelection",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
           "command": "zowe.uss.filterBy",
           "group": "000_zowe_ussMainframeInteraction@1"
         },
