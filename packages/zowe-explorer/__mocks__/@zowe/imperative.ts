@@ -417,6 +417,10 @@ export class IO {
     public static isSubPath(parent: string, child: string): boolean {
         return child.startsWith(parent + path.sep);
     }
+
+    public static containsBacktrack(_path: string): boolean {
+        return false;
+    }
 }
 
 export class LoggerUtils {
