@@ -183,13 +183,7 @@ export class VscePromptApi extends AbstractConfigManager {
     }
 
     protected storeServerPath(host: string, path: string): void {
-        const config = vscode.workspace.getConfiguration("zowe");
-        let serverPathMap: Record<string, string> = config.get("zowex.serverInstallPath") ?? {};
-        if (!serverPathMap) {
-            serverPathMap = {};
-        }
-        serverPathMap[host] = path;
-        config.update("zowex.serverInstallPath", serverPathMap, vscode.ConfigurationTarget.Global);
+        SshClientCache.inst.storeServerPath(host, path);
     }
 
     protected getClientSetting<T>(setting: keyof ISshSession): T | undefined {
