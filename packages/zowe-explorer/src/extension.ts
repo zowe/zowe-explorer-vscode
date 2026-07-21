@@ -43,6 +43,27 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     await ProfilesUtils.handleV1MigrationStatus();
     await Profiles.createInstance(ZoweLogger.imperativeLogger);
 
+    // todo where to add  autoUpdate to schema?
+
+    // profileTypeConfigurations.forEach((t) => {
+    //     if (t.type === ZosUssProfile.type) {
+    //         // add the autoUpdate property for SSH profiles which is only used by the VSC extension.
+    //         const sshAutoUpdateProperty: imperative.ICommandProfileProperty = {
+    //             type: "boolean",
+    //             optionDefinition: {
+    //                 name: "autoUpdate",
+    //                 description:
+    //                     "Specify false to prevent the Zowe VS Code extension " +
+    //                     "from automatically updating the SSH backend server when it is outdated.",
+    //                 type: "boolean",
+    //                 aliases: [],
+    //                 group: SshSession.SSH_CONNECTION_OPTION_GROUP,
+    //             },
+    //         };
+    //         t.schema.properties = { ...t.schema.properties, autoUpdate: sshAutoUpdateProperty };
+    //     }
+    // });
+
     const providers = await SharedTreeProviders.initializeProviders({
         ds: () => DatasetInit.initDatasetProvider(context),
         uss: () => USSInit.initUSSProvider(context),

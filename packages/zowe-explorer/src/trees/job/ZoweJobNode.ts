@@ -443,7 +443,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 }
                 // Support comma-separated prefixes by issuing one API call per prefix value
                 // and merging the results.
-                const prefixParts = prefix.split(",").map((p) => p.trim()).filter(Boolean);
+                const prefixParts = prefix
+                    .split(",")
+                    .map((p) => p.trim())
+                    .filter(Boolean);
                 const allJobs = await Promise.all(
                     prefixParts.map((p) =>
                         ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
