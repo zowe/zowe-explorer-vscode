@@ -1970,6 +1970,23 @@ describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
         expect(await node.fetchAttributes()).toBeUndefined();
         lookupMock.mockRestore();
     });
+    it("returns undefined if API response has undefined items", async () => {
+        const globalMocks = createGlobalMocks();
+        const fileEntry = new UssFile("testFile");
+        const lookupMock = vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
+        vi.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: { items: undefined },
+            commandResponse: "",
+        });
+        expect(await node.fetchAttributes()).toBeUndefined();
+        lookupMock.mockRestore();
+    });
     it("returns undefined if API response apiResponse is more than 1 array/file attrs", async () => {
         const globalMocks = createGlobalMocks();
         const lookupMock = vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(undefined);

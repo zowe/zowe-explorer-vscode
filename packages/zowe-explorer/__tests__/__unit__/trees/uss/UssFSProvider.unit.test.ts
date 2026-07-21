@@ -724,6 +724,30 @@ describe("UssFSProvider", () => {
             createRecursiveSpy.mockRestore();
             existsSpy.mockRestore();
         });
+
+        it("creates a directory entry for successful empty directory response from extender", async () => {
+            vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+                fileList: vi.fn().mockResolvedValueOnce({
+                    success: true,
+                    commandResponse: "",
+                    apiResponse: { items: [] },
+                }),
+            } as any);
+            const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createRecursiveSpy = vi
+                .spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive")
+                .mockImplementation((() => undefined) as any);
+
+            expect(await UssFSProvider.instance.listFiles(testProfile, testUris.folder)).toStrictEqual({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [] },
+            });
+            expect(createRecursiveSpy).toHaveBeenCalledWith(testUris.folder);
+
+            createRecursiveSpy.mockRestore();
+            existsSpy.mockRestore();
+        });
         it("creates a directory entry when the response includes the dot self-entry", async () => {
             vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
                 fileList: vi.fn().mockResolvedValueOnce({
