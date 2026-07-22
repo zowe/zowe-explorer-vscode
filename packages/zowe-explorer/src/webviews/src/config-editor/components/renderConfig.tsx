@@ -9,11 +9,12 @@
  *
  */
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import * as l10n from "@vscode/l10n";
 import { cloneDeep } from "es-toolkit";
 import { SortDropdown } from "./SortDropdown";
 import { EnvVarAutocomplete } from "./EnvVarAutocomplete";
+import { InfoIcon } from "./InfoIcon";
 import {
   flattenProfiles,
   extractProfileKeyFromPath,
@@ -76,6 +77,10 @@ interface RenderConfigProps {
   ) => boolean;
   canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
   isMergedPropertySecure: (displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean) => boolean;
+  /** Property key to scroll to and blink when first rendered (from editor cursor context). */
+  highlightPropertyKey?: string | null;
+  /** Called once the blink has been triggered so the parent can clear the key. */
+  onHighlightPropertyKeyConsumed?: () => void;
 }
 
 export const RenderConfig = ({
@@ -103,6 +108,8 @@ export const RenderConfig = ({
   isPropertySecure,
   canPropertyBeSecure,
   isMergedPropertySecure,
+  highlightPropertyKey,
+  onHighlightPropertyKeyConsumed,
 }: RenderConfigProps) => {
   const {
     configurations,
@@ -122,6 +129,55 @@ export const RenderConfig = ({
   } = useConfigContext();
 
   const { showMergedProperties, propertySortOrder } = configEditorSettings;
+
+  // Blink the highlighted property row once when highlightPropertyKey is set.
+  // Uses a retry loop because RenderConfig may mount before the DOM rows finish painting
+  // (profile selection and highlight are set in the same React batch).
+  const highlightConsumedRef = useRef<string | null>(null);
+  useEffect(() => {
+    // Reset consumed tracker when highlight is cleared so re-invocations work.
+    if (!highlightPropertyKey) {
+      highlightConsumedRef.current = null;
+      return;
+    }
+    if (highlightPropertyKey === highlightConsumedRef.current) return;
+    highlightConsumedRef.current = highlightPropertyKey;
+
+    let attempts = 0;
+    const maxAttempts = 20; // try for up to 2 seconds (20 × 100ms)
+    let timerId: ReturnType<typeof setTimeout>;
+
+    const tryBlink = () => {
+      const el = document.querySelector<HTMLElement>(`[data-property-key="${CSS.escape(highlightPropertyKey)}"]`);
+      if (!el) {
+        attempts++;
+        if (attempts < maxAttempts) {
+          timerId = setTimeout(tryBlink, 100);
+        } else {
+          // Give up — clear the key so another invocation can retry.
+          onHighlightPropertyKeyConsumed?.();
+        }
+        return;
+      }
+
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      const row = el.closest<HTMLElement>(".config-item.property-entry") ?? el.closest<HTMLElement>(".config-item") ?? el;
+      row.classList.add("property-highlight-blink");
+      row.addEventListener(
+        "animationend",
+        () => {
+          row.classList.remove("property-highlight-blink");
+          onHighlightPropertyKeyConsumed?.();
+        },
+        { once: true }
+      );
+    };
+
+    // Initial delay — profile panel needs one render cycle after profile selection.
+    timerId = setTimeout(tryBlink, 100);
+
+    return () => clearTimeout(timerId);
+  }, [highlightPropertyKey]);
 
   const MERGED_PROPERTIES_OPTIONS: MergedPropertiesVisibility[] = ["hide", "show", "unfiltered"];
   const isUntypedProfile = isCurrentProfileUntyped();
@@ -385,8 +441,8 @@ export const RenderConfig = ({
           return (
             <div key={fullKey} className="config-item">
               <div className="config-item-container" style={{ gridTemplateColumns: "150px 1fr" }}>
-                <span className="config-label" title={displayKey ? propertyDescriptions[displayKey] || "" : ""} style={{ fontWeight: "bold" }}>
-                  {displayKey}
+                <span className="config-label" style={{ fontWeight: "bold" }}>
+                  <span className="config-label-text" title={displayKey ?? ""}>{displayKey}</span>
                 </span>
                 <div
                   onClick={() => {
@@ -520,8 +576,8 @@ export const RenderConfig = ({
               <div key={fullKey} className="config-item">
                 <div className="config-item-container" style={{ flexDirection: "column", alignItems: "flex-start" }}>
                   <div style={{ marginBottom: "8px" }}>
-                    <span className="config-label" title={displayKey ? propertyDescriptions[displayKey] || "" : ""} style={{ fontWeight: "bold" }}>
-                      {displayKey}
+                    <span className="config-label" style={{ fontWeight: "bold" }}>
+                      <span className="config-label-text" title={displayKey ?? ""}>{displayKey}</span>
                     </span>
                   </div>
                   <div
@@ -690,13 +746,12 @@ export const RenderConfig = ({
                 <div className="config-item-container " data-testid="profile-property-container">
                   <span
                     className="config-label"
-                    title={displayKey ? propertyDescriptions[displayKey] || "" : ""}
                     style={{
                       color: "var(--vscode-descriptionForeground)",
                       cursor: "pointer",
                     }}
                   >
-                    {displayKey}
+                    <span className="config-label-text" title={displayKey ?? ""}>{displayKey}</span>
                   </span>
                   <input
                     className="config-input config-input-inherited"
@@ -744,6 +799,15 @@ export const RenderConfig = ({
 
           const inheritedInputClass = isFromMergedProps && !isDeletedMergedProperty ? " config-input-inherited" : "";
 
+          const schemaDescription = displayKey ? propertyDescriptions[displayKey] || null : null;
+          const profileTypeForDefault = extractProfileKeyFromPath(path)
+            ? getProfileType({ profileKey: extractProfileKeyFromPath(path), selectedTab, configurations, pendingChanges, renames })
+            : null;
+          const schemaDefault =
+            displayKey && profileTypeForDefault
+              ? (schemaValidations[configPath]?.propertySchema[profileTypeForDefault]?.[displayKey]?.default ?? null)
+              : null;
+
           const readOnlyContainer = (
             <div
               className="config-item-container "
@@ -752,7 +816,6 @@ export const RenderConfig = ({
             >
               <span
                 className="config-label"
-                title={displayKey ? propertyDescriptions[displayKey] || "" : ""}
                 style={
                   isFromMergedProps && !isDeletedMergedProperty
                     ? {
@@ -762,7 +825,12 @@ export const RenderConfig = ({
                     : {}
                 }
               >
-                {displayKey}
+                <span className="config-label-text" title={displayKey ?? ""}>
+                  {displayKey}
+                </span>
+                {schemaDescription && displayKey && (
+                  <InfoIcon fieldKey={displayKey} description={schemaDescription} defaultValue={schemaDefault ?? undefined} />
+                )}
               </span>
               {displayKey === "type" && path[path.length - 1] !== "properties" ? (
                 <div style={{ position: "relative", width: "100%" }}>
@@ -1065,6 +1133,7 @@ export const RenderConfig = ({
               key={fullKey}
               className="config-item property-entry"
               data-testid="profile-property-entry"
+              data-property-key={displayKey ?? ""}
               onClick={isFromMergedProps && !isDeletedMergedProperty && jsonLoc ? () => handleNavigateToSource(jsonLoc, osLoc) : undefined}
               title={
                 isFromMergedProps && !isDeletedMergedProperty && jsonLoc

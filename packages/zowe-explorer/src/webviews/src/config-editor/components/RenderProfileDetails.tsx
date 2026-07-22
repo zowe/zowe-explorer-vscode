@@ -33,6 +33,10 @@ interface RenderProfileDetailsProps {
   handleUnlinkMergedProperty: (propertyKey: string | undefined, fullKey: string) => void;
   handleNavigateToSource: (jsonLoc: string, osLoc?: string[]) => void;
   openAddProfileModalAtPath: (path: string[], key?: string, value?: string) => void;
+  /** Property key to blink in the details panel (comes from editor cursor context). */
+  highlightPropertyKey?: string | null;
+  /** Called once the blink animation has started so the key can be cleared. */
+  onHighlightPropertyKeyConsumed?: () => void;
 }
 
 export const RenderProfileDetails = ({
@@ -50,6 +54,8 @@ export const RenderProfileDetails = ({
   handleUnlinkMergedProperty,
   handleNavigateToSource,
   openAddProfileModalAtPath,
+  highlightPropertyKey,
+  onHighlightPropertyKeyConsumed,
 }: RenderProfileDetailsProps) => {
   const {
     selectedProfileKey,
@@ -298,6 +304,8 @@ export const RenderProfileDetails = ({
                   isPropertySecure={isPropertySecure}
                   canPropertyBeSecure={canPropertyBeSecure}
                   isMergedPropertySecure={isMergedPropertySecure}
+                  highlightPropertyKey={highlightPropertyKey ?? null}
+                  onHighlightPropertyKeyConsumed={onHighlightPropertyKeyConsumed}
                 />
               </div>
             );

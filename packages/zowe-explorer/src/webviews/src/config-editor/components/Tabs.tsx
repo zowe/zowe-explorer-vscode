@@ -2,16 +2,16 @@ import { useState, useEffect } from "react";
 import * as l10n from "@vscode/l10n";
 import { useConfigContext } from "../context/ConfigContext";
 
-interface TabsProps {
+export interface TabsProps {
   onTabChange: (index: number) => void;
-  onOpenRawFile: (filePath: string) => void;
   onRevealInFinder: (filePath: string) => void;
   onOpenSchemaFile: (filePath: string) => void;
   onAddNewConfig: () => void;
   onToggleAutostore: (configPath: string) => void;
+  onShowTutorial: () => void;
 }
 
-export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchemaFile, onAddNewConfig, onToggleAutostore }: TabsProps) {
+export function Tabs({ onTabChange, onRevealInFinder, onOpenSchemaFile, onAddNewConfig, onToggleAutostore, onShowTutorial }: TabsProps) {
   const { configurations, selectedTab, pendingChanges, autostoreChanges, renames, deletions, pendingDefaults, defaultsDeletions } =
     useConfigContext();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabIndex: number } | null>(null);
@@ -71,13 +71,11 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
     setContextMenu({ x, y, tabIndex: index });
   };
 
-  const handleContextMenuAction = (action: "open" | "reveal" | "schema" | "autostore") => {
+  const handleContextMenuAction = (action: "reveal" | "schema" | "autostore") => {
     if (contextMenu) {
       const config = configurations[contextMenu.tabIndex];
       if (config) {
-        if (action === "open") {
-          onOpenRawFile(config.configPath);
-        } else if (action === "reveal") {
+        if (action === "reveal") {
           onRevealInFinder(config.configPath);
         } else if (action === "schema" && config.schemaPath) {
           onOpenSchemaFile(config.schemaPath);
@@ -147,6 +145,14 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
         </div>
 
         <div className="tabs-toolbar">
+          <button
+            className="ce-icon-button"
+            onClick={onShowTutorial}
+            title={l10n.t("Open Tutorial")}
+            data-testid="open-tutorial"
+          >
+            <span className="codicon codicon-mortar-board codicon-size-16"></span>
+          </button>
           <a
             className="ce-icon-button"
             href="https://docs.zowe.org/stable/user-guide/cli-using-using-team-profiles"
@@ -171,10 +177,6 @@ export function Tabs({ onTabChange, onOpenRawFile, onRevealInFinder, onOpenSchem
       {/* Context Menu */}
       {contextMenu && (
         <div className="tab-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }} onClick={(e) => e.stopPropagation()}>
-          <div className="tab-context-menu-item" onClick={() => handleContextMenuAction("open")} id="tab-open-file">
-            <span id="open-file" className="codicon codicon-go-to-file codicon-tab-menu-icon"></span>
-            {l10n.t("Open File")}
-          </div>
           <div className="tab-context-menu-item" onClick={() => handleContextMenuAction("reveal")}>
             <span className="codicon codicon-folder-opened codicon-tab-menu-icon"></span>
             {getRevealText()}

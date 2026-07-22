@@ -316,6 +316,7 @@
   "Adopted support for VS Code proxy settings with zosmf profile types. <a>#3010</a>": "Adopted support for VS Code proxy settings with zosmf profile types. <a>#3010</a>",
   "Adopted ZE APIs new directConnectLogin and directConnectLogout methods for login and logout actions NOT using the tokenType apimlAuthenticationToken. <a>#3346</a>": "Adopted ZE APIs new directConnectLogin and directConnectLogout methods for login and logout actions NOT using the tokenType apimlAuthenticationToken. <a>#3346</a>",
   "Advanced data set copy and paste": "Advanced data set copy and paste",
+  "After editing, click Save to write your changes to disk. Use Refresh to discard unsaved changes and reload from the file.": "After editing, click Save to write your changes to disk. Use Refresh to discard unsaved changes and reload from the file.",
   "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager": "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager",
   "All": "All",
   "All configuration types are currently unavailable. Remove existing configurations or open a workspace to enable more options.": "All configuration types are currently unavailable. Remove existing configurations or open a workspace to enable more options.",
@@ -472,6 +473,7 @@
   "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:": "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:",
   "Click to navigate to profile": "Click to navigate to profile",
   "Click to remove default": "Click to remove default",
+  "Close tutorial": "Close tutorial",
   "Column settings": "Column settings",
   "Command response: {0}/Command response": {
     "message": "Command response: {0}",
@@ -481,6 +483,7 @@
   },
   "Common API": "Common API",
   "Config Editor": "Config Editor",
+  "Config Editor Tutorial": "Config Editor Tutorial",
   "Config File: ": "Config File: ",
   "Configuration file errors": "Configuration file errors",
   "Configure and apply file filtering options": "Configure and apply file filtering options",
@@ -623,7 +626,6 @@
   "Disable Profile Validation": "Disable Profile Validation",
   "Disable validation of server check for profile": "Disable validation of server check for profile",
   "Disabled": "Disabled",
-  "Display in Tree": "Display in Tree",
   "Display release notes after an update": "Display release notes after an update",
   "Display the data set in the **DATA SETS** tree": "Display the data set in the **DATA SETS** tree",
   "Do you wish to apply this for all trees?": "Do you wish to apply this for all trees?",
@@ -969,6 +971,7 @@
   "Favorites changes": "Favorites changes",
   "Fetching data set...": "Fetching data set...",
   "Fetching spool file...": "Fetching spool file...",
+  "Fields shown here map directly to your zowe.config.json. Click the ɍ icon next to a field name for a description and default value.": "Fields shown here map directly to your zowe.config.json. Click the ɍ icon next to a field name for a description and default value.",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
   "File extension can only contain letters, numbers, hyphens, and underscores": "File extension can only contain letters, numbers, hyphens, and underscores",
   "File extension cannot be empty": "File extension cannot be empty",
@@ -1021,6 +1024,7 @@
       "The new filter"
     ]
   },
+  "Finish": "Finish",
   "Fix concerns regarding Unix command handling work. <a>#2866</a>": "Fix concerns regarding Unix command handling work. <a>#2866</a>",
   "Fix error for Theia check when token authentication returns 401. <a>#2407</a>": "Fix error for Theia check when token authentication returns 401. <a>#2407</a>",
   "Fix for profile status check when certificate authentication is used and an invalid certificate is used. <a>#3699</a>": "Fix for profile status check when certificate authentication is used and an invalid certificate is used. <a>#3699</a>",
@@ -1059,10 +1063,8 @@
   "Fixed an issue in USS where a directory could not be expanded if it contained at least one subdirectory that the user did not have access to. <a>#4278</a>": "Fixed an issue in USS where a directory could not be expanded if it contained at least one subdirectory that the user did not have access to. <a>#4278</a>",
   "Fixed an issue in USS where a file was incorrectly identified as a directory if the request returned the full path of the file, causing an error when trying to open it in the editor. <a>#4305</a>": "Fixed an issue in USS where a file was incorrectly identified as a directory if the request returned the full path of the file, causing an error when trying to open it in the editor. <a>#4305</a>",
   "Fixed an issue in USS where the search path in the profile node description or filter tooltip became out of sync and did not match the actual listed path after a failed search or a search timeout. <a>#4287</a>": "Fixed an issue in USS where the search path in the profile node description or filter tooltip became out of sync and did not match the actual listed path after a failed search or a search timeout. <a>#4287</a>",
-  "Fixed an issue in USS where a directory could not be expanded if it contained at least one subdirectory that the user did not have access to. <a>#4278</a>": "Fixed an issue in USS where a directory could not be expanded if it contained at least one subdirectory that the user did not have access to. <a>#4278</a>",
   "Fixed an issue seen where extender favorites not showing in the tree views. <a>#3470</a>": "Fixed an issue seen where extender favorites not showing in the tree views. <a>#3470</a>",
   "Fixed an issue seen with outdated profile information in the z/OS tree view data during upload and download of data set and USS files. <a>#3457</a>": "Fixed an issue seen with outdated profile information in the z/OS tree view data during upload and download of data set and USS files. <a>#3457</a>",
-  "Fixed an issue that caused a rename to fail when removing the rightmost qualifier from a data set name. <a>#4273</a>": "Fixed an issue that caused a rename to fail when removing the rightmost qualifier from a data set name. <a>#4273</a>",
   "Fixed an issue that caused a rename to fail when removing the rightmost qualifier from a data set name. <a>#4273</a>": "Fixed an issue that caused a rename to fail when removing the rightmost qualifier from a data set name. <a>#4273</a>",
   "Fixed an issue that prevented screen readers from reading Unix file attributes in the Unix file attributes webview, and added clear tags to help users understand how to edit those attributes.<a>#4024</a>": "Fixed an issue that prevented screen readers from reading Unix file attributes in the Unix file attributes webview, and added clear tags to help users understand how to edit those attributes.<a>#4024</a>",
   "Fixed an issue that would allow multiple member-filter on a single dataset search. <a>#2037</a>": "Fixed an issue that would allow multiple member-filter on a single dataset search. <a>#2037</a>",
@@ -1554,6 +1556,7 @@
   "Localization for release notes and changelogs": "Localization for release notes and changelogs",
   "Localization is tied to the VS Code localization setting. If there are no localizations available for a string, it will fallback to English.": "Localization is tied to the VS Code localization setting. If there are no localizations available for a string, it will fallback to English.",
   "Localization of strings within Zowe Explorer webviews. <a>#2983</a>": "Localization of strings within Zowe Explorer webviews. <a>#2983</a>",
+  "Locate in Tree": "Locate in Tree",
   "Log in to Authentication Service": "Log in to Authentication Service",
   "Log in to obtain a new token value": "Log in to obtain a new token value",
   "Log out of Authentication Service": "Log out of Authentication Service",
@@ -1634,6 +1637,7 @@
   "New filter": "New filter",
   "New Key": "New Key",
   "New Layer Name": "New Layer Name",
+  "Next": "Next",
   "Next page": "Next page",
   "No": "No",
   "No {0} entries found for this version.": "No {0} entries found for this version.",
@@ -1737,6 +1741,8 @@
   "Open the **Command Palette** and search for Zowe Explorer: List Data Sets, select a profile, and enter a search filter.": "Open the **Command Palette** and search for Zowe Explorer: List Data Sets, select a profile, and enter a search filter.",
   "Open the data set": "Open the data set",
   "Open the job in the Jobs tree": "Open the job in the Jobs tree",
+  "Open Tutorial": "Open Tutorial",
+  "Open zowe.config.json": "Open zowe.config.json",
   "Opening a dialog for Upload or Download of files will now open at the project level directory or the user's home directory if no project is opened. <a>#2203</a>": "Opening a dialog for Upload or Download of files will now open at the project level directory or the user's home directory if no project is opened. <a>#2203</a>",
   "Opening data set failed.": "Opening data set failed.",
   "openUSS() called from invalid node.": "openUSS() called from invalid node.",
@@ -1890,6 +1896,7 @@
   "Profile name already exists under this root": "Profile name already exists under this root",
   "Profile name already exists under this root.": "Profile name already exists under this root.",
   "Profile not found.": "Profile not found.",
+  "Profile Properties": "Profile Properties",
   "Profile selection has been cancelled.": "Profile selection has been cancelled.",
   "Profile Type": "Profile Type",
   "Profile Type: ": "Profile Type: ",
@@ -1902,6 +1909,7 @@
   "Profile Wizard": "Profile Wizard",
   "Profile: ": "Profile: ",
   "Profiles": "Profiles",
+  "Profiles Panel": "Profiles Panel",
   "Progress is shown in the status bar.": "Progress is shown in the status bar.",
   "Project": "Project",
   "Project Team": "Project Team",
@@ -1975,6 +1983,7 @@
   "Renamed \"Zowe Explorer z/OS Console\" to \"z/OS Console\". <a>#3445</a>": "Renamed \"Zowe Explorer z/OS Console\" to \"z/OS Console\". <a>#3445</a>",
   "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>": "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>",
   "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>": "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>",
+  "Renamed the 'Display in Tree' option in table views to 'Locate in Tree' to improve clarity. <a>#3771</a>": "Renamed the 'Display in Tree' option in table views to 'Locate in Tree' to improve clarity. <a>#3771</a>",
   "Renaming data set {0}/Old data set name": {
     "message": "Renaming data set {0}",
     "comment": [
@@ -2016,6 +2025,7 @@
   "Save all changes": "Save all changes",
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
+  "Saving Changes": "Saving Changes",
   "Saving data set...": "Saving data set...",
   "Saving USS file...": "Saving USS file...",
   "SCLM": "SCLM",
@@ -2118,6 +2128,7 @@
   "Select specific encoding for file": "Select specific encoding for file",
   "Select specific encoding for file (current: {0})": "Select specific encoding for file (current: {0})",
   "Select text in the editor, right-click, and choose **Open Selected Data Set**. If the selected text is a valid data set name, it opens in a new editor tab or focus onto an existing tab if already open. If the selected text is a valid partitioned data set, it opens in the **DATA SETS** tree. This is equivalent to the ZOOM command in ISPF.": "Select text in the editor, right-click, and choose **Open Selected Data Set**. If the selected text is a valid data set name, it opens in a new editor tab or focus onto an existing tab if already open. If the selected text is a valid partitioned data set, it opens in the **DATA SETS** tree. This is equivalent to the ZOOM command in ISPF.",
+  "Select the config file to open": "Select the config file to open",
   "Select the location of the config file to edit": "Select the location of the config file to edit",
   "Select the location where the config file will be initialized": "Select the location where the config file will be initialized",
   "Select the profile to use to open the data set": "Select the profile to use to open the data set",
@@ -2161,6 +2172,7 @@
     ]
   },
   "Size": "Size",
+  "Skip": "Skip",
   "Smarter data set search filtering": "Smarter data set search filtering",
   "Solved issue with a conflicting keybinding for Edit History, changed keybinding to Ctrl+Alt+y for Windows and ⌘ Cmd+⌥ Opt+y for macOS. <a>#2543</a>": "Solved issue with a conflicting keybinding for Edit History, changed keybinding to Ctrl+Alt+y for Windows and ⌘ Cmd+⌥ Opt+y for macOS. <a>#2543</a>",
   "Sort": "Sort",
@@ -2184,6 +2196,7 @@
   "Specify the data set type (DSNTYPE)": "Specify the data set type (DSNTYPE)",
   "Spool file not found: {0}": "Spool file not found: {0}",
   "SSH profile missing connection details. Please update.": "SSH profile missing connection details. Please update.",
+  "Start by selecting a profile on the left.": "Start by selecting a profile on the left.",
   "Starting to poll job {0} for completion./Job display name": {
     "message": "Starting to poll job {0} for completion.",
     "comment": [
@@ -2191,6 +2204,7 @@
     ]
   },
   "Status": "Status",
+  "Step {0} of {1}": "Step {0} of {1}",
   "Streamlined attribute viewing options into one feature - \"Show Attributes\".": "Streamlined attribute viewing options into one feature - \"Show Attributes\".",
   "Submit": "Submit",
   "Submit this query": "Submit this query",
@@ -2227,6 +2241,7 @@
   "The data set member already exists.\nDo you want to replace it?": "The data set member already exists.\nDo you want to replace it?",
   "The Data Sets tree and any data sets with many members now display <- Previous page and -> Next page navigation buttons to page through members. Only a subset of members is loaded at a time, allowing for large filters and data sets to load members faster. The number of members per page is configurable in the settings under **Zowe > Ds > Paginate**. The default is 100 members per page.": "The Data Sets tree and any data sets with many members now display <- Previous page and -> Next page navigation buttons to page through members. Only a subset of members is loaded at a time, allowing for large filters and data sets to load members faster. The number of members per page is configurable in the settings under **Zowe > Ds > Paginate**. The default is 100 members per page.",
   "The default sort order of every data set or job can now be changed. For example, to always open a data set to see the most recently edited members, set the default sort order to be by descending, date modified. The following settings are available:": "The default sort order of every data set or job can now be changed. For example, to always open a data set to see the most recently edited members, set the default sort order to be by descending, date modified. The following settings are available:",
+  "The Defaults section lets you choose which profile is the default for each connection type (zosmf, ssh, etc.).": "The Defaults section lets you choose which profile is the default for each connection type (zosmf, ssh, etc.).",
   "The downloadAllMembers API is not supported for this profile type. Please contact the extension developer.": "The downloadAllMembers API is not supported for this profile type. Please contact the extension developer.",
   "The downloadDirectory API is not supported for this profile type. Please contact the extension developer.": "The downloadDirectory API is not supported for this profile type. Please contact the extension developer.",
   "The entire PDS can still be favorited with all members. When a member is removed from favorites, only it is removed, unless it is the only member in the PDS, in which case the entire PDS will be removed from favorites.": "The entire PDS can still be favorited with all members. When a member is removed from favorites, only it is removed, unless it is the only member in the PDS, in which case the entire PDS will be removed from favorites.",
@@ -2254,6 +2269,7 @@
   },
   "The job was not cancelled.": "The job was not cancelled.",
   "The jobs table is a panel that allows viewing filtered jobs more clearly and for performing bulk actions on jobs.": "The jobs table is a panel that allows viewing filtered jobs more clearly and for performing bulk actions on jobs.",
+  "The left panel lists all profiles in your config. Click any profile to view and edit its properties on the right.": "The left panel lists all profiles in your config. Click any profile to view and edit its properties on the right.",
   "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?": "The partitioned (PO) data set already exists.\nDo you want to merge them while replacing any existing members?",
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
   "the PDS members in {0}/Node label": {
@@ -2283,6 +2299,7 @@
   "This action is only supported for USS directories.": "This action is only supported for USS directories.",
   "This data set has {0} members. Downloading a large number of files can take a long time. Do you want to continue?": "This data set has {0} members. Downloading a large number of files can take a long time. Do you want to continue?",
   "This directory has {0} members. Downloading a large number of files may take a long time. Do you want to continue?": "This directory has {0} members. Downloading a large number of files may take a long time. Do you want to continue?",
+  "This editor lets you manage your Zowe team configuration file visually. You can add, edit, and delete profiles without manually editing JSON.": "This editor lets you manage your Zowe team configuration file visually. You can add, edit, and delete profiles without manually editing JSON.",
   "This log file can be found at {0}/Log file location": {
     "message": "This log file can be found at {0}",
     "comment": [
@@ -2489,6 +2506,7 @@
       "Terminal Name"
     ]
   },
+  "Welcome to the Zowe Config Editor": "Welcome to the Zowe Config Editor",
   "What's New in Zowe Explorer {0}": "What's New in Zowe Explorer {0}",
   "When all jobs have completed, polling automatically stops. Alternatively, to stop polling, right-click the profile again and select **Stop Polling Active Jobs**.": "When all jobs have completed, polling automatically stops. Alternatively, to stop polling, right-click the profile again and select **Stop Polling Active Jobs**.",
   "When favoriting a data set member, the partitioned data set will still show in the favorites tree, but now only with the favorited data set member under it, rather than all members as before. When expanded, a tooltip will now show beside the data set name with the number of members that are favorited inside of it vs the total number of members the data set has.": "When favoriting a data set member, the partitioned data set will still show in the favorites tree, but now only with the favorited data set member under it, rather than all members as before. When expanded, a tooltip will now show beside the data set name with the number of members that are favorited inside of it vs the total number of members the data set has.",
@@ -2505,6 +2523,7 @@
   "You must enter a pattern.": "You must enter a pattern.",
   "You must select a profile.": "You must select a profile.",
   "You must specify a directory before moving.": "You must specify a directory before moving.",
+  "You're all set!": "You're all set!",
   "Your authOrder: {0}/Authentication order": {
     "message": "Your authOrder: {0}",
     "comment": [
