@@ -20,6 +20,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed "Open Selected Data Set" action opening data sets in the z/OSMF tree instead of the originating extender profile's tree when invoked from a spool file. [#4372](https://github.com/zowe/zowe-explorer-vscode/issues/4372)
 - Fixed an issue where the "Open" action in the data sets table did not validate the URI before opening it. [#4416](https://github.com/zowe/zowe-explorer-vscode/pull/4416)
 - Fixed an issue where opening a PDS member with a recognized file extension (such as JCL) from the data sets table would fail. [#4416](https://github.com/zowe/zowe-explorer-vscode/pull/4416)
+- Fixed an issue where right-clicking a filtered USS directory (session profile node with an active path filter) showed fewer context menu options than a regular directory node in the tree. [#4289](https://github.com/zowe/zowe-explorer-vscode/issues/4289)
 
 ## `3.5.1`
 
