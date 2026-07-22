@@ -544,6 +544,7 @@ export class ConfigEditor extends WebView {
                         parseErrors: result.parseErrors,
                         secureValuesAllowed,
                         tutorialSeen,
+                        isNewConfig: true,
                     });
                 }
                 break;

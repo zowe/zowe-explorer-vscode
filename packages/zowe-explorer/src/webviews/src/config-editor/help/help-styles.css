@@ -65,13 +65,13 @@
     border-radius: 4px;
     padding: 12px 16px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-    max-width: 450px;
-    min-width: 320px;
+    width: min(450px, calc(100vw - 32px));
     font-size: 13px;
     line-height: 1.5;
     color: var(--vscode-editorHoverWidget-foreground);
     max-height: 80vh;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Tooltip Sections */
@@ -97,6 +97,10 @@
     margin: 0;
     line-height: 1.6;
     color: var(--vscode-foreground);
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 .help-section code {

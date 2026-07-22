@@ -170,7 +170,7 @@
       },
       {
         "command": "zowe.configEditor",
-        "title": "Edit in zowe config webview",
+        "title": "Edit in Zowe configuration editor",
         "category": "Zowe Explorer"
       },
       {

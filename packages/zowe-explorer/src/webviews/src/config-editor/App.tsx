@@ -176,17 +176,6 @@ function AppContent() {
     tutorialSeenRef.current = tutorialSeen;
   }, [tutorialSeen]);
 
-  // Show the tutorial automatically whenever configurations first become non-empty
-  // and the user has not yet dismissed it.
-  // Depends on both 'configurations' and 'tutorialSeen' so it re-evaluates correctly
-  // when either changes (e.g. tutorialSeen arrives in the same batch as configurations).
-  useEffect(() => {
-    if (configurations.length === 0) return;
-    if (!tutorialSeen) {
-      setShowTutorial(true);
-    }
-  }, [configurations, tutorialSeen]);
-
   const handleOpenTutorial = () => setShowTutorial(true);
 
   useEffect(() => {
@@ -450,6 +439,7 @@ function AppContent() {
     setRenames,
     setConfigParseErrors,
     setTutorialSeen,
+    setShowTutorial,
     setHighlightPropertyKey,
     configurationsRef,
     mergedPropertiesLatestRequestSeqRef,

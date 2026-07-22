@@ -2196,7 +2196,7 @@
   "Specify the data set type (DSNTYPE)": "Specify the data set type (DSNTYPE)",
   "Spool file not found: {0}": "Spool file not found: {0}",
   "SSH profile missing connection details. Please update.": "SSH profile missing connection details. Please update.",
-  "Start by selecting a profile on the left. Click the ɍ icons for contextual help on any field.": "Start by selecting a profile on the left. Click the ɍ icons for contextual help on any field.",
+  "Start by selecting a profile on the left.": "Start by selecting a profile on the left.",
   "Starting to poll job {0} for completion./Job display name": {
     "message": "Starting to poll job {0} for completion.",
     "comment": [
