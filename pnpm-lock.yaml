@@ -266,9 +266,6 @@ importers:
       fs-extra:
         specifier: 8.0.1
         version: 8.0.1
-      glob:
-        specifier: ^7.2.3
-        version: 7.2.3
       jest-mock-vscode:
         specifier: ^3.0.5
         version: 3.0.5
@@ -9654,7 +9651,7 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  agent-base@6.0.2(supports-color@8.1.1):
+  agent-base@6.0.2:
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
@@ -11782,7 +11779,7 @@ snapshots:
   http-proxy-agent@4.0.1(supports-color@8.1.1):
     dependencies:
       '@tootallnate/once': 3.0.1
-      agent-base: 6.0.2(supports-color@8.1.1)
+      agent-base: 6.0.2
       debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
@@ -11801,7 +11798,7 @@ snapshots:
 
   https-proxy-agent@5.0.1(supports-color@8.1.1):
     dependencies:
-      agent-base: 6.0.2(supports-color@8.1.1)
+      agent-base: 6.0.2
       debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
