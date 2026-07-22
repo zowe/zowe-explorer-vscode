@@ -21,6 +21,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the "Open" action in the data sets table did not validate the URI before opening it. [#4416](https://github.com/zowe/zowe-explorer-vscode/pull/4416)
 - Fixed an issue where opening a PDS member with a recognized file extension (such as JCL) from the data sets table would fail. [#4416](https://github.com/zowe/zowe-explorer-vscode/pull/4416)
 - Fixed an issue where right-clicking a filtered USS directory (session profile node with an active path filter) showed fewer context menu options than a regular directory node in the tree. [#4289](https://github.com/zowe/zowe-explorer-vscode/issues/4289)
+- Fixed an issue where creating a new file in a USS directory added to the workspace failed to open the editor with an "unexpected error", because the newly created placeholder file triggered a remote fetch for a path that did not exist yet. [#4423](https://github.com/zowe/zowe-explorer-vscode/issues/4423)
 
 ## `3.5.1`
 

@@ -1696,6 +1696,29 @@ describe("UssFSProvider", () => {
             ussApiMock.mockRestore();
             uploadEntryMock.mockRestore();
         });
+        it("marks a newly created empty file as accessed so it can be opened without a failing remote fetch (issue #4423)", async () => {
+            const uploadEntryMock = vi.spyOn(UssFSProvider.instance as any, "uploadEntry").mockResolvedValue({ apiResponse: { etag: "NEWETAG" } });
+            const folder = {
+                ...testEntries.folder,
+                entries: new Map(),
+                metadata: { ...testEntries.folder.metadata },
+            };
+            const lookupParentDirMock = vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValueOnce(folder);
+
+            // Emulates VS Code's native "New File" in a USS workspace folder: writeFile with empty content.
+            await UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([]), { create: true, overwrite: false });
+
+            const fileEntry = folder.entries.get("aFile.txt")!;
+            expect(fileEntry).toBeDefined();
+            expect(fileEntry.data?.length).toBe(0);
+            // An empty placeholder file is not uploaded to the mainframe yet...
+            expect(uploadEntryMock).not.toHaveBeenCalled();
+            // ...so it must be marked as accessed; otherwise readFile fetches from a remote path
+            // that does not exist yet, and the editor fails to open (issue #4423).
+            expect(fileEntry.wasAccessed).toBe(true);
+            lookupParentDirMock.mockRestore();
+            uploadEntryMock.mockRestore();
+        });
 
         it("updates a file when open in the diff view", async () => {
             const ussApiMock = vi.spyOn(ZoweExplorerApiRegister, "getUssApi");

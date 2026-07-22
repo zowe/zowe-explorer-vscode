@@ -777,6 +777,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 path: path.posix.join(parentDir.metadata.path, fileName),
             };
             entry.data = new Uint8Array();
+            // The provider holds authoritative content for a brand-new local entry (an empty
+            // placeholder that has not been uploaded yet). Mark it as accessed so that opening the
+            // file serves this local content instead of triggering a remote fetch for a path that
+            // does not exist on the mainframe yet, which fails to open the editor (issue #4423).
+            entry.wasAccessed = true;
             parentDir.entries.set(fileName, entry);
             parentDir.mtime = Date.now();
             parentDir.size += 1;
