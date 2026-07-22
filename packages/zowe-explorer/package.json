@@ -31,7 +31,7 @@
   ],
   "main": "./out/src/main.extension",
   "l10n": "./l10n",
-  "browser": "./out/src/main.extension",
+  "browser": "./out/src/web.extension.js",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -900,7 +900,7 @@
           "group": "inline"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(directory.*|(?!.*_fav.*)ussSession.*isFilterSearch)/",
           "command": "zowe.uss.refreshDirectory",
           "group": "000_zowe_ussMainframeInteraction@1"
         },
@@ -965,7 +965,7 @@
           "group": "001_zowe_ussCreate@2"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*)/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!.*_fav.*)(textFile.*|binaryFile.*|directory.*|ussSession.*isFilterSearch)/",
           "command": "zowe.uss.copyUssFile",
           "group": "001_zowe_ussCreate@7"
         },
@@ -975,12 +975,12 @@
           "group": "001_zowe_ussCreate@8"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(directory.*|textFile.*|binaryFile.*|(?!.*_fav.*)ussSession.*isFilterSearch)/ && !listMultiSelection",
           "command": "zowe.uss.copyPath",
           "group": "002_zowe_ussSystemSpecific@4"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(directory.*|textFile.*|binaryFile.*|(?!.*_fav.*)ussSession.*isFilterSearch)/ && !listMultiSelection",
           "command": "zowe.uss.copyRelativePath",
           "group": "002_zowe_ussSystemSpecific@5"
         },
@@ -990,17 +990,17 @@
           "group": "002_zowe_ussSystemSpecific@6"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(directory.*|(?!.*_fav.*)ussSession.*isFilterSearch)/ && !listMultiSelection",
           "command": "zowe.uss.uploadDialog",
           "group": "003_zowe_ussTransfer@1"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(directory.*|(?!.*_fav.*)ussSession.*isFilterSearch)/ && !listMultiSelection",
           "command": "zowe.uss.uploadDialogBinary",
           "group": "003_zowe_ussTransfer@2"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(directory.*|(?!.*_fav.*)ussSession.*isFilterSearch)/ && !listMultiSelection",
           "command": "zowe.uss.uploadDialogWithEncoding",
           "group": "003_zowe_ussTransfer@3"
         },
@@ -1010,7 +1010,7 @@
           "group": "003_zowe_ussTransfer@6"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^directory.*/ && !listMultiSelection",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(directory.*|(?!.*_fav.*)ussSession.*isFilterSearch)/ && !listMultiSelection",
           "command": "zowe.uss.downloadDirectory",
           "group": "003_zowe_ussTransfer@7"
         },
@@ -1050,7 +1050,7 @@
           "group": "099_zowe_ussModification:@0"
         },
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*|directory.*)/",
+          "when": "view == zowe.uss.explorer && viewItem =~ /^(textFile.*|binaryFile.*|directory.*|(?!.*_fav.*)ussSession.*isFilterSearch)/",
           "command": "zowe.uss.editAttributes",
           "group": "099_zowe_ussModification:@1"
         },

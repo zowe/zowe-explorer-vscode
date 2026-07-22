@@ -19,7 +19,7 @@ const fs = require("fs");
 const TerserPlugin = require("terser-webpack-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
-const config = (mode) => ({
+const nodeConfig = (mode) => ({
     target: "node",
     entry: "./src/extension.ts",
     output: {
@@ -106,4 +106,47 @@ const config = (mode) => ({
     ],
 });
 
-module.exports = (_, { mode }) => config(mode);
+// Minimal web extension bundle: runs in the VS Code web extension host.
+const webConfig = (mode) => ({
+    target: "webworker",
+    entry: { web: "./src/web/extension.ts" },
+    output: {
+        path: path.resolve(__dirname, "out/src"),
+        filename: "[name].extension.js",
+        libraryTarget: "commonjs2",
+    },
+    devtool: "source-map",
+    externals: ["vscode"],
+    resolve: {
+        extensions: [".ts", ".js"],
+        mainFields: ["browser", "module", "main"],
+    },
+    stats: {
+        warnings: false,
+    },
+    optimization: {
+        minimize: mode !== "development",
+        minimizer: [
+            new TerserPlugin({
+                parallel: true,
+                minify: TerserPlugin.esbuildMinify,
+            }),
+        ],
+    },
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                exclude: /node_modules/,
+                use: [
+                    {
+                        loader: "esbuild-loader",
+                    },
+                ],
+            },
+        ],
+    },
+    plugins: [new webpack.BannerPlugin(fs.readFileSync("../../scripts/LICENSE_HEADER", "utf-8"))],
+});
+
+module.exports = (_, { mode }) => [nodeConfig(mode), webConfig(mode)];
