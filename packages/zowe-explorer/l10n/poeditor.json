@@ -608,9 +608,6 @@
   "zowe.zowex.keepAliveInterval": {
     "Number of seconds between keep-alive messages to keep connection active. Set to 0 to disable keep-alive.": ""
   },
-  "zowe.zowex.serverAutoUpdate": {
-    "Automatically re-deploy the Zowe Remote SSH server if out of date.": ""
-  },
   "zowe.zowex.serverInstallPath": {
     "Mapping of SSH hostname to server install path for that host. Defaults to '~/.zowe-server'.": ""
   },

@@ -148,7 +148,6 @@ export class SshClientCache extends vscode.Disposable {
             const requestTimeout = vsceConfig.get<number>("settings.requestTimeout", 0) / 1000 || 60;
             const responseTimeout = vsceConfig.get<number>("zowex.responseTimeout") ?? 60;
             const useNativeSsh = vsceConfig.get<boolean>("zowex.experimentalNativeSsh", false);
-            const autoUpdate = vsceConfig.get<boolean>("zowex.serverAutoUpdate", true);
 
             let newClient: ZSshClient | undefined;
             let serverNotFound = false;
@@ -165,12 +164,18 @@ export class SshClientCache extends vscode.Disposable {
                     useNativeSsh,
                 });
                 imperative.Logger.getAppLogger().debug(`Server version: ${newClient.serverVersion}`);
-                if (await ZSshUtils.checkIfOutdated(newClient.serverVersion!)) {
-                    if (autoUpdate) {
-                        imperative.Logger.getAppLogger().info(`Server is out of date, deploying to ${profile.name} at %s`, serverPath);
-                        return true;
-                    } else {
+                if (
+
+                    (await ZSshUtils.checkIfOutdated(newClient.serverVersion!))
+                ) {
+                    // assume autoUpdate is allowed unless the SSH profile says otherwise
+                    if (profile.profile?.autoUpdate === false) {
                         imperative.Logger.getAppLogger().warn(`Server is out of date, skipping update for ${profile.name}`);
+                        return false;
+                    } else {
+                        imperative.Logger.getAppLogger().info(`Server is out of date, deploying to ${profile.name} at %s`, serverPath);
+
+                        return true;
                     }
                 }
                 return false;

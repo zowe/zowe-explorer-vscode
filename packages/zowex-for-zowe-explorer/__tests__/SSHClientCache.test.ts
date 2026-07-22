@@ -100,7 +100,7 @@ vi.mock("../src/ServerDeployment", () => ({
 }));
 
 vi.mock("vscode", () => ({
-    Disposable: class {},
+    Disposable: class { },
     window: {
         showErrorMessage: vi.fn(),
     },
@@ -145,7 +145,6 @@ describe("SshClientCache", () => {
                     "zowex.workerCount": 2,
                     "settings.requestTimeout": 60000, // in milliseconds as per old implementation
                     "zowex.responseTimeout": 60,
-                    "zowex.serverAutoUpdate": true,
                     "zowex.experimentalNativeSsh": false,
                 };
                 return config[key] === undefined ? defaultVal : config[key];
@@ -156,7 +155,6 @@ describe("SshClientCache", () => {
         vi.mocked(ZSshClient.create).mockResolvedValue({
             dispose: vi.fn(),
             collectAllRequests: vi.fn().mockReturnValue(mockCollectedRequests),
-            serverChecksums: {},
         } as any);
         mockGetLoadedProfConfig = mockGetProfilesCache.getLoadedProfConfig;
         mockGetLoadedProfConfig.mockResolvedValue(mockProfile); // Resolve with valid profile by default
@@ -264,9 +262,11 @@ describe("SshClientCache", () => {
         });
 
         it("should deploy a new server if the current one is outdated and autoUpdate is true", async () => {
+            const autoUpdateTrueProfile = { ...mockProfile, profile: { ...mockProfile.profile, autoUpdate: true } };
+
             vi.mocked(ZSshUtils.checkIfOutdated).mockResolvedValueOnce(true);
 
-            await cache.connect(mockProfile);
+            await cache.connect(autoUpdateTrueProfile);
 
             expect(deployWithProgress).toHaveBeenCalled();
             expect(ZSshClient.create).toHaveBeenCalledTimes(2); // Initial try + post-deploy try
@@ -283,12 +283,11 @@ describe("SshClientCache", () => {
         });
 
         it("should skip the update and warn when the server is outdated but autoUpdate is false", async () => {
-            vi.mocked(vscode.workspace.getConfiguration).mockReturnValueOnce({
-                get: vi.fn().mockImplementation((key: string, defaultVal: any) => (key === "zowex.serverAutoUpdate" ? false : (defaultVal ?? null))),
-            } as any);
+            const autoUpdateFalseProfile = { ...mockProfile, profile: { ...mockProfile.profile, autoUpdate: false } };
+
             vi.mocked(ZSshUtils.checkIfOutdated).mockResolvedValueOnce(true);
 
-            await cache.connect(mockProfile);
+            await cache.connect(autoUpdateFalseProfile);
 
             // autoUpdate disabled => keep the existing client, no redeploy
             expect(deployWithProgress).not.toHaveBeenCalled();
@@ -333,7 +332,7 @@ describe("SshClientCache", () => {
             const createGate = new Promise((resolve) => {
                 releaseCreate = resolve;
             });
-            const builtClient = { dispose: vi.fn(), collectAllRequests: vi.fn(), serverChecksums: {} };
+            const builtClient = { dispose: vi.fn(), collectAllRequests: vi.fn() };
             vi.mocked(ZSshClient.create).mockReset();
             vi.mocked(ZSshClient.create).mockReturnValueOnce(createGate as any);
             vi.mocked(ZSshClient.create).mockResolvedValue(builtClient as any);
@@ -682,7 +681,7 @@ describe("SshClientCache", () => {
 
         it("should call ZSshClient.create with the correct options and callbacks", async () => {
             const endSpy = vi.spyOn(cache, "end");
-            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => {});
+            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => { });
             await (cache as any).buildClient(mockSession, clientId, mockOpts);
 
             expect(ZSshClient.create).toHaveBeenCalledWith(
@@ -713,7 +712,7 @@ describe("SshClientCache", () => {
 
         it(
             "should return a parentDir if the server is successfully located on the $PATH and is executable, " +
-                "and the parentDir should be stored in config",
+            "and the parentDir should be stored in config",
             async () => {
                 const binary = "/my/wonderful/dir/zowex";
                 const expectedHost = "expected-host";
