@@ -34,11 +34,11 @@ nls.config({
 })();
 const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
-// /**
-//  * Moves temp folder to user defined location in preferences
-//  * @param previousTempPath Zowe temp folder value before updated by user
-//  * @param currentTempPath temp path settings value after updated by user
-//  */
+/**
+ * Moves temp folder to user defined location in preferences
+ * @param previousTempPath Zowe temp folder value before updated by user
+ * @param currentTempPath temp path settings value after updated by user
+ */
 export async function moveTempFolder(previousTempPath: string, currentTempPath: string): Promise<void> {
     ZoweLogger.trace("TempFolder.moveTempFolder called.");
     // Re-define globals with updated path
@@ -49,9 +49,9 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
 
     try {
         fs.mkdirSync(globals.ZOWETEMPFOLDER);
-        fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
         fs.mkdirSync(globals.USS_DIR);
         fs.mkdirSync(globals.DS_DIR);
+        imperative.IO.giveAccessOnlyToOwner(globals.ZOWETEMPFOLDER);
     } catch (err) {
         if (err instanceof Error) {
             await errorHandling(err, null, localize("moveTempFolder.error", "Error encountered when creating temporary folder!"));
@@ -72,6 +72,7 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
         }
 
         moveSync(previousTempPath, globals.ZOWETEMPFOLDER, { overwrite: true });
+        imperative.IO.giveAccessOnlyToOwner(globals.ZOWETEMPFOLDER);
     } catch (err) {
         ZoweLogger.error("Error moving temporary folder! " + JSON.stringify(err));
         if (err instanceof Error) {
@@ -81,11 +82,11 @@ export async function moveTempFolder(previousTempPath: string, currentTempPath: 
 }
 
 /**
- * Recursively deletes directory
+ * Safely deletes directory without recursing symlinks
  *
  * @param directory path to directory to be deleted
  */
-export function cleanDir(directory: string): void {
+export function cleanDir(directory: string, recursive = false): void {
     ZoweLogger.trace("TempFolder.cleanDir called.");
     if (!fs.existsSync(directory)) {
         return;
@@ -93,10 +94,10 @@ export function cleanDir(directory: string): void {
     fs.readdirSync(directory).forEach((file) => {
         const fullpath = path.join(directory, file);
         const lstat = fs.lstatSync(fullpath);
-        if (lstat.isFile()) {
+        if (!lstat.isDirectory()) {
             fs.unlinkSync(fullpath);
-        } else {
-            cleanDir(fullpath);
+        } else if (recursive) {
+            cleanDir(fullpath, true);
         }
     });
     fs.rmdirSync(directory);
@@ -116,6 +117,8 @@ export function cleanTempDir(): Promise<void> {
         return;
     }
     try {
+        cleanDir(globals.USS_DIR, true);
+        cleanDir(globals.DS_DIR, true);
         cleanDir(globals.ZOWETEMPFOLDER);
         ZoweLocalStorage.setValue(LocalStorageKey.FILE_INFO_CACHE, undefined);
     } catch (err) {
@@ -146,7 +149,7 @@ export function findRecoveredFiles(): void {
         return tempNode;
     };
     for (const document of vscode.workspace.textDocuments) {
-        if (document.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
+        if (imperative.IO.isSubPath(globals.DS_DIR.toUpperCase(), document.fileName.toUpperCase())) {
             const pathSegments = document.fileName.slice(globals.DS_DIR.length + 1).split(path.sep);
             const treeOpts: IZoweDatasetTreeOpts = {
                 label: checkForAddedSuffix(pathSegments[1]) ? path.parse(pathSegments[1]).name : pathSegments[1],
@@ -155,7 +158,7 @@ export function findRecoveredFiles(): void {
             };
             LocalFileManagement.addRecoveredFile(document, treeOpts);
             LocalFileManagement.loadFileInfo(injectProfile(new ZoweDatasetNode(treeOpts)), document.fileName);
-        } else if (document.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
+        } else if (imperative.IO.isSubPath(globals.USS_DIR.toUpperCase(), document.fileName.toUpperCase())) {
             const pathSegments = document.fileName.slice(globals.USS_DIR.length + 1).split(path.sep);
             const treeOpts: IZoweUssTreeOpts = {
                 label: pathSegments[pathSegments.length - 1],

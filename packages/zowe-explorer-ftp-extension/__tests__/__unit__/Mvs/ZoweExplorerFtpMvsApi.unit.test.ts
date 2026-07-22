@@ -31,13 +31,6 @@ const stream = require("stream");
 const readableStream = stream.Readable.from([]);
 const fs = require("fs");
 
-const ensureTmpDirExists = (dirPath: string) => {
-    if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-    }
-    return dirPath;
-};
-
 fs.createReadStream = jest.fn().mockReturnValue(readableStream);
 const MvsApi = new FtpMvsApi();
 
@@ -85,15 +78,13 @@ describe("FtpMvsApi", () => {
     });
 
     it("should view dataset content.", async () => {
-        const tmpDir = ensureTmpDirExists("/tmp");
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
         const response = TestUtils.getSingleLineStream();
         DataSetUtils.downloadDataSet = jest.fn().mockReturnValue(response);
 
         const mockParams = {
             dataSetName: "IBMUSER.DS2",
             options: {
-                file: localFile,
+                file: "localFile",
                 encoding: "",
             },
         };
@@ -107,12 +98,9 @@ describe("FtpMvsApi", () => {
     });
 
     it("should upload content to dataset.", async () => {
-        const tmpDir = ensureTmpDirExists("/tmp");
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
-        const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
-        const rmSyncSpy = jest.spyOn(fs, "rmSync");
+        const mockRmCallback = jest.fn();
+        const tmpFileSyncSpy = jest.spyOn(tmp, "fileSync").mockReturnValue({ removeCallback: mockRmCallback } as unknown as tmp.FileResult);
 
-        fs.writeFileSync(localFile, "hello");
         const response = TestUtils.getSingleLineStream();
         const response2 = [{ dsname: "IBMUSER.DS2", dsorg: "PS", lrecl: 2 }];
         DataSetUtils.listDataSets = jest.fn().mockReturnValue(response2);
@@ -120,7 +108,7 @@ describe("FtpMvsApi", () => {
         jest.spyOn(MvsApi, "getContents").mockResolvedValue({ apiResponse: { etag: "123" } } as any);
 
         const mockParams = {
-            inputFilePath: localFile,
+            inputFilePath: "localFile",
             dataSetName: "   (IBMUSER).DS2",
             options: { encoding: "", returnEtag: true, etag: "utf8" },
         };
@@ -133,15 +121,11 @@ describe("FtpMvsApi", () => {
         expect(DataSetUtils.uploadDataSet).toBeCalledTimes(1);
         expect(MvsApi.releaseConnection).toBeCalled();
         // check that correct function is called from node-tmp
-        expect(tmpNameSyncSpy).toHaveBeenCalled();
-        expect(rmSyncSpy).toHaveBeenCalled();
+        expect(tmpFileSyncSpy).toHaveBeenCalled();
+        expect(mockRmCallback).toHaveBeenCalled();
     });
 
     it("should upload single space to dataset when secureFtp is true and contents are empty", async () => {
-        const tmpDir = ensureTmpDirExists("/tmp");
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
-
-        fs.writeFileSync(localFile, "");
         const response = TestUtils.getSingleLineStream();
         DataSetUtils.listDataSets = jest.fn().mockReturnValue([{ dsname: "USER.EMPTYDS", dsorg: "PS", lrecl: 2 }]);
         const uploadDataSetMock = jest.fn().mockReturnValue(response);
@@ -149,7 +133,7 @@ describe("FtpMvsApi", () => {
         jest.spyOn(MvsApi, "getContents").mockResolvedValue({ apiResponse: { etag: "123" } } as any);
 
         const mockParams = {
-            inputFilePath: localFile,
+            inputFilePath: "localFile",
             dataSetName: "USER.EMPTYDS",
             options: { encoding: "", returnEtag: true, etag: "utf8" },
         };
@@ -341,10 +325,8 @@ describe("FtpMvsApi", () => {
                 throw new Error("Upload dataset failed.");
             })
         );
-        const tmpDir = ensureTmpDirExists("/tmp");
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
         const mockParams = {
-            inputFilePath: localFile,
+            inputFilePath: "localFile",
             dataSetName: "IBMUSER.DS2",
             options: { encoding: "", returnEtag: false, etag: "utf8" },
         };

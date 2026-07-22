@@ -535,6 +535,26 @@ describe("ProfilesUtils unit tests", () => {
         });
     });
 
+    describe("initializeZoweTempFolder", () => {
+        it("should create the temp folder and restrict access to owner", () => {
+            const blockMocks = createBlockMocks();
+            blockMocks.mockExistsSync.mockReturnValue(false);
+            const giveAccessOnlyToOwnerSpy = jest.spyOn(zowe.imperative.IO, "giveAccessOnlyToOwner").mockImplementation();
+            profUtils.ProfilesUtils.initializeZoweTempFolder();
+            expect(blockMocks.mockMkdirSync).toHaveBeenCalledTimes(3);
+            expect(giveAccessOnlyToOwnerSpy).toHaveBeenCalledWith(globals.ZOWETEMPFOLDER);
+        });
+
+        it("should not create the temp folder if it already exists but should still restrict access", () => {
+            const blockMocks = createBlockMocks();
+            blockMocks.mockExistsSync.mockReturnValue(true);
+            const giveAccessOnlyToOwnerSpy = jest.spyOn(zowe.imperative.IO, "giveAccessOnlyToOwner").mockImplementation();
+            profUtils.ProfilesUtils.initializeZoweTempFolder();
+            expect(blockMocks.mockMkdirSync).not.toHaveBeenCalled();
+            expect(giveAccessOnlyToOwnerSpy).toHaveBeenCalledWith(globals.ZOWETEMPFOLDER);
+        });
+    });
+
     describe("writeOverridesFile", () => {
         it("should have file exist", () => {
             const blockMocks = createBlockMocks();

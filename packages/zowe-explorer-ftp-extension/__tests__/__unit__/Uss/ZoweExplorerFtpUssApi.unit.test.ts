@@ -20,7 +20,6 @@ import * as zowe from "@zowe/cli";
 import { ZoweLogger, sessionMap } from "../../../src/extension";
 import { ZoweFtpExtensionError } from "../../../src/ZoweFtpExtensionError";
 import * as tmp from "tmp";
-import { tmpdir } from "os";
 
 // two methods to mock modules: create a __mocks__ file for zowe-explorer-api.ts and direct mock for extension.ts
 jest.mock("../../../__mocks__/@zowe/zowe-explorer-api.ts");
@@ -30,13 +29,6 @@ const stream = require("stream");
 
 const readableStream = stream.Readable.from([]);
 const fs = require("fs");
-
-const ensureTmpDirExists = (dirPath: string) => {
-    if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-    }
-    return dirPath;
-};
 
 fs.createReadStream = jest.fn().mockReturnValue(readableStream);
 const UssApi = new FtpUssApi();
@@ -71,15 +63,13 @@ describe("FtpUssApi", () => {
     });
 
     it("should view uss files.", async () => {
-        const tmpDir = ensureTmpDirExists(tmpdir());
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
         const response = TestUtils.getSingleLineStream();
         UssUtils.downloadFile = jest.fn().mockReturnValue(response);
 
         const mockParams = {
             ussFilePath: "/a/b/c.txt",
             options: {
-                file: localFile,
+                file: "localFile",
             },
         };
         const result = await UssApi.getContents(mockParams.ussFilePath, mockParams.options);
@@ -102,21 +92,16 @@ describe("FtpUssApi", () => {
     };
 
     it("should upload uss files.", async () => {
-        const tmpDir = ensureTmpDirExists(tmpdir());
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
         const response = TestUtils.getSingleLineStream();
         UssUtils.uploadFile = jest.fn().mockReturnValue(response);
-        const tmpNameSyncSpy = jest.spyOn(tmp, "tmpNameSync");
-        const rmSyncSpy = jest.spyOn(fs, "rmSync");
+        const mockRmCallback = jest.fn();
+        const tmpFileSyncSpy = jest.spyOn(tmp, "fileSync").mockReturnValue({ removeCallback: mockRmCallback } as unknown as tmp.FileResult);
         jest.spyOn(UssApi, "getContents").mockResolvedValue({ apiResponse: { etag: "test" } } as any);
         const mockParams = {
-            inputFilePath: localFile,
+            inputFilePath: "localFile",
             ussFilePath: "/a/b/c.txt",
             etag: "test",
             returnEtag: true,
-            options: {
-                file: localFile,
-            },
         };
         const result = await UssApi.putContents(mockParams.inputFilePath, mockParams.ussFilePath, undefined, undefined, "test", true);
         jest.spyOn(UssApi as any, "getContents").mockResolvedValueOnce({ apiResponse: { etag: "test" } });
@@ -125,8 +110,8 @@ describe("FtpUssApi", () => {
         expect(UssUtils.uploadFile).toBeCalledTimes(1);
         expect(UssApi.releaseConnection).toBeCalled();
         // check that correct function is called from node-tmp
-        expect(tmpNameSyncSpy).toHaveBeenCalled();
-        expect(rmSyncSpy).toHaveBeenCalled();
+        expect(tmpFileSyncSpy).toHaveBeenCalled();
+        expect(mockRmCallback).toHaveBeenCalled();
     });
 
     it("should call putContents when calling putContent", async () => {
@@ -136,12 +121,11 @@ describe("FtpUssApi", () => {
     });
 
     it("should upload uss directory.", async () => {
-        ensureTmpDirExists(tmpdir());
-        const localpath = "/tmp";
         const files = ["file1", "file2"];
         zowe.ZosFilesUtils.getFileListFromPath = jest.fn().mockReturnValue(files);
+        jest.spyOn(zowe.imperative.IO, "isDir").mockReturnValueOnce(true);
         const mockParams = {
-            inputDirectoryPath: localpath,
+            inputDirectoryPath: "localFile",
             ussDirectoryPath: "/a/b/c",
             options: {},
         };
@@ -240,12 +224,10 @@ describe("FtpUssApi", () => {
         jest.spyOn(UssUtils, "downloadFile").mockImplementationOnce(() => {
             throw new Error("Download file failed.");
         });
-        const tmpDir = ensureTmpDirExists(tmpdir());
-        const localFile = tmp.tmpNameSync({ tmpdir: tmpDir });
         const mockParams = {
             ussFilePath: "/a/b/d.txt",
             options: {
-                file: localFile,
+                file: "localFile",
             },
         };
         await expect(async () => {

@@ -10,6 +10,8 @@
   "uploadFile.putContents": "Uploading USS file",
   "copyPath.infoMessage": "Copy Path is not yet supported in Theia.",
   "saveUSSFile.log.debug.saveRequest": "save requested for USS file ",
+  "saveUSSFile.log.debug.path": "File path is not under the USS temp directory.",
+  "saveUSSFile.log.debug.directory": " Assuming we are not in the USS_DIR directory: ",
   "saveUSSFile.session.error": "Could not locate session when saving USS file.",
   "saveUSSFile.missingSessionNode": "Could not find session node",
   "saveUSSFile.response.title": "Saving file...",

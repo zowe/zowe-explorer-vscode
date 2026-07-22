@@ -34,6 +34,7 @@ import * as ussUtils from "../../../src/uss/utils";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { TreeProviders } from "../../../src/shared/TreeProviders";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
+import * as profileUtils from "../../../src/utils/ProfilesUtils";
 
 jest.mock("fs");
 jest.mock("path");
@@ -1266,6 +1267,30 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
     });
 });
 
+describe("ZoweUSSNode Unit Tests - Function node.getUSSDocumentFilePath()", () => {
+    it("Tests that node.getUSSDocumentFilePath() throws an error if fullPath contains a backtrack", () => {
+        const globalMocks = createGlobalMocks();
+
+        const rootNode = new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+        rootNode.contextValue = globals.USS_SESSION_CONTEXT;
+        const testNode = new ZoweUSSNode({
+            label: "node",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: rootNode,
+            profile: globalMocks.profileOne,
+        });
+        testNode.fullPath = "test/../../bad/path";
+        jest.spyOn(zowe.imperative.IO, "containsBacktrack").mockReturnValueOnce(true);
+
+        expect(() => testNode.getUSSDocumentFilePath()).toThrow("Path contains backtrack, target folder is outside of the zowe tmp directory");
+    });
+});
+
 describe("ZoweUSSNode Unit Tests - Function node.isDirtyInEditor()", () => {
     it("Tests that node.isDirtyInEditor() returns true if the file is open", async () => {
         const globalMocks = createGlobalMocks();
@@ -1463,6 +1488,13 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
             })
         );
         globalMocks.basePath.mockResolvedValue("/temp");
+        // The __mocks__/path.ts stub does not implement path.resolve/path.sep, which
+        // UssFileUtils.resolveLocalPath relies on. That method is unit-tested against the
+        // real "path" module in FileStructure.unit.test.ts, so here we stub it to a
+        // deterministic local path and keep these tests focused on paste orchestration.
+        jest.spyOn(UssFileUtils, "resolveLocalPath").mockImplementation(
+            (profileName: string, ussPath: string) => `/local/${profileName ?? ""}${ussPath}`
+        );
         return newMocks;
     }
 
@@ -1590,5 +1622,40 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         jest.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockRejectedValueOnce(blockMocks.fileResponse);
 
         await blockMocks.testNode.pasteUssTree();
+    });
+
+    it("Tests node.pasteUssTree() rejects clipboard contents that are not a valid USS file structure", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const errorHandlingSpy = jest.spyOn(profileUtils, "errorHandling").mockResolvedValue(undefined);
+        errorHandlingSpy.mockClear();
+        const pasteSpy = jest.spyOn(blockMocks.testNode, "paste");
+        pasteSpy.mockClear();
+
+        // Well-formed JSON, but the children are not valid UssFileTree nodes (attacker-controlled shape).
+        globalMocks.readText.mockResolvedValueOnce(JSON.stringify({ children: [{ ussPath: 5, type: "File", localPath: "/etc/passwd" }] }));
+
+        await blockMocks.testNode.pasteUssTree();
+
+        expect(pasteSpy).not.toHaveBeenCalled();
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
+        expect(errorHandlingSpy.mock.calls[0][0]).toBeInstanceOf(Error);
+        expect((errorHandlingSpy.mock.calls[0][0] as Error).message).toContain("not a valid USS file structure");
+    });
+
+    it("Tests node.pasteUssTree() rejects clipboard contents whose top-level children is not an array", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const errorHandlingSpy = jest.spyOn(profileUtils, "errorHandling").mockResolvedValue(undefined);
+        errorHandlingSpy.mockClear();
+        const pasteSpy = jest.spyOn(blockMocks.testNode, "paste");
+        pasteSpy.mockClear();
+
+        globalMocks.readText.mockResolvedValueOnce(JSON.stringify({ children: "not-an-array" }));
+
+        await blockMocks.testNode.pasteUssTree();
+
+        expect(pasteSpy).not.toHaveBeenCalled();
+        expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
     });
 });

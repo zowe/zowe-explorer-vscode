@@ -12,7 +12,7 @@
 /**
  * This interface defines the options that can be sent into the download data set function
  */
-
+import * as path from "path";
 const log4js = require("log4js");
 
 /**
@@ -409,6 +409,18 @@ export class TextUtils {
 
 export namespace SessConstants {
     export declare const AUTH_TYPE_TOKEN = "token";
+}
+
+export class IO {
+    public static giveAccessOnlyToOwner(filename: string) {}
+
+    public static isSubPath(parent: string, child: string): boolean {
+        return child.startsWith(parent + path.sep);
+    }
+
+    public static containsBacktrack(_path: string): boolean {
+        return false;
+    }
 }
 
 export class LoggerUtils {

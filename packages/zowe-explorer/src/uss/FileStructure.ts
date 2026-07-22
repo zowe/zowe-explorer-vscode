@@ -9,7 +9,17 @@
  *
  */
 
+import * as path from "path";
+import * as nls from "vscode-nls";
+import * as globals from "../globals";
 import { ZoweLogger } from "../utils/LoggerUtils";
+
+// Set up localization
+nls.config({
+    messageFormat: nls.MessageFormat.bundle,
+    bundleFormat: nls.BundleFormat.standalone,
+})();
+const localize: nls.LocalizeFunc = nls.loadMessageBundle();
 
 /**
  * File types within the USS tree structure
@@ -43,6 +53,37 @@ export interface UssFileTree {
 }
 
 /**
+ * Type guard that validates an untrusted value (ie parsed from the clipboard)
+ * has the shape of a `UssFileTree` node before it is used anywhere else.
+ * path value is always recomputed locally, never taken from the input
+ */
+export function isValidUssFileTree(node: unknown): node is UssFileTree {
+    if (typeof node !== "object" || node === null) {
+        return false;
+    }
+    const tree = node as Record<string, unknown>;
+    if (typeof tree.ussPath !== "string") {
+        return false;
+    }
+    if (tree.type !== UssFileType.File && tree.type !== UssFileType.Directory) {
+        return false;
+    }
+    if (tree.baseName != null && typeof tree.baseName !== "string") {
+        return false;
+    }
+    if (tree.sessionName != null && typeof tree.sessionName !== "string") {
+        return false;
+    }
+    if (tree.binary != null && typeof tree.binary !== "boolean") {
+        return false;
+    }
+    if (tree.children != null && (!Array.isArray(tree.children) || !tree.children.every((child) => isValidUssFileTree(child)))) {
+        return false;
+    }
+    return true;
+}
+
+/**
  * Interprets a file/directory list as a tree structure
  */
 export class UssFileUtils {
@@ -60,5 +101,40 @@ export class UssFileUtils {
         }
 
         return fileTree.children.every((node) => UssFileUtils.toSameSession(node, destSessionName));
+    }
+
+    /**
+     * Recomputes the local file system path for a USS path that is about to be
+     * pasted, ignoring any `localPath` supplied by the clipboard
+     * contents. The resulting path is guaranteed to live inside `globals.USS_DIR`.
+     *
+     * @param profileName The name of the profile that owns the paste destination
+     * @param ussPath The remote USS path taken from the (untrusted) file tree node
+     * @returns An absolute local path underneath `globals.USS_DIR`
+     * @throws if `ussPath` is not a safe, containable path
+     */
+    public static resolveLocalPath(profileName: string, ussPath: string): string {
+        ZoweLogger.trace("UssFileUtils.resolveLocalPath called.");
+        const invalidPathMsg = localize("resolveLocalPath.invalidPath", "Cannot paste: missing or invalid USS path");
+        if (typeof ussPath !== "string" || ussPath.length === 0) {
+            throw new Error(`${invalidPathMsg}.`);
+        }
+
+        // Treat the USS path as relative to the local USS directory: strip any
+        // leading slashes and reject drive letters/UNC roots/".." segments so it
+        // can never be interpreted as an OS-absolute path or escape via traversal.
+        const segments = ussPath.split(/[/\\]+/).filter((segment) => segment.length > 0 && segment !== ".");
+        const isUnsafeSegment = (segment: string): boolean => segment === ".." || /^[a-zA-Z]:$/.test(segment);
+        if (segments.some(isUnsafeSegment)) {
+            throw new Error(`${invalidPathMsg}: ${ussPath}`);
+        }
+
+        const ussDir = path.resolve(globals.USS_DIR);
+        const localPath = path.resolve(ussDir, profileName ?? "", ...segments);
+        if (localPath !== ussDir && !localPath.startsWith(ussDir + path.sep)) {
+            throw new Error(`${invalidPathMsg}: ${ussPath}`);
+        }
+
+        return localPath;
     }
 }
