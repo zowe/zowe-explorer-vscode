@@ -16,9 +16,6 @@ import { IListOptions } from "@zowe/cli";
 import * as imperative from "@zowe/imperative";
 
 jest.mock("@zowe/imperative");
-(imperative as any).IO = {
-    containsBacktrack: jest.fn().mockReturnValue(false),
-};
 export * as imperative from "@zowe/imperative";
 
 export function getZoweDir(): string {

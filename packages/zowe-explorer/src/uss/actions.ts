@@ -260,6 +260,15 @@ export async function changeFileType(node: IZoweUSSTreeNode, binary: boolean, us
 export async function saveUSSFile(doc: vscode.TextDocument, ussFileProvider: IZoweTree<IZoweUSSTreeNode>): Promise<void> {
     ZoweLogger.trace("uss.actions.saveUSSFile called.");
     ZoweLogger.debug(localize("saveUSSFile.log.debug.saveRequest", "save requested for USS file ") + doc.fileName);
+    const docPath = path.join(doc.fileName, "..");
+    if (!imperative.IO.isSubPath(globals.USS_DIR.toUpperCase(), docPath.toUpperCase())) {
+        ZoweLogger.error(
+            localize("saveUSSFile.log.debug.path", "File path is not under the USS temp directory.") +
+                localize("saveUSSFile.log.debug.directory", " Assuming we are not in the USS_DIR directory: ") +
+                path.relative(docPath, globals.USS_DIR)
+        );
+        return;
+    }
     const start = path.join(globals.USS_DIR + path.sep).length;
     const ending = doc.fileName.substring(start);
     const sesName = ending.substring(0, ending.indexOf(path.sep));

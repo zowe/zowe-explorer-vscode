@@ -727,11 +727,11 @@ export class ProfilesUtils {
         try {
             if (!fs.existsSync(globals.ZOWETEMPFOLDER)) {
                 fs.mkdirSync(globals.ZOWETEMPFOLDER, { recursive: true });
-                fs.mkdirSync(globals.ZOWE_TMP_FOLDER);
                 fs.mkdirSync(globals.USS_DIR);
                 fs.mkdirSync(globals.DS_DIR);
                 ZoweLogger.info(localize("initializeZoweTempFolder.success", "Zowe Temp folder initialized successfully."));
             }
+            imperative.IO.giveAccessOnlyToOwner(globals.ZOWETEMPFOLDER);
         } catch (err) {
             ZoweLogger.error(err);
             Gui.errorMessage(err.message);

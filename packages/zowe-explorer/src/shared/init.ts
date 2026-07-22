@@ -14,7 +14,7 @@ import * as vscode from "vscode";
 import * as refreshActions from "./refresh";
 import * as nls from "vscode-nls";
 import * as sharedActions from "./actions";
-import { getZoweDir, IZoweTree, IZoweTreeNode, EventTypes } from "@zowe/zowe-explorer-api";
+import { getZoweDir, IZoweTree, IZoweTreeNode, EventTypes, imperative } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../ZoweExplorerApiRegister";
 import { Profiles } from "../Profiles";
 import { hideTempFolder, moveTempFolder } from "../utils/TempFolder";
@@ -159,10 +159,10 @@ export function registerCommonCommands(context: vscode.ExtensionContext, provide
                         globals.USS_DIR
                     )
                 );
-                if (savedFile.fileName.toUpperCase().indexOf(globals.DS_DIR.toUpperCase()) >= 0) {
+                if (imperative.IO.isSubPath(globals.DS_DIR.toUpperCase(), savedFile.fileName.toUpperCase())) {
                     ZoweLogger.debug(localize("onDidSaveTextDocument.isDataSet", "File is a data set -- saving"));
                     ZoweSaveQueue.push({ uploadRequest: saveFile, savedFile, fileProvider: providers.ds });
-                } else if (savedFile.fileName.toUpperCase().indexOf(globals.USS_DIR.toUpperCase()) >= 0) {
+                } else if (imperative.IO.isSubPath(globals.USS_DIR.toUpperCase(), savedFile.fileName.toUpperCase())) {
                     ZoweLogger.debug(localize("onDidSaveTextDocument.isUSSFile", "File is a USS file -- saving"));
                     ZoweSaveQueue.push({ uploadRequest: saveUSSFile, savedFile, fileProvider: providers.uss });
                 } else {

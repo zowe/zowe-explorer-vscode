@@ -18,7 +18,7 @@ import * as ProfileUtils from "../../../src/utils/ProfilesUtils";
 import * as vscode from "vscode";
 import * as TempFolder from "../../../src/utils/TempFolder";
 import { SettingsConfig } from "../../../src/utils/SettingsConfig";
-import { Gui } from "@zowe/zowe-explorer-api";
+import { Gui, imperative } from "@zowe/zowe-explorer-api";
 import { ZoweLogger } from "../../../src/utils/LoggerUtils";
 import { LocalFileManagement } from "../../../src/utils/LocalFileManagement";
 import { Profiles } from "../../../src/Profiles";
@@ -52,6 +52,7 @@ describe("TempFolder Unit Tests", () => {
             unixPath2: "testpath123/temp",
             addRecoveredFile: jest.spyOn(LocalFileManagement, "addRecoveredFile").mockImplementation(),
             loadFileInfo: jest.spyOn(LocalFileManagement, "loadFileInfo").mockImplementation(),
+            giveAccessOnlyToOwner: jest.spyOn(imperative.IO, "giveAccessOnlyToOwner").mockImplementation(),
         };
         Object.defineProperty(vscode.workspace, "getConfiguration", {
             value: jest.fn(),
@@ -94,6 +95,8 @@ describe("TempFolder Unit Tests", () => {
         const expectedPath1 = process.platform === "win32" ? blockMocks.winPath : blockMocks.unixPath.split(path.sep).join(path.posix.sep);
         const expectedPath2 = process.platform === "win32" ? blockMocks.winPath2 : blockMocks.unixPath2.split(path.sep).join(path.posix.sep);
         expect(moveSyncSpy).toBeCalledWith(expectedPath1, expectedPath2, { overwrite: true });
+        expect(blockMocks.giveAccessOnlyToOwner).toBeCalledTimes(2);
+        expect(blockMocks.giveAccessOnlyToOwner).toBeCalledWith(globals.ZOWETEMPFOLDER);
     });
 
     it("moveTempFolder should catch the error upon running moveSync", async () => {
@@ -145,15 +148,41 @@ describe("TempFolder Unit Tests", () => {
         }
     });
 
-    it("cleanDir should run readDirSync once", async () => {
+    it("cleanDir should run readDirSync once for files", async () => {
         jest.spyOn(fs, "existsSync").mockReturnValue(true);
         const readdirSyncSpy = jest.spyOn(fs, "readdirSync").mockReturnValue(["./test1", "./test2"] as any);
         jest.spyOn(fs, "lstatSync").mockReturnValue({
-            isFile: () => true,
+            isDirectory: () => false,
         } as any);
 
         TempFolder.cleanDir("./sampleDir");
         expect(readdirSyncSpy).toBeCalledTimes(1);
+    });
+
+    it("cleanDir should run readDirSync once for directories", async () => {
+        jest.spyOn(fs, "existsSync").mockReturnValue(true);
+        const readdirSyncSpy = jest.spyOn(fs, "readdirSync").mockReturnValue(["./test1", "./test2"] as any);
+        jest.spyOn(fs, "lstatSync").mockReturnValue({
+            isDirectory: () => true,
+        } as any);
+
+        TempFolder.cleanDir("./sampleDir");
+        expect(readdirSyncSpy).toBeCalledTimes(1);
+    });
+
+    it("cleanDir should run readDirSync multiple times for directories when recursive is true", async () => {
+        jest.spyOn(fs, "existsSync").mockReturnValue(true);
+        const readdirSyncSpy = jest
+            .spyOn(fs, "readdirSync")
+            .mockReturnValueOnce(["./test1", "./test2"] as any)
+            .mockReturnValueOnce(["./test3"] as any)
+            .mockReturnValue([]);
+        jest.spyOn(fs, "lstatSync").mockReturnValue({
+            isDirectory: () => true,
+        } as any);
+
+        TempFolder.cleanDir("./sampleDir", true);
+        expect(readdirSyncSpy).toBeCalledTimes(4);
     });
 
     it("hideTempFolder should hide local directory from workspace", async () => {
