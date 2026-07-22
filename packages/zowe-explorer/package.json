@@ -31,7 +31,7 @@
   ],
   "main": "./out/src/main.extension",
   "l10n": "./l10n",
-  "browser": "./out/src/main.extension",
+  "browser": "./out/src/web.extension.js",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -2409,7 +2409,7 @@
     "@wdio/mocha-framework": "^9.27.2",
     "@wdio/spec-reporter": "^9.27.2",
     "@wdio/types": "^9.12.3",
-    "adm-zip": "^0.5.16",
+    "adm-zip": "^0.6.0",
     "chalk": "^2.4.2",
     "eslint-plugin-zowe-explorer": "workspace:*",
     "expect-webdriverio": "^5.6.7",
