@@ -29,6 +29,7 @@ import { ZoweExplorerApiRegister } from "../../../src/ZoweExplorerApiRegister";
 import * as HistoryView from "../../../src/shared/HistoryView";
 import * as certWizard from "../../../src/utils/CertificateWizard";
 import * as sharedUtils from "../../../src/shared/utils";
+import * as path from "path";
 
 describe("Test src/shared/extension", () => {
     describe("registerCommonCommands", () => {
@@ -152,14 +153,14 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "onDidSaveTextDocument:2",
-                parm: [{ fileName: "DS_DIR", isDirty: true, uri: vscode.Uri.parse("") }],
+                parm: [{ fileName: path.join("DS_DIR", "test"), isDirty: true, uri: vscode.Uri.parse("") }],
                 mock: [
                     {
                         spy: jest.spyOn(ZoweSaveQueue, "push"),
                         arg: [
                             {
                                 fileProvider: "ds",
-                                savedFile: { fileName: "DS_DIR", uri: vscode.Uri.parse(""), isDirty: true },
+                                savedFile: { fileName: `DS_DIR${path.sep}test`, uri: vscode.Uri.parse(""), isDirty: true },
                                 uploadRequest: saveFile,
                             },
                         ],
@@ -168,14 +169,14 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "onDidSaveTextDocument:3",
-                parm: [{ fileName: "USS_DIR", isDirty: true, uri: vscode.Uri.parse("") }],
+                parm: [{ fileName: path.join("USS_DIR", "test"), isDirty: true, uri: vscode.Uri.parse("") }],
                 mock: [
                     {
                         spy: jest.spyOn(ZoweSaveQueue, "push"),
                         arg: [
                             {
                                 fileProvider: "uss",
-                                savedFile: { fileName: "USS_DIR", isDirty: true, uri: vscode.Uri.parse("") },
+                                savedFile: { fileName: `USS_DIR${path.sep}test`, isDirty: true, uri: vscode.Uri.parse("") },
                                 uploadRequest: saveUSSFile,
                             },
                         ],
