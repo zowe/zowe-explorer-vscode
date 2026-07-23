@@ -2414,7 +2414,6 @@
     "eslint-plugin-zowe-explorer": "workspace:*",
     "expect-webdriverio": "^5.6.7",
     "fs-extra": "8.0.1",
-    "glob": "^7.2.3",
     "jest-mock-vscode": "^3.0.5",
     "log4js": "^6.9.1",
     "markdownlint-cli": "^0.48.0",
