@@ -901,6 +901,7 @@
       "The new filter"
     ]
   },
+  "Fix an issue where creating or writing to a file from a Zowe Explorer virtual workspace would fail. <a>#4426</a>": "Fix an issue where creating or writing to a file from a Zowe Explorer virtual workspace would fail. <a>#4426</a>",
   "Fix concerns regarding Unix command handling work. <a>#2866</a>": "Fix concerns regarding Unix command handling work. <a>#2866</a>",
   "Fix error for Theia check when token authentication returns 401. <a>#2407</a>": "Fix error for Theia check when token authentication returns 401. <a>#2407</a>",
   "Fix for profile status check when certificate authentication is used and an invalid certificate is used. <a>#3699</a>": "Fix for profile status check when certificate authentication is used and an invalid certificate is used. <a>#3699</a>",
