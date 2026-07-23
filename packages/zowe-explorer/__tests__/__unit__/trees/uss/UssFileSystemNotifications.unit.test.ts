@@ -132,16 +132,21 @@ describe("UssFSProvider File System Notifications", () => {
             expect(createdCalls.length).toBeGreaterThan(0);
         });
 
-        it("should not upload empty file on creation", async () => {
+        it("should still upload an empty file on creation to ensure the remote file exists", async () => {
             const fakeFolderEntry = { ...testEntries.folder, entries: new Map() };
             vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeFolderEntry);
-            const uploadEntrySpy = vi.spyOn(UssFSProvider.instance as any, "uploadEntry");
+            const uploadEntrySpy = vi.spyOn(UssFSProvider.instance as any, "uploadEntry").mockResolvedValue({
+                apiResponse: { etag: "NEWTAG" },
+            });
             vi.spyOn(UssFSProvider.instance as any, "fireSoon");
 
             const content = new Uint8Array(); // Empty
             await UssFSProvider.instance.writeFile(testUris.file, content, { create: true, overwrite: false });
 
-            expect(uploadEntrySpy).not.toHaveBeenCalled();
+            // Some callers (e.g. VS Code's native "New File" action) invoke writeFile directly without
+            // first calling ussApi.create(), so the upload must still happen for empty new files -
+            // otherwise the remote file is never created.
+            expect(uploadEntrySpy).toHaveBeenCalledWith(expect.anything(), content, expect.objectContaining({ forceUpload: false }));
         });
     });
 
