@@ -335,10 +335,22 @@ export class AuthUtils {
                 }
                 case Boolean(usingSshKey): {
                     toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("SSH Key")}`;
+                    const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
+                    if (userIDIndex !== -1) {
+                        toolTipList[userIDIndex] = `${vscode.l10n.t("User: ")}${profile.profile.user as string}`;
+                    } else {
+                        toolTipList.splice(authMethodIndex + 1, 0, `${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
+                    }
                     break;
                 }
                 case Boolean(usingSshAgent): {
                     toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("SSH Agent")}`;
+                    const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
+                    if (userIDIndex !== -1) {
+                        toolTipList[userIDIndex] = `${vscode.l10n.t("User: ")}${profile.profile.user as string}`;
+                    } else {
+                        toolTipList.splice(authMethodIndex + 1, 0, `${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
+                    }
                     break;
                 }
                 default: {
