@@ -253,6 +253,8 @@ export class AuthUtils {
         let usingBasicAuth: boolean = false;
         let usingTokenAuth: boolean = false;
         let usingCertAuth: boolean = false;
+        let usingSshKey: boolean = false;
+        let usingSshAgent: boolean = false;
         switch (iSessFromProf.type) {
             case imperative.SessConstants.AUTH_TYPE_BASIC:
                 usingBasicAuth = true;
@@ -265,6 +267,17 @@ export class AuthUtils {
                 usingCertAuth = true;
                 break;
         }
+
+        if (profile.type === "ssh") {
+            if (profile.profile.privateKey) {
+                usingBasicAuth = false;
+                usingSshKey = true;
+            } else if (profile.profile.agent) {
+                usingBasicAuth = false;
+                usingSshAgent = true;
+            }
+        }
+
         const tooltipValue: string | undefined =
             sessionNode.tooltip instanceof vscode.MarkdownString ? sessionNode.tooltip.value : sessionNode.tooltip;
         const toolTipList = tooltipValue ? tooltipValue.split("\n") : [];
@@ -283,6 +296,16 @@ export class AuthUtils {
                 }
                 case Boolean(usingCertAuth): {
                     toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Certificate Authentication")}`);
+                    break;
+                }
+                case Boolean(usingSshKey): {
+                    toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("SSH Key")}`);
+                    toolTipList.push(`${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
+                    break;
+                }
+                case Boolean(usingSshAgent): {
+                    toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("SSH Agent")}`);
+                    toolTipList.push(`${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
                     break;
                 }
                 default: {
@@ -308,6 +331,26 @@ export class AuthUtils {
                 }
                 case Boolean(usingCertAuth): {
                     toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Certificate Authentication")}`;
+                    break;
+                }
+                case Boolean(usingSshKey): {
+                    toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("SSH Key")}`;
+                    const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
+                    if (userIDIndex !== -1) {
+                        toolTipList[userIDIndex] = `${vscode.l10n.t("User: ")}${profile.profile.user as string}`;
+                    } else {
+                        toolTipList.splice(authMethodIndex + 1, 0, `${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
+                    }
+                    break;
+                }
+                case Boolean(usingSshAgent): {
+                    toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("SSH Agent")}`;
+                    const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
+                    if (userIDIndex !== -1) {
+                        toolTipList[userIDIndex] = `${vscode.l10n.t("User: ")}${profile.profile.user as string}`;
+                    } else {
+                        toolTipList.splice(authMethodIndex + 1, 0, `${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
+                    }
                     break;
                 }
                 default: {

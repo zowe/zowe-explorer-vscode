@@ -1828,6 +1828,8 @@
   "Right-click a profile: **Search filtered data sets**": "",
   "Right-click on a directory or partitioned data set in the **USS** or **DATA SETS** tree and select **Upload with Encoding...** to choose a character encoding for the uploaded files.": "",
   "SCLM": "",
+  "SSH Agent": "",
+  "SSH Key": "",
   "SSH profile missing connection details. Please update.": "",
   "Save as User setting": "",
   "Save as Workspace setting": "",
