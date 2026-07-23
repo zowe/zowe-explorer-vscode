@@ -734,6 +734,7 @@ describe("Test src/shared/extension", () => {
             vi.spyOn(vscode.workspace, "createFileSystemWatcher").mockReturnValue(watcher);
             vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter, "fire").mockImplementation(mockEmitter);
             vi.spyOn(SharedUtils, "debounce").mockImplementation((cb: any) => cb);
+            vi.spyOn(SharedUtils, "debounceAsync").mockImplementation((cb: any) => cb);
         });
 
         afterAll(() => {
