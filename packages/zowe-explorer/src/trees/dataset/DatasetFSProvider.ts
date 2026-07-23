@@ -902,11 +902,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 return;
             }
 
-            if (!isNew || content.length > 0) {
-                const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload, encodingParam);
-                entry = parent.entries.get(basename) as FileEntry;
-                entry.etag = resp.apiResponse.etag;
-            }
+            // Always upload for new entries, even with empty content
+            const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload, encodingParam);
+            entry = parent.entries.get(basename) as FileEntry;
+            entry.etag = resp.apiResponse.etag;
             entry.data = content;
             entry.mtime = Date.now();
             entry.size = content.byteLength;

@@ -149,16 +149,18 @@ describe("DatasetFSProvider File System Notifications", () => {
             expect(memberEntry.isMember).toBe(true);
         });
 
-        it("should not upload empty file on creation", async () => {
+        it("should still upload an empty file on creation to ensure the remote data set exists", async () => {
             const fakeSessionEntry = { ...testEntries.session, entries: new Map() };
             vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
-            const uploadEntrySpy = vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry");
+            const uploadEntrySpy = vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry").mockResolvedValue({
+                apiResponse: { etag: "NEWTAG" },
+            });
             vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
 
             const content = new Uint8Array(); // Empty
             await DatasetFSProvider.instance.writeFile(testUris.ps, content, { create: true, overwrite: false });
 
-            expect(uploadEntrySpy).not.toHaveBeenCalled();
+            expect(uploadEntrySpy).toHaveBeenCalled();
         });
     });
 

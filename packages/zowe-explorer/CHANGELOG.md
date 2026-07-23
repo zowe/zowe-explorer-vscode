@@ -13,6 +13,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where creating or writing to a file from a Zowe Explorer virtual workspace would fail. [#4426](https://github.com/zowe/zowe-explorer-vscode/pull/4426)
 - Fixed an issue where calling the `AuthUtils.errorHandling` function without a `moreInfo` parameter would cause a runtime error. [#4399](https://github.com/zowe/zowe-explorer-vscode/pull/4399)
 - Fixed Zowe Explorer failing to activate in the VS Code web extension host (`vscode.dev`), which was blocking dependent extensions from activating. [#4389](https://github.com/zowe/zowe-explorer-vscode/issues/4389)
 - Renamed 'Display in Tree' to 'Locate in Tree' in table views to improve clarity. [#3771](https://github.com/zowe/zowe-explorer-vscode/issues/3771)
