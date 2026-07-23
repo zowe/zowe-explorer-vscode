@@ -143,9 +143,6 @@ describe("UssFSProvider File System Notifications", () => {
             const content = new Uint8Array(); // Empty
             await UssFSProvider.instance.writeFile(testUris.file, content, { create: true, overwrite: false });
 
-            // Some callers (e.g. VS Code's native "New File" action) invoke writeFile directly without
-            // first calling ussApi.create(), so the upload must still happen for empty new files -
-            // otherwise the remote file is never created.
             expect(uploadEntrySpy).toHaveBeenCalledWith(expect.anything(), content, expect.objectContaining({ forceUpload: false }));
         });
     });

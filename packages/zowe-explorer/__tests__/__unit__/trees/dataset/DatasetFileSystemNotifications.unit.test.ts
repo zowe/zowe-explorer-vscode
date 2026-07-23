@@ -160,9 +160,6 @@ describe("DatasetFSProvider File System Notifications", () => {
             const content = new Uint8Array(); // Empty
             await DatasetFSProvider.instance.writeFile(testUris.ps, content, { create: true, overwrite: false });
 
-            // Some callers (e.g. VS Code's native "New File" action) invoke writeFile directly without
-            // a prior allocate/create call, so the upload must still happen for empty new entries -
-            // otherwise the remote data set is never created.
             expect(uploadEntrySpy).toHaveBeenCalled();
         });
     });
