@@ -301,12 +301,18 @@ export class SharedContext {
     }
 
     /**
-     * Helper function which identifies if the node is a USS Directory
+     * Helper function which identifies if the node is a USS directory (or a filtered session node, which acts as a directory)
      * @param node
      * @return true if a USS Directory, false otherwise
      */
     public static isUssDirectory(node: TreeItem): boolean {
-        return new RegExp("^" + Constants.USS_DIR_CONTEXT).test(node.contextValue);
+        const filteredSessionPattern =
+            "^(?!" + Constants.USS_SESSION_CONTEXT + ".*" + Constants.FAV_SUFFIX + ")" +
+            Constants.USS_SESSION_CONTEXT + ".*" + Constants.FILTER_SEARCH;
+        return (
+            new RegExp("^" + Constants.USS_DIR_CONTEXT).test(node.contextValue) ||
+            new RegExp(filteredSessionPattern).test(node.contextValue)
+        );
     }
 
     /**

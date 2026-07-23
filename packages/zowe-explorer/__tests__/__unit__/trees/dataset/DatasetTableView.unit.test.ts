@@ -1061,6 +1061,8 @@ describe("DatasetTableView", () => {
     describe("openInEditor", () => {
         let executeCommandSpy: MockInstance;
 
+        const mockViewWithContent = (content: Table.RowData[]): Table.View => ({ getContent: vi.fn().mockReturnValue(content) }) as any;
+
         beforeEach(() => {
             executeCommandSpy = vi.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
         });
@@ -1073,8 +1075,9 @@ describe("DatasetTableView", () => {
             const rows: Record<number, Table.RowData> = {
                 0: { uri: "zowe-ds:/profile/DATA.SET.NAME" },
             };
+            const view = mockViewWithContent(Object.values(rows));
 
-            await (DatasetTableView as any).openInEditor(null, rows);
+            await (DatasetTableView as any).openInEditor(view, rows);
 
             expect(executeCommandSpy).toHaveBeenCalledTimes(1);
             expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME"), { preview: false });
@@ -1085,8 +1088,9 @@ describe("DatasetTableView", () => {
                 0: { uri: "zowe-ds:/profile/DATA.SET.NAME1" },
                 1: { uri: "zowe-ds:/profile/DATA.SET.NAME2" },
             };
+            const view = mockViewWithContent(Object.values(rows));
 
-            await (DatasetTableView as any).openInEditor(null, rows);
+            await (DatasetTableView as any).openInEditor(view, rows);
 
             expect(executeCommandSpy).toHaveBeenCalledTimes(2);
             expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME1"), { preview: false });
@@ -1095,8 +1099,35 @@ describe("DatasetTableView", () => {
 
         it("should do nothing for an empty list of rows", async () => {
             const rows: Record<number, Table.RowData> = {};
+            const view = mockViewWithContent([]);
 
-            await (DatasetTableView as any).openInEditor(null, rows);
+            await (DatasetTableView as any).openInEditor(view, rows);
+
+            expect(executeCommandSpy).not.toHaveBeenCalled();
+        });
+
+        it("should ignore rows whose URI scheme is not the data set scheme", async () => {
+            const rows: Record<number, Table.RowData> = {
+                0: { uri: "file:///etc/passwd" },
+                1: { uri: "zowe-ds:/profile/DATA.SET.NAME" },
+            };
+            // Even a manipulated scheme is only reachable if it also matches a row the table actually knows about.
+            const view = mockViewWithContent(Object.values(rows));
+
+            await (DatasetTableView as any).openInEditor(view, rows);
+
+            expect(executeCommandSpy).toHaveBeenCalledTimes(1);
+            expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME"), { preview: false });
+        });
+
+        it("should ignore rows whose URI is not present in the table's own row data", async () => {
+            const rows: Record<number, Table.RowData> = {
+                0: { uri: "zowe-ds:/profile/SPOOFED.DATASET" },
+            };
+            // The table only actually knows about a different data set - the webview's row doesn't match it.
+            const view = mockViewWithContent([{ uri: "zowe-ds:/profile/REAL.DATASET" }]);
+
+            await (DatasetTableView as any).openInEditor(view, rows);
 
             expect(executeCommandSpy).not.toHaveBeenCalled();
         });
@@ -1212,6 +1243,62 @@ describe("DatasetTableView", () => {
 
             expect(mockGetChildren).toHaveBeenCalled();
             expect(mockTreeView.reveal).toHaveBeenCalledWith(mockPdsNode, { expand: true });
+        });
+
+        it("should reveal member in tree when the row URI carries a synthetic extension not present on the tree label", async () => {
+            const profile = createIProfile();
+            const jclPdsNode = new ZoweDatasetNode({
+                label: "TEST.JCL",
+                collapsibleState: TreeItemCollapsibleState.Collapsed,
+                contextOverride: Constants.DS_PDS_CONTEXT,
+                profile,
+            });
+            const jclMemberNode = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: TreeItemCollapsibleState.None,
+                contextOverride: Constants.DS_MEMBER_CONTEXT,
+                profile,
+                parentNode: jclPdsNode,
+            });
+            jclPdsNode.children = [jclMemberNode];
+            mockProfileNode.children = [mockPdsNode, jclPdsNode];
+
+            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue(mockProfileNode.children);
+            const mockJclPdsGetChildren = vi.spyOn(jclPdsNode, "getChildren").mockResolvedValue(jclPdsNode.children);
+
+            const rowInfo: Table.RowInfo = {
+                row: { uri: "zowe-ds:/sestest/TEST.JCL/MEMBER1.jcl" },
+                index: 0,
+            };
+
+            await DatasetTableView.displayInTree(null as any, rowInfo);
+
+            expect(mockGetChildren).toHaveBeenCalled();
+            expect(mockJclPdsGetChildren).toHaveBeenCalled();
+            expect(mockTreeView.reveal).toHaveBeenCalledWith(jclMemberNode, { focus: true });
+        });
+
+        it("should reveal dataset in tree when the row URI carries a synthetic extension not present on the tree label", async () => {
+            const profile = createIProfile();
+            const jclDsNode = new ZoweDatasetNode({
+                label: "TEST.JCL",
+                collapsibleState: TreeItemCollapsibleState.None,
+                contextOverride: Constants.DS_DS_CONTEXT,
+                profile,
+            });
+            mockProfileNode.children = [mockPdsNode, jclDsNode];
+
+            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue(mockProfileNode.children);
+
+            const rowInfo: Table.RowInfo = {
+                row: { uri: "zowe-ds:/sestest/TEST.JCL.jcl" },
+                index: 0,
+            };
+
+            await DatasetTableView.displayInTree(null as any, rowInfo);
+
+            expect(mockGetChildren).toHaveBeenCalled();
+            expect(mockTreeView.reveal).toHaveBeenCalledWith(jclDsNode, { expand: true });
         });
 
         it("should reveal member in tree for member URI found in favorites when not in session nodes", async () => {
@@ -2100,7 +2187,8 @@ describe("DatasetTableView", () => {
                 // Mock the table instance and its webview
                 const mockWebview = { postMessage: vi.fn() };
                 const mockPanel = { webview: mockWebview };
-                (datasetTableView as any).table = { panel: mockPanel };
+                const mockTable = { panel: mockPanel, trackRows: vi.fn() };
+                (datasetTableView as any).table = mockTable;
 
                 const message = {
                     command: "loadTreeChildren",
@@ -2112,6 +2200,11 @@ describe("DatasetTableView", () => {
                 await datasetTableView["onDidReceiveMessage"](message);
 
                 expect(mockDataSource.loadChildren).toHaveBeenCalledWith(message.payload.nodeId);
+                // The newly-loaded member rows must be tracked so that later lookups (e.g. openInEditor) recognize them.
+                expect(mockTable.trackRows).toHaveBeenCalledWith(
+                    expect.objectContaining({ uri: "zowe-ds:/sestest/TEST.PDS/MEMBER1" }),
+                    expect.objectContaining({ uri: "zowe-ds:/sestest/TEST.PDS/MEMBER2" })
+                );
                 expect(mockWebview.postMessage).toHaveBeenCalledWith({
                     command: "treeChildrenLoaded",
                     data: {
@@ -3137,6 +3230,25 @@ describe("buildMemberInfo", () => {
                 mnorc: undefined,
                 sclm: undefined,
             });
+        });
+    });
+
+    describe("file extension inference", () => {
+        it("appends the inferred extension when the PDS name matches a known extension pattern", () => {
+            const jclParentUri = "zowe-ds:/profile/X.Y.Z.JCL.W";
+            const member = { member: "MEMBER1" };
+
+            const result = buildMemberInfo(member, jclParentUri);
+
+            expect(result.uri).toBe(`${jclParentUri}/MEMBER1.jcl`);
+        });
+
+        it("does not append an extension when the PDS name matches no known pattern", () => {
+            const member = { member: "MEMBER1" };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            expect(result.uri).toBe(`${parentUri}/MEMBER1`);
         });
     });
 });
