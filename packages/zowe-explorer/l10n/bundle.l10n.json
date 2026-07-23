@@ -901,7 +901,6 @@
       "The new filter"
     ]
   },
-  "Fix an issue where creating or writing to a file from a Zowe Explorer virtual workspace would fail. <a>#4426</a>": "Fix an issue where creating or writing to a file from a Zowe Explorer virtual workspace would fail. <a>#4426</a>",
   "Fix concerns regarding Unix command handling work. <a>#2866</a>": "Fix concerns regarding Unix command handling work. <a>#2866</a>",
   "Fix error for Theia check when token authentication returns 401. <a>#2407</a>": "Fix error for Theia check when token authentication returns 401. <a>#2407</a>",
   "Fix for profile status check when certificate authentication is used and an invalid certificate is used. <a>#3699</a>": "Fix for profile status check when certificate authentication is used and an invalid certificate is used. <a>#3699</a>",
@@ -981,6 +980,7 @@
   "Fixed an issue where copy-and-pasting an empty PDS within the same LPAR would result in an error. <a>#3541</a>": "Fixed an issue where copy-and-pasting an empty PDS within the same LPAR would result in an error. <a>#3541</a>",
   "Fixed an issue where copying a USS file across profiles when a profile encoding was configured would corrupt characters in the destination file because the encoding was not passed to the upload call. <a>#4262</a>": "Fixed an issue where copying a USS file across profiles when a profile encoding was configured would corrupt characters in the destination file because the encoding was not passed to the upload call. <a>#4262</a>",
   "Fixed an issue where copying and pasting a file/folder in the USS tree would fail abruptly, displaying an error. <a>#3128</a>": "Fixed an issue where copying and pasting a file/folder in the USS tree would fail abruptly, displaying an error. <a>#3128</a>",
+  "Fixed an issue where creating or writing to a file from a Zowe Explorer virtual workspace would fail. <a>#4426</a>": "Fixed an issue where creating or writing to a file from a Zowe Explorer virtual workspace would fail. <a>#4426</a>",
   "Fixed an issue where data set migration status was incorrectly handled when the migr attribute was not present in the API response. <a>#3471</a>": "Fixed an issue where data set migration status was incorrectly handled when the migr attribute was not present in the API response. <a>#3471</a>",
   "Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. <a>#3294</a>": "Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. <a>#3294</a>",
   "Fixed an issue where data sets were not requested with attributes if the profile type's API did not implement the dataSetsMatchingPattern function. <a>#3578</a>": "Fixed an issue where data sets were not requested with attributes if the profile type's API did not implement the dataSetsMatchingPattern function. <a>#3578</a>",
