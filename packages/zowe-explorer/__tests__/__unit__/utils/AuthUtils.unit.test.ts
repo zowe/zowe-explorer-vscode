@@ -593,6 +593,72 @@ describe("AuthUtils", () => {
             expect(sessionNode.tooltip).toContain("Auth Method: Basic Authentication");
         });
 
+        it("To check for node tooltip when profile is using SSH Key authentication", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            const getChildrenSpy = vi.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = vi.fn();
+            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = vi.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                }) as any;
+
+            const testProfile = {
+                name: "sestest",
+                profile: {
+                    host: "fake",
+                    port: 22,
+                    user: "testuser",
+                    privateKey: "/path/to/key",
+                },
+                type: "ssh",
+                message: "",
+                failNotFound: false,
+            };
+            loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
+
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(sessionNode.tooltip).toContain("Auth Method: SSH Key");
+            expect(sessionNode.tooltip).toContain("User: testuser");
+        });
+
+        it("To check for node tooltip when profile is using SSH Agent authentication", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            const getChildrenSpy = vi.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = vi.fn();
+            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = vi.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                }) as any;
+
+            const testProfile = {
+                name: "sestest",
+                profile: {
+                    host: "fake",
+                    port: 22,
+                    user: "testuser",
+                    agent: "testAgent",
+                },
+                type: "ssh",
+                message: "",
+                failNotFound: false,
+            };
+            loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
+
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(sessionNode.tooltip).toContain("Auth Method: SSH Agent");
+            expect(sessionNode.tooltip).toContain("User: testuser");
+        });
+
         it("To check for node tooltip when profile is using Certificate based authentication and when Auth Method is not initially present in the toolTip", async () => {
             const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
             const getChildrenSpy = vi.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
