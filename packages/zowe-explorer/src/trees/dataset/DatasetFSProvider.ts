@@ -876,7 +876,24 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 .substring(uriInfo.slashAfterProfilePos + 1)
                 .split("/")
                 .filter(Boolean);
-            const ds = new DsEntry(basename, uriPath.length === this.EXPECTED_MEMBER_LENGTH);
+            const isPdsMember = uriPath.length === this.EXPECTED_MEMBER_LENGTH;
+
+            if (!options.overwrite) {
+                const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
+                const remoteRes = isPdsMember ? await mvsApi.allMembers(uriPath[0]) : await mvsApi.dataSet(FsDatasetsUtils.trimExtension(uriPath[0]));
+                const remoteExists = isPdsMember
+                    ? remoteRes?.success &&
+                      remoteRes.apiResponse?.items?.some((m) => m.member === FsDatasetsUtils.trimExtension(uriPath[1]).toUpperCase())
+                    : remoteRes?.success &&
+                      remoteRes.apiResponse?.items?.some(
+                          (item) => item.dsname?.toUpperCase() === FsDatasetsUtils.trimExtension(uriPath[0]).toUpperCase()
+                      );
+                if (remoteExists) {
+                    throw vscode.FileSystemError.FileExists(uri);
+                }
+            }
+
+            const ds = new DsEntry(basename, isPdsMember);
             ds.metadata = new DsEntryMetadata({
                 path: path.posix.join(parent.metadata.path, basename),
                 profile: parent.metadata.profile,
@@ -889,6 +906,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const urlQuery = new URLSearchParams(uri.query);
         const forceUpload = urlQuery.has("forceUpload");
         const encodingParam = urlQuery.get("encoding") || undefined;
+        const skipUpload = urlQuery.has("skipUpload");
 
         try {
             if (urlQuery.has("inDiff")) {
@@ -902,10 +920,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 return;
             }
 
-            // Always upload for new entries, even with empty content
-            const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload, encodingParam);
-            entry = parent.entries.get(basename) as FileEntry;
-            entry.etag = resp.apiResponse.etag;
+            if (!skipUpload) {
+                // Always upload for new entries, even with empty content
+                const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload, encodingParam);
+                entry = parent.entries.get(basename) as FileEntry;
+                entry.etag = resp.apiResponse.etag;
+            }
             entry.data = content;
             entry.mtime = Date.now();
             entry.size = content.byteLength;
