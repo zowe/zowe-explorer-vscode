@@ -17,6 +17,7 @@ import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 
 const testProfile = createIProfile();
 const testEntries = {
@@ -56,6 +57,10 @@ describe("DatasetFSProvider File System Notifications", () => {
             } as any),
         });
         vi.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation((() => undefined) as any);
+        vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            allMembers: vi.fn().mockResolvedValue({ success: false, apiResponse: { items: [] } }),
+            dataSet: vi.fn().mockResolvedValue({ success: false, apiResponse: { items: [] } }),
+        } as any);
         vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
             isRoot: false,
             slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
