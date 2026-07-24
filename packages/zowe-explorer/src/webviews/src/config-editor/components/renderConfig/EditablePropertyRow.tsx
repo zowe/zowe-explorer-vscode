@@ -11,7 +11,8 @@
 
 import { PropertyValueInput } from "./PropertyValueInput";
 import { PropertyActionButtons } from "./PropertyActionButtons";
-import { formatInheritedFromWithRenames } from "./inheritedFrom";
+import { getInheritedFromPartsWithRenames } from "./inheritedFrom";
+import { InheritedFromIndicator } from "./InheritedFromIndicator";
 import { InfoIcon } from "../InfoIcon";
 import { getProfileType, extractProfileKeyFromPath } from "../../utils";
 import type { RenderConfigCtx } from "./context";
@@ -87,6 +88,11 @@ export function EditablePropertyRow({
 
   const inheritedInputClass = isFromMergedProps && !isDeletedMergedProperty ? " config-input-inherited" : "";
 
+  const inheritedFrom =
+    isFromMergedProps && !isDeletedMergedProperty && jsonLoc
+      ? getInheritedFromPartsWithRenames(jsonLoc, osLoc, selectedProfileKey, configPath, renames)
+      : undefined;
+
   const readOnlyContainer = (
     <div
       className="config-item-container "
@@ -109,6 +115,13 @@ export function EditablePropertyRow({
         </span>
         {schemaDescription && displayKey && (
           <InfoIcon fieldKey={displayKey} description={schemaDescription} defaultValue={schemaDefault ?? undefined} />
+        )}
+        {inheritedFrom && (
+          <InheritedFromIndicator
+            profilePath={inheritedFrom.profilePath}
+            configPath={inheritedFrom.configPath}
+            onNavigate={() => handleNavigateToSource(jsonLoc, osLoc)}
+          />
         )}
       </span>
       <PropertyValueInput
@@ -144,11 +157,6 @@ export function EditablePropertyRow({
       data-testid="profile-property-entry"
       data-property-key={displayKey ?? ""}
       onClick={isFromMergedProps && !isDeletedMergedProperty && jsonLoc ? () => handleNavigateToSource(jsonLoc, osLoc) : undefined}
-      title={
-        isFromMergedProps && !isDeletedMergedProperty && jsonLoc
-          ? formatInheritedFromWithRenames(jsonLoc, osLoc, selectedProfileKey, configPath, renames)
-          : undefined
-      }
       style={isFromMergedProps && !isDeletedMergedProperty && jsonLoc ? { cursor: "pointer" } : {}}
     >
       {readOnlyContainer}

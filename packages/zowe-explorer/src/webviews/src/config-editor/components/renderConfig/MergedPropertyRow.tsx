@@ -11,7 +11,8 @@
 
 import * as l10n from "@vscode/l10n";
 import { stringifyValueByType } from "../../utils";
-import { formatInheritedFrom } from "./inheritedFrom";
+import { getInheritedFromParts } from "./inheritedFrom";
+import { InheritedFromIndicator } from "./InheritedFromIndicator";
 import type { RenderConfigCtx } from "./context";
 
 interface MergedPropertyRowProps {
@@ -45,6 +46,7 @@ export function MergedPropertyRow({ ctx, fullKey, displayKey, path, mergedProps,
   const osLoc = mergedPropData?.osLoc;
   const secure = mergedPropData?.secure;
   const isSecureProperty = jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc, osLoc, secure) : false;
+  const inheritedFrom = jsonLoc ? getInheritedFromParts(jsonLoc, osLoc) : undefined;
 
   // Render merged property with proper styling and behavior
   return (
@@ -53,7 +55,6 @@ export function MergedPropertyRow({ ctx, fullKey, displayKey, path, mergedProps,
       className="config-item"
       data-testid="profile-property-entry"
       onClick={jsonLoc ? () => handleNavigateToSource(jsonLoc, osLoc) : undefined}
-      title={jsonLoc ? formatInheritedFrom(jsonLoc, osLoc) : undefined}
       style={{ cursor: jsonLoc ? "pointer" : "default" }}
     >
       <div className="config-item-container " data-testid="profile-property-container">
@@ -65,6 +66,13 @@ export function MergedPropertyRow({ ctx, fullKey, displayKey, path, mergedProps,
           }}
         >
           <span className="config-label-text" title={displayKey ?? ""}>{displayKey}</span>
+          {inheritedFrom && (
+            <InheritedFromIndicator
+              profilePath={inheritedFrom.profilePath}
+              configPath={inheritedFrom.configPath}
+              onNavigate={() => handleNavigateToSource(jsonLoc, osLoc)}
+            />
+          )}
         </span>
         <input
           className="config-input config-input-inherited"

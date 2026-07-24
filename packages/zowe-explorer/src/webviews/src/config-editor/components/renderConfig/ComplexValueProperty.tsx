@@ -11,7 +11,8 @@
 
 import * as l10n from "@vscode/l10n";
 import { configComplexValueLines } from "../ConfigComplexValueLines";
-import { formatInheritedFrom } from "./inheritedFrom";
+import { getInheritedFromParts } from "./inheritedFrom";
+import { InheritedFromIndicator } from "./InheritedFromIndicator";
 import type { RenderConfigCtx } from "./context";
 
 interface ComplexValuePropertyProps {
@@ -51,11 +52,21 @@ export function ComplexValueProperty({
     return configComplexValueLines(actualValue, disabledStyle);
   };
 
+  const inheritedFrom =
+    isFromMergedProps && mergedPropData?.jsonLoc ? getInheritedFromParts(mergedPropData.jsonLoc, mergedPropData.osLoc) : undefined;
+
   return (
     <div key={fullKey} className="config-item">
       <div className="config-item-container" style={{ gridTemplateColumns: "150px 1fr" }}>
         <span className="config-label" style={{ fontWeight: "bold" }}>
           <span className="config-label-text" title={displayKey ?? ""}>{displayKey}</span>
+          {inheritedFrom && (
+            <InheritedFromIndicator
+              profilePath={inheritedFrom.profilePath}
+              configPath={inheritedFrom.configPath}
+              onNavigate={() => handleNavigateToSource(mergedPropData.jsonLoc, mergedPropData.osLoc)}
+            />
+          )}
         </span>
         <div
           onClick={() => {
@@ -75,11 +86,7 @@ export function ComplexValueProperty({
               }
             }
           }}
-          title={
-            isFromMergedProps && mergedPropData?.jsonLoc
-              ? formatInheritedFrom(mergedPropData.jsonLoc, mergedPropData.osLoc)
-              : l10n.t("Click to navigate to profile")
-          }
+          title={isFromMergedProps && mergedPropData?.jsonLoc ? undefined : l10n.t("Click to navigate to profile")}
           style={{
             backgroundColor: isFromMergedProps ? "var(--vscode-input-disabledBackground)" : "var(--vscode-input-background)",
             border: isFromMergedProps ? "1px solid var(--vscode-input-background)" : "1px solid var(--vscode-input-border)",

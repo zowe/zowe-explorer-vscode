@@ -9,8 +9,6 @@
  *
  */
 
-import * as l10n from "@vscode/l10n";
-
 /**
  * Extract the logical profile path (e.g. `lpar1.zosmf`) from a merged-property `jsonLoc`.
  * `jsonLoc` looks like `profiles.lpar1.profiles.zosmf.properties.host`; we drop the leading
@@ -22,28 +20,34 @@ function extractProfilePathFromJsonLoc(jsonLoc: string): string {
     return profilePathParts.filter((part: string, index: number) => part !== "profiles" || index % 2 === 0).join(".") || "unknown profile";
 }
 
-/**
- * Non-localized "Inherited from: <profile> (<config>)" tooltip used by the read-only
- * complex-value and merged-property rows.
- */
-export function formatInheritedFrom(jsonLoc: string, osLoc?: string[]): string {
-    const profilePath = extractProfilePathFromJsonLoc(jsonLoc);
-    const fullConfigPath = osLoc?.[0] || "unknown config";
-    return `Inherited from: ${profilePath} (${fullConfigPath})`;
+export interface InheritedFromParts {
+    profilePath: string;
+    configPath: string;
 }
 
 /**
- * Rename-aware, localized variant used by the editable property row. Returns `undefined`
- * when the source resolves to the current profile (i.e. the value isn't actually inherited),
- * and rewrites the source profile name when it has itself been renamed.
+ * Resolves the `{ profilePath, configPath }` a merged property was inherited from, for
+ * display in the `InheritedFromIndicator` popover.
  */
-export function formatInheritedFromWithRenames(
+export function getInheritedFromParts(jsonLoc: string, osLoc?: string[]): InheritedFromParts {
+    return {
+        profilePath: extractProfilePathFromJsonLoc(jsonLoc),
+        configPath: osLoc?.[0] || "unknown config",
+    };
+}
+
+/**
+ * Rename-aware variant used by the editable property row. Returns `undefined` when the source
+ * resolves to the current profile (i.e. the value isn't actually inherited), and rewrites the
+ * source profile name when it has itself been renamed.
+ */
+export function getInheritedFromPartsWithRenames(
     jsonLoc: string,
     osLoc: string[] | undefined,
     selectedProfileKey: string | null,
     configPath: string | undefined,
     renames: { [configPath: string]: { [originalKey: string]: string } }
-): string | undefined {
+): InheritedFromParts | undefined {
     let profilePath = extractProfilePathFromJsonLoc(jsonLoc);
 
     // Check if this is the current profile or its renamed version.
@@ -73,5 +77,5 @@ export function formatInheritedFromWithRenames(
         profilePath = sourceProfileRenamed[1];
     }
 
-    return l10n.t("Inherited from: {0} ({1})", profilePath, fullConfigPath);
+    return { profilePath, configPath: fullConfigPath };
 }

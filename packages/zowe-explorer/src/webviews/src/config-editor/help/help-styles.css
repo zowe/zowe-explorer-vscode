@@ -99,6 +99,13 @@
     color: var(--vscode-foreground);
 }
 
+.help-section p + p {
+    margin-top: 4px;
+    color: var(--vscode-descriptionForeground);
+    font-size: 12px;
+    word-break: break-all;
+}
+
 .help-section code {
     background-color: var(--vscode-textCodeBlock-background);
     padding: 3px 6px;
@@ -124,6 +131,10 @@
     font-size: 13px;
     text-transform: none;
     letter-spacing: normal;
+}
+
+.field-help-tooltip > .tutorial-button {
+    margin-top: 8px;
 }
 
 /* ========================================
