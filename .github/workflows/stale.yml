@@ -13,8 +13,7 @@ jobs:
       - uses: actions/stale@v9
         with:
           close-issue-message: >
-            This issue has been automatically closed due to lack of activity. In an
-            effort to reduce noise, please do not comment any further.
+            This issue has been automatically closed due to lack of activity.
           days-before-issue-stale: 90
           days-before-issue-close: 14
           exempt-all-assignees: true

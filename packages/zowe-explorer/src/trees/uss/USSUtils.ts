@@ -117,12 +117,12 @@ export class USSUtils {
      */
     public static filterHiddenFiles(nodes: zosfiles.IZosFilesResponse): Promise<zosfiles.IZosFilesResponse> {
         // Filtering out the filename starting with '.' to hide hidden files
-        const filter_list = nodes.apiResponse?.items.filter((node: any) => {
+        const filter_list = (nodes.apiResponse?.items ?? []).filter((node: any) => {
             const basename = node.name.includes("/") ? path.posix.basename(node.name) : node.name;
             return !basename.startsWith(".");
         });
         return new Promise((resolve) => {
-            resolve({ ...nodes, apiResponse: { ...nodes.apiResponse, items: filter_list } });
+            resolve({ ...nodes, apiResponse: { ...(nodes.apiResponse ?? {}), items: filter_list } });
         });
     }
 }
