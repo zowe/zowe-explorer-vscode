@@ -715,6 +715,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.all.config.exportRedacted",
+        "title": "%all.configExportRedacted%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.refreshJob",
         "title": "%jobs.refreshJob%",
         "category": "Zowe Explorer"

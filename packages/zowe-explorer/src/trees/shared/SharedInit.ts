@@ -40,6 +40,7 @@ import { UnixCommandHandler } from "../../commands/UnixCommandHandler";
 import { Profiles } from "../../configuration/Profiles";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
+import { ConfigRedactManagement } from "../../management/ConfigRedactManagement";
 import { LocalFileManagement } from "../../management/LocalFileManagement";
 import { ProfileManagement } from "../../management/ProfileManagement";
 import { ZoweLogger } from "../../tools/ZoweLogger";
@@ -227,6 +228,12 @@ export class SharedInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.profileManagement", async (node: IZoweTreeNode) => {
                 await ProfileManagement.manageProfile(node);
+            })
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.all.config.exportRedacted", async () => {
+                await ConfigRedactManagement.exportRedactedConfig();
             })
         );
 
