@@ -830,11 +830,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             const binary = encoding === "binary" || entry.encoding?.kind === "binary";
 
-            resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
-                binary,
-                encoding: encoding ?? (entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding),
-                etag: forceUpload ? undefined : entry.etag,
-                returnEtag: true,
+            await AuthUtils.retryRequest(entry.metadata.profile, async () => {
+                resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
+                    binary,
+                    encoding: encoding ?? (entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding),
+                    etag: forceUpload ? undefined : entry.etag,
+                    returnEtag: true,
+                });
             });
         } catch (err) {
             statusMsg.dispose();
@@ -856,6 +858,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const basename = path.posix.basename(uri.path);
         const parent = this.lookupParentDirectory(uri);
         let entry: FileEntry = parent.entries.get(basename);
+
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
+
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
         }
@@ -879,18 +884,22 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const isPdsMember = uriPath.length === this.EXPECTED_MEMBER_LENGTH;
 
             if (!options.overwrite) {
-                const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
-                const remoteRes = isPdsMember ? await mvsApi.allMembers(uriPath[0]) : await mvsApi.dataSet(FsDatasetsUtils.trimExtension(uriPath[0]));
-                const remoteExists = isPdsMember
-                    ? remoteRes?.success &&
-                      remoteRes.apiResponse?.items?.some((m) => m.member === FsDatasetsUtils.trimExtension(uriPath[1]).toUpperCase())
-                    : remoteRes?.success &&
-                      remoteRes.apiResponse?.items?.some(
-                          (item) => item.dsname?.toUpperCase() === FsDatasetsUtils.trimExtension(uriPath[0]).toUpperCase()
-                      );
-                if (remoteExists) {
-                    throw vscode.FileSystemError.FileExists(uri);
-                }
+                await AuthUtils.retryRequest(parent.metadata.profile, async () => {
+                    const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
+                    const remoteRes = isPdsMember
+                        ? await mvsApi.allMembers(uriPath[0])
+                        : await mvsApi.dataSet(FsDatasetsUtils.trimExtension(uriPath[0]));
+                    const remoteExists = isPdsMember
+                        ? remoteRes?.success &&
+                          remoteRes.apiResponse?.items?.some((m) => m.member === FsDatasetsUtils.trimExtension(uriPath[1]).toUpperCase())
+                        : remoteRes?.success &&
+                          remoteRes.apiResponse?.items?.some(
+                              (item) => item.dsname?.toUpperCase() === FsDatasetsUtils.trimExtension(uriPath[0]).toUpperCase()
+                          );
+                    if (remoteExists) {
+                        throw vscode.FileSystemError.FileExists(uri);
+                    }
+                });
             }
 
             const ds = new DsEntry(basename, isPdsMember);
