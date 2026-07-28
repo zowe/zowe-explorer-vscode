@@ -32,8 +32,13 @@ export default defineConfig({
         clearMocks: false,
         restoreMocks: false,
         mockReset: false,
+        reporters: ["default", "junit"],
+        outputFile: {
+            junit: "results/unit/junit.xml",
+        },
         coverage: {
             reportsDirectory: "results/unit/coverage",
+            reporter: ["text", "lcov", "html", "json", "cobertura"],
             include: ["src/**"],
             excludeAfterRemap: true,
             exclude: [
