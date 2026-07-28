@@ -10,13 +10,14 @@
  */
 
 import type { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
-import { imperative, ProfilesCache, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { ErrorCorrelator, imperative, ProfilesCache, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { type ClientOptions, type ExistingClientRequest, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils } from "./ConfigUtils";
 import { deployWithProgress } from "./ServerDeployment";
 import { SshErrorHandler } from "./SshErrorHandler";
 import path from "path";
+import { ImperativeError } from "@zowe/imperative";
 
 class AsyncMutex extends imperative.DeferredPromise<void> implements Disposable {
     public constructor(private onDispose?: () => void) {
@@ -217,6 +218,13 @@ export class SshClientCache extends vscode.Disposable {
                             requestTimeout,
                             requests: replayRequests,
                             useNativeSsh,
+                        });
+                    } else if (serverNotFound) {
+                        throw new ImperativeError({
+                            msg:
+                                `You do not have write access to the deployment directory '${serverPath}'. ` +
+                                `The SSH server could not be started. Configure a different directory, ` +
+                                `or grant yourself write permission to the deployment directory if possible. `,
                         });
                     } else {
                         imperative.Logger.getAppLogger().warn("Skipped deploy step as server path '%s' is not writeable by the user", serverPath);
