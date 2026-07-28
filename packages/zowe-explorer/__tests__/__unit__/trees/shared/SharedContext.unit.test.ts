@@ -130,6 +130,36 @@ describe("Context helper tests", () => {
             }
         }
     });
+
+    it("isUssDirectory returns true for a filtered USS session node", () => {
+        // Plain filter-search session: ussSession_isFilterSearch
+        treeItem.contextValue = Constants.USS_SESSION_CONTEXT + "_" + Constants.FILTER_SEARCH;
+        expect(SharedContext.isUssDirectory(treeItem)).toBe(true);
+        expect(SharedContext.isUssSession(treeItem)).toBe(true);
+
+        // Filter-search session with a profile type suffix: ussSession_type=zosmf_isFilterSearch
+        treeItem.contextValue =
+            Constants.USS_SESSION_CONTEXT + Constants.TYPE_SUFFIX + "zosmf_" + Constants.FILTER_SEARCH;
+        expect(SharedContext.isUssDirectory(treeItem)).toBe(true);
+        expect(SharedContext.isUssSession(treeItem)).toBe(true);
+    });
+
+    it("isUssDirectory returns false for a non-filtered USS session node", () => {
+        // Unfilitered session must NOT be treated as a directory
+        treeItem.contextValue = Constants.USS_SESSION_CONTEXT;
+        expect(SharedContext.isUssDirectory(treeItem)).toBe(false);
+
+        // Favorited session without a filter must NOT be treated as a directory
+        treeItem.contextValue = Constants.USS_SESSION_CONTEXT + Constants.FAV_SUFFIX;
+        expect(SharedContext.isUssDirectory(treeItem)).toBe(false);
+    });
+
+    it("isUssDirectory returns false for a favorited filtered USS session node", () => {
+        // Favorited filter sessions carry _fav; they should not be treated as plain directories
+        treeItem.contextValue = Constants.USS_SESSION_CONTEXT + Constants.FAV_SUFFIX + "_" + Constants.FILTER_SEARCH;
+        expect(SharedContext.isUssDirectory(treeItem)).toBe(false);
+    });
+
     it("Test is dataset", () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;

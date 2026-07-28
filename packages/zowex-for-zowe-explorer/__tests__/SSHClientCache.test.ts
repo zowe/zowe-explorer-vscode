@@ -711,12 +711,18 @@ describe("SshClientCache", () => {
             cache.storeServerPath = vi.fn();
         });
 
-        it("should return a parentDir if the server is successfully located on the $PATH and is executable", async () => {
-            const binary = "/my/wonderful/dir/zowex";
-            vi.mocked(ZSshUtils.detectServerOnPath).mockResolvedValue({ serverPath: binary, hasExecutePermission: true });
-            const envServerPath = await (cache as any).detectServerOnPath({}, mockProfile);
-            expect(envServerPath).toEqual("/my/wonderful/dir");
-        });
+        it(
+            "should return a parentDir if the server is successfully located on the $PATH and is executable, " +
+                "and the parentDir should be stored in config",
+            async () => {
+                const binary = "/my/wonderful/dir/zowex";
+                const expectedHost = "expected-host";
+                vi.mocked(ZSshUtils.detectServerOnPath).mockResolvedValue({ serverPath: binary, hasExecutePermission: true });
+                const envServerPath = await (cache as any).detectServerOnPath({ ISshSession: { hostname: expectedHost } });
+                expect(envServerPath).toEqual("/my/wonderful/dir");
+                expect(cache.storeServerPath).toHaveBeenCalledWith(expectedHost, "/my/wonderful/dir");
+            }
+        );
 
         it("should NOT return a parentDir if the server is successfully located on the $PATH but is NOT executable", async () => {
             const binary = "/my/wonderful/dir/zowex";
