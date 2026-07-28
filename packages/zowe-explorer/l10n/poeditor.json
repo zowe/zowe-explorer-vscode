@@ -1993,6 +1993,7 @@
   "USS path must start with /": "",
   "USSActions.pasteUssFile - use DatasetActions.pasteUss instead": "",
   "Unable to copy data set.": "",
+  "Unable to create data set or member with lowercase letters.": "",
   "Unable to create data set.": "",
   "Unable to create member.": "",
   "Unable to create node:": "",
