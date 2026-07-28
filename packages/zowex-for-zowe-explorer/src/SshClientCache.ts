@@ -10,7 +10,7 @@
  */
 
 import type { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
-import { imperative, ProfilesCache, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ProfilesCache, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { type ClientOptions, type ExistingClientRequest, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils } from "./ConfigUtils";
@@ -53,6 +53,9 @@ export class SshClientCache extends vscode.Disposable {
     private static mInstance: SshClientCache;
     private readonly mClientSessionMap: Map<string, ZSshClientSessions> = new Map();
     private mMutexMap: Map<string, AsyncMutex> = new Map();
+    // Profiles with a reload prompt already on screen. One dropped connection can fail
+    // several in-flight requests, and each would otherwise stack its own prompt.
+    private readonly mActivePrompts: Set<string> = new Set();
     private static readonly ERROR_SNIPPETS = {
         FATAL: ["CEE5207E", "CEE3204S", "at compile unit offset", "Fatal error encountered in zowex"],
         UNSUPPORTED: ["CEE3561S"],
@@ -251,15 +254,29 @@ export class SshClientCache extends vscode.Disposable {
         }
 
         try {
-            const updatedProfile = await this.mProfilesCache.getLoadedProfConfig(profile.name!, profile.type);
-            if (updatedProfile == null) {
-                throw new Error(`Could not load profile ${profile.name}. Check that this profile still exists in your Zowe team config.`);
-            }
+            // Reconnecting can take up to the server startup timeout, so surface progress
+            // rather than leaving the user with no feedback after they click Reload
+            await Gui.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: `Reconnecting to Zowe Remote SSH for profile "${profile.name as string}"...`,
+                },
+                async () => {
+                    const updatedProfile = await this.mProfilesCache.getLoadedProfConfig(profile.name!, profile.type);
+                    if (updatedProfile == null) {
+                        throw new Error(`Could not load profile ${profile.name}. Check that this profile still exists in your Zowe team config.`);
+                    }
 
-            if (clientSession) {
-                clientSession.profile = updatedProfile;
-            }
-            await this.connect(updatedProfile, { restart: clientSession != null, retryRequests: clientSession != null && retryRequests });
+                    if (clientSession) {
+                        clientSession.profile = updatedProfile;
+                    }
+                    await this.connect(updatedProfile, {
+                        restart: clientSession != null,
+                        retryRequests: clientSession != null && retryRequests,
+                    });
+                }
+            );
+            Gui.showMessage(`Reconnected to Zowe Remote SSH for profile "${profile.name as string}".`);
         } catch (err) {
             if (clientSession) {
                 clientSession.status = ServerStatus.DOWN;
@@ -295,7 +312,7 @@ export class SshClientCache extends vscode.Disposable {
         const clientSession = this.mClientSessionMap.get(clientId);
         if (!clientSession) {
             imperative.Logger.getAppLogger().error(`Received SSH client error for untracked session ${clientId}: ${errorMsg}`);
-            vscode.window.showErrorMessage(`Zowe Remote SSH encountered an error while starting: ${errorMsg}. Try the operation again.`);
+            vscode.window.showErrorMessage(`Zowe Remote SSH encountered an error: ${errorMsg}. Try the operation again.`);
             return;
         }
 
@@ -352,9 +369,17 @@ export class SshClientCache extends vscode.Disposable {
     }
 
     private promptErrorAndReload(message: string, profile: imperative.IProfileLoaded): void {
+        const clientId = this.getClientId(profile);
+        if (this.mActivePrompts.has(clientId)) {
+            imperative.Logger.getAppLogger().debug(`Suppressed duplicate reload prompt for ${clientId}: ${message}`);
+            return;
+        }
+        this.mActivePrompts.add(clientId);
+
         vscode.window
             .showErrorMessage(message, SshClientCache.ACTIONS.RELOAD, SshClientCache.ACTIONS.RELOAD_RETRY, SshClientCache.ACTIONS.CLOSE)
             .then((selection) => {
+                this.mActivePrompts.delete(clientId);
                 if (selection === SshClientCache.ACTIONS.RELOAD) {
                     this.reloadClient(profile, false).catch((err) => {
                         imperative.Logger.getAppLogger().error(`Failed to reload ZRS. Error: ${err.toString()}`);
