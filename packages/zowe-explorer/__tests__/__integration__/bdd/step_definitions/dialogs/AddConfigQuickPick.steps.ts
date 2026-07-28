@@ -96,10 +96,12 @@ Then("it will prompt the user to add the profile to one or all trees", async fun
 When(/a user selects (.*) to apply to all trees/, async function (choice: string) {
     this.userSelectedYes = choice === "Yes";
     if (this.userSelectedYes) {
-        await expect(this.yesOpt).toBeClickable();
+        await this.yesOpt.scrollIntoView();
+        await this.yesOpt.waitForClickable({ timeout: 3000 });
         await this.yesOpt.click();
     } else {
-        await expect(this.noOpt).toBeClickable();
+        await this.noOpt.scrollIntoView();
+        await this.noOpt.waitForClickable({ timeout: 3000 });
         await this.noOpt.click();
     }
 });

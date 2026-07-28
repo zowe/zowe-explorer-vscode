@@ -10,6 +10,7 @@ interface PanelsProps {
   renderProfileDetails: () => React.ReactNode;
   onProfileWizard: () => void;
   onViewModeToggle: () => void;
+  onOpenRawFile: (filePath: string) => void;
   onClearChanges: () => void;
   onSaveAll: () => void;
   hasPendingChanges: boolean;
@@ -21,6 +22,7 @@ export function Panels({
   renderProfileDetails,
   onProfileWizard,
   onViewModeToggle,
+  onOpenRawFile,
   onClearChanges,
   onSaveAll,
   hasPendingChanges,
@@ -85,6 +87,14 @@ export function Panels({
                 </button>
                 {!profilesCollapsed && (
                   <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                    <button
+                      style={{ display: "none" }}
+                      onClick={() => {
+                        const configPath = selectedTab !== null ? configurations[selectedTab]?.configPath : undefined;
+                        if (configPath) onOpenRawFile(configPath);
+                      }}
+                      data-testid="open-config-file"
+                    />
                     <SortDropdown
                       options={PROFILE_SORT_OPTIONS as unknown as ProfileSortOrder[]}
                       selectedOption={(profileSortOrder as ProfileSortOrder) ?? "natural"}

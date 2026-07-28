@@ -285,6 +285,10 @@ function AppContent() {
     }));
   };
 
+  const handleOpenRawJson = (configPath: string) => {
+    vscodeApi.postMessage({ command: "OPEN_CONFIG_FILE", filePath: configPath });
+  };
+
   const handleRevealInFinder = (configPath: string) => {
     vscodeApi.postMessage({ command: "REVEAL_IN_FINDER", filePath: configPath });
   };
@@ -464,6 +468,7 @@ function AppContent() {
         onShowTutorial={handleOpenTutorial}
       />
       <Panels
+        onOpenRawFile={handleOpenRawJson}
         renderProfiles={(profilesObj) => (
           <RenderProfiles
             profilesObj={profilesObj}
