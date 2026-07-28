@@ -95,15 +95,16 @@ Then("it will prompt the user to add the profile to one or all trees", async fun
 });
 When(/a user selects (.*) to apply to all trees/, async function (choice: string) {
     this.userSelectedYes = choice === "Yes";
-    // Re-query the item fresh — stored references go stale as the quick pick re-renders.
+    // Re-query fresh — stored references go stale as the quick pick re-renders.
+    // Use JS click: VS Code's virtual list marks offscreen rows as non-clickable.
     if (this.userSelectedYes) {
         const yesOpt = await quickPick.findItem("Yes, Apply to all trees");
-        await yesOpt.waitForClickable({ timeout: 5000 });
-        await yesOpt.click();
+        await yesOpt.waitForExist({ timeout: 5000 });
+        await browser.execute((el: HTMLElement) => el.click(), yesOpt);
     } else {
         const noOpt = await quickPick.findItem("No, Apply to current tree selected");
-        await noOpt.waitForClickable({ timeout: 5000 });
-        await noOpt.click();
+        await noOpt.waitForExist({ timeout: 5000 });
+        await browser.execute((el: HTMLElement) => el.click(), noOpt);
     }
 });
 Then("it will add a tree item for the profile to the correct trees", async function () {

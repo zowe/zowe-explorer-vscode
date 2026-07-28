@@ -15,10 +15,18 @@ import * as fs from "fs";
 import * as path from "path";
 
 When("a user clicks the open config file button", async () => {
+    // The button lives inside the webview iframe — switch into it first.
+    const workbench = await browser.getWorkbench();
+    const webview = (await workbench.getAllWebviews())[0];
+    await webview.wait();
+    await webview.open();
+
     const openFileBtn = await browser.$(`[data-testid="open-config-file"]`);
-    await openFileBtn.waitForExist({ timeout: 1000 });
+    await openFileBtn.waitForExist({ timeout: 5000 });
     // The button is hidden from the UI; use a JS click so WebDriver doesn't reject it.
     await browser.execute((el: HTMLElement) => el.click(), openFileBtn);
+
+    await webview.close();
 });
 
 When("a user right clicks a configuration tab and clicks open schema", async () => {
