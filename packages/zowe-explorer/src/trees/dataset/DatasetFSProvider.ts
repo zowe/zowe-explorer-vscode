@@ -856,6 +856,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
         const basename = path.posix.basename(uri.path);
+        // TODO: Improve behavior of creating PDS members with lowercase names, to avoid data loss, just reject from the virtual workspace context if uri path contains lowercase.
+        if (options.create && /[a-z]/.test(basename)) {
+            throw vscode.FileSystemError.Unavailable(vscode.l10n.t("Unable to create data set or member with lowercase letters."));
+        }
+
         const parent = this.lookupParentDirectory(uri);
         let entry: FileEntry = parent.entries.get(basename);
 
