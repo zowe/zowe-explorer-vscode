@@ -217,6 +217,10 @@ describe("SshClientCache", () => {
             );
         });
 
+        it("should not throw when restarting with retryRequests and no session is cached", async () => {
+            await expect(cache.connect(mockProfile, { restart: true, retryRequests: true })).resolves.toBeDefined();
+        });
+
         it("should release the profile lock via the AsyncMutex onDispose callback after connecting", async () => {
             const deleteSpy = vi.spyOn((cache as any).mMutexMap, "delete");
 
@@ -270,6 +274,7 @@ describe("SshClientCache", () => {
 
             expect(deployWithProgress).toHaveBeenCalled();
             expect(ZSshClient.create).toHaveBeenCalledTimes(2); // Initial try + post-deploy try
+            expect(ZSshClient.create).toHaveBeenNthCalledWith(2, expect.anything(), expect.objectContaining({ responseTimeout: 60 }));
         });
 
         it("should NOT deploy a new server if the current one is outdated but the user lacks write access", async () => {
@@ -459,7 +464,7 @@ describe("SshClientCache", () => {
             mockGetLoadedProfConfig.mockClear();
             mockGetLoadedProfConfig.mockResolvedValue(mockProfile);
 
-            await (cache as any).reloadClient(clientId);
+            await (cache as any).reloadClient(mockProfile);
 
             expect(connectSpy).toHaveBeenCalledWith(mockProfile, { restart: true, retryRequests: false });
         });
@@ -470,7 +475,7 @@ describe("SshClientCache", () => {
             mockGetLoadedProfConfig.mockClear();
             mockGetLoadedProfConfig.mockResolvedValue(mockProfile);
 
-            await (cache as any).reloadClient(clientId, true);
+            await (cache as any).reloadClient(mockProfile, true);
 
             expect(mockGetLoadedProfConfig).toHaveBeenCalledWith(mockProfile.name, mockProfile.type);
             expect(connectSpy).toHaveBeenCalledWith(mockProfile, { restart: true, retryRequests: true });
@@ -480,13 +485,27 @@ describe("SshClientCache", () => {
             // Simulate profile deletion from config
             mockGetLoadedProfConfig.mockResolvedValueOnce(null);
 
-            await expect((cache as any).reloadClient(clientId, false)).rejects.toThrow(/Could not load profile testProfile/);
+            await expect((cache as any).reloadClient(mockProfile, false)).rejects.toThrow(/Could not load profile testProfile/);
         });
 
-        it("should log and return early when reloading a non-existent session", async () => {
+        it("should reset status to DOWN (not leave it stuck at RESTARTING) when reconnecting fails", async () => {
+            vi.spyOn(cache, "connect").mockRejectedValue(new Error("still down"));
+            const session = (cache as any).mClientSessionMap.get(clientId);
+
+            await expect((cache as any).reloadClient(mockProfile)).rejects.toThrow("still down");
+
+            expect(session.status).toBe(1); // ServerStatus.DOWN
+        });
+
+        it("should reconnect from scratch when no session is cached for the profile", async () => {
             const connectSpy = vi.spyOn(cache, "connect").mockResolvedValue({} as any);
-            await (cache as any).reloadClient("nonexistent_client");
-            expect(connectSpy).not.toHaveBeenCalled();
+            const profileWithoutSession = { ...mockProfile, name: "otherProfile" } as imperative.IProfileLoaded;
+            mockGetLoadedProfConfig.mockClear();
+            mockGetLoadedProfConfig.mockResolvedValue(profileWithoutSession);
+
+            await (cache as any).reloadClient(profileWithoutSession);
+
+            expect(connectSpy).toHaveBeenCalledWith(profileWithoutSession, { restart: false, retryRequests: false });
         });
     });
 
@@ -524,7 +543,7 @@ describe("SshClientCache", () => {
 
             await new Promise(process.nextTick);
 
-            expect(reloadSpy).toHaveBeenCalledWith(clientId, true);
+            expect(reloadSpy).toHaveBeenCalledWith(mockProfile, true);
         });
 
         it("should reload without retrying requests if 'Reload' is clicked", async () => {
@@ -534,7 +553,15 @@ describe("SshClientCache", () => {
             await (cache as any).handleClientError(clientId, new Error("Something went wrong CEE5207E offset"));
 
             await new Promise(process.nextTick);
-            expect(reloadSpy).toHaveBeenCalledWith(clientId, false);
+            expect(reloadSpy).toHaveBeenCalledWith(mockProfile, false);
+        });
+
+        it("should show a generic error and not throw when no session is tracked for the client", () => {
+            (cache as any).mClientSessionMap.delete(clientId);
+
+            expect(() => (cache as any).handleClientError(clientId, new Error("boom"))).not.toThrow();
+
+            expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(expect.stringContaining("Zowe Remote SSH encountered an error"));
         });
 
         const errorMessages = [
@@ -558,7 +585,7 @@ describe("SshClientCache", () => {
                 "Close"
             );
 
-            expect(reloadSpy).toHaveBeenCalledWith(clientId, false);
+            expect(reloadSpy).toHaveBeenCalledWith(mockProfile, false);
             reloadSpy.mockClear();
             vi.mocked(vscode.window.showErrorMessage).mockClear();
             session.status = 0;
