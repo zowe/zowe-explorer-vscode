@@ -88,21 +88,22 @@ When("a user selects the first profile in the list", async function () {
     await firstProfileEntry.click();
 });
 Then("it will prompt the user to add the profile to one or all trees", async function () {
-    this.yesOpt = await quickPick.findItem("Yes, Apply to all trees");
-    await expect(this.yesOpt).toBeDefined();
-    this.noOpt = await quickPick.findItem("No, Apply to current tree selected");
-    await expect(this.noOpt).toBeDefined();
+    const yesOpt = await quickPick.findItem("Yes, Apply to all trees");
+    await expect(yesOpt).toBeDefined();
+    const noOpt = await quickPick.findItem("No, Apply to current tree selected");
+    await expect(noOpt).toBeDefined();
 });
 When(/a user selects (.*) to apply to all trees/, async function (choice: string) {
     this.userSelectedYes = choice === "Yes";
+    // Re-query the item fresh — stored references go stale as the quick pick re-renders.
     if (this.userSelectedYes) {
-        await this.yesOpt.scrollIntoView();
-        await this.yesOpt.waitForClickable({ timeout: 3000 });
-        await this.yesOpt.click();
+        const yesOpt = await quickPick.findItem("Yes, Apply to all trees");
+        await yesOpt.waitForClickable({ timeout: 5000 });
+        await yesOpt.click();
     } else {
-        await this.noOpt.scrollIntoView();
-        await this.noOpt.waitForClickable({ timeout: 3000 });
-        await this.noOpt.click();
+        const noOpt = await quickPick.findItem("No, Apply to current tree selected");
+        await noOpt.waitForClickable({ timeout: 5000 });
+        await noOpt.click();
     }
 });
 Then("it will add a tree item for the profile to the correct trees", async function () {

@@ -85,16 +85,17 @@ export function Panels({
                   <span className={`codicon ${profilesCollapsed ? "codicon-chevron-right" : "codicon-chevron-down"}`}></span>
                   <h2 style={{ margin: 0, fontSize: "16px" }}>{l10n.t("Profiles")}</h2>
                 </button>
+                {/* Hidden anchor for the integration test — always in the DOM regardless of collapse state */}
+                <button
+                  style={{ display: "none" }}
+                  onClick={() => {
+                    const configPath = selectedTab !== null ? configurations[selectedTab]?.configPath : undefined;
+                    if (configPath) onOpenRawFile(configPath);
+                  }}
+                  data-testid="open-config-file"
+                />
                 {!profilesCollapsed && (
                   <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-                    <button
-                      style={{ display: "none" }}
-                      onClick={() => {
-                        const configPath = selectedTab !== null ? configurations[selectedTab]?.configPath : undefined;
-                        if (configPath) onOpenRawFile(configPath);
-                      }}
-                      data-testid="open-config-file"
-                    />
                     <SortDropdown
                       options={PROFILE_SORT_OPTIONS as unknown as ProfileSortOrder[]}
                       selectedOption={(profileSortOrder as ProfileSortOrder) ?? "natural"}
