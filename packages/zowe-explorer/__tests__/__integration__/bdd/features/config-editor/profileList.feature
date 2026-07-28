@@ -1,5 +1,13 @@
 Feature: Profile List Management - Comprehensive Testing
 
+  @config-editor @open-config-file
+  Scenario: User opens config file from the profile list header button
+    When a user opens the Zowe Config Editor from the Command Palette
+    Then the Zowe Config Editor webview should be opened
+    When a user clicks the open config file button
+    Then a new file should be opened
+    Then close the current tab
+
   @config-editor @profile-tree
   Scenario: Check that profile tree contains expected nodes
     When a user opens the Zowe Config Editor from the Command Palette

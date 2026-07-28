@@ -294,6 +294,7 @@ async function createGlobalMocks() {
             "zowe.executeNavCallback",
             "zowe.configEditor.refresh",
             "zowe.configEditor.save",
+            "zowe.openTeamConfigJson",
             "zowe.openRecentMember",
             "zowe.searchInAllLoadedItems",
             "zowe.disableValidation",

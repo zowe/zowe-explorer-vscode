@@ -413,10 +413,10 @@ export const RenderConfig = ({
           (isSecurePropertyForSorting
             ? ""
             : isMergedPropertyForSorting
-            ? value._mergedValue
-            : isFromMergedProps && mergedPropData
-            ? mergedPropData.value
-            : value);
+              ? value._mergedValue
+              : isFromMergedProps && mergedPropData
+                ? mergedPropData.value
+                : value);
 
         // Merge pending secure properties for secure arrays
         let renderValue: any[] = Array.isArray(value) ? value : [];
@@ -442,7 +442,9 @@ export const RenderConfig = ({
             <div key={fullKey} className="config-item">
               <div className="config-item-container" style={{ gridTemplateColumns: "150px 1fr" }}>
                 <span className="config-label" style={{ fontWeight: "bold" }}>
-                  <span className="config-label-text" title={displayKey ?? ""}>{displayKey}</span>
+                  <span className="config-label-text" title={displayKey ?? ""}>
+                    {displayKey}
+                  </span>
                 </span>
                 <div
                   onClick={() => {
@@ -577,7 +579,9 @@ export const RenderConfig = ({
                 <div className="config-item-container" style={{ flexDirection: "column", alignItems: "flex-start" }}>
                   <div style={{ marginBottom: "8px" }}>
                     <span className="config-label" style={{ fontWeight: "bold" }}>
-                      <span className="config-label-text" title={displayKey ?? ""}>{displayKey}</span>
+                      <span className="config-label-text" title={displayKey ?? ""}>
+                        {displayKey}
+                      </span>
                     </span>
                   </div>
                   <div
@@ -751,7 +755,9 @@ export const RenderConfig = ({
                       cursor: "pointer",
                     }}
                   >
-                    <span className="config-label-text" title={displayKey ?? ""}>{displayKey}</span>
+                    <span className="config-label-text" title={displayKey ?? ""}>
+                      {displayKey}
+                    </span>
                   </span>
                   <input
                     className="config-input config-input-inherited"

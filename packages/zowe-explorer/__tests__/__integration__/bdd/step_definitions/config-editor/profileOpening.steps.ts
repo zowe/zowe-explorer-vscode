@@ -14,14 +14,10 @@ import { Key } from "webdriverio";
 import * as fs from "fs";
 import * as path from "path";
 
-When("a user right clicks a configuration tab and clicks open file", async () => {
-    const tab = await browser.$(`[id="global:true,user:false"]`);
-    await tab.waitForExist({ timeout: 1000 });
-    await tab.click({ button: "right" });
-
-    const openFile = await browser.$(`[id="tab-open-file"]`);
-    await openFile.waitForExist({ timeout: 1000 });
-    await openFile.click({ button: "left" });
+When("a user clicks the open config file button", async () => {
+    const openFileBtn = await browser.$(`[data-testid="open-config-file"]`);
+    await openFileBtn.waitForExist({ timeout: 1000 });
+    await openFileBtn.click({ button: "left" });
 });
 
 When("a user right clicks a configuration tab and clicks open schema", async () => {

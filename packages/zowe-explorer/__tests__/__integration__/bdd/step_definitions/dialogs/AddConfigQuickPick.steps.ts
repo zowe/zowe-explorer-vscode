@@ -70,8 +70,8 @@ Then("it will open the config in the editor", async function () {
 //
 // Scenario: User wants to edit existing Team Configuration file
 //
-When("a user selects 'Edit Team Configuration File'", async function () {
-    const editTeamConfigEntry = await quickPick.findItem("✏ Edit Team Configuration File");
+When("a user selects 'Edit in Zowe Configuration Editor'", async function () {
+    const editTeamConfigEntry = await quickPick.findItem("✏ Edit Team Configuration File in Zowe Configuration Editor");
     await expect(editTeamConfigEntry).toBeClickable();
     await editTeamConfigEntry.click();
 });

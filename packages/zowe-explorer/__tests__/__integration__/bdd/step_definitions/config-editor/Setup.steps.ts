@@ -95,7 +95,7 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
         }
     );
 
-    await browser.keys("Zowe Explorer: Edit Zowe Config Files");
+    await browser.keys("Zowe Explorer: Edit in Zowe Configuration Editor");
 
     await browser.keys(Key.Enter);
 });

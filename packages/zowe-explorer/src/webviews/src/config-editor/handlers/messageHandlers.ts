@@ -62,10 +62,12 @@ export interface MessageHandlerProps {
     setTutorialSeen: React.Dispatch<React.SetStateAction<boolean>>;
     setShowTutorial: React.Dispatch<React.SetStateAction<boolean>>;
     setHighlightPropertyKey: React.Dispatch<React.SetStateAction<string | null>>;
+    setHighlightProfileCard: React.Dispatch<React.SetStateAction<boolean>>;
 
     // Refs
     configurationsRef: React.MutableRefObject<Configuration[]>;
     mergedPropertiesLatestRequestSeqRef: React.MutableRefObject<number>;
+    selectedProfileKeyRef: React.MutableRefObject<string | null>;
 
     // State values
     pendingSaveSelection: { tab: number | null; profile: string | null } | null;
@@ -101,7 +103,6 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
         setPendingSaveSelection,
         setIsSaving,
         setSortOrderVersion,
-        selectedProfilesByConfig,
         setSelectedProfilesByConfig,
         selectedTab,
         setFlattenedConfig,
@@ -177,14 +178,20 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
         });
     }
 
-    // Initialize selected profiles for each configuration if not already set
-    contents.forEach((config) => {
-        if (!selectedProfilesByConfig[config.configPath]) {
-            setSelectedProfilesByConfig((prev) => ({
-                ...prev,
-                [config.configPath]: null,
-            }));
-        }
+    // Initialize selected profiles for each configuration if not already set.
+    // Use the functional updater form so we read the latest state (not the stale
+    // closure value) — this prevents overwriting a selection that was just applied
+    // by INITIAL_SELECTION before this CONFIGURATIONS message was processed.
+    setSelectedProfilesByConfig((prev) => {
+        const next = { ...prev };
+        let changed = false;
+        contents.forEach((config) => {
+            if (!(config.configPath in next)) {
+                next[config.configPath] = null;
+                changed = true;
+            }
+        });
+        return changed ? next : prev;
     });
 
     if (contents.length > 0) {
@@ -320,7 +327,16 @@ interface InitialSelectionMessagePayload {
 
 // Handle INITIAL_SELECTION message
 export const handleInitialSelectionMessage = (data: InitialSelectionMessagePayload, props: MessageHandlerProps) => {
-    const { setSelectedTab, setSelectedProfileKey, setSelectedProfilesByConfig, configurationsRef, setHighlightPropertyKey } = props;
+    const {
+        setSelectedTab,
+        setSelectedProfileKey,
+        setSelectedProfilesByConfig,
+        configurationsRef,
+        setHighlightPropertyKey,
+        setHighlightProfileCard,
+        setConfigEditorSettings,
+        selectedProfileKeyRef,
+    } = props;
 
     // Handle initial profile selection when opening the config editor
     const { profileName, configPath, propertyKey } = data;
@@ -328,8 +344,8 @@ export const handleInitialSelectionMessage = (data: InitialSelectionMessagePaylo
     // Use the configurations from the ref to avoid state timing issues
     const currentConfigs = configurationsRef.current;
 
-    // Find the config tab that contains this profile
-    // Normalize paths for comparison to handle different path formats
+    // Find the config tab that contains this profile.
+    // Normalize paths for comparison to handle different path separator styles.
     const normalizedTargetPath = configPath.replace(/\\/g, "/").toLowerCase();
     const configIndex = currentConfigs.findIndex((config) => {
         const normalizedConfigPath = config.configPath.replace(/\\/g, "/").toLowerCase();
@@ -339,14 +355,32 @@ export const handleInitialSelectionMessage = (data: InitialSelectionMessagePaylo
     if (configIndex !== -1) {
         setSelectedTab(configIndex);
 
-        // Set the selected profile key
-        setSelectedProfileKey(profileName);
+        if (profileName) {
+            // Ensure the profiles panel is expanded so the selected profile and its
+            // property highlight are visible to the user.
+            setConfigEditorSettings((prev) => ({
+                ...prev,
+                profilesCollapsed: false,
+            }));
 
-        // Update selected profiles by config
-        setSelectedProfilesByConfig((prev) => ({
-            ...prev,
-            [configPath]: profileName,
-        }));
+            // Update the ref immediately so focus/visibility event handlers see the
+            // new selection before React's useEffect has had a chance to sync it.
+            // This prevents spurious GET_PROFILES calls that would clobber the selection.
+            selectedProfileKeyRef.current = profileName;
+
+            // Set the selected profile key state
+            setSelectedProfileKey(profileName);
+
+            // Track the selection per config using the resolved config path from the configs list
+            const resolvedConfigPath = currentConfigs[configIndex].configPath;
+            setSelectedProfilesByConfig((prev) => ({
+                ...prev,
+                [resolvedConfigPath]: profileName,
+            }));
+
+            // Signal RenderProfileDetails to blink the entire profile card.
+            setHighlightProfileCard(true);
+        }
     }
 
     // Trigger property highlight/blink if a specific property key was requested
@@ -457,7 +491,6 @@ const handleProfileNameValidationResultMessage = (data: ProfileNameValidationRes
 // Main message handler dispatcher
 export const handleMessage = (event: MessageEvent, props: MessageHandlerProps) => {
     if (!event.data.command) return;
-
     switch (event.data.command) {
         case "CONFIGURATIONS":
             handleConfigurationsMessage(event.data, props);

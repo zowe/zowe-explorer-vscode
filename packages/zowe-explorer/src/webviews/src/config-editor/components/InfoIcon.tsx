@@ -60,12 +60,7 @@ export function InfoIcon({ fieldKey, description, defaultValue }: InfoIconProps)
     if (!visible) return;
 
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        iconRef.current &&
-        !iconRef.current.contains(e.target as Node) &&
-        tooltipRef.current &&
-        !tooltipRef.current.contains(e.target as Node)
-      ) {
+      if (iconRef.current && !iconRef.current.contains(e.target as Node) && tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
         setVisible(false);
       }
     };

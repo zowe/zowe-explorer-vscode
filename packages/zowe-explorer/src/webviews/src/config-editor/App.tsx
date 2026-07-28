@@ -147,6 +147,8 @@ function AppContent() {
   // highlightPropertyKey: property key to blink in the details panel after "Edit in zowe config webview"
   // context menu action with cursor on a specific property.
   const [highlightPropertyKey, setHighlightPropertyKey] = useState<string | null>(null);
+  // highlightProfileCard: true when the whole profile details card should blink (navigated from editor).
+  const [highlightProfileCard, setHighlightProfileCard] = useState<boolean>(false);
 
   const { handleChange, handleDefaultsChange, handleDeleteProperty, confirmDeleteProperty, handleUnlinkMergedProperty, handleAddNewProfileKey } =
     usePropertyHandlers({
@@ -281,10 +283,6 @@ function AppContent() {
       ...prev,
       [configPath]: prev[configPath]?.filter((k) => k !== profileType) ?? [],
     }));
-  };
-
-  const handleOpenRawJson = (configPath: string) => {
-    vscodeApi.postMessage({ command: "OPEN_CONFIG_FILE", filePath: configPath });
   };
 
   const handleRevealInFinder = (configPath: string) => {
@@ -441,6 +439,7 @@ function AppContent() {
     setTutorialSeen,
     setShowTutorial,
     setHighlightPropertyKey,
+    setHighlightProfileCard,
     configurationsRef,
     mergedPropertiesLatestRequestSeqRef,
     pendingSaveSelection,
@@ -465,7 +464,6 @@ function AppContent() {
         onShowTutorial={handleOpenTutorial}
       />
       <Panels
-        onOpenRawFile={handleOpenRawJson}
         renderProfiles={(profilesObj) => (
           <RenderProfiles
             profilesObj={profilesObj}
@@ -499,6 +497,8 @@ function AppContent() {
             openAddProfileModalAtPath={openAddProfileModalAtPath}
             highlightPropertyKey={highlightPropertyKey}
             onHighlightPropertyKeyConsumed={() => setHighlightPropertyKey(null)}
+            highlightProfileCard={highlightProfileCard}
+            onHighlightProfileCardConsumed={() => setHighlightProfileCard(false)}
           />
         )}
         renderDefaults={(defaults) => <RenderDefaults defaults={defaults} handleDefaultsChange={handleDefaultsChange} />}

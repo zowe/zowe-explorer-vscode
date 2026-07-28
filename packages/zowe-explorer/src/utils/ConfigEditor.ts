@@ -81,7 +81,7 @@ export class ConfigEditor extends WebView {
     private fileOperations: ConfigEditorFileOperations;
     private lastParseErrorPaths: Set<string> = new Set();
 
-    public constructor(context: vscode.ExtensionContext) {
+    public constructor(context: vscode.ExtensionContext, initialSelection?: InitialSelectionPayload) {
         super(vscode.l10n.t("Config Editor"), "config-editor", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message as WebviewCommandMessage),
             retainContext: true,
@@ -97,6 +97,12 @@ export class ConfigEditor extends WebView {
         );
         this.fileOperations = new ConfigEditorFileOperations(() => this.getLocalConfigs());
 
+        // Set initialSelection before initializeWebview() fires so that when the webview
+        // responds with CONFIGURATIONS_READY, handleConfigurationsReady already has the
+        // selection and sends INITIAL_SELECTION in the same round-trip.
+        if (initialSelection) {
+            this.initialSelection = initialSelection;
+        }
         this.panel.reveal(vscode.ViewColumn.One, false);
 
         vscode.commands.executeCommand("workbench.action.keepEditor");
@@ -109,7 +115,21 @@ export class ConfigEditor extends WebView {
             })
         );
 
-        this.initializeWebview();
+        void this.initializeWebview();
+    }
+
+    private async initializeWebview(): Promise<void> {
+        const { configs, parseErrors } = await this.getLocalConfigs();
+        const secureValuesAllowed = await this.areSecureValuesAllowed();
+        const tutorialSeen = this.messageHandlers.getTutorialSeen();
+
+        await this.panel.webview.postMessage({
+            command: "CONFIGURATIONS",
+            contents: configs,
+            parseErrors,
+            secureValuesAllowed,
+            tutorialSeen,
+        });
     }
 
     /**
@@ -230,20 +250,6 @@ export class ConfigEditor extends WebView {
         const updatedRenames = this.profileOperations.updateRenameKeysForParentChanges(sortedRenames);
         const finalRenames = this.profileOperations.removeDuplicateRenames(updatedRenames);
         return finalRenames.filter((rename) => rename.originalKey !== rename.newKey);
-    }
-
-    private async initializeWebview(): Promise<void> {
-        const { configs, parseErrors } = await this.getLocalConfigs();
-        const secureValuesAllowed = await this.areSecureValuesAllowed();
-        const tutorialSeen = this.messageHandlers.getTutorialSeen();
-
-        await this.panel.webview.postMessage({
-            command: "CONFIGURATIONS",
-            contents: configs,
-            parseErrors,
-            secureValuesAllowed,
-            tutorialSeen,
-        });
     }
 
     public async areSecureValuesAllowed(): Promise<boolean> {

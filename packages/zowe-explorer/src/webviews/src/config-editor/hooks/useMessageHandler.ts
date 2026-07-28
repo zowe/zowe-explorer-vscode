@@ -1,11 +1,10 @@
-import { useEffect, MutableRefObject, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { isSecureOrigin } from "../../utils";
 import { handleMessage, MessageHandlerProps } from "../handlers/messageHandlers";
 import { postProfilesAndEnv } from "../utils/extensionRequests";
 
-interface UseMessageHandlerProps extends MessageHandlerProps {
-    selectedProfileKeyRef: MutableRefObject<string | null>;
-}
+// selectedProfileKeyRef is now part of MessageHandlerProps; no extra fields needed here.
+type UseMessageHandlerProps = MessageHandlerProps;
 
 export function useMessageHandler(props: UseMessageHandlerProps) {
     const propsRef = useRef(props);
@@ -59,10 +58,15 @@ export function useMessageHandler(props: UseMessageHandlerProps) {
 
         window.addEventListener("message", messageListener);
 
-        postProfilesAndEnv(vscodeApi);
+        // Only request env information on initial mount — the extension already sends
+        // CONFIGURATIONS via initializeWebview() in the constructor, so a GET_PROFILES
+        // here would race with that and cause a second CONFIGURATIONS_READY that consumes
+        // this.initialSelection before INITIAL_SELECTION can be applied.
+        vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
 
         const handleWindowFocus = () => {
             if (!selectedProfileKeyRef.current) {
+                // On re-focus (e.g. user switched away and back), refresh profiles and env.
                 postProfilesAndEnv(vscodeApi);
                 vscodeApi.postMessage({ command: "GET_KEYBINDS" });
             }

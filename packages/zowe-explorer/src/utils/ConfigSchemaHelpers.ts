@@ -33,18 +33,21 @@ export class ConfigSchemaHelpers {
             const secureProperties = rule?.then?.properties?.secure?.items?.enum || [];
 
             if (profileType && properties) {
-                propertySchema[profileType] = Object.keys(properties).reduce((acc, key) => {
-                    const typeValue = properties[key].type;
-                    const resolvedType = !typeValue ? undefined : Array.isArray(typeValue) ? typeValue[0] : typeValue;
+                propertySchema[profileType] = Object.keys(properties).reduce(
+                    (acc, key) => {
+                        const typeValue = properties[key].type;
+                        const resolvedType = !typeValue ? undefined : Array.isArray(typeValue) ? typeValue[0] : typeValue;
 
-                    acc[key] = {
-                        type: resolvedType,
-                        description: properties[key].description,
-                        default: properties[key].default,
-                        secure: secureProperties.includes(key),
-                    };
-                    return acc;
-                }, {} as Record<string, SchemaProfilePropertyMeta>);
+                        acc[key] = {
+                            type: resolvedType,
+                            description: properties[key].description,
+                            default: properties[key].default,
+                            secure: secureProperties.includes(key),
+                        };
+                        return acc;
+                    },
+                    {} as Record<string, SchemaProfilePropertyMeta>
+                );
             }
         }
 
