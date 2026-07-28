@@ -1427,7 +1427,7 @@ export class DatasetActions {
             }
 
             if (!DatasetFSProvider.instance.exists(memberUri) || replace === "replace") {
-                const writeUri = replace === "replace" ? memberUri.with({ query: "forceUpload=true" }) : memberUri;
+                const writeUri = replace === "replace" ? memberUri.with({ query: "forceUpload=true" }) : memberUri.with({ query: "skipUpload=true" });
                 await vscode.workspace.fs.writeFile(writeUri, new Uint8Array());
             }
 
