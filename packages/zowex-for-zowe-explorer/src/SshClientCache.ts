@@ -164,10 +164,7 @@ export class SshClientCache extends vscode.Disposable {
                     useNativeSsh,
                 });
                 imperative.Logger.getAppLogger().debug(`Server version: ${newClient.serverVersion}`);
-                if (
-
-                    (await ZSshUtils.checkIfOutdated(newClient.serverVersion!))
-                ) {
+                if (ZSshUtils.checkIfOutdated(newClient.serverVersion)) {
                     // assume autoUpdate is allowed unless the SSH profile says otherwise
                     if (profile.profile?.autoUpdate === false) {
                         imperative.Logger.getAppLogger().warn(`Server is out of date, skipping update for ${profile.name}`);

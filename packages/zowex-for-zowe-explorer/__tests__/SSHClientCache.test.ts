@@ -100,7 +100,7 @@ vi.mock("../src/ServerDeployment", () => ({
 }));
 
 vi.mock("vscode", () => ({
-    Disposable: class { },
+    Disposable: class {},
     window: {
         showErrorMessage: vi.fn(),
     },
@@ -151,7 +151,7 @@ describe("SshClientCache", () => {
             }),
         } as any);
         vi.mocked(vscode.window.showErrorMessage).mockResolvedValue(undefined);
-        vi.mocked(ZSshUtils.checkIfOutdated).mockResolvedValue(false);
+        vi.mocked(ZSshUtils.checkIfOutdated).mockReturnValue(false);
         vi.mocked(ZSshClient.create).mockResolvedValue({
             dispose: vi.fn(),
             collectAllRequests: vi.fn().mockReturnValue(mockCollectedRequests),
@@ -264,7 +264,7 @@ describe("SshClientCache", () => {
         it("should deploy a new server if the current one is outdated and autoUpdate is true", async () => {
             const autoUpdateTrueProfile = { ...mockProfile, profile: { ...mockProfile.profile, autoUpdate: true } };
 
-            vi.mocked(ZSshUtils.checkIfOutdated).mockResolvedValueOnce(true);
+            vi.mocked(ZSshUtils.checkIfOutdated).mockReturnValueOnce(true);
 
             await cache.connect(autoUpdateTrueProfile);
 
@@ -273,7 +273,7 @@ describe("SshClientCache", () => {
         });
 
         it("should NOT deploy a new server if the current one is outdated but the user lacks write access", async () => {
-            vi.mocked(ZSshUtils.checkIfOutdated).mockResolvedValueOnce(true);
+            vi.mocked(ZSshUtils.checkIfOutdated).mockReturnValueOnce(true);
             vi.mocked(ZSshUtils.lacksWriteAccess).mockResolvedValueOnce(true);
 
             await cache.connect(mockProfile);
@@ -285,7 +285,7 @@ describe("SshClientCache", () => {
         it("should skip the update and warn when the server is outdated but autoUpdate is false", async () => {
             const autoUpdateFalseProfile = { ...mockProfile, profile: { ...mockProfile.profile, autoUpdate: false } };
 
-            vi.mocked(ZSshUtils.checkIfOutdated).mockResolvedValueOnce(true);
+            vi.mocked(ZSshUtils.checkIfOutdated).mockReturnValueOnce(true);
 
             await cache.connect(autoUpdateFalseProfile);
 
@@ -376,7 +376,7 @@ describe("SshClientCache", () => {
                 .mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }))
                 .mockResolvedValueOnce({ dispose: vi.fn() } as any)
                 .mockResolvedValueOnce({ dispose: vi.fn() } as any);
-            vi.mocked(ZSshUtils.checkIfOutdated).mockResolvedValue(true);
+            vi.mocked(ZSshUtils.checkIfOutdated).mockReturnValue(true);
 
             ConfigUtils.getServerPath = vi.fn().mockReturnValue(undefined);
             const client = await cache.connect(mockProfile);
@@ -681,7 +681,7 @@ describe("SshClientCache", () => {
 
         it("should call ZSshClient.create with the correct options and callbacks", async () => {
             const endSpy = vi.spyOn(cache, "end");
-            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => { });
+            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => {});
             await (cache as any).buildClient(mockSession, clientId, mockOpts);
 
             expect(ZSshClient.create).toHaveBeenCalledWith(
@@ -712,7 +712,7 @@ describe("SshClientCache", () => {
 
         it(
             "should return a parentDir if the server is successfully located on the $PATH and is executable, " +
-            "and the parentDir should be stored in config",
+                "and the parentDir should be stored in config",
             async () => {
                 const binary = "/my/wonderful/dir/zowex";
                 const expectedHost = "expected-host";
