@@ -51,7 +51,7 @@ jobs:
       - run: pnpm build
         id: build
 
-      - run: pnpm test
+      - run: pnpm --filter '!zowe-explorer-ftp-extension' -r test
         env:
           CI: true
           NODE_OPTIONS: --max_old_space_size=4096

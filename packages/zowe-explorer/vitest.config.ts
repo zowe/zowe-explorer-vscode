@@ -36,6 +36,10 @@ export default defineConfig({
         clearMocks: false,
         restoreMocks: false,
         mockReset: false,
+        reporters: ["default", "junit"],
+        outputFile: {
+            junit: "results/unit/junit.xml",
+        },
         server: {
             deps: {
                 inline: [/zowex-for-zowe-explorer/],
@@ -43,6 +47,7 @@ export default defineConfig({
         },
         coverage: {
             reportsDirectory: "results/unit/coverage",
+            reporter: ["text", "lcov", "html", "json", "cobertura"],
             // Restrict coverage to first-party TypeScript sources. Otherwise the
             // v8 provider also reports on every JS file loaded during the run
             // (node_modules, webpack runtime stubs, webview bundles, etc.),
