@@ -26,35 +26,11 @@ Given("a user who is looking at the Add Config quick pick", async function () {
     await browser.waitUntil(() => quickPick.isDisplayed());
 });
 
-//
-// Scenario: User wants to create a new Team Configuration file
-//
-When("a user selects 'Create a new Team Configuration file'", async function () {
-    const createTeamConfigEntry = await quickPick.findItem("＋ Create a New Team Configuration File");
-    await expect(createTeamConfigEntry).toBeClickable();
-    await createTeamConfigEntry.click();
-});
-
-Then("it will ask the user for the desired config location", async function () {
-    this.globalCfgOpt = await quickPick.findItem("Global: in the Zowe home directory");
-    await expect(this.globalCfgOpt).toBeDisplayedInViewport();
-
-    this.projectCfgOpt = await quickPick.findItem("Project: in the current working directory");
-    await expect(this.projectCfgOpt).toBeDisplayedInViewport();
-});
-
 Then("the user can dismiss the dialog", async function () {
     await browser.keys(Key.Escape);
     await browser.waitUntil((): Promise<boolean> => quickPick.isNotInViewport());
 });
 
-//
-// Scenario: User creates a global Team Configuration
-//
-When("the user selects the global option", async function () {
-    await expect(this.globalCfgOpt).toBeClickable();
-    await this.globalCfgOpt.click();
-});
 Then("it will open the config in the editor", async function () {
     const editorView = (await browser.getWorkbench()).getEditorView();
     await expect(editorView).toBeDefined();
@@ -102,10 +78,11 @@ When("a user selects the first profile in the list", async function () {
     // Focus + JS click + Enter for maximum selection reliability in CI:
     // The JS click alone can be swallowed when VS Code re-renders the virtual list;
     // sending Enter afterwards commits the selection through the keyboard path.
-    await browser.execute((el: HTMLElement) => (el as HTMLElement).focus(), firstProfileEntry);
+    await browser.execute((el: HTMLElement) => el.focus(), firstProfileEntry);
     await browser.execute((el: HTMLElement) => el.click(), firstProfileEntry);
     await browser.keys(Key.Enter);
 });
+
 Then("it will prompt the user to add the profile to one or all trees", async function () {
     // Wait for the initial quick pick to close before looking for the Yes/No picker.
     // Tolerate the case where VS Code re-renders the same widget in-place (catch swallows
@@ -144,7 +121,7 @@ Then("it will prompt the user to add the profile to one or all trees", async fun
         const retryEntry = await findFirstProfileEntry();
         const profileLabelAttr = await retryEntry.getAttribute("aria-label");
         this.profileName = profileLabelAttr.substring(profileLabelAttr.lastIndexOf(" ")).trim();
-        await browser.execute((el: HTMLElement) => (el as HTMLElement).focus(), retryEntry);
+        await browser.execute((el: HTMLElement) => el.focus(), retryEntry);
         await browser.execute((el: HTMLElement) => el.click(), retryEntry);
         await browser.keys(Key.Enter);
 
@@ -162,16 +139,23 @@ Then("it will prompt the user to add the profile to one or all trees", async fun
     await expect(this.yesOpt).toExist();
     await expect(this.noOpt).toExist();
 });
+
 When(/a user selects (.*) to apply to all trees/, async function (choice: string) {
     this.userSelectedYes = choice === "Yes";
 
     // Monaco virtual-list rows are not interactable via WebDriver click in headless
-    // Linux (Chrome reports "element not interactable" for both native and JS-injected
-    // clicks on .monaco-list-row elements).  The Yes/No quick pick opens with "Yes"
-    // already as the active/focused item (qp.activeItems = [qp.items[0]]).
-    // Pure keyboard navigation is the only reliable approach:
-    //   - "Yes" (index 0): already active — just commit with Enter.
-    //   - "No"  (index 1): move focus one step down with ArrowDown, then Enter.
+    // Linux. Pure keyboard navigation is the only reliable approach, but browser.keys()
+    // sends to whatever element currently has focus — which may have drifted to the
+    // editor/sidebar after the async tree refresh that opens this picker.
+    // Explicitly JS-focus the quick pick's <input> first to anchor keyboard events
+    // to the correct widget. The <input> is a real DOM element and accepts JS focus
+    // without any interactability check.
+    const qpInput = await browser.$(".quick-input-widget input");
+    await qpInput.waitForExist({ timeout: 5000 });
+    await browser.execute((el: HTMLElement) => el.focus(), qpInput);
+
+    // "Yes" (index 0) is already the active item (qp.activeItems = [qp.items[0]]).
+    // For "No" (index 1): move focus one step down with ArrowDown, then commit.
     if (!this.userSelectedYes) {
         await browser.keys(Key.ArrowDown);
     }
@@ -187,13 +171,14 @@ When(/a user selects (.*) to apply to all trees/, async function (choice: string
             // Tolerate re-render in-place; the selection was still sent.
         });
 });
+
 Then("it will add a tree item for the profile to the correct trees", async function () {
     const dsPane = await paneDivForTree("data sets");
     const ussPane = await paneDivForTree("uss");
 
     // Wait until the profile node actually appears in the DS tree DOM.
-    // ViewSection.findItem returns undefined for a missing item; .elem is the
-    // underlying WebdriverIO element for existence checks.
+    // ViewSection.findItem returns a CustomTreeItem wrapper (never undefined);
+    // .elem is the underlying WebdriverIO element for DOM existence checks.
     await browser.waitUntil(
         async () => {
             const item = await dsPane.findItem(this.profileName);

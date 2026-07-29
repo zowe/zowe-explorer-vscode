@@ -101,12 +101,6 @@ When("a user opens the Zowe Config Editor from the Command Palette", async () =>
 });
 
 Then("the Zowe Config Editor webview should be opened", async function () {
-    // Switch back to the main frame in case a previous step left the browser
-    // inside a webview iframe — getWorkbench() waits on .monaco-workbench which
-    // is not visible from within a nested frame context.
-    try {
-        await browser.switchToFrame(null);
-    } catch (_) {}
     const workbench = await browser.getWorkbench();
     const editorView = workbench.getEditorView();
 
