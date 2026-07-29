@@ -166,20 +166,56 @@ When(/a user selects (.*) to apply to all trees/, async function (choice: string
     this.userSelectedYes = choice === "Yes";
     // The Then step above already confirmed the quick pick is open and the items exist.
     // Re-query fresh — stored references go stale as the quick pick can re-render.
-    // Use JS click: VS Code's virtual list marks offscreen rows as non-clickable.
+    // Use focus + JS click + Enter to reliably commit the selection in CI.
+    // A plain JS click can be swallowed by VS Code's virtual list re-render, leaving
+    // the default active item ("Yes") selected — causing "No" to behave like "Yes".
     const label = this.userSelectedYes ? "Yes, Apply to all trees" : "No, Apply to current tree selected";
     const opt = await quickPick.findItem(label);
     await opt.waitForExist({ timeout: 10000 });
+    await browser.execute((el: HTMLElement) => (el as HTMLElement).focus(), opt);
     await browser.execute((el: HTMLElement) => el.click(), opt);
+    await browser.keys(Key.Enter);
+
+    // Wait for the Yes/No quick pick to close before asserting tree state.
+    // Without this, the tree may not yet reflect the selection.
+    await browser
+        .waitUntil(async () => quickPick.isNotInViewport(), {
+            timeout: 5000,
+            timeoutMsg: "Yes/No quick pick did not close after selecting an option",
+        })
+        .catch(() => {
+            // Tolerate re-render in-place; the selection was still sent.
+        });
 });
 Then("it will add a tree item for the profile to the correct trees", async function () {
     const dsPane = await paneDivForTree("data sets");
     const ussPane = await paneDivForTree("uss");
 
-    await expect(await dsPane.findItem(this.profileName)).toBeDefined();
+    // Wait until the profile node actually appears in the DS tree DOM.
+    // ViewSection.findItem returns undefined for a missing item; .elem is the
+    // underlying WebdriverIO element for existence checks.
+    await browser.waitUntil(
+        async () => {
+            const item = await dsPane.findItem(this.profileName);
+            return item != null && (await item.elem.isExisting());
+        },
+        { timeout: 10000, timeoutMsg: `Profile "${this.profileName}" did not appear in Data Sets tree` }
+    );
+
     if (this.userSelectedYes) {
-        await expect(await ussPane.findItem(this.profileName)).toBeDefined();
+        // "Yes" path: profile must appear in USS tree too.
+        await browser.waitUntil(
+            async () => {
+                const item = await ussPane.findItem(this.profileName);
+                return item != null && (await item.elem.isExisting());
+            },
+            { timeout: 10000, timeoutMsg: `Profile "${this.profileName}" did not appear in USS tree` }
+        );
     } else {
-        await expect(await ussPane.findItem(this.profileName)).toBeUndefined();
+        // "No" path: profile must NOT be in USS tree.
+        // Wait briefly for any in-flight tree refresh to settle, then assert absence.
+        await browser.pause(500);
+        const ussItem = await ussPane.findItem(this.profileName);
+        await expect(ussItem).toBeUndefined();
     }
 });
