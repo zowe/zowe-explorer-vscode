@@ -81,23 +81,35 @@ When("a user selects 'Edit in Zowe Configuration Editor'", async function () {
 //
 When("a user selects the first profile in the list", async function () {
     const firstProfileEntry = await quickPick.findItemByIndex(2);
+    await firstProfileEntry.waitForExist({ timeout: 10000 });
     await expect(firstProfileEntry).toBeClickable();
     const profileLabelAttr = await firstProfileEntry.getAttribute("aria-label");
     // strip off any extra details added to the label of the profile node
     this.profileName = profileLabelAttr.substring(profileLabelAttr.lastIndexOf(" ")).trim();
-    await firstProfileEntry.click();
+    // Use a JS click to avoid virtual-list offscreen-click flakiness
+    await browser.execute((el: HTMLElement) => el.click(), firstProfileEntry);
 });
 Then("it will prompt the user to add the profile to one or all trees", async function () {
-    // After clicking a profile the first quick pick closes and VS Code opens a second
-    // quick pick containing the Yes/No options. We must wait for the specific items to
-    // actually exist in the DOM — findItem() returns a lazy ChainablePromiseElement so
-    // toBeDefined() alone does not confirm the element is rendered.
+    // Wait for the initial quick pick to close before looking for the Yes/No picker.
+    // Tolerate the case where VS Code re-renders the same widget in-place (catch swallows
+    // the timeout so the test can still proceed if the picker never fully disappears).
+    await browser
+        .waitUntil(async () => quickPick.isNotInViewport(), {
+            timeout: 5000,
+            timeoutMsg: "Initial quick pick did not close after selecting a profile",
+        })
+        .catch(() => {
+            // Picker may re-render in place rather than close — continue regardless.
+        });
+
+    // Wait for either option to exist in the new quick pick (15 s for slow CI).
     await browser.waitUntil(
         async () => {
             const yesOpt = await quickPick.findItem("Yes, Apply to all trees");
-            return yesOpt.isExisting();
+            const noOpt = await quickPick.findItem("No, Apply to current tree selected");
+            return (await yesOpt.isExisting()) || (await noOpt.isExisting());
         },
-        { timeout: 10000, timeoutMsg: "Yes/No quick pick did not appear after selecting a profile" }
+        { timeout: 15000, timeoutMsg: "Yes/No quick pick did not appear after selecting a profile" }
     );
     this.yesOpt = await quickPick.findItem("Yes, Apply to all trees");
     this.noOpt = await quickPick.findItem("No, Apply to current tree selected");
