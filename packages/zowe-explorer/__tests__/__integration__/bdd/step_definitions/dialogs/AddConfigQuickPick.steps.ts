@@ -164,23 +164,42 @@ Then("it will prompt the user to add the profile to one or all trees", async fun
 });
 When(/a user selects (.*) to apply to all trees/, async function (choice: string) {
     this.userSelectedYes = choice === "Yes";
-    // The Then step above already confirmed the quick pick is open and the items exist.
-    // Re-query fresh — stored references go stale as the quick pick can re-render.
-    // Use focus + JS click + Enter to reliably commit the selection in CI.
-    // A plain JS click can be swallowed by VS Code's virtual list re-render, leaving
-    // the default active item ("Yes") selected — causing "No" to behave like "Yes".
     const label = this.userSelectedYes ? "Yes, Apply to all trees" : "No, Apply to current tree selected";
+
     const opt = await quickPick.findItem(label);
     await opt.waitForExist({ timeout: 10000 });
+
+    // Scroll the item into view and focus it so it is visible to WebDriver.
     await browser.execute((el: HTMLElement) => (el as HTMLElement).focus(), opt);
-    await browser.execute((el: HTMLElement) => el.click(), opt);
+    await browser.execute((el: HTMLElement) => el.scrollIntoView(), opt);
+
+    // When selecting "No" (the second item), the quick pick defaults to "Yes" (item 0)
+    // as the active item. If our target item is not yet aria-selected, press ArrowDown
+    // once to move the active selection to "No" before committing with Enter.
+    // This avoids a JS-injected click being swallowed by VS Code's virtual list
+    // re-render and accidentally committing the default "Yes".
+    if (!this.userSelectedYes) {
+        let isActive = false;
+        try {
+            isActive = (await opt.getAttribute("aria-selected")) === "true";
+        } catch {
+            // attribute may be absent; treat as not active
+        }
+        if (!isActive) {
+            await browser.keys(Key.ArrowDown);
+            await browser.pause(100);
+        }
+    }
+
+    // Use the native WebdriverIO element click (not JS-injected) — less likely to be
+    // swallowed by a virtual-list re-render than browser.execute(() => el.click()).
+    await opt.click();
     await browser.keys(Key.Enter);
 
     // Wait for the Yes/No quick pick to close before asserting tree state.
-    // Without this, the tree may not yet reflect the selection.
     await browser
         .waitUntil(async () => quickPick.isNotInViewport(), {
-            timeout: 5000,
+            timeout: 10000,
             timeoutMsg: "Yes/No quick pick did not close after selecting an option",
         })
         .catch(() => {
