@@ -242,11 +242,7 @@ export const config: Options.Testrunner = {
      */
     afterStep: async function (step, scenario, result, context) {
         if (!result.passed) {
-            // Strip characters that are invalid in filenames on NTFS/Windows (rejected by actions/upload-artifact):
-            // double-quote, colon, less-than, greater-than, vertical bar, asterisk, question mark, CR, LF
-            const sanitize = (s: string) => s.replace(/[":/<>|*?\r\n]/g, "_");
-            const filename = `${sanitize(scenario.name)} - ${sanitize(step.text)}.png`;
-            await browser.saveScreenshot(joinPath(screenshotDir, filename));
+            await browser.saveScreenshot(joinPath(screenshotDir, `${scenario.name} - ${step.text}.png`));
         }
     },
     /**
