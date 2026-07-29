@@ -79,15 +79,32 @@ When("a user selects 'Edit in Zowe Configuration Editor'", async function () {
 //
 // Scenario: User wants to add a profile to a tree
 //
+
+/**
+ * Returns the first profile entry in the quick pick, skipping the three fixed
+ * header items: (0) Create config, (1) Edit config in ZCE, (2) Edit config via JSON.
+ * Using the explicit index avoids picking a header if the list hasn't fully rendered.
+ */
+async function findFirstProfileEntry(): Promise<ChainablePromiseElement> {
+    // The quick-pick list always starts with three fixed control items at indices 0–2.
+    // The first selectable profile is at index 3.
+    const entry = await quickPick.findItemByIndex(3);
+    await entry.waitForExist({ timeout: 10000 });
+    return entry;
+}
+
 When("a user selects the first profile in the list", async function () {
-    const firstProfileEntry = await quickPick.findItemByIndex(2);
-    await firstProfileEntry.waitForExist({ timeout: 10000 });
+    const firstProfileEntry = await findFirstProfileEntry();
     await expect(firstProfileEntry).toBeClickable();
     const profileLabelAttr = await firstProfileEntry.getAttribute("aria-label");
     // strip off any extra details added to the label of the profile node
     this.profileName = profileLabelAttr.substring(profileLabelAttr.lastIndexOf(" ")).trim();
-    // Use a JS click to avoid virtual-list offscreen-click flakiness
+    // Focus + JS click + Enter for maximum selection reliability in CI:
+    // The JS click alone can be swallowed when VS Code re-renders the virtual list;
+    // sending Enter afterwards commits the selection through the keyboard path.
+    await browser.execute((el: HTMLElement) => (el as HTMLElement).focus(), firstProfileEntry);
     await browser.execute((el: HTMLElement) => el.click(), firstProfileEntry);
+    await browser.keys(Key.Enter);
 });
 Then("it will prompt the user to add the profile to one or all trees", async function () {
     // Wait for the initial quick pick to close before looking for the Yes/No picker.
@@ -102,15 +119,44 @@ Then("it will prompt the user to add the profile to one or all trees", async fun
             // Picker may re-render in place rather than close — continue regardless.
         });
 
-    // Wait for either option to exist in the new quick pick (15 s for slow CI).
-    await browser.waitUntil(
-        async () => {
-            const yesOpt = await quickPick.findItem("Yes, Apply to all trees");
-            const noOpt = await quickPick.findItem("No, Apply to current tree selected");
-            return (await yesOpt.isExisting()) || (await noOpt.isExisting());
-        },
-        { timeout: 15000, timeoutMsg: "Yes/No quick pick did not appear after selecting a profile" }
-    );
+    const waitForYesNo = (timeoutMs = 30000): Promise<boolean> =>
+        browser.waitUntil(
+            async () => {
+                const yesOpt = await quickPick.findItem("Yes, Apply to all trees");
+                const noOpt = await quickPick.findItem("No, Apply to current tree selected");
+                return (await yesOpt.isExisting()) || (await noOpt.isExisting());
+            },
+            { timeout: timeoutMs, timeoutMsg: "Yes/No quick pick did not appear after selecting a profile" }
+        );
+
+    // First attempt: wait up to 30 s for the Yes/No items to appear.
+    let seen = await waitForYesNo().catch(() => false);
+
+    if (!seen) {
+        // The profile selection may not have been committed — re-open the quick pick
+        // and retry with focus + click + Enter before giving up.
+        const dsPane = await paneDivForTree("data sets");
+        const plusIcon = await dsPane.getAction(`Add Profile to Data Sets View`);
+        await dsPane.elem.moveTo();
+        await plusIcon.elem.click();
+        await browser.waitUntil(() => quickPick.isDisplayed(), { timeout: 10000 });
+
+        const retryEntry = await findFirstProfileEntry();
+        const profileLabelAttr = await retryEntry.getAttribute("aria-label");
+        this.profileName = profileLabelAttr.substring(profileLabelAttr.lastIndexOf(" ")).trim();
+        await browser.execute((el: HTMLElement) => (el as HTMLElement).focus(), retryEntry);
+        await browser.execute((el: HTMLElement) => el.click(), retryEntry);
+        await browser.keys(Key.Enter);
+
+        await browser.waitUntil(async () => quickPick.isNotInViewport(), { timeout: 5000 }).catch(() => {});
+
+        seen = await waitForYesNo(15000).catch(() => false);
+    }
+
+    if (!seen) {
+        throw new Error("Yes/No quick pick did not appear after selecting a profile (after retry)");
+    }
+
     this.yesOpt = await quickPick.findItem("Yes, Apply to all trees");
     this.noOpt = await quickPick.findItem("No, Apply to current tree selected");
     await expect(this.yesOpt).toExist();
