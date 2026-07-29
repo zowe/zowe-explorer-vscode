@@ -88,21 +88,30 @@ When("a user selects the first profile in the list", async function () {
     await firstProfileEntry.click();
 });
 Then("it will prompt the user to add the profile to one or all trees", async function () {
-    const yesOpt = await quickPick.findItem("Yes, Apply to all trees");
-    await expect(yesOpt).toBeDefined();
-    const noOpt = await quickPick.findItem("No, Apply to current tree selected");
-    await expect(noOpt).toBeDefined();
+    // After clicking a profile the first quick pick closes and VS Code opens a second
+    // quick pick containing the Yes/No options. We must wait for the specific items to
+    // actually exist in the DOM — findItem() returns a lazy ChainablePromiseElement so
+    // toBeDefined() alone does not confirm the element is rendered.
+    await browser.waitUntil(
+        async () => {
+            const yesOpt = await quickPick.findItem("Yes, Apply to all trees");
+            return yesOpt.isExisting();
+        },
+        { timeout: 10000, timeoutMsg: "Yes/No quick pick did not appear after selecting a profile" }
+    );
+    this.yesOpt = await quickPick.findItem("Yes, Apply to all trees");
+    this.noOpt = await quickPick.findItem("No, Apply to current tree selected");
+    await expect(this.yesOpt).toExist();
+    await expect(this.noOpt).toExist();
 });
 When(/a user selects (.*) to apply to all trees/, async function (choice: string) {
     this.userSelectedYes = choice === "Yes";
-    // Wait for the quick pick to be displayed before querying items.
-    // On CI the picker can take a moment to open after the profile click.
-    await browser.waitUntil(() => quickPick.isDisplayed(), { timeout: 5000, timeoutMsg: "Quick pick did not appear for tree selection" });
-    // Re-query fresh — stored references go stale as the quick pick re-renders.
+    // The Then step above already confirmed the quick pick is open and the items exist.
+    // Re-query fresh — stored references go stale as the quick pick can re-render.
     // Use JS click: VS Code's virtual list marks offscreen rows as non-clickable.
     const label = this.userSelectedYes ? "Yes, Apply to all trees" : "No, Apply to current tree selected";
     const opt = await quickPick.findItem(label);
-    await opt.waitForExist({ timeout: 5000 });
+    await opt.waitForExist({ timeout: 10000 });
     await browser.execute((el: HTMLElement) => el.click(), opt);
 });
 Then("it will add a tree item for the profile to the correct trees", async function () {
