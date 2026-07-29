@@ -8,13 +8,19 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-
+import * as vscode from "vscode";
 import { ExtensionContext } from "vscode";
 import { Utilities } from "../src/Utilities";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { SshClientCache } from "../src/SshClientCache";
 
 vi.mock("vscode", () => ({
+    l10n: {
+        t: vi.fn().mockImplementation((msg, ..._args) => {
+            return msg;
+        }),
+    },
     Disposable: vi.fn(),
     window: {
         createQuickPick: vi.fn(),
@@ -296,6 +302,21 @@ describe("Utilities", () => {
 
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await expect((Utilities as any).connectCallback(api)).rejects.toThrow("deploy exploded");
+        });
+
+        it("should throw an error when the user does not have write access to the deployment directory", async () => {
+            const mockDeployDir = "/dir";
+            const profile = { name: "p", profile: { host: "h" } };
+            const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
+            VscePromptApi.mockImplementation(() => ({
+                promptForProfile: vi.fn().mockResolvedValue(profile),
+                promptForDeployDirectory: vi.fn().mockResolvedValue(mockDeployDir),
+            }));
+            vi.mocked(ZSshUtils.lacksWriteAccess).mockResolvedValue(true);
+            const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
+            await expect((Utilities as any).connectCallback(api)).rejects.toThrow(
+                vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, "/mock/server/path")
+            );
         });
     });
 

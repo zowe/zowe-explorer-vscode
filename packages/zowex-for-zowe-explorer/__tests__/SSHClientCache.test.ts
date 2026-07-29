@@ -100,7 +100,12 @@ vi.mock("../src/ServerDeployment", () => ({
 }));
 
 vi.mock("vscode", () => ({
-    Disposable: class { },
+    l10n: {
+        t: vi.fn().mockImplementation((msg, ..._args) => {
+            return msg;
+        }),
+    },
+    Disposable: class {},
     window: {
         showErrorMessage: vi.fn(),
     },
@@ -263,14 +268,11 @@ describe("SshClientCache", () => {
 
         it("should throw an error if the current one is missing (ENOTFOUND) but the user does not have write permission", async () => {
             // Force ZSshClient.create to throw ENOTFOUND on the first try
-            vi.mocked(ZSshClient.create)
-                .mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }));
+            vi.mocked(ZSshClient.create).mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }));
             vi.mocked(ZSshUtils.lacksWriteAccess).mockResolvedValue(true);
             cache.detectServerOnPath = vi.fn().mockResolvedValue(undefined);
             await expect(cache.connect(mockProfile)).rejects.toThrow(
-                "You do not have write access to the deployment directory '/mock/server/path'. "
-                + "The SSH server could not be started. Configure a different directory, or grant yourself write permission "
-                + "to the deployment directory if possible. ",
+                vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, "/mock/server/path")
             );
 
             expect(deployWithProgress).not.toHaveBeenCalled();
@@ -740,7 +742,7 @@ describe("SshClientCache", () => {
 
         it("should call ZSshClient.create with the correct options and callbacks", async () => {
             const endSpy = vi.spyOn(cache, "end");
-            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => { });
+            const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => {});
             await (cache as any).buildClient(mockSession, clientId, mockOpts);
 
             expect(ZSshClient.create).toHaveBeenCalledWith(
@@ -771,7 +773,7 @@ describe("SshClientCache", () => {
 
         it(
             "should return a parentDir if the server is successfully located on the $PATH and is executable, " +
-            "and the parentDir should be stored in config",
+                "and the parentDir should be stored in config",
             async () => {
                 const binary = "/my/wonderful/dir/zowex";
                 const expectedHost = "expected-host";

@@ -69,6 +69,11 @@ export class SshClientCache extends vscode.Disposable {
         super(() => this.dispose());
     }
 
+    public static readonly WRITE_ACCESS_TO_SERVER_PATH_ERR =
+        `You do not have write access to the deployment directory '{0}' ` +
+        `The SSH server could not be started. Configure a different directory, ` +
+        `or grant yourself write permission to the deployment directory if possible. `;
+
     public dispose(opts?: ZSshRestartOptions): void {
         for (const session of this.mClientSessionMap.values()) {
             session.client.dispose(opts?.restart);
@@ -220,12 +225,9 @@ export class SshClientCache extends vscode.Disposable {
                             useNativeSsh,
                         });
                     } else if (serverNotFound) {
-                        throw new ImperativeError({
-                            msg:
-                                `You do not have write access to the deployment directory '${serverPath}'. ` +
-                                `The SSH server could not be started. Configure a different directory, ` +
-                                `or grant yourself write permission to the deployment directory if possible. `,
-                        });
+                        const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, serverPath);
+                        imperative.Logger.getAppLogger().error(errMsg);
+                        throw new ImperativeError({ msg: errMsg });
                     } else {
                         imperative.Logger.getAppLogger().warn("Skipped deploy step as server path '%s' is not writeable by the user", serverPath);
                     }
