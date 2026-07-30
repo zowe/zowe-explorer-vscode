@@ -270,8 +270,12 @@ export class SharedInit {
                 // When invoked from the editor/explorer context menu, opts is the clicked config file's URI.
                 const configPath = opts instanceof vscode.Uri ? opts.fsPath : undefined;
 
+                // Capture the active editor and its cursor synchronously right now — before any
+                // async work or focus changes caused by the context menu closing.
+                const activeEditorAtInvocation = vscode.window.activeTextEditor;
+
                 // Attempt to resolve profile/property from the editor cursor position
-                const cursorContext = configPath ? SharedInit.resolveZoweConfigCursorContext(configPath) : undefined;
+                const cursorContext = configPath ? SharedInit.resolveZoweConfigCursorContext(configPath, activeEditorAtInvocation) : undefined;
                 const profileName = cursorContext?.profileName ?? "";
                 const profileType = cursorContext?.profileType ?? "";
                 const propertyKey = cursorContext?.propertyKey;
@@ -294,12 +298,8 @@ export class SharedInit {
 
                     return existingConfigEditor;
                 } else {
-                    // Create new ConfigEditor
-                    const configEditor = new ConfigEditor(context);
-
-                    if (configPath) {
-                        configEditor.initialSelection = { profileName, configPath, profileType, propertyKey };
-                    }
+                    // Create new ConfigEditor, passing selection so it's set before initializeWebview fires
+                    const configEditor = new ConfigEditor(context, configPath ? { profileName, configPath, profileType, propertyKey } : undefined);
 
                     // Track this instance
                     existingConfigEditor = configEditor;
@@ -309,9 +309,7 @@ export class SharedInit {
                         existingConfigEditor = null;
                     });
 
-                    const ret = await configEditor.userSubmission.promise;
-                    configEditor.panel.dispose();
-                    return ret;
+                    return configEditor;
                 }
             })
         );
@@ -343,15 +341,8 @@ export class SharedInit {
 
                     return existingConfigEditor;
                 } else {
-                    // Create new ConfigEditor
-                    const configEditor = new ConfigEditor(context);
-
-                    // Store the initial selection data in the ConfigEditor instance
-                    configEditor.initialSelection = {
-                        profileName: profileName,
-                        configPath: configPath,
-                        profileType: profileType,
-                    };
+                    // Create new ConfigEditor, passing selection so it's set before GET_PROFILES fires
+                    const configEditor = new ConfigEditor(context, { profileName, configPath, profileType });
 
                     // Track this instance
                     existingConfigEditor = configEditor;
@@ -389,6 +380,12 @@ export class SharedInit {
                 if (existingConfigEditor?.panel?.visible) {
                     await existingConfigEditor.panel.webview.postMessage({ command: "SAVE" });
                 }
+            })
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.openTeamConfigJson", async () => {
+                await Profiles.getInstance().editZoweConfigFile(false);
             })
         );
 
@@ -846,14 +843,17 @@ export class SharedInit {
      *          is not inside a profiles block.
      */
     public static resolveZoweConfigCursorContext(
-        configPath: string
+        configPath: string,
+        capturedEditor?: vscode.TextEditor
     ): { profileName: string; profileType: string; propertyKey?: string } | undefined {
         // Find the active text editor regardless of path-separator style.
         const normalize = (p: string) => p.replace(/\\/g, "/").toLowerCase();
-        const editor = vscode.window.visibleTextEditors.find(
-            (e) => normalize(e.document.uri.fsPath) === normalize(configPath)
-        ) ?? vscode.window.activeTextEditor;
-
+        // Prefer the pre-captured editor (passed synchronously at command-invocation time before
+        // focus shifts away). Fall back to visibleTextEditors / activeTextEditor for other callers.
+        const editor =
+            capturedEditor ??
+            vscode.window.visibleTextEditors.find((e) => normalize(e.document.uri.fsPath) === normalize(configPath)) ??
+            vscode.window.activeTextEditor;
         if (!editor) return undefined;
         if (normalize(editor.document.uri.fsPath) !== normalize(configPath)) return undefined;
 
@@ -861,9 +861,15 @@ export class SharedInit {
         const cursorLine = editor.selection.active.line; // 0-based
 
         // Parse the full JSON once to look up types.
+        // zowe.config.json files may contain JSONC-style comments and trailing commas —
+        // strip them before parsing so JSON.parse doesn't fail.
+        const stripped = text
+            .replace(/\/\/[^\n]*/g, "") // remove // line comments
+            .replace(/\/\*[\s\S]*?\*\//g, "") // remove /* block comments */
+            .replace(/,(\s*[}\]])/g, "$1"); // remove trailing commas before } or ]
         let json: Record<string, any>;
         try {
-            json = JSON.parse(text);
+            json = JSON.parse(stripped);
         } catch {
             return undefined;
         }
@@ -878,7 +884,11 @@ export class SharedInit {
 
         // First pass: find all "key": { positions and their char offsets.
         // We represent each as { line, key, openBraceOffset }.
-        interface KeyEntry { line: number; col: number; key: string }
+        interface KeyEntry {
+            line: number;
+            col: number;
+            key: string;
+        }
         const keyEntries: KeyEntry[] = [];
         // Match lines like:    "someKey": {   or   "someKey": [
         const keyLineRe = /^\s*"([^"\\]*)"\s*:\s*[{[]/;
@@ -916,9 +926,18 @@ export class SharedInit {
         for (let ci = 0; ci < text.length; ci++) {
             const ch = text[ci];
             braceDepthAt[ci] = depth;
-            if (escaped) { escaped = false; continue; }
-            if (ch === "\\" && inStr) { escaped = true; continue; }
-            if (ch === '"') { inStr = !inStr; continue; }
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+            if (ch === "\\" && inStr) {
+                escaped = true;
+                continue;
+            }
+            if (ch === '"') {
+                inStr = !inStr;
+                continue;
+            }
             if (inStr) continue;
             if (ch === "{" || ch === "[") {
                 openStack.push(ci);
@@ -936,20 +955,27 @@ export class SharedInit {
         // For each "key": { entry, find the exact open-brace offset.
         // The key truly encloses the cursor only when:
         //   openOffset < cursorOffset < closeBraceOffset
-        interface ScopedKey { key: string; depthAtOpen: number; openOffset: number }
+        interface ScopedKey {
+            key: string;
+            depthAtOpen: number;
+            openOffset: number;
+        }
         const enclosingKeys: ScopedKey[] = [];
 
         for (const entry of keyEntries) {
-            const lineStart = lines.slice(0, entry.line).reduce((sum, l) => sum + l.length + 1, 0);
+            const entryLineStart = lines.slice(0, entry.line).reduce((sum, l) => sum + l.length + 1, 0);
             const lineText = lines[entry.line];
             const openIdx = lineText.search(/[{[]/);
             if (openIdx === -1) continue;
-            const openOffset = lineStart + openIdx;
+            const openOffset = entryLineStart + openIdx;
 
-            if (openOffset >= cursorOffset) continue; // opener is after cursor
+            // Treat the cursor being anywhere on "key": { line as being inside that block.
+            const lineEnd = entryLineStart + lineText.length;
+            const cursorOnThisLine = cursorOffset >= entryLineStart && cursorOffset <= lineEnd;
+            if (openOffset > cursorOffset && !cursorOnThisLine) continue;
 
             const closeOffset = closeBraceOf.get(openOffset);
-            if (closeOffset === undefined || closeOffset <= cursorOffset) continue; // closer is at/before cursor
+            if (closeOffset === undefined || (closeOffset < cursorOffset && !cursorOnThisLine)) continue;
 
             const depthInside = braceDepthAt[openOffset] + 1;
             enclosingKeys.push({ key: entry.key, depthAtOpen: depthInside, openOffset });
@@ -959,40 +985,58 @@ export class SharedInit {
         enclosingKeys.sort((a, b) => a.depthAtOpen - b.depthAtOpen);
 
         // Build the logical path: we want entries matching
-        //   profiles > <name> [> properties > <key>]
-        // Extract them from the sorted enclosing keys.
+        //   profiles > <name1> [> profiles > <name2> > ...] [> properties > <key>]
+        // Extract them from the sorted (shallow-first) enclosing keys to build the full
+        // dot-qualified profile path (e.g. "parent.child") and optional property key.
+
         const profilesIdx = enclosingKeys.findIndex((k) => k.key === "profiles");
         if (profilesIdx === -1) return undefined;
 
-        // The profile name is the key immediately after "profiles"
-        const profileNameEntry = enclosingKeys[profilesIdx + 1];
-        if (!profileNameEntry) return undefined;
-        const profileName = profileNameEntry.key;
+        // Walk the enclosing keys from the first "profiles" entry, alternating
+        // "profiles" / <name> pairs to collect all levels of nesting.
+        const profileParts: string[] = [];
+        let i = profilesIdx;
+        while (i < enclosingKeys.length) {
+            if (enclosingKeys[i].key !== "profiles") break;
+            i++; // step past "profiles"
+            if (i >= enclosingKeys.length || enclosingKeys[i].key === "profiles" || enclosingKeys[i].key === "properties") break;
+            profileParts.push(enclosingKeys[i].key); // profile name at this level
+            i++; // step past the name — next should be "profiles" (deeper nesting) or "properties"
+        }
 
-        // Resolve profile type from parsed JSON.
-        const profileData = json?.profiles?.[profileName];
+        if (profileParts.length === 0) return undefined;
+
+        // The full dot-qualified profile key as the webview uses it.
+        const profileName = profileParts.join(".");
+
+        // Resolve profile type from parsed JSON by traversing the nested profile structure.
+        let profileData: Record<string, any> | undefined = json?.profiles;
+        for (const part of profileParts) {
+            profileData = profileData?.[part];
+            // Each level except the last is accessed via its .profiles sub-key.
+            if (profileParts.indexOf(part) < profileParts.length - 1) {
+                profileData = (profileData as any)?.profiles;
+            }
+        }
         const profileType: string = typeof profileData?.type === "string" ? profileData.type : "";
 
-        // Check if we're inside a "properties" block.
-        const afterName = enclosingKeys.slice(profilesIdx + 2);
-        const propertiesIdx = afterName.findIndex((k) => k.key === "properties");
+        // Remaining enclosing keys after the last profile name entry.
+        const afterLastName = enclosingKeys.slice(profilesIdx + profileParts.length * 2);
+        const propertiesIdx = afterLastName.findIndex((k) => k.key === "properties");
 
         let propertyKey: string | undefined;
         if (propertiesIdx !== -1) {
-            // If there's a deeper enclosing key after "properties", that's a sub-object.
-            // But if the cursor is directly on a property line, use cursorLineKey.
-            const deeperKey = afterName[propertiesIdx + 1];
+            // If there's a deeper enclosing key after "properties", that's a sub-object key.
+            const deeperKey = afterLastName[propertiesIdx + 1];
             if (deeperKey) {
                 // Cursor is inside a sub-object value — use the sub-object's key name.
                 propertyKey = deeperKey.key;
             } else if (cursorLineKey && cursorLineKey !== "properties") {
-                // Cursor is on a direct property line inside "properties": { }
+                // Cursor is directly on a property line inside "properties": { }
                 propertyKey = cursorLineKey;
             }
         } else if (cursorLineKey && cursorLineKey !== "type" && cursorLineKey !== "secure" && cursorLineKey !== "profiles") {
-            // Cursor is on e.g. "type": "rse" or other profile-level keys — not a property.
-            // But if the user clicks directly on a "properties" child without entering its block,
-            // this branch won't fire.  Leave propertyKey undefined.
+            // Cursor is on a profile-level field (e.g. "type") — not a property key.
         }
 
         return { profileName, profileType, propertyKey };

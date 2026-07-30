@@ -74,10 +74,10 @@ export async function createMemberInPds(pdsNode: any, memberName: string): Promi
     const editorView = (await browser.getWorkbench()).getEditorView();
     const matchesTitle = (t: string): boolean =>
         t.toUpperCase() === memberName.toUpperCase() || t.toUpperCase().startsWith(`${memberName.toUpperCase()}.`);
-    await browser.waitUntil(
-        async () => (await editorView.getOpenEditorTitles()).some(matchesTitle),
-        { timeout: 10000, timeoutMsg: `Editor for new member ${memberName} did not open` }
-    );
+    await browser.waitUntil(async () => (await editorView.getOpenEditorTitles()).some(matchesTitle), {
+        timeout: 10000,
+        timeoutMsg: `Editor for new member ${memberName} did not open`,
+    });
     const actualTitle = (await editorView.getOpenEditorTitles()).find(matchesTitle);
     await editorView.closeEditor(actualTitle);
 }
@@ -97,10 +97,14 @@ export async function waitForMemberInPds(world: any, pdsName: string, memberName
     );
 }
 export async function writeDsContent(nodePath: string, content: string): Promise<void> {
-    await browser.executeWorkbench(async (vscode, path: string, text: string) => {
-        const uri = vscode.Uri.from({ scheme: "zowe-ds", path });
-        await vscode.workspace.fs.writeFile(uri, Buffer.from(text, "utf8") as Uint8Array);
-    }, nodePath, content);
+    await browser.executeWorkbench(
+        async (vscode, path: string, text: string) => {
+            const uri = vscode.Uri.from({ scheme: "zowe-ds", path });
+            await vscode.workspace.fs.writeFile(uri, Buffer.from(text, "utf8") as Uint8Array);
+        },
+        nodePath,
+        content
+    );
 }
 
 export async function deleteDsOrMember(...nodePaths: string[]): Promise<void> {

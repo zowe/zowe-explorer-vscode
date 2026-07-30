@@ -14,7 +14,7 @@ Scenario: User opens and dismisses the Team Configuration quick pick
 
 Scenario: User edits Team Configuration file
     Given a user who is looking at the Add Config quick pick
-    When a user selects 'Edit Team Configuration File'
+    When a user selects 'Edit in Zowe Configuration Editor'
     Then it will open the config in the editor
 
 Scenario Outline: User wants to add a profile to the tree views

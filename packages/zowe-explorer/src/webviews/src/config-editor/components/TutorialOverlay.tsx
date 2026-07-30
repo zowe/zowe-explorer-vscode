@@ -38,9 +38,7 @@ function getSteps(): TutorialStep[] {
     },
     {
       title: l10n.t("Defaults"),
-      description: l10n.t(
-        "The Defaults section lets you choose which profile is the default for each connection type (zosmf, ssh, etc.)."
-      ),
+      description: l10n.t("The Defaults section lets you choose which profile is the default for each connection type (zosmf, ssh, etc.)."),
     },
     {
       title: l10n.t("Saving Changes"),
@@ -50,7 +48,7 @@ function getSteps(): TutorialStep[] {
     },
     {
       title: l10n.t("You're all set!"),
-      description: l10n.t("Start by selecting a profile on the left. Click the \u24D8 icons for contextual help on any field."),
+      description: l10n.t("Start by selecting a profile on the left."),
     },
   ];
 }

@@ -145,6 +145,8 @@ function AppContent() {
   // highlightPropertyKey: property key to blink in the details panel after "Edit in zowe config webview"
   // context menu action with cursor on a specific property.
   const [highlightPropertyKey, setHighlightPropertyKey] = useState<string | null>(null);
+  // highlightProfileCard: true when the whole profile details card should blink (navigated from editor).
+  const [highlightProfileCard, setHighlightProfileCard] = useState<boolean>(false);
 
   const { handleChange, handleDefaultsChange, handleDeleteProperty, confirmDeleteProperty, handleUnlinkMergedProperty, handleAddNewProfileKey } =
     usePropertyHandlers({
@@ -173,17 +175,6 @@ function AppContent() {
   useEffect(() => {
     tutorialSeenRef.current = tutorialSeen;
   }, [tutorialSeen]);
-
-  // Show the tutorial automatically whenever configurations first become non-empty
-  // and the user has not yet dismissed it.
-  // Depends on both 'configurations' and 'tutorialSeen' so it re-evaluates correctly
-  // when either changes (e.g. tutorialSeen arrives in the same batch as configurations).
-  useEffect(() => {
-    if (configurations.length === 0) return;
-    if (!tutorialSeen) {
-      setShowTutorial(true);
-    }
-  }, [configurations, tutorialSeen]);
 
   const handleOpenTutorial = () => setShowTutorial(true);
 
@@ -448,7 +439,9 @@ function AppContent() {
     setRenames,
     setConfigParseErrors,
     setTutorialSeen,
+    setShowTutorial,
     setHighlightPropertyKey,
+    setHighlightProfileCard,
     configurationsRef,
     mergedPropertiesLatestRequestSeqRef,
     pendingSaveSelection,
@@ -507,6 +500,8 @@ function AppContent() {
             openAddProfileModalAtPath={openAddProfileModalAtPath}
             highlightPropertyKey={highlightPropertyKey}
             onHighlightPropertyKeyConsumed={() => setHighlightPropertyKey(null)}
+            highlightProfileCard={highlightProfileCard}
+            onHighlightProfileCardConsumed={() => setHighlightProfileCard(false)}
           />
         )}
         renderDefaults={(defaults) => <RenderDefaults defaults={defaults} handleDefaultsChange={handleDefaultsChange} />}

@@ -145,12 +145,7 @@ export function Tabs({ onTabChange, onRevealInFinder, onOpenSchemaFile, onAddNew
         </div>
 
         <div className="tabs-toolbar">
-          <button
-            className="ce-icon-button"
-            onClick={onShowTutorial}
-            title={l10n.t("Open Tutorial")}
-            data-testid="open-tutorial"
-          >
+          <button className="ce-icon-button" onClick={onShowTutorial} title={l10n.t("Open Tutorial")} data-testid="open-tutorial">
             <span className="codicon codicon-mortar-board codicon-size-16"></span>
           </button>
           <a

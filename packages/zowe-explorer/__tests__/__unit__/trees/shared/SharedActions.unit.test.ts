@@ -836,7 +836,7 @@ describe("Shared Actions Unit Tests - Function refreshAll", () => {
         // Fire two refreshes concurrently; the second should be a no-op due to the in-progress guard.
         const firstRefresh = SharedActions.refreshAll();
         await SharedActions.refreshAll(); // returns immediately (guard)
-        await firstRefresh;               // wait for the first run to complete
+        await firstRefresh; // wait for the first run to complete
 
         // Work should have happened exactly once (from the first call only).
         expect(providers.ds.deleteSession).toHaveBeenCalledTimes(2);

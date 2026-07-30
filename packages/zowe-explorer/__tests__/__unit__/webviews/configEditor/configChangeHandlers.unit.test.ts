@@ -149,7 +149,7 @@ describe("ConfigChangeHandlers", () => {
                 ({
                     readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
                     getTeamConfig: vi.fn().mockReturnValue(mockTeamConfig),
-                } as any)
+                }) as any
         );
     });
 

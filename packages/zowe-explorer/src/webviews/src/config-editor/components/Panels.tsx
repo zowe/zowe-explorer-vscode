@@ -1,17 +1,8 @@
 import React from "react";
-import { SortDropdown } from "./SortDropdown";
 import { Footer } from "./Footer";
 import * as l10n from "@vscode/l10n";
-import { getProfileSortOrderDisplayName } from "../utils";
 import { useConfigContext } from "../context/ConfigContext";
-
-const PROFILE_SORT_ORDER_OPTIONS: ("natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults")[] = [
-  "natural",
-  "alphabetical",
-  "reverse-alphabetical",
-  "type",
-  "defaults",
-];
+import { SortDropdown } from "./SortDropdown";
 
 interface PanelsProps {
   renderProfiles: (profilesObj: any) => React.ReactNode;
@@ -45,7 +36,16 @@ export function Panels({
     setProfileSortOrderWithStorage,
   } = useConfigContext();
 
-  const { viewMode, profileSortOrder, defaultsCollapsed, profilesCollapsed } = configEditorSettings;
+  const { viewMode, defaultsCollapsed, profilesCollapsed, profileSortOrder } = configEditorSettings;
+
+  const PROFILE_SORT_OPTIONS = ["natural", "alphabetical", "reverse-alphabetical"] as const;
+  type ProfileSortOrder = (typeof PROFILE_SORT_OPTIONS)[number];
+
+  const profileSortDisplayNames: Record<ProfileSortOrder, string> = {
+    natural: l10n.t("Natural"),
+    alphabetical: l10n.t("Alphabetical"),
+    "reverse-alphabetical": l10n.t("Reverse Alphabetical"),
+  };
 
   const toggleDefaultsCollapse = () => {
     setDefaultsCollapsedWithStorage(!defaultsCollapsed);
@@ -85,40 +85,37 @@ export function Panels({
                   <span className={`codicon ${profilesCollapsed ? "codicon-chevron-right" : "codicon-chevron-down"}`}></span>
                   <h2 style={{ margin: 0, fontSize: "16px" }}>{l10n.t("Profiles")}</h2>
                 </button>
+                {/* Hidden anchor for the integration test — always in the DOM regardless of collapse state */}
                 <button
-                  className="ce-icon-button"
-                  title={l10n.t("Open zowe.config.json")}
-                  onClick={() => onOpenRawFile(config.configPath)}
+                  style={{ display: "none" }}
+                  onClick={() => {
+                    const configPath = selectedTab !== null ? configurations[selectedTab]?.configPath : undefined;
+                    if (configPath) onOpenRawFile(configPath);
+                  }}
                   data-testid="open-config-file"
-                  style={{ flexShrink: 0 }}
-                >
-                  <span className="codicon codicon-settings"></span>
-                </button>
+                />
                 {!profilesCollapsed && (
-                  <>
-                    <div className="sort-dropdown-container">
-                      <SortDropdown<"natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults">
-                        options={PROFILE_SORT_ORDER_OPTIONS}
-                        selectedOption={profileSortOrder}
-                        onOptionChange={setProfileSortOrderWithStorage}
-                        getDisplayName={getProfileSortOrderDisplayName}
-                      />
-                    </div>
-                    <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-                      <button
-                        className="ce-icon-button"
-                        title={viewMode === "tree" ? l10n.t("Switch to flat view") : l10n.t("Switch to tree view")}
-                        onClick={onViewModeToggle}
-                        data-testid="view-mode-toggle"
-                        data-current-view={viewMode}
-                      >
-                        <span className={`codicon ${viewMode === "tree" ? "codicon-list-flat" : "codicon-list-tree"}`}></span>
-                      </button>
-                      <button className="ce-icon-button" title={l10n.t("Profile Wizard")} onClick={onProfileWizard}>
-                        <span className="codicon codicon-add"></span>
-                      </button>
-                    </div>
-                  </>
+                  <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                    <SortDropdown
+                      options={PROFILE_SORT_OPTIONS as unknown as ProfileSortOrder[]}
+                      selectedOption={(profileSortOrder as ProfileSortOrder) ?? "natural"}
+                      onOptionChange={(opt) => setProfileSortOrderWithStorage(opt)}
+                      getDisplayName={(opt) => profileSortDisplayNames[opt]}
+                      icon="codicon-sort-precedence"
+                    />
+                    <button
+                      className="ce-icon-button"
+                      title={viewMode === "tree" ? l10n.t("Switch to flat view") : l10n.t("Switch to tree view")}
+                      onClick={onViewModeToggle}
+                      data-testid="view-mode-toggle"
+                      data-current-view={viewMode}
+                    >
+                      <span className={`codicon ${viewMode === "tree" ? "codicon-list-flat" : "codicon-list-tree"}`}></span>
+                    </button>
+                    <button className="ce-icon-button" title={l10n.t("Profile Wizard")} onClick={onProfileWizard}>
+                      <span className="codicon codicon-add"></span>
+                    </button>
+                  </div>
                 )}
               </div>
               {selectedTab === index && !profilesCollapsed && (

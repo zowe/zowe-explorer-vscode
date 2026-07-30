@@ -9,7 +9,7 @@
  *
  */
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { RenderConfig } from "./renderConfig";
 import { ConfirmableDeleteButton } from "./ConfirmableDeleteButton";
@@ -38,6 +38,10 @@ interface RenderProfileDetailsProps {
   highlightPropertyKey?: string | null;
   /** Called once the blink animation has started so the key can be cleared. */
   onHighlightPropertyKeyConsumed?: () => void;
+  /** When true, the whole profile details card blinks (navigated from editor context menu). */
+  highlightProfileCard?: boolean;
+  /** Called once the card blink has been triggered so the flag can be cleared. */
+  onHighlightProfileCardConsumed?: () => void;
 }
 
 export const RenderProfileDetails = ({
@@ -57,6 +61,8 @@ export const RenderProfileDetails = ({
   openAddProfileModalAtPath,
   highlightPropertyKey,
   onHighlightPropertyKeyConsumed,
+  highlightProfileCard,
+  onHighlightProfileCardConsumed,
 }: RenderProfileDetailsProps) => {
   const {
     selectedProfileKey,
@@ -93,10 +99,28 @@ export const RenderProfileDetails = ({
     handleToggleSecure,
   } = useUtilityHelpers();
 
+  // Ref for the card container — used to apply the blink animation.
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Blink the entire profile card when highlightProfileCard becomes true.
+  useEffect(() => {
+    if (!highlightProfileCard || !cardRef.current) return;
+    const card = cardRef.current;
+    card.classList.add("profile-highlight-blink");
+    card.addEventListener(
+      "animationend",
+      () => {
+        card.classList.remove("profile-highlight-blink");
+        onHighlightProfileCardConsumed?.();
+      },
+      { once: true }
+    );
+  }, [highlightProfileCard]);
+
   const renderProfileDetails = useCallback(() => {
     const profileDetailsHeader = l10n.t("Profile Details");
     return (
-      <div>
+      <div ref={cardRef}>
         <div className="profile-heading-container">
           <h2
             title={selectedProfileKey || profileDetailsHeader}

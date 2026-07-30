@@ -2075,6 +2075,7 @@ describe("configEditor", () => {
                 parseErrors: [],
                 secureValuesAllowed: true,
                 tutorialSeen: false,
+                isNewConfig: true,
             });
         });
 

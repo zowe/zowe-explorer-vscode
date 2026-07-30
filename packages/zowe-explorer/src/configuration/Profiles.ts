@@ -483,8 +483,8 @@ export class Profiles extends ProfilesCache {
         // Set Options according to profile management in use
 
         const createNewConfig = "Create a New Team Configuration File";
-        const editConfig = "Edit Team Configuration File";
-        const openConfigJson = "Open Config File";
+        const editConfig = "Edit Team Configuration File in Zowe Configuration Editor";
+        const openConfigJson = "Edit Team Configuration File via JSON";
 
         const configPick = new FilterDescriptor("\uFF0B " + createNewConfig);
         const configEdit = new FilterDescriptor("\u270F " + editConfig);
@@ -507,7 +507,7 @@ export class Profiles extends ProfilesCache {
         const quickpick = Gui.createQuickPick();
         let addProfilePlaceholder = "";
         const createNewInstruction = vscode.l10n.t(
-            "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles"
+            "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File in Zowe Configuration Editor' to update existing profiles"
         );
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
@@ -558,23 +558,7 @@ export class Profiles extends ProfilesCache {
             return;
         }
         if (choice === configOpen) {
-            const existingLayers = await this.uniqueExistingLayers();
-            if (existingLayers.length === 0) {
-                // No config files on disk — mirror what editZoweConfigFile does in this state (no-op).
-                return;
-            }
-            const layerItems = existingLayers.map((layer) => ({
-                label: path.basename(layer.path),
-                description: path.dirname(layer.path),
-                detail: layer.path,
-            }));
-            const picked = await Gui.showQuickPick(layerItems, {
-                placeHolder: vscode.l10n.t("Select the config file to open"),
-                ignoreFocusOut: true,
-            });
-            if (picked?.detail) {
-                await vscode.commands.executeCommand("zowe.configEditor", vscode.Uri.file(picked.detail));
-            }
+            await this.editZoweConfigFile(false);
             return;
         }
         let chosenProfile: string = "";
@@ -623,7 +607,8 @@ export class Profiles extends ProfilesCache {
             ZoweExplorerExtender.showZoweConfigError(err.message);
             return;
         }
-        const filePath = currentProfile.profLoc.osLoc[0];
+        // Normalize the path so it matches the resolved configPath stored in the webview
+        const filePath = path.resolve(currentProfile.profLoc.osLoc[0]);
 
         // Open the ConfigEditor webview with the selected profile pre-selected
         await vscode.commands.executeCommand("zowe.configEditorWithProfile", profileLoaded.name, filePath, profileLoaded.type);

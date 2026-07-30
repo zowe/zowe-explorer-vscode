@@ -253,7 +253,9 @@ describe("FavoritePersistenceUtils — new methods", () => {
             vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(null as any);
 
             vi.spyOn(Profiles, "getInstance").mockReturnValue({
-                loadNamedProfile: vi.fn().mockImplementation(() => { throw new Error("not found"); }),
+                loadNamedProfile: vi.fn().mockImplementation(() => {
+                    throw new Error("not found");
+                }),
             } as any);
 
             await expect(FavoritePersistenceUtils.rebuildSessionNodesAfterProfileRename(rename)).resolves.not.toThrow();
