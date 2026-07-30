@@ -130,7 +130,7 @@ describe("ConfigEditorMessageHandlers", () => {
 
     describe("handleGetProfiles", () => {
         it("should get profiles and post configurations message", async () => {
-            // tutorialSeen is a single global boolean; default is false when not set
+            // No entry in the per-path map — tutorialSeen should be false
             (LocalStorageAccess.getValue as any).mockReturnValue(undefined);
 
             await messageHandlers.handleGetProfiles();
@@ -153,8 +153,11 @@ describe("ConfigEditorMessageHandlers", () => {
             });
         });
 
-        it("should send tutorialSeen: true when the user has previously dismissed the tutorial", async () => {
-            (LocalStorageAccess.getValue as any).mockReturnValue(true);
+        it("should send tutorialSeen: true when all loaded config paths have been seen", async () => {
+            (LocalStorageAccess.getValue as any).mockReturnValue({
+                "/path/to/config1.json": true,
+                "/path/to/config2.json": true,
+            });
 
             await messageHandlers.handleGetProfiles();
 
@@ -162,8 +165,10 @@ describe("ConfigEditorMessageHandlers", () => {
             expect(call.tutorialSeen).toBe(true);
         });
 
-        it("should send tutorialSeen: false when the user has not yet dismissed the tutorial", async () => {
-            (LocalStorageAccess.getValue as any).mockReturnValue(false);
+        it("should send tutorialSeen: false when at least one loaded config path has not been seen", async () => {
+            (LocalStorageAccess.getValue as any).mockReturnValue({
+                "/path/to/config1.json": true,
+            });
 
             await messageHandlers.handleGetProfiles();
 
@@ -175,17 +180,22 @@ describe("ConfigEditorMessageHandlers", () => {
     describe("getTutorialSeen", () => {
         it("returns false when no value is stored in globalState", () => {
             (LocalStorageAccess.getValue as any).mockReturnValue(undefined);
-            expect(messageHandlers.getTutorialSeen()).toBe(false);
+            expect(messageHandlers.getTutorialSeen(["/path/to/config.json"])).toBe(false);
         });
 
-        it("returns true when globalState has true", () => {
-            (LocalStorageAccess.getValue as any).mockReturnValue(true);
-            expect(messageHandlers.getTutorialSeen()).toBe(true);
+        it("returns true when all provided paths are present in the stored map", () => {
+            (LocalStorageAccess.getValue as any).mockReturnValue({ "/path/to/config.json": true });
+            expect(messageHandlers.getTutorialSeen(["/path/to/config.json"])).toBe(true);
         });
 
-        it("returns false when globalState has false", () => {
-            (LocalStorageAccess.getValue as any).mockReturnValue(false);
-            expect(messageHandlers.getTutorialSeen()).toBe(false);
+        it("returns false when at least one path is missing from the stored map", () => {
+            (LocalStorageAccess.getValue as any).mockReturnValue({ "/path/to/config1.json": true });
+            expect(messageHandlers.getTutorialSeen(["/path/to/config1.json", "/path/to/config2.json"])).toBe(false);
+        });
+
+        it("returns false when an empty path list is provided", () => {
+            (LocalStorageAccess.getValue as any).mockReturnValue({ "/path/to/config.json": true });
+            expect(messageHandlers.getTutorialSeen([])).toBe(false);
         });
     });
 

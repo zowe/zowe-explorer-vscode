@@ -9,8 +9,26 @@
  *
  */
 
+import { vi } from "vitest";
+import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { ConfigEditorPathUtils } from "../../../src/utils/ConfigEditorPathUtils";
 import { FavoritePersistenceUtils } from "../../../src/utils/FavoritePersistenceUtils";
+import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
+import { ZoweLogger } from "../../../src/tools/ZoweLogger";
+import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
+import { Profiles } from "../../../src/configuration/Profiles";
+import { ZowePersistentFilters } from "../../../src/tools/ZowePersistentFilters";
+
+vi.mock("../../../src/tools/ZoweLogger");
+vi.mock("../../../src/tools/ZoweLocalStorage", () => ({
+    ZoweLocalStorage: {
+        getValue: vi.fn(),
+        setValue: vi.fn().mockResolvedValue(undefined),
+        isPersistenceKeyInWorkspace: vi.fn().mockReturnValue(false),
+    },
+}));
+vi.mock("../../../src/trees/shared/SharedTreeProviders");
+vi.mock("../../../src/configuration/Profiles");
 
 describe("FavoritePersistenceUtils", () => {
     const cfg = "/path/zowe.config.json";
@@ -72,25 +90,6 @@ describe("FavoritePersistenceUtils", () => {
         });
     });
 });
-
-import { vi } from "vitest";
-import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
-import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
-import { ZoweLogger } from "../../../src/tools/ZoweLogger";
-import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
-import { Profiles } from "../../../src/configuration/Profiles";
-import { ZowePersistentFilters } from "../../../src/tools/ZowePersistentFilters";
-
-vi.mock("../../../src/tools/ZoweLogger");
-vi.mock("../../../src/tools/ZoweLocalStorage", () => ({
-    ZoweLocalStorage: {
-        getValue: vi.fn(),
-        setValue: vi.fn().mockResolvedValue(undefined),
-        isPersistenceKeyInWorkspace: vi.fn().mockReturnValue(false),
-    },
-}));
-vi.mock("../../../src/trees/shared/SharedTreeProviders");
-vi.mock("../../../src/configuration/Profiles");
 
 describe("FavoritePersistenceUtils — new methods", () => {
     const cfg = "/path/zowe.config.json";

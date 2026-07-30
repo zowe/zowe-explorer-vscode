@@ -4,6 +4,7 @@ import { useConfigContext } from "../context/ConfigContext";
 
 export interface TabsProps {
   onTabChange: (index: number) => void;
+  onOpenFile: (filePath: string) => void;
   onRevealInFinder: (filePath: string) => void;
   onOpenSchemaFile: (filePath: string) => void;
   onAddNewConfig: () => void;
@@ -11,7 +12,7 @@ export interface TabsProps {
   onShowTutorial: () => void;
 }
 
-export function Tabs({ onTabChange, onRevealInFinder, onOpenSchemaFile, onAddNewConfig, onToggleAutostore, onShowTutorial }: TabsProps) {
+export function Tabs({ onTabChange, onOpenFile, onRevealInFinder, onOpenSchemaFile, onAddNewConfig, onToggleAutostore, onShowTutorial }: TabsProps) {
   const { configurations, selectedTab, pendingChanges, autostoreChanges, renames, deletions, pendingDefaults, defaultsDeletions } =
     useConfigContext();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabIndex: number } | null>(null);
@@ -71,11 +72,13 @@ export function Tabs({ onTabChange, onRevealInFinder, onOpenSchemaFile, onAddNew
     setContextMenu({ x, y, tabIndex: index });
   };
 
-  const handleContextMenuAction = (action: "reveal" | "schema" | "autostore") => {
+  const handleContextMenuAction = (action: "open" | "reveal" | "schema" | "autostore") => {
     if (contextMenu) {
       const config = configurations[contextMenu.tabIndex];
       if (config) {
-        if (action === "reveal") {
+        if (action === "open") {
+          onOpenFile(config.configPath);
+        } else if (action === "reveal") {
           onRevealInFinder(config.configPath);
         } else if (action === "schema" && config.schemaPath) {
           onOpenSchemaFile(config.schemaPath);
@@ -172,6 +175,10 @@ export function Tabs({ onTabChange, onRevealInFinder, onOpenSchemaFile, onAddNew
       {/* Context Menu */}
       {contextMenu && (
         <div className="tab-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }} onClick={(e) => e.stopPropagation()}>
+          <div className="tab-context-menu-item" onClick={() => handleContextMenuAction("open")} id="tab-open-file">
+            <span className="codicon codicon-go-to-file codicon-tab-menu-icon"></span>
+            {l10n.t("Open File")}
+          </div>
           <div className="tab-context-menu-item" onClick={() => handleContextMenuAction("reveal")}>
             <span className="codicon codicon-folder-opened codicon-tab-menu-icon"></span>
             {getRevealText()}

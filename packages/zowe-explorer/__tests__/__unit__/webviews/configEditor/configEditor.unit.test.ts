@@ -2064,7 +2064,7 @@ describe("configEditor", () => {
             });
             const areSecureValuesAllowedSpy = vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
             // getTutorialSeen reads from ZoweLocalStorage.globalState which is undefined in unit tests
-            vi.spyOn((configEditor as any).messageHandlers, "getTutorialSeen").mockReturnValue(false);
+            vi.spyOn((configEditor as any).messageHandlers, "getTutorialSeen").mockImplementation((_paths: string[]) => false);
             const postMessageSpy = vi.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);

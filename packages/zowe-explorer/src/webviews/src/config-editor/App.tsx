@@ -285,7 +285,7 @@ function AppContent() {
     }));
   };
 
-  const handleOpenRawJson = (configPath: string) => {
+  const handleOpenConfigFile = (configPath: string) => {
     vscodeApi.postMessage({ command: "OPEN_CONFIG_FILE", filePath: configPath });
   };
 
@@ -461,6 +461,7 @@ function AppContent() {
     <div className="app-container" data-testid="config-editor-app" data-config-count={configurations.length} data-selected-tab={selectedTab}>
       <Tabs
         onTabChange={handleTabChange}
+        onOpenFile={handleOpenConfigFile}
         onRevealInFinder={handleRevealInFinder}
         onOpenSchemaFile={handleOpenSchemaFile}
         onAddNewConfig={handleAddNewConfig}
@@ -468,7 +469,6 @@ function AppContent() {
         onShowTutorial={handleOpenTutorial}
       />
       <Panels
-        onOpenRawFile={handleOpenRawJson}
         renderProfiles={(profilesObj) => (
           <RenderProfiles
             profilesObj={profilesObj}
@@ -632,10 +632,14 @@ function AppContent() {
           onClose={() => {
             tutorialSeenRef.current = true;
             setTutorialSeen(true);
+            const seenMap: Record<string, boolean> = {};
+            for (const config of configurations) {
+              seenMap[config.configPath] = true;
+            }
             vscodeApi.postMessage({
               command: "SET_LOCAL_STORAGE_VALUE",
               key: "zowe.configEditor.tutorialSeen",
-              value: true,
+              value: seenMap,
             });
             setShowTutorial(false);
           }}

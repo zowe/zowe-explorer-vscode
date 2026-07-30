@@ -117,6 +117,9 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
     const { contents, secureValuesAllowed, parseErrors, tutorialSeen, isNewConfig } = data;
     if (tutorialSeen !== undefined) {
         props.setTutorialSeen(tutorialSeen);
+        if (!tutorialSeen && !isNewConfig) {
+            props.setShowTutorial(true);
+        }
     }
     // Show tutorial whenever a brand-new config is created via the webview's
     // "Add New Configuration File" modal. tutorialSeen only prevents the
@@ -378,8 +381,12 @@ export const handleInitialSelectionMessage = (data: InitialSelectionMessagePaylo
                 [resolvedConfigPath]: profileName,
             }));
 
-            // Signal RenderProfileDetails to blink the entire profile card.
-            setHighlightProfileCard(true);
+            // Signal RenderProfileDetails to blink the entire profile card only when no
+            // specific property key was requested. When a propertyKey is present the
+            // individual property row blink (setHighlightPropertyKey below) is sufficient.
+            if (!propertyKey) {
+                setHighlightProfileCard(true);
+            }
         }
     }
 
