@@ -415,6 +415,18 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     });
                     dsNode.wasPds = item.dsorg?.startsWith("PO");
                     elementChildren[dsNode.label.toString()] = dsNode;
+                } else if (item.vol === "*ALIAS") {
+                    // todo need to conditionally set collapsible state based on whether alias points to PDS
+                    // const membersList = await mvsApi.allMembers
+                    const isAliasPDS = await this.checkIsAliasPDS(item);
+                    dsNode = new ZoweDatasetNode({
+                        label: item.dsname,
+                        collapsibleState: isAliasPDS ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
+                        parentNode: this,
+                        profile: cachedProfile,
+                    });
+                    elementChildren[dsNode.label.toString()] = dsNode;
+
                 } else if (item.dsorg?.startsWith("PO")) {
                     // Creates a ZoweDatasetNode for a PDS
                     dsNode = new ZoweDatasetNode({
@@ -628,6 +640,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         return this.children;
     }
+
 
     /**
      * Returns a sorting function based on the given sorting method.
@@ -969,12 +982,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     apiResponse: Array.isArray(resp.apiResponse)
                         ? filteredItems
                         : {
-                              ...(resp.apiResponse ?? {}),
-                              items: filteredItems,
-                              // Update returnedRows to reflect the list without the cursor item
-                              // (difference between array length of `items` and `filteredItems`)
-                              returnedRows: resp.apiResponse.returnedRows - (items.length - filteredItems.length),
-                          },
+                            ...(resp.apiResponse ?? {}),
+                            items: filteredItems,
+                            // Update returnedRows to reflect the list without the cursor item
+                            // (difference between array length of `items` and `filteredItems`)
+                            returnedRows: resp.apiResponse.returnedRows - (items.length - filteredItems.length),
+                        },
                 };
             });
 
@@ -1119,7 +1132,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
         return responses;
     }
+    /**
+     * Try to determine whether a dataset 
+     * @param item 
+     */
+    private async checkIsAliasPDS(item: IZosmfListResponse): Promise<boolean> {
+        const profile = Profiles.getInstance()?.loadNamedProfile(this.getProfile().name);
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
 
+        const members = await mvsApi.allMembers(item.dsname);
+        return true; // todo 
+    }
     public async openDs(forceDownload: boolean, _previewMember: boolean, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
         ZoweLogger.trace("ZoweDatasetNode.openDs called.");
         await datasetProvider.checkCurrentProfile(this);
