@@ -71,68 +71,41 @@ async function findFirstProfileEntry(): Promise<ChainablePromiseElement> {
 
 When("a user selects the first profile in the list", async function () {
     const firstProfileEntry = await findFirstProfileEntry();
-    await expect(firstProfileEntry).toBeClickable();
+    // Read the profile name from the aria-label before clicking
+    // (aria-label = codicon-text + profile name, e.g. "home   zosmf1")
     const profileLabelAttr = await firstProfileEntry.getAttribute("aria-label");
-    // strip off any extra details added to the label of the profile node
+    // strip any leading icon text — the actual profile name is the last whitespace-separated token
     this.profileName = profileLabelAttr.substring(profileLabelAttr.lastIndexOf(" ")).trim();
-    // Focus + JS click + Enter for maximum selection reliability in CI:
-    // The JS click alone can be swallowed when VS Code re-renders the virtual list;
-    // sending Enter afterwards commits the selection through the keyboard path.
-    await browser.execute((el: HTMLElement) => el.focus(), firstProfileEntry);
-    await browser.execute((el: HTMLElement) => el.click(), firstProfileEntry);
-    await browser.keys(Key.Enter);
+
+    // Use a native WebDriver click — the same pattern used in UpdateCredentials.steps.ts.
+    // The item at index 3 is always visible in a standard-height quick pick, so it is
+    // interactable and a plain .click() is reliable.
+    await firstProfileEntry.waitForClickable({ timeout: 10000 });
+    await firstProfileEntry.click();
 });
 
 Then("it will prompt the user to add the profile to one or all trees", async function () {
-    // Wait for the initial quick pick to close before looking for the Yes/No picker.
-    // Tolerate the case where VS Code re-renders the same widget in-place (catch swallows
-    // the timeout so the test can still proceed if the picker never fully disappears).
+    // After the profile entry is clicked, VS Code closes the profile picker and
+    // opens the Yes/No "apply to all trees" quick pick.
+    // Wait for the initial quick pick to close / transition to the new one.
     await browser
         .waitUntil(async () => quickPick.isNotInViewport(), {
             timeout: 5000,
             timeoutMsg: "Initial quick pick did not close after selecting a profile",
         })
         .catch(() => {
-            // Picker may re-render in place rather than close — continue regardless.
+            // Picker may re-render in place rather than fully unmount — continue regardless.
         });
 
-    const waitForYesNo = (timeoutMs = 30000): Promise<boolean> =>
-        browser.waitUntil(
-            async () => {
-                const yesOpt = await quickPick.findItem("Yes, Apply to all trees");
-                const noOpt = await quickPick.findItem("No, Apply to current tree selected");
-                return (await yesOpt.isExisting()) || (await noOpt.isExisting());
-            },
-            { timeout: timeoutMs, timeoutMsg: "Yes/No quick pick did not appear after selecting a profile" }
-        );
-
-    // First attempt: wait up to 30 s for the Yes/No items to appear.
-    let seen = await waitForYesNo().catch(() => false);
-
-    if (!seen) {
-        // The profile selection may not have been committed — re-open the quick pick
-        // and retry with focus + click + Enter before giving up.
-        const dsPane = await paneDivForTree("data sets");
-        const plusIcon = await dsPane.getAction(`Add Profile to Data Sets View`);
-        await dsPane.elem.moveTo();
-        await plusIcon.elem.click();
-        await browser.waitUntil(() => quickPick.isDisplayed(), { timeout: 10000 });
-
-        const retryEntry = await findFirstProfileEntry();
-        const profileLabelAttr = await retryEntry.getAttribute("aria-label");
-        this.profileName = profileLabelAttr.substring(profileLabelAttr.lastIndexOf(" ")).trim();
-        await browser.execute((el: HTMLElement) => el.focus(), retryEntry);
-        await browser.execute((el: HTMLElement) => el.click(), retryEntry);
-        await browser.keys(Key.Enter);
-
-        await browser.waitUntil(async () => quickPick.isNotInViewport(), { timeout: 5000 }).catch(() => {});
-
-        seen = await waitForYesNo(15000).catch(() => false);
-    }
-
-    if (!seen) {
-        throw new Error("Yes/No quick pick did not appear after selecting a profile (after retry)");
-    }
+    // Wait for the Yes/No items to appear in the (possibly re-rendered) quick pick.
+    await browser.waitUntil(
+        async () => {
+            const yesOpt = await quickPick.findItem("Yes, Apply to all trees");
+            const noOpt = await quickPick.findItem("No, Apply to current tree selected");
+            return (await yesOpt.isExisting()) || (await noOpt.isExisting());
+        },
+        { timeout: 30000, timeoutMsg: "Yes/No quick pick did not appear after selecting a profile" }
+    );
 
     this.yesOpt = await quickPick.findItem("Yes, Apply to all trees");
     this.noOpt = await quickPick.findItem("No, Apply to current tree selected");
@@ -143,23 +116,19 @@ Then("it will prompt the user to add the profile to one or all trees", async fun
 When(/a user selects (.*) to apply to all trees/, async function (choice: string) {
     this.userSelectedYes = choice === "Yes";
 
-    // Monaco virtual-list rows are not interactable via WebDriver click in headless
-    // Linux. Pure keyboard navigation is the only reliable approach, but browser.keys()
-    // sends to whatever element currently has focus — which may have drifted to the
-    // editor/sidebar after the async tree refresh that opens this picker.
-    // Explicitly JS-focus the quick pick's <input> first to anchor keyboard events
-    // to the correct widget. The <input> is a real DOM element and accepts JS focus
-    // without any interactability check.
-    const qpInput = await browser.$(".quick-input-widget input");
-    await qpInput.waitForExist({ timeout: 5000 });
-    await browser.execute((el: HTMLElement) => el.focus(), qpInput);
+    // Re-query the Yes/No options fresh to avoid stale element references.
+    const yesOpt = await quickPick.findItem("Yes, Apply to all trees");
+    const noOpt = await quickPick.findItem("No, Apply to current tree selected");
 
-    // "Yes" (index 0) is already the active item (qp.activeItems = [qp.items[0]]).
-    // For "No" (index 1): move focus one step down with ArrowDown, then commit.
-    if (!this.userSelectedYes) {
-        await browser.keys(Key.ArrowDown);
+    // Use native clicks — UpdateCredentials.steps.ts uses this same pattern
+    // and it passes reliably in CI.
+    if (this.userSelectedYes) {
+        await yesOpt.waitForClickable({ timeout: 10000 });
+        await yesOpt.click();
+    } else {
+        await noOpt.waitForClickable({ timeout: 10000 });
+        await noOpt.click();
     }
-    await browser.keys(Key.Enter);
 
     // Wait for the Yes/No quick pick to close before asserting tree state.
     await browser
