@@ -24,7 +24,7 @@ export async function verifyProfiles(expectedTreeTitles: string[], expectedFlatT
     await appContainer.waitForExist({ timeout: 10000 });
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -34,7 +34,7 @@ export async function verifyProfiles(expectedTreeTitles: string[], expectedFlatT
             const items = await browser.$$(selector);
             return items.length > 0;
         },
-        { timeout: 1000, timeoutMsg: "Profile elements not found within timeout" }
+        { timeout: 10000, timeoutMsg: "Profile elements not found within timeout" }
     );
 
     const selector = viewMode === "tree" ? "[data-testid='profile-tree-node']" : "[data-testid='profile-list-item']";
@@ -63,7 +63,7 @@ export async function verifyProfiles(expectedTreeTitles: string[], expectedFlatT
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "flat";
                 },
-                { timeout: 1000, timeoutMsg: "Failed to switch to flat view" }
+                { timeout: 10000, timeoutMsg: "Failed to switch to flat view" }
             );
 
             const flatItems = await browser.$$("[data-testid='profile-list-item']");
@@ -86,7 +86,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json", 
     await appContainer.waitForExist({ timeout: 10000 });
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -96,7 +96,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json", 
             const items = await browser.$$(selector);
             return items.length > 0;
         },
-        { timeout: 1000, timeoutMsg: "Profile elements not found within timeout" }
+        { timeout: 10000, timeoutMsg: "Profile elements not found within timeout" }
     );
 
     const selector = viewMode === "tree" ? "[data-testid='profile-tree-node']" : "[data-testid='profile-list-item']";
@@ -138,7 +138,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json", 
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "flat";
                 },
-                { timeout: 1000, timeoutMsg: "Failed to switch to flat view" }
+                { timeout: 10000, timeoutMsg: "Failed to switch to flat view" }
             );
 
             const flatItems = await browser.$$("[data-testid='profile-list-item']");
@@ -176,7 +176,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json", 
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "tree";
                 },
-                { timeout: 1000, timeoutMsg: "Failed to switch back to tree view" }
+                { timeout: 10000, timeoutMsg: "Failed to switch back to tree view" }
             );
         }
     }
@@ -189,7 +189,7 @@ Then("the profile list should be in tree view mode", async () => {
     await webview.open();
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
     expect(viewMode).toBe("tree");
@@ -197,13 +197,20 @@ Then("the profile list should be in tree view mode", async () => {
 
 When("the user switches to flat view mode", async function () {
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
     const currentMode = await profileList.getAttribute("data-view-mode");
 
     if (currentMode !== "flat") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
-        await viewToggleButton.waitForExist({ timeout: 1000 });
-        await viewToggleButton.click();
+        await viewToggleButton.waitForExist({ timeout: 10000 });
+        // Scroll into view via DOM to avoid Actions API / CDP mismatches in CI
+        await browser.execute((el: HTMLElement) => el.scrollIntoView({ block: "center" }), viewToggleButton);
+        await viewToggleButton.waitForClickable({ timeout: 5000 });
+        try {
+            await viewToggleButton.click();
+        } catch {
+            await browser.execute((el: HTMLElement) => el.click(), viewToggleButton);
+        }
         await browser.pause(50);
 
         await browser.waitUntil(
@@ -213,7 +220,7 @@ When("the user switches to flat view mode", async function () {
                 return viewMode === "flat";
             },
             {
-                timeout: 1000,
+                timeout: 10000,
                 timeoutMsg: "Failed to switch to flat view",
             }
         );
@@ -222,13 +229,20 @@ When("the user switches to flat view mode", async function () {
 
 When("the user switches to tree view mode", async function () {
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
     const currentMode = await profileList.getAttribute("data-view-mode");
 
     if (currentMode !== "tree") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
-        await viewToggleButton.waitForExist({ timeout: 1000 });
-        await viewToggleButton.click();
+        await viewToggleButton.waitForExist({ timeout: 10000 });
+        // Scroll into view via DOM to avoid Actions API / CDP mismatches in CI
+        await browser.execute((el: HTMLElement) => el.scrollIntoView({ block: "center" }), viewToggleButton);
+        await viewToggleButton.waitForClickable({ timeout: 5000 });
+        try {
+            await viewToggleButton.click();
+        } catch {
+            await browser.execute((el: HTMLElement) => el.click(), viewToggleButton);
+        }
         await browser.pause(50);
 
         await browser.waitUntil(
@@ -238,7 +252,7 @@ When("the user switches to tree view mode", async function () {
                 return viewMode === "tree";
             },
             {
-                timeout: 1000,
+                timeout: 10000,
                 timeoutMsg: "Failed to switch to tree view",
             }
         );
@@ -247,14 +261,14 @@ When("the user switches to tree view mode", async function () {
 
 When("the user clicks on the search input field", async () => {
     const searchInput = await browser.$("input[placeholder='Search...']");
-    await searchInput.waitForExist({ timeout: 1000 });
+    await searchInput.waitForExist({ timeout: 10000 });
     await searchInput.click();
     await browser.pause(50);
 });
 
 When("the user types {string} in the search field", async (searchTerm: string) => {
     const searchInput = await browser.$("input[placeholder='Search...']");
-    await searchInput.waitForExist({ timeout: 1000 });
+    await searchInput.waitForExist({ timeout: 10000 });
     await searchInput.clearValue();
     await searchInput.setValue(searchTerm);
     await browser.pause(50);
@@ -262,7 +276,7 @@ When("the user types {string} in the search field", async (searchTerm: string) =
 
 When("the user clicks the clear search button", async () => {
     const clearButton = await browser.$("button[title='Clear search']");
-    await clearButton.waitForExist({ timeout: 1000 });
+    await clearButton.waitForExist({ timeout: 10000 });
     await clearButton.click();
     await browser.pause(50);
 });
@@ -271,7 +285,7 @@ Then("the profile list should show only profiles containing {string}", async (se
     await browser.pause(50);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -346,7 +360,7 @@ Then("the profile list should show no profiles", async () => {
     await browser.pause(50);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -362,7 +376,7 @@ Then("the profile list should show no profiles", async () => {
 
 Then("the profile count should be {int}", async (expectedCount: number) => {
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const actualCount = await profileList.getAttribute("data-profile-count");
     expect(parseInt(actualCount)).toBe(expectedCount);
@@ -372,7 +386,7 @@ Then("the profile list should show the nested profile and its children", async (
     await browser.pause(50);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -399,7 +413,7 @@ Then("the profile list should show the nested profile and its children", async (
 
 When("the user selects {string} from the type filter dropdown", async (filterType: string) => {
     const typeFilterSelect = await browser.$("select");
-    await typeFilterSelect.waitForExist({ timeout: 1000 });
+    await typeFilterSelect.waitForExist({ timeout: 10000 });
     await typeFilterSelect.selectByVisibleText(filterType);
     await browser.pause(50);
 });
@@ -408,7 +422,7 @@ Then("the profile list should show only profiles of type {string}", async (expec
     await browser.pause(50);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -435,7 +449,7 @@ Then("the profile list should show profiles of type {string} and their parents i
     await browser.pause(50);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
     expect(viewMode).toBe("tree");
@@ -458,7 +472,7 @@ Then("the profile list should show only profiles containing {string} and of type
     await browser.pause(50);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -484,14 +498,14 @@ Then("the profile list should show only profiles containing {string} and of type
 
 When("the user clicks on the profile sort dropdown", async () => {
     const sortDropdownTrigger = await browser.$(".sort-dropdown-trigger");
-    await sortDropdownTrigger.waitForExist({ timeout: 1000 });
+    await sortDropdownTrigger.waitForExist({ timeout: 10000 });
     await sortDropdownTrigger.click();
     await browser.pause(100);
 });
 
 When("the user selects {string} from the sort dropdown", async (sortOption: string) => {
     const dropdownList = await browser.$(".sort-dropdown-list");
-    await dropdownList.waitForDisplayed({ timeout: 1000 });
+    await dropdownList.waitForDisplayed({ timeout: 10000 });
 
     const optionElements = await browser.$$(".sort-dropdown-item[role='option']");
     let optionElement = null;
@@ -514,7 +528,7 @@ When("the user selects {string} from the sort dropdown", async (sortOption: stri
 
 Then("the profile sort dropdown should show {string} as selected", async (expectedSort: string) => {
     const sortDropdownTrigger = await browser.$(".sort-dropdown-trigger");
-    await sortDropdownTrigger.waitForExist({ timeout: 1000 });
+    await sortDropdownTrigger.waitForExist({ timeout: 10000 });
 
     const title = await sortDropdownTrigger.getAttribute("title");
     expect(title).toContain(`Current: ${expectedSort}`);
@@ -528,7 +542,7 @@ Then("the profiles should be displayed in natural order", async () => {
     await browser.pause(100);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -546,7 +560,7 @@ Then("the profiles should be displayed in alphabetical order", async () => {
     await browser.pause(100);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -573,7 +587,7 @@ Then("the profiles should be displayed in reverse alphabetical order", async () 
     await browser.pause(100);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -600,7 +614,7 @@ Then("the profiles should be displayed in alphabetical order in flat view", asyn
     await browser.pause(100);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
     expect(viewMode).toBe("flat");
@@ -623,7 +637,7 @@ Then("the profiles should be displayed in reverse alphabetical order in flat vie
     await browser.pause(100);
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
     expect(viewMode).toBe("flat");

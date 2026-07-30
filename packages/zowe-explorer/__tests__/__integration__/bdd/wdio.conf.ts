@@ -187,7 +187,15 @@ export const config: Options.Testrunner = {
 
     afterStep: async function (step, scenario, result, context) {
         if (!result.passed) {
-            await browser.saveScreenshot(joinPath(screenshotDir, `${scenario.name} - ${step.text}.png`));
+            // Sanitize the filename: remove characters that are invalid on NTFS/Linux
+            // (e.g. double-quote from Gherkin scenario text, colons, angle brackets, etc.)
+            const sanitize = (s: string) =>
+                s
+                    .replace(/["<>:|*?/\\\r\n]/g, "-")
+                    .replace(/\s+/g, " ")
+                    .trim();
+            const safeName = `${sanitize(scenario.name)} - ${sanitize(step.text)}`;
+            await browser.saveScreenshot(joinPath(screenshotDir, `${safeName}.png`));
         }
     },
 
