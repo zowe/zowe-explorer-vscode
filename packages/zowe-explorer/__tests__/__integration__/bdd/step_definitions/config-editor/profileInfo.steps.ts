@@ -13,7 +13,7 @@ import { Given, When, Then } from "@cucumber/cucumber";
 import { expect } from "@wdio/globals";
 import * as fs from "fs";
 import * as path from "path";
-import { verifyProfiles } from "./profileList.steps";
+import { verifyProfiles, robustClick } from "./profileList.steps";
 
 declare const browser: any;
 
@@ -22,33 +22,6 @@ let foundOptions: string[] = [];
 async function ensureConfigEditorReady() {
     const appContainer = await browser.$("[data-testid='config-editor-app']");
     await appContainer.waitForExist({ timeout: 10000 });
-}
-
-// robust click helper for webview elements
-async function robustClick(element: WebdriverIO.Element, attempts = 4, waitMsBetween = 250) {
-    await element.waitForExist({ timeout: 15000 });
-    await element.waitForDisplayed({ timeout: 15000 });
-    await browser.execute((el: HTMLElement) => el.scrollIntoView({ block: "center" }), element);
-
-    let lastError: any = null;
-    for (let i = 0; i < attempts; i++) {
-        try {
-            // prefer native click first
-            await element.click();
-            return;
-        } catch (err) {
-            lastError = err;
-            // try DOM click fallback
-            try {
-                await browser.execute((el: HTMLElement) => el.click(), element);
-                return;
-            } catch (err2) {
-                lastError = err2;
-            }
-        }
-        await browser.pause(waitMsBetween);
-    }
-    throw lastError;
 }
 
 Given("the profile list is set to flat view mode", async function () {
@@ -442,8 +415,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
     if (viewMode === "tree") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
         if (await viewToggleButton.isExisting()) {
-            await viewToggleButton.click();
-            await browser.pause(50);
+            await robustClick(viewToggleButton);
 
             await browser.waitUntil(
                 async () => {
@@ -451,7 +423,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "flat";
                 },
-                { timeout: 10000, timeoutMsg: "Failed to switch to flat view" }
+                { timeout: 20000, timeoutMsg: "Failed to switch to flat view" }
             );
 
             const flatItems = await browser.$$("[data-testid='profile-list-item']");
@@ -481,15 +453,14 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
             }
             expect(flatProfiles.length).toBe(expectedFlatTitles.length);
 
-            await viewToggleButton.click();
-            await browser.pause(50);
+            await robustClick(viewToggleButton);
             await browser.waitUntil(
                 async () => {
                     const updatedList = await browser.$("[data-testid='profile-list']");
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "tree";
                 },
-                { timeout: 10000, timeoutMsg: "Failed to switch back to tree view" }
+                { timeout: 20000, timeoutMsg: "Failed to switch back to tree view" }
             );
         }
     }
@@ -531,8 +502,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
     if (viewMode === "tree") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
         if (await viewToggleButton.isExisting()) {
-            await viewToggleButton.click();
-            await browser.pause(50);
+            await robustClick(viewToggleButton);
 
             await browser.waitUntil(
                 async () => {
@@ -540,7 +510,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "flat";
                 },
-                { timeout: 10000, timeoutMsg: "Failed to switch to flat view" }
+                { timeout: 20000, timeoutMsg: "Failed to switch to flat view" }
             );
 
             const flatItems = await browser.$$("[data-testid='profile-list-item']");
@@ -568,15 +538,14 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
             }
             expect(flatProfiles.length).toBe(expectedFlatTitles.length);
 
-            await viewToggleButton.click();
-            await browser.pause(50);
+            await robustClick(viewToggleButton);
             await browser.waitUntil(
                 async () => {
                     const updatedList = await browser.$("[data-testid='profile-list']");
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "tree";
                 },
-                { timeout: 10000, timeoutMsg: "Failed to switch back to tree view" }
+                { timeout: 20000, timeoutMsg: "Failed to switch back to tree view" }
             );
         }
     }

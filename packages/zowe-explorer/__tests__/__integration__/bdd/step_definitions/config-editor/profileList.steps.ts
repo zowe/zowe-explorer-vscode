@@ -15,6 +15,38 @@ import { expect } from "@wdio/globals";
 
 declare const browser: any;
 
+
+/**
+ * Robust click helper for webview elements in CI.
+ * Uses DOM-level scrollIntoView (avoids Actions API / CDP commands that fail with
+ * "unknown command: Browser.getWindowForTarget") then retries both a native
+ * WebDriver click and a DOM-level fallback up to `attempts` times.
+ */
+export async function robustClick(element: any, attempts = 6, waitMsBetween = 300): Promise<void> {
+    await element.waitForExist({ timeout: 15000 });
+    await element.waitForDisplayed({ timeout: 15000 });
+    await browser.execute((el: HTMLElement) => el.scrollIntoView({ block: "center" }), element);
+
+    let lastError: any = null;
+    for (let i = 0; i < attempts; i++) {
+        try {
+            await element.click();
+            return;
+        } catch (err) {
+            lastError = err;
+            try {
+                await browser.execute((el: HTMLElement) => el.click(), element);
+                return;
+            } catch (err2) {
+                lastError = err2;
+            }
+        }
+        await browser.pause(waitMsBetween);
+    }
+    throw lastError;
+}
+
+
 export async function verifyProfiles(expectedTreeTitles: string[], expectedFlatTitles: string[], workbench: Workbench) {
     const webview = (await workbench.getAllWebviews())[0];
     await webview.wait();
@@ -54,8 +86,7 @@ export async function verifyProfiles(expectedTreeTitles: string[], expectedFlatT
     if (viewMode === "tree") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
         if (await viewToggleButton.isExisting()) {
-            await viewToggleButton.click();
-            await browser.pause(50);
+            await robustClick(viewToggleButton);
 
             await browser.waitUntil(
                 async () => {
@@ -63,7 +94,7 @@ export async function verifyProfiles(expectedTreeTitles: string[], expectedFlatT
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "flat";
                 },
-                { timeout: 10000, timeoutMsg: "Failed to switch to flat view" }
+                { timeout: 20000, timeoutMsg: "Failed to switch to flat view" }
             );
 
             const flatItems = await browser.$$("[data-testid='profile-list-item']");
@@ -129,8 +160,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json", 
     if (viewMode === "tree") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
         if (await viewToggleButton.isExisting()) {
-            await viewToggleButton.click();
-            await browser.pause(50);
+            await robustClick(viewToggleButton);
 
             await browser.waitUntil(
                 async () => {
@@ -138,7 +168,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json", 
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "flat";
                 },
-                { timeout: 10000, timeoutMsg: "Failed to switch to flat view" }
+                { timeout: 20000, timeoutMsg: "Failed to switch to flat view" }
             );
 
             const flatItems = await browser.$$("[data-testid='profile-list-item']");
@@ -168,15 +198,14 @@ Then("the profile tree should contain expected profiles from zowe.config.json", 
             }
             expect(flatProfiles.length).toBe(expectedFlatTitles.length);
 
-            await viewToggleButton.click();
-            await browser.pause(50);
+            await robustClick(viewToggleButton);
             await browser.waitUntil(
                 async () => {
                     const updatedList = await browser.$("[data-testid='profile-list']");
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "tree";
                 },
-                { timeout: 10000, timeoutMsg: "Failed to switch back to tree view" }
+                { timeout: 20000, timeoutMsg: "Failed to switch back to tree view" }
             );
         }
     }
@@ -202,16 +231,7 @@ When("the user switches to flat view mode", async function () {
 
     if (currentMode !== "flat") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
-        await viewToggleButton.waitForExist({ timeout: 10000 });
-        // Scroll into view via DOM to avoid Actions API / CDP mismatches in CI
-        await browser.execute((el: HTMLElement) => el.scrollIntoView({ block: "center" }), viewToggleButton);
-        await viewToggleButton.waitForClickable({ timeout: 5000 });
-        try {
-            await viewToggleButton.click();
-        } catch {
-            await browser.execute((el: HTMLElement) => el.click(), viewToggleButton);
-        }
-        await browser.pause(50);
+        await robustClick(viewToggleButton);
 
         await browser.waitUntil(
             async () => {
@@ -220,7 +240,7 @@ When("the user switches to flat view mode", async function () {
                 return viewMode === "flat";
             },
             {
-                timeout: 10000,
+                timeout: 20000,
                 timeoutMsg: "Failed to switch to flat view",
             }
         );
@@ -234,16 +254,7 @@ When("the user switches to tree view mode", async function () {
 
     if (currentMode !== "tree") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
-        await viewToggleButton.waitForExist({ timeout: 10000 });
-        // Scroll into view via DOM to avoid Actions API / CDP mismatches in CI
-        await browser.execute((el: HTMLElement) => el.scrollIntoView({ block: "center" }), viewToggleButton);
-        await viewToggleButton.waitForClickable({ timeout: 5000 });
-        try {
-            await viewToggleButton.click();
-        } catch {
-            await browser.execute((el: HTMLElement) => el.click(), viewToggleButton);
-        }
-        await browser.pause(50);
+        await robustClick(viewToggleButton);
 
         await browser.waitUntil(
             async () => {
@@ -252,7 +263,7 @@ When("the user switches to tree view mode", async function () {
                 return viewMode === "tree";
             },
             {
-                timeout: 10000,
+                timeout: 20000,
                 timeoutMsg: "Failed to switch to tree view",
             }
         );
