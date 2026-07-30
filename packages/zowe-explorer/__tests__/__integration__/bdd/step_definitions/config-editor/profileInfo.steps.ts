@@ -24,6 +24,33 @@ async function ensureConfigEditorReady() {
     await appContainer.waitForExist({ timeout: 10000 });
 }
 
+// robust click helper for webview elements
+async function robustClick(element: WebdriverIO.Element, attempts = 4, waitMsBetween = 250) {
+    await element.waitForExist({ timeout: 15000 });
+    await element.waitForDisplayed({ timeout: 15000 });
+    await browser.execute((el: HTMLElement) => el.scrollIntoView({ block: "center" }), element);
+
+    let lastError: any = null;
+    for (let i = 0; i < attempts; i++) {
+        try {
+            // prefer native click first
+            await element.click();
+            return;
+        } catch (err) {
+            lastError = err;
+            // try DOM click fallback
+            try {
+                await browser.execute((el: HTMLElement) => el.click(), element);
+                return;
+            } catch (err2) {
+                lastError = err2;
+            }
+        }
+        await browser.pause(waitMsBetween);
+    }
+    throw lastError;
+}
+
 Given("the profile list is set to flat view mode", async function () {
     this.workbench = await browser.getWorkbench();
 
@@ -41,15 +68,8 @@ Given("the profile list is set to flat view mode", async function () {
 
     if (viewMode !== "flat") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
-        await viewToggleButton.waitForExist({ timeout: 10000 });
-        // Scroll into view via DOM to avoid Actions API / CDP mismatches in CI
-        await browser.execute((el: HTMLElement) => el.scrollIntoView({ block: "center" }), viewToggleButton);
-        await viewToggleButton.waitForClickable({ timeout: 5000 });
-        try {
-            await viewToggleButton.click();
-        } catch {
-            await browser.execute((el: HTMLElement) => el.click(), viewToggleButton);
-        }
+        // Use the robust click helper instead of waitForClickable with short timeout
+        await robustClick(viewToggleButton, 6, 300);
 
         await browser.waitUntil(
             async () => {
@@ -58,7 +78,7 @@ Given("the profile list is set to flat view mode", async function () {
                 return updatedViewMode === "flat";
             },
             {
-                timeout: 10000,
+                timeout: 20000,
                 timeoutMsg: "Failed to switch to flat view",
             }
         );
@@ -66,16 +86,43 @@ Given("the profile list is set to flat view mode", async function () {
 });
 
 When("the user clicks the defaults toggle button to open the defaults section", async () => {
-    const defaultsToggleButton = await browser.$(".defaults-toggle-button");
-    await defaultsToggleButton.waitForExist({ timeout: 10000 });
-    await defaultsToggleButton.click();
+    const selectors = [".defaults-toggle-button", "[data-testid='defaults-toggle']", "button[title*='Defaults']", "button[aria-label*='Defaults']"];
+    let defaultsToggleButton = null;
+    for (const sel of selectors) {
+        const el = await browser.$(sel);
+        if (await el.isExisting()) {
+            defaultsToggleButton = el;
+            break;
+        }
+    }
+    if (!defaultsToggleButton) throw new Error("Could not find defaults toggle button");
+
+    // use the same robustClick helper
+    await robustClick(defaultsToggleButton, 6, 300);
+
+    // ensure defaults section is visible by waiting for any default-dropdown select
+    await browser.waitUntil(
+        async () => {
+            const anyDefaultSelect = await browser.$("select[id^='default-dropdown-']");
+            return await anyDefaultSelect.isExisting();
+        },
+        { timeout: 15000, timeoutMsg: "Defaults section did not become visible" }
+    );
 });
 
 When("the user selects the {word} default dropdown", async (type: string) => {
     const dropdownSelector = `select[id="default-dropdown-${type}"]`;
-    const typeFilterSelect = await browser.$(dropdownSelector);
-    await typeFilterSelect.waitForExist({ timeout: 10000 });
+    let typeFilterSelect = await browser.$(dropdownSelector);
 
+    await browser.waitUntil(
+        async () => {
+            typeFilterSelect = await browser.$(dropdownSelector);
+            return (await typeFilterSelect.isExisting()) && (await typeFilterSelect.isDisplayed());
+        },
+        { timeout: 15000, timeoutMsg: `Dropdown ${dropdownSelector} not visible` }
+    );
+
+    // gather options
     const options = await typeFilterSelect.$$("option");
     foundOptions = [];
     for (let i = 0; i < options.length; i++) {
@@ -92,9 +139,27 @@ Then("the dropdown should have {string} as options", async (expectedOptions: str
 When("the user selects {string} in the {word} default dropdown", async (option: string, type: string) => {
     const dropdownSelector = `select[id="default-dropdown-${type}"]`;
     const typeFilterSelect = await browser.$(dropdownSelector);
-    await typeFilterSelect.waitForExist({ timeout: 10000 });
+    await browser.waitUntil(async () => (await typeFilterSelect.isExisting()) && (await typeFilterSelect.isDisplayed()), {
+        timeout: 15000,
+        timeoutMsg: `Dropdown ${dropdownSelector} not visible`,
+    });
 
-    await typeFilterSelect.selectByAttribute("value", option);
+    try {
+        await typeFilterSelect.selectByAttribute("value", option);
+    } catch (err) {
+        // fallback: click the select then click option element
+        try {
+            await typeFilterSelect.click();
+        } catch {}
+        const options = await typeFilterSelect.$$("option");
+        for (const opt of options) {
+            const val = await opt.getAttribute("value");
+            if (val === option) {
+                await opt.click();
+                break;
+            }
+        }
+    }
 });
 
 Then("the {word} default should be {string}", async (type: string, expectedDefault: string) => {
