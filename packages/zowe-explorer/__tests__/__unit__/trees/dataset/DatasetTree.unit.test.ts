@@ -5178,12 +5178,12 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
         expect(pdsNodeAfterRefresh.description).toBeUndefined();
     });
 
-    it("successfully initializes migrated favorites from the main favorites list", async () => {
+    it("successfully initializes migrated favorites from the main favorites list alongside non-migrated favorites, sorted alphabetically", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         vi.spyOn(blockMocks.testTree as any, "mPersistence" as any, "get").mockReturnValue({
-            readFavorites: () => ["[test]: SAMPLE.PS.MIGR{ds_migr}", "[test]: SAMPLE.PDS.MIGR{pds_migr}"],
+            readFavorites: () => ["[test]: Z.SAMPLE.PS.MIGR{ds_migr}", "[test]: A.SAMPLE.PDS.NONMIGR{pds}", "[test]: M.SAMPLE.PDS.MIGR{pds_migr}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
             readMigratedFavorites: () => [],
@@ -5192,38 +5192,44 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
 
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
         const profileNode = blockMocks.testTree.mFavorites[0];
-        expect(profileNode.children?.map((item) => item.label)).toEqual(["SAMPLE.PDS.MIGR", "SAMPLE.PS.MIGR"]);
+        expect(profileNode.children?.map((item) => item.label)).toEqual(["A.SAMPLE.PDS.NONMIGR", "M.SAMPLE.PDS.MIGR", "Z.SAMPLE.PS.MIGR"]);
 
-        const pdsNode = profileNode.children[0] as ZoweDatasetNode;
+        const nonMigrNode = profileNode.children[0] as ZoweDatasetNode;
+        expect(SharedContext.isMigrated(nonMigrNode)).toBe(false);
+
+        const pdsNode = profileNode.children[1] as ZoweDatasetNode;
         expect(SharedContext.isMigrated(pdsNode)).toBe(true);
         expect(pdsNode.wasPds).toBe(true);
 
-        const dsNode = profileNode.children[1] as ZoweDatasetNode;
+        const dsNode = profileNode.children[2] as ZoweDatasetNode;
         expect(SharedContext.isMigrated(dsNode)).toBe(true);
         expect(dsNode.wasPds).toBe(false);
     });
 
-    it("successfully initializes migrated favorites from the migrated favorites list", async () => {
+    it("successfully initializes migrated favorites from the migrated favorites list alongside non-migrated favorites, sorted alphabetically", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
         vi.spyOn(blockMocks.testTree as any, "mPersistence" as any, "get").mockReturnValue({
-            readFavorites: () => [],
+            readFavorites: () => ["[test]: A.SAMPLE.PDS.NONMIGR{pds}"],
             readVsamFavorites: () => [],
             readMemberFavorites: () => [],
-            readMigratedFavorites: () => ["[test]: SAMPLE.PS.MIGR{ds_migr}", "[test]: SAMPLE.PDS.MIGR{pds_migr}"],
+            readMigratedFavorites: () => ["[test]: Z.SAMPLE.PS.MIGR{ds_migr}", "[test]: M.SAMPLE.PDS.MIGR{pds_migr}"],
         } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
         const profileNode = blockMocks.testTree.mFavorites[0];
-        expect(profileNode.children?.map((item) => item.label)).toEqual(["SAMPLE.PDS.MIGR", "SAMPLE.PS.MIGR"]);
+        expect(profileNode.children?.map((item) => item.label)).toEqual(["A.SAMPLE.PDS.NONMIGR", "M.SAMPLE.PDS.MIGR", "Z.SAMPLE.PS.MIGR"]);
 
-        const pdsNode = profileNode.children[0] as ZoweDatasetNode;
+        const nonMigrNode = profileNode.children[0] as ZoweDatasetNode;
+        expect(SharedContext.isMigrated(nonMigrNode)).toBe(false);
+
+        const pdsNode = profileNode.children[1] as ZoweDatasetNode;
         expect(SharedContext.isMigrated(pdsNode)).toBe(true);
         expect(pdsNode.wasPds).toBe(true);
 
-        const dsNode = profileNode.children[1] as ZoweDatasetNode;
+        const dsNode = profileNode.children[2] as ZoweDatasetNode;
         expect(SharedContext.isMigrated(dsNode)).toBe(true);
         expect(dsNode.wasPds).toBe(false);
     });

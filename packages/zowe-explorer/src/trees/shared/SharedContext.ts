@@ -307,12 +307,15 @@ export class SharedContext {
      */
     public static isUssDirectory(node: TreeItem): boolean {
         const filteredSessionPattern =
-            "^(?!" + Constants.USS_SESSION_CONTEXT + ".*" + Constants.FAV_SUFFIX + ")" +
-            Constants.USS_SESSION_CONTEXT + ".*" + Constants.FILTER_SEARCH;
-        return (
-            new RegExp("^" + Constants.USS_DIR_CONTEXT).test(node.contextValue) ||
-            new RegExp(filteredSessionPattern).test(node.contextValue)
-        );
+            "^(?!" +
+            Constants.USS_SESSION_CONTEXT +
+            ".*" +
+            Constants.FAV_SUFFIX +
+            ")" +
+            Constants.USS_SESSION_CONTEXT +
+            ".*" +
+            Constants.FILTER_SEARCH;
+        return new RegExp("^" + Constants.USS_DIR_CONTEXT).test(node.contextValue) || new RegExp(filteredSessionPattern).test(node.contextValue);
     }
 
     /**

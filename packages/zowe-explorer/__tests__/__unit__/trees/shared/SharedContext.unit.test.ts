@@ -138,8 +138,7 @@ describe("Context helper tests", () => {
         expect(SharedContext.isUssSession(treeItem)).toBe(true);
 
         // Filter-search session with a profile type suffix: ussSession_type=zosmf_isFilterSearch
-        treeItem.contextValue =
-            Constants.USS_SESSION_CONTEXT + Constants.TYPE_SUFFIX + "zosmf_" + Constants.FILTER_SEARCH;
+        treeItem.contextValue = Constants.USS_SESSION_CONTEXT + Constants.TYPE_SUFFIX + "zosmf_" + Constants.FILTER_SEARCH;
         expect(SharedContext.isUssDirectory(treeItem)).toBe(true);
         expect(SharedContext.isUssSession(treeItem)).toBe(true);
     });
