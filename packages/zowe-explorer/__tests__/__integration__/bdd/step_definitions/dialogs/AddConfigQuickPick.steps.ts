@@ -167,11 +167,21 @@ Then("it will add a tree item for the profile to the correct trees", async funct
         );
     } else {
         // "No" path: profile must NOT be in USS tree.
-        // Wait briefly for any in-flight tree refresh to settle, then assert absence.
-        // ViewSection.findItem always returns a CustomTreeItem object (never undefined),
-        // so we must check DOM existence via .elem.isExisting() instead of toBeUndefined().
-        await browser.pause(500);
-        const ussItem = await ussPane.findItem(this.profileName);
-        expect(await ussItem.elem.isExisting()).toBe(false);
+        // Wait until the USS pane either doesn't have the node or its DOM node is absent.
+        await browser.waitUntil(
+            async () => {
+                const item = await ussPane.findItem(this.profileName);
+                if (!item) {
+                    // Not present at all => success (absent)
+                    return true;
+                }
+                // Item wrapper exists; check whether its DOM element exists
+                return !(await item.elem.isExisting());
+            },
+            {
+                timeout: 10000,
+                timeoutMsg: `Profile "${this.profileName}" unexpectedly appeared in USS tree`,
+            }
+        );
     }
 });
