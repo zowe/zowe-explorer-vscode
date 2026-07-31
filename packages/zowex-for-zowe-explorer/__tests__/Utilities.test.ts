@@ -8,18 +8,19 @@
  * Copyright Contributors to the Zowe Project.
  *
  */
-import * as vscode from "vscode";
 import { ExtensionContext } from "vscode";
 import { Utilities } from "../src/Utilities";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { SshClientCache } from "../src/SshClientCache";
 
+import *  as vscode from "vscode";
+
 vi.mock("vscode", () => ({
     l10n: {
-        t: vi.fn().mockImplementation((msg, ..._args) => {
+        t: (msg: string, ..._args: any) => {
             return msg;
-        }),
+        },
     },
     Disposable: vi.fn(),
     window: {
@@ -40,6 +41,7 @@ vi.mock("vscode", () => ({
         registerCommand: vi.fn(),
     },
 }));
+
 
 vi.mock("@zowe/zowe-explorer-api", () => {
     class MockDeferredPromise {
@@ -107,15 +109,19 @@ vi.mock("../src/ConfigUtils", () => ({
         showSessionInTree: vi.fn().mockResolvedValue(undefined),
     },
 }));
-vi.mock("../src/SshClientCache", () => ({
-    SshClientCache: {
-        inst: {
-            connect: vi.fn().mockResolvedValue({}),
-            end: vi.fn(),
-            detectServerOnPath: vi.fn().mockResolvedValue(false),
+vi.mock("../src/SshClientCache", async (importOriginal) => {
+    const original: any = await importOriginal();
+    return {
+        SshClientCache: {
+            WRITE_ACCESS_TO_SERVER_PATH_ERR: original.SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR,
+            inst: {
+                connect: vi.fn().mockResolvedValue({}),
+                end: vi.fn(),
+                detectServerOnPath: vi.fn().mockResolvedValue(false),
+            },
         },
-    },
-}));
+    };
+});
 vi.mock("../src/SshErrorHandler", () => ({
     SshErrorHandler: {
         getInstance: () => ({
@@ -179,8 +185,8 @@ describe("Utilities", () => {
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: { host: "h" } };
             VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(profile) }));
-            const mockedCache = await vi.importMock("../src/SshClientCache");
-            vi.spyOn(mockedCache.SshClientCache.inst, "connect").mockResolvedValue({} as any);
+
+            vi.spyOn(SshClientCache.inst, "connect").mockResolvedValue({} as any);
 
             const disposeSpy = vi.fn();
             vi.spyOn(mockedExplorer.Gui, "setStatusBarMessage").mockReturnValue({ dispose: disposeSpy } as any);
@@ -264,7 +270,6 @@ describe("Utilities", () => {
             const promptForProfile = vi.fn().mockResolvedValue(profile);
             const promptForDeployDirectory = vi.fn().mockResolvedValue(undefined);
             VscePromptApi.mockImplementation(() => ({ promptForProfile, promptForDeployDirectory }));
-
             const deploySpy = vi.spyOn(mockedDeploy, "deployWithProgress");
             const api = mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await (Utilities as any).connectCallback(api);
@@ -314,23 +319,26 @@ describe("Utilities", () => {
             }));
             vi.mocked(ZSshUtils.lacksWriteAccess).mockResolvedValue(true);
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
-            await expect((Utilities as any).connectCallback(api)).rejects.toThrow(
-                vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, "/mock/server/path")
-            );
+            try {
+                await (Utilities as any).connectCallback(api);
+                expect('Succeeded').toEqual('connectCallback should have thrown an error.');
+            }
+            catch (e) {
+                expect(e.toString()).toContain('You do not have write access');
+            }
         });
     });
 
     describe("restartCallback", () => {
         it("should restart the SSH server and report a status message", async () => {
             const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
-            const mockedCache = await vi.importMock("../src/SshClientCache");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: { host: "myHost" } };
             VscePromptApi.mockImplementation(() => ({
                 promptForProfile: vi.fn().mockResolvedValue(profile),
             }));
 
-            const connectSpy = vi.spyOn(mockedCache.SshClientCache.inst, "connect").mockResolvedValue({} as any);
+            const connectSpy = vi.spyOn(SshClientCache.inst, "connect").mockResolvedValue({} as any);
 
             const statusSpy = vi.spyOn(mockedExplorer.Gui, "setStatusBarMessage");
 
@@ -342,11 +350,10 @@ describe("Utilities", () => {
         });
 
         it("should abort when no profile is selected", async () => {
-            const mockedCache = await vi.importMock("../src/SshClientCache");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(undefined) }));
 
-            const connectSpy = vi.spyOn(mockedCache.SshClientCache.inst, "connect");
+            const connectSpy = vi.spyOn(SshClientCache.inst, "connect");
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await (Utilities as any).restartCallback(api);
 
@@ -355,11 +362,10 @@ describe("Utilities", () => {
 
         it("should fall back to the profile name in the info log when host is undefined", async () => {
             const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
-            const mockedCache = await vi.importMock("../src/SshClientCache");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: {} }; // no host
             VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(profile) }));
-            vi.spyOn(mockedCache.SshClientCache.inst, "connect").mockResolvedValue({} as any);
+            vi.spyOn(SshClientCache.inst, "connect").mockResolvedValue({} as any);
             const infoSpy = vi.fn();
             vi.spyOn(mockedExplorer.imperative.Logger, "getAppLogger").mockReturnValue({ trace: vi.fn(), info: infoSpy } as any);
 
@@ -370,13 +376,12 @@ describe("Utilities", () => {
         });
 
         it("should propagate a rejection from connect", async () => {
-            const mockedCache = await vi.importMock("../src/SshClientCache");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: { host: "myHost" } };
             VscePromptApi.mockImplementation(() => ({
                 promptForProfile: vi.fn().mockResolvedValue(profile),
             }));
-            vi.spyOn(mockedCache.SshClientCache.inst, "connect").mockRejectedValue(new Error("connect failed"));
+            vi.spyOn(SshClientCache.inst, "connect").mockRejectedValue(new Error("connect failed"));
 
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await expect((Utilities as any).restartCallback(api, "myProf")).rejects.toThrow("connect failed");
@@ -387,7 +392,6 @@ describe("Utilities", () => {
         it("should end the session and uninstall the server", async () => {
             const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
             const mockedConfig = await vi.importMock("../src/ConfigUtils");
-            const mockedCache = await vi.importMock("../src/SshClientCache");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: { host: "myHost" } };
             VscePromptApi.mockImplementation(() => ({
@@ -396,7 +400,7 @@ describe("Utilities", () => {
 
             vi.spyOn(mockedConfig.ConfigUtils, "getServerPath").mockReturnValue("/server/path");
             const showSessionSpy = vi.spyOn(mockedConfig.ConfigUtils, "showSessionInTree").mockResolvedValue(undefined);
-            const endSpy = vi.spyOn(mockedCache.SshClientCache.inst, "end");
+            const endSpy = vi.spyOn(SshClientCache.inst, "end");
             const uninstallSpy = vi.spyOn(ZSshUtils, "uninstallServer").mockResolvedValue(undefined);
             vi.spyOn(ZSshUtils, "buildSession").mockReturnValue({ ISshSession: {} });
             const showMessageSpy = vi.spyOn(mockedExplorer.Gui, "showMessage");
@@ -411,11 +415,10 @@ describe("Utilities", () => {
         });
 
         it("should abort when no profile is selected", async () => {
-            const mockedCache = await vi.importMock("../src/SshClientCache");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(undefined) }));
 
-            const endSpy = vi.spyOn(mockedCache.SshClientCache.inst, "end");
+            const endSpy = vi.spyOn(SshClientCache.inst, "end");
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await (Utilities as any).uninstallCallback(api);
 
@@ -425,14 +428,13 @@ describe("Utilities", () => {
         it("should fall back to the profile name in the info message when host is undefined", async () => {
             const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
             const mockedConfig = await vi.importMock("../src/ConfigUtils");
-            const mockedCache = await vi.importMock("../src/SshClientCache");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: {} }; // no host
             VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(profile) }));
 
             vi.spyOn(mockedConfig.ConfigUtils, "getServerPath").mockReturnValue("/server/path");
             vi.spyOn(mockedConfig.ConfigUtils, "showSessionInTree").mockResolvedValue(undefined);
-            vi.spyOn(mockedCache.SshClientCache.inst, "end");
+            vi.spyOn(SshClientCache.inst, "end");
             vi.spyOn(ZSshUtils, "uninstallServer").mockResolvedValue(undefined);
             vi.spyOn(ZSshUtils, "buildSession").mockReturnValue({ ISshSession: {} });
             const showMessageSpy = vi.spyOn(mockedExplorer.Gui, "showMessage");
