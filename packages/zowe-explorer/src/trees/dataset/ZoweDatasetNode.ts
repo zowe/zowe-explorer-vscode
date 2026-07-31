@@ -914,7 +914,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 if (resolution.apiResponse.targetDsn) {
                     const originalAttributes = await mvsApi.dataSet(resolution.apiResponse.targetDsn, { attributes: true });
                     ZoweLogger.info(`[ZoweDatasetNode.resolveAlias] Resolved alias ${item.dsname} to ${resolution.apiResponse.targetDsn}.` +
-                        ` Retrieving attributes of the original data set.`)
+                        ` Retrieving attributes of the original data set.`);
                     const matchingOriginal = (originalAttributes.apiResponse.items ?? originalAttributes.apiResponse) as IZosmfListResponse[];
                     if (matchingOriginal.length > 0) {
                         return {
