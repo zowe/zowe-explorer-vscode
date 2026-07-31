@@ -13,7 +13,7 @@ import { Given, When, Then } from "@cucumber/cucumber";
 import { expect } from "@wdio/globals";
 import * as fs from "fs";
 import * as path from "path";
-import { verifyProfiles, robustClick } from "./profileList.steps";
+import { verifyProfiles, robustClick, dismissTutorialOverlay } from "./profileList.steps";
 
 declare const browser: any;
 
@@ -22,6 +22,7 @@ let foundOptions: string[] = [];
 async function ensureConfigEditorReady() {
     const appContainer = await browser.$("[data-testid='config-editor-app']");
     await appContainer.waitForExist({ timeout: 10000 });
+    await dismissTutorialOverlay();
 }
 
 Given("the profile list is set to flat view mode", async function () {

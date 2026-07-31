@@ -13,8 +13,10 @@ import { When, Then } from "@cucumber/cucumber";
 import { Key } from "webdriverio";
 import * as fs from "fs";
 import * as path from "path";
+import { dismissTutorialOverlay } from "./profileList.steps";
 
 When("a user right clicks a configuration tab and clicks open schema", async () => {
+    await dismissTutorialOverlay();
     const tab = await browser.$(`[id="global:true,user:false"]`);
     await tab.waitForExist({ timeout: 1000 });
     await tab.click({ button: "right" });
@@ -25,6 +27,7 @@ When("a user right clicks a configuration tab and clicks open schema", async () 
 });
 
 When("a user clicks the add configuration layer button", async () => {
+    await dismissTutorialOverlay();
     const addConfigButton = await browser.$(`[id="add-config-layer-button"]`);
     await addConfigButton.waitForExist({ timeout: 1000 });
     await addConfigButton.click({ button: "left" });
@@ -44,6 +47,7 @@ Then("close the current tab", async () => {
 });
 
 When("a user right clicks a configuration tab and clicks toggle autostore", async () => {
+    await dismissTutorialOverlay();
     const tab = await browser.$(`.tab`);
     await tab.waitForExist({ timeout: 1000 });
     await tab.click({ button: "right" });

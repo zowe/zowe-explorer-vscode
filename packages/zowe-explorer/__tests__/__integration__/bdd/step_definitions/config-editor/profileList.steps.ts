@@ -17,12 +17,28 @@ declare const browser: any;
 
 
 /**
+ * Dismiss the tutorial overlay backdrop if it is currently blocking the UI.
+ * The backdrop's onClick handler calls the tutorial's skip/close callback, so
+ * a DOM-level click on it is all that is needed.
+ */
+export async function dismissTutorialOverlay(): Promise<void> {
+    await browser.execute(() => {
+        const backdrop = document.querySelector(".tutorial-overlay-backdrop") as HTMLElement | null;
+        if (backdrop) {
+            backdrop.click();
+        }
+    });
+}
+
+/**
  * Robust click helper for webview elements in CI.
- * Uses DOM-level scrollIntoView (avoids Actions API / CDP commands that fail with
- * "unknown command: Browser.getWindowForTarget") then retries both a native
+ * Dismisses the tutorial overlay if present, then uses DOM-level scrollIntoView
+ * (avoids Actions API / CDP commands that fail with
+ * "unknown command: Browser.getWindowForTarget") and retries both a native
  * WebDriver click and a DOM-level fallback up to `attempts` times.
  */
 export async function robustClick(element: any, attempts = 6, waitMsBetween = 300): Promise<void> {
+    await dismissTutorialOverlay();
     await element.waitForExist({ timeout: 15000 });
     await element.waitForDisplayed({ timeout: 15000 });
     await browser.execute((el: HTMLElement) => el.scrollIntoView({ block: "center" }), element);
@@ -271,6 +287,7 @@ When("the user switches to tree view mode", async function () {
 });
 
 When("the user clicks on the search input field", async () => {
+    await dismissTutorialOverlay();
     const searchInput = await browser.$("input[placeholder='Search...']");
     await searchInput.waitForExist({ timeout: 10000 });
     await searchInput.click();
@@ -286,6 +303,7 @@ When("the user types {string} in the search field", async (searchTerm: string) =
 });
 
 When("the user clicks the clear search button", async () => {
+    await dismissTutorialOverlay();
     const clearButton = await browser.$("button[title='Clear search']");
     await clearButton.waitForExist({ timeout: 10000 });
     await clearButton.click();
@@ -508,6 +526,7 @@ Then("the profile list should show only profiles containing {string} and of type
 });
 
 When("the user clicks on the profile sort dropdown", async () => {
+    await dismissTutorialOverlay();
     const sortDropdownTrigger = await browser.$(".sort-dropdown-trigger");
     await sortDropdownTrigger.waitForExist({ timeout: 10000 });
     await sortDropdownTrigger.click();
