@@ -13,7 +13,7 @@ import { Given, When, Then } from "@cucumber/cucumber";
 import { expect } from "@wdio/globals";
 import * as fs from "fs";
 import * as path from "path";
-import { verifyProfiles, robustClick, dismissTutorialOverlay } from "./profileList.steps";
+import { verifyProfiles, robustClick, dismissTutorialOverlay } from "./profileListHelpers";
 
 declare const browser: any;
 

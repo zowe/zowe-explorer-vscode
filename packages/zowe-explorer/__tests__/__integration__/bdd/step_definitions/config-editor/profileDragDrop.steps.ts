@@ -14,7 +14,7 @@ import { expect } from "@wdio/globals";
 import * as fs from "fs";
 import * as path from "path";
 import { restoreZoweConfig } from "../../features/config-editor/utils";
-import { dismissTutorialOverlay } from "./profileList.steps";
+import { dismissTutorialOverlay } from "./profileListHelpers";
 
 declare const browser: any;
 

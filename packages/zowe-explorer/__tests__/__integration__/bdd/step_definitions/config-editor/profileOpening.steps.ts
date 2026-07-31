@@ -13,7 +13,7 @@ import { When, Then } from "@cucumber/cucumber";
 import { Key } from "webdriverio";
 import * as fs from "fs";
 import * as path from "path";
-import { dismissTutorialOverlay } from "./profileList.steps";
+import { dismissTutorialOverlay } from "./profileListHelpers";
 
 When("a user right clicks a configuration tab and clicks open schema", async () => {
     await dismissTutorialOverlay();
