@@ -354,7 +354,7 @@ export class AuthUtils {
                     }
                 }
             }
-            if (!usingBasicAuth) {
+            if (!usingBasicAuth && !usingSshKey) {
                 const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
                 if (userIDIndex !== -1) {
                     toolTipList.splice(userIDIndex, 1);
