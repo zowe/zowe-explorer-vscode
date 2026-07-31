@@ -1571,6 +1571,107 @@ describe("Test src/shared/extension", () => {
             expect(result!.profileType).toBe("ssh");
             expect(result!.propertyKey).toBe("host");
         });
+
+        it("resolves a config file that contains JSONC line comments", () => {
+            const jsonWithLineComments = [
+                "{",
+                '  "profiles": {',
+                "    // This is a comment",
+                '    "zosmf": {',
+                '      "type": "zosmf",',
+                '      "properties": {',
+                '        "host": "zos.example.com" // inline comment',
+                "      }",
+                "    }",
+                "  },",
+                '  "defaults": {}',
+                "}",
+            ].join("\n");
+            const hostOffset = jsonWithLineComments.indexOf('"host"');
+            const hostLine = jsonWithLineComments.substring(0, hostOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", jsonWithLineComments, hostLine, hostOffset);
+            setEditors([editor]);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeDefined();
+            expect(result!.profileName).toBe("zosmf");
+            expect(result!.profileType).toBe("zosmf");
+            expect(result!.propertyKey).toBe("host");
+        });
+
+        it("resolves a config file that contains JSONC block comments", () => {
+            const jsonWithBlockComments = [
+                "{",
+                '  "profiles": {',
+                "    /* block comment */",
+                '    "zosmf": {',
+                '      "type": "zosmf",',
+                '      "properties": {',
+                '        "host": "zos.example.com"',
+                "      }",
+                "    }",
+                "  },",
+                '  "defaults": {}',
+                "}",
+            ].join("\n");
+            const hostOffset = jsonWithBlockComments.indexOf('"host"');
+            const hostLine = jsonWithBlockComments.substring(0, hostOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", jsonWithBlockComments, hostLine, hostOffset);
+            setEditors([editor]);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeDefined();
+            expect(result!.profileName).toBe("zosmf");
+            expect(result!.propertyKey).toBe("host");
+        });
+
+        it("does not strip // inside a quoted string value (e.g. a URL)", () => {
+            const jsonWithUrl = [
+                "{",
+                '  "profiles": {',
+                '    "zosmf": {',
+                '      "type": "zosmf",',
+                '      "properties": {',
+                '        "basePath": "https://my.host/api/v1"',
+                "      }",
+                "    }",
+                "  },",
+                '  "defaults": {}',
+                "}",
+            ].join("\n");
+            const basePathOffset = jsonWithUrl.indexOf('"basePath"');
+            const basePathLine = jsonWithUrl.substring(0, basePathOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", jsonWithUrl, basePathLine, basePathOffset);
+            setEditors([editor]);
+            // The URL inside the string must not be treated as a line comment.
+            // If it were, JSON.parse would fail and result would be undefined.
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeDefined();
+            expect(result!.profileName).toBe("zosmf");
+            expect(result!.propertyKey).toBe("basePath");
+        });
+
+        it("resolves a config file that contains trailing commas", () => {
+            const jsonWithTrailingCommas = [
+                "{",
+                '  "profiles": {',
+                '    "zosmf": {',
+                '      "type": "zosmf",',
+                '      "properties": {',
+                '        "host": "zos.example.com",',
+                "      },",
+                "    },",
+                "  },",
+                '  "defaults": {},',
+                "}",
+            ].join("\n");
+            const hostOffset = jsonWithTrailingCommas.indexOf('"host"');
+            const hostLine = jsonWithTrailingCommas.substring(0, hostOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", jsonWithTrailingCommas, hostLine, hostOffset);
+            setEditors([editor]);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeDefined();
+            expect(result!.profileName).toBe("zosmf");
+            expect(result!.propertyKey).toBe("host");
+        });
     });
 
     describe("zowe.configEditor with cursor context (propertyKey forwarding)", () => {

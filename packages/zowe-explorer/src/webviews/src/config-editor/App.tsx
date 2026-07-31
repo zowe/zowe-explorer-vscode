@@ -283,7 +283,7 @@ function AppContent() {
     }));
   };
 
-  const handleOpenRawJson = (configPath: string) => {
+  const handleOpenConfigFile = (configPath: string) => {
     vscodeApi.postMessage({ command: "OPEN_CONFIG_FILE", filePath: configPath });
   };
 
@@ -459,6 +459,7 @@ function AppContent() {
     <div className="app-container" data-testid="config-editor-app" data-config-count={configurations.length} data-selected-tab={selectedTab}>
       <Tabs
         onTabChange={handleTabChange}
+        onOpenFile={handleOpenConfigFile}
         onRevealInFinder={handleRevealInFinder}
         onOpenSchemaFile={handleOpenSchemaFile}
         onAddNewConfig={handleAddNewConfig}
@@ -466,7 +467,6 @@ function AppContent() {
         onShowTutorial={handleOpenTutorial}
       />
       <Panels
-        onOpenRawFile={handleOpenRawJson}
         renderProfiles={(profilesObj) => (
           <RenderProfiles
             profilesObj={profilesObj}

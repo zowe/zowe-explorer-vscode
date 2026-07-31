@@ -12,6 +12,7 @@
  */
 
 import { useState, useCallback } from "react";
+import * as l10n from "@vscode/l10n";
 import { useAnchoredTooltip } from "../hooks/useAnchoredTooltip";
 
 interface InfoIconProps {
@@ -30,13 +31,13 @@ export function InfoIcon({ fieldKey, description, defaultValue }: InfoIconProps)
       <button
         ref={iconRef}
         className="info-icon-button"
-        aria-label={`Help for ${fieldKey}`}
+        aria-label={l10n.t("Help for {0}", fieldKey)}
         aria-expanded={visible}
         onClick={(e) => {
           e.stopPropagation();
           setVisible((v) => !v);
         }}
-        title="Click for help"
+        title={l10n.t("Click for help")}
       >
         <span className="codicon codicon-info"></span>
       </button>
@@ -48,7 +49,7 @@ export function InfoIcon({ fieldKey, description, defaultValue }: InfoIconProps)
           </div>
           {defaultValue !== undefined && (
             <div className="help-section">
-              <strong>Default</strong>
+              <strong>{l10n.t("Default")}</strong>
               <code>{String(defaultValue)}</code>
             </div>
           )}

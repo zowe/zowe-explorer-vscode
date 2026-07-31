@@ -10,7 +10,6 @@ interface PanelsProps {
   renderProfileDetails: () => React.ReactNode;
   onProfileWizard: () => void;
   onViewModeToggle: () => void;
-  onOpenRawFile: (filePath: string) => void;
   onClearChanges: () => void;
   onSaveAll: () => void;
   hasPendingChanges: boolean;
@@ -22,7 +21,6 @@ export function Panels({
   renderProfileDetails,
   onProfileWizard,
   onViewModeToggle,
-  onOpenRawFile,
   onClearChanges,
   onSaveAll,
   hasPendingChanges,
@@ -38,13 +36,15 @@ export function Panels({
 
   const { viewMode, defaultsCollapsed, profilesCollapsed, profileSortOrder } = configEditorSettings;
 
-  const PROFILE_SORT_OPTIONS = ["natural", "alphabetical", "reverse-alphabetical"] as const;
+  const PROFILE_SORT_OPTIONS = ["natural", "alphabetical", "reverse-alphabetical", "type", "defaults"] as const;
   type ProfileSortOrder = (typeof PROFILE_SORT_OPTIONS)[number];
 
   const profileSortDisplayNames: Record<ProfileSortOrder, string> = {
     natural: l10n.t("Natural"),
     alphabetical: l10n.t("Alphabetical"),
     "reverse-alphabetical": l10n.t("Reverse Alphabetical"),
+    type: l10n.t("By Type"),
+    defaults: l10n.t("By Defaults"),
   };
 
   const toggleDefaultsCollapse = () => {
@@ -85,15 +85,6 @@ export function Panels({
                   <span className={`codicon ${profilesCollapsed ? "codicon-chevron-right" : "codicon-chevron-down"}`}></span>
                   <h2 style={{ margin: 0, fontSize: "16px" }}>{l10n.t("Profiles")}</h2>
                 </button>
-                {/* Hidden anchor for the integration test — always in the DOM regardless of collapse state */}
-                <button
-                  style={{ display: "none" }}
-                  onClick={() => {
-                    const configPath = selectedTab !== null ? configurations[selectedTab]?.configPath : undefined;
-                    if (configPath) onOpenRawFile(configPath);
-                  }}
-                  data-testid="open-config-file"
-                />
                 {!profilesCollapsed && (
                   <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
                     <SortDropdown

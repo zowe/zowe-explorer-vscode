@@ -13,23 +13,10 @@ import { When, Then } from "@cucumber/cucumber";
 import { Key } from "webdriverio";
 import * as fs from "fs";
 import * as path from "path";
-
-When("a user clicks the open config file button", async () => {
-    // The button lives inside the webview iframe — switch into it first.
-    const workbench = await browser.getWorkbench();
-    const webview = (await workbench.getAllWebviews())[0];
-    await webview.wait();
-    await webview.open();
-
-    const openFileBtn = await browser.$(`[data-testid="open-config-file"]`);
-    await openFileBtn.waitForExist({ timeout: 5000 });
-    // The button is hidden from the UI; use a JS click so WebDriver doesn't reject it.
-    await browser.execute((el: HTMLElement) => el.click(), openFileBtn);
-
-    await webview.close();
-});
+import { dismissTutorialOverlay } from "./profileListHelpers";
 
 When("a user right clicks a configuration tab and clicks open schema", async () => {
+    await dismissTutorialOverlay();
     const tab = await browser.$(`[id="global:true,user:false"]`);
     await tab.waitForExist({ timeout: 1000 });
     await tab.click({ button: "right" });
@@ -40,6 +27,7 @@ When("a user right clicks a configuration tab and clicks open schema", async () 
 });
 
 When("a user clicks the add configuration layer button", async () => {
+    await dismissTutorialOverlay();
     const addConfigButton = await browser.$(`[id="add-config-layer-button"]`);
     await addConfigButton.waitForExist({ timeout: 1000 });
     await addConfigButton.click({ button: "left" });
@@ -59,6 +47,7 @@ Then("close the current tab", async () => {
 });
 
 When("a user right clicks a configuration tab and clicks toggle autostore", async () => {
+    await dismissTutorialOverlay();
     const tab = await browser.$(`.tab`);
     await tab.waitForExist({ timeout: 1000 });
     await tab.click({ button: "right" });

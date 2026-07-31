@@ -470,6 +470,7 @@
   "Clear filter for PDS": "Clear filter for PDS",
   "Clear filter for profile": "Clear filter for profile",
   "Clear search": "Clear search",
+  "Click for help": "Click for help",
   "Click on a filter to change its value": "Click on a filter to change its value",
   "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:": "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:",
   "Click to navigate to profile": "Click to navigate to profile",
@@ -597,6 +598,7 @@
   "Date Created": "Date Created",
   "Date Modified": "Date Modified",
   "Date Submitted": "Date Submitted",
+  "Default": "Default",
   "Default encoding is {0}/Encoding name": {
     "message": "Default encoding is {0}",
     "comment": [
@@ -1353,6 +1355,7 @@
   "Group": "Group",
   "Grouped Common methods into Singleton classes. <a>#2109</a>": "Grouped Common methods into Singleton classes. <a>#2109</a>",
   "Header actions": "Header actions",
+  "Help for {0}": "Help for {0}",
   "Hide merged": "Hide merged",
   "Hide Profile": "Hide Profile",
   "Hide profile name from tree view": "Hide profile name from tree view",
