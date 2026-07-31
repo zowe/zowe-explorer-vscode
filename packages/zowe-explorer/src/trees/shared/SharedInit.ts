@@ -52,6 +52,7 @@ import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { CertificateWizard } from "../../utils/CertificateWizard";
 import { ConfigEditor } from "../../utils/ConfigEditor";
+import { ConfigUtils } from "../../utils/ConfigUtils";
 import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 import { ZoweUriHandler } from "../../utils/UriHandler";
 import { TroubleshootError } from "../../utils/TroubleshootError";
@@ -830,65 +831,6 @@ export class SharedInit {
     }
 
     /**
-     * Strips JSONC-style line comments, block comments, and trailing commas from source,
-     * respecting quoted string boundaries so that URL-like sequences inside string values
-     * are left untouched.
-     */
-    private static stripJsoncToJson(source: string): string {
-        let result = "";
-        let i = 0;
-        const len = source.length;
-
-        while (i < len) {
-            const ch = source[i];
-
-            // Quoted string — copy verbatim, handling escape sequences.
-            if (ch === '"') {
-                result += ch;
-                i++;
-                while (i < len) {
-                    const sc = source[i];
-                    result += sc;
-                    i++;
-                    if (sc === "\\") {
-                        // Copy the escaped character as-is and keep scanning.
-                        if (i < len) {
-                            result += source[i];
-                            i++;
-                        }
-                    } else if (sc === '"') {
-                        break;
-                    }
-                }
-                continue;
-            }
-
-            // Possible comment start.
-            if (ch === "/" && i + 1 < len) {
-                const next = source[i + 1];
-                if (next === "/") {
-                    // Line comment — skip to end of line.
-                    while (i < len && source[i] !== "\n") i++;
-                    continue;
-                }
-                if (next === "*") {
-                    // Block comment — skip to closing */.
-                    i += 2;
-                    while (i + 1 < len && !(source[i] === "*" && source[i + 1] === "/")) i++;
-                    i += 2; // consume closing */
-                    continue;
-                }
-            }
-
-            result += ch;
-            i++;
-        }
-
-        // Remove trailing commas before } or ] (safe to do with regex after comments are gone).
-        return result.replace(/,(\s*[}\]])/g, "$1");
-    }
-
-    /**
      * Resolves the profile name, profile type, and property key at the editor's current cursor
      * position inside a zowe.config*.json file.
      *
@@ -924,7 +866,7 @@ export class SharedInit {
         // strip them before parsing so JSON.parse doesn't fail.
         // The stripping must respect string boundaries so that sequences like "https://..."
         // inside quoted values are not mistakenly treated as comments.
-        const stripped = SharedInit.stripJsoncToJson(text);
+        const stripped = ConfigUtils.stripJsoncToJson(text);
         let json: Record<string, any>;
         try {
             json = JSON.parse(stripped);

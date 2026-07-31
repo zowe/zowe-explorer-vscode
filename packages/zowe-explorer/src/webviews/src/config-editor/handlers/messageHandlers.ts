@@ -265,6 +265,13 @@ export const handleMergedPropertiesMessage = (data: MergedPropertiesMessagePaylo
         return;
     }
 
+    if (data.error) {
+        console.error("Failed to get merged properties:", data.error);
+        setMergedProperties(null);
+        setPendingMergedPropertiesRequest(null);
+        return;
+    }
+
     // Store the full merged properties data including jsonLoc and osLoc information
     const mergedPropsData: MergedPropertiesMap = {};
     if (Array.isArray(data.mergedArgs)) {
@@ -427,6 +434,37 @@ export const handleLocalStorageValueMessage = (data: LocalStorageValueMessagePay
     }
 };
 
+interface LocalStorageErrorMessagePayload {
+    key?: string;
+    error?: string;
+}
+
+// Handle LOCAL_STORAGE_ERROR message
+export const handleLocalStorageErrorMessage = (data: LocalStorageErrorMessagePayload, props: MessageHandlerProps) => {
+    const { setConfigEditorSettings, setSortOrderVersion } = props;
+    console.error(`Local storage operation failed for key "${data.key}":`, data.error);
+
+    // If reading/writing the editor settings failed, fall back to defaults so the UI isn't left uninitialized.
+    if (data.key === CONFIG_EDITOR_SETTINGS_KEY) {
+        const defaultSettings: ConfigEditorSettings = {
+            showMergedProperties: "show",
+            viewMode: "tree",
+            propertySortOrder: "alphabetical",
+            profileSortOrder: "natural",
+            profilesWidthPercent: 35,
+            defaultsCollapsed: true,
+            profilesCollapsed: false,
+        };
+        setConfigEditorSettings(defaultSettings);
+        setSortOrderVersion((prev) => prev + 1);
+    }
+};
+
+// Handle LOCAL_STORAGE_SET_SUCCESS message (acknowledgement only; nothing for the UI to react to today)
+export const handleLocalStorageSetSuccessMessage = (_data: { key?: string }, _props: MessageHandlerProps) => {
+    // no-op — explicitly handled so this ack isn't silently dropped as an unrecognized command
+};
+
 // Handle RELOAD message
 export const handleReloadMessage = (props: MessageHandlerProps) => {
     const {
@@ -522,6 +560,12 @@ export const handleMessage = (event: MessageEvent, props: MessageHandlerProps) =
             break;
         case "LOCAL_STORAGE_VALUE":
             handleLocalStorageValueMessage(event.data, props);
+            break;
+        case "LOCAL_STORAGE_ERROR":
+            handleLocalStorageErrorMessage(event.data, props);
+            break;
+        case "LOCAL_STORAGE_SET_SUCCESS":
+            handleLocalStorageSetSuccessMessage(event.data, props);
             break;
         case "RELOAD":
             handleReloadMessage(props);

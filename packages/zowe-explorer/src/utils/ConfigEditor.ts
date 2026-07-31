@@ -107,13 +107,12 @@ export class ConfigEditor extends WebView {
 
         vscode.commands.executeCommand("workbench.action.keepEditor");
 
-        this.panel.onDidDispose(() => {});
-
-        this.context.subscriptions.push(
-            vscode.workspace.onDidSaveTextDocument((doc) => {
-                void this.onDidSaveDocumentForParseErrors(doc);
-            })
-        );
+        const saveListener = vscode.workspace.onDidSaveTextDocument((doc) => {
+            void this.onDidSaveDocumentForParseErrors(doc);
+        });
+        this.panel.onDidDispose(() => {
+            saveListener.dispose();
+        });
 
         void this.initializeWebview();
     }
@@ -184,7 +183,7 @@ export class ConfigEditor extends WebView {
                 }
                 try {
                     const raw = fs.readFileSync(resolved, { encoding: "utf8" });
-                    JSON.parse(raw);
+                    JSON.parse(ConfigUtils.stripJsoncToJson(raw));
                 } catch (err) {
                     const errorMessage = err instanceof Error ? err.message : String(err);
                     pushParseError(parseErrors, resolved, `Error reading or parsing file ${resolved}: ${errorMessage}`);
@@ -510,6 +509,11 @@ export class ConfigEditor extends WebView {
                     const errorMessage = error instanceof Error ? error.message : String(error);
                     console.error("Failed to get merged properties:", errorMessage);
                     vscode.window.showErrorMessage(`Cannot show merged properties: ${errorMessage}`);
+                    await this.panel.webview.postMessage({
+                        command: "MERGED_PROPERTIES",
+                        error: errorMessage,
+                        mergedPropertiesRequestSeq: message.mergedPropertiesRequestSeq,
+                    });
                 }
                 break;
             }

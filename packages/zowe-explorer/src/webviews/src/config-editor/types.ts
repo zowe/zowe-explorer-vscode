@@ -174,4 +174,5 @@ export interface MergedArgItem {
 export interface MergedPropertiesMessagePayload {
     mergedPropertiesRequestSeq?: number;
     mergedArgs?: MergedArgItem[];
+    error?: string;
 }
