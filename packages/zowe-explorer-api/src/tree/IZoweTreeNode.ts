@@ -196,6 +196,12 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
     inFilterPrompt?: boolean;
 
     /**
+     * If this node represents an alias, this field will contain the data set name
+     * that the alias points to if the MVS API for its profile supports resolving aliases.
+     */
+    aliasTargetDsn?: string;
+
+    /**
      * Retrieves child nodes of this IZoweDatasetTreeNode
      *
      * @returns {Promise<IZoweDatasetTreeNode[]>}

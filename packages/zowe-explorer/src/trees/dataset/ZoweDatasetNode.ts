@@ -73,6 +73,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public favoritedMemberNames?: string[];
     public wasPds?: boolean;
     public justRecalled?: boolean;
+    public aliasTargetDsn?: string;
 
     private paginator?: Paginator<IZosFilesResponse>;
     private paginatorData?: {
@@ -106,6 +107,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.tooltip = toolTipList.join("\n");
         } else {
             this.tooltip = this.label as string;
+        }
+        if (opts.aliasTargetDsn) {
+            this.tooltip += `\n${vscode.l10n.t("Alias to: ")}${opts.aliasTargetDsn}`;
+            this.aliasTargetDsn = opts.aliasTargetDsn;
         }
         const icon = IconGenerator.getIconByNode(this);
         if (icon) {
@@ -416,14 +421,20 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     dsNode.wasPds = item.dsorg?.startsWith("PO");
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.vol === "*ALIAS") {
-                    // todo need to conditionally set collapsible state based on whether alias points to PDS
-                    // const membersList = await mvsApi.allMembers
-                    const isAliasPDS = await this.checkIsAliasPDS(item);
+
+                    const resolvedAlias = await this.resolveAlias(item);
+                    item.dsorg ??= resolvedAlias.dsorg;
+                    item.recfm ??= resolvedAlias.recfm;
+                    item.blksz ??= resolvedAlias.blksz;
+
                     dsNode = new ZoweDatasetNode({
                         label: item.dsname,
-                        collapsibleState: isAliasPDS ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
+                        collapsibleState: item.dsorg?.startsWith("PO") ?
+                            vscode.TreeItemCollapsibleState.Collapsed :
+                            vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         profile: cachedProfile,
+                        aliasTargetDsn: resolvedAlias?.dsname,
                     });
                     elementChildren[dsNode.label.toString()] = dsNode;
 
@@ -893,6 +904,40 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         };
     }
 
+    private async resolveAlias(item: IZosmfListResponse): Promise<IZosmfListResponse> {
+
+        const profile = Profiles.getInstance()?.loadNamedProfile(this.getProfile().name);
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+        if (mvsApi.resolveAlias) {
+            try {
+                const resolution = await mvsApi.resolveAlias(item.dsname);
+                if (resolution.apiResponse.targetDsn) {
+                    const originalAttributes = await mvsApi.dataSet(resolution.apiResponse.targetDsn, { attributes: true });
+                    ZoweLogger.info(`[ZoweDatasetNode.resolveAlias] Resolved alias ${item.dsname} to ${resolution.apiResponse.targetDsn}.` +
+                        ` Retrieving attributes of the original data set.`)
+                    const matchingOriginal = (originalAttributes.apiResponse.items ?? originalAttributes.apiResponse) as IZosmfListResponse[];
+                    if (matchingOriginal.length > 0) {
+                        return {
+                            ...item,
+                            dsorg: matchingOriginal[0].dsorg,
+                            // todo more attributes? 
+                            recfm: matchingOriginal[0].recfm,
+                            blksz: matchingOriginal[0].blksz,
+                            dsname: resolution.apiResponse.targetDsn
+                        };
+                    }
+                }
+
+            }
+            catch (e) {
+                ZoweLogger.error("[ZoweDatasetNode.resolveAlias] Encountered an error trying to  " + e);
+            }
+        } else {
+            ZoweLogger.warn(`[ZoweDatasetNode.resolveAlias] MVS API for ${profile.type} does not implement resolveAlias. Alias ${item.dsname} will not be resolved.`);
+        }
+        return item;
+    }
+
     public async listDatasets(responses: IZosFilesResponse[], options?: Definitions.DatasetListOpts): Promise<void> {
         const dsPatterns = [
             ...new Set(
@@ -1132,17 +1177,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
         return responses;
     }
-    /**
-     * Try to determine whether a dataset 
-     * @param item 
-     */
-    private async checkIsAliasPDS(item: IZosmfListResponse): Promise<boolean> {
-        const profile = Profiles.getInstance()?.loadNamedProfile(this.getProfile().name);
-        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
 
-        const members = await mvsApi.allMembers(item.dsname);
-        return true; // todo 
-    }
     public async openDs(forceDownload: boolean, _previewMember: boolean, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
         ZoweLogger.trace("ZoweDatasetNode.openDs called.");
         await datasetProvider.checkCurrentProfile(this);
