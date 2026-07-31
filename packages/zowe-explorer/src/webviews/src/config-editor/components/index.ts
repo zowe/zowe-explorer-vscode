@@ -29,3 +29,5 @@ export { RenderProfiles } from "./renderProfiles";
 export { RenderProfileDetails } from "./RenderProfileDetails";
 export { RenderDefaults } from "./renderDefaults";
 export { WizardManager } from "./WizardManager";
+export { TutorialOverlay } from "./TutorialOverlay";
+export { InfoIcon } from "./InfoIcon";

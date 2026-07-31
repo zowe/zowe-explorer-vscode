@@ -775,16 +775,14 @@ describe("Test src/shared/extension", () => {
                     reveal: vi.fn(),
                     visible: true,
                 },
-                userSubmission: {
-                    promise: Promise.resolve("success"),
-                },
             };
             (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
 
             const result = await cmd({});
 
             expect(ConfigEditor).toHaveBeenCalled();
-            expect(result).toBe("success");
+            // Command now returns the ConfigEditor instance directly (no longer awaits userSubmission)
+            expect(result).toBe(mockConfigEditorInstance);
         });
 
         it("should reuse existing ConfigEditor if one exists (zowe.configEditor)", async () => {
@@ -827,14 +825,14 @@ describe("Test src/shared/extension", () => {
                     reveal: vi.fn(),
                     webview: { postMessage: vi.fn() },
                 },
-                initialSelection: null as any,
                 userSubmission: { promise: Promise.resolve() }, // Add promise to prevent await issues if returned
             };
             (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
 
             const result = await cmd("prof1", "path/1", "type1");
 
-            expect(mockConfigEditorInstance.initialSelection).toEqual({
+            // initialSelection is now passed directly to the constructor so it's set before GET_PROFILES fires
+            expect(ConfigEditor).toHaveBeenCalledWith(testContext, {
                 profileName: "prof1",
                 configPath: "path/1",
                 profileType: "type1",
@@ -1386,6 +1384,428 @@ describe("Test src/shared/extension", () => {
             expect(result).toBe(false);
             expect(spyLookup).toHaveBeenCalledWith(testUri, false);
             expect(spyIsSpoolEntry).toHaveBeenCalledWith(undefined);
+        });
+    });
+
+    describe("resolveZoweConfigCursorContext", () => {
+        /**
+         * Builds a fake VS Code text editor stub that resolveZoweConfigCursorContext
+         * will accept for the given configPath.
+         */
+        function makeEditor(configPath: string, text: string, cursorLine: number, charOffset: number): any {
+            return {
+                document: {
+                    uri: { fsPath: configPath },
+                    getText: () => text,
+                    offsetAt: () => charOffset,
+                },
+                selection: {
+                    active: { line: cursorLine },
+                },
+            };
+        }
+
+        const SAMPLE_JSON = JSON.stringify(
+            {
+                profiles: {
+                    zosmf: {
+                        type: "zosmf",
+                        properties: {
+                            host: "zos.example.com",
+                            port: 443,
+                        },
+                    },
+                    base: {
+                        type: "base",
+                        properties: {
+                            tokenType: "apimlAuthenticationToken",
+                        },
+                    },
+                },
+                defaults: {},
+            },
+            null,
+            2
+        );
+
+        // Save and restore visibleTextEditors around each test
+        let _savedVisible: any[];
+        let _savedActive: any;
+        beforeEach(() => {
+            _savedVisible = (vscode.window as any).visibleTextEditors;
+            _savedActive = (vscode.window as any).activeTextEditor;
+        });
+        afterEach(() => {
+            Object.defineProperty(vscode.window, "visibleTextEditors", { value: _savedVisible, configurable: true, writable: true });
+            Object.defineProperty(vscode.window, "activeTextEditor", { value: _savedActive, configurable: true, writable: true });
+            vi.restoreAllMocks();
+        });
+
+        function setEditors(visible: any[], active?: any) {
+            Object.defineProperty(vscode.window, "visibleTextEditors", { value: visible, configurable: true, writable: true });
+            Object.defineProperty(vscode.window, "activeTextEditor", { value: active, configurable: true, writable: true });
+        }
+
+        it("returns undefined when no active editor is open", () => {
+            setEditors([], undefined);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeUndefined();
+        });
+
+        it("returns undefined when the active editor is for a different file", () => {
+            const editor = makeEditor("/other/file.json", "{}", 0, 0);
+            setEditors([], editor);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeUndefined();
+        });
+
+        it("returns undefined when the JSON is invalid", () => {
+            const editor = makeEditor("/path/to/zowe.config.json", "not valid json", 0, 0);
+            setEditors([editor], editor);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeUndefined();
+        });
+
+        it("returns undefined when cursor is not inside any profile block", () => {
+            // cursor at offset 0 — top-level object start, not inside profiles
+            const editor = makeEditor("/path/to/zowe.config.json", SAMPLE_JSON, 0, 0);
+            setEditors([editor]);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeUndefined();
+        });
+
+        it("resolves profileName and profileType when cursor is inside a named profile block", () => {
+            const hostKeyOffset = SAMPLE_JSON.indexOf('"host"');
+            const cursorLine = SAMPLE_JSON.substring(0, hostKeyOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", SAMPLE_JSON, cursorLine, hostKeyOffset);
+            setEditors([editor]);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeDefined();
+            expect(result!.profileName).toBe("zosmf");
+            expect(result!.profileType).toBe("zosmf");
+        });
+
+        it("resolves propertyKey when cursor is on a direct property line inside properties block", () => {
+            const hostOffset = SAMPLE_JSON.indexOf('"host"');
+            const hostLine = SAMPLE_JSON.substring(0, hostOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", SAMPLE_JSON, hostLine, hostOffset);
+            setEditors([editor]);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeDefined();
+            expect(result!.profileName).toBe("zosmf");
+            expect(result!.profileType).toBe("zosmf");
+            expect(result!.propertyKey).toBe("host");
+        });
+
+        it("resolves propertyKey for 'port' inside properties block", () => {
+            const portOffset = SAMPLE_JSON.indexOf('"port"');
+            const portLine = SAMPLE_JSON.substring(0, portOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", SAMPLE_JSON, portLine, portOffset);
+            setEditors([editor]);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result!.propertyKey).toBe("port");
+        });
+
+        it("resolves propertyKey for the second profile ('base')", () => {
+            const tokenOffset = SAMPLE_JSON.indexOf('"tokenType"');
+            const tokenLine = SAMPLE_JSON.substring(0, tokenOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", SAMPLE_JSON, tokenLine, tokenOffset);
+            setEditors([editor]);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeDefined();
+            expect(result!.profileName).toBe("base");
+            expect(result!.profileType).toBe("base");
+            expect(result!.propertyKey).toBe("tokenType");
+        });
+
+        it("leaves propertyKey undefined when cursor is on the profile 'type' line (not inside properties)", () => {
+            const typeOffset = SAMPLE_JSON.indexOf('"type": "zosmf"');
+            const typeLine = SAMPLE_JSON.substring(0, typeOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", SAMPLE_JSON, typeLine, typeOffset);
+            setEditors([editor]);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeDefined();
+            expect(result!.profileName).toBe("zosmf");
+            expect(result!.propertyKey).toBeUndefined();
+        });
+
+        it("uses the visibleTextEditors match when available (does not fall back to activeTextEditor)", () => {
+            const correctEditor = makeEditor("/path/to/zowe.config.json", SAMPLE_JSON, 0, 0);
+            const wrongEditor = makeEditor("/other/path.json", "{}", 0, 0);
+            setEditors([correctEditor], wrongEditor);
+            // Cursor at offset 0 is not inside a profiles block → undefined result
+            // but the function did not bail out due to path mismatch
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeUndefined(); // correct editor selected, but cursor not inside profiles
+        });
+
+        it("returns the full dot-qualified profile name for a nested profile", () => {
+            const NESTED_JSON = JSON.stringify(
+                {
+                    profiles: {
+                        lpar1: {
+                            type: "zosmf",
+                            profiles: {
+                                ssh: {
+                                    type: "ssh",
+                                    properties: {
+                                        host: "lpar1.example.com",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    defaults: {},
+                },
+                null,
+                2
+            );
+            const hostOffset = NESTED_JSON.indexOf('"host"');
+            const hostLine = NESTED_JSON.substring(0, hostOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", NESTED_JSON, hostLine, hostOffset);
+            setEditors([editor]);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeDefined();
+            // Profile name must be the full dot-qualified path, not just "ssh"
+            expect(result!.profileName).toBe("lpar1.ssh");
+            expect(result!.profileType).toBe("ssh");
+            expect(result!.propertyKey).toBe("host");
+        });
+
+        it("resolves a config file that contains JSONC line comments", () => {
+            const jsonWithLineComments = [
+                "{",
+                '  "profiles": {',
+                '    // This is a comment',
+                '    "zosmf": {',
+                '      "type": "zosmf",',
+                '      "properties": {',
+                '        "host": "zos.example.com" // inline comment',
+                "      }",
+                "    }",
+                "  },",
+                '  "defaults": {}',
+                "}",
+            ].join("\n");
+            const hostOffset = jsonWithLineComments.indexOf('"host"');
+            const hostLine = jsonWithLineComments.substring(0, hostOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", jsonWithLineComments, hostLine, hostOffset);
+            setEditors([editor]);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeDefined();
+            expect(result!.profileName).toBe("zosmf");
+            expect(result!.profileType).toBe("zosmf");
+            expect(result!.propertyKey).toBe("host");
+        });
+
+        it("resolves a config file that contains JSONC block comments", () => {
+            const jsonWithBlockComments = [
+                "{",
+                '  "profiles": {',
+                '    /* block comment */',
+                '    "zosmf": {',
+                '      "type": "zosmf",',
+                '      "properties": {',
+                '        "host": "zos.example.com"',
+                "      }",
+                "    }",
+                "  },",
+                '  "defaults": {}',
+                "}",
+            ].join("\n");
+            const hostOffset = jsonWithBlockComments.indexOf('"host"');
+            const hostLine = jsonWithBlockComments.substring(0, hostOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", jsonWithBlockComments, hostLine, hostOffset);
+            setEditors([editor]);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeDefined();
+            expect(result!.profileName).toBe("zosmf");
+            expect(result!.propertyKey).toBe("host");
+        });
+
+        it("does not strip // inside a quoted string value (e.g. a URL)", () => {
+            const jsonWithUrl = [
+                "{",
+                '  "profiles": {',
+                '    "zosmf": {',
+                '      "type": "zosmf",',
+                '      "properties": {',
+                '        "basePath": "https://my.host/api/v1"',
+                "      }",
+                "    }",
+                "  },",
+                '  "defaults": {}',
+                "}",
+            ].join("\n");
+            const basePathOffset = jsonWithUrl.indexOf('"basePath"');
+            const basePathLine = jsonWithUrl.substring(0, basePathOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", jsonWithUrl, basePathLine, basePathOffset);
+            setEditors([editor]);
+            // The URL inside the string must not be treated as a line comment.
+            // If it were, JSON.parse would fail and result would be undefined.
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeDefined();
+            expect(result!.profileName).toBe("zosmf");
+            expect(result!.propertyKey).toBe("basePath");
+        });
+
+        it("resolves a config file that contains trailing commas", () => {
+            const jsonWithTrailingCommas = [
+                "{",
+                '  "profiles": {',
+                '    "zosmf": {',
+                '      "type": "zosmf",',
+                '      "properties": {',
+                '        "host": "zos.example.com",',
+                "      },",
+                "    },",
+                "  },",
+                '  "defaults": {},',
+                "}",
+            ].join("\n");
+            const hostOffset = jsonWithTrailingCommas.indexOf('"host"');
+            const hostLine = jsonWithTrailingCommas.substring(0, hostOffset).split("\n").length - 1;
+            const editor = makeEditor("/path/to/zowe.config.json", jsonWithTrailingCommas, hostLine, hostOffset);
+            setEditors([editor]);
+            const result = SharedInit.resolveZoweConfigCursorContext("/path/to/zowe.config.json");
+            expect(result).toBeDefined();
+            expect(result!.profileName).toBe("zosmf");
+            expect(result!.propertyKey).toBe("host");
+        });
+    });
+
+    describe("zowe.configEditor with cursor context (propertyKey forwarding)", () => {
+        let registeredCommands: { [key: string]: (...args: any[]) => any };
+        const testContext: any = { subscriptions: [] };
+
+        beforeEach(() => {
+            registeredCommands = {};
+            testContext.subscriptions = [];
+            vi.spyOn(vscode.commands, "registerCommand").mockImplementation((command, callback) => {
+                registeredCommands[command] = callback;
+                return { dispose: vi.fn() } as any;
+            });
+            vi.spyOn(vscode.window, "registerWebviewPanelSerializer").mockReturnValue({ dispose: vi.fn() } as any);
+            vi.spyOn(vscode.window, "registerWebviewViewProvider").mockReturnValue({ dispose: vi.fn() } as any);
+            vi.spyOn(vscode.workspace, "onDidChangeConfiguration").mockReturnValue({ dispose: vi.fn() } as any);
+            vi.spyOn(ConsoleCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: vi.fn() } as any);
+            vi.spyOn(TsoCommandHandler, "getInstance").mockReturnValue({ issueTsoCommand: vi.fn() } as any);
+            vi.spyOn(UnixCommandHandler, "getInstance").mockReturnValue({ issueUnixCommand: vi.fn() } as any);
+            vi.spyOn(TableViewProvider, "getInstance").mockReturnValue({} as any);
+            vi.spyOn(SharedHistoryView, "SharedHistoryView").mockImplementation();
+        });
+
+        afterEach(() => {
+            vi.clearAllMocks();
+        });
+
+        it("forwards propertyKey to panel.webview.postMessage when reusing an existing ConfigEditor", async () => {
+            SharedInit.registerCommonCommands(testContext, {} as any);
+            const cmd = registeredCommands["zowe.configEditor"];
+
+            const mockConfigEditorInstance = {
+                panel: {
+                    onDidDispose: vi.fn(),
+                    dispose: vi.fn(),
+                    reveal: vi.fn(),
+                    visible: true,
+                    webview: { postMessage: vi.fn().mockResolvedValue(true) },
+                },
+                initialSelection: {} as any,
+                userSubmission: { promise: Promise.resolve("success") },
+            };
+            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+
+            // First call — creates the instance
+            await cmd(undefined); // no URI → no cursor context
+            expect(ConfigEditor).toHaveBeenCalledTimes(1);
+
+            // Stub resolveZoweConfigCursorContext to return a cursor context with propertyKey
+            const resolveSpy = vi
+                .spyOn(SharedInit, "resolveZoweConfigCursorContext")
+                .mockReturnValue({ profileName: "zosmf", profileType: "zosmf", propertyKey: "host" });
+
+            // Second call with a real vscode.Uri — should reuse and post INITIAL_SELECTION including propertyKey
+            const fakeUri = vscode.Uri.file("/home/user/.zowe/zowe.config.json");
+            const result = await cmd(fakeUri);
+
+            expect(ConfigEditor).toHaveBeenCalledTimes(1); // still reusing
+            expect(mockConfigEditorInstance.panel.reveal).toHaveBeenCalled();
+            expect(mockConfigEditorInstance.panel.webview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    command: "INITIAL_SELECTION",
+                    profileName: "zosmf",
+                    profileType: "zosmf",
+                    propertyKey: "host",
+                    configPath: "/home/user/.zowe/zowe.config.json",
+                })
+            );
+            expect(result).toBe(mockConfigEditorInstance);
+            resolveSpy.mockRestore();
+        });
+
+        it("sets initialSelection with propertyKey on new ConfigEditor when created with URI", async () => {
+            SharedInit.registerCommonCommands(testContext, {} as any);
+            const cmd = registeredCommands["zowe.configEditor"];
+
+            const mockConfigEditorInstance = {
+                panel: {
+                    onDidDispose: vi.fn(),
+                    dispose: vi.fn(),
+                    reveal: vi.fn(),
+                    visible: true,
+                    webview: { postMessage: vi.fn() },
+                },
+                userSubmission: { promise: Promise.resolve("done") },
+            };
+            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+
+            const resolveSpy = vi
+                .spyOn(SharedInit, "resolveZoweConfigCursorContext")
+                .mockReturnValue({ profileName: "zosmf", profileType: "zosmf", propertyKey: "port" });
+
+            const fakeUri = vscode.Uri.file("/home/user/.zowe/zowe.config.json");
+            await cmd(fakeUri);
+
+            // initialSelection is now passed directly to the constructor so it's set before GET_PROFILES fires
+            expect(ConfigEditor).toHaveBeenCalledWith(testContext, {
+                profileName: "zosmf",
+                configPath: "/home/user/.zowe/zowe.config.json",
+                profileType: "zosmf",
+                propertyKey: "port",
+            });
+            resolveSpy.mockRestore();
+        });
+
+        it("does not set propertyKey on initialSelection when cursor context returns undefined", async () => {
+            SharedInit.registerCommonCommands(testContext, {} as any);
+            const cmd = registeredCommands["zowe.configEditor"];
+
+            const mockConfigEditorInstance = {
+                panel: {
+                    onDidDispose: vi.fn(),
+                    dispose: vi.fn(),
+                    reveal: vi.fn(),
+                    visible: true,
+                    webview: { postMessage: vi.fn() },
+                },
+                userSubmission: { promise: Promise.resolve("done") },
+            };
+            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+
+            const resolveSpy = vi.spyOn(SharedInit, "resolveZoweConfigCursorContext").mockReturnValue(undefined);
+
+            const fakeUri = vscode.Uri.file("/home/user/.zowe/zowe.config.json");
+            await cmd(fakeUri);
+
+            // profileName/profileType default to "" when cursorContext is undefined; initialSelection passed to constructor
+            expect(ConfigEditor).toHaveBeenCalledWith(testContext, {
+                profileName: "",
+                configPath: "/home/user/.zowe/zowe.config.json",
+                profileType: "",
+                propertyKey: undefined,
+            });
+            resolveSpy.mockRestore();
         });
     });
 });

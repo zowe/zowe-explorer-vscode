@@ -500,7 +500,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Helper method which sets an icon of node and initiates reloading of tree
      * @param iconPath
      */
-    public setIcon(iconPath: vscode.IconPath): void {
+    public setIcon(iconPath: { light: vscode.Uri; dark: vscode.Uri }): void {
         ZoweLogger.trace("ZoweUSSNode.setIcon called.");
         this.iconPath = iconPath;
         // Use nodeDataChanged instead of refreshElement to avoid collapsing the tree

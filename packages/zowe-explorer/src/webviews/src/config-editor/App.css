@@ -6,6 +6,58 @@ body {
     overflow: hidden;
 }
 
+/* Property highlight blink animation — triggered when opening webview from editor cursor context */
+@keyframes property-blink {
+    0% {
+        background-color: transparent;
+    }
+    25% {
+        background-color: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 200, 0, 0.35));
+    }
+    50% {
+        background-color: transparent;
+    }
+    75% {
+        background-color: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 200, 0, 0.35));
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.property-highlight-blink {
+    animation: property-blink 0.9s ease-in-out forwards;
+    border-radius: 3px;
+}
+
+/* Profile highlight blink animation — triggered when navigating to a profile from the editor */
+@keyframes profile-blink {
+    0% {
+        outline: 2px solid transparent;
+    }
+    25% {
+        outline: 2px solid var(--vscode-focusBorder, rgba(0, 120, 212, 0.8));
+        background-color: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 200, 0, 0.25));
+    }
+    50% {
+        outline: 2px solid transparent;
+        background-color: transparent;
+    }
+    75% {
+        outline: 2px solid var(--vscode-focusBorder, rgba(0, 120, 212, 0.8));
+        background-color: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 200, 0, 0.25));
+    }
+    100% {
+        outline: 2px solid transparent;
+        background-color: transparent;
+    }
+}
+
+.profile-highlight-blink {
+    animation: profile-blink 1s ease-in-out forwards;
+    border-radius: 3px;
+}
+
 /* Drag and drop styles */
 .profile-tree-item.dragging {
     opacity: 0.5;
@@ -438,13 +490,21 @@ div:has(> .vscode-panel) {
 
 .config-label {
     font-weight: 500;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     margin-right: 8px;
     color: var(--vscode-editor-foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.config-label-text {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 100%;
+    min-width: 0;
 }
 
 .config-input {

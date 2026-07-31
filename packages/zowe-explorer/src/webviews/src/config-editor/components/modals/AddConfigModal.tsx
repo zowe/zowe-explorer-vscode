@@ -48,10 +48,10 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
         reason: hasProjectTeam
           ? "Already exists"
           : currentConfigs >= 4
-          ? "Maximum configurations reached"
-          : !hasWorkspace
-          ? "No current workspace"
-          : null,
+            ? "Maximum configurations reached"
+            : !hasWorkspace
+              ? "No current workspace"
+              : null,
       },
       {
         id: "global:false,user:true",
@@ -62,10 +62,10 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
         reason: hasProjectUser
           ? "Already exists"
           : currentConfigs >= 4
-          ? "Maximum configurations reached"
-          : !hasWorkspace
-          ? "No current workspace"
-          : null,
+            ? "Maximum configurations reached"
+            : !hasWorkspace
+              ? "No current workspace"
+              : null,
       },
     ];
 

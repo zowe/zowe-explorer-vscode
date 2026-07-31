@@ -152,3 +152,68 @@ describe("PersistentFilters Unit Test", () => {
         });
     });
 });
+
+describe("ZowePersistentFilters.reloadSessionsFromStorage", () => {
+    beforeEach(() => {
+        Object.defineProperty(ZoweLogger, "trace", { value: vi.fn(), configurable: true });
+    });
+
+    it("reloads mSessions from storage when persistence is true", () => {
+        const stored: any = { persistence: true, sessions: ["zosmf", "base"] };
+        const getSpy = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(stored);
+        const setSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined as any);
+
+        const pf = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
+        (pf as any).mSessions = [];
+
+        pf.reloadSessionsFromStorage();
+
+        expect((pf as any).mSessions).toEqual(["zosmf", "base"]);
+        getSpy.mockRestore();
+        setSpy.mockRestore();
+    });
+
+    it("does not update mSessions when persistence is false", () => {
+        const stored: any = { persistence: false, sessions: ["zosmf"] };
+        const getSpy = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(stored);
+        const setSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined as any);
+
+        const pf = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
+        (pf as any).mSessions = ["existing"];
+
+        pf.reloadSessionsFromStorage();
+
+        expect((pf as any).mSessions).toEqual(["existing"]);
+        getSpy.mockRestore();
+        setSpy.mockRestore();
+    });
+
+    it("sets mSessions to [] when storage sessions is missing", () => {
+        const stored: any = { persistence: true };
+        const getSpy = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(stored);
+        const setSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined as any);
+
+        const pf = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
+        (pf as any).mSessions = ["stale"];
+
+        pf.reloadSessionsFromStorage();
+
+        expect((pf as any).mSessions).toEqual([]);
+        getSpy.mockRestore();
+        setSpy.mockRestore();
+    });
+
+    it("does not update mSessions when storage returns undefined", () => {
+        const getSpy = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined as any);
+        const setSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined as any);
+
+        const pf = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset);
+        (pf as any).mSessions = ["original"];
+
+        pf.reloadSessionsFromStorage();
+
+        expect((pf as any).mSessions).toEqual(["original"]);
+        getSpy.mockRestore();
+        setSpy.mockRestore();
+    });
+});

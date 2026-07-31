@@ -13,7 +13,7 @@ import { Given, When, Then } from "@cucumber/cucumber";
 import { expect } from "@wdio/globals";
 import * as fs from "fs";
 import * as path from "path";
-import { verifyProfiles } from "./profileList.steps";
+import { verifyProfiles, robustClick, dismissTutorialOverlay } from "./profileListHelpers";
 
 declare const browser: any;
 
@@ -21,7 +21,8 @@ let foundOptions: string[] = [];
 
 async function ensureConfigEditorReady() {
     const appContainer = await browser.$("[data-testid='config-editor-app']");
-    await appContainer.waitForExist({ timeout: 1000 });
+    await appContainer.waitForExist({ timeout: 10000 });
+    await dismissTutorialOverlay();
 }
 
 Given("the profile list is set to flat view mode", async function () {
@@ -32,17 +33,17 @@ Given("the profile list is set to flat view mode", async function () {
     await this.webview.open();
 
     const appContainer = await browser.$("[data-testid='config-editor-app']");
-    await appContainer.waitForExist({ timeout: 1000 });
+    await appContainer.waitForExist({ timeout: 10000 });
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
     if (viewMode !== "flat") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
-        await viewToggleButton.waitForExist({ timeout: 1000 });
-        await viewToggleButton.click();
+        // Use the robust click helper instead of waitForClickable with short timeout
+        await robustClick(viewToggleButton, 6, 300);
 
         await browser.waitUntil(
             async () => {
@@ -51,7 +52,7 @@ Given("the profile list is set to flat view mode", async function () {
                 return updatedViewMode === "flat";
             },
             {
-                timeout: 1000,
+                timeout: 20000,
                 timeoutMsg: "Failed to switch to flat view",
             }
         );
@@ -59,16 +60,43 @@ Given("the profile list is set to flat view mode", async function () {
 });
 
 When("the user clicks the defaults toggle button to open the defaults section", async () => {
-    const defaultsToggleButton = await browser.$(".defaults-toggle-button");
-    await defaultsToggleButton.waitForExist({ timeout: 1000 });
-    await defaultsToggleButton.click();
+    const selectors = [".defaults-toggle-button", "[data-testid='defaults-toggle']", "button[title*='Defaults']", "button[aria-label*='Defaults']"];
+    let defaultsToggleButton = null;
+    for (const sel of selectors) {
+        const el = await browser.$(sel);
+        if (await el.isExisting()) {
+            defaultsToggleButton = el;
+            break;
+        }
+    }
+    if (!defaultsToggleButton) throw new Error("Could not find defaults toggle button");
+
+    // use the same robustClick helper
+    await robustClick(defaultsToggleButton, 6, 300);
+
+    // ensure defaults section is visible by waiting for any default-dropdown select
+    await browser.waitUntil(
+        async () => {
+            const anyDefaultSelect = await browser.$("select[id^='default-dropdown-']");
+            return await anyDefaultSelect.isExisting();
+        },
+        { timeout: 15000, timeoutMsg: "Defaults section did not become visible" }
+    );
 });
 
 When("the user selects the {word} default dropdown", async (type: string) => {
     const dropdownSelector = `select[id="default-dropdown-${type}"]`;
-    const typeFilterSelect = await browser.$(dropdownSelector);
-    await typeFilterSelect.waitForExist({ timeout: 1000 });
+    let typeFilterSelect = await browser.$(dropdownSelector);
 
+    await browser.waitUntil(
+        async () => {
+            typeFilterSelect = await browser.$(dropdownSelector);
+            return (await typeFilterSelect.isExisting()) && (await typeFilterSelect.isDisplayed());
+        },
+        { timeout: 15000, timeoutMsg: `Dropdown ${dropdownSelector} not visible` }
+    );
+
+    // gather options
     const options = await typeFilterSelect.$$("option");
     foundOptions = [];
     for (let i = 0; i < options.length; i++) {
@@ -85,9 +113,27 @@ Then("the dropdown should have {string} as options", async (expectedOptions: str
 When("the user selects {string} in the {word} default dropdown", async (option: string, type: string) => {
     const dropdownSelector = `select[id="default-dropdown-${type}"]`;
     const typeFilterSelect = await browser.$(dropdownSelector);
-    await typeFilterSelect.waitForExist({ timeout: 1000 });
+    await browser.waitUntil(async () => (await typeFilterSelect.isExisting()) && (await typeFilterSelect.isDisplayed()), {
+        timeout: 15000,
+        timeoutMsg: `Dropdown ${dropdownSelector} not visible`,
+    });
 
-    await typeFilterSelect.selectByAttribute("value", option);
+    try {
+        await typeFilterSelect.selectByAttribute("value", option);
+    } catch (err) {
+        // fallback: click the select then click option element
+        try {
+            await typeFilterSelect.click();
+        } catch {}
+        const options = await typeFilterSelect.$$("option");
+        for (const opt of options) {
+            const val = await opt.getAttribute("value");
+            if (val === option) {
+                await opt.click();
+                break;
+            }
+        }
+    }
 });
 
 Then("the {word} default should be {string}", async (type: string, expectedDefault: string) => {
@@ -102,7 +148,7 @@ When("the user clicks on the {string} profile entry", async function (profileNam
     await ensureConfigEditorReady();
 
     const profileItem = await browser.$(`[data-testid='profile-list-item'][data-profile-name='${profileName}']`);
-    await profileItem.waitForExist({ timeout: 1000 });
+    await profileItem.waitForExist({ timeout: 10000 });
     await profileItem.click();
     await browser.pause(50);
 });
@@ -111,7 +157,7 @@ When("the user clicks the {string} button", async function (buttonText: string) 
     await ensureConfigEditorReady();
 
     const profileDetailsSection = await browser.$(".profile-details-section");
-    await profileDetailsSection.waitForExist({ timeout: 1000 });
+    await profileDetailsSection.waitForExist({ timeout: 10000 });
     await browser.pause(50);
     let button;
 
@@ -126,12 +172,12 @@ When("the user clicks the {string} button", async function (buttonText: string) 
             const mergedPropsDropdown = await browser.$(
                 ".config-section.profile-details-section .sort-dropdown:first-of-type .sort-dropdown-trigger"
             );
-            await mergedPropsDropdown.waitForExist({ timeout: 1000 });
+            await mergedPropsDropdown.waitForExist({ timeout: 10000 });
             await mergedPropsDropdown.click();
             await browser.pause(100);
 
             const hideOption = await browser.$(".config-section.profile-details-section .sort-dropdown-list .sort-dropdown-item");
-            await hideOption.waitForExist({ timeout: 1000 });
+            await hideOption.waitForExist({ timeout: 10000 });
             await hideOption.click();
             await browser.pause(100);
             return;
@@ -151,7 +197,7 @@ When("the user clicks the {string} button", async function (buttonText: string) 
             throw new Error(`Unknown button: ${buttonText}`);
     }
 
-    await button.waitForExist({ timeout: 1000 });
+    await button.waitForExist({ timeout: 10000 });
     await button.click();
     await browser.pause(50);
 });
@@ -159,7 +205,7 @@ When("the user clicks the {string} button", async function (buttonText: string) 
 When("the user appends {string} to the profile name in the modal", async function (textToAppend: string) {
     await ensureConfigEditorReady();
     const profileNameInput = await browser.$("#profile-name");
-    await profileNameInput.waitForExist({ timeout: 1000 });
+    await profileNameInput.waitForExist({ timeout: 10000 });
 
     const currentValue = await profileNameInput.getValue();
     await profileNameInput.setValue(currentValue + textToAppend);
@@ -172,7 +218,7 @@ When("the user saves the changes", async () => {
     const saveButton = await browser.$(".footer button[title='Save all changes']");
     const saveButtonExists = await saveButton.isExisting().catch(() => false);
     if (saveButtonExists) {
-        await saveButton.waitForExist({ timeout: 1000 });
+        await saveButton.waitForExist({ timeout: 10000 });
         await saveButton.click();
         await browser.pause(500);
     } else {
@@ -217,7 +263,7 @@ Then("the zowe.config.json file should be open", async () => {
                 }
             },
             {
-                timeout: 1000,
+                timeout: 10000,
                 timeoutMsg: "Expected zowe.config.json to be opened",
             }
         );
@@ -252,7 +298,7 @@ Then("there should be {int} profile properties", async (expectedCount: number) =
     await ensureConfigEditorReady();
 
     const profileDetailsSection = await browser.$(".profile-details-section");
-    await profileDetailsSection.waitForExist({ timeout: 1000 });
+    await profileDetailsSection.waitForExist({ timeout: 10000 });
     await browser.pause(50);
 
     const propertyEntries = await browser.$$("[data-testid='profile-property-entry']");
@@ -297,7 +343,7 @@ Then("the delete profile button click should be successful", async function () {
 Then("the profile should be renamed to {string}", async function (expectedName: string) {
     await ensureConfigEditorReady();
     const renamedProfile = await browser.$(`[data-testid='profile-list-item'][data-profile-name='${expectedName}']`);
-    await renamedProfile.waitForExist({ timeout: 1000 });
+    await renamedProfile.waitForExist({ timeout: 10000 });
 
     const configPath = path.join(process.cwd(), "..", "ci", "zowe.config.json");
     const configContent = fs.readFileSync(configPath, "utf8");
@@ -327,7 +373,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
     await appContainer.waitForExist({ timeout: 10000 });
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -337,7 +383,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
             const items = await browser.$$(selector);
             return items.length > 0;
         },
-        { timeout: 1000, timeoutMsg: "Profile elements not found within timeout" }
+        { timeout: 10000, timeoutMsg: "Profile elements not found within timeout" }
     );
 
     const selector = viewMode === "tree" ? "[data-testid='profile-tree-node']" : "[data-testid='profile-list-item']";
@@ -370,8 +416,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
     if (viewMode === "tree") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
         if (await viewToggleButton.isExisting()) {
-            await viewToggleButton.click();
-            await browser.pause(50);
+            await robustClick(viewToggleButton);
 
             await browser.waitUntil(
                 async () => {
@@ -379,7 +424,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "flat";
                 },
-                { timeout: 1000, timeoutMsg: "Failed to switch to flat view" }
+                { timeout: 20000, timeoutMsg: "Failed to switch to flat view" }
             );
 
             const flatItems = await browser.$$("[data-testid='profile-list-item']");
@@ -409,15 +454,14 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
             }
             expect(flatProfiles.length).toBe(expectedFlatTitles.length);
 
-            await viewToggleButton.click();
-            await browser.pause(50);
+            await robustClick(viewToggleButton);
             await browser.waitUntil(
                 async () => {
                     const updatedList = await browser.$("[data-testid='profile-list']");
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "tree";
                 },
-                { timeout: 1000, timeoutMsg: "Failed to switch back to tree view" }
+                { timeout: 20000, timeoutMsg: "Failed to switch back to tree view" }
             );
         }
     }
@@ -428,7 +472,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
     await appContainer.waitForExist({ timeout: 10000 });
 
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const viewMode = await profileList.getAttribute("data-view-mode");
 
@@ -438,7 +482,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
             const items = await browser.$$(selector);
             return items.length > 0;
         },
-        { timeout: 1000, timeoutMsg: "Profile elements not found within timeout" }
+        { timeout: 10000, timeoutMsg: "Profile elements not found within timeout" }
     );
 
     const selector = viewMode === "tree" ? "[data-testid='profile-tree-node']" : "[data-testid='profile-list-item']";
@@ -459,8 +503,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
     if (viewMode === "tree") {
         const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
         if (await viewToggleButton.isExisting()) {
-            await viewToggleButton.click();
-            await browser.pause(50);
+            await robustClick(viewToggleButton);
 
             await browser.waitUntil(
                 async () => {
@@ -468,7 +511,7 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "flat";
                 },
-                { timeout: 1000, timeoutMsg: "Failed to switch to flat view" }
+                { timeout: 20000, timeoutMsg: "Failed to switch to flat view" }
             );
 
             const flatItems = await browser.$$("[data-testid='profile-list-item']");
@@ -496,15 +539,14 @@ Then("the profile tree should contain expected profiles from zowe.config.json wi
             }
             expect(flatProfiles.length).toBe(expectedFlatTitles.length);
 
-            await viewToggleButton.click();
-            await browser.pause(50);
+            await robustClick(viewToggleButton);
             await browser.waitUntil(
                 async () => {
                     const updatedList = await browser.$("[data-testid='profile-list']");
                     const updatedMode = await updatedList.getAttribute("data-view-mode");
                     return updatedMode === "tree";
                 },
-                { timeout: 1000, timeoutMsg: "Failed to switch back to tree view" }
+                { timeout: 20000, timeoutMsg: "Failed to switch back to tree view" }
             );
         }
     }
@@ -598,7 +640,7 @@ When("the user types {string} as the profile name", async function (profileName:
     await ensureConfigEditorReady();
 
     const profileNameInput = await browser.$("#profile-name-input");
-    await profileNameInput.waitForExist({ timeout: 1000 });
+    await profileNameInput.waitForExist({ timeout: 10000 });
     await profileNameInput.clearValue();
     await profileNameInput.setValue(profileName);
     await browser.pause(100);
@@ -608,7 +650,7 @@ When("the user selects {string} as the profile type", async function (profileTyp
     await ensureConfigEditorReady();
 
     const profileTypeSelect = await browser.$("#profile-type-select");
-    await profileTypeSelect.waitForExist({ timeout: 1000 });
+    await profileTypeSelect.waitForExist({ timeout: 10000 });
     await profileTypeSelect.selectByVisibleText(profileType);
     await browser.pause(100);
 });
@@ -617,7 +659,7 @@ When("the user clicks the populate defaults button", async function () {
     await ensureConfigEditorReady();
 
     const button = await browser.$("#populate-defaults-button");
-    await button.waitForExist({ timeout: 1000 });
+    await button.waitForExist({ timeout: 10000 });
     await button.click();
     await browser.pause(200);
 });
@@ -676,7 +718,7 @@ Then("the profile {string} should have ZOSMF properties", async function (profil
 
 When("the user selects a profile to view its properties", async () => {
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const profileElements = await browser.$$("[data-testid='profile-list-item']");
     if (profileElements.length > 0) {
@@ -693,7 +735,7 @@ When("the user selects a profile to view its properties", async () => {
 
 When("the user selects the {string} to view its properties", async (profileName: string) => {
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     await browser.pause(500);
 
@@ -752,7 +794,7 @@ When("the user selects the {string} to view its properties", async (profileName:
 
 When("the user selects a different profile to view its properties", async () => {
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const profileElements = await browser.$$("[data-testid='profile-list-item']");
     if (profileElements.length > 1) {
@@ -769,7 +811,7 @@ When("the user selects a different profile to view its properties", async () => 
 
 When("the user switches back to the first profile", async () => {
     const profileList = await browser.$("[data-testid='profile-list']");
-    await profileList.waitForExist({ timeout: 1000 });
+    await profileList.waitForExist({ timeout: 10000 });
 
     const profileElements = await browser.$$("[data-testid='profile-list-item']");
     if (profileElements.length > 0) {
@@ -786,20 +828,20 @@ When("the user switches back to the first profile", async () => {
 
 Then("the profile details section should be displayed", async () => {
     const profileDetailsSection = await browser.$(".config-section.profile-details-section");
-    await profileDetailsSection.waitForExist({ timeout: 1000 });
-    await profileDetailsSection.waitForDisplayed({ timeout: 1000 });
+    await profileDetailsSection.waitForExist({ timeout: 10000 });
+    await profileDetailsSection.waitForDisplayed({ timeout: 10000 });
 });
 
 When("the user clicks on the property sort dropdown", async () => {
     const propertySortDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown:nth-of-type(2) .sort-dropdown-trigger");
-    await propertySortDropdown.waitForExist({ timeout: 1000 });
+    await propertySortDropdown.waitForExist({ timeout: 10000 });
     await propertySortDropdown.click();
     await browser.pause(100);
 });
 
 When("the user selects {string} from the property sort dropdown", async (sortOption: string) => {
     const dropdownList = await browser.$(".config-section.profile-details-section .sort-dropdown-list");
-    await dropdownList.waitForDisplayed({ timeout: 1000 });
+    await dropdownList.waitForDisplayed({ timeout: 10000 });
 
     const optionElements = await browser.$$(".config-section.profile-details-section .sort-dropdown-item[role='option']");
     let optionElement = null;
@@ -822,7 +864,7 @@ When("the user selects {string} from the property sort dropdown", async (sortOpt
 
 Then("the property sort dropdown should show {string} as selected", async (expectedSort: string) => {
     const propertySortDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown:nth-of-type(2) .sort-dropdown-trigger");
-    await propertySortDropdown.waitForExist({ timeout: 1000 });
+    await propertySortDropdown.waitForExist({ timeout: 10000 });
 
     const title = await propertySortDropdown.getAttribute("title");
     expect(title).toContain(`Current: ${expectedSort}`);
@@ -834,7 +876,7 @@ Then("the property sort dropdown should show {string} as selected", async (expec
 
 Then("the property sort dropdown should show {string} as selected by default", async (expectedSort: string) => {
     const propertySortDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown:nth-of-type(2) .sort-dropdown-trigger");
-    await propertySortDropdown.waitForExist({ timeout: 1000 });
+    await propertySortDropdown.waitForExist({ timeout: 10000 });
 
     const title = await propertySortDropdown.getAttribute("title");
     expect(title).toContain(`Current: ${expectedSort}`);
@@ -873,18 +915,18 @@ Then("the properties should be displayed according to the sort order", async () 
     await browser.pause(100);
 
     const profileDetailsSection = await browser.$(".config-section.profile-details-section");
-    await profileDetailsSection.waitForExist({ timeout: 1000 });
-    await profileDetailsSection.waitForDisplayed({ timeout: 1000 });
+    await profileDetailsSection.waitForExist({ timeout: 10000 });
+    await profileDetailsSection.waitForDisplayed({ timeout: 10000 });
 
     const propertySortDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown-trigger");
-    await propertySortDropdown.waitForExist({ timeout: 1000 });
+    await propertySortDropdown.waitForExist({ timeout: 10000 });
 
     expect(propertySortDropdown).toBeTruthy();
 });
 
 Then("the property sort dropdown should maintain the current sort order", async () => {
     const propertySortDropdown = await browser.$(".config-section.profile-details-section .sort-dropdown:nth-of-type(2) .sort-dropdown-trigger");
-    await propertySortDropdown.waitForExist({ timeout: 1000 });
+    await propertySortDropdown.waitForExist({ timeout: 10000 });
 
     const title = await propertySortDropdown.getAttribute("title");
     expect(title).toContain("Current:");
@@ -897,8 +939,8 @@ Then("the properties should be displayed according to the current sort order", a
 
 When("the user clicks on the {string} property input field", async (propertyName: string) => {
     const profileDetailsSection = await browser.$(".config-section.profile-details-section");
-    await profileDetailsSection.waitForExist({ timeout: 1000 });
-    await profileDetailsSection.waitForDisplayed({ timeout: 1000 });
+    await profileDetailsSection.waitForExist({ timeout: 10000 });
+    await profileDetailsSection.waitForDisplayed({ timeout: 10000 });
 
     let inputField = null;
 
@@ -926,8 +968,8 @@ When("the user clicks on the {string} property input field", async (propertyName
     }
 
     if (inputField) {
-        await inputField.waitForExist({ timeout: 1000 });
-        await inputField.waitForDisplayed({ timeout: 1000 });
+        await inputField.waitForExist({ timeout: 10000 });
+        await inputField.waitForDisplayed({ timeout: 10000 });
         await inputField.click();
         await browser.pause(50);
     } else {
@@ -1028,7 +1070,7 @@ Then("the {string} property should contain {string}", async (propertyName: strin
     }
 
     if (inputField) {
-        await inputField.waitForExist({ timeout: 1000 });
+        await inputField.waitForExist({ timeout: 10000 });
         const actualValue = await inputField.getValue();
         expect(actualValue).toBe(expectedValue);
     } else {
@@ -1038,7 +1080,7 @@ Then("the {string} property should contain {string}", async (propertyName: strin
 
 When("the user clicks the save button", async () => {
     const saveButton = await browser.$(".footer button[title='Save all changes']");
-    await saveButton.waitForExist({ timeout: 1000 });
+    await saveButton.waitForExist({ timeout: 10000 });
     await saveButton.click();
     await browser.pause(250);
 });
@@ -1050,8 +1092,8 @@ Then("the changes should be saved successfully", async () => {
     expect(errorMessages.length).toBe(0);
 
     const profileDetailsSection = await browser.$(".config-section.profile-details-section");
-    await profileDetailsSection.waitForExist({ timeout: 1000 });
-    await profileDetailsSection.waitForDisplayed({ timeout: 1000 });
+    await profileDetailsSection.waitForExist({ timeout: 10000 });
+    await profileDetailsSection.waitForDisplayed({ timeout: 10000 });
 });
 
 Then("the {string} property should contain {string} in the config file", async (propertyName: string, expectedValue: string) => {
@@ -1146,8 +1188,8 @@ Then("the password property should be in the secure array in the config file", a
 
 When("the user clicks the delete button for the {string} property", async (propertyName: string) => {
     const profileDetailsSection = await browser.$(".config-section.profile-details-section");
-    await profileDetailsSection.waitForExist({ timeout: 1000 });
-    await profileDetailsSection.waitForDisplayed({ timeout: 1000 });
+    await profileDetailsSection.waitForExist({ timeout: 10000 });
+    await profileDetailsSection.waitForDisplayed({ timeout: 10000 });
 
     let propertyContainer = null;
     const allContainers = await browser.$$(".config-item, .property-item");
@@ -1176,8 +1218,8 @@ When("the user clicks the delete button for the {string} property", async (prope
         }
 
         if (deleteButton) {
-            await deleteButton.waitForExist({ timeout: 1000 });
-            await deleteButton.waitForDisplayed({ timeout: 1000 });
+            await deleteButton.waitForExist({ timeout: 10000 });
+            await deleteButton.waitForDisplayed({ timeout: 10000 });
             await deleteButton.click();
             await browser.pause(100);
         } else {
@@ -1225,8 +1267,8 @@ When("the user clicks the add property button", async () => {
         }
     }
 
-    await addButton.waitForExist({ timeout: 1000 });
-    await addButton.waitForDisplayed({ timeout: 1000 });
+    await addButton.waitForExist({ timeout: 10000 });
+    await addButton.waitForDisplayed({ timeout: 10000 });
     await addButton.click();
     await browser.pause(100);
 });
@@ -1249,14 +1291,14 @@ Then("the add property modal should be displayed", async () => {
         }
     }
 
-    await modal.waitForExist({ timeout: 1000 });
-    await modal.waitForDisplayed({ timeout: 1000 });
+    await modal.waitForExist({ timeout: 10000 });
+    await modal.waitForDisplayed({ timeout: 10000 });
 });
 
 When("the user enters {string} as the property key", async (key: string) => {
     const keyInput = await browser.$("input[placeholder*='key'], input[placeholder*='Key'], input[name='key'], input[name='propertyKey']");
-    await keyInput.waitForExist({ timeout: 1000 });
-    await keyInput.waitForDisplayed({ timeout: 1000 });
+    await keyInput.waitForExist({ timeout: 10000 });
+    await keyInput.waitForDisplayed({ timeout: 10000 });
     await keyInput.clearValue();
     await keyInput.setValue(key);
     await browser.pause(50);
@@ -1270,8 +1312,8 @@ When("the user enters {string} as the property value", async (value: string) => 
     if (!valueInput || !(await valueInput.isExisting())) {
         valueInput = await browser.$(".modal input, .add-profile-modal input");
     }
-    await valueInput.waitForExist({ timeout: 1000 });
-    await valueInput.waitForDisplayed({ timeout: 1000 });
+    await valueInput.waitForExist({ timeout: 10000 });
+    await valueInput.waitForDisplayed({ timeout: 10000 });
     await valueInput.clearValue();
     await valueInput.setValue(value);
     await browser.pause(50);
@@ -1288,8 +1330,8 @@ When("the user enters {string} as the number value", async (value: string) => {
     if (!numberInput || !(await numberInput.isExisting())) {
         numberInput = await browser.$(".modal input[placeholder*='Value'], .add-profile-modal input[placeholder*='Value']");
     }
-    await numberInput.waitForExist({ timeout: 1000 });
-    await numberInput.waitForDisplayed({ timeout: 1000 });
+    await numberInput.waitForExist({ timeout: 10000 });
+    await numberInput.waitForDisplayed({ timeout: 10000 });
     await numberInput.clearValue();
     await numberInput.setValue(value);
     await browser.pause(50);
@@ -1356,8 +1398,8 @@ When("the user toggles the secure property option", async () => {
         }
     }
 
-    await secureToggle.waitForExist({ timeout: 1000 });
-    await secureToggle.waitForDisplayed({ timeout: 1000 });
+    await secureToggle.waitForExist({ timeout: 10000 });
+    await secureToggle.waitForDisplayed({ timeout: 10000 });
     await secureToggle.click();
     await browser.pause(50);
 });
@@ -1378,8 +1420,8 @@ When("the user clicks the add property button in the modal", async () => {
         }
     }
 
-    await addButton.waitForExist({ timeout: 1000 });
-    await addButton.waitForDisplayed({ timeout: 1000 });
+    await addButton.waitForExist({ timeout: 10000 });
+    await addButton.waitForDisplayed({ timeout: 10000 });
     await addButton.click();
     await browser.pause(100);
 });

@@ -2510,7 +2510,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
                 const contextOptions = (datasetTableView as any).contextOptions;
 
                 expect(contextOptions.displayInTree).toBeDefined();
-                expect(contextOptions.displayInTree.title).toBe("Display in Tree");
+                expect(contextOptions.displayInTree.title).toBe("Locate in Tree");
                 expect(contextOptions.displayInTree.command).toBe("display-in-tree");
                 expect(contextOptions.displayInTree.callback.typ).toBe("single-row");
                 expect(contextOptions.displayInTree.callback.fn).toBe(DatasetTableView.displayInTree);

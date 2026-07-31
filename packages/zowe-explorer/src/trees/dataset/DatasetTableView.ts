@@ -398,7 +398,7 @@ export class DatasetTableView {
     private PAGE_SIZE_OPTIONS = [10, 25, 50, 100, 500, 1000];
     private contextOptions: Record<string, Table.ContextMenuOption> = {
         displayInTree: {
-            title: l10n.t("Display in Tree"),
+            title: l10n.t("Locate in Tree"),
             command: "display-in-tree",
             callback: {
                 fn: DatasetTableView.displayInTree,

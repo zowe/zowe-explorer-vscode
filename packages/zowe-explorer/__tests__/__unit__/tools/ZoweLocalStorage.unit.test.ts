@@ -130,4 +130,114 @@ describe("LocalStorageAccess", () => {
             }
         });
     });
+
+    describe("CONFIG_EDITOR_TUTORIAL_SEEN key", () => {
+        beforeEach(() => {
+            const mockGlobalState = {
+                get: vi.fn().mockReturnValue(undefined),
+                update: vi.fn().mockResolvedValue(undefined),
+                keys: () => [],
+            } as vscode.Memento;
+            ZoweLocalStorage.initializeZoweLocalStorage(mockGlobalState);
+        });
+
+        it("CONFIG_EDITOR_TUTORIAL_SEEN is defined in LocalStorageKey enum", () => {
+            expect(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN).toBe("zowe.configEditor.tutorialSeen");
+        });
+
+        it("CONFIG_EDITOR_TUTORIAL_SEEN is included in readable keys", () => {
+            expect(LocalStorageAccess.getReadableKeys()).toContain(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN);
+        });
+
+        it("CONFIG_EDITOR_TUTORIAL_SEEN is included in writable keys", () => {
+            expect(LocalStorageAccess.getWritableKeys()).toContain(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN);
+        });
+
+        it("LocalStorageAccess.getValue succeeds for CONFIG_EDITOR_TUTORIAL_SEEN", () => {
+            const getValueSpy = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({ "/path/zowe.config.json": true } as any);
+            const result = LocalStorageAccess.getValue(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN);
+            expect(getValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN);
+            expect(result).toEqual({ "/path/zowe.config.json": true });
+        });
+
+        it("LocalStorageAccess.setValue succeeds for CONFIG_EDITOR_TUTORIAL_SEEN", async () => {
+            const setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
+            await LocalStorageAccess.setValue(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN, { "/path/zowe.config.json": true });
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN, {
+                "/path/zowe.config.json": true,
+            });
+        });
+    });
+
+    describe("CONFIG_EDITOR_SETTINGS key", () => {
+        beforeEach(() => {
+            const mockGlobalState = {
+                get: vi.fn().mockReturnValue(undefined),
+                update: vi.fn().mockResolvedValue(undefined),
+                keys: () => [],
+            } as vscode.Memento;
+            ZoweLocalStorage.initializeZoweLocalStorage(mockGlobalState);
+        });
+
+        it("CONFIG_EDITOR_SETTINGS is defined in LocalStorageKey enum", () => {
+            expect(Definitions.LocalStorageKey.CONFIG_EDITOR_SETTINGS).toBe("zowe.configEditor.settings");
+        });
+
+        it("CONFIG_EDITOR_SETTINGS is included in readable keys", () => {
+            expect(LocalStorageAccess.getReadableKeys()).toContain(Definitions.LocalStorageKey.CONFIG_EDITOR_SETTINGS);
+        });
+
+        it("CONFIG_EDITOR_SETTINGS is included in writable keys", () => {
+            expect(LocalStorageAccess.getWritableKeys()).toContain(Definitions.LocalStorageKey.CONFIG_EDITOR_SETTINGS);
+        });
+
+        it("LocalStorageAccess.getValue succeeds for CONFIG_EDITOR_SETTINGS", () => {
+            const mockSettings = { viewMode: "tree", profilesWidthPercent: 30 };
+            const getValueSpy = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(mockSettings as any);
+            const result = LocalStorageAccess.getValue(Definitions.LocalStorageKey.CONFIG_EDITOR_SETTINGS);
+            expect(getValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.CONFIG_EDITOR_SETTINGS);
+            expect(result).toEqual(mockSettings);
+        });
+
+        it("LocalStorageAccess.setValue succeeds for CONFIG_EDITOR_SETTINGS", async () => {
+            const mockSettings = { viewMode: "flat", profilesWidthPercent: 40 };
+            const setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
+            await LocalStorageAccess.setValue(Definitions.LocalStorageKey.CONFIG_EDITOR_SETTINGS, mockSettings);
+            expect(setValueSpy).toHaveBeenCalledWith(Definitions.LocalStorageKey.CONFIG_EDITOR_SETTINGS, mockSettings);
+        });
+    });
+});
+
+describe("ZoweLocalStorage.isPersistenceKeyInWorkspace", () => {
+    it("returns false when workspaceState is undefined", () => {
+        ZoweLocalStorage.initializeZoweLocalStorage({
+            get: vi.fn(),
+            update: vi.fn(),
+            keys: () => [],
+        } as vscode.Memento);
+        // workspaceState is not set → always false
+        expect(ZoweLocalStorage.isPersistenceKeyInWorkspace(PersistenceSchemaEnum.Dataset)).toBe(false);
+    });
+
+    it("returns true when the key exists in workspaceState.keys()", () => {
+        const mockGlobalState = { get: vi.fn(), update: vi.fn(), keys: () => [] } as vscode.Memento;
+        const mockWorkspaceState = {
+            get: vi.fn(),
+            update: vi.fn(),
+            keys: () => [PersistenceSchemaEnum.Dataset],
+        } as vscode.Memento;
+        ZoweLocalStorage.initializeZoweLocalStorage(mockGlobalState, mockWorkspaceState);
+        expect(ZoweLocalStorage.isPersistenceKeyInWorkspace(PersistenceSchemaEnum.Dataset)).toBe(true);
+    });
+
+    it("returns false when the key is NOT in workspaceState.keys()", () => {
+        const mockGlobalState = { get: vi.fn(), update: vi.fn(), keys: () => [] } as vscode.Memento;
+        const mockWorkspaceState = {
+            get: vi.fn(),
+            update: vi.fn(),
+            keys: () => [PersistenceSchemaEnum.USS],
+        } as vscode.Memento;
+        ZoweLocalStorage.initializeZoweLocalStorage(mockGlobalState, mockWorkspaceState);
+        expect(ZoweLocalStorage.isPersistenceKeyInWorkspace(PersistenceSchemaEnum.Dataset)).toBe(false);
+    });
 });

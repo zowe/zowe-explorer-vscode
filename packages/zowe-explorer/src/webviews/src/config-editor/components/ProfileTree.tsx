@@ -525,8 +525,8 @@ export function ProfileTree({
               isDragOver && canDrop
                 ? "var(--vscode-button-hoverBackground)"
                 : isDragging
-                ? "var(--vscode-button-secondaryHoverBackground)"
-                : "var(--vscode-input-background)",
+                  ? "var(--vscode-button-secondaryHoverBackground)"
+                  : "var(--vscode-input-background)",
             display: "flex",
             alignItems: "center",
             gap: "6px",

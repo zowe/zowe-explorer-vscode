@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 
 import "./App.css";
+import "./help/help-styles.css";
 
 import {
   Tabs,
@@ -15,6 +16,7 @@ import {
   RenderProfileDetails,
   RenderDefaults,
   WizardManager,
+  TutorialOverlay,
 } from "./components";
 
 import { flattenKeys, flattenProfiles, getAllQualifiedProfileKeys, resolveOriginalProfileKeyFromRenames } from "./utils";
@@ -137,6 +139,16 @@ function AppContent() {
 
   const [pendingPropertyDeletion, setPendingPropertyDeletion] = useState<string | null>(null);
   const [pendingProfileDeletion, setPendingProfileDeletion] = useState<string | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
+  // tutorialSeen: true once the user has dismissed the tutorial at least once.
+  // Populated from globalState via the CONFIGURATIONS message; persisted via SET_LOCAL_STORAGE_VALUE.
+  const [tutorialSeen, setTutorialSeen] = useState(false);
+  const tutorialSeenRef = useRef(false);
+  // highlightPropertyKey: property key to blink in the details panel after "Edit in zowe config webview"
+  // context menu action with cursor on a specific property.
+  const [highlightPropertyKey, setHighlightPropertyKey] = useState<string | null>(null);
+  // highlightProfileCard: true when the whole profile details card should blink (navigated from editor).
+  const [highlightProfileCard, setHighlightProfileCard] = useState<boolean>(false);
 
   const { handleChange, handleDefaultsChange, handleDeleteProperty, confirmDeleteProperty, handleUnlinkMergedProperty, handleAddNewProfileKey } =
     usePropertyHandlers({
@@ -160,6 +172,13 @@ function AppContent() {
 
   const { formatPendingChanges, hasPendingChanges } = useProfileUtils();
   const { setWizardModalOpen, wizardModalOpen, setWizardProfileNameValidation } = useWizardContext();
+
+  // Keep tutorialSeenRef in sync so other callbacks can read it without stale closures.
+  useEffect(() => {
+    tutorialSeenRef.current = tutorialSeen;
+  }, [tutorialSeen]);
+
+  const handleOpenTutorial = () => setShowTutorial(true);
 
   useEffect(() => {
     if (selectedTab !== null && configurations[selectedTab]) {
@@ -266,7 +285,7 @@ function AppContent() {
     }));
   };
 
-  const handleOpenRawJson = (configPath: string) => {
+  const handleOpenConfigFile = (configPath: string) => {
     vscodeApi.postMessage({ command: "OPEN_CONFIG_FILE", filePath: configPath });
   };
 
@@ -421,6 +440,10 @@ function AppContent() {
     setWizardProfileNameValidation,
     setRenames,
     setConfigParseErrors,
+    setTutorialSeen,
+    setShowTutorial,
+    setHighlightPropertyKey,
+    setHighlightProfileCard,
     configurationsRef,
     mergedPropertiesLatestRequestSeqRef,
     pendingSaveSelection,
@@ -438,11 +461,12 @@ function AppContent() {
     <div className="app-container" data-testid="config-editor-app" data-config-count={configurations.length} data-selected-tab={selectedTab}>
       <Tabs
         onTabChange={handleTabChange}
-        onOpenRawFile={handleOpenRawJson}
+        onOpenFile={handleOpenConfigFile}
         onRevealInFinder={handleRevealInFinder}
         onOpenSchemaFile={handleOpenSchemaFile}
         onAddNewConfig={handleAddNewConfig}
         onToggleAutostore={handleAutostoreToggle}
+        onShowTutorial={handleOpenTutorial}
       />
       <Panels
         renderProfiles={(profilesObj) => (
@@ -476,6 +500,10 @@ function AppContent() {
             handleUnlinkMergedProperty={handleUnlinkMergedProperty}
             handleNavigateToSource={handleNavigateToSource}
             openAddProfileModalAtPath={openAddProfileModalAtPath}
+            highlightPropertyKey={highlightPropertyKey}
+            onHighlightPropertyKeyConsumed={() => setHighlightPropertyKey(null)}
+            highlightProfileCard={highlightProfileCard}
+            onHighlightProfileCardConsumed={() => setHighlightProfileCard(false)}
           />
         )}
         renderDefaults={(defaults) => <RenderDefaults defaults={defaults} handleDefaultsChange={handleDefaultsChange} />}
@@ -598,6 +626,25 @@ function AppContent() {
         }}
         onCancel={() => setRenameProfileModalOpen(false)}
       />
+
+      {showTutorial && (
+        <TutorialOverlay
+          onClose={() => {
+            tutorialSeenRef.current = true;
+            setTutorialSeen(true);
+            const seenMap: Record<string, boolean> = {};
+            for (const config of configurations) {
+              seenMap[config.configPath] = true;
+            }
+            vscodeApi.postMessage({
+              command: "SET_LOCAL_STORAGE_VALUE",
+              key: "zowe.configEditor.tutorialSeen",
+              value: seenMap,
+            });
+            setShowTutorial(false);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -10,7 +10,7 @@
  */
 
 import * as path from "path";
-import { TreeItemCollapsibleState, IconPath, Uri } from "vscode";
+import { TreeItemCollapsibleState, Uri } from "vscode";
 import { SharedContext } from "../trees/shared/SharedContext";
 import { Constants } from "../configuration/Constants";
 import { IconUtils } from "./IconUtils";
@@ -225,7 +225,10 @@ export class Icon {
      * @param iconFileName {string} Name of icon file with extension
      * @returns {object} Object containing path to light and dark version of icon
      */
-    public static getIconPathInResources(iconFileName: string): IconPath {
+    public static getIconPathInResources(iconFileName: string): {
+        light: Uri;
+        dark: Uri;
+    } {
         return {
             light: Uri.file(path.join(Constants.ROOTPATH, "resources", "light", iconFileName)),
             dark: Uri.file(path.join(Constants.ROOTPATH, "resources", "dark", iconFileName)),

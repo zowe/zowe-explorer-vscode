@@ -14,6 +14,7 @@ import { expect } from "@wdio/globals";
 import * as fs from "fs";
 import * as path from "path";
 import { restoreZoweConfig } from "../../features/config-editor/utils";
+import { dismissTutorialOverlay } from "./profileListHelpers";
 
 declare const browser: any;
 
@@ -55,6 +56,7 @@ Given("the zowe team config file is restored from backup", async () => {
 });
 
 When("the user refreshes the Config Editor from disk", async () => {
+    await dismissTutorialOverlay();
     const refreshBtn = await browser.$(".footer > button");
     await refreshBtn.waitForExist({ timeout: 10000 });
     await refreshBtn.click();

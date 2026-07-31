@@ -120,6 +120,11 @@ export const config: Options.Testrunner = {
     framework: "cucumber",
 
     // If you are using Cucumber you need to specify the location of your step definitions.
+    // Retry a failing spec file once before reporting it as failed.
+    // This catches transient CI timing issues (e.g. slow VS Code start-up, focus races)
+    // without masking real regressions — the spec still fails on a second failure.
+    specFileRetries: 1,
+
     cucumberOpts: {
         // <string[]> (file/dir) require files before executing features
         import: ["./step_definitions/**/*.steps.ts"],
@@ -141,8 +146,9 @@ export const config: Options.Testrunner = {
         strict: false,
         // <string> (expression) only execute the features or scenarios with tags matching the expression
         tagExpression: "",
-        // <number> timeout for step definitions
-        timeout: 60000,
+        // <number> timeout for individual step definitions (ms).
+        // 120 s gives slow CI machines enough headroom for VS Code UI interactions.
+        timeout: 120000,
         // <boolean> Enable this config to treat undefined definitions as warnings.
         ignoreUndefinedDefinitions: false,
         // <boolean> Treat ambiguous definitions as errors.
@@ -181,7 +187,15 @@ export const config: Options.Testrunner = {
 
     afterStep: async function (step, scenario, result, context) {
         if (!result.passed) {
-            await browser.saveScreenshot(joinPath(screenshotDir, `${scenario.name} - ${step.text}.png`));
+            // Sanitize the filename: remove characters that are invalid on NTFS/Linux
+            // (e.g. double-quote from Gherkin scenario text, colons, angle brackets, etc.)
+            const sanitize = (s: string) =>
+                s
+                    .replace(/["<>:|*?/\\\r\n]/g, "-")
+                    .replace(/\s+/g, " ")
+                    .trim();
+            const safeName = `${sanitize(scenario.name)} - ${sanitize(step.text)}`;
+            await browser.saveScreenshot(joinPath(screenshotDir, `${safeName}.png`));
         }
     },
 

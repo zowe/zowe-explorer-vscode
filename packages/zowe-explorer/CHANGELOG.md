@@ -6,11 +6,13 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added "Edit in Zowe Configuration Editor" editor context menu action: right-clicking on a profile name or property line in `zowe.config.json` now opens the Config Editor webview, navigates to the corresponding profile, and highlights the profile card (and the specific property row when applicable) with a blink animation. [#4249](https://github.com/zowe/zowe-explorer-vscode/issues/4249)
 - Replaced repetitive `if (err instanceof Error)` patterns with `handleError` and `errorMessage` utility functions from `@zowe/zowe-explorer-api`. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 - Added new VS Code toggle setting for enabling various features within Zowe Explorer. [#4242](https://github.com/zowe/zowe-explorer-vscode/issues/4242)
 
 ### Bug fixes
 
+- Renamed the 'Display in Tree' option in table views to 'Locate in Tree' to improve clarity. [#3771](https://github.com/zowe/zowe-explorer-vscode/issues/3771)
 - Added error handling for a "Could not list members" error that appears when deleting an expanded PDS using an SSH profile. [#768](https://github.com/zowe/zowex/issues/768)
 - Fixed an issue where valuable details in error messages were truncated, particularly when using SSH profiles. [zowex/#766](https://github.com/zowe/zowex/issues/766)
 
