@@ -627,6 +627,8 @@ function AppContent() {
 
       {showTutorial && (
         <TutorialOverlay
+          selectedProfileKey={selectedProfileKey}
+          onSelectProfile={handleProfileSelection}
           onClose={() => {
             tutorialSeenRef.current = true;
             setTutorialSeen(true);

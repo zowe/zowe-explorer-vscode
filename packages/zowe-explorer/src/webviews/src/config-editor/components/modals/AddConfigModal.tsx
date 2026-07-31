@@ -104,7 +104,7 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
           {availableTypes.length === 0 && (
             <div
               style={{
-                color: "var(--vscode-warningForeground)",
+                color: "var(--vscode-inputValidation-warningForeground, var(--vscode-foreground))",
                 marginBottom: "16px",
                 padding: "8px 12px",
                 backgroundColor: "var(--vscode-inputValidation-warningBackground)",

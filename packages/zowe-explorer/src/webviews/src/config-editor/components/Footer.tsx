@@ -8,7 +8,7 @@ interface FooterProps {
 
 export function Footer({ onClearChanges, onSaveAll, hasPendingChanges }: FooterProps) {
   return (
-    <div className="footer">
+    <div className="footer" data-tutorial-id="save-refresh-footer">
       <button
         onClick={onClearChanges}
         title={l10n.t("Refresh changes")}

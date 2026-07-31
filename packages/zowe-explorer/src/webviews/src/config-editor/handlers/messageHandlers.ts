@@ -87,7 +87,6 @@ interface ConfigurationsMessagePayload {
     parseErrors?: ConfigParseError[];
     secureValuesAllowed?: boolean;
     tutorialSeen?: boolean;
-    isNewConfig?: boolean;
 }
 
 // Handle CONFIGURATIONS message
@@ -114,18 +113,12 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
         setConfigParseErrors,
     } = props;
 
-    const { contents, secureValuesAllowed, parseErrors, tutorialSeen, isNewConfig } = data;
+    const { contents, secureValuesAllowed, parseErrors, tutorialSeen } = data;
     if (tutorialSeen !== undefined) {
         props.setTutorialSeen(tutorialSeen);
-        if (!tutorialSeen && !isNewConfig) {
+        if (!tutorialSeen) {
             props.setShowTutorial(true);
         }
-    }
-    // Show tutorial whenever a brand-new config is created via the webview's
-    // "Add New Configuration File" modal. tutorialSeen only prevents the
-    // tutorial from auto-appearing on subsequent opens, not on explicit creation.
-    if (isNewConfig) {
-        props.setShowTutorial(true);
     }
     const parseErrorList: ConfigParseError[] = parseErrors ?? [];
     setConfigParseErrors(parseErrorList);

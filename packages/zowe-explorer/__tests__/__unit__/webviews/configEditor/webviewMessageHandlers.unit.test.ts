@@ -84,33 +84,19 @@ describe("handleConfigurationsMessage — tutorial visibility logic", () => {
         expect(props.setShowTutorial).not.toHaveBeenCalled();
     });
 
-    it("calls setTutorialSeen(false) AND setShowTutorial(true) on first open (tutorialSeen=false, not isNewConfig)", () => {
+    it("calls setTutorialSeen(false) AND setShowTutorial(true) on first open", () => {
         const props = makeProps();
         handleConfigurationsMessage({ contents: EMPTY_CONTENTS, tutorialSeen: false }, props);
         expect(props.setTutorialSeen).toHaveBeenCalledWith(false);
         expect(props.setShowTutorial).toHaveBeenCalledWith(true);
     });
 
-    it("does NOT auto-show tutorial when tutorialSeen=false but isNewConfig=true (isNewConfig branch handles it)", () => {
+    it("does NOT auto-show the tutorial for a newly-created config once it has been seen globally", () => {
+        // tutorialSeen is the single source of truth now — creating a new config file no longer
+        // forces the tutorial open on its own.
         const props = makeProps();
-        handleConfigurationsMessage({ contents: EMPTY_CONTENTS, tutorialSeen: false, isNewConfig: true }, props);
-        expect(props.setTutorialSeen).toHaveBeenCalledWith(false);
-        // setShowTutorial is still called — but via the isNewConfig branch, not the tutorialSeen branch
-        // Verify it is called exactly once (from isNewConfig path only)
-        expect(props.setShowTutorial).toHaveBeenCalledTimes(1);
-        expect(props.setShowTutorial).toHaveBeenCalledWith(true);
-    });
-
-    it("calls setShowTutorial(true) when isNewConfig=true regardless of tutorialSeen", () => {
-        const props = makeProps();
-        handleConfigurationsMessage({ contents: EMPTY_CONTENTS, tutorialSeen: true, isNewConfig: true }, props);
-        expect(props.setShowTutorial).toHaveBeenCalledWith(true);
-    });
-
-    it("calls setShowTutorial(true) when isNewConfig=true and tutorialSeen is undefined", () => {
-        const props = makeProps();
-        handleConfigurationsMessage({ contents: EMPTY_CONTENTS, isNewConfig: true }, props);
-        expect(props.setShowTutorial).toHaveBeenCalledWith(true);
+        handleConfigurationsMessage({ contents: EMPTY_CONTENTS, tutorialSeen: true }, props);
+        expect(props.setShowTutorial).not.toHaveBeenCalled();
     });
 });
 
