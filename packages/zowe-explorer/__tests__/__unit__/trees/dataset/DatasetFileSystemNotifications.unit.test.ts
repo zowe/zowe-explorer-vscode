@@ -17,6 +17,7 @@ import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
+import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 
 const testProfile = createIProfile();
 const testEntries = {
@@ -56,6 +57,10 @@ describe("DatasetFSProvider File System Notifications", () => {
             } as any),
         });
         vi.spyOn(ProfilesUtils, "awaitExtenderType").mockImplementation((() => undefined) as any);
+        vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+            allMembers: vi.fn().mockResolvedValue({ success: false, apiResponse: { items: [] } }),
+            dataSet: vi.fn().mockResolvedValue({ success: false, apiResponse: { items: [] } }),
+        } as any);
         vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
             isRoot: false,
             slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
@@ -149,16 +154,103 @@ describe("DatasetFSProvider File System Notifications", () => {
             expect(memberEntry.isMember).toBe(true);
         });
 
-        it("should not upload empty file on creation", async () => {
+        it("should still upload an empty file on creation to ensure the remote data set exists", async () => {
             const fakeSessionEntry = { ...testEntries.session, entries: new Map() };
             vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
-            const uploadEntrySpy = vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry");
+            const uploadEntrySpy = vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry").mockResolvedValue({
+                apiResponse: { etag: "NEWTAG" },
+            });
             vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
 
             const content = new Uint8Array(); // Empty
             await DatasetFSProvider.instance.writeFile(testUris.ps, content, { create: true, overwrite: false });
 
+            expect(uploadEntrySpy).toHaveBeenCalled();
+        });
+    });
+
+    describe("writeFile - Remote existence check (overwrite: false)", () => {
+        it("should throw FileExists when a new PS entry already exists remotely", async () => {
+            const fakeSessionEntry = { ...testEntries.session, entries: new Map() };
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            const dataSetMock = vi.fn().mockResolvedValue({ success: true, apiResponse: { items: [{ dsname: "USER.DATA.PS" }] } });
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                allMembers: vi.fn(),
+                dataSet: dataSetMock,
+            } as any);
+            const uploadEntrySpy = vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry");
+            vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
+
+            const content = new Uint8Array([1, 2, 3]);
+            await expect(DatasetFSProvider.instance.writeFile(testUris.ps, content, { create: true, overwrite: false })).rejects.toThrow(
+                vscode.FileSystemError.FileExists(testUris.ps).message
+            );
+
+            expect(dataSetMock).toHaveBeenCalledWith("USER.DATA.PS");
             expect(uploadEntrySpy).not.toHaveBeenCalled();
+            expect(fakeSessionEntry.entries.has("USER.DATA.PS")).toBe(false);
+        });
+
+        it("should throw FileExists when a new PDS member already exists remotely", async () => {
+            const fakePdsEntry = { ...testEntries.pds, entries: new Map() };
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakePdsEntry);
+            const allMembersMock = vi.fn().mockResolvedValue({ success: true, apiResponse: { items: [{ member: "MEMBER1" }] } });
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                allMembers: allMembersMock,
+                dataSet: vi.fn(),
+            } as any);
+            const uploadEntrySpy = vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry");
+            vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
+
+            const content = new Uint8Array([1, 2, 3]);
+            await expect(
+                DatasetFSProvider.instance.writeFile(testUris.pdsMember, content, { create: true, overwrite: false })
+            ).rejects.toThrow(vscode.FileSystemError.FileExists(testUris.pdsMember).message);
+
+            expect(allMembersMock).toHaveBeenCalledWith("USER.DATA.PDS");
+            expect(uploadEntrySpy).not.toHaveBeenCalled();
+            expect(fakePdsEntry.entries.has("MEMBER1")).toBe(false);
+        });
+
+        it("should proceed with creation when the entry does not exist remotely", async () => {
+            const fakeSessionEntry = { ...testEntries.session, entries: new Map() };
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            const dataSetMock = vi.fn().mockResolvedValue({ success: true, apiResponse: { items: [] } });
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                allMembers: vi.fn(),
+                dataSet: dataSetMock,
+            } as any);
+            vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry").mockResolvedValue({
+                apiResponse: { etag: "NEWTAG" },
+            });
+            vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
+
+            const content = new Uint8Array([1, 2, 3]);
+            await DatasetFSProvider.instance.writeFile(testUris.ps, content, { create: true, overwrite: false });
+
+            expect(dataSetMock).toHaveBeenCalledWith("USER.DATA.PS");
+            expect(fakeSessionEntry.entries.has("USER.DATA.PS")).toBe(true);
+        });
+
+        it("should not perform a remote existence check when overwrite is true", async () => {
+            const fakeSessionEntry = { ...testEntries.session, entries: new Map() };
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            const dataSetMock = vi.fn();
+            const allMembersMock = vi.fn();
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                allMembers: allMembersMock,
+                dataSet: dataSetMock,
+            } as any);
+            vi.spyOn(DatasetFSProvider.instance as any, "uploadEntry").mockResolvedValue({
+                apiResponse: { etag: "NEWTAG" },
+            });
+            vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
+
+            const content = new Uint8Array([1, 2, 3]);
+            await DatasetFSProvider.instance.writeFile(testUris.ps, content, { create: true, overwrite: true });
+
+            expect(dataSetMock).not.toHaveBeenCalled();
+            expect(allMembersMock).not.toHaveBeenCalled();
         });
     });
 
