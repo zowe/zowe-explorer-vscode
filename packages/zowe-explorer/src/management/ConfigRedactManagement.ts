@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { Gui, imperative } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, errorMessage } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../configuration/Profiles";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { LocalFileManagement } from "./LocalFileManagement";
@@ -97,7 +97,7 @@ export class ConfigRedactManagement {
             await Gui.errorMessage(
                 vscode.l10n.t({
                     message: "Failed to export redacted configuration: {0}",
-                    args: [err instanceof Error ? err.message : String(err)],
+                    args: [errorMessage(err)],
                     comment: ["Error message"],
                 })
             );
@@ -113,6 +113,21 @@ export class ConfigRedactManagement {
         });
         if (picked === undefined) {
             return undefined;
+        }
+        const hasRedactOption = picked.some((item) => item.key !== "showHostPath");
+        if (!hasRedactOption) {
+            const proceed = await Gui.warningMessage(
+                vscode.l10n.t(
+                    "No redact options were selected. The exported configuration will not have any values redacted and may expose sensitive information."
+                ),
+                {
+                    items: [vscode.l10n.t("Continue")],
+                    vsCodeOpts: { modal: true },
+                }
+            );
+            if (proceed !== vscode.l10n.t("Continue")) {
+                return undefined;
+            }
         }
         const pickedKeys = new Set(picked.map((item) => item.key));
         const opts: imperative.IConfigExportRedactedOpts = {};
