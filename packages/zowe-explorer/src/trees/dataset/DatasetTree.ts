@@ -641,6 +641,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
             favProfileNode.children.push(favChildNode);
         }
+
+        for (const favProfileNode of this.mFavorites) {
+            SharedUtils.sortTreeItems(favProfileNode.children, Constants.DS_SESSION_CONTEXT + Constants.FAV_SUFFIX);
+        }
     }
 
     /**
