@@ -14,8 +14,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { SshClientCache } from "../src/SshClientCache";
 
-import *  as vscode from "vscode";
-
 vi.mock("vscode", () => ({
     l10n: {
         t: (msg: string, ..._args: any) => {
