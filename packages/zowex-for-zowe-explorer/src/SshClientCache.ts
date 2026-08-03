@@ -150,6 +150,7 @@ export class SshClientCache extends vscode.Disposable {
             const useNativeSsh = vsceConfig.get<boolean>("zowex.experimentalNativeSsh", false);
             const autoUpdate = vsceConfig.get<boolean>("zowex.serverAutoUpdate", true);
 
+            const promptBeforeUpgrade = vsceConfig.get<boolean>("zowex.promptBeforeServerUpgrade", true);
             let newClient: ZSshClient | undefined;
             let serverNotFound = false;
             let serverShouldDeploy = true;

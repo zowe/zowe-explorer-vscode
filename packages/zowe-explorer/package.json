@@ -2306,6 +2306,12 @@
           "description": "%zowe.zowex.keepAliveInterval%",
           "scope": "window"
         },
+        "zowe.zowex.promptBeforeServerUpgrade": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.zowex.promptBeforeServerUpgrade%",
+          "scope": "window"
+        },
         "zowe.zowex.serverAutoUpdate": {
           "type": "boolean",
           "default": true,
