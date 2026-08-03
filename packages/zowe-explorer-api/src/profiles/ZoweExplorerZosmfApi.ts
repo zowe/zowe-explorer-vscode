@@ -37,7 +37,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         }
 
         private session: imperative.Session;
-        public constructor(public profile?: imperative.IProfileLoaded) {}
+        public constructor(public profile?: imperative.IProfileLoaded) { }
 
         public getProfileTypeName(): string {
             return CommonApi.getProfileTypeName();
@@ -446,6 +446,12 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                     return arr;
                 }, new Set<string>());
             return { count: allDatasets.size, lastItem: Array.from(allDatasets).pop() };
+        }
+
+        public async resolveAlias(aliasName: string): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.List.resolveAlias(this.getSession(), aliasName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+            });
         }
     }
 
