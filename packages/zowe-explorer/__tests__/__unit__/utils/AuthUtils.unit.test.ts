@@ -595,7 +595,7 @@ describe("AuthUtils", () => {
 
         it("To check for node tooltip when profile is using SSH Key authentication", async () => {
             const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
-            const getChildrenSpy = vi.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            vi.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
             const refreshElementMock = vi.fn();
             vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({
                 refreshElement: refreshElementMock,
@@ -625,6 +625,110 @@ describe("AuthUtils", () => {
             expect(sessionNode.tooltip).toContain("Auth Method: SSH Key");
             expect(sessionNode.tooltip).toContain("User: testuser");
         });
+        it("To check for node tooltip when profile is using SSH Key authentication and Auth Method is already present", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            sessionNode.tooltip = "Auth Method: Unknown\nUser: olduser";
+            vi.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = vi.fn();
+            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = vi.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                }) as any;
+
+            const testProfile = {
+                name: "sestest",
+                profile: {
+                    host: "fake",
+                    port: 22,
+                    user: "testuser",
+                    privateKey: "/path/to/key",
+                },
+                type: "ssh",
+                message: "",
+                failNotFound: false,
+            };
+            loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
+
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(sessionNode.tooltip).toContain("Auth Method: SSH Key");
+            expect(sessionNode.tooltip).toContain("User: testuser");
+            expect(sessionNode.tooltip).not.toContain("User: olduser");
+        });
+
+        it("To check for node tooltip when profile is using SSH Key authentication and Auth Method is present but User is not", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            sessionNode.tooltip = "Auth Method: Unknown";
+            vi.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = vi.fn();
+            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = vi.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                }) as any;
+
+            const testProfile = {
+                name: "sestest",
+                profile: {
+                    host: "fake",
+                    port: 22,
+                    user: "testuser",
+                    privateKey: "/path/to/key",
+                },
+                type: "ssh",
+                message: "",
+                failNotFound: false,
+            };
+            loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
+
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(sessionNode.tooltip).toContain("Auth Method: SSH Key");
+            expect(sessionNode.tooltip).toContain("User: testuser");
+        });
+
+        it("To check for node tooltip when profile is using SSH Key authentication and Auth Method and User is already present", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            sessionNode.tooltip = "Auth Method: Unknown\nUser: olduser";
+            vi.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = vi.fn();
+            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = vi.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                }) as any;
+
+            const testProfile = {
+                name: "sestest",
+                profile: {
+                    host: "fake",
+                    port: 22,
+                    user: "testuser",
+                    privateKey: "/path/to/key",
+                },
+                type: "ssh",
+                message: "",
+                failNotFound: false,
+            };
+            loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
+
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(sessionNode.tooltip).toContain("Auth Method: SSH Key");
+            expect(sessionNode.tooltip).toContain("User: testuser");
+            expect(sessionNode.tooltip).not.toContain("User: olduser");
+        });
+
 
         it("To check for node tooltip when profile is using Certificate based authentication and when Auth Method is not initially present in the toolTip", async () => {
             const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
