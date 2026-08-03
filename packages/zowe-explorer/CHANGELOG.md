@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Breaking: Removed the setting `zowe.zowex.serverAutoUpdate`, which was a global setting used to control whether the backend SSH server `zowex` would be automatically updated when it was outdated. To prevent such updates going forward, specify `"autoUpdate": false` in each desired `ssh` profile. [4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
 - Replaced the comparison of checksums of the backend SSH server `zowex` with comparing version numbers when checking if the remote server version is outdated. [4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
 - Renamed the `Connect to zowex server on host...` command to `Deploy zowex on server and connect...`. [4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
 - Added an error message in the case that Zowe Explorer needs to deploy the backend SSH server `zowex`, but the user does not have write access to the specified directory when issuing the `Deploy zowex on server and connect...` command or when validating `ssh` profiles. [4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
