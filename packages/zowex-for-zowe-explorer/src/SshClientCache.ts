@@ -70,7 +70,7 @@ export class SshClientCache extends vscode.Disposable {
     }
 
     public static readonly WRITE_ACCESS_TO_SERVER_PATH_ERR =
-        `You do not have write access to the deployment directory '{0}' ` +
+        `You do not have write access to the deployment directory '{0}'. ` +
         `The SSH server could not be started. Configure a different directory, ` +
         `or grant yourself write permission to the deployment directory if possible. `;
 
