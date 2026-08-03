@@ -40,7 +40,6 @@ vi.mock("vscode", () => ({
     },
 }));
 
-
 vi.mock("@zowe/zowe-explorer-api", () => {
     class MockDeferredPromise {
         public promise = Promise.resolve();
@@ -319,10 +318,9 @@ describe("Utilities", () => {
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             try {
                 await (Utilities as any).connectCallback(api);
-                expect('Succeeded').toEqual('connectCallback should have thrown an error.');
-            }
-            catch (e) {
-                expect(e.toString()).toContain('You do not have write access');
+                expect("Succeeded").toEqual("connectCallback should have thrown an error.");
+            } catch (e) {
+                expect(e.toString()).toContain("You do not have write access");
             }
         });
     });
