@@ -444,8 +444,8 @@ importers:
         specifier: workspace:*
         version: link:../zowe-explorer-api
       '@zowe/zowex-for-zowe-sdk':
-        specifier: ^0.6.1
-        version: 0.6.1(@zowe/imperative@8.32.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.32.0))(rxjs@7.8.2)
+        specifier: ^0.7.0
+        version: 0.7.0(@zowe/imperative@8.32.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.32.0))(rxjs@7.8.2)
       ssh2:
         specifier: ^1.17.0
         version: 1.17.0
@@ -2343,8 +2343,8 @@ packages:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zowex-for-zowe-sdk@0.6.1':
-    resolution: {integrity: sha512-+uY5TZ1fUEnyG6G6xXD/vV0dGZGNi4Kg4YA0xrUvPr9o6rFtDa3ZufSZ3b0m0OkUrzjZaKqhjmCnlRkxP8QoZw==}
+  '@zowe/zowex-for-zowe-sdk@0.7.0':
+    resolution: {integrity: sha512-tsT8C8vfb+PxUpiU/RE79pais5/kscpS6F/WFZS16ng602ZoY236mNnedOCVTEYQ/VA0cZP/SMEnIigyR5GZQw==}
     peerDependencies:
       '@zowe/imperative': ^8.11.0
       '@zowe/zos-uss-for-zowe-sdk': ^8.11.0
@@ -6128,6 +6128,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  semver@7.8.5:
+    resolution: {integrity: sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   serialize-error@12.0.0:
     resolution: {integrity: sha512-ZYkZLAvKTKQXWuh5XpBw7CdbSzagarX39WyZ2H07CDLC5/KfsRGlIXV8d4+tfqX1M7916mRqR1QfNHSij+c9Pw==}
     engines: {node: '>=18'}
@@ -9601,13 +9606,14 @@ snapshots:
       '@zowe/core-for-zowe-sdk': 8.32.0(@zowe/imperative@8.32.0)
       '@zowe/imperative': 8.32.0
 
-  '@zowe/zowex-for-zowe-sdk@0.6.1(@zowe/imperative@8.32.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.32.0))(rxjs@7.8.2)':
+  '@zowe/zowex-for-zowe-sdk@0.7.0(@zowe/imperative@8.32.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.32.0))(rxjs@7.8.2)':
     dependencies:
       '@zowe/imperative': 8.32.0
       '@zowe/zos-uss-for-zowe-sdk': 8.32.0(@zowe/imperative@8.32.0)
       base64-stream: 1.0.0
       es-toolkit: 1.47.1
       node-ssh: 13.2.1
+      semver: 7.8.5
       ssh-config: 5.1.0
       ssh2: 1.17.0
     optionalDependencies:
@@ -13916,6 +13922,8 @@ snapshots:
   semver@7.6.2: {}
 
   semver@7.7.4: {}
+
+  semver@7.8.5: {}
 
   serialize-error@12.0.0:
     dependencies:
