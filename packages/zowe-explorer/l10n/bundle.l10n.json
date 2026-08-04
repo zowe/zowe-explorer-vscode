@@ -104,6 +104,7 @@
   "Added a Release Notes page which opens when VS Code is launched or from the command palette Display Release Notes. The zowe.settings.displayReleaseNotes setting can be changed to set when the release notes display. <a>#3621</a>": "Added a Release Notes page which opens when VS Code is launched or from the command palette Display Release Notes. The zowe.settings.displayReleaseNotes setting can be changed to set when the release notes display. <a>#3621</a>",
   "Added a button to filter the USS tree by the parent path of the current filter. <a>#1783</a>.": "Added a button to filter the USS tree by the parent path of the current filter. <a>#1783</a>.",
   "Added a confirmation dialog when the encoding is changed for an unsaved data set or USS file. <a>#2911</a>": "Added a confirmation dialog when the encoding is changed for an unsaved data set or USS file. <a>#2911</a>",
+  "Added a new \"Export Redacted Configuration Files\" command to export team configuration files with sensitive values redacted, for sharing with others when troubleshooting. <a>#4432</a>": "Added a new \"Export Redacted Configuration Files\" command to export team configuration files with sensitive values redacted, for sharing with others when troubleshooting. <a>#4432</a>",
   "Added a new \"Override with Environment Variables\" setting. When selected, Zowe Explorer prioritizes values from environment variables for properties when loading the user's team configuration. <a>#3591</a>": "Added a new \"Override with Environment Variables\" setting. When selected, Zowe Explorer prioritizes values from environment variables for properties when loading the user's team configuration. <a>#3591</a>",
   "Added a new Poll For Job Completion button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting Zowe > Jobs: Poll Interval. <a>#3967</a>": "Added a new Poll For Job Completion button to the job submitted notification which polls on the job status and notify when the job is complete. The poll interval can be changed in the setting Zowe > Jobs: Poll Interval. <a>#3967</a>",
   "Added a new VS Code setting zowe.settings.zosmfMaxConcurrentRequests, that allows users to limit the number of concurrent REST requests sent to z/OSMF. <a>#4130</a>": "Added a new VS Code setting zowe.settings.zosmfMaxConcurrentRequests, that allows users to limit the number of concurrent REST requests sent to z/OSMF. <a>#4130</a>",
@@ -272,6 +273,7 @@
   "Basic Authentication": "Basic Authentication",
   "Binary": "Binary",
   "Browse": "Browse",
+  "Browse for Export Folder...": "Browse for Export Folder...",
   "Bug fixes": "Bug fixes",
   "Bugfix: Added validation check while creating, renaming and using allocate alike feature for datasets <a>#1849</a>": "Bugfix: Added validation check while creating, renaming and using allocate alike feature for datasets <a>#1849</a>",
   "Bump @zowe/secrets-for-zowe-sdk to 7.18.4 to handle install errors gracefully and to allow running without MSVC redistributables.": "Bump @zowe/secrets-for-zowe-sdk to 7.18.4 to handle install errors gracefully and to allow running without MSVC redistributables.",
@@ -345,8 +347,10 @@
       "Node label"
     ]
   },
+  "Choose the folder where the redacted configuration files will be saved": "Choose the folder where the redacted configuration files will be saved",
   "Choose the schema location(s) to update.": "Choose the schema location(s) to update.",
   "Choose the setting location to save the data set template...": "Choose the setting location to save the data set template...",
+  "Choose where to save the redacted configuration files": "Choose where to save the redacted configuration files",
   "Class": "Class",
   "Clear All": "Clear All",
   "Clear all history items for this persistent property?": "Clear all history items for this persistent property?",
@@ -692,6 +696,7 @@
     ]
   },
   "Execute": "Execute",
+  "Export Redacted Configuration": "Export Redacted Configuration",
   "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>": "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>",
   "Exposed commands to drive search in the USS views. <a>#3933</a>": "Exposed commands to drive search in the USS views. <a>#3933</a>",
   "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>": "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>",
@@ -745,6 +750,12 @@
     "message": "Failed to expand PDS {0}: {1}",
     "comment": [
       "PDS name",
+      "Error message"
+    ]
+  },
+  "Failed to export redacted configuration: {0}/Error message": {
+    "message": "Failed to export redacted configuration: {0}",
+    "comment": [
       "Error message"
     ]
   },
@@ -1239,6 +1250,7 @@
   "Header actions": "Header actions",
   "Hide Profile": "Hide Profile",
   "Hide profile name from tree view": "Hide profile name from tree view",
+  "Hide secure field names": "Hide secure field names",
   "Hovering over a data set, USS, or jobs profile now displays detailed connection information.": "Hovering over a data set, USS, or jobs profile now displays detailed connection information.",
   "ID": "ID",
   "If searching more than 50 members, a prompt displays to confirm or cancel.": "If searching more than 50 members, a prompt displays to confirm or cancel.",
@@ -1404,6 +1416,7 @@
       "Job Status"
     ]
   },
+  "Keep host and basePath values instead of redacting them": "Keep host and basePath values instead of redacting them",
   "Large job spool files now load faster by displaying a Load more… button at the bottom of the spool file to fetch additional lines as needed. For active jobs, use this button to retrieve new output without refreshing the **JOBS** tree. It is recommended to use the default keyboard shortcut Ctrl + L to quickly load more lines. The number of lines per page and the toggle for pagination can be configured in the settings under **Zowe > Jobs > Paginate**. The default is 100 lines per page.": "Large job spool files now load faster by displaying a Load more… button at the bottom of the spool file to fetch additional lines as needed. For active jobs, use this button to retrieve new output without refreshing the **JOBS** tree. It is recommended to use the default keyboard shortcut Ctrl + L to quickly load more lines. The number of lines per page and the toggle for pagination can be configured in the settings under **Zowe > Jobs > Paginate**. The default is 100 lines per page.",
   "Last Modified By": "Last Modified By",
   "Last refreshed:": "Last refreshed:",
@@ -1519,6 +1532,7 @@
     ]
   },
   "No changelog entries found for this version.": "No changelog entries found for this version.",
+  "No configuration files were found to export.": "No configuration files were found to export.",
   "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
   "No data set favorites found.": "No data set favorites found.",
   "No data set profiles found. Please add a profile first.": "No data set profiles found. Please add a profile first.",
@@ -1546,6 +1560,7 @@
   "No profiles available.": "No profiles available.",
   "No recent members found.": "No recent members found.",
   "No records found": "No records found",
+  "No redact options were selected. The exported configuration will not have any values redacted and may expose sensitive information.": "No redact options were selected. The exported configuration will not have any values redacted and may expose sensitive information.",
   "No release notes found for this version.": "No release notes found for this version.",
   "No search pattern applied. Search for a pattern and try again.": "No search pattern applied. Search for a pattern and try again.",
   "No selection made. Operation cancelled.": "No selection made. Operation cancelled.",
@@ -1795,6 +1810,10 @@
   "Recent Searches": "Recent Searches",
   "Record Format": "Record Format",
   "Record Length": "Record Length",
+  "Redact boolean values": "Redact boolean values",
+  "Redact number values": "Redact number values",
+  "Redact profile names": "Redact profile names",
+  "Redact string values": "Redact string values",
   "Redirecting to Home Directory": "Redirecting to Home Directory",
   "Reduced the number of MVS API calls performed by vscode.workspace.fs.readFile when fetching the contents of a data set entry. <a>#3278</a>": "Reduced the number of MVS API calls performed by vscode.workspace.fs.readFile when fetching the contents of a data set entry. <a>#3278</a>",
   "Refactored behavior and management of Favorites in Zowe Explorer. <a>#2026</a>": "Refactored behavior and management of Favorites in Zowe Explorer. <a>#2026</a>",
@@ -1815,6 +1834,7 @@
   "Removal of v1 profile support. <a>#2072</a>": "Removal of v1 profile support. <a>#2072</a>",
   "Remove": "Remove",
   "Remove the 'Show Attributes' context menu action for migrated datasets. <a>#2033</a>": "Remove the 'Show Attributes' context menu action for migrated datasets. <a>#2033</a>",
+  "Remove the list of secure property names from the output": "Remove the list of secure property names from the output",
   "Removed \"Delete Profile\" action from the \"Manage Profile\" menu since this action is currently not supported in Zowe Explorer. <a>#3037</a>": "Removed \"Delete Profile\" action from the \"Manage Profile\" menu since this action is currently not supported in Zowe Explorer. <a>#3037</a>",
   "Removed Gulp dependency and migrated from i18n standard to l10n. <a>#2253</a>": "Removed Gulp dependency and migrated from i18n standard to l10n. <a>#2253</a>",
   "Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. <a>#2030</a>": "Removed TSLint (as it is deprecated), and replaced all TSLint rules with their ESLint equivalents. <a>#2030</a>",
@@ -1836,6 +1856,10 @@
   },
   "Reorder, filter, sort, and choose visible columns": "Reorder, filter, sort, and choose visible columns",
   "Replace": "Replace",
+  "Replace boolean properties with placeholder values": "Replace boolean properties with placeholder values",
+  "Replace numeric properties (e.g. port) with placeholder values": "Replace numeric properties (e.g. port) with placeholder values",
+  "Replace profile names and their references in the defaults section": "Replace profile names and their references in the defaults section",
+  "Replace string properties (e.g. user, host) with placeholder values": "Replace string properties (e.g. user, host) with placeholder values",
   "Replaced an import of ILocalStorageAccess from \"@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess\" to \"@zowe/zowe-explorer-api\". <a>#3606</a>": "Replaced an import of ILocalStorageAccess from \"@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess\" to \"@zowe/zowe-explorer-api\". <a>#3606</a>",
   "Replaced keytar dependency with keyring module from <a>@zowe/secrets-for-zowe-sdk</a>. <a>#2358</a> <a>#2348</a>": "Replaced keytar dependency with keyring module from <a>@zowe/secrets-for-zowe-sdk</a>. <a>#2358</a> <a>#2348</a>",
   "Replaced lodash dependency with es-toolkit to reduce webview bundle size and add technical currency. <a>#3060</a>": "Replaced lodash dependency with es-toolkit to reduce webview bundle size and add technical currency. <a>#3060</a>",
@@ -1894,6 +1918,7 @@
   "Select Certificate": "Select Certificate",
   "Select Certificate Key": "Select Certificate Key",
   "Select Download Location": "Select Download Location",
+  "Select Export Folder": "Select Export Folder",
   "Select a TSO command to run against {0} (An option to edit will follow)/Host name": {
     "message": "Select a TSO command to run against {0} (An option to edit will follow)",
     "comment": [
@@ -1934,6 +1959,7 @@
   "Select a data set organization (DSORG)": "Select a data set organization (DSORG)",
   "Select a filter": "Select a filter",
   "Select a filter or type to create a new one": "Select a filter or type to create a new one",
+  "Select a folder to export the redacted configuration files to": "Select a folder to export the redacted configuration files to",
   "Select a profile": "Select a profile",
   "Select a profile to search for data sets": "Select a profile to search for data sets",
   "Select a recent member to open": "Select a recent member to open",
@@ -1970,6 +1996,7 @@
   "Select the profile to which the original data set belongs": "Select the profile to which the original data set belongs",
   "Select the profile you want to delete": "Select the profile you want to delete",
   "Select the version to display release notes for": "Select the version to display release notes for",
+  "Select which values to redact, then confirm": "Select which values to redact, then confirm",
   "Selected auth type: {0}/Selected authentication method": {
     "message": "Selected auth type: {0}",
     "comment": [
@@ -1992,6 +2019,7 @@
   "Setting to hide hidden USS files": "Setting to hide hidden USS files",
   "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.",
   "Several members may be favorited or unfavorited at once by doing a multi-selection.": "Several members may be favorited or unfavorited at once by doing a multi-selection.",
+  "Show host and basePath values": "Show host and basePath values",
   "Showing attributes for {0}./Label": {
     "message": "Showing attributes for {0}.",
     "comment": [
