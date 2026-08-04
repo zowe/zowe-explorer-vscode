@@ -309,8 +309,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return {
             ...response,
             apiResponse: {
-                ...response.apiResponse,
-                items: (response.apiResponse.items ?? []).filter(keepRelative ? Boolean : (it): boolean => !/^\.{1,3}$/.test(it.name as string)),
+                ...(response.apiResponse ?? {}),
+                items: (response.apiResponse?.items ?? []).filter(keepRelative ? Boolean : (it): boolean => !/^\.{1,3}$/.test(it.name as string)),
             },
         };
     }
@@ -693,7 +693,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     private async uploadEntry(
         entry: UssFile,
         content: Uint8Array,
-        options?: { forceUpload?: boolean; noStatusMsg?: boolean }
+        options?: { forceUpload?: boolean; noStatusMsg?: boolean; isNew?: boolean }
     ): Promise<IZosFilesResponse> {
         const statusMsg =
             // only show a status message if "noStatusMsg" is not specified,
@@ -719,7 +719,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         let resp: IZosFilesResponse;
         try {
             await AuthUtils.retryRequest(entry.metadata.profile, async () => {
-                await this.autoDetectEncoding(entry);
+                if (!options?.isNew) {
+                    await this.autoDetectEncoding(entry);
+                }
                 const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
                 resp = await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
@@ -796,10 +798,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 return;
             }
 
-            if (!isNew || content.length > 0) {
-                const resp = await this.uploadEntry(entry as UssFile, content, { forceUpload });
-                entry.etag = resp.apiResponse.etag;
-            }
+            const resp = await this.uploadEntry(entry as UssFile, content, { forceUpload, isNew });
+            entry.etag = resp.apiResponse.etag;
             entry.data = content;
             entry.mtime = Date.now();
             entry.size = content.byteLength;

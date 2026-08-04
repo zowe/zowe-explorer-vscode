@@ -350,4 +350,27 @@ describe("USSUtils Unit Tests - filterHiddenFiles", () => {
         expect(result.apiResponse.items).toHaveLength(1);
         expect(result.apiResponse.items[0].name).toBe("/u/users/ibmuser/visible.txt");
     });
+
+    it("should handle response with undefined items", async () => {
+        const mockResponse = {
+            success: true,
+            commandResponse: "",
+            apiResponse: { items: undefined },
+        } as any;
+
+        const result = await USSUtils.filterHiddenFiles(mockResponse);
+
+        expect(result.apiResponse.items).toEqual([]);
+    });
+
+    it("should handle response without apiResponse", async () => {
+        const mockResponse = {
+            success: true,
+            commandResponse: "",
+        } as any;
+
+        const result = await USSUtils.filterHiddenFiles(mockResponse);
+
+        expect(result.apiResponse.items).toEqual([]);
+    });
 });

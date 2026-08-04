@@ -103,23 +103,22 @@ export class SshClientCache extends vscode.Disposable {
     /**
      * Detect if a usable instance of our server binary exists on the user's USS environment.
      * @param session - established SSH session used to detect the server
-     * @param profile - the SSH profile used to connect
      * @returns true if a usable version of the SSH backend server is detected on the user's path
      */
-    public async detectServerOnPath(session: SshSession, profile: imperative.IProfile): Promise<string | undefined> {
+    public async detectServerOnPath(session: SshSession): Promise<string | undefined> {
         try {
             const pathServer = await ZSshUtils.detectServerOnPath(session);
             imperative.Logger.getAppLogger().debug("detectServerOnPath return value: %s", JSON.stringify(pathServer));
             if (pathServer.serverPath && pathServer.hasExecutePermission) {
-                imperative.Logger.getAppLogger().debug("Skipping deploy, since a usable instance of the server exists on the user's PATH");
+                imperative.Logger.getAppLogger().debug("A usable instance of the server exists on the user's PATH");
                 // path.resolve(): remove binary from the full path to set serverPath to the parent directory,
                 // the same as a user would configure the path manually
                 const parentDir = path.posix.dirname(pathServer.serverPath);
-                SshClientCache.inst.storeServerPath(profile.host, parentDir);
+                SshClientCache.inst.storeServerPath(session.ISshSession.hostname!, parentDir);
                 return parentDir;
             }
         } catch (e) {
-            imperative.Logger.getAppLogger().error("Error detecting server on user's $PATH: %s", e);
+            imperative.Logger.getAppLogger().error(`Error detecting server on user's $PATH: ${(e as Error).toString()}`);
             await SshErrorHandler.getInstance().handleError(e as Error, ZoweExplorerApiType.All, "Detecting server on $PATH");
         }
         return undefined;
@@ -189,7 +188,7 @@ export class SshClientCache extends vscode.Disposable {
             }
             if (serverShouldDeploy) {
                 if (serverNotFound) {
-                    const onEnvPathServer = await this.detectServerOnPath(session, profile);
+                    const onEnvPathServer = await this.detectServerOnPath(session);
                     if (onEnvPathServer) {
                         try {
                             serverPath = onEnvPathServer;

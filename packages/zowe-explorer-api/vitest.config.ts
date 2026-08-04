@@ -45,6 +45,10 @@ export default mergeConfig(
             clearMocks: false,
             restoreMocks: false,
             mockReset: false,
+            reporters: ["default", "junit"],
+            outputFile: {
+                junit: "results/unit/junit.xml",
+            },
             server: {
                 deps: {
                     // Tell Vitest to inline this dependency so Vite processes it
