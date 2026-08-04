@@ -27,7 +27,7 @@ overrides:
   "brace-expansion@5": "^5.0.9"
   "diff@5": "^5.2.2"
   "diff@>5": "^8.0.3"
-  "fast-uri": "^3.1.4"
+  "fast-uri": "^3.1.5"
   "fast-xml-builder": "^1.1.7"
   "fast-xml-parser": "^5.7.0"
   "fastify": "^5.10.0"
@@ -51,6 +51,7 @@ overrides:
   "tinyclip": "^0.1.15"
   "tmp": "^0.2.7"
   "underscore": "^1.13.8"
+  "undici@6": "^6.28.0"
   "uuid@<11": "^11.1.1"
   "ws": "^8.21.0"
 # Previously set using `pnpm config set network-timeout`
