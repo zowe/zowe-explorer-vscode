@@ -444,7 +444,7 @@
     "Allow commands to be executed using integrated terminals": ""
   },
   "zowe.commands.zowex.connect": {
-    "Deploy zowex server on host and connect...": ""
+    "Deploy SSH server on host and connect...": ""
   },
   "zowe.commands.zowex.restart": {
     "Restart zowex server on host...": ""
@@ -730,7 +730,7 @@
   "Added a zowe.settings.socketConnectTimeout setting to provide users with the ability to specify a connection timeout for REST requests. <a>#3379</a>": "",
   "Added ability to filter jobs by status. Improved Job filtering User experience. <a>#1925</a>": "",
   "Added ability to install extension from VS Code marketplace if custom credential manager extension is missing after defining it on imperative.json. <a>#2381</a>": "",
-  "Added an error message in the case that Zowe Explorer needs to deploy the backend SSH server zowex, but the user does not have write access to the specified directory when issuing the Deploy zowex server on host and connect... command or when validating ssh profiles. <a>#4436</a>": "",
+  "Added an error message in the case that Zowe Explorer needs to deploy the backend SSH server zowex, but the user does not have write access to the specified directory when issuing the Deploy SSH server on host and connect... command or when validating ssh profiles. <a>#4436</a>": "",
   "Added an new VS Code command palette option Zowe Explorer: Update Profile Configuration Schema, allowing users to manually trigger an update to global and project level configuration schema files with registered Zowe Explorer extender types. <a>#1642</a>": "",
   "Added an output channel, Zowe Explorer, for logging within VS Code's Output view. The log level is set by the new Zowe Explorer setting, zowe.logger.": "",
   "Added back local storage for Zowe Explorer persistent items": "",
@@ -1820,7 +1820,7 @@
   "Renamed 'Display in Tree' to 'Locate in Tree' in table views to improve clarity. <a>#3771</a>": "",
   "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>": "",
   "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>": "",
-  "Renamed the Connect to zowex server on host... command to Deploy zowex server on host and connect.... <a>#4436</a>": "",
+  "Renamed the Connect to zowex server on host... command to Deploy SSH server on host and connect.... <a>#4436</a>": "",
   "Renaming data set {0}": "",
   "Reorder, filter, sort, and choose visible columns": "",
   "Replace": "",
