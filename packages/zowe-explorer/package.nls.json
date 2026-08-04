@@ -173,6 +173,7 @@
   "downloadSingleSpool": "Download",
   "downloadSingleSpoolBinary": "Download (Binary)",
   "all.configInit": "Initialize Team Configuration File",
+  "all.configExportRedacted": "Export Redacted Configuration Files",
   "copyFile": "Copy",
   "pasteFile": "Paste",
   "jobs.sortBy": "Sort Jobs...",

@@ -715,6 +715,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.all.config.exportRedacted",
+        "title": "%all.configExportRedacted%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.jobs.refreshJob",
         "title": "%jobs.refreshJob%",
         "category": "Zowe Explorer"
@@ -2420,11 +2425,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.32.0",
+    "@zowe/core-for-zowe-sdk": "^8.35.0",
     "@zowe/secrets-for-zowe-sdk": "^8.32.0",
     "@zowe/zos-files-for-zowe-sdk": "^8.32.0",
     "@zowe/zos-jobs-for-zowe-sdk": "^8.32.0",
-    "@zowe/zosmf-for-zowe-sdk": "^8.32.0",
+    "@zowe/zosmf-for-zowe-sdk": "^8.35.0",
     "@zowe/zowe-explorer-api": "workspace:*",
     "dayjs": "^1.11.11",
     "isbinaryfile": "4.0.4",
