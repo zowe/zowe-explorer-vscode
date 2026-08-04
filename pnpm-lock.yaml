@@ -13965,7 +13965,7 @@ snapshots:
       is-plain-object: 5.0.0
       launder: 1.7.1
       parse-srcset: 1.0.2
-      postcss: 8.5.14
+      postcss: 8.5.23
 
   sass-lookup@5.0.1:
     dependencies:
