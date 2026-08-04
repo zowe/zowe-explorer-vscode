@@ -53,7 +53,7 @@ jobs:
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.node-version == 'lts/-1' && matrix.os == 'ubuntu-22.04'
         with:
           name: zowe-explorer-ftp-extension-results
           path: packages/zowe-explorer-ftp-extension/results/
@@ -66,12 +66,12 @@ jobs:
       #     env_vars: OS,NODE
 
       - name: Package VSIX
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.node-version == 'lts/-1' && matrix.os == 'ubuntu-22.04'
         run: pnpm package
         working-directory: packages/zowe-explorer-ftp-extension
 
       - name: Archive VSIX artifact
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.node-version == 'lts/-1' && matrix.os == 'ubuntu-22.04'
         uses: actions/upload-artifact@v4
         with:
           name: zowe-explorer-ftp-extension-vsix

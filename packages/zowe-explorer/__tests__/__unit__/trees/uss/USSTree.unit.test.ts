@@ -2494,7 +2494,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         // @ts-ignore
         vi.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
         vi.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
-        vi.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        vi.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockReturnValue(false);
         vi.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
 
         // Spy on GUI error to assert it was invoked
@@ -2551,7 +2551,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         // Ensure helpers are permissive
         vi.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
         vi.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
-        vi.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        vi.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockReturnValue(false);
         vi.spyOn(SharedContext as any, "isUssDirectory").mockReturnValue(false);
 
         // Mock ZoweExplorerApiRegister to advertise a move API
@@ -2605,7 +2605,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
         const dataTransfer = { get: vi.fn().mockReturnValueOnce(payload) } as any;
         expect(typeof dataTransfer.get).toBe("function"); // sanity
 
-        (SharedUtils as any).isLikelySameUssObjectByUris = vi.fn().mockResolvedValue(true);
+        (SharedUtils as any).isLikelySameUssObjectByUris = vi.fn().mockReturnValue(true);
         (SharedUtils as any).ERROR_SAME_OBJECT_DROP =
             "Cannot move: The source and target are the same. You are using a different profile to view the target. Refresh to view changes.";
 
@@ -2835,7 +2835,7 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         } as any);
         vi.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
         vi.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
-        vi.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        vi.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockReturnValue(false);
         vi.spyOn(UssFSProvider.instance as any, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
         vi.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue(undefined);
 
@@ -2894,7 +2894,7 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         } as any);
         vi.spyOn(SharedUtils as any, "getNodeProperty").mockImplementation((n: any, p: string) => (n ? n[p] : undefined));
         vi.spyOn(SharedUtils as any, "hasNameCollision").mockReturnValue(false);
-        vi.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockResolvedValue(false);
+        vi.spyOn(SharedUtils as any, "isLikelySameUssObjectByUris").mockReturnValue(false);
 
         vi.spyOn(UssFSProvider.instance as any, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
         vi.spyOn(ZoweExplorerApiRegister as any, "getUssApi").mockReturnValue(undefined);

@@ -3224,7 +3224,7 @@ dependencies = [
 
 [[package]]
 name = "zedc"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "cfg-if",
@@ -3237,6 +3237,7 @@ dependencies = [
  "octocrab",
  "owo-colors",
  "reqwest",
+ "serde",
  "serde_json",
  "supports-hyperlinks",
  "tar",

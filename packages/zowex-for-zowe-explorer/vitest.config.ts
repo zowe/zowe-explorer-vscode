@@ -24,7 +24,7 @@ export default defineConfig({
         name: "zowex-for-zowe-explorer",
         globals: true,
         environment: "node",
-        include: ["tests/**/*.(spec|test).ts"],
+        include: ["__tests__/**/*.(spec|test).ts"],
         exclude: ["**/node_modules/**", "**/out/**"],
         testTimeout: 10000,
         hookTimeout: 10000,

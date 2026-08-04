@@ -171,10 +171,13 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             return undefined;
         }
         const response = await this.getUssFiles(this.profile);
-        if (response.success === false || response.apiResponse?.items.length === 0 || response.apiResponse?.items.length > 1) {
+        if (response.success === false || response.apiResponse?.items?.length !== 1) {
             return undefined;
         }
         const item = response.apiResponse.items[0];
+        if (item == null) {
+            return undefined;
+        }
         const attrs: Types.FileAttributes = {
             gid: item.gid,
             uid: item.uid,
@@ -254,7 +257,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 if (SharedContext.isSession(this)) {
                     const profile = this.getProfile();
                     const toolTipList: string[] = [];
-                    toolTipList.push(`${vscode.l10n.t("Profile: ")}${this.label}`);
+                    toolTipList.push(`${vscode.l10n.t("Profile: ")}${this.label.toString()}`);
                     toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${profile.type}`);
                     this.tooltip = toolTipList.join("\n");
                 }
@@ -284,7 +287,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             existingItems[`${element.parentPath}/${element.label.toString()}`] = element;
         }
         const responseNodes: IZoweUSSTreeNode[] = [];
-        for (const item of response.apiResponse.items) {
+        for (const item of response.apiResponse?.items ?? []) {
             // ".", "..", and "..." have already been filtered out
             let itemName = item.name as string;
             let itemParentPath = this.fullPath;
@@ -322,7 +325,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 profile: cachedProfile,
                 encoding: isDir ? undefined : this.getEncodingInMap(`${itemParentPath}/${itemName}`),
             });
-            const createParentDirs = (uri: vscode.Uri) => {
+            const createParentDirs = (uri: vscode.Uri): void => {
                 const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
                 if (parentUri.path !== uri.path && parentUri.path !== "/" && !UssFSProvider.instance.exists(parentUri)) {
                     createParentDirs(parentUri);
@@ -518,7 +521,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             await vscode.workspace.fs.delete(this.resourceUri, { recursive: this.isFolder });
         } catch (err) {
             ZoweLogger.error(err);
-            handleError(err, (error) => {
+            void handleError(err, (error) => {
                 Gui.errorMessage(
                     vscode.l10n.t({
                         message: "Unable to delete node: {0}",

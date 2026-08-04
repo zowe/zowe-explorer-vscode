@@ -70,7 +70,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             label: `Job Prefix`,
             value: "*",
             show: true,
-            placeHolder: vscode.l10n.t("Enter job prefix"),
+            placeHolder: vscode.l10n.t("Enter job prefix, use a comma to separate multiple prefixes"),
             validateInput: (text: string): string | null => SharedUtils.jobStringValidator(text, "prefix"),
         },
         {
@@ -309,7 +309,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 profile,
             });
         } catch (err) {
-            handleError(err, (error) => {
+            void handleError(err, (error) => {
                 ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
             });
             return null;

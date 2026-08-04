@@ -1,4 +1,4 @@
-﻿# Change Log
+# Change Log
 
 All notable changes to the "zowe-explorer-api" extension will be documented in this file.
 
@@ -9,9 +9,11 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 - Added a function `isEnabledInSettings` to the `FeatureFlags` class, which checks VS Code settings to see if a given Zowe Explorer feature ID is enabled. [#4242](https://github.com/zowe/zowe-explorer-vscode/issues/4242)
 - Added a function `trimExtension` in the `FsDatasetsUtils` class for stripping extension suffix off of a data set name. [#4326](https://github.com/zowe/zowe-explorer-vscode/pull/4326)
+- Added a `trackRows` method to the `Table.View` class for registering rows that were delivered to the webview outside of the standard update flow. [#4416](https://github.com/zowe/zowe-explorer-vscode/pull/4416)
 
 ### Bug fixes
 
+- Fixed an issue where the `promptUserPass` function would incorrectly reject an empty username when its `rePrompt` parameter was false. [#4378](https://github.com/zowe/zowe-explorer-vscode/pull/4378)
 - Fixed an issue where the `ZoweVsCodeExtension.workspaceRoot` function getter could return a non-existent local directory. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are considered as the workspace root. [#4271](https://github.com/zowe/zowe-explorer-vscode/issues/4271)
 - Fixed an issue where executing Unix commands could fail if the current working directory path contained certain special characters. [#4330](https://github.com/zowe/zowe-explorer-vscode/pull/4330)
 - Deprecated support for `string` type in `condition` property of `TableView` actions. Use a function instead. [#4363](https://github.com/zowe/zowe-explorer-vscode/pull/4363)

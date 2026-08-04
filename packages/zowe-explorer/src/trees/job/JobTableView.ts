@@ -20,7 +20,7 @@ import { IJob } from "@zowe/zos-jobs-for-zowe-sdk";
 
 export class JobTableView {
     private static cachedChildren: IZoweJobTreeNode[];
-    private static contextOptions: Record<string, Table.ContextMenuOpts> = {
+    private static contextOptions: Record<string, Table.ContextMenuOption> = {
         getJcl: {
             title: l10n.t("Get JCL"),
             command: "get-jcl",
@@ -38,7 +38,7 @@ export class JobTableView {
             },
         },
     };
-    private static rowActions: Record<string, Table.ActionOpts> = {
+    private static rowActions: Record<string, Table.Action> = {
         cancelJob: {
             title: l10n.t("Cancel"),
             command: "cancel-job",

@@ -23,12 +23,12 @@
     "clean": "rimraf bin lib coverage",
     "license": "node ../../scripts/updateLicenses.mjs",
     "link:zowex": "node ../../scripts/linkZowex.js",
-    "lint": "concurrently -n \"_eslint_,prettier\" \"pnpm lint:src\" \"pnpm lint:html\" \"pnpm lint:pretty\"",
+    "lint": "concurrently -n \"_eslint_,prettier\" \"pnpm lint:all\" \"pnpm lint:pretty\"",
     "lint:all": "pnpm run \"/^lint:[hst].*/\"",
     "lint:html": "(mkdir -p \"results\" || true) && eslint ./src --format html > results/eslint.html",
     "lint:pretty": "prettier --write . && prettier --check .",
     "lint:src": "eslint --format stylish \"src/**/*.ts\"",
-    "lint:test": "eslint --format stylish \"tests/**/*.ts\"",
+    "lint:test": "eslint --format stylish \"__tests__/**/*.ts\"",
     "madge": "madge -c --no-color --no-spinner --exclude __mocks__ --extensions js,ts src/",
     "package": "echo 'zowex: nothing to package.'",
     "test": "vitest run --coverage",
@@ -37,9 +37,9 @@
     "watch": "tsc --watch -p ./"
   },
   "dependencies": {
-    "@zowe/core-for-zowe-sdk": "^8.32.0",
+    "@zowe/core-for-zowe-sdk": "^8.35.0",
     "@zowe/zowe-explorer-api": "workspace:*",
-    "@zowe/zowex-for-zowe-sdk": "^0.6.0",
+    "@zowe/zowex-for-zowe-sdk": "^0.6.1",
     "ssh2": "^1.17.0"
   },
   "devDependencies": {

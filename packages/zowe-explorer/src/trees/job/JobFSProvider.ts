@@ -118,7 +118,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             registeredTypes: apiRegister.registeredJesApiTypes(),
         });
 
-        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
+        AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
         await AuthHandler.waitForUnlock(uriInfo.profile);
         try {
             if (FsAbstractUtils.isFilterEntry(fsEntry)) {
@@ -238,15 +238,15 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             apiName: vscode.l10n.t("JES API"),
             registeredTypes: apiRegister.registeredJesApiTypes(),
         });
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(metadata.profile);
         const query = new URLSearchParams(uri.query);
         let recordRange = "";
         const recordsToFetch = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
 
         if (query.has("startLine")) {
-            const startLine = parseInt(query.get("startLine")!);
-            const endLine = query.has("endLine") ? parseInt(query.get("endLine")!) : startLine + (recordsToFetch - 1);
+            const startLine = parseInt(query.get("startLine"));
+            const endLine = query.has("endLine") ? parseInt(query.get("endLine")) : startLine + (recordsToFetch - 1);
             recordRange = `${startLine}-${endLine}`;
         } else {
             const defFetchSetting = SettingsConfig.getDirectValue<number>("zowe.jobs.paginate.recordsToFetch") ?? 0;
@@ -380,7 +380,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const parent = this.lookupParentDirectory(uri, false);
         const profInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         try {
-            await AuthUtils.ensureAuthNotCancelled(profInfo.profile);
+            AuthUtils.ensureAuthNotCancelled(profInfo.profile);
             await AuthHandler.waitForUnlock(profInfo.profile);
             const apiRegister = ZoweExplorerApiRegister.getInstance();
             await FsAbstractUtils.getApiOrThrowUnavailable(profInfo.profile, () => apiRegister.getJesApi(profInfo.profile), {
@@ -451,7 +451,6 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Create job directory if it doesn't exist
         const jobUri = uri.with({ path: `/${metadata.profile.name}/${jobId}` });
-        let jobEntry: JobEntry;
         if (!this.exists(jobUri)) {
             // Fetch job information from the mainframe
             const apiRegister = ZoweExplorerApiRegister.getInstance();
@@ -460,7 +459,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
                 registeredTypes: apiRegister.registeredJesApiTypes(),
             });
 
-            await AuthUtils.ensureAuthNotCancelled(metadata.profile);
+            AuthUtils.ensureAuthNotCancelled(metadata.profile);
             await AuthHandler.waitForUnlock(metadata.profile);
 
             // Get job by job ID
@@ -474,7 +473,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
             });
             this.createDirectory(jobUri, { job });
         }
-        jobEntry = this._lookupAsDirectory(jobUri, false) as JobEntry;
+        const jobEntry = this._lookupAsDirectory(jobUri, false) as JobEntry;
 
         // Fetch spool files for the job if not already loaded
         if (jobEntry.entries.size === 0) {

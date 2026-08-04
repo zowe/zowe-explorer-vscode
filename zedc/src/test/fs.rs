@@ -14,24 +14,34 @@ use std::{
 /// # Arguments
 /// * `version` - The version of Zowe CLI to install from `npm`
 pub fn install_cli(version: String) -> anyhow::Result<()> {
+    let text = crate::output::text_enabled();
     let nm_path = Path::new("./node_modules");
     if nm_path.exists() {
         std::fs::remove_dir_all(nm_path)?;
     }
     std::fs::create_dir(nm_path)?;
-    let _ = match crate::pm::npm()
-        .args(["install", "-g", "--no-save", "--prefix", "./node_modules"])
-        .arg(format!("@zowe/cli@{}", version))
-        .status()
-    {
+    let mut npm = crate::pm::npm();
+    npm.args(["install", "-g", "--no-save", "--prefix", "./node_modules"])
+        .arg(format!("@zowe/cli@{}", version));
+    if !text {
+        npm.stdout(Stdio::null()).stderr(Stdio::null());
+    }
+    let status = match npm.status() {
         Ok(s) => s,
         Err(e) => {
-            println!("❌ Could not install Zowe CLI, error: {}", e);
+            if text {
+                println!("❌ Could not install Zowe CLI, error: {}", e);
+            }
             bail!(e)
         }
     };
+    if !status.success() {
+        bail!("Could not install Zowe CLI");
+    }
 
-    println!("✔️  Installed Zowe CLI");
+    if text {
+        println!("✔️  Installed Zowe CLI");
+    }
     Ok(())
 }
 
@@ -46,15 +56,20 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
     }
 
     // Install the given extensions using the VS Code CLI.
+    // Must complete before launching so the data/ directory isn't locked by two processes.
     let vsc_bin_path = Path::new(&vsc_bin);
-    println!("\n⌛ Installing extensions...");
+    let text = crate::output::text_enabled();
+    if text {
+        println!("\n⌛ Installing extensions...");
+    }
     let mut cmd = Command::new(vsc_bin_path);
     for file in files.iter() {
         cmd.args(["--install-extension", file]);
     }
 
-    if let Err(e) = cmd.stdout(Stdio::null()).spawn() {
-        bail!(e);
+    let install_status = cmd.stdout(Stdio::null()).stderr(Stdio::null()).status()?;
+    if !install_status.success() {
+        bail!("VS Code CLI exited with a non-zero status while installing extensions");
     }
 
     // Launch VS Code after installing the given extensions.
@@ -73,6 +88,7 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
             .args([
                 vsc.to_str().unwrap(),
                 "--args",
+                "--new-window",
                 "--disable-updates",
                 sandbox_str,
             ])
@@ -81,21 +97,24 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
             .spawn()
         {
             Ok(_s) => {
-                println!("🚀 Launched VS Code");
+                if text {
+                    println!("🚀 Launched VS Code");
+                }
                 Ok(())
             }
             Err(_) => todo!(),
         }
     } else {
         match Command::new(vsc)
-            .arg("")
-            .arg(sandbox_str)
+            .args(["--new-window", sandbox_str])
             .env("ZOWE_CLI_HOME", zowe_dir.to_str().unwrap())
             .stdout(Stdio::null())
             .spawn()
         {
             Ok(_s) => {
-                println!("🚀 Launched VS Code");
+                if text {
+                    println!("🚀 Launched VS Code");
+                }
                 Ok(())
             }
             Err(_) => todo!(),
@@ -108,25 +127,34 @@ pub async fn install_from_paths(vsc_bin: String, files: Vec<String>) -> anyhow::
 /// # Arguments
 /// * `files` - A `Vec` of relative file paths to resolve on the local filesystem.
 pub fn resolve_paths(files: Vec<String>) -> Vec<String> {
-    println!("\n🔍 Resolving files...");
+    let text = crate::output::text_enabled();
+    if text {
+        println!("\n🔍 Resolving files...");
+    }
     files
         .iter()
         .filter_map(|f| match std::fs::canonicalize(f) {
             Ok(p) => match p.extension().unwrap_or(OsStr::new("")).to_str().unwrap() {
                 "vsix" => {
-                    println!("  ✔️  {}", f.bold());
+                    if text {
+                        println!("  ✔️  {}", f.bold());
+                    }
                     Some(p.to_str().unwrap().to_owned())
                 }
                 _ => {
-                    println!(
-                        "  ❌ {}",
-                        format!("{}: invalid extension format", f).italic()
-                    );
+                    if text {
+                        println!(
+                            "  ❌ {}",
+                            format!("{}: invalid extension format", f).italic()
+                        );
+                    }
                     None
                 }
             },
             Err(e) => {
-                println!("  ❌ {}", format!("{}: {}", f, e).italic());
+                if text {
+                    println!("  ❌ {}", format!("{}: {}", f, e).italic());
+                }
                 None
             }
         })

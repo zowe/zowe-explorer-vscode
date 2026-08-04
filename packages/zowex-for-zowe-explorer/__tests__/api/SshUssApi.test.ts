@@ -16,9 +16,9 @@ import * as fs from "node:fs";
 
 // `node:fs` named imports are not configurable for spyOn under ESM, so mock the module.
 vi.mock("node:fs", async (importActual) => {
-    const actual = (await importActual()) as typeof import("node:fs");
+    const actual = await importActual();
     return {
-        ...actual,
+        ...(actual as typeof import("node:fs")),
         createReadStream: vi.fn(() => ({}) as any),
         createWriteStream: vi.fn(() => ({}) as any),
     };

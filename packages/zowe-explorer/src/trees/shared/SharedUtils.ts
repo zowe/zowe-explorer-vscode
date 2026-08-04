@@ -147,17 +147,22 @@ export class SharedUtils {
     }
 
     /**
-     * Function that validates job prefix
-     * @param {string} text - prefix text
-     * @returns undefined | string
+     * Function that validates job owner or prefix input.
+     * For prefix, comma-separated values are supported; each individual value must be at most
+     * {@link Constants.JOBS_MAX_PREFIX} characters long.
+     * @param {string} text - owner or prefix text
+     * @returns null when valid, otherwise a localised error string
      */
     public static jobStringValidator(text: string, localizedParam: "owner" | "prefix"): string | null {
         switch (localizedParam) {
             case "owner":
                 return text.length > Constants.JOBS_MAX_PREFIX ? vscode.l10n.t("Invalid job owner") : null;
             case "prefix":
-            default:
-                return text.length > Constants.JOBS_MAX_PREFIX ? vscode.l10n.t("Invalid job prefix") : null;
+            default: {
+                const parts = text.split(",").map((p) => p.trim());
+                const invalid = parts.some((p) => p.length === 0 || p.length > Constants.JOBS_MAX_PREFIX);
+                return invalid ? vscode.l10n.t("Invalid job prefix") : null;
+            }
         }
     }
 
@@ -677,7 +682,7 @@ export class SharedUtils {
                 const node = (await provider.getChildren()).find((n) => n.label === profile?.name);
                 node?.setProfileToChoice?.(profile);
             } catch (err) {
-                handleError(err, (error) => {
+                void handleError(err, (error) => {
                     ZoweLogger.error(error.message);
                 });
                 return;
@@ -744,6 +749,7 @@ export class SharedUtils {
         }
 
         if (response.apiResponse && Array.isArray(response.apiResponse)) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             const failedItems = response.apiResponse.filter((item: any) => item.error || item.status === "failed");
             if (failedItems.length > 0) {
                 hasErrors = true;
@@ -915,11 +921,8 @@ export class SharedUtils {
      * @param droppedLabel - name of the dropped item
      * @returns Promise resolves to true if the normalized paths match and the target path exists. false otherwise
      */
-    public static async isLikelySameUssObjectByUris(
-        sourceNode: IZoweUSSTreeNode,
-        targetParent: IZoweUSSTreeNode,
-        droppedLabel: string
-    ): Promise<boolean> {
+
+    public static isLikelySameUssObjectByUris(sourceNode: IZoweUSSTreeNode, targetParent: IZoweUSSTreeNode, droppedLabel: string): boolean {
         //normalize paths
         const equal =
             path.posix.normalize(sourceNode.fullPath.replace(/\\/g, "/")) ===

@@ -40,6 +40,7 @@ import { UnixCommandHandler } from "../../commands/UnixCommandHandler";
 import { Profiles } from "../../configuration/Profiles";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
+import { ConfigRedactManagement } from "../../management/ConfigRedactManagement";
 import { LocalFileManagement } from "../../management/LocalFileManagement";
 import { ProfileManagement } from "../../management/ProfileManagement";
 import { ZoweLogger } from "../../tools/ZoweLogger";
@@ -229,6 +230,12 @@ export class SharedInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.profileManagement", async (node: IZoweTreeNode) => {
                 await ProfileManagement.manageProfile(node);
+            })
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.all.config.exportRedacted", async () => {
+                await ConfigRedactManagement.exportRedactedConfig();
             })
         );
 
@@ -641,7 +648,7 @@ export class SharedInit {
         );
     }
 
-    public static isDocumentASpool(uri: vscode.Uri): Boolean {
+    public static isDocumentASpool(uri: vscode.Uri): boolean {
         const entry = JobFSProvider.instance.lookup(uri, false);
         return FsJobsUtils.isSpoolEntry(entry);
     }
@@ -685,13 +692,16 @@ export class SharedInit {
         });
 
         try {
-            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
-                ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
-                AuthHandler.unlockAllProfiles();
-                await ProfilesUtils.readConfigFromDisk();
-                await SharedActions.refreshAll();
-                ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
-            });
+            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(
+                imperative.ZoweUserEvents.ON_VAULT_CHANGED,
+                SharedUtils.debounceAsync(async () => {
+                    ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
+                    AuthHandler.unlockAllProfiles();
+                    await ProfilesUtils.readConfigFromDisk();
+                    await SharedActions.refreshAll();
+                    ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
+                }, 100) // eslint-disable-line no-magic-numbers
+            );
             context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
         } catch (err) {
             Gui.errorMessage("Unable to watch for vault changes. " + JSON.stringify(err));
@@ -760,7 +770,7 @@ export class SharedInit {
                 }
                 readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri));
             } catch (err) {
-                handleError(err, (error) => {
+                void handleError(err, (error) => {
                     ZoweLogger.error(error.message);
                 });
             }
@@ -768,7 +778,7 @@ export class SharedInit {
         try {
             await Promise.all(readDirRequests);
         } catch (err) {
-            handleError(err, (error) => {
+            void handleError(err, (error) => {
                 ZoweLogger.error(error.message);
             });
         }
@@ -812,7 +822,9 @@ export class SharedInit {
      * @param context @deprecated
      */
     public static registerZosConsoleView(context: vscode.ExtensionContext): void {
+        // eslint-disable-next-line deprecation/deprecation
         const provider = new ZosConsoleViewProvider(context.extensionUri);
+        // eslint-disable-next-line deprecation/deprecation
         context.subscriptions.push(vscode.window.registerWebviewViewProvider(ZosConsoleViewProvider.viewType, provider));
     }
 

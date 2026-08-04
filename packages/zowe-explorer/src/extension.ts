@@ -49,6 +49,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         job: () => JobInit.initJobsProvider(context),
     });
     SharedInit.registerCommonCommands(context, providers);
+    // eslint-disable-next-line deprecation/deprecation
     SharedInit.registerZosConsoleView(context);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
 

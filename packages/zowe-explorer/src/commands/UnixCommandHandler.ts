@@ -45,13 +45,13 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     private static instance: UnixCommandHandler;
     private nodeProfile: imperative.IProfileLoaded = undefined;
     private unixCmdMsgs = {
-        issueCmdNotSupportedMsg: (profileType: string) =>
+        issueCmdNotSupportedMsg: (profileType: string): string =>
             vscode.l10n.t({
                 message: "Issuing commands is not supported for this profile type, {0}.",
                 args: [profileType],
                 comment: ["Profile type"],
             }),
-        issueUnixCmdNotSupportedMsg: (profileType: string) =>
+        issueUnixCmdNotSupportedMsg: (profileType: string): string =>
             vscode.l10n.t({
                 message: "Issuing UNIX commands is not supported for this profile type, {0}.",
                 args: [profileType],
