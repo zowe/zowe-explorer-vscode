@@ -181,6 +181,7 @@ export class SshClientCache extends vscode.Disposable {
                         return true;
                     }
                 }
+                serverNotFound = false;
                 return false;
             };
 
@@ -213,7 +214,18 @@ export class SshClientCache extends vscode.Disposable {
                 }
 
                 if (serverShouldDeploy) {
-                    if (!(await ZSshUtils.lacksWriteAccess(session, serverPath))) {
+                    if ((await ZSshUtils.lacksWriteAccess(session, serverPath))) {
+                        if (serverNotFound) {
+                            // the user has no usable instance of the SSH server so we should notify them 
+                            const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, serverPath);
+                            imperative.Logger.getAppLogger().error(errMsg);
+                            throw new ImperativeError({ msg: errMsg });
+                        } else {
+                            // otherwise we were just trying to update and the user can use the old version
+                            imperative.Logger.getAppLogger().warn("Skipped deploy step as server path '%s' is not writeable by the user", serverPath);
+                        }
+                    } else {
+                        // The user appears to have write access 
                         await deployWithProgress(session, serverPath);
                         newClient?.dispose();
                         newClient = await this.buildClient(session, clientId, {
@@ -224,12 +236,6 @@ export class SshClientCache extends vscode.Disposable {
                             requests: replayRequests,
                             useNativeSsh,
                         });
-                    } else if (serverNotFound) {
-                        const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, serverPath);
-                        imperative.Logger.getAppLogger().error(errMsg);
-                        throw new ImperativeError({ msg: errMsg });
-                    } else {
-                        imperative.Logger.getAppLogger().warn("Skipped deploy step as server path '%s' is not writeable by the user", serverPath);
                     }
                 }
             }
