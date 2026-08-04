@@ -745,7 +745,7 @@ describe("UssFSProvider", () => {
             });
             expect(createRecursiveSpy).toHaveBeenCalledWith(testUris.folder);
 
-                createRecursiveSpy.mockRestore();
+            createRecursiveSpy.mockRestore();
             existsSpy.mockRestore();
         });
         it("handles listFiles response without apiResponse from extender", async () => {
