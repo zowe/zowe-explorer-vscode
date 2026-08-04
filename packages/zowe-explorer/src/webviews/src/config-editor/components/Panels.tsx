@@ -61,7 +61,7 @@ export function Panels({
         <div key={index} className={`panel ${selectedTab === index ? "active" : ""}`}>
           <div className="panel-content">
             <div className="config-section profiles-section">
-              <div className="profile-heading-container">
+              <div className="profile-heading-container" data-tutorial-id="profiles-heading">
                 <button
                   className="profiles-toggle-button"
                   onClick={toggleProfilesCollapse}
@@ -110,12 +110,14 @@ export function Panels({
                 )}
               </div>
               {selectedTab === index && !profilesCollapsed && (
-                <div className="profile-list-container">{renderProfiles(config.properties.profiles)}</div>
+                <div className="profile-list-container" data-tutorial-id="profiles-list">
+                  {renderProfiles(config.properties.profiles)}
+                </div>
               )}
 
               {/* Collapsible Defaults Section */}
               {selectedTab === index && (
-                <div className="config-section defaults-section">
+                <div className="config-section defaults-section" data-tutorial-id="defaults-section">
                   <div className="defaults-heading-container">
                     <button
                       className="defaults-toggle-button"
@@ -143,7 +145,7 @@ export function Panels({
               )}
             </div>
             <div className="resize-divider" id={`resize-divider-${index}`}></div>
-            <div className="config-section profile-details-section">
+            <div className="config-section profile-details-section" data-tutorial-id="profile-details-panel">
               {selectedTab === index && (
                 <div className="profile-details-content">
                   {renderProfileDetails()}

@@ -62,11 +62,7 @@ export async function robustClick(element: any, attempts = 6, waitMsBetween = 30
 /**
  * Verify that profiles match expected titles in both tree and flat view modes.
  */
-export async function verifyProfiles(
-    expectedTreeTitles: string[],
-    expectedFlatTitles: string[],
-    workbench: Workbench
-) {
+export async function verifyProfiles(expectedTreeTitles: string[], expectedFlatTitles: string[], workbench: Workbench) {
     const profileList = await browser.$("[data-testid='profile-list']");
     const viewToggleButton = await browser.$("[data-testid='view-mode-toggle']");
 

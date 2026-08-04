@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useModalClickOutside, useModalFocus } from "../../hooks";
+import { ModalShell } from "../ModalShell";
 
 interface RenameProfileModalProps {
   isOpen: boolean;
@@ -25,8 +25,6 @@ export function RenameProfileModal({
   const [newName, setNewName] = useState("");
   const [error, setError] = useState("");
   const isFullPathMode = false;
-  const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
-  const modalRef = useModalFocus(isOpen, "#profile-name");
 
   useEffect(() => {
     if (isOpen) {
@@ -188,8 +186,6 @@ export function RenameProfileModal({
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
       handleSubmit();
-    } else if (e.key === "Escape") {
-      onCancel();
     }
   };
 
@@ -214,36 +210,41 @@ export function RenameProfileModal({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onMouseDown={handleBackdropMouseDown} onClick={handleBackdropClick}>
-      <div ref={modalRef} className="modal-content">
-        <h2>Rename Profile</h2>
-        <div className="modal-body">
-          <div style={{ marginBottom: "16px" }}>
-            <label htmlFor="profile-name" style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>
-              New Profile Name
-            </label>
-            <input
-              id="profile-name"
-              type="text"
-              className={`modal-input ${error ? "error" : ""}`}
-              value={newName}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder="e.g., tso-new"
-            />
-            {error && <div className="modal-error">{error}</div>}
-            <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>Use letters, numbers, underscores, and hyphens only</div>
-          </div>
-        </div>
-        <div className="modal-actions">
-          <button className="modal-button secondary" id="rename-cancel" onClick={onCancel}>
-            Cancel
-          </button>
-          <button className="modal-button primary" id="rename-confirm" onClick={handleSubmit}>
-            Rename
-          </button>
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onCancel}
+      initialFocusSelector="#profile-name"
+      titleId="rename-profile-modal-title"
+      overlayClassName="modal-overlay"
+      panelClassName="modal-content"
+    >
+      <h2 id="rename-profile-modal-title">Rename Profile</h2>
+      <div className="modal-body">
+        <div style={{ marginBottom: "16px" }}>
+          <label htmlFor="profile-name" style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>
+            New Profile Name
+          </label>
+          <input
+            id="profile-name"
+            type="text"
+            className={`modal-input ${error ? "error" : ""}`}
+            value={newName}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="e.g., tso-new"
+          />
+          {error && <div className="modal-error">{error}</div>}
+          <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>Use letters, numbers, underscores, and hyphens only</div>
         </div>
       </div>
-    </div>
+      <div className="modal-actions">
+        <button className="modal-button secondary" id="rename-cancel" onClick={onCancel}>
+          Cancel
+        </button>
+        <button className="modal-button primary" id="rename-confirm" onClick={handleSubmit}>
+          Rename
+        </button>
+      </div>
+    </ModalShell>
   );
 }

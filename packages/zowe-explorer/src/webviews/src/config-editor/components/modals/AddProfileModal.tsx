@@ -1,5 +1,5 @@
 import * as l10n from "@vscode/l10n";
-import { useModalClickOutside, useModalFocus } from "../../hooks";
+import { ModalShell } from "../ModalShell";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 import { isFileProperty } from "../../utils/propertyUtils";
 
@@ -46,9 +46,6 @@ export function AddProfileModal({
   onCancel,
   focusValueInput = false,
 }: AddProfileModalProps) {
-  const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
-  const modalRef = useModalFocus(isOpen, focusValueInput ? ".add-profile-input" : "#profile-type-input");
-
   if (!isOpen) return null;
 
   const isAuthOrderProperty = (key: string): boolean => {
@@ -110,219 +107,222 @@ export function AddProfileModal({
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter") {
       onAdd();
-    } else if (e.key === "Escape") {
-      onCancel();
     }
   };
 
   return (
-    <div className="modal-backdrop" onMouseDown={handleBackdropMouseDown} onClick={handleBackdropClick}>
-      <div className="modal" ref={modalRef} onClick={(e) => e.stopPropagation()}>
-        <h3>{l10n.t("Add New Profile Property")}</h3>
-        <div className="dropdown-container" style={{ position: "relative" }}>
-          <input
-            id="profile-type-input"
-            value={newProfileKey}
-            onChange={(e) => {
-              onNewProfileKeyChange((e.target as HTMLInputElement).value);
-              onShowDropdownChange(true);
-            }}
-            onFocus={() => onShowDropdownChange(true)}
-            onBlur={() => setTimeout(() => onShowDropdownChange(false), 100)}
-            onKeyDown={handleKeyDown}
-            className="modal-input"
-            placeholder={l10n.t("New Key")}
-            style={{ paddingRight: "2rem" }}
-          />
-          {newProfileKey && (
-            <button onClick={() => onNewProfileKeyChange("")} className="profile-clear-button" title="Clear input">
-              <span
-                className="codicon codicon-chrome-close"
-                style={{
-                  fontSize: "14px",
-                  lineHeight: 1,
-                }}
-              />
-            </button>
-          )}
-          {showDropdown && (
-            <ul className="dropdown-list">
-              {typeOptions
-                .filter((opt) => opt.toLowerCase().includes(newProfileKey.toLowerCase()))
-                .map((option, index) => (
-                  <li
-                    key={index}
-                    className="dropdown-item"
-                    title={propertyDescriptions[option] || ""}
-                    onMouseDown={() => {
-                      onNewProfileKeyChange(option);
-                      onShowDropdownChange(false);
-                    }}
-                  >
-                    {option}
-                  </li>
-                ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Auth Order Buttons */}
-        {isAuthOrderProperty(newProfileKey.trim()) && (
-          <div className="auth-order-buttons">
-            <label className="auth-order-label">{l10n.t("Select Authentication Order")}:</label>
-            <div className="auth-order-button-container">
-              {["token", "basic", "bearer", "cert-pem"].map((authMethod) => {
-                const isSelected = isAuthMethodAlreadyAdded(authMethod);
-                return (
-                  <button
-                    key={authMethod}
-                    type="button"
-                    onClick={() => handleAuthMethodClick(authMethod)}
-                    className={`auth-order-button ${isSelected ? "selected" : ""}`}
-                    title={`${getAuthMethodTooltip(authMethod)} (${isSelected ? "Click to remove" : "Click to add"})`}
-                  >
-                    {authMethod}
-                  </button>
-                );
-              })}
-            </div>
-            {!isValidAuthOrder(newProfileValue) && (
-              <div className="auth-order-error">{l10n.t("Invalid format. Use: basic, token, bearer, cert-pem")}</div>
-            )}
-          </div>
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onCancel}
+      initialFocusSelector={focusValueInput ? ".add-profile-input" : "#profile-type-input"}
+      titleId="add-profile-modal-title"
+      overlayClassName="modal-backdrop"
+      panelClassName="modal"
+    >
+      <h3 id="add-profile-modal-title">{l10n.t("Add New Profile Property")}</h3>
+      <div className="dropdown-container" style={{ position: "relative" }}>
+        <input
+          id="profile-type-input"
+          value={newProfileKey}
+          onChange={(e) => {
+            onNewProfileKeyChange((e.target as HTMLInputElement).value);
+            onShowDropdownChange(true);
+          }}
+          onFocus={() => onShowDropdownChange(true)}
+          onBlur={() => setTimeout(() => onShowDropdownChange(false), 100)}
+          onKeyDown={handleKeyDown}
+          className="modal-input"
+          placeholder={l10n.t("New Key")}
+          style={{ paddingRight: "2rem" }}
+        />
+        {newProfileKey && (
+          <button onClick={() => onNewProfileKeyChange("")} className="profile-clear-button" title="Clear input">
+            <span
+              className="codicon codicon-chrome-close"
+              style={{
+                fontSize: "14px",
+                lineHeight: 1,
+              }}
+            />
+          </button>
         )}
-
-        <div className="add-profile-input-row">
-          {(() => {
-            const propertyType = getPropertyType(newProfileKey.trim());
-            if (isSecure) {
-              return (
-                <input
-                  placeholder="••••••••"
-                  value={newProfileValue}
-                  onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
-                  onKeyDown={handleKeyDown}
-                  className="modal-input add-profile-input"
-                  type="password"
-                />
-              );
-            } else if (propertyType === "boolean") {
-              return (
-                <select
-                  value={newProfileValue}
-                  onChange={(e) => onNewProfileValueChange((e.target as HTMLSelectElement).value)}
-                  onKeyDown={handleKeyDown}
-                  className="modal-input add-profile-input"
-                >
-                  <option value="true">true</option>
-                  <option value="false">false</option>
-                </select>
-              );
-            } else if (propertyType === "number") {
-              return (
-                <input
-                  type="number"
-                  value={newProfileValue}
-                  onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
-                  onKeyDown={handleKeyDown}
-                  className="modal-input add-profile-input"
-                  placeholder={l10n.t("Value")}
-                />
-              );
-            } else {
-              const isAuthOrder = isAuthOrderProperty(newProfileKey.trim());
-              const hasValidationError = isAuthOrder && !isValidAuthOrder(newProfileValue);
-
-              return (
-                <EnvVarAutocomplete
-                  value={newProfileValue}
-                  onChange={onNewProfileValueChange}
-                  onKeyDown={handleKeyDown}
-                  className={`modal-input add-profile-input ${hasValidationError ? "error" : ""}`}
-                  placeholder={isAuthOrder ? l10n.t("e.g., basic, token") : l10n.t("Value")}
-                  vscodeApi={vscodeApi}
-                />
-              );
-            }
-          })()}
-          <div className="add-profile-buttons">
-            {newProfileKey && isFileProperty(newProfileKey.trim()) && (
-              <button
-                onClick={() => {
-                  if (vscodeApi) {
-                    vscodeApi.postMessage({
-                      command: "SELECT_FILE",
-                      propertyIndex: -1, // -1 indicates new property
-                      isNewProperty: true,
-                      source: "addProfile",
-                    });
-                  } else {
-                    const input = document.createElement("input");
-                    input.type = "file";
-                    input.accept = "*";
-
-                    input.onchange = (event) => {
-                      const target = event.target as HTMLInputElement;
-                      if (target.files && target.files.length > 0) {
-                        const file = target.files[0];
-                        const fileName = file.name;
-                        const filePath = (file as any).webkitRelativePath || fileName;
-                        onNewProfileValueChange(filePath);
-                      }
-                    };
-
-                    input.click();
-                  }
-                }}
-                className="wizard-file-picker"
-                title="Select file"
-              >
-                <span className="codicon codicon-folder-opened"></span>
-              </button>
-            )}
-            {canPropertyBeSecure(newProfileKey, newProfileKeyPath) ? (
-              secureValuesAllowed ? (
-                <button
-                  type="button"
-                  onClick={onSecureToggle}
-                  className={`wizard-secure-toggle ${isSecure ? "active" : "inactive"}`}
-                  title={isSecure ? "Unlock property" : "Lock property"}
-                >
-                  <span className={`codicon ${isSecure ? "codicon-lock" : "codicon-unlock"}`}></span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    vscodeApi.postMessage({
-                      command: "OPEN_VSCODE_SETTINGS",
-                      searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
-                    });
+        {showDropdown && (
+          <ul className="dropdown-list">
+            {typeOptions
+              .filter((opt) => opt.toLowerCase().includes(newProfileKey.toLowerCase()))
+              .map((option, index) => (
+                <li
+                  key={index}
+                  className="dropdown-item"
+                  title={propertyDescriptions[option] || ""}
+                  onMouseDown={() => {
+                    onNewProfileKeyChange(option);
+                    onShowDropdownChange(false);
                   }}
-                  className="wizard-secure-toggle inactive"
-                  title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
                 >
-                  <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+                  {option}
+                </li>
+              ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Auth Order Buttons */}
+      {isAuthOrderProperty(newProfileKey.trim()) && (
+        <div className="auth-order-buttons">
+          <label className="auth-order-label">{l10n.t("Select Authentication Order")}:</label>
+          <div className="auth-order-button-container">
+            {["token", "basic", "bearer", "cert-pem"].map((authMethod) => {
+              const isSelected = isAuthMethodAlreadyAdded(authMethod);
+              return (
+                <button
+                  key={authMethod}
+                  type="button"
+                  onClick={() => handleAuthMethodClick(authMethod)}
+                  className={`auth-order-button ${isSelected ? "selected" : ""}`}
+                  title={`${getAuthMethodTooltip(authMethod)} (${isSelected ? "Click to remove" : "Click to add"})`}
+                >
+                  {authMethod}
                 </button>
-              )
-            ) : null}
+              );
+            })}
           </div>
+          {!isValidAuthOrder(newProfileValue) && (
+            <div className="auth-order-error">{l10n.t("Invalid format. Use: basic, token, bearer, cert-pem")}</div>
+          )}
         </div>
-        <div className="modal-actions">
-          <div className="add-profile-actions">
-            <button className="wizard-button secondary" onClick={onCancel}>
-              {l10n.t("Cancel")}
-            </button>
+      )}
+
+      <div className="add-profile-input-row">
+        {(() => {
+          const propertyType = getPropertyType(newProfileKey.trim());
+          if (isSecure) {
+            return (
+              <input
+                placeholder="••••••••"
+                value={newProfileValue}
+                onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
+                onKeyDown={handleKeyDown}
+                className="modal-input add-profile-input"
+                type="password"
+              />
+            );
+          } else if (propertyType === "boolean") {
+            return (
+              <select
+                value={newProfileValue}
+                onChange={(e) => onNewProfileValueChange((e.target as HTMLSelectElement).value)}
+                onKeyDown={handleKeyDown}
+                className="modal-input add-profile-input"
+              >
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            );
+          } else if (propertyType === "number") {
+            return (
+              <input
+                type="number"
+                value={newProfileValue}
+                onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
+                onKeyDown={handleKeyDown}
+                className="modal-input add-profile-input"
+                placeholder={l10n.t("Value")}
+              />
+            );
+          } else {
+            const isAuthOrder = isAuthOrderProperty(newProfileKey.trim());
+            const hasValidationError = isAuthOrder && !isValidAuthOrder(newProfileValue);
+
+            return (
+              <EnvVarAutocomplete
+                value={newProfileValue}
+                onChange={onNewProfileValueChange}
+                onKeyDown={handleKeyDown}
+                className={`modal-input add-profile-input ${hasValidationError ? "error" : ""}`}
+                placeholder={isAuthOrder ? l10n.t("e.g., basic, token") : l10n.t("Value")}
+                vscodeApi={vscodeApi}
+              />
+            );
+          }
+        })()}
+        <div className="add-profile-buttons">
+          {newProfileKey && isFileProperty(newProfileKey.trim()) && (
             <button
-              className="wizard-button primary"
-              onClick={onAdd}
-              disabled={isAuthOrderProperty(newProfileKey.trim()) && !isValidAuthOrder(newProfileValue)}
+              onClick={() => {
+                if (vscodeApi) {
+                  vscodeApi.postMessage({
+                    command: "SELECT_FILE",
+                    propertyIndex: -1, // -1 indicates new property
+                    isNewProperty: true,
+                    source: "addProfile",
+                  });
+                } else {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.accept = "*";
+
+                  input.onchange = (event) => {
+                    const target = event.target as HTMLInputElement;
+                    if (target.files && target.files.length > 0) {
+                      const file = target.files[0];
+                      const fileName = file.name;
+                      const filePath = (file as any).webkitRelativePath || fileName;
+                      onNewProfileValueChange(filePath);
+                    }
+                  };
+
+                  input.click();
+                }
+              }}
+              className="wizard-file-picker"
+              title="Select file"
             >
-              {l10n.t("Add")}
+              <span className="codicon codicon-folder-opened"></span>
             </button>
-          </div>
+          )}
+          {canPropertyBeSecure(newProfileKey, newProfileKeyPath) ? (
+            secureValuesAllowed ? (
+              <button
+                type="button"
+                onClick={onSecureToggle}
+                className={`wizard-secure-toggle ${isSecure ? "active" : "inactive"}`}
+                title={isSecure ? "Unlock property" : "Lock property"}
+              >
+                <span className={`codicon ${isSecure ? "codicon-lock" : "codicon-unlock"}`}></span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  vscodeApi.postMessage({
+                    command: "OPEN_VSCODE_SETTINGS",
+                    searchText: "Zowe.vscode-extension-for-zowe Secure Credentials Enabled",
+                  });
+                }}
+                className="wizard-secure-toggle inactive"
+                title="A credential manager is not available. Click to open VS Code settings to enable secure credentials."
+              >
+                <span className="codicon codicon-lock" style={{ opacity: 0.5 }}></span>
+              </button>
+            )
+          ) : null}
         </div>
       </div>
-    </div>
+      <div className="modal-actions">
+        <div className="add-profile-actions">
+          <button className="wizard-button secondary" onClick={onCancel}>
+            {l10n.t("Cancel")}
+          </button>
+          <button
+            className="wizard-button primary"
+            onClick={onAdd}
+            disabled={isAuthOrderProperty(newProfileKey.trim()) && !isValidAuthOrder(newProfileValue)}
+          >
+            {l10n.t("Add")}
+          </button>
+        </div>
+      </div>
+    </ModalShell>
   );
 }

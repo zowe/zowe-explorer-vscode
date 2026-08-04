@@ -87,7 +87,6 @@ interface ConfigurationsMessagePayload {
     parseErrors?: ConfigParseError[];
     secureValuesAllowed?: boolean;
     tutorialSeen?: boolean;
-    isNewConfig?: boolean;
 }
 
 // Handle CONFIGURATIONS message
@@ -114,18 +113,12 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
         setConfigParseErrors,
     } = props;
 
-    const { contents, secureValuesAllowed, parseErrors, tutorialSeen, isNewConfig } = data;
+    const { contents, secureValuesAllowed, parseErrors, tutorialSeen } = data;
     if (tutorialSeen !== undefined) {
         props.setTutorialSeen(tutorialSeen);
-        if (!tutorialSeen && !isNewConfig) {
+        if (!tutorialSeen) {
             props.setShowTutorial(true);
         }
-    }
-    // Show tutorial whenever a brand-new config is created via the webview's
-    // "Add New Configuration File" modal. tutorialSeen only prevents the
-    // tutorial from auto-appearing on subsequent opens, not on explicit creation.
-    if (isNewConfig) {
-        props.setShowTutorial(true);
     }
     const parseErrorList: ConfigParseError[] = parseErrors ?? [];
     setConfigParseErrors(parseErrorList);
@@ -262,6 +255,13 @@ export const handleMergedPropertiesMessage = (data: MergedPropertiesMessagePaylo
 
     const responseSeq = data.mergedPropertiesRequestSeq;
     if (responseSeq !== undefined && responseSeq !== mergedPropertiesLatestRequestSeqRef.current) {
+        return;
+    }
+
+    if (data.error) {
+        console.error("Failed to get merged properties:", data.error);
+        setMergedProperties(null);
+        setPendingMergedPropertiesRequest(null);
         return;
     }
 
@@ -427,6 +427,37 @@ export const handleLocalStorageValueMessage = (data: LocalStorageValueMessagePay
     }
 };
 
+interface LocalStorageErrorMessagePayload {
+    key?: string;
+    error?: string;
+}
+
+// Handle LOCAL_STORAGE_ERROR message
+export const handleLocalStorageErrorMessage = (data: LocalStorageErrorMessagePayload, props: MessageHandlerProps) => {
+    const { setConfigEditorSettings, setSortOrderVersion } = props;
+    console.error(`Local storage operation failed for key "${data.key}":`, data.error);
+
+    // If reading/writing the editor settings failed, fall back to defaults so the UI isn't left uninitialized.
+    if (data.key === CONFIG_EDITOR_SETTINGS_KEY) {
+        const defaultSettings: ConfigEditorSettings = {
+            showMergedProperties: "show",
+            viewMode: "tree",
+            propertySortOrder: "alphabetical",
+            profileSortOrder: "natural",
+            profilesWidthPercent: 35,
+            defaultsCollapsed: true,
+            profilesCollapsed: false,
+        };
+        setConfigEditorSettings(defaultSettings);
+        setSortOrderVersion((prev) => prev + 1);
+    }
+};
+
+// Handle LOCAL_STORAGE_SET_SUCCESS message (acknowledgement only; nothing for the UI to react to today)
+export const handleLocalStorageSetSuccessMessage = (_data: { key?: string }, _props: MessageHandlerProps) => {
+    // no-op — explicitly handled so this ack isn't silently dropped as an unrecognized command
+};
+
 // Handle RELOAD message
 export const handleReloadMessage = (props: MessageHandlerProps) => {
     const {
@@ -522,6 +553,12 @@ export const handleMessage = (event: MessageEvent, props: MessageHandlerProps) =
             break;
         case "LOCAL_STORAGE_VALUE":
             handleLocalStorageValueMessage(event.data, props);
+            break;
+        case "LOCAL_STORAGE_ERROR":
+            handleLocalStorageErrorMessage(event.data, props);
+            break;
+        case "LOCAL_STORAGE_SET_SUCCESS":
+            handleLocalStorageSetSuccessMessage(event.data, props);
             break;
         case "RELOAD":
             handleReloadMessage(props);

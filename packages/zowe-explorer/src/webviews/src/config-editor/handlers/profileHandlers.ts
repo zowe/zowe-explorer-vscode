@@ -9,7 +9,7 @@
  *
  */
 
-import { getCurrentEffectiveName, checkIfRenameCancelsOut, consolidateRenames, detectClosedLoops } from "../utils/renameUtils";
+import { checkIfRenameCancelsOut, consolidateRenames, detectClosedLoops } from "../utils/renameUtils";
 import { getRenamedProfileKeyWithNested, getReplacementProfileAfterDelete } from "../utils/profileUtils";
 import { flattenProfiles } from "../utils";
 
@@ -43,7 +43,7 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
     const configPath = configurations[selectedTab!]!.configPath;
 
     // Check if we need to use the current effective name instead of the original key
-    const currentEffectiveName = getCurrentEffectiveName(originalKey, configPath, renames);
+    const currentEffectiveName = getRenamedProfileKeyWithNested(originalKey, configPath, renames);
     if (currentEffectiveName !== originalKey) {
         // Use the current effective name as the original key
         originalKey = currentEffectiveName;
@@ -708,7 +708,7 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
     const configPath = configurations[selectedTab!]!.configPath;
 
     // Get the current effective profile key considering pending renames
-    const effectiveProfileKey = getCurrentEffectiveName(profileKey, configPath, renames);
+    const effectiveProfileKey = getRenamedProfileKeyWithNested(profileKey, configPath, renames);
 
     // Construct the full profile path using the effective profile key
     let fullProfilePath: string;

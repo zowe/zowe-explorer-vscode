@@ -1576,7 +1576,7 @@ describe("Test src/shared/extension", () => {
             const jsonWithLineComments = [
                 "{",
                 '  "profiles": {',
-                '    // This is a comment',
+                "    // This is a comment",
                 '    "zosmf": {',
                 '      "type": "zosmf",',
                 '      "properties": {',
@@ -1602,7 +1602,7 @@ describe("Test src/shared/extension", () => {
             const jsonWithBlockComments = [
                 "{",
                 '  "profiles": {',
-                '    /* block comment */',
+                "    /* block comment */",
                 '    "zosmf": {',
                 '      "type": "zosmf",',
                 '      "properties": {',

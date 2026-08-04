@@ -103,6 +103,13 @@
     word-break: break-word;
 }
 
+.help-section p + p {
+    margin-top: 4px;
+    color: var(--vscode-descriptionForeground);
+    font-size: 12px;
+    word-break: break-all;
+}
+
 .help-section code {
     background-color: var(--vscode-textCodeBlock-background);
     padding: 3px 6px;
@@ -130,6 +137,10 @@
     letter-spacing: normal;
 }
 
+.field-help-tooltip > .tutorial-button {
+    margin-top: 8px;
+}
+
 /* ========================================
    Tutorial Overlay Styles
    ======================================== */
@@ -142,6 +153,26 @@
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.6);
     z-index: 9998;
+}
+
+.tutorial-overlay-backdrop-segment {
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 9998;
+}
+
+.tutorial-spotlight-outline {
+    position: fixed;
+    z-index: 9998;
+    pointer-events: none;
+    border: 2px solid var(--vscode-focusBorder);
+    border-radius: 6px;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12);
+    transition:
+        top 0.2s ease,
+        left 0.2s ease,
+        width 0.2s ease,
+        height 0.2s ease;
 }
 
 .tutorial-overlay-modal {
@@ -159,6 +190,9 @@
     max-height: 80vh;
     display: flex;
     flex-direction: column;
+    transition:
+        top 0.2s ease,
+        left 0.2s ease;
 }
 
 .tutorial-header {
@@ -254,6 +288,10 @@
     align-items: center;
     gap: 6px;
     border: none;
+}
+
+.tutorial-overlay-modal .codicon {
+    margin-top: 0 !important;
 }
 
 .tutorial-button-primary {

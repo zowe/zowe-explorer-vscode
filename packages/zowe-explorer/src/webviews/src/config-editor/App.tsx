@@ -20,10 +20,8 @@ import {
 } from "./components";
 
 import { flattenKeys, flattenProfiles, getAllQualifiedProfileKeys, resolveOriginalProfileKeyFromRenames } from "./utils";
-import { getProfileType } from "./utils/profileUtils";
+import { getProfileType, getOriginalProfileKeyWithNested } from "./utils/profileUtils";
 import { getPropertyTypeForAddProfile, fetchTypeOptions, getPropertyDescriptions } from "./utils/propertyUtils";
-
-import { getProfileNameForMergedProperties } from "./utils/renameUtils";
 import { usePropertyHandlers, useConfigHandlers, useProfileUtils, useHandlerContext } from "./hooks";
 import { usePanelResizer } from "./hooks/usePanelResizer";
 import { useMessageHandler } from "./hooks/useMessageHandler";
@@ -214,7 +212,7 @@ function AppContent() {
 
     mergedPropertiesLatestRequestSeqRef.current += 1;
     const seq = mergedPropertiesLatestRequestSeqRef.current;
-    const profileNameForMergedProperties = getProfileNameForMergedProperties(selectedProfileKey, configPath, renames);
+    const profileNameForMergedProperties = getOriginalProfileKeyWithNested(selectedProfileKey, configPath, renames);
     const changes = formatPendingChanges();
     vscodeApi.postMessage({
       command: "GET_MERGED_PROPERTIES",
@@ -629,17 +627,15 @@ function AppContent() {
 
       {showTutorial && (
         <TutorialOverlay
+          selectedProfileKey={selectedProfileKey}
+          onSelectProfile={handleProfileSelection}
           onClose={() => {
             tutorialSeenRef.current = true;
             setTutorialSeen(true);
-            const seenMap: Record<string, boolean> = {};
-            for (const config of configurations) {
-              seenMap[config.configPath] = true;
-            }
             vscodeApi.postMessage({
               command: "SET_LOCAL_STORAGE_VALUE",
               key: "zowe.configEditor.tutorialSeen",
-              value: seenMap,
+              value: true,
             });
             setShowTutorial(false);
           }}

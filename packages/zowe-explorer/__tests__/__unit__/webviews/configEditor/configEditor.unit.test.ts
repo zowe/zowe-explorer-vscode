@@ -426,12 +426,10 @@ describe("configEditor", () => {
             profilesCacheSpy.mockRestore();
         });
 
-        it("should return true when credential manager is in app settings", async () => {
+        it("should return true when profile info reports secured credentials", async () => {
             const mockProfilesCache = {
                 getProfileInfo: vi.fn().mockResolvedValue({
-                    mCredentials: {
-                        isCredentialManagerInAppSettings: vi.fn().mockReturnValue(true),
-                    },
+                    isSecured: vi.fn().mockReturnValue(true),
                 }),
             };
 
@@ -2064,7 +2062,7 @@ describe("configEditor", () => {
             });
             const areSecureValuesAllowedSpy = vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
             // getTutorialSeen reads from ZoweLocalStorage.globalState which is undefined in unit tests
-            vi.spyOn((configEditor as any).messageHandlers, "getTutorialSeen").mockImplementation((_paths: string[]) => false);
+            vi.spyOn((configEditor as any).messageHandlers, "getTutorialSeen").mockReturnValue(false);
             const postMessageSpy = vi.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
@@ -2077,7 +2075,6 @@ describe("configEditor", () => {
                 parseErrors: [],
                 secureValuesAllowed: true,
                 tutorialSeen: false,
-                isNewConfig: true,
             });
         });
 

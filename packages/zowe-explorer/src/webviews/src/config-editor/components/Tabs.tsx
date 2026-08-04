@@ -133,7 +133,7 @@ export function Tabs({ onTabChange, onOpenFile, onRevealInFinder, onOpenSchemaFi
               >
                 <span className="tab-label tab-label-row" title={config.configPath}>
                   <span className={`codicon codicon-size-14 ${getConfigIcon(config)}`}></span>
-                  {getTabLabel(config)}
+                  <span className="tab-label-text">{getTabLabel(config)}</span>
                   {hasPendingChanges && <span className="codicon codicon-circle-filled tab-unsaved-indicator" title={l10n.t("Unsaved changes")} />}
                 </span>
               </div>

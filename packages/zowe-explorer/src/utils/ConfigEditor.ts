@@ -107,13 +107,12 @@ export class ConfigEditor extends WebView {
 
         vscode.commands.executeCommand("workbench.action.keepEditor");
 
-        this.panel.onDidDispose(() => {});
-
-        this.context.subscriptions.push(
-            vscode.workspace.onDidSaveTextDocument((doc) => {
-                void this.onDidSaveDocumentForParseErrors(doc);
-            })
-        );
+        const saveListener = vscode.workspace.onDidSaveTextDocument((doc) => {
+            void this.onDidSaveDocumentForParseErrors(doc);
+        });
+        this.panel.onDidDispose(() => {
+            saveListener.dispose();
+        });
 
         void this.initializeWebview();
     }
@@ -121,7 +120,7 @@ export class ConfigEditor extends WebView {
     private async initializeWebview(): Promise<void> {
         const { configs, parseErrors } = await this.getLocalConfigs();
         const secureValuesAllowed = await this.areSecureValuesAllowed();
-        const tutorialSeen = this.messageHandlers.getTutorialSeen(configs.map((c) => c.configPath));
+        const tutorialSeen = this.messageHandlers.getTutorialSeen();
 
         await this.panel.webview.postMessage({
             command: "CONFIGURATIONS",
@@ -184,7 +183,7 @@ export class ConfigEditor extends WebView {
                 }
                 try {
                     const raw = fs.readFileSync(resolved, { encoding: "utf8" });
-                    JSON.parse(raw);
+                    JSON.parse(ConfigUtils.stripJsoncToJson(raw));
                 } catch (err) {
                     const errorMessage = err instanceof Error ? err.message : String(err);
                     pushParseError(parseErrors, resolved, `Error reading or parsing file ${resolved}: ${errorMessage}`);
@@ -259,7 +258,7 @@ export class ConfigEditor extends WebView {
             return false;
         }
         try {
-            return (((await profilesCache.getProfileInfo()) as any).mCredentials.isCredentialManagerInAppSettings() ?? false) as boolean;
+            return ((await profilesCache.getProfileInfo()) as ProfileInfo).isSecured();
         } catch (_err) {
             return false;
         }
@@ -510,6 +509,11 @@ export class ConfigEditor extends WebView {
                     const errorMessage = error instanceof Error ? error.message : String(error);
                     console.error("Failed to get merged properties:", errorMessage);
                     vscode.window.showErrorMessage(`Cannot show merged properties: ${errorMessage}`);
+                    await this.panel.webview.postMessage({
+                        command: "MERGED_PROPERTIES",
+                        error: errorMessage,
+                        mergedPropertiesRequestSeq: message.mergedPropertiesRequestSeq,
+                    });
                 }
                 break;
             }
@@ -543,14 +547,13 @@ export class ConfigEditor extends WebView {
                 const result = await this.fileOperations.createNewConfig(message as unknown as CreateNewConfigMessage);
                 if (result && result.configs.length > 0) {
                     const secureValuesAllowed = await this.areSecureValuesAllowed();
-                    const tutorialSeen = this.messageHandlers.getTutorialSeen(result.configs.map((c) => c.configPath));
+                    const tutorialSeen = this.messageHandlers.getTutorialSeen();
                     await this.panel.webview.postMessage({
                         command: "CONFIGURATIONS",
                         contents: result.configs,
                         parseErrors: result.parseErrors,
                         secureValuesAllowed,
                         tutorialSeen,
-                        isNewConfig: true,
                     });
                 }
                 break;

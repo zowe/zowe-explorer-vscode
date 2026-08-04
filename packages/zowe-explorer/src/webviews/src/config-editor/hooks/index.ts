@@ -18,3 +18,4 @@ export * from "./useConfigHandlers";
 export * from "./useProfileUtils";
 export * from "./useHandlerContext";
 export * from "./useWizardState";
+export * from "./useAnchoredTooltip";

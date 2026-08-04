@@ -37,13 +37,11 @@ export class ConfigEditorMessageHandlers {
     ) {}
 
     /**
-     * Returns whether the tutorial has been dismissed for all of the given config file paths.
-     * The stored value is a per-path map (`Record<string, boolean>`); returns `false` if any
-     * path has not yet been seen, or if no paths are provided.
+     * Returns whether the user has ever dismissed the tutorial.
+     * A single global boolean — not per config file path.
      */
-    public getTutorialSeen(configPaths: string[]): boolean {
-        const seen = LocalStorageAccess.getValue<Record<string, boolean>>(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN) ?? {};
-        return configPaths.length > 0 && configPaths.every((p) => seen[p] === true);
+    public getTutorialSeen(): boolean {
+        return LocalStorageAccess.getValue<boolean>(Definitions.LocalStorageKey.CONFIG_EDITOR_TUTORIAL_SEEN) ?? false;
     }
 
     async handleGetProfiles(): Promise<void> {
@@ -53,7 +51,7 @@ export class ConfigEditorMessageHandlers {
 
         const { configs, parseErrors } = await this.getLocalConfigs();
         const secureValuesAllowed = await this.areSecureValuesAllowed();
-        const tutorialSeen = this.getTutorialSeen(configs.map((c) => c.configPath));
+        const tutorialSeen = this.getTutorialSeen();
         await this.panel.webview.postMessage({
             command: "CONFIGURATIONS",
             contents: configs,

@@ -65,6 +65,10 @@ export const EnvVarAutocomplete: React.FC<EnvVarAutocompleteProps> = ({
       if (event.data.command === "ENV_VARS_RESPONSE") {
         setSuggestions(event.data.envVars || []);
         setIsLoading(false);
+      } else if (event.data.command === "ENV_VARS_ERROR") {
+        console.error("Failed to fetch environment variables:", event.data.error);
+        setSuggestions([]);
+        setIsLoading(false);
       }
     };
 

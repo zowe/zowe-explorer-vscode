@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useRef } from "react";
 
 import { RenderConfig } from "./renderConfig";
+import { ConfirmableDeleteButton } from "./ConfirmableDeleteButton";
 import { flattenProfiles, ensureProfileProperties, isMergedPropertySecure, getOriginalProfileKey } from "../utils";
 import { getPropertyDescriptions } from "../utils/propertyUtils";
 import * as l10n from "@vscode/l10n";
@@ -207,30 +208,16 @@ export const RenderProfileDetails = ({
               >
                 <span className="codicon codicon-edit"></span>
               </button>
-              {pendingProfileDeletion === selectedProfileKey ? (
-                <div className="config-editor-flex-gap">
-                  <button
-                    className="profile-action-button"
-                    onClick={() => confirmDeleteProfile(selectedProfileKey)}
-                    title={l10n.t("Confirm delete")}
-                    style={{ color: "var(--vscode-errorForeground)" }}
-                  >
-                    <span className="codicon codicon-check"></span>
-                  </button>
-                  <button className="profile-action-button" onClick={() => setPendingProfileDeletion(null)} title={l10n.t("Cancel")}>
-                    <span className="codicon codicon-close"></span>
-                  </button>
-                </div>
-              ) : (
-                <button
-                  className="profile-action-button"
-                  id="delete-profile"
-                  onClick={() => handleDeleteProfile(selectedProfileKey)}
-                  title={l10n.t("Delete profile")}
-                >
-                  <span className="codicon codicon-trash"></span>
-                </button>
-              )}
+              <ConfirmableDeleteButton
+                isConfirming={pendingProfileDeletion === selectedProfileKey}
+                buttonClassName="profile-action-button"
+                confirmWrapperClassName="config-editor-flex-gap"
+                deleteId="delete-profile"
+                deleteTitle={l10n.t("Delete profile")}
+                onRequestDelete={() => handleDeleteProfile(selectedProfileKey)}
+                onConfirmDelete={() => confirmDeleteProfile(selectedProfileKey)}
+                onCancel={() => setPendingProfileDeletion(null)}
+              />
             </div>
           )}
         </div>

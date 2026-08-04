@@ -11,14 +11,13 @@
 
 import {
     updateChangesForRenames,
-    getProfileNameForMergedProperties,
     consolidateRenames,
     consolidateConflictingRenames,
-    getCurrentEffectiveName,
     detectClosedLoops,
     checkIfRenameCancelsOut,
     hasPendingRename,
 } from "../../../../src/webviews/src/config-editor/utils/renameUtils";
+import { getOriginalProfileKeyWithNested, getRenamedProfileKeyWithNested } from "../../../../src/webviews/src/config-editor/utils/profileRenames";
 
 describe("renameUtils", () => {
     describe("updateChangesForRenames", () => {
@@ -132,21 +131,21 @@ describe("renameUtils", () => {
         });
     });
 
-    describe("getProfileNameForMergedProperties", () => {
+    describe("getOriginalProfileKeyWithNested", () => {
         it("returns profileKey when no renames", () => {
-            expect(getProfileNameForMergedProperties("p1", "/c", {})).toBe("p1");
+            expect(getOriginalProfileKeyWithNested("p1", "/c", {})).toBe("p1");
         });
         it("reverses rename for exact match", () => {
             const renames = { "/c": { orig: "p1" } };
-            expect(getProfileNameForMergedProperties("p1", "/c", renames)).toBe("orig");
+            expect(getOriginalProfileKeyWithNested("p1", "/c", renames)).toBe("orig");
         });
         it("reverses nested rename", () => {
             const renames = { "/c": { a: "a.b" } };
-            expect(getProfileNameForMergedProperties("a.b", "/c", renames)).toBe("a");
+            expect(getOriginalProfileKeyWithNested("a.b", "/c", renames)).toBe("a");
         });
         it("reverses multiple renames when config has several entries (sorted by length)", () => {
             const renames = { "/c": { short: "long.name", long: "long.name.nested" } };
-            expect(getProfileNameForMergedProperties("long.name.nested", "/c", renames)).toBe("long");
+            expect(getOriginalProfileKeyWithNested("long.name.nested", "/c", renames)).toBe("long");
         });
     });
 
@@ -225,21 +224,21 @@ describe("renameUtils", () => {
         });
     });
 
-    describe("getCurrentEffectiveName", () => {
+    describe("getRenamedProfileKeyWithNested", () => {
         it("returns profileKey when no renames", () => {
-            expect(getCurrentEffectiveName("p1", "/c", {})).toBe("p1");
+            expect(getRenamedProfileKeyWithNested("p1", "/c", {})).toBe("p1");
         });
         it("applies single rename", () => {
             const renames = { "/c": { orig: "p1" } };
-            expect(getCurrentEffectiveName("orig", "/c", renames)).toBe("p1");
+            expect(getRenamedProfileKeyWithNested("orig", "/c", renames)).toBe("p1");
         });
         it("applies nested rename without prefix re-apply", () => {
             const renames = { "/c": { orig: "renamed" } };
-            expect(getCurrentEffectiveName("orig", "/c", renames)).toBe("renamed");
+            expect(getRenamedProfileKeyWithNested("orig", "/c", renames)).toBe("renamed");
         });
         it("applies rename when effectiveName starts with originalKey + dot", () => {
             const renames = { "/c": { a: "x" } };
-            expect(getCurrentEffectiveName("a.b", "/c", renames)).toBe("x.b");
+            expect(getRenamedProfileKeyWithNested("a.b", "/c", renames)).toBe("x.b");
         });
     });
 

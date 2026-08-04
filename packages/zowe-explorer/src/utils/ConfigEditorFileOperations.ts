@@ -151,7 +151,8 @@ export class ConfigEditorFileOperations {
 
         const createButton = "Create New";
         const message =
-            `A Team Configuration File already exists in this location\n{0}\n` + `Continuing may alter the existing file, would you like to proceed?`;
+            `A Team Configuration File already exists in this location\n${foundLayer.path}\n` +
+            `Continuing may alter the existing file, would you like to proceed?`;
         const response = await vscode.window.showInformationMessage(message, { modal: true }, createButton);
         if (response) {
             return path.basename(foundLayer.path);

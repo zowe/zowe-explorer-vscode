@@ -21,6 +21,65 @@ type ArrayField = "changes" | "deletions" | "defaultsChanges" | "defaultsDeleteK
 
 export class ConfigUtils {
     /**
+     * Strips JSONC-style line comments, block comments, and trailing commas from source,
+     * respecting quoted string boundaries so that URL-like sequences inside string values
+     * are left untouched.
+     */
+    public static stripJsoncToJson(source: string): string {
+        let result = "";
+        let i = 0;
+        const len = source.length;
+
+        while (i < len) {
+            const ch = source[i];
+
+            // Quoted string — copy verbatim, handling escape sequences.
+            if (ch === '"') {
+                result += ch;
+                i++;
+                while (i < len) {
+                    const sc = source[i];
+                    result += sc;
+                    i++;
+                    if (sc === "\\") {
+                        // Copy the escaped character as-is and keep scanning.
+                        if (i < len) {
+                            result += source[i];
+                            i++;
+                        }
+                    } else if (sc === '"') {
+                        break;
+                    }
+                }
+                continue;
+            }
+
+            // Possible comment start.
+            if (ch === "/" && i + 1 < len) {
+                const next = source[i + 1];
+                if (next === "/") {
+                    // Line comment — skip to end of line.
+                    while (i < len && source[i] !== "\n") i++;
+                    continue;
+                }
+                if (next === "*") {
+                    // Block comment — skip to closing */.
+                    i += 2;
+                    while (i + 1 < len && !(source[i] === "*" && source[i + 1] === "/")) i++;
+                    i += 2; // consume closing */
+                    continue;
+                }
+            }
+
+            result += ch;
+            i++;
+        }
+
+        // Remove trailing commas before } or ] (safe to do with regex after comments are gone).
+        return result.replace(/,(\s*[}\]])/g, "$1");
+    }
+
+    /**
      * Creates a ProfileInfo instance for Zowe and loads profiles from disk.
      * @returns ProfileInfo after readProfilesFromDisk
      */

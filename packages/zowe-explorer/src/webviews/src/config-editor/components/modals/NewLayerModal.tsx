@@ -1,5 +1,5 @@
 import * as l10n from "@vscode/l10n";
-import { useModalClickOutside, useModalFocus } from "../../hooks";
+import { ModalShell } from "../ModalShell";
 
 interface NewLayerModalProps {
   isOpen: boolean;
@@ -10,32 +10,32 @@ interface NewLayerModalProps {
 }
 
 export function NewLayerModal({ isOpen, newLayerName, onNewLayerNameChange, onAdd, onCancel }: NewLayerModalProps) {
-  const { modalRef: _clickOutsideRef, handleBackdropMouseDown, handleBackdropClick } = useModalClickOutside(onCancel);
-  const modalRef = useModalFocus(isOpen, "input");
-
   if (!isOpen) return null;
 
   return (
-    <div className="modal-backdrop" onMouseDown={handleBackdropMouseDown} onClick={handleBackdropClick}>
-      <div className="modal" ref={modalRef} onClick={(e) => e.stopPropagation()}>
-        <h3>{l10n.t("Add New Layer")}</h3>
-        <input
-          placeholder={l10n.t("New Layer Name")}
-          value={newLayerName}
-          onChange={(e) => onNewLayerNameChange((e.target as HTMLInputElement).value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              onAdd();
-            } else if (e.key === "Escape") {
-              onCancel();
-            }
-          }}
-        />
-        <div className="modal-actions">
-          <button onClick={onAdd}>{l10n.t("Add")}</button>
-          <button onClick={onCancel}>{l10n.t("Cancel")}</button>
-        </div>
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onCancel}
+      initialFocusSelector="input"
+      titleId="new-layer-modal-title"
+      overlayClassName="modal-backdrop"
+      panelClassName="modal"
+    >
+      <h3 id="new-layer-modal-title">{l10n.t("Add New Layer")}</h3>
+      <input
+        placeholder={l10n.t("New Layer Name")}
+        value={newLayerName}
+        onChange={(e) => onNewLayerNameChange((e.target as HTMLInputElement).value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            onAdd();
+          }
+        }}
+      />
+      <div className="modal-actions">
+        <button onClick={onAdd}>{l10n.t("Add")}</button>
+        <button onClick={onCancel}>{l10n.t("Cancel")}</button>
       </div>
-    </div>
+    </ModalShell>
   );
 }
