@@ -24,7 +24,7 @@
     "@typescript-eslint/rule-tester": "^6.21.0",
     "requireindex": "^1.2.0",
     "rewire": "^6.0.0",
-    "vitest": "^3.2.6"
+    "vitest": "^3.2.7"
   },
   "engines": {
     "node": ">=0.10.0"
