@@ -17,6 +17,7 @@ import { ConfigUtils } from "./ConfigUtils";
 import { deployWithProgress } from "./ServerDeployment";
 import { SshErrorHandler } from "./SshErrorHandler";
 import path from "path";
+import { ImperativeError } from "@zowe/imperative";
 
 class AsyncMutex extends imperative.DeferredPromise<void> implements Disposable {
     public constructor(private onDispose?: () => void) {
@@ -70,6 +71,11 @@ export class SshClientCache extends vscode.Disposable {
     private constructor(private readonly mProfilesCache: ProfilesCache) {
         super(() => this.dispose());
     }
+
+    public static readonly WRITE_ACCESS_TO_SERVER_PATH_ERR =
+        `You do not have write access to the deployment directory '{0}'. ` +
+        `The SSH server could not be started. Configure a different directory, ` +
+        `or grant yourself write permission to the deployment directory if possible. `;
 
     public dispose(opts?: ZSshRestartOptions): void {
         for (const session of this.mClientSessionMap.values()) {
@@ -153,7 +159,6 @@ export class SshClientCache extends vscode.Disposable {
             const requestTimeout = vsceConfig.get<number>("settings.requestTimeout", 0) / 1000 || 60;
             const responseTimeout = vsceConfig.get<number>("zowex.responseTimeout") ?? 60;
             const useNativeSsh = vsceConfig.get<boolean>("zowex.experimentalNativeSsh", false);
-            const autoUpdate = vsceConfig.get<boolean>("zowex.serverAutoUpdate", true);
 
             let newClient: ZSshClient | undefined;
             let serverNotFound = false;
@@ -169,13 +174,17 @@ export class SshClientCache extends vscode.Disposable {
                     requests: replayRequests,
                     useNativeSsh,
                 });
-                imperative.Logger.getAppLogger().debug(`Server checksums: ${JSON.stringify(newClient.serverChecksums)}`);
-                if (await ZSshUtils.checkIfOutdated(newClient.serverChecksums)) {
-                    if (autoUpdate) {
-                        imperative.Logger.getAppLogger().info(`Server is out of date, deploying to ${profile.name} at %s`, serverPath);
-                        return true;
-                    } else {
+                imperative.Logger.getAppLogger().debug(`Server version: ${newClient.serverVersion}`);
+                serverNotFound = false;
+                if (ZSshUtils.checkIfOutdated(newClient.serverVersion)) {
+                    // assume autoUpdate is allowed unless the SSH profile says otherwise
+                    if (profile.profile?.autoUpdate === false) {
                         imperative.Logger.getAppLogger().warn(`Server is out of date, skipping update for ${profile.name}`);
+                        return false;
+                    } else {
+                        imperative.Logger.getAppLogger().info(`Server is out of date, deploying to ${profile.name} at %s`, serverPath);
+
+                        return true;
                     }
                 }
                 return false;
@@ -210,7 +219,18 @@ export class SshClientCache extends vscode.Disposable {
                 }
 
                 if (serverShouldDeploy) {
-                    if (!(await ZSshUtils.lacksWriteAccess(session, serverPath))) {
+                    if ((await ZSshUtils.lacksWriteAccess(session, serverPath))) {
+                        if (serverNotFound) {
+                            // the user has no usable instance of the SSH server so we should notify them 
+                            const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, serverPath);
+                            imperative.Logger.getAppLogger().error(errMsg);
+                            throw new ImperativeError({ msg: errMsg });
+                        } else {
+                            // otherwise we were just trying to update and the user can use the old version
+                            imperative.Logger.getAppLogger().warn("Skipped deploy step as server path '%s' is not writeable by the user", serverPath);
+                        }
+                    } else {
+                        // The user appears to have write access 
                         await deployWithProgress(session, serverPath);
                         newClient?.dispose();
                         newClient = await this.buildClient(session, clientId, {
@@ -222,8 +242,6 @@ export class SshClientCache extends vscode.Disposable {
                             requests: replayRequests,
                             useNativeSsh,
                         });
-                    } else {
-                        imperative.Logger.getAppLogger().warn("Skipped deploy step as server path '%s' is not writeable by the user", serverPath);
                     }
                 }
             }
