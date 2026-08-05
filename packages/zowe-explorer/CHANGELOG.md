@@ -6,6 +6,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Breaking: Removed the setting `zowe.zowex.serverAutoUpdate`, which was a global setting used to control whether the backend SSH server `zowex` would be automatically updated when it was outdated. To prevent such updates going forward, specify `"autoUpdate": false` in each desired `ssh` profile. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
+- Replaced the comparison of checksums of the backend SSH server `zowex` with comparing version numbers when checking if the remote server version is outdated. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
+- Renamed the `Connect to zowex server on host...` command to `Deploy SSH server on host and connect...`. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
+- Added an error message in the case that Zowe Explorer needs to deploy the backend SSH server `zowex`, but the user does not have write access to the specified directory when issuing the `Deploy SSH server on host and connect...` command or when validating `ssh` profiles. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
 - Added a new "Export Redacted Configuration Files" command to export team configuration files with sensitive values redacted, for sharing with others when troubleshooting. [#4432](https://github.com/zowe/zowe-explorer-vscode/pull/4432)
 - Added functionality to automatically detect the backend SSH server on the user's `$PATH` on USS, and use it by default if no serverPath exists in your configuration. Also updated the plug-in to avoid deploying the SSH server binary to directories to which the user does not have write access. [#4367](https://github.com/zowe/zowe-explorer-vscode/pull/4367)
 - Replaced repetitive `if (err instanceof Error)` patterns with `handleError` and `errorMessage` utility functions from `@zowe/zowe-explorer-api`. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
