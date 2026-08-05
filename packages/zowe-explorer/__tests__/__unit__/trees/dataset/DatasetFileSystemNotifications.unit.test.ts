@@ -203,9 +203,9 @@ describe("DatasetFSProvider File System Notifications", () => {
             vi.spyOn(DatasetFSProvider.instance as any, "fireSoon");
 
             const content = new Uint8Array([1, 2, 3]);
-            await expect(
-                DatasetFSProvider.instance.writeFile(testUris.pdsMember, content, { create: true, overwrite: false })
-            ).rejects.toThrow(vscode.FileSystemError.FileExists(testUris.pdsMember).message);
+            await expect(DatasetFSProvider.instance.writeFile(testUris.pdsMember, content, { create: true, overwrite: false })).rejects.toThrow(
+                vscode.FileSystemError.FileExists(testUris.pdsMember).message
+            );
 
             expect(allMembersMock).toHaveBeenCalledWith("USER.DATA.PDS");
             expect(uploadEntrySpy).not.toHaveBeenCalled();
