@@ -17,6 +17,7 @@ import { VscePromptApi } from "./VscePromptApi";
 import { SshClientCache } from "./SshClientCache";
 import { SshErrorHandler } from "./SshErrorHandler";
 import { deployWithProgress } from "./ServerDeployment";
+import { ImperativeError } from "@zowe/imperative";
 
 export class Utilities {
     public static registerCommands(_context: vscode.ExtensionContext, zoweExplorerApi: IApiExplorerExtender): vscode.Disposable[] {
@@ -62,7 +63,9 @@ export class Utilities {
                 return;
             }
         } else {
-            imperative.Logger.getAppLogger().info("Skipped deploy step as server path '%s' is not writeable by the user", deployDirectory);
+            const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, deployDirectory);
+            imperative.Logger.getAppLogger().error(errMsg);
+            throw new ImperativeError({ msg: errMsg });
         }
 
         await ConfigUtils.showSessionInTree(profile.name!, true, zoweExplorerApi);
