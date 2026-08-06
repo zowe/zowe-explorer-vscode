@@ -729,7 +729,6 @@ describe("AuthUtils", () => {
             expect(sessionNode.tooltip).not.toContain("User: olduser");
         });
 
-
         it("To check for node tooltip when profile is using Certificate based authentication and when Auth Method is not initially present in the toolTip", async () => {
             const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
             const getChildrenSpy = vi.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
