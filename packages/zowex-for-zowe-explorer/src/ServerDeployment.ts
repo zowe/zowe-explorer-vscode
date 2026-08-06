@@ -31,8 +31,6 @@ export function deployWithProgress(session: SshSession, serverPath: string): The
                     });
                     imperative.Logger.getAppLogger().info(`Prompting the user to determine whether we should proceed` +
                         ` with the deployment despite the apparent lack of disk space (${remainingMB} of ${recommendedMB} MB)`);
-                    // Accessibility: Capture the button response to ensure screen readers properly announce
-                    // the buttons as actionable elements rather than just informational text.
                     const selection = await Gui.showMessage(message, { items: [deployButton, cancelButton] });
                     if (selection === deployButton) {
                         imperative.Logger.getAppLogger().info("User accepted the risk of insufficient disk space");
