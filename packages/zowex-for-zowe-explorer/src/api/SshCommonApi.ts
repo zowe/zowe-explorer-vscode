@@ -34,20 +34,18 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                 const vsceConfig = vscode.workspace.getConfiguration("zowe");
                 const confirmSshServerDeploy = vsceConfig.get<boolean>("confirmSshServerDeploy", true);
                 if (confirmSshServerDeploy) {
-                    const deployButton = vscode.l10n.t("Deploy");
-                    const deployDontAskButton = vscode.l10n.t("Deploy, don't ask me again");
+                    const connectButton = vscode.l10n.t("Connect");
+                    const connectDontAskButton = vscode.l10n.t("Connect, don't ask me again");
 
                     const cancelButton = vscode.l10n.t("Cancel");
                     const message = vscode.l10n.t(
                         "Connecting with an SSH profile will deploy the SSH server to z/OS UNIX to " +
-                        "enable you to perform actions on the mainframe. An estimated {0} MB of disk space is " +
-                        "required. Would you like to proceed with connecting?",
-                        ZSshClient.REQUIRED_DEPLOY_SIZE_MB,
+                        "enable you to perform actions on the mainframe. Would you like to proceed with connecting?",
                     );
-                    const selection = await Gui.showMessage(message, { items: [cancelButton, deployButton, deployDontAskButton,] });
-                    if (selection === deployButton) {
+                    const selection = await Gui.showMessage(message, { items: [cancelButton, connectButton, connectDontAskButton,] });
+                    if (selection === connectButton) {
                         imperative.Logger.getAppLogger().info("User accepted the initial deployment warning");
-                    } else if (selection == deployDontAskButton) {
+                    } else if (selection == connectDontAskButton) {
                         imperative.Logger.getAppLogger().info("User accepted the initial deployment warning, and requested not to be asked again");
                         await vsceConfig.update("confirmSshServerDeploy", false, vscode.ConfigurationTarget.Global);
                     } else {
