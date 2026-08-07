@@ -261,6 +261,27 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
         expect(placeholderNode.tooltip).toBe("Use the Search button to list USS files");
         expect(placeholderNode.command?.command).toBe("zowe.placeholderCommand");
     });
+
+    it("Tests that a favorited node's tooltip displays the profile name and type instead of the path", async () => {
+        const globalMocks = createGlobalMocks();
+        globalMocks.withProgress.mockImplementation((progLocation, callback) => {
+            return callback();
+        });
+
+        const favoriteFile = new ZoweUSSNode({
+            label: "/u/myuser/usstest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: {
+                contextValue: Constants.FAV_PROFILE_CONTEXT,
+            } as any,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+        });
+
+        expect(favoriteFile.tooltip).toContain(`Profile: ${globalMocks.profileOne.name}`);
+        expect(favoriteFile.tooltip).toContain(`Profile Type: ${globalMocks.profileOne.type}`);
+        expect(favoriteFile.tooltip).toContain(`Path: /u/myuser/usstest`);
+    });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.getSession()", () => {
@@ -2003,41 +2024,41 @@ describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
         expect(await node.fetchAttributes()).toBeUndefined();
         lookupMock.mockRestore();
     });
-   it("returns undefined if the single item in apiResponse is null", async () => {
-    const globalMocks = createGlobalMocks();
-    const fileEntry = new UssFile("testFile");
-    const lookupMock = vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
-    const node = new ZoweUSSNode({
-        label: "testFile",
-        collapsibleState: vscode.TreeItemCollapsibleState.None,
-        profile: globalMocks.profileOne,
+    it("returns undefined if the single item in apiResponse is null", async () => {
+        const globalMocks = createGlobalMocks();
+        const fileEntry = new UssFile("testFile");
+        const lookupMock = vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
+        vi.spyOn(node, "getUssFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: { items: [null] },
+            commandResponse: "",
+        });
+        expect(await node.fetchAttributes()).toBeUndefined();
+        lookupMock.mockRestore();
     });
-    vi.spyOn(node, "getUssFiles").mockResolvedValueOnce({
-        success: true,
-        apiResponse: { items: [null] },
-        commandResponse: "",
-    });
-    expect(await node.fetchAttributes()).toBeUndefined();
-    lookupMock.mockRestore();
-});
 
-it("returns undefined if the single item in apiResponse is undefined", async () => {
-    const globalMocks = createGlobalMocks();
-    const fileEntry = new UssFile("testFile");
-    const lookupMock = vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
-    const node = new ZoweUSSNode({
-        label: "testFile",
-        collapsibleState: vscode.TreeItemCollapsibleState.None,
-        profile: globalMocks.profileOne,
+    it("returns undefined if the single item in apiResponse is undefined", async () => {
+        const globalMocks = createGlobalMocks();
+        const fileEntry = new UssFile("testFile");
+        const lookupMock = vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(fileEntry);
+        const node = new ZoweUSSNode({
+            label: "testFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+        });
+        vi.spyOn(node, "getUssFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: { items: [undefined] },
+            commandResponse: "",
+        });
+        expect(await node.fetchAttributes()).toBeUndefined();
+        lookupMock.mockRestore();
     });
-    vi.spyOn(node, "getUssFiles").mockResolvedValueOnce({
-        success: true,
-        apiResponse: { items: [undefined] },
-        commandResponse: "",
-    });
-    expect(await node.fetchAttributes()).toBeUndefined();
-    lookupMock.mockRestore();
-});
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.setAttributes", () => {

@@ -1094,6 +1094,7 @@
   "Fixed extended to include PDS members and USS files. <a>#4050</a>": "Fixed extended to include PDS members and USS files. <a>#4050</a>",
   "Fixed extension being slow to load large team config files. <a>#1911</a>": "Fixed extension being slow to load large team config files. <a>#1911</a>",
   "Fixed failure to refresh token value after user logs in to authentication. <a>#2638</a>": "Fixed failure to refresh token value after user logs in to authentication. <a>#2638</a>",
+  "Fixed hover/tooltip inconsistencies in favorited search nodes where search criteria or path was displayed instead of the profile name. <a>#4011</a>": "Fixed hover/tooltip inconsistencies in favorited search nodes where search criteria or path was displayed instead of the profile name. <a>#4011</a>",
   "Fixed issue handling job files with the same DD names across different steps. <a>#2279</a>": "Fixed issue handling job files with the same DD names across different steps. <a>#2279</a>",
   "Fixed issue handling job files with unnamed steps. <a>#2315</a>": "Fixed issue handling job files with unnamed steps. <a>#2315</a>",
   "Fixed issue of migrate/recall icons and right-click options now update instantly upon selection, eliminating the need to reload VS Code. <a>#2755</a>": "Fixed issue of migrate/recall icons and right-click options now update instantly upon selection, eliminating the need to reload VS Code. <a>#2755</a>",

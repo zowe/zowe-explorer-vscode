@@ -70,7 +70,11 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         this._prefix = "*";
         this._searchId = "";
         this._jobStatus = "*";
-        this.tooltip = opts.label;
+        if (opts.parentNode?.contextValue === Constants.FAV_PROFILE_CONTEXT) {
+            this.tooltip = AuthUtils.buildFavoriteTooltip(opts.profile?.name ?? opts.label, opts.profile?.type ?? "");
+        } else {
+            this.tooltip = opts.label;
+        }
         this.job = opts.job ?? null; // null instead of undefined to satisfy isZoweJobTreeNode
 
         const isFavoritesNode = opts.label === vscode.l10n.t("Favorites");
@@ -443,7 +447,10 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 }
                 // Support comma-separated prefixes by issuing one API call per prefix value
                 // and merging the results.
-                const prefixParts = prefix.split(",").map((p) => p.trim()).filter(Boolean);
+                const prefixParts = prefix
+                    .split(",")
+                    .map((p) => p.trim())
+                    .filter(Boolean);
                 const allJobs = await Promise.all(
                     prefixParts.map((p) =>
                         ZoweExplorerApiRegister.getJesApi(cachedProfile).getJobsByParameters({
