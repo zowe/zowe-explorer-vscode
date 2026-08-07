@@ -2305,6 +2305,12 @@
           "description": "%zowe.commands.tso.defaultProfile%",
           "scope": "window"
         },
+        "zowe.confirmSshServerDeploy": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.confirmSshServerDeploy%",
+          "scope": "window"
+        },
         "zowex.zowex.keepAliveInterval": {
           "type": "number",
           "default": 30,
