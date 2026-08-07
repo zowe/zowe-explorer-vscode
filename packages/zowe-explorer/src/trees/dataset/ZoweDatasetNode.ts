@@ -99,13 +99,24 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         } else {
             this.contextValue = isBinary ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
         }
+        const isFavorite = SharedContext.isFavorite(this) || opts.parentNode?.contextValue === Constants.FAV_PROFILE_CONTEXT;
         if (opts.contextOverride?.includes(Constants.DS_SESSION_CONTEXT)) {
-            const toolTipList: string[] = [];
-            toolTipList.push(`${vscode.l10n.t("Profile: ")}${opts.label}`);
-            toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${opts.profile.type}`);
-            this.tooltip = toolTipList.join("\n");
+            if (isFavorite) {
+                this.tooltip = AuthUtils.buildFavoriteTooltip(
+                    opts.profile?.name ?? opts.label,
+                    opts.profile?.type ?? "",
+                    `${vscode.l10n.t("Pattern: ")}${opts.label}`
+                );
+            } else {
+                const toolTipList: string[] = [];
+                toolTipList.push(`${vscode.l10n.t("Profile: ")}${opts.label}`);
+                toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${opts.profile.type}`);
+                this.tooltip = toolTipList.join("\n");
+            }
+        } else if (isFavorite) {
+            this.tooltip = AuthUtils.buildFavoriteTooltip(opts.profile?.name ?? opts.label, opts.profile?.type ?? "");
         } else {
-            this.tooltip = this.label as string;
+            this.tooltip = opts.profile?.name ?? opts.label;
         }
         const icon = IconGenerator.getIconByNode(this);
         if (icon) {
