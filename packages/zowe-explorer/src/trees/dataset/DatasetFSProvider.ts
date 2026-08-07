@@ -203,6 +203,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             if (pdsEntry && pdsEntry.entries) {
                 const memberStat = pdsEntry.entries.get(memberName);
                 if (memberStat) {
+                    const queryParams = new URLSearchParams(uri.query);
+                    if (queryParams.has("conflict")) {
+                        return { ...memberStat, permissions: vscode.FilePermission.Readonly };
+                    }
                     return memberStat;
                 }
             }
@@ -830,11 +834,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             const binary = encoding === "binary" || entry.encoding?.kind === "binary";
 
-            resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
-                binary,
-                encoding: encoding ?? (entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding),
-                etag: forceUpload ? undefined : entry.etag,
-                returnEtag: true,
+            await AuthUtils.retryRequest(entry.metadata.profile, async () => {
+                resp = await mvsApi.uploadFromBuffer(Buffer.from(content), entry.metadata.dsName, {
+                    binary,
+                    encoding: encoding ?? (entry.encoding?.kind === "other" ? entry.encoding.codepage : profileEncoding),
+                    etag: forceUpload ? undefined : entry.etag,
+                    returnEtag: true,
+                });
             });
         } catch (err) {
             statusMsg.dispose();
@@ -854,8 +860,16 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
         const basename = path.posix.basename(uri.path);
+        // TODO: Improve behavior of creating PDS members with lowercase names, to avoid data loss, just reject from the virtual workspace context if uri path contains lowercase.
+        if (options.create && /[a-z]/.test(path.posix.basename(basename, path.posix.extname(basename)))) {
+            throw vscode.FileSystemError.Unavailable(vscode.l10n.t("Unable to create data set or member with lowercase letters."));
+        }
+
         const parent = this.lookupParentDirectory(uri);
         let entry: FileEntry = parent.entries.get(basename);
+
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
+
         if (FsAbstractUtils.isDirectoryEntry(entry)) {
             throw vscode.FileSystemError.FileIsADirectory(uri);
         }
@@ -876,7 +890,28 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 .substring(uriInfo.slashAfterProfilePos + 1)
                 .split("/")
                 .filter(Boolean);
-            const ds = new DsEntry(basename, uriPath.length === this.EXPECTED_MEMBER_LENGTH);
+            const isPdsMember = uriPath.length === this.EXPECTED_MEMBER_LENGTH;
+
+            if (!options.overwrite) {
+                await AuthUtils.retryRequest(parent.metadata.profile, async () => {
+                    const mvsApi = ZoweExplorerApiRegister.getMvsApi(parent.metadata.profile);
+                    const remoteRes = isPdsMember
+                        ? await mvsApi.allMembers(uriPath[0])
+                        : await mvsApi.dataSet(FsDatasetsUtils.trimExtension(uriPath[0]));
+                    const remoteExists = isPdsMember
+                        ? remoteRes?.success &&
+                          remoteRes.apiResponse?.items?.some((m) => m.member === FsDatasetsUtils.trimExtension(uriPath[1]).toUpperCase())
+                        : remoteRes?.success &&
+                          remoteRes.apiResponse?.items?.some(
+                              (item) => item.dsname?.toUpperCase() === FsDatasetsUtils.trimExtension(uriPath[0]).toUpperCase()
+                          );
+                    if (remoteExists) {
+                        throw vscode.FileSystemError.FileExists(uri);
+                    }
+                });
+            }
+
+            const ds = new DsEntry(basename, isPdsMember);
             ds.metadata = new DsEntryMetadata({
                 path: path.posix.join(parent.metadata.path, basename),
                 profile: parent.metadata.profile,
@@ -889,6 +924,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const urlQuery = new URLSearchParams(uri.query);
         const forceUpload = urlQuery.has("forceUpload");
         const encodingParam = urlQuery.get("encoding") || undefined;
+        const skipUpload = urlQuery.has("skipUpload");
 
         try {
             if (urlQuery.has("inDiff")) {
@@ -902,7 +938,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 return;
             }
 
-            if (!isNew || content.length > 0) {
+            if (!skipUpload) {
+                // Always upload for new entries, even with empty content
                 const resp = await this.uploadEntry(entry as DsEntry, content, uri, forceUpload, encodingParam);
                 entry = parent.entries.get(basename) as FileEntry;
                 entry.etag = resp.apiResponse.etag;

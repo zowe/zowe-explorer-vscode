@@ -1397,6 +1397,16 @@ describe("DatasetFSProvider", () => {
             expect(res.permissions).toBe(FilePermission.Readonly);
             expect(lookupMock).toHaveBeenCalledWith(conflictUri, false);
         });
+        it("returns readonly for a PDS member URI in the conflict view", async () => {
+            const mockPdsEntry = {
+                type: vscode.FileType.Directory,
+                entries: new Map([["MEMBER1", testEntries.pdsMember]]),
+            };
+            vi.spyOn(DatasetFSProvider.instance as any, "readDirectoryImplementation").mockResolvedValue(mockPdsEntry);
+            const conflictUri = testUris.pdsMember.with({ query: "conflict=true" });
+            const res = await DatasetFSProvider.instance.stat(conflictUri);
+            expect(res.permissions).toBe(FilePermission.Readonly);
+        });
         it("returns a file as-is when query has inDiff parameter", async () => {
             const lookupMock = vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(testEntries.ps);
             await expect(DatasetFSProvider.instance.stat(testUris.ps.with({ query: "inDiff=true" }))).resolves.toStrictEqual(testEntries.ps);
