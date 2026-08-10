@@ -220,9 +220,9 @@ export class SshClientCache extends vscode.Disposable {
                 }
 
                 if (serverShouldDeploy) {
-                    if ((await ZSshUtils.lacksWriteAccess(session, serverPath))) {
+                    if (await ZSshUtils.lacksWriteAccess(session, serverPath)) {
                         if (serverNotFound) {
-                            // the user has no usable instance of the SSH server so we should notify them 
+                            // the user has no usable instance of the SSH server so we should notify them
                             const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, serverPath);
                             imperative.Logger.getAppLogger().error(errMsg);
                             throw new ImperativeError({ msg: errMsg });
@@ -231,7 +231,7 @@ export class SshClientCache extends vscode.Disposable {
                             imperative.Logger.getAppLogger().warn("Skipped deploy step as server path '%s' is not writeable by the user", serverPath);
                         }
                     } else {
-                        // The user appears to have write access 
+                        // The user appears to have write access
                         await deployWithProgress(session, serverPath);
                         newClient?.dispose();
                         newClient = await this.buildClient(session, clientId, {
