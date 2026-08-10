@@ -30,7 +30,7 @@ export function deployWithProgress(session: SshSession, serverPath: string): The
                             "for the server path and recommended available space in megabytes"],
                     });
                     imperative.Logger.getAppLogger().info(`Prompting the user to determine whether we should proceed` +
-                        ` with the deployment despite the apparent lack of disk space (${remainingMB} of ${recommendedMB} MB)`);
+                        ` with the deployment despite the apparent lack of disk space (${remainingMB} vs the recommended ${recommendedMB} MB)`);
                     const selection = await Gui.showMessage(message, { items: [deployButton, cancelButton] });
                     if (selection === deployButton) {
                         imperative.Logger.getAppLogger().info("User accepted the risk of insufficient disk space");
