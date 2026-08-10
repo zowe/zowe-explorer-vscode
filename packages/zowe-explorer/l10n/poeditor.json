@@ -1321,6 +1321,7 @@
   "Fixed an issue where the onProfilesUpdate event did not fire after secure credentials were updated. <a>#2822</a>": "",
   "Fixed an issue where the profile status did not refresh after updating credentials <a>#4141</a>": "",
   "Fixed an issue where the remote conflict icons showed when using the \"Compare with Selected\" feature. <a>#3085</a>": "",
+  "Fixed an issue where the selected profile name changed after the first Unix command was executed. <a>#4446</a>": "",
   "Fixed an issue where the source data set was removed even though the move operation was not successful. <a>#3518</a>": "",
   "Fixed an issue where the token expiration check was performed on profiles with APIs that do not support token types. <a>#3525</a>": "",
   "Fixed an issue where updating the vault information might lead to a loop of the ON_VAULT_CHANGED handler calls. <a>#4272</a>": "",

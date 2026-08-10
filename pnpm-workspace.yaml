@@ -56,6 +56,3 @@ overrides:
   "ws": "^8.21.0"
 # Previously set using `pnpm config set network-timeout`
 fetchTimeout: 60000
-minimumReleaseAgeExclude:
-  - dompurify@3.4.13
-  - nanoid@3.3.17
