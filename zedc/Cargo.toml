@@ -1,6 +1,6 @@
 [package]
 name = "zedc"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -21,6 +21,7 @@ indicatif = "0.17.8"
 octocrab = "0.49.5"
 owo-colors = "4.0.0"
 reqwest = { version = "0.12.4", features = ["blocking"] }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 supports-hyperlinks = "3.1.0"
 tokio = { version = "1", features = ["fs", "macros", "rt-multi-thread"] }
@@ -29,4 +30,4 @@ zip = "3"
 
 [target.'cfg(not(windows))'.dependencies]
 flate2 = "1.0.30"
-tar = "0.4.45"
+tar = "0.4.46"

@@ -10,7 +10,7 @@
  */
 
 import { IFileSystemEntry } from "../types/abstract";
-import { DsEntry, PdsEntry } from "../types/datasets";
+import { DsEntry, PdsEntry, DS_EXTENSION_MAP } from "../types/datasets";
 
 export class FsDatasetsUtils {
     public static isDsEntry(entry: IFileSystemEntry): entry is DsEntry {
@@ -23,5 +23,15 @@ export class FsDatasetsUtils {
 
     public static isPdsEntry(entry: IFileSystemEntry): entry is PdsEntry {
         return entry != null && entry instanceof PdsEntry;
+    }
+
+    public static trimExtension(dsName: string): string {
+        for (const ext of DS_EXTENSION_MAP.keys()) {
+            if (dsName.endsWith(ext)) {
+                return dsName.replace(ext, "");
+            }
+        }
+
+        return dsName;
     }
 }

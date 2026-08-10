@@ -10,7 +10,7 @@ This repository includes custom agent skills located in `.agents/skills/` to hel
 - **`code-quality`**: Refactor, deduplicate, and improve TypeScript code quality using Zowe Explorer specific patterns.
 - **`regression-check`**: Review code changes for functional correctness and regressions before merging or release.
 - **`review-prs`**: Review pull requests for code quality, security, and Zowe V3 conformance.
-- **`testing`**: Write and maintain Jest unit tests and WDIO/Cucumber end-to-end tests using project-specific helpers and conventions.
+- **`testing`**: Write and maintain Vitest unit tests and WDIO/Cucumber end-to-end tests using project-specific helpers and conventions.
 - **`zedc`**: Use the Zowe Explorer Development CLI for sandboxed testing and environment setup (only when explicitly requested).
 
 ## Commands you can use
@@ -20,7 +20,7 @@ This repository includes custom agent skills located in `.agents/skills/` to hel
 - **Build Parallel:** `pnpm build:parallel`
 - **Test (All):** `pnpm test`
 - **Test (Package):** `cd packages/<package-name> && pnpm test`
-- **Test (Single File):** `cd packages/<package-name> && pnpm exec jest <test-file-name>`
+- **Test (Single File):** `cd packages/<package-name> && pnpm exec vitest <test-file-name>`
 - **E2E Tests:** `cd packages/zowe-explorer && pnpm test:e2e` (runs WebDriver-automated tests in VS Code)
 - **Lint & Format:** `pnpm lint` and `pnpm pretty`
 - **Check Dependencies:** `pnpm madge` (detects circular dependencies)
@@ -33,7 +33,7 @@ This repository includes custom agent skills located in `.agents/skills/` to hel
 
 Zowe Explorer (ZE) is an extension for Visual Studio Code that offers access to z/OS mainframe resources.
 
-**Tech Stack:** TypeScript, VS Code Extension API, Node.js, Webpack, Jest, pnpm.
+**Tech Stack:** TypeScript, VS Code Extension API, Node.js, Webpack, Vitest, pnpm.
 
 ## Project structure
 
@@ -43,7 +43,7 @@ The project is a monorepo managed by pnpm. `zowe-explorer` depends on `zowe-expl
 - `packages/zowe-explorer/`: Main VS Code extension (tree views, UI).
 - `packages/zowe-explorer-ftp-extension/`: Sample extension implementing FTP (`zftp`) profile support.
 
-*Note: Changes in the API can sometimes require a full monorepo build (`pnpm build`) to be picked up by the VS Code extension.*
+_Note: Changes in the API can sometimes require a full monorepo build (`pnpm build`) to be picked up by the VS Code extension._
 
 ## Architecture and logic patterns
 
@@ -55,6 +55,7 @@ The project is a monorepo managed by pnpm. `zowe-explorer` depends on `zowe-expl
 ## Code style examples
 
 **Error Handling:**
+
 ```typescript
 // ✅ Good - Uses AuthUtils.errorHandling for consistent user feedback
 try {
@@ -69,6 +70,7 @@ try {
 ```
 
 **Logging:**
+
 ```typescript
 // ✅ Good - Logs with context before handling
 ZoweLogger.error(`Operation failed for ${profile}: ${error.message}`);
@@ -76,7 +78,7 @@ ZoweLogger.error(`Operation failed for ${profile}: ${error.message}`);
 
 ## Testing practices
 
-- **Unit Tests**: Standardized with `jest` and `ts-jest`. Located in `__tests__` directories within each package.
+- **Unit Tests**: Standardized with `vitest`. Located in `__tests__` directories within each package.
 - **End-to-End Tests**: BDD-style tests using `wdio` and Cucumber in `packages/zowe-explorer/__tests__/__e2e__/` (require a real Zowe team config and `.env`).
 - **Mocks**: Use `jest-mock-vscode` for VS Code API mocking and follow established mock patterns.
 - **Coverage**: Maintain or improve coverage when adding new logic. `pnpm test` generates coverage reports.
@@ -84,15 +86,15 @@ ZoweLogger.error(`Operation failed for ${profile}: ${error.message}`);
 
 ## Boundaries
 
-- ✅ **Always do:** 
+- ✅ **Always do:**
   - Use `vscode.workspace.fs` or Zowe filesystem providers for file access.
   - Use `extensionContext.storageUri` or `globalStorageUri` for temporary files.
   - Sanitize user inputs before passing to shell commands.
   - Run `pnpm lint`, `pnpm pretty`, and `pnpm build` before submitting PRs.
-- ⚠️ **Ask first:** 
+- ⚠️ **Ask first:**
   - Before adding new external dependencies (check if they exist in the monorepo first to minimize bundle size).
   - Before making changes that might break backward compatibility in `zowe-explorer-api`.
-- 🚫 **Never do:** 
+- 🚫 **Never do:**
   - **NEVER** use direct `fs` or `path` calls for mainframe resources.
   - **NEVER** use hardcoded temporary directories.
   - **NEVER** log user credentials or passwords to the console.

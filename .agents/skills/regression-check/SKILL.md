@@ -37,11 +37,13 @@ Follow this explicit checklist when auditing changes:
 
 Return the validation results using this exact markdown template:
 
-````markdown
+```markdown
 ### QA Summary
+
 [Short summary of overall status and regression risk]
 
 ### Issues Found
+
 - **[Issue Title]**
   - **Expected:** [What should happen]
   - **Actual:** [What happened]
@@ -49,15 +51,17 @@ Return the validation results using this exact markdown template:
   - **Affected Area:** [e.g., Tree View, Filesystem, Activation]
   - **Reproduction:** [Simple steps to reproduce]
 
-*(Omit "Issues Found" if none exist)*
+_(Omit "Issues Found" if none exist)_
 
 ### Regression Risk Notes
+
 [Call out any areas that need follow-up checks or mention potential impact on extenders]
 
 ### Acceptance Checklist
+
 - [ ] All reported issues addressed
 - [ ] Required tests pass (e.g., `pnpm test`, `pnpm test:e2e`)
-````
+```
 
 ## Rules
 

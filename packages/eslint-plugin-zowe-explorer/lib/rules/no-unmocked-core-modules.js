@@ -1,13 +1,15 @@
-const isJestMockOf = (name) => (node) => {
+const MOCK_CALLER_NAMES = new Set(["jest", "vi"]);
+
+const isMockOf = (name) => (node) => {
   return (
     node.type === "ExpressionStatement" &&
     node.expression.type === "CallExpression" &&
     node.expression.callee.type === "MemberExpression" &&
     node.expression.callee.object.type === "Identifier" &&
-    node.expression.callee.object.name === "jest" &&
+    MOCK_CALLER_NAMES.has(node.expression.callee.object.name) &&
     node.expression.callee.property.type === "Identifier" &&
     node.expression.callee.property.name === "mock" &&
-    node.expression.arguments.length === 1 &&
+    node.expression.arguments.length >= 1 &&
     node.expression.arguments[0].type === "Literal" &&
     node.expression.arguments[0].value === name
   );
@@ -59,16 +61,16 @@ module.exports = {
         if (
           coreModuleNames.includes(moduleName) && // imports node core module
           node.parent.type === "Program" &&
-          !node.parent.body.some(isJestMockOf(moduleName)) // does not mock it
+          !node.parent.body.some(isMockOf(moduleName)) // does not mock it
         ) {
           context.report({
             node,
-            message: `Use jest.mock('${moduleName}') to mock a node core module`,
+            message: `Use vi.mock('${moduleName}') to mock a node core module`,
             fix: (fixer) =>
               fixer.insertTextAfter(
                 node,
                 `
-jest.mock('${moduleName}');`
+vi.mock('${moduleName}');`
               ),
           });
         }

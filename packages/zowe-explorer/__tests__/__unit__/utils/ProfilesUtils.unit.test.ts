@@ -9,6 +9,8 @@
  *
  */
 
+import { MockInstance } from "vitest";
+
 import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
@@ -45,23 +47,21 @@ import { createDatasetSessionNode } from "../../__mocks__/mockCreators/datasets"
 import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
 import { IProfAttrs, SessConstants } from "@zowe/imperative";
 
-jest.mock("../../../src/tools/ZoweLogger");
-jest.mock("../../../src/tools/ZoweLocalStorage");
-jest.mock("fs");
-jest.mock("vscode");
-jest.mock("@zowe/imperative");
+vi.mock("../../../src/tools/ZoweLogger");
+vi.mock("../../../src/tools/ZoweLocalStorage");
+vi.mock("fs");
 
 describe("ProfilesUtils unit tests", () => {
     beforeAll(() => {
         (SessConstants as any).AUTH_TYPE_NONE = "none";
     });
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe("getCredentialManagerOptions", () => {
         it("should call ProfilesCache.getCredentialManagerOptions", () => {
-            const getCredMgrOptionsSpy = jest.spyOn(ProfilesCache, "getCredentialManagerOptions").mockReturnValue({ key: "value" });
+            const getCredMgrOptionsSpy = vi.spyOn(ProfilesCache, "getCredentialManagerOptions").mockReturnValue({ key: "value" });
             const options = ProfilesUtils.getCredentialManagerOptions();
             expect(getCredMgrOptionsSpy).toHaveBeenCalledTimes(1);
             expect(options).toEqual({ key: "value" });
@@ -70,12 +70,12 @@ describe("ProfilesUtils unit tests", () => {
 
     function createBlockMocks(): { [key: string]: any } {
         const newMocks = {
-            mockExistsSync: jest.fn().mockReturnValue(true),
-            mockReadFileSync: jest.fn(),
-            mockWriteFileSync: jest.fn(),
-            mockOpenSync: jest.fn().mockReturnValue(process.stdout.fd),
-            mockMkdirSync: jest.fn(),
-            mockGetDirectValue: jest.fn(),
+            mockExistsSync: vi.fn().mockReturnValue(true),
+            mockReadFileSync: vi.fn(),
+            mockWriteFileSync: vi.fn(),
+            mockOpenSync: vi.fn().mockReturnValue(process.stdout.fd),
+            mockMkdirSync: vi.fn(),
+            mockGetDirectValue: vi.fn(),
             mockFileRead: { overrides: { CredentialManager: "@zowe/cli" } },
             zoweDir: path.normalize("__tests__/.zowe/settings/imperative.json"),
             profInstance: createInstanceOfProfile(createValidIProfile()),
@@ -87,16 +87,16 @@ describe("ProfilesUtils unit tests", () => {
 
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
         Object.defineProperty(fs, "readFileSync", { value: newMocks.mockReadFileSync, configurable: true });
-        jest.spyOn(fs, "writeFileSync").mockImplementation(newMocks.mockWriteFileSync);
+        vi.spyOn(fs, "writeFileSync").mockImplementation(newMocks.mockWriteFileSync);
         Object.defineProperty(fs, "openSync", { value: newMocks.mockOpenSync, configurable: true });
         Object.defineProperty(fs, "mkdirSync", { value: newMocks.mockMkdirSync, configurable: true });
-        Object.defineProperty(Gui, "errorMessage", { value: jest.fn(), configurable: true });
-        Object.defineProperty(Gui, "infoMessage", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-        Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
+        Object.defineProperty(Gui, "errorMessage", { value: vi.fn(), configurable: true });
+        Object.defineProperty(Gui, "infoMessage", { value: vi.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "warn", { value: vi.fn(), configurable: true });
+        Object.defineProperty(ZoweLogger, "info", { value: vi.fn(), configurable: true });
         Object.defineProperty(SettingsConfig, "getDirectValue", { value: newMocks.mockGetDirectValue, configurable: true });
         Object.defineProperty(ProfilesUtils, "PROFILE_SECURITY", { value: Constants.ZOWE_CLI_SCM, configurable: true });
-        Object.defineProperty(ProfilesUtils, "checkDefaultCredentialManager", { value: jest.fn(), configurable: true });
+        Object.defineProperty(ProfilesUtils, "checkDefaultCredentialManager", { value: vi.fn(), configurable: true });
         return newMocks;
     }
 
@@ -120,7 +120,7 @@ describe("ProfilesUtils unit tests", () => {
             }),
         });
         beforeEach(() => {
-            jest.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+            vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
                 getCommonApi: () => ({
                     getSession: () => createISession(),
                 }),
@@ -161,7 +161,7 @@ describe("ProfilesUtils unit tests", () => {
                 errorCode: 404 as unknown as string,
             });
             const scenario = "Task failed successfully";
-            const openConfigForMissingHostnameMock = jest.spyOn(AuthUtils, "openConfigForMissingHostname");
+            const openConfigForMissingHostnameMock = vi.spyOn(AuthUtils, "openConfigForMissingHostname");
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     getProfileInfo: () => ({
@@ -175,7 +175,7 @@ describe("ProfilesUtils unit tests", () => {
                             },
                         ],
                     }),
-                    openConfigFile: jest.fn(),
+                    openConfigFile: vi.fn(),
                 },
                 configurable: true,
             });
@@ -188,8 +188,8 @@ describe("ProfilesUtils unit tests", () => {
                 msg: "protocol should not be included in hostname",
             });
             const scenario = "Task failed successfully";
-            const openConfigForMissingHostnameMock = jest.spyOn(AuthUtils, "openConfigForMissingHostname");
-            const errorCorrelatorGetInstanceMock = jest.spyOn(ErrorCorrelator, "getInstance");
+            const openConfigForMissingHostnameMock = vi.spyOn(AuthUtils, "openConfigForMissingHostname");
+            const errorCorrelatorGetInstanceMock = vi.spyOn(ErrorCorrelator, "getInstance");
             await AuthUtils.errorHandling(errorDetails, { scenario });
             expect(openConfigForMissingHostnameMock).not.toHaveBeenCalled();
             expect(errorCorrelatorGetInstanceMock).toHaveBeenCalled();
@@ -202,9 +202,9 @@ describe("ProfilesUtils unit tests", () => {
                 additionalDetails: "Authentication is not valid or expired.",
             });
             const scenario = "Task failed successfully";
-            const showMessageSpy = jest.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve("Update Credentials"));
-            const promptCredsSpy = jest.fn().mockResolvedValueOnce(["someusername", "pw"]);
-            const ssoLoginSpy = jest.fn();
+            const showMessageSpy = vi.spyOn(Gui, "errorMessage").mockImplementation(() => Promise.resolve("Update Credentials"));
+            const promptCredsSpy = vi.fn().mockResolvedValueOnce(["someusername", "pw"]);
+            const ssoLoginSpy = vi.fn();
             const profile = createIProfile();
             // disable locking mechanism for this test, will be tested in separate test cases
 
@@ -217,11 +217,11 @@ describe("ProfilesUtils unit tests", () => {
                     getDefaultProfile: () => ({}),
                     getPropsForProfile: () => ["tokenValue"],
                     loadNamedProfile: () => profile,
-                    shouldRemoveTokenFromProfile: () => jest.fn(),
+                    shouldRemoveTokenFromProfile: () => vi.fn(),
                 },
                 configurable: true,
             });
-            const unlockProfileMock = jest.spyOn(AuthHandler, "unlockProfile").mockImplementation();
+            const unlockProfileMock = vi.spyOn(AuthHandler, "unlockProfile").mockImplementation((() => undefined) as any);
             await AuthUtils.errorHandling(errorDetails, { profile, scenario });
 
             expect(showMessageSpy).toHaveBeenCalledTimes(1);
@@ -242,15 +242,15 @@ describe("ProfilesUtils unit tests", () => {
                 additionalDetails: "Token is not valid or expired.",
             });
             const scenario = "Task failed successfully";
-            const showErrorSpy = jest.spyOn(Gui, "errorMessage");
-            const showMessageSpy = jest.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("Log in to Authentication Service"));
+            const showErrorSpy = vi.spyOn(Gui, "errorMessage");
+            const showMessageSpy = vi.spyOn(Gui, "showMessage").mockImplementation(() => Promise.resolve("Log in to Authentication Service"));
 
             // simulate successful SSO login
-            const ssoLoginSpy = jest.fn().mockResolvedValueOnce(true);
-            const promptCredentialsSpy = jest.fn();
+            const ssoLoginSpy = vi.fn().mockResolvedValueOnce(true);
+            const promptCredentialsSpy = vi.fn();
             const profile = createIProfile();
-            const unlockProfileMock = jest.spyOn(AuthHandler, "unlockProfile").mockImplementation();
-            const setAuthCancelledMock = jest.spyOn(AuthHandler, "setAuthCancelled").mockImplementation();
+            const unlockProfileMock = vi.spyOn(AuthHandler, "unlockProfile").mockImplementation((() => undefined) as any);
+            const setAuthCancelledMock = vi.spyOn(AuthHandler, "setAuthCancelled").mockImplementation((() => undefined) as any);
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
                     getProfileInfo: profileInfoMock,
@@ -258,7 +258,7 @@ describe("ProfilesUtils unit tests", () => {
                     getDefaultProfile: () => ({}),
                     getPropsForProfile: () => ["tokenValue"],
                     loadNamedProfile: () => profile,
-                    shouldRemoveTokenFromProfile: () => jest.fn(),
+                    shouldRemoveTokenFromProfile: () => vi.fn(),
                     ssoLogin: ssoLoginSpy,
                     promptCredentials: promptCredentialsSpy,
                 },
@@ -289,11 +289,11 @@ describe("ProfilesUtils unit tests", () => {
                 },
                 configurable: true,
             });
-            const showErrorSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
-            const setAuthCancelledMock = jest.spyOn(AuthHandler, "setAuthCancelled").mockImplementation();
-            const showMsgSpy = jest.spyOn(Gui, "showMessage");
-            const promptCredentialsSpy = jest.fn();
-            const ssoLogin = jest.fn();
+            const showErrorSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+            const setAuthCancelledMock = vi.spyOn(AuthHandler, "setAuthCancelled").mockImplementation((() => undefined) as any);
+            const showMsgSpy = vi.spyOn(Gui, "showMessage");
+            const promptCredentialsSpy = vi.fn();
+            const ssoLogin = vi.fn();
             const profile = { type: "zosmf" } as any;
             Object.defineProperty(Constants, "PROFILES_CACHE", {
                 value: {
@@ -304,7 +304,7 @@ describe("ProfilesUtils unit tests", () => {
                     getDefaultProfile: () => ({}),
                     getPropsForProfile: () => ["tokenValue"],
                     loadNamedProfile: () => profile,
-                    shouldRemoveTokenFromProfile: () => jest.fn(),
+                    shouldRemoveTokenFromProfile: () => vi.fn(),
                 },
                 configurable: true,
             });
@@ -337,8 +337,8 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("should readConfigFromDisk and find default profiles", async () => {
-            const mockReadProfilesFromDisk = jest.fn();
-            jest.spyOn(ProfilesUtils, "setupProfileInfo").mockReturnValueOnce({
+            const mockReadProfilesFromDisk = vi.fn();
+            vi.spyOn(ProfilesUtils, "setupProfileInfo").mockReturnValueOnce({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 getTeamConfig: () => ({
                     exists: true,
@@ -358,15 +358,15 @@ describe("ProfilesUtils unit tests", () => {
                     ],
                 }),
             } as never);
-            const loggerSpy = jest.spyOn(ZoweLogger, "debug");
+            const loggerSpy = vi.spyOn(ZoweLogger, "debug");
             await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
             expect(loggerSpy).toHaveBeenLastCalledWith(expect.stringContaining(`Path: test, Found with the following defaults: "test"`));
         });
 
         it("should readConfigFromDisk and log 'Not Available'", async () => {
-            const mockReadProfilesFromDisk = jest.fn();
-            jest.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValueOnce({
+            const mockReadProfilesFromDisk = vi.fn();
+            vi.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValueOnce({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 getTeamConfig: () => ({
                     exists: true,
@@ -379,7 +379,7 @@ describe("ProfilesUtils unit tests", () => {
                     ],
                 }),
             } as never);
-            const loggerSpy = jest.spyOn(ZoweLogger, "debug");
+            const loggerSpy = vi.spyOn(ZoweLogger, "debug");
             await expect(ProfilesUtils.readConfigFromDisk()).resolves.not.toThrow();
             expect(mockReadProfilesFromDisk).toHaveBeenCalledTimes(1);
             expect(loggerSpy).toHaveBeenLastCalledWith(expect.stringContaining("Path: test, Not available"));
@@ -387,8 +387,8 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should keep Imperative error details if readConfigFromDisk fails", async () => {
             const impErr = new imperative.ImperativeError({ msg: "Unexpected Imperative error" });
-            const mockReadProfilesFromDisk = jest.fn().mockRejectedValue(impErr);
-            jest.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValueOnce({
+            const mockReadProfilesFromDisk = vi.fn().mockRejectedValue(impErr);
+            vi.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValueOnce({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
                 getTeamConfig: () => ({ exists: true }),
             } as never);
@@ -399,8 +399,8 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("should warn the user when using team config with a missing schema", async () => {
-            jest.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValueOnce({
-                readProfilesFromDisk: jest.fn(),
+            vi.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValueOnce({
+                readProfilesFromDisk: vi.fn(),
                 hasValidSchema: false,
                 getTeamConfig: () => ({
                     exists: true,
@@ -420,7 +420,7 @@ describe("ProfilesUtils unit tests", () => {
                     ],
                 }),
             } as never);
-            const warnMsgSpy = jest.spyOn(Gui, "warningMessage");
+            const warnMsgSpy = vi.spyOn(Gui, "warningMessage");
             await ProfilesUtils.readConfigFromDisk(true);
             expect(warnMsgSpy).toHaveBeenCalledWith(
                 "No valid schema was found for the active team configuration. This may introduce issues with profiles in Zowe Explorer."
@@ -430,44 +430,44 @@ describe("ProfilesUtils unit tests", () => {
 
     describe("promptCredentials", () => {
         const prof = {
-            getAllProfiles: jest.fn().mockReturnValue([]),
-            isSecured: jest.fn().mockReturnValue(true),
-            readProfilesFromDisk: jest.fn(),
+            getAllProfiles: vi.fn().mockReturnValue([]),
+            isSecured: vi.fn().mockReturnValue(true),
+            readProfilesFromDisk: vi.fn(),
             getTeamConfig: () => ({ properties: { autoStore: true } }),
         };
         it("calls getProfileInfo", async () => {
             const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
-            const getProfileInfoSpy = jest.spyOn(Profiles.prototype, "getProfileInfo");
-            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as imperative.ProfileInfo);
-            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+            const getProfileInfoSpy = vi.spyOn(Profiles.prototype, "getProfileInfo");
+            vi.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as imperative.ProfileInfo);
+            vi.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
                 profile: prof,
             } as unknown as imperative.IProfileLoaded);
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             Object.defineProperty(vscode.window, "showInputBox", {
-                value: jest.fn().mockResolvedValue("emptyConfig"),
+                value: vi.fn().mockResolvedValue("emptyConfig"),
                 configurable: true,
             });
-            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
+            vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
             await ProfilesUtils.promptCredentials(null as any);
             expect(getProfileInfoSpy).toHaveBeenCalled();
         });
 
         it("calls unlockProfile once credentials are provided", async () => {
             const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
-            const promptCredentialsProfilesMock = jest.spyOn(mockProfileInstance, "promptCredentials").mockResolvedValueOnce(["someusername", "pw"]);
-            const updateCachedProfileMock = jest.spyOn(mockProfileInstance, "updateCachedProfile").mockResolvedValueOnce(undefined);
+            const promptCredentialsProfilesMock = vi.spyOn(mockProfileInstance, "promptCredentials").mockResolvedValueOnce(["someusername", "pw"]);
+            const updateCachedProfileMock = vi.spyOn(mockProfileInstance, "updateCachedProfile").mockResolvedValueOnce(undefined);
             const profile = createIProfile();
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
-            const unlockProfileSpy = jest.spyOn(AuthHandler, "unlockProfile");
+            const unlockProfileSpy = vi.spyOn(AuthHandler, "unlockProfile");
             const mockNode = createDatasetSessionNode(createISession(), profile);
             const mockTreeProvider = {
                 mSessionNodes: [mockNode],
-                flipState: jest.fn(),
-                refreshElement: jest.fn(),
+                flipState: vi.fn(),
+                refreshElement: vi.fn(),
             } as any;
-            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
-            jest.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
-            jest.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+            vi.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+            vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
             await ProfilesUtils.promptCredentials(mockNode);
             expect(promptCredentialsProfilesMock).toHaveBeenCalledTimes(1);
             expect(promptCredentialsProfilesMock).toHaveBeenCalledWith(profile, true);
@@ -479,36 +479,36 @@ describe("ProfilesUtils unit tests", () => {
 
         it("shows an error message if the profile input is undefined", async () => {
             const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
-            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as imperative.ProfileInfo);
-            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+            vi.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as imperative.ProfileInfo);
+            vi.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
                 profile: prof,
             } as unknown as imperative.IProfileLoaded);
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             Object.defineProperty(vscode.window, "showInputBox", {
-                value: jest.fn().mockResolvedValue(""),
+                value: vi.fn().mockResolvedValue(""),
                 configurable: true,
             });
-            jest.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
+            vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue([]);
             await ProfilesUtils.promptCredentials(null as any);
             expect(Gui.showMessage).toHaveBeenCalledWith("Operation cancelled");
         });
 
         it("shows an info message if the profile credentials were updated", async () => {
             const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
-            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as imperative.ProfileInfo);
-            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+            vi.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as imperative.ProfileInfo);
+            vi.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
                 profile: prof,
             } as unknown as imperative.IProfileLoaded);
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             Object.defineProperty(vscode.window, "showInputBox", {
-                value: jest.fn().mockResolvedValue("testConfig"),
+                value: vi.fn().mockResolvedValue("testConfig"),
                 configurable: true,
             });
             Object.defineProperty(Gui, "showMessage", {
-                value: jest.fn(),
+                value: vi.fn(),
                 configurable: true,
             });
-            jest.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
+            vi.spyOn(Profiles.prototype, "promptCredentials").mockResolvedValue(["some_user", "some_pass", "c29tZV9iYXNlNjRfc3RyaW5n"]);
             await ProfilesUtils.promptCredentials(null as any);
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
         });
@@ -517,10 +517,10 @@ describe("ProfilesUtils unit tests", () => {
             const mockProfileInstance = new Profiles(imperative.Logger.getAppLogger());
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
             Object.defineProperty(mockProfileInstance, "getProfileInfo", {
-                value: jest.fn(() => {
+                value: vi.fn(() => {
                     return {
                         profileName: "emptyConfig",
-                        getTeamConfig: jest.fn().mockReturnValue({
+                        getTeamConfig: vi.fn().mockReturnValue({
                             exists: true,
                             properties: {
                                 autoStore: false,
@@ -531,10 +531,10 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
             });
             Object.defineProperty(Gui, "showMessage", {
-                value: jest.fn(),
+                value: vi.fn(),
                 configurable: true,
             });
-            const promptCredentialsMock = jest.spyOn(mockProfileInstance, "promptCredentials").mockResolvedValueOnce(undefined as any);
+            const promptCredentialsMock = vi.spyOn(mockProfileInstance, "promptCredentials").mockResolvedValueOnce(undefined as any);
             const dsNode = createDatasetSessionNode(createISession(), createIProfile());
             await ProfilesUtils.promptCredentials(dsNode);
             expect(Gui.showMessage).not.toHaveBeenCalledWith('"Update Credentials" operation not supported when "autoStore" is false');
@@ -555,19 +555,19 @@ describe("ProfilesUtils unit tests", () => {
                 },
             ];
             Object.defineProperty(Constants, "PROFILES_CACHE", { value: mockProfileInstance, configurable: true });
-            jest.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as any);
-            jest.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
+            vi.spyOn(ProfilesCache.prototype, "getProfileInfo").mockResolvedValue(prof as unknown as any);
+            vi.spyOn(ProfilesCache.prototype, "getLoadedProfConfig").mockResolvedValue({
                 profile: prof,
             } as unknown as imperative.IProfileLoaded);
             Object.defineProperty(vscode.window, "showInputBox", {
-                value: jest.fn().mockResolvedValue("testConfig"),
+                value: vi.fn().mockResolvedValue("testConfig"),
                 configurable: true,
             });
             Object.defineProperty(Gui, "showMessage", {
-                value: jest.fn(),
+                value: vi.fn(),
                 configurable: true,
             });
-            const secureCredsMock = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            const secureCredsMock = vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
             const testConfig = {
                 name: "testConfig",
                 type: "test-type",
@@ -577,11 +577,11 @@ describe("ProfilesUtils unit tests", () => {
                     base64EncodedAuth: "user-pass",
                 } as imperative.IProfile,
             } as imperative.IProfileLoaded;
-            const updCredsMock = jest.spyOn(Constants.PROFILES_CACHE, "promptCredentials").mockResolvedValueOnce(["test", "test"]);
+            const updCredsMock = vi.spyOn(Constants.PROFILES_CACHE, "promptCredentials").mockResolvedValueOnce(["test", "test"]);
             await ProfilesUtils.promptCredentials({
                 getProfile: () => testConfig,
-                setProfileToChoice: jest.fn(),
-                getChildren: jest.fn().mockResolvedValue([]),
+                setProfileToChoice: vi.fn(),
+                getChildren: vi.fn().mockResolvedValue([]),
             } as any);
             expect(updCredsMock).toHaveBeenCalled();
             expect(Gui.showMessage).toHaveBeenCalledWith("Credentials for testConfig were successfully updated");
@@ -592,11 +592,11 @@ describe("ProfilesUtils unit tests", () => {
     describe("initializeZoweFolder", () => {
         it("should create directories and files that do not exist", async () => {
             const blockMocks = createBlockMocks();
-            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
+            vi.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
             blockMocks.mockGetDirectValue.mockReturnValue(true);
             blockMocks.mockExistsSync.mockReturnValue(false);
-            jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
-            const createFileSpy = jest.spyOn(ProfilesUtils, "writeOverridesFile");
+            vi.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
+            const createFileSpy = vi.spyOn(ProfilesUtils, "writeOverridesFile");
             await ProfilesUtils.initializeZoweFolder();
             expect(ProfilesUtils.PROFILE_SECURITY).toBe(Constants.ZOWE_CLI_SCM);
             expect(blockMocks.mockMkdirSync).toHaveBeenCalledTimes(2);
@@ -605,12 +605,12 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should skip creating directories and files that already exist", async () => {
             const blockMocks = createBlockMocks();
-            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
-            jest.spyOn(ProfilesUtils, "getCredentialManagerOverride").mockReturnValue("@zowe/cli");
+            vi.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
+            vi.spyOn(ProfilesUtils, "getCredentialManagerOverride").mockReturnValue("@zowe/cli");
             blockMocks.mockGetDirectValue.mockReturnValue("@zowe/cli");
             blockMocks.mockExistsSync.mockReturnValue(true);
             const fileJson = blockMocks.mockFileRead;
-            jest.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
+            vi.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from(JSON.stringify({ overrides: { credentialManager: "@zowe/cli" } }), "utf-8"));
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2));
             await ProfilesUtils.initializeZoweFolder();
             expect(ProfilesUtils.PROFILE_SECURITY).toBe("@zowe/cli");
@@ -653,12 +653,12 @@ describe("ProfilesUtils unit tests", () => {
         it("should have not exist and create default file", () => {
             const blockMocks = createBlockMocks();
             Object.defineProperty(fs, "readFileSync", {
-                value: jest.fn().mockImplementationOnce(() => {
+                value: vi.fn().mockImplementationOnce(() => {
                     throw new Error("ENOENT");
                 }),
                 configurable: true,
             });
-            const loggerSpy = jest.spyOn(ZoweLogger, "debug");
+            const loggerSpy = vi.spyOn(ZoweLogger, "debug");
             const content = JSON.stringify(blockMocks.mockFileRead, null, 2);
             ProfilesUtils.writeOverridesFile();
             expect(loggerSpy).toHaveBeenCalledWith("Reading imperative.json failed. Will try to create file.");
@@ -672,7 +672,7 @@ describe("ProfilesUtils unit tests", () => {
                 test: null,
             };
             blockMocks.mockReadFileSync.mockReturnValueOnce(JSON.stringify(fileJson, null, 2).slice(1));
-            const writeFileSpy = jest.spyOn(fs, "writeFileSync");
+            const writeFileSpy = vi.spyOn(fs, "writeFileSync");
             expect(ProfilesUtils.writeOverridesFile).not.toThrow();
             expect(writeFileSpy).toHaveBeenCalled();
         });
@@ -680,9 +680,9 @@ describe("ProfilesUtils unit tests", () => {
 
     describe("initializeZoweProfiles", () => {
         it("should successfully initialize Zowe folder and read config from disk", async () => {
-            const initZoweFolderSpy = jest.spyOn(ProfilesUtils, "initializeZoweFolder");
-            jest.spyOn(ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
-            const readConfigFromDiskSpy = jest.spyOn(ProfilesUtils, "readConfigFromDisk").mockResolvedValueOnce();
+            const initZoweFolderSpy = vi.spyOn(ProfilesUtils, "initializeZoweFolder");
+            vi.spyOn(ProfilesUtils, "getCredentialManagerOverride").mockReturnValueOnce("@zowe/cli");
+            const readConfigFromDiskSpy = vi.spyOn(ProfilesUtils, "readConfigFromDisk").mockResolvedValueOnce();
             await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
@@ -691,10 +691,10 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should handle error thrown on initialize Zowe folder", async () => {
             const testError = new Error("initializeZoweFolder failed");
-            const initZoweFolderSpy = jest.spyOn(ProfilesUtils, "initializeZoweFolder").mockImplementationOnce(() => {
+            const initZoweFolderSpy = vi.spyOn(ProfilesUtils, "initializeZoweFolder").mockImplementationOnce(() => {
                 throw testError;
             });
-            const readConfigFromDiskSpy = jest.spyOn(ProfilesUtils, "readConfigFromDisk").mockResolvedValueOnce();
+            const readConfigFromDiskSpy = vi.spyOn(ProfilesUtils, "readConfigFromDisk").mockResolvedValueOnce();
             await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
@@ -703,8 +703,8 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should handle Imperative error thrown on read config from disk", async () => {
             const testError = new imperative.ImperativeError({ msg: "readConfigFromDisk failed" });
-            const initZoweFolderSpy = jest.spyOn(ProfilesUtils, "initializeZoweFolder").mockResolvedValueOnce();
-            const readConfigFromDiskSpy = jest.spyOn(ProfilesUtils, "readConfigFromDisk").mockRejectedValueOnce(testError);
+            const initZoweFolderSpy = vi.spyOn(ProfilesUtils, "initializeZoweFolder").mockResolvedValueOnce();
+            const readConfigFromDiskSpy = vi.spyOn(ProfilesUtils, "readConfigFromDisk").mockRejectedValueOnce(testError);
             await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
@@ -713,9 +713,9 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should handle JSON parse error thrown on read config from disk", async () => {
             const testError = new Error("readConfigFromDisk failed");
-            const initZoweFolderSpy = jest.spyOn(ProfilesUtils, "initializeZoweFolder").mockResolvedValueOnce();
-            const readConfigFromDiskSpy = jest.spyOn(ProfilesUtils, "readConfigFromDisk").mockRejectedValueOnce(testError);
-            const showZoweConfigErrorSpy = jest.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockReturnValueOnce();
+            const initZoweFolderSpy = vi.spyOn(ProfilesUtils, "initializeZoweFolder").mockResolvedValueOnce();
+            const readConfigFromDiskSpy = vi.spyOn(ProfilesUtils, "readConfigFromDisk").mockRejectedValueOnce(testError);
+            const showZoweConfigErrorSpy = vi.spyOn(ZoweExplorerExtender, "showZoweConfigError").mockReturnValueOnce();
             await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
             expect(initZoweFolderSpy).toHaveBeenCalledTimes(1);
             expect(readConfigFromDiskSpy).toHaveBeenCalledTimes(1);
@@ -732,12 +732,12 @@ describe("ProfilesUtils unit tests", () => {
 
     describe("activateCredentialManagerOverride", () => {
         afterEach(() => {
-            jest.clearAllMocks();
-            jest.resetAllMocks();
+            vi.clearAllMocks();
+            vi.resetAllMocks();
         });
 
         it("should successfully activate the extension passed in for a credential manager override", async () => {
-            const activateSpy = jest.fn(() => ({}));
+            const activateSpy = vi.fn(() => ({}));
             const credentialManagerExtension: vscode.Extension<any> = {
                 exports: {} as imperative.ICredentialManagerConstructor,
                 activate: activateSpy,
@@ -751,7 +751,7 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("should successfully activate the extension passed in but return undefined if no exports are found", async () => {
-            const activateSpy = jest.fn(() => undefined);
+            const activateSpy = vi.fn(() => undefined);
             const credentialManagerExtension: vscode.Extension<any> = {
                 exports: undefined,
                 activate: activateSpy,
@@ -779,16 +779,17 @@ describe("ProfilesUtils unit tests", () => {
 
     describe("updateCredentialManagerSetting", () => {
         afterEach(() => {
-            jest.clearAllMocks();
-            jest.resetAllMocks();
+            vi.clearAllMocks();
+            vi.resetAllMocks();
         });
 
         it("should update the credential manager setting if secure value is true", () => {
-            jest.spyOn(SettingsConfig, "isConfigSettingSetByUser").mockReturnValue(false);
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
-            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
-            const loggerInfoSpy = jest.spyOn(ZoweLogger, "info");
-            const recordCredMgrInConfigSpy = jest.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig");
+            ProfilesUtils.PROFILE_SECURITY = false;
+            vi.spyOn(SettingsConfig, "isConfigSettingSetByUser").mockReturnValue(false);
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            vi.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
+            const loggerInfoSpy = vi.spyOn(ZoweLogger, "info");
+            const recordCredMgrInConfigSpy = vi.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig").mockImplementation(() => {});
             ProfilesUtils.updateCredentialManagerSetting();
             expect(ProfilesUtils.PROFILE_SECURITY).toBe(Constants.ZOWE_CLI_SCM);
             expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
@@ -796,10 +797,11 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("should update the credential manager setting if specific credential manager is passed", () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
-            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
-            const loggerInfoSpy = jest.spyOn(ZoweLogger, "info");
-            const recordCredMgrInConfigSpy = jest.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig");
+            ProfilesUtils.PROFILE_SECURITY = false;
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(true);
+            vi.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(true);
+            const loggerInfoSpy = vi.spyOn(ZoweLogger, "info");
+            const recordCredMgrInConfigSpy = vi.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig").mockImplementation(() => {});
             ProfilesUtils.updateCredentialManagerSetting("customCredentialManager");
             expect(ProfilesUtils.PROFILE_SECURITY).toBe("customCredentialManager");
             expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
@@ -807,13 +809,16 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("if setting is not enabled and default credential manager not found", () => {
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
-            jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(false);
-            const loggerInfoSpy = jest.spyOn(ZoweLogger, "info");
+            ProfilesUtils.PROFILE_SECURITY = Constants.ZOWE_CLI_SCM;
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
+            vi.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(false);
+            const loggerInfoSpy = vi.spyOn(ZoweLogger, "info");
+            const recordCredMgrInConfigSpy = vi.spyOn(imperative.CredentialManagerOverride, "recordCredMgrInConfig").mockImplementation(() => {});
             ProfilesUtils.updateCredentialManagerSetting();
             expect(ProfilesUtils.PROFILE_SECURITY).toBe(false);
             expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
             expect(loggerInfoSpy.mock.calls[0][0]).toEqual("Zowe Explorer profiles are being set as unsecured.");
+            expect(recordCredMgrInConfigSpy).toHaveBeenCalledWith(false);
         });
     });
 
@@ -821,45 +826,45 @@ describe("ProfilesUtils unit tests", () => {
         it("should check the profile in use if using token based auth instead of the base profile", async () => {
             const mocks = createBlockMocks();
             Object.defineProperty(mocks.profInstance, "getDefaultProfile", {
-                value: jest.fn().mockReturnValueOnce({} as any),
+                value: vi.fn().mockReturnValueOnce({} as any),
                 configurable: true,
             });
-            jest.spyOn(Constants.PROFILES_CACHE, "getLoadedProfConfig").mockResolvedValue({ type: "test" } as any);
-            jest.spyOn(Constants.PROFILES_CACHE, "getPropsForProfile").mockResolvedValue([]);
-            jest.spyOn(Constants.PROFILES_CACHE, "shouldRemoveTokenFromProfile").mockResolvedValue(false as never);
+            vi.spyOn(Constants.PROFILES_CACHE, "getLoadedProfConfig").mockResolvedValue({ type: "test" } as any);
+            vi.spyOn(Constants.PROFILES_CACHE, "getPropsForProfile").mockResolvedValue([]);
+            vi.spyOn(Constants.PROFILES_CACHE, "shouldRemoveTokenFromProfile").mockResolvedValue(false as never);
             await expect(AuthUtils.isUsingTokenAuth("test")).resolves.toEqual(false);
         });
     });
 
     describe("setupProfileInfo", () => {
-        let isVSCodeCredentialPluginInstalledSpy: jest.SpyInstance;
-        let getDirectValueSpy: jest.SpyInstance;
-        let fetchRegisteredPluginsSpy: jest.SpyInstance;
-        let getCredentialManagerOverrideSpy: jest.SpyInstance;
-        let getCredentialManagerMapSpy: jest.SpyInstance;
-        let setupCustomCredentialManagerSpy: jest.SpyInstance;
-        let profileManagerWillLoadSpy: jest.SpyInstance;
-        let disableCredentialManagementSpy: jest.SpyInstance;
-        let checkDefaultCredentialManagerSpy: jest.SpyInstance;
+        let isVSCodeCredentialPluginInstalledSpy: MockInstance;
+        let getDirectValueSpy: MockInstance;
+        let fetchRegisteredPluginsSpy: MockInstance;
+        let getCredentialManagerOverrideSpy: MockInstance;
+        let getCredentialManagerMapSpy: MockInstance;
+        let setupCustomCredentialManagerSpy: MockInstance;
+        let profileManagerWillLoadSpy: MockInstance;
+        let disableCredentialManagementSpy: MockInstance;
+        let checkDefaultCredentialManagerSpy: MockInstance;
 
         beforeEach(() => {
-            jest.clearAllMocks();
-            jest.resetAllMocks();
-            jest.restoreAllMocks();
-            getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue");
-            isVSCodeCredentialPluginInstalledSpy = jest.spyOn(ProfilesUtils, "isVSCodeCredentialPluginInstalled");
-            fetchRegisteredPluginsSpy = jest.spyOn(ProfilesUtils as any, "fetchRegisteredPlugins");
-            getCredentialManagerOverrideSpy = jest.spyOn(ProfilesUtils, "getCredentialManagerOverride");
-            getCredentialManagerMapSpy = jest.spyOn(ProfilesUtils, "getCredentialManagerMap");
-            setupCustomCredentialManagerSpy = jest.spyOn(ProfilesUtils, "setupCustomCredentialManager");
-            profileManagerWillLoadSpy = jest.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad");
-            disableCredentialManagementSpy = jest.spyOn(ProfilesUtils, "disableCredentialManagement");
-            checkDefaultCredentialManagerSpy = jest.spyOn(ProfilesUtils, "checkDefaultCredentialManager");
+            vi.clearAllMocks();
+            vi.resetAllMocks();
+            vi.restoreAllMocks();
+            getDirectValueSpy = vi.spyOn(SettingsConfig, "getDirectValue");
+            isVSCodeCredentialPluginInstalledSpy = vi.spyOn(ProfilesUtils, "isVSCodeCredentialPluginInstalled");
+            fetchRegisteredPluginsSpy = vi.spyOn(ProfilesUtils as any, "fetchRegisteredPlugins");
+            getCredentialManagerOverrideSpy = vi.spyOn(ProfilesUtils, "getCredentialManagerOverride");
+            getCredentialManagerMapSpy = vi.spyOn(ProfilesUtils, "getCredentialManagerMap");
+            setupCustomCredentialManagerSpy = vi.spyOn(ProfilesUtils, "setupCustomCredentialManager");
+            profileManagerWillLoadSpy = vi.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad");
+            disableCredentialManagementSpy = vi.spyOn(ProfilesUtils, "disableCredentialManagement");
+            checkDefaultCredentialManagerSpy = vi.spyOn(ProfilesUtils, "checkDefaultCredentialManager");
         });
 
         it("should retrieve the custom credential manager", async () => {
             getDirectValueSpy.mockReturnValueOnce(true);
-            fetchRegisteredPluginsSpy.mockImplementation();
+            fetchRegisteredPluginsSpy.mockImplementation((() => undefined) as any);
             getCredentialManagerOverrideSpy.mockReturnValue("test");
             isVSCodeCredentialPluginInstalledSpy.mockReturnValueOnce(true);
             getDirectValueSpy.mockReturnValueOnce(true);
@@ -898,19 +903,19 @@ describe("ProfilesUtils unit tests", () => {
 
     describe("isVSCodeCredentialPluginInstalled", () => {
         beforeEach(() => {
-            jest.clearAllMocks();
-            jest.resetAllMocks();
-            jest.restoreAllMocks();
+            vi.clearAllMocks();
+            vi.resetAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should return false if an error is thrown when getting extension from available VS Code extensions", () => {
-            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
-            jest.spyOn(imperative.CredentialManagerOverride, "getCredMgrInfoByDisplayName").mockReturnValue({
+            const zoweLoggerTraceSpy = vi.spyOn(ZoweLogger, "trace");
+            vi.spyOn(imperative.CredentialManagerOverride, "getCredMgrInfoByDisplayName").mockReturnValue({
                 credMgrDisplayName: "test",
                 credMgrPluginName: "test",
                 credMgrZEName: "test",
             });
-            jest.spyOn(vscode.extensions, "getExtension").mockImplementation(() => {
+            vi.spyOn(vscode.extensions, "getExtension").mockImplementation(() => {
                 throw new Error("test error");
             });
             expect(ProfilesUtils.isVSCodeCredentialPluginInstalled("test")).toBe(false);
@@ -920,15 +925,15 @@ describe("ProfilesUtils unit tests", () => {
 
     describe("getCredentialManagerOverride", () => {
         afterEach(() => {
-            jest.clearAllMocks();
-            jest.resetAllMocks();
-            jest.restoreAllMocks();
+            vi.clearAllMocks();
+            vi.resetAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should return the custom credential manager override if of type string", () => {
-            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
+            const zoweLoggerTraceSpy = vi.spyOn(ZoweLogger, "trace");
 
-            jest.spyOn(fs, "readFileSync").mockReturnValueOnce(
+            vi.spyOn(fs, "readFileSync").mockReturnValueOnce(
                 Buffer.from(
                     JSON.stringify({
                         overrides: {
@@ -947,10 +952,10 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("should return default manager if the override file does not exist", () => {
-            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
-            const zoweLoggerInfoSpy = jest.spyOn(ZoweLogger, "info");
+            const zoweLoggerTraceSpy = vi.spyOn(ZoweLogger, "trace");
+            const zoweLoggerInfoSpy = vi.spyOn(ZoweLogger, "info");
 
-            jest.spyOn(fs, "readFileSync").mockImplementation(() => {
+            vi.spyOn(fs, "readFileSync").mockImplementation(() => {
                 throw new Error("test");
             });
             try {
@@ -966,17 +971,17 @@ describe("ProfilesUtils unit tests", () => {
 
     describe("setupCustomCredentialManager", () => {
         afterEach(() => {
-            jest.clearAllMocks();
-            jest.resetAllMocks();
-            jest.restoreAllMocks();
+            vi.clearAllMocks();
+            vi.resetAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should return the credential manager override with the custom credential manager constructor", async () => {
-            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
-            const zoweLoggerInfoSpy = jest.spyOn(ZoweLogger, "info");
+            const zoweLoggerTraceSpy = vi.spyOn(ZoweLogger, "trace");
+            const zoweLoggerInfoSpy = vi.spyOn(ZoweLogger, "info");
 
-            jest.spyOn(vscode.extensions, "getExtension").mockImplementation();
-            jest.spyOn(ProfilesUtils as any, "activateCredentialManagerOverride").mockResolvedValue(jest.fn());
+            vi.spyOn(vscode.extensions, "getExtension").mockImplementation((() => undefined) as any);
+            vi.spyOn(ProfilesUtils as any, "activateCredentialManagerOverride").mockResolvedValue(vi.fn());
 
             await expect(
                 ProfilesUtils["setupCustomCredentialManager"]({
@@ -992,24 +997,24 @@ describe("ProfilesUtils unit tests", () => {
 
     describe("fetchRegisteredPlugins", () => {
         afterEach(() => {
-            jest.clearAllMocks();
-            jest.resetAllMocks();
-            jest.restoreAllMocks();
+            vi.clearAllMocks();
+            vi.resetAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should not find any registered plugins and simply return", async () => {
-            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
-            const updateCredentialManagerSettingSpy = jest.spyOn(ProfilesUtils, "updateCredentialManagerSetting");
-            const setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue");
+            const zoweLoggerTraceSpy = vi.spyOn(ZoweLogger, "trace");
+            const updateCredentialManagerSettingSpy = vi.spyOn(ProfilesUtils, "updateCredentialManagerSetting");
+            const setDirectValueSpy = vi.spyOn(SettingsConfig, "setDirectValue");
 
-            jest.spyOn(imperative.CredentialManagerOverride, "getKnownCredMgrs").mockReturnValue([
+            vi.spyOn(imperative.CredentialManagerOverride, "getKnownCredMgrs").mockReturnValue([
                 {
                     credMgrDisplayName: "test",
                     credMgrPluginName: "test",
                     credMgrZEName: "test",
                 },
             ]);
-            jest.spyOn(vscode.extensions, "getExtension").mockImplementation(() => {
+            vi.spyOn(vscode.extensions, "getExtension").mockImplementation(() => {
                 throw new Error("test error");
             });
 
@@ -1020,21 +1025,21 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("suggest changing the override setting after finding a registered custom credential manager and selecting 'yes'", async () => {
-            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
-            const updateCredentialManagerSettingSpy = jest.spyOn(ProfilesUtils, "updateCredentialManagerSetting");
-            const setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue");
+            const zoweLoggerTraceSpy = vi.spyOn(ZoweLogger, "trace");
+            const updateCredentialManagerSettingSpy = vi.spyOn(ProfilesUtils, "updateCredentialManagerSetting");
+            const setDirectValueSpy = vi.spyOn(SettingsConfig, "setDirectValue");
 
-            jest.spyOn(imperative.CredentialManagerOverride, "getKnownCredMgrs").mockReturnValue([
+            vi.spyOn(imperative.CredentialManagerOverride, "getKnownCredMgrs").mockReturnValue([
                 {
                     credMgrDisplayName: "test",
                     credMgrPluginName: "test",
                     credMgrZEName: "test",
                 },
             ]);
-            jest.spyOn(vscode.extensions, "getExtension").mockReturnValue({
+            vi.spyOn(vscode.extensions, "getExtension").mockReturnValue({
                 credMgrDisplayName: "test",
             } as any);
-            jest.spyOn(Gui, "infoMessage").mockResolvedValue("Yes");
+            vi.spyOn(Gui, "infoMessage").mockResolvedValue("Yes");
 
             await expect(ProfilesUtils["fetchRegisteredPlugins"]()).resolves.not.toThrow();
             expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(2);
@@ -1043,21 +1048,21 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("suggest changing the override setting and selecting 'no' and should keep the default manager", async () => {
-            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
-            const updateCredentialManagerSettingSpy = jest.spyOn(ProfilesUtils, "updateCredentialManagerSetting");
-            const setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue");
+            const zoweLoggerTraceSpy = vi.spyOn(ZoweLogger, "trace");
+            const updateCredentialManagerSettingSpy = vi.spyOn(ProfilesUtils, "updateCredentialManagerSetting");
+            const setDirectValueSpy = vi.spyOn(SettingsConfig, "setDirectValue");
 
-            jest.spyOn(imperative.CredentialManagerOverride, "getKnownCredMgrs").mockReturnValue([
+            vi.spyOn(imperative.CredentialManagerOverride, "getKnownCredMgrs").mockReturnValue([
                 {
                     credMgrDisplayName: "test",
                     credMgrPluginName: "test",
                     credMgrZEName: "test",
                 },
             ]);
-            jest.spyOn(vscode.extensions, "getExtension").mockReturnValue({
+            vi.spyOn(vscode.extensions, "getExtension").mockReturnValue({
                 credMgrDisplayName: "test",
             } as any);
-            jest.spyOn(Gui, "infoMessage").mockResolvedValue("Don't ask again");
+            vi.spyOn(Gui, "infoMessage").mockResolvedValue("Don't ask again");
 
             await expect(ProfilesUtils["fetchRegisteredPlugins"]()).resolves.not.toThrow();
             expect(zoweLoggerTraceSpy).toHaveBeenCalledTimes(1);
@@ -1068,21 +1073,21 @@ describe("ProfilesUtils unit tests", () => {
 
     describe("promptAndHandleMissingCredentialManager", () => {
         afterEach(() => {
-            jest.clearAllMocks();
-            jest.resetAllMocks();
-            jest.restoreAllMocks();
+            vi.clearAllMocks();
+            vi.resetAllMocks();
+            vi.restoreAllMocks();
         });
 
         it("should prompt to install missing custom credential manager defined in 'imperative.json'", async () => {
-            const zoweLoggerTraceSpy = jest.spyOn(ZoweLogger, "trace");
-            const reloadWindowSpy = jest.spyOn(vscode.commands, "executeCommand");
+            const zoweLoggerTraceSpy = vi.spyOn(ZoweLogger, "trace");
+            const reloadWindowSpy = vi.spyOn(vscode.commands, "executeCommand");
 
-            jest.spyOn(Gui, "infoMessage").mockResolvedValue("Install");
+            vi.spyOn(Gui, "infoMessage").mockResolvedValue("Install");
             Object.defineProperty(vscode.env, "openExternal", {
                 value: () => true,
                 configurable: true,
             });
-            jest.spyOn(Gui, "showMessage").mockResolvedValue("Reload");
+            vi.spyOn(Gui, "showMessage").mockResolvedValue("Reload");
 
             await expect(
                 ProfilesUtils["promptAndHandleMissingCredentialManager"]({
@@ -1097,19 +1102,19 @@ describe("ProfilesUtils unit tests", () => {
     });
 
     describe("disableCredentialManagement", () => {
-        let setDirectValueSpy: jest.SpyInstance;
-        let warningMessageSpy: jest.SpyInstance;
-        let executeCommandSpy: jest.SpyInstance;
-        let getDirectValueSpy: jest.SpyInstance;
+        let setDirectValueSpy: MockInstance;
+        let warningMessageSpy: MockInstance;
+        let executeCommandSpy: MockInstance;
+        let getDirectValueSpy: MockInstance;
 
         beforeEach(() => {
-            jest.clearAllMocks();
-            jest.resetModules();
-            jest.restoreAllMocks();
-            setDirectValueSpy = jest.spyOn(SettingsConfig, "setDirectValue");
-            warningMessageSpy = jest.spyOn(Gui, "warningMessage");
-            executeCommandSpy = jest.spyOn(vscode.commands, "executeCommand");
-            getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue");
+            vi.clearAllMocks();
+            vi.resetModules();
+            vi.restoreAllMocks();
+            setDirectValueSpy = vi.spyOn(SettingsConfig, "setDirectValue");
+            warningMessageSpy = vi.spyOn(Gui, "warningMessage");
+            executeCommandSpy = vi.spyOn(vscode.commands, "executeCommand");
+            getDirectValueSpy = vi.spyOn(SettingsConfig, "getDirectValue");
         });
 
         it("should show warning that credential management was disabled", async () => {
@@ -1123,16 +1128,16 @@ describe("ProfilesUtils unit tests", () => {
 
     describe("v1ProfileOptions", () => {
         it("should prompt user if v1 profiles detected and Convert Existing Profiles chosen", async () => {
-            const mockReadProfilesFromDisk = jest.fn();
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValue({
+            const mockReadProfilesFromDisk = vi.fn();
+            const profInfoSpy = vi.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                getTeamConfig: jest.fn().mockReturnValue({ configName: "zowe.config.json" }),
-                getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
+                getTeamConfig: vi.fn().mockReturnValue({ configName: "zowe.config.json" }),
+                getAllProfiles: vi.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
                 onlyV1ProfilesExist: true,
             } as never);
-            const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Convert existing profiles" as any);
+            const infoMsgSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Convert existing profiles" as any);
             Object.defineProperty(imperative, "ConvertMsgFmt", {
-                value: jest.fn().mockReturnValue({
+                value: vi.fn().mockReturnValue({
                     REPORT_LINE: 1,
                     ERROR_LINE: 2,
                     PARAGRAPH: 4,
@@ -1140,7 +1145,7 @@ describe("ProfilesUtils unit tests", () => {
                 }),
                 configurable: true,
             });
-            jest.spyOn(ProfilesCache, "convertV1ProfToConfig").mockResolvedValueOnce({
+            vi.spyOn(ProfilesCache, "convertV1ProfToConfig").mockResolvedValueOnce({
                 msgs: [
                     { msgFormat: imperative.ConvertMsgFmt.PARAGRAPH, msgText: "message text for testing." },
                     { msgFormat: imperative.ConvertMsgFmt.INDENT, msgText: "message text for testing." },
@@ -1151,10 +1156,10 @@ describe("ProfilesUtils unit tests", () => {
                     { name: null, type: "zosmf", error: "failed" as any },
                 ],
             } as any);
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
-            jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
-            Object.defineProperty(vscode.workspace, "openTextDocument", { value: jest.fn().mockReturnValue({}), configurable: true });
-            Object.defineProperty(Gui, "showTextDocument", { value: jest.fn(), configurable: true });
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
+            vi.spyOn(ZoweLocalStorage, "setValue").mockImplementation((() => undefined) as any);
+            Object.defineProperty(vscode.workspace, "openTextDocument", { value: vi.fn().mockReturnValue({}), configurable: true });
+            Object.defineProperty(Gui, "showTextDocument", { value: vi.fn(), configurable: true });
 
             await (ProfilesUtils as any).v1ProfileOptions();
             expect(ZoweLocalStorage.setValue).toHaveBeenCalled();
@@ -1165,14 +1170,14 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("should prompt user if v1 profiles detected and return if nothing chosen", async () => {
-            const mockReadProfilesFromDisk = jest.fn();
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValue({
+            const mockReadProfilesFromDisk = vi.fn();
+            const profInfoSpy = vi.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                getTeamConfig: jest.fn().mockReturnValue([]),
-                getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
+                getTeamConfig: vi.fn().mockReturnValue([]),
+                getAllProfiles: vi.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
                 onlyV1ProfilesExist: true,
             } as never);
-            const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
+            const infoMsgSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
 
             await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.not.toThrow();
 
@@ -1181,24 +1186,24 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("should prompt user if v1 profiles detected and Create New is selected", async () => {
-            const mockReadProfilesFromDisk = jest.fn();
-            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            const mockReadProfilesFromDisk = vi.fn();
+            vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
                 persistent: true,
-                get: jest.fn(),
-                has: jest.fn(),
-                inspect: jest.fn(),
-                update: jest.fn(),
+                get: vi.fn(),
+                has: vi.fn(),
+                inspect: vi.fn(),
+                update: vi.fn(),
             });
-            const profInfoSpy = jest.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValue({
+            const profInfoSpy = vi.spyOn(ProfilesUtils, "setupProfileInfo").mockResolvedValue({
                 readProfilesFromDisk: mockReadProfilesFromDisk,
-                getTeamConfig: jest.fn().mockReturnValue([]),
-                getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
+                getTeamConfig: vi.fn().mockReturnValue([]),
+                getAllProfiles: vi.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
                 onlyV1ProfilesExist: true,
             } as never);
-            const infoMsgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New");
+            const infoMsgSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New");
 
-            jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
-            jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
+            vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
+            vi.spyOn(ZoweLocalStorage, "setValue").mockImplementation((() => undefined) as any);
             await (ProfilesUtils as any).v1ProfileOptions();
             expect(ZoweLocalStorage.setValue).toHaveBeenCalled();
 
@@ -1211,17 +1216,17 @@ describe("ProfilesUtils unit tests", () => {
     describe("handleV1MigrationStatus", () => {
         function getBlockMocks() {
             return {
-                getValueMock: jest.spyOn(ZoweLocalStorage, "getValue"),
-                setValueMock: jest.spyOn(ZoweLocalStorage, "setValue"),
+                getValueMock: vi.spyOn(ZoweLocalStorage, "getValue"),
+                setValueMock: vi.spyOn(ZoweLocalStorage, "setValue"),
             };
         }
 
         it("should return early if profileInfo is nullish", async () => {
             const blockMocks = getBlockMocks();
             blockMocks.getValueMock.mockReturnValueOnce(Definitions.V1MigrationStatus.JustMigrated);
-            blockMocks.setValueMock.mockImplementation();
-            const v1ProfileOptsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions");
-            const profInfoMock = jest.fn();
+            blockMocks.setValueMock.mockImplementation((() => undefined) as any);
+            const v1ProfileOptsMock = vi.spyOn(ProfilesUtils as any, "v1ProfileOptions");
+            const profInfoMock = vi.fn();
             Object.defineProperty(ProfilesUtils, "mProfileInfo", {
                 get: profInfoMock,
             });
@@ -1234,16 +1239,16 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should call executeCommand with zowe.ds.addSession if the migration status is CreateConfigSelected", async () => {
             const blockMocks = getBlockMocks();
-            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+            const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
             blockMocks.getValueMock.mockReturnValueOnce(Definitions.V1MigrationStatus.JustMigrated);
-            blockMocks.setValueMock.mockImplementation();
+            blockMocks.setValueMock.mockImplementation((() => undefined) as any);
             Object.defineProperty(ProfilesUtils, "mProfileInfo", {
                 value: {
-                    getTeamConfig: jest.fn().mockReturnValue({ exists: false }),
+                    getTeamConfig: vi.fn().mockReturnValue({ exists: false }),
                     onlyV1ProfilesExist: true,
                 },
             });
-            const v1ProfileOptsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions");
+            const v1ProfileOptsMock = vi.spyOn(ProfilesUtils as any, "v1ProfileOptions");
             await ProfilesUtils.handleV1MigrationStatus();
             expect(v1ProfileOptsMock).toHaveBeenCalled();
             blockMocks.getValueMock.mockRestore();
@@ -1253,7 +1258,7 @@ describe("ProfilesUtils unit tests", () => {
         it("should reload the window once if the user just migrated from v1", async () => {
             Object.defineProperty(ProfilesUtils, "mProfileInfo", {
                 value: {
-                    readProfilesFromDisk: jest.fn(),
+                    readProfilesFromDisk: vi.fn(),
                     hasValidSchema: false,
                     getTeamConfig: () => ({
                         exists: false,
@@ -1261,16 +1266,16 @@ describe("ProfilesUtils unit tests", () => {
                     onlyV1ProfilesExist: true,
                 },
             });
-            const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            const getConfigurationMock = vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
                 persistent: true,
-                get: jest.fn(),
-                has: jest.fn(),
-                inspect: jest.fn(),
-                update: jest.fn(),
+                get: vi.fn(),
+                has: vi.fn(),
+                inspect: vi.fn(),
+                update: vi.fn(),
             });
-            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
-            const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
+            const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
+            const getValueMock = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+            const setValueMock = vi.spyOn(ZoweLocalStorage, "setValue").mockImplementation((() => undefined) as any);
             await ProfilesUtils.handleV1MigrationStatus();
             expect(getConfigurationMock).toHaveBeenCalledWith("Zowe-USS-Persistent");
             expect(getValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
@@ -1285,7 +1290,7 @@ describe("ProfilesUtils unit tests", () => {
         it("should not reload the window during migration if imperative.ProfileInfo.onlyV1ProfilesExist is false", async () => {
             Object.defineProperty(ProfilesUtils, "mProfileInfo", {
                 value: {
-                    readProfilesFromDisk: jest.fn(),
+                    readProfilesFromDisk: vi.fn(),
                     hasValidSchema: false,
                     getTeamConfig: () => ({
                         exists: false,
@@ -1293,16 +1298,16 @@ describe("ProfilesUtils unit tests", () => {
                     onlyV1ProfilesExist: false,
                 },
             });
-            const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            const getConfigurationMock = vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
                 persistent: true,
-                get: jest.fn(),
-                has: jest.fn(),
-                inspect: jest.fn(),
-                update: jest.fn(),
+                get: vi.fn(),
+                has: vi.fn(),
+                inspect: vi.fn(),
+                update: vi.fn(),
             });
-            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
-            const setValueMock = jest.spyOn(ZoweLocalStorage, "setValue").mockImplementation();
+            const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
+            const getValueMock = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+            const setValueMock = vi.spyOn(ZoweLocalStorage, "setValue").mockImplementation((() => undefined) as any);
             await ProfilesUtils.handleV1MigrationStatus();
             expect(getConfigurationMock).toHaveBeenCalledWith("Zowe-USS-Persistent");
             expect(getValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
@@ -1316,7 +1321,7 @@ describe("ProfilesUtils unit tests", () => {
         it("should call v1ProfileOptions if team config does not exist and only v1 profiles exist", async () => {
             Object.defineProperty(ProfilesUtils, "mProfileInfo", {
                 value: {
-                    readProfilesFromDisk: jest.fn(),
+                    readProfilesFromDisk: vi.fn(),
                     hasValidSchema: false,
                     getTeamConfig: () => ({
                         exists: false,
@@ -1324,15 +1329,15 @@ describe("ProfilesUtils unit tests", () => {
                     onlyV1ProfilesExist: true,
                 },
             });
-            const getConfigurationMock = jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            const getConfigurationMock = vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
                 persistent: true,
-                get: jest.fn(),
-                has: jest.fn(),
-                inspect: jest.fn(),
-                update: jest.fn(),
+                get: vi.fn(),
+                has: vi.fn(),
+                inspect: vi.fn(),
+                update: vi.fn(),
             });
-            const v1ProfileOptionsMock = jest.spyOn(ProfilesUtils as any, "v1ProfileOptions").mockImplementation();
-            const getValueMock = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
+            const v1ProfileOptionsMock = vi.spyOn(ProfilesUtils as any, "v1ProfileOptions").mockImplementation((() => undefined) as any);
+            const getValueMock = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(Definitions.V1MigrationStatus.JustMigrated);
             await ProfilesUtils.handleV1MigrationStatus();
             expect(getConfigurationMock).toHaveBeenCalledWith("Zowe-USS-Persistent");
             expect(getValueMock).toHaveBeenCalledWith(Definitions.LocalStorageKey.V1_MIGRATION_STATUS);
@@ -1344,17 +1349,17 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should show the Create Config prompt when Create New is chosen", async () => {
             const blockMocks = getBlockMocks();
-            blockMocks.setValueMock.mockImplementation();
-            const mockReadProfilesFromDisk = jest.fn();
+            blockMocks.setValueMock.mockImplementation((() => undefined) as any);
+            const mockReadProfilesFromDisk = vi.fn();
             Object.defineProperty(ProfilesUtils, "mProfileInfo", {
                 value: {
                     readProfilesFromDisk: mockReadProfilesFromDisk,
-                    getTeamConfig: jest.fn().mockReturnValue([]),
-                    getAllProfiles: jest.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
+                    getTeamConfig: vi.fn().mockReturnValue([]),
+                    getAllProfiles: vi.fn().mockReturnValue([createValidIProfile(), createAltTypeIProfile()]),
                     onlyV1ProfilesExist: true,
                 },
             });
-            const msgSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New" as any);
+            const msgSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce("Create New" as any);
 
             await expect((ProfilesUtils as any).v1ProfileOptions()).resolves.not.toThrow();
             expect(msgSpy).toHaveBeenCalled();
@@ -1364,7 +1369,7 @@ describe("ProfilesUtils unit tests", () => {
     describe("promptUserWithNoConfigs", () => {
         it("returns early if user was already prompted in this session", () => {
             const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", { value: true });
-            const profInfoMock = jest.fn();
+            const profInfoMock = vi.fn();
             Object.defineProperty(ProfilesUtils, "mProfileInfo", {
                 get: profInfoMock,
             });
@@ -1374,11 +1379,11 @@ describe("ProfilesUtils unit tests", () => {
         });
         it("returns early if profileInfo is nullish", () => {
             const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", { value: false });
-            const profInfoMock = jest.fn();
+            const profInfoMock = vi.fn();
             Object.defineProperty(ProfilesUtils, "mProfileInfo", {
                 get: profInfoMock,
             });
-            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+            const showMessageSpy = vi.spyOn(Gui, "showMessage");
             ProfilesUtils.promptUserWithNoConfigs();
             expect(profInfoMock).toHaveBeenCalled();
             expect(showMessageSpy).not.toHaveBeenCalled();
@@ -1386,14 +1391,14 @@ describe("ProfilesUtils unit tests", () => {
         });
         it("prompts the user if they don't have any Zowe client configs", () => {
             const noConfigDialogShownMock = new MockedProperty(ProfilesUtils, "noConfigDialogShown", { value: false });
-            const profInfoMock = jest.fn().mockReturnValue({
+            const profInfoMock = vi.fn().mockReturnValue({
                 getTeamConfig: () => ({ exists: false }),
                 onlyV1ProfilesExist: false,
             });
             Object.defineProperty(ProfilesUtils, "mProfileInfo", {
                 get: profInfoMock,
             });
-            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+            const showMessageSpy = vi.spyOn(Gui, "showMessage");
             ProfilesUtils.promptUserWithNoConfigs();
             expect(showMessageSpy).toHaveBeenCalledWith(
                 "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
@@ -1403,7 +1408,7 @@ describe("ProfilesUtils unit tests", () => {
             noConfigDialogShownMock[Symbol.dispose]();
         });
         it("executes zowe.ds.addSession if the user selects 'Create New' in the prompt", async () => {
-            const profInfoMock = jest.fn().mockReturnValue({
+            const profInfoMock = vi.fn().mockReturnValue({
                 getTeamConfig: () => ({ exists: false }),
                 onlyV1ProfilesExist: false,
             });
@@ -1414,8 +1419,8 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
                 value: false,
             });
-            const showMessageSpy = jest.spyOn(Gui, "showMessage").mockResolvedValue("Create New");
-            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
+            const showMessageSpy = vi.spyOn(Gui, "showMessage").mockResolvedValue("Create New");
+            const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
             ProfilesUtils.promptUserWithNoConfigs();
             expect(await showMessageSpy).toHaveBeenCalledWith(
                 "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
@@ -1427,7 +1432,7 @@ describe("ProfilesUtils unit tests", () => {
             noConfigDialogShownMock[Symbol.dispose]();
         });
         it("does not prompt the user if they have a Zowe team config", () => {
-            const profInfoMock = jest.fn().mockReturnValue({
+            const profInfoMock = vi.fn().mockReturnValue({
                 getTeamConfig: () => ({ exists: true }),
                 onlyV1ProfilesExist: false,
             });
@@ -1438,7 +1443,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
                 value: false,
             });
-            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+            const showMessageSpy = vi.spyOn(Gui, "showMessage");
             ProfilesUtils.promptUserWithNoConfigs();
             expect(showMessageSpy).not.toHaveBeenCalledWith(
                 "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
@@ -1448,7 +1453,7 @@ describe("ProfilesUtils unit tests", () => {
             noConfigDialogShownMock[Symbol.dispose]();
         });
         it("does not prompt the user if they have v1 profiles", () => {
-            const profInfoMock = jest.fn().mockReturnValue({
+            const profInfoMock = vi.fn().mockReturnValue({
                 getTeamConfig: () => ({ exists: false }),
                 onlyV1ProfilesExist: true,
             });
@@ -1459,7 +1464,7 @@ describe("ProfilesUtils unit tests", () => {
                 configurable: true,
                 value: false,
             });
-            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+            const showMessageSpy = vi.spyOn(Gui, "showMessage");
             ProfilesUtils.promptUserWithNoConfigs();
             expect(showMessageSpy).not.toHaveBeenCalledWith(
                 "No Zowe client configurations were detected. Click 'Create New' to create a new Zowe team configuration.",
@@ -1472,14 +1477,14 @@ describe("ProfilesUtils unit tests", () => {
 
     describe("setupDefaultCredentialManager", () => {
         it("calls profileManagerWillLoad to load default credential manager", async () => {
-            const profileManagerWillLoadSpy = jest.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad");
+            const profileManagerWillLoadSpy = vi.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad");
             await ProfilesUtils.setupDefaultCredentialManager();
             expect(profileManagerWillLoadSpy).toHaveBeenCalled();
         });
 
         it("prompts user to disable credential manager if default fails to load", async () => {
-            const profileManagerWillLoadSpy = jest.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad").mockResolvedValueOnce(false);
-            const disableCredMgmtSpy = jest.spyOn(ProfilesUtils, "disableCredentialManagement").mockImplementation();
+            const profileManagerWillLoadSpy = vi.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad").mockResolvedValueOnce(false);
+            const disableCredMgmtSpy = vi.spyOn(ProfilesUtils, "disableCredentialManagement").mockImplementation((() => undefined) as any);
             await ProfilesUtils.setupDefaultCredentialManager();
             expect(profileManagerWillLoadSpy).toHaveBeenCalled();
             expect(disableCredMgmtSpy).toHaveBeenCalled();
@@ -1487,14 +1492,14 @@ describe("ProfilesUtils unit tests", () => {
 
         it("should apply credential manager options if they exist", async () => {
             const mockOptions = { someOption: "someValue" };
-            jest.spyOn(ProfilesUtils, "getCredentialManagerOptions").mockReturnValue(mockOptions);
+            vi.spyOn(ProfilesUtils, "getCredentialManagerOptions").mockReturnValue(mockOptions);
 
             const mockDefaultCredMgr = { options: {} };
-            jest.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar").mockReturnValue(mockDefaultCredMgr as any);
+            vi.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar").mockReturnValue(mockDefaultCredMgr as any);
 
-            const loggerDebugSpy = jest.spyOn(ZoweLogger, "debug");
+            const loggerDebugSpy = vi.spyOn(ZoweLogger, "debug");
 
-            jest.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad").mockResolvedValueOnce(true);
+            vi.spyOn(imperative.ProfileInfo.prototype, "profileManagerWillLoad").mockResolvedValueOnce(true);
 
             await ProfilesUtils.setupDefaultCredentialManager();
 
@@ -1511,14 +1516,14 @@ describe("ProfilesUtils unit tests", () => {
                     return { profName: "test", profType: "zosmf" } as IProfAttrs;
                 },
             } as unknown as ProfilesCache;
-            const extenderProfileReadyGetSpy = jest.spyOn((ProfilesUtils as any).extenderProfileReady, "get");
-            const extenderProfileReadySetSpy = jest.spyOn((ProfilesUtils as any).extenderProfileReady, "set");
+            const extenderProfileReadyGetSpy = vi.spyOn((ProfilesUtils as any).extenderProfileReady, "get");
+            const extenderProfileReadySetSpy = vi.spyOn((ProfilesUtils as any).extenderProfileReady, "set");
 
-            const getInfoSpy = jest.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+            const getInfoSpy = vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
                 profile: { name: "testName", type: "testType" },
             } as any);
             const mockApiReg = {
-                registeredApiTypes: jest.fn().mockReturnValue([]),
+                registeredApiTypes: vi.fn().mockReturnValue([]),
             };
             ProfilesUtils.setApiRegister(mockApiReg as any);
 
@@ -1537,9 +1542,9 @@ describe("ProfilesUtils unit tests", () => {
 
     describe("Profiles unit tests - function resolveTypePromise", () => {
         it("should resolve deferred promises for matching profile type", () => {
-            const mockResolve = jest.spyOn(imperative.DeferredPromise.prototype, "resolve").mockReturnValueOnce();
+            const mockResolve = vi.spyOn(imperative.DeferredPromise.prototype, "resolve").mockReturnValueOnce();
             const mockProfilesCache = {
-                getProfiles: jest.fn(() => [
+                getProfiles: vi.fn(() => [
                     { name: "test1", type: "zftp" },
                     { name: "test2", type: "zftp" },
                 ]),
@@ -1551,9 +1556,9 @@ describe("ProfilesUtils unit tests", () => {
         });
 
         it("should invoke vscode command to setup remote workspace folders", () => {
-            const mockResolve = jest.spyOn(imperative.DeferredPromise.prototype, "resolve").mockReturnValueOnce();
-            const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-            const mockProfilesCache = { getProfiles: jest.fn(() => []) } as unknown as ProfilesCache;
+            const mockResolve = vi.spyOn(imperative.DeferredPromise.prototype, "resolve").mockReturnValueOnce();
+            const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
+            const mockProfilesCache = { getProfiles: vi.fn(() => []) } as unknown as ProfilesCache;
             ProfilesUtils.resolveTypePromise("test", mockProfilesCache);
             expect(mockResolve).not.toHaveBeenCalled();
             expect(executeCommandMock).toHaveBeenCalledWith("zowe.setupRemoteWorkspaceFolders", "test");

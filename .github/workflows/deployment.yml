@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Check permissions
-        if: ${{ github.event_name == 'workflow-dispatch' }}
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: prince-chrismc/check-actor-permissions-action@v3
         with:
           permission: admin
@@ -43,7 +43,7 @@ jobs:
       - name: Use Node.js LTS
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: lts/-1
 
       - name: Install pnpm and Lerna
         run: npm install -g pnpm lerna@6

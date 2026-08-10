@@ -12,6 +12,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import {
+    errorMessage,
+    handleError,
     FsAbstractUtils,
     Gui,
     imperative,
@@ -150,11 +152,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 );
             } catch (err) {
                 // If the write fails, we cannot move to the next file.
-                if (err instanceof Error) {
+                void handleError(err, (error) => {
                     Gui.errorMessage(
-                        vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), err.message)
+                        vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), error.message)
                     );
-                }
+                });
                 return;
             }
 
@@ -192,8 +194,12 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             droppedItems = { value: effectiveDataTransfer.value };
         }
 
-        if (!droppedItems || !Array.isArray(droppedItems.value)) return;
-        if (!resolvedTargetNode || !resolvedTargetNode.fullPath) return;
+        if (!droppedItems || !Array.isArray(droppedItems.value)) {
+            return;
+        }
+        if (!resolvedTargetNode || !resolvedTargetNode.fullPath) {
+            return;
+        }
 
         if (!resolvedTargetNode.fullPath.includes("\\") && !resolvedTargetNode.fullPath.includes("/")) {
             Gui.errorMessage(vscode.l10n.t("You must specify a directory before moving."));
@@ -208,17 +214,25 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         }
 
         // Helper to find the dragged node when keys differ (profile prefix, etc.)
-        const findDraggedNode = (itemUri: { path: string }, label?: string) => {
-            let node = this.draggedNodes && this.draggedNodes[itemUri.path];
-            if (node) return node;
+        const findDraggedNode = (itemUri: { path: string }, label?: string): IZoweUSSTreeNode => {
+            const node = this.draggedNodes && this.draggedNodes[itemUri.path];
+            if (node) {
+                return node;
+            }
             const nodes = Object.values(this.draggedNodes || {});
             for (const n of nodes) {
                 try {
                     const rpath = n?.resourceUri?.path;
-                    if (rpath === itemUri.path) return n;
-                    if (typeof rpath === "string" && rpath.endsWith(itemUri.path)) return n;
+                    if (rpath === itemUri.path) {
+                        return n;
+                    }
+                    if (typeof rpath === "string" && rpath.endsWith(itemUri.path)) {
+                        return n;
+                    }
                     const nlabel = SharedUtils.getNodeProperty(n, "label");
-                    if (label && nlabel === label) return n;
+                    if (label && nlabel === label) {
+                        return n;
+                    }
                 } catch {
                     // ignore malformed entries
                 }
@@ -254,7 +268,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
 
             // Skip nodes that are direct children of the target node
-            if (node.getParent() === target) continue;
+            if (node.getParent() === target) {
+                continue;
+            }
 
             const nodeLabel = SharedUtils.getNodeProperty(node, "label") || (item.label as string);
 
@@ -270,7 +286,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
 
             // Check for same-object by comparing normalized USS paths (ignoring profile)
-            if (await SharedUtils.isLikelySameUssObjectByUris(node, resolvedTargetNode, nodeLabel)) {
+            if (SharedUtils.isLikelySameUssObjectByUris(node, resolvedTargetNode, nodeLabel)) {
                 Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
                 this.draggedNodes = {};
                 return;
@@ -283,8 +299,12 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
         for (const item of droppedItems.value) {
             const node = findDraggedNode(item.uri, item.label);
-            if (!node) continue;
-            if (node.getParent() === target) continue;
+            if (!node) {
+                continue;
+            }
+            if (node.getParent() === target) {
+                continue;
+            }
 
             const nodeLabel = SharedUtils.getNodeProperty(node, "label") || (item.label as string);
             const newUriForNode = vscode.Uri.from({
@@ -393,7 +413,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 setImmediate(() => {
                     Promise.resolve(this.getTreeView().reveal(originalNode, { select: true, focus: true })).catch((revealErr) => {
                         // If reveal fails, just log it - the rename was still successful
-                        ZoweLogger.warn(`Could not reveal renamed node: ${revealErr instanceof Error ? revealErr.message : String(revealErr)}`);
+                        ZoweLogger.warn(`Could not reveal renamed node: ${errorMessage(revealErr)}`);
                     });
                 });
                 Gui.showMessage(
@@ -404,13 +424,13 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     })
                 );
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Uss,
                         profile: originalNode.getProfile(),
                         scenario: vscode.l10n.t("Unable to rename node:"),
                     });
-                }
+                });
                 throw err;
             }
         }
@@ -538,7 +558,12 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 const favsForProfile = await this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
-            return element.getChildren();
+            const prevDescription = element.description;
+            const children = await element.getChildren();
+            if (element.description !== prevDescription) {
+                this.nodeDataChanged(element);
+            }
+            return children;
         }
         return this.mSessionNodes;
     }
@@ -739,7 +764,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 favoritesArray.push(favoriteEntry);
             });
         });
-        this.mPersistence.updateFavorites(favoritesArray);
+        this.mPersistence.updateFavorites({ favorites: favoritesArray });
     }
 
     /**
@@ -1015,9 +1040,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 profile,
             });
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.warn(`Skipping creation of favorited profile. ${err.toString()}`);
-            }
+            void handleError(err, (error) => {
+                ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
+            });
             return null;
         }
 

@@ -15,7 +15,7 @@
  *
  * @example <caption>Class in __mocks__<caption>
  * export class TestClass {
- *   // This method will be wrapped in a jest.fn() call with the implementation
+ *   // This method will be wrapped in a vi.fn() call with the implementation
  *   // being the contents of the below function.
  *   @MockMethod()
  *   public test() {
@@ -36,7 +36,7 @@ export function MockMethod(): (target: any, key: string, descriptor: PropertyDes
 
         if (descriptor != null) {
             const originalMethod = descriptor.value;
-            descriptor.value = jest.fn((...args) => {
+            descriptor.value = vi.fn((...args) => {
                 originalMethod.apply(this, args);
             });
         }

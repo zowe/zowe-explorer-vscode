@@ -12,7 +12,7 @@
 import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
 import * as path from "path";
-import { FileManagement, Gui, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode, Types, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { FileManagement, Gui, handleError, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode, Types, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../configuration/Profiles";
 import { Constants } from "../../configuration/Constants";
 import { SharedUtils } from "./SharedUtils";
@@ -257,10 +257,10 @@ export class SharedActions {
         try {
             await Profiles.getInstance().refresh(ZoweExplorerApiRegister.getInstance());
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.error(err.message);
-                ZoweExplorerExtender.showZoweConfigError(err.message);
-            }
+            void handleError(err, (error) => {
+                ZoweLogger.error(error.message);
+                ZoweExplorerExtender.showZoweConfigError(error.message);
+            });
         }
     }
 

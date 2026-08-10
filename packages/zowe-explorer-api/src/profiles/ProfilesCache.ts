@@ -12,6 +12,7 @@
 import * as imperative from "@zowe/imperative";
 import type { IRegisterClient } from "../extend/IRegisterClient";
 import { FileManagement } from "../utils/FileManagement";
+import { errorMessage } from "../utils/ErrorUtils";
 import { Validation } from "./Validation";
 import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
@@ -40,7 +41,10 @@ export class ProfilesCache {
     protected defaultProfileByType = new Map<string, imperative.IProfileLoaded>();
     protected overrideWithEnv = false;
 
-    public constructor(protected log: imperative.Logger, protected cwd?: string) {
+    public constructor(
+        protected log: imperative.Logger,
+        protected cwd?: string
+    ) {
         this.cwd = cwd != null ? FileManagement.getFullPath(cwd) : undefined;
     }
 
@@ -110,9 +114,7 @@ export class ProfilesCache {
             return undefined;
         } catch (err) {
             // Log the error but don't throw - credential manager options are optional
-            imperative.Logger.getAppLogger().warn(
-                `Failed to read credential manager options from imperative.json: ${err instanceof Error ? err.message : String(err)}`
-            );
+            imperative.Logger.getAppLogger().warn(`Failed to read credential manager options from imperative.json: ${errorMessage(err)}`);
             return undefined;
         }
     }

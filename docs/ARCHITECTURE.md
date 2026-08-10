@@ -123,7 +123,7 @@ graph TB
 #### Command Providers
 
 - **[`ZoweCommandProvider`](packages/zowe-explorer/src/commands/ZoweCommandProvider.ts)**: Abstract base class for mainframe command execution
-- **[`MvsCommandHandler`](packages/zowe-explorer/src/commands/MvsCommandHandler.ts)**: Handles MVS console commands
+- **[`ConsoleCommandHandler`](packages/zowe-explorer/src/commands/ConsoleCommandHandler.ts)**: Handles z/OS console commands
 - **[`TsoCommandHandler`](packages/zowe-explorer/src/commands/TsoCommandHandler.ts)**: Handles TSO commands
 - **[`UnixCommandHandler`](packages/zowe-explorer/src/commands/UnixCommandHandler.ts)**: Handles Unix System Services commands
 
@@ -341,7 +341,7 @@ Both approaches return the same `IApiRegisterClient` instance that provides acce
 
 Additionally, extenders can access Zowe Explorer's command handlers and utilities through the VS Code command palette:
 
-- MVS, TSO, and Unix command execution via [`MvsCommandHandler`](packages/zowe-explorer/src/commands/MvsCommandHandler.ts), [`TsoCommandHandler`](packages/zowe-explorer/src/commands/TsoCommandHandler.ts), [`UnixCommandHandler`](packages/zowe-explorer/src/commands/UnixCommandHandler.ts)
+- Console, TSO, and Unix command execution via [`ConsoleCommandHandler`](packages/zowe-explorer/src/commands/ConsoleCommandHandler.ts), [`TsoCommandHandler`](packages/zowe-explorer/src/commands/TsoCommandHandler.ts), [`UnixCommandHandler`](packages/zowe-explorer/src/commands/UnixCommandHandler.ts)
 - Certificate wizard, troubleshooting tools, and other UI components via registered VS Code commands
 
 ---

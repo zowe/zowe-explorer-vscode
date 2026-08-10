@@ -154,7 +154,9 @@ function main() {
 
     Object.assign(bundle, entries);
     const sortedBundle = Object.fromEntries(
-        Object.entries(bundle).sort(([a], [b]) => a.localeCompare(b))
+        // Use ordinal comparison instead of localeCompare, which is locale/ICU-dependent
+        // and can order punctuation differently across platforms, producing a non-deterministic diff.
+        Object.entries(bundle).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
     );
 
     fs.writeFileSync(L10N_BUNDLE_PATH, JSON.stringify(sortedBundle, null, 2) + "\n");

@@ -100,7 +100,16 @@ Then(/the (.*) view is no longer displayed/, async (tree: string) => {
     const zeView = await zeContainer.openView();
     const sidebarContent = zeView.getContent();
     const visibleSections = await sidebarContent.getSections();
-    expect(visibleSections.find(async (s) => (await s.getTitle()) === tree)).not.toBeDisplayedInViewport();
+    let matchedSection;
+    for (const s of visibleSections) {
+        if ((await s.getTitle()) === tree) {
+            matchedSection = s;
+            break;
+        }
+    }
+    if (matchedSection) {
+        await expect(matchedSection.elem).not.toBeDisplayedInViewport();
+    }
 
     // re-enable the view for the next test scenario
     const zeTitlePart = zeView.getTitlePart();

@@ -13,7 +13,18 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { Gui, imperative, IZoweUSSTreeNode, Types, ZoweExplorerApiType, ZosEncoding, MessageSeverity } from "@zowe/zowe-explorer-api";
+import {
+    errorMessage,
+    handleError,
+    Gui,
+    imperative,
+    IZoweUSSTreeNode,
+    Types,
+    ZoweExplorerApiType,
+    ZosEncoding,
+    MessageSeverity,
+    IZoweTreeNode,
+} from "@zowe/zowe-explorer-api";
 import { isBinaryFileSync } from "isbinaryfile";
 import { USSAttributeView } from "./USSAttributeView";
 import { USSFileStructure } from "./USSFileStructure";
@@ -168,13 +179,13 @@ export class USSActions {
                     ussFileProvider.refreshElement(equivalentNodeParent);
                 }
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Uss,
                         profile: node.getProfile(),
                         scenario: vscode.l10n.t("Unable to create node:"),
                     });
-                }
+                });
                 throw err;
             }
         }
@@ -584,8 +595,8 @@ export class USSActions {
                     downloadOpts.encoding.kind === "binary"
                         ? "binary"
                         : downloadOpts.encoding.kind === "other"
-                        ? downloadOpts.encoding.codepage
-                        : "EBCDIC";
+                          ? downloadOpts.encoding.codepage
+                          : "EBCDIC";
 
                 return vscode.l10n.t("Select specific encoding for file (current: {0})", encodingName);
             }
@@ -830,16 +841,16 @@ export class USSActions {
             {
                 location: vscode.ProgressLocation.Notification,
                 title: vscode.l10n.t("Downloading USS directory"),
-                cancellable: false, // TODO: Add cancellation support at SDK level and then enable cancellation here as well
+                cancellable: true,
             },
-            async (progress) => {
+            async (progress, token) => {
                 let realPercentComplete = 0;
                 const realTotalEntries = totalFileCount;
                 let numDownloaded = 0;
                 const task: imperative.ITaskWithStatus = {
                     set percentComplete(value: number) {
                         realPercentComplete = value;
-                        Gui.reportProgress(progress, realTotalEntries, ++numDownloaded, "");
+                        Gui.reportProgress(progress, realTotalEntries, numDownloaded++, "");
                     },
                     get percentComplete(): number {
                         return realPercentComplete;
@@ -859,9 +870,10 @@ export class USSActions {
                     directory: directoryPath,
                     overwrite: downloadOptions.overwrite,
                     includeHidden: includeHidden,
-                    maxConcurrentRequests: profile?.profile?.maxConcurrentRequests || 1,
+                    maxConcurrentRequests: profile.profile?.maxConcurrentRequests || 1,
                     task,
-                    responseTimeout: profile?.profile?.responseTimeout,
+                    responseTimeout: profile.profile?.responseTimeout,
+                    abortDownload: () => token?.isCancellationRequested ?? false,
                 };
 
                 // only set encoding/binary if user chose a specific encoding (not auto detect)
@@ -881,7 +893,7 @@ export class USSActions {
 
                 try {
                     const response = await ussApi.downloadDirectory(node.fullPath, options, listOptions);
-                    void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"), directoryPath);
+                    void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"), directoryPath, token?.isCancellationRequested);
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
                 }
@@ -909,7 +921,7 @@ export class USSActions {
         ussFileProvider: Types.IZoweUSSTreeType
     ): Promise<void> {
         ZoweLogger.trace("uss.actions.deleteUSSFilesPrompt called.");
-        let selectedNodes;
+        let selectedNodes: readonly IZoweTreeNode[];
         if (node || nodeList) {
             selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList) as IZoweUSSTreeNode[];
         } else {
@@ -926,19 +938,22 @@ export class USSActions {
             args: [displayedFileNames, additionalFilesCount > 0 ? `\n...and ${additionalFilesCount} more` : ""],
             comment: ["File names", "Additional files count"],
         });
+        const confirmDeletion = vscode.workspace.getConfiguration().get<boolean>("zowe.uss.deleteNode.confirmDeletion", true);
         const deleteButton = vscode.l10n.t("Delete");
         let cancelled = false;
-        await Gui.warningMessage(message, {
-            items: [deleteButton],
-            vsCodeOpts: { modal: true },
-        }).then((selection) => {
-            if (!selection || selection === "Cancel") {
-                ZoweLogger.debug(vscode.l10n.t("Delete action was canceled."));
-                cancelled = true;
-            }
-        });
+        if (confirmDeletion) {
+            await Gui.warningMessage(message, {
+                items: [deleteButton],
+                vsCodeOpts: { modal: true },
+            }).then((selection) => {
+                if (!selection || selection === "Cancel") {
+                    ZoweLogger.debug(vscode.l10n.t("Delete action was canceled."));
+                    cancelled = true;
+                }
+            });
+        }
         for (const item of selectedNodes) {
-            await item.deleteUSSNode(ussFileProvider, "", cancelled);
+            await (item as IZoweUSSTreeNode).deleteUSSNode(ussFileProvider, "", cancelled);
         }
     }
 
@@ -1247,7 +1262,7 @@ export class USSActions {
                         await Gui.errorMessage(
                             vscode.l10n.t({
                                 message: "Failed to reveal '{0}': {1}",
-                                args: [targetFileName, err instanceof Error ? err.message : String(err)],
+                                args: [targetFileName, errorMessage(err)],
                                 comment: ["Item name", "Error message"],
                             })
                         );

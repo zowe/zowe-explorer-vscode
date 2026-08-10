@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "types": ["node"],
+    "target": "es2015",
+    "module": "commonjs",
+    "declaration": true,
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "outDir": "./lib",
+    "preserveConstEnums": true,
+    "removeComments": false,
+    "pretty": true,
+    "sourceMap": true,
+    "stripInternal": true,
+    "newLine": "lf",
+    "resolveJsonModule": true,
+    "strict": true,
+    "rootDir": "./src",
+    "paths": {
+      "@zowe/zowe-explorer-api": ["../zowe-explorer-api"]
+    },
+    "composite": true
+  },
+  "exclude": ["node_modules", "lib"],
+  "include": ["src/**/*.ts"],
+  "references": [{ "path": "../zowe-explorer-api" }]
+}

@@ -2,9 +2,10 @@
 
 use std::process::Command;
 
+use crate::output::OutputFormat;
 use crate::test::Commands as TestCommands;
 use anyhow::Result;
-use clap::{command, CommandFactory, Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, Shell};
 
 /// Configuration options for test commands
@@ -34,11 +35,45 @@ pub struct TestConfig {
 /// Root commands available in the Zowe Explorer development CLI
 #[derive(Subcommand)]
 pub enum RootCommands {
+    /// Generate shell completions
+    Completions {
+        /// Shell to generate completions for
+        #[arg(value_enum)]
+        shell: clap_complete::Shell,
+    },
+    /// Check that installed tool versions satisfy the project's requirements
+    Doctor,
+    /// Run package manager commands
+    PkgMgr {
+        /// Arguments to pass to the package manager
+        #[arg(trailing_var_arg = true)]
+        args: Vec<String>,
+    },
+    /// Fetch a PR, reuse its posted VSIX artifact (or build from source), and launch the sandbox
+    Pr {
+        /// GitHub pull request number
+        pr_number: u64,
+        /// VS Code version to use for the sandbox (default: latest)
+        #[arg(long, value_name = "VERSION")]
+        vsc_version: Option<String>,
+        /// Skip dependency installation (reuse existing node_modules)
+        #[arg(long)]
+        skip_setup: bool,
+        /// Always build from source, ignoring any VSIX artifact posted on the PR
+        #[arg(long)]
+        build: bool,
+    },
     /// Set up the development environment
     Setup {
         /// Git reference to use for setup
         #[arg(short, long)]
         reference: Option<String>,
+    },
+    /// Show development environment status
+    Status {
+        /// Show verbose output
+        #[arg(short, long)]
+        verbose: bool,
     },
     /// Run tests
     Test {
@@ -49,32 +84,34 @@ pub enum RootCommands {
     },
     /// Print version information
     Version,
-    /// Run package manager commands
-    PkgMgr {
-        /// Arguments to pass to the package manager
-        #[arg(trailing_var_arg = true)]
-        args: Vec<String>,
-    },
-    /// Show development environment status
-    Status {
-        /// Show verbose output
-        #[arg(short, long)]
-        verbose: bool,
-    },
-    /// Generate shell completions
-    Completions {
-        /// Shell to generate completions for
-        #[arg(value_enum)]
-        shell: clap_complete::Shell,
-    },
 }
 
 /// Command-line arguments for the zedc tool
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
+    /// Output format for command results
+    #[arg(long, value_enum, value_name = "FORMAT", global = true)]
+    pub format: Option<OutputFormat>,
+
+    /// Emit machine-readable JSON (shorthand for `--format json`)
+    #[arg(long, global = true)]
+    pub json: bool,
+
     #[command(subcommand)]
     pub command: RootCommands,
+}
+
+impl Args {
+    /// Resolves the effective output format, treating `--json` as a shorthand
+    /// for `--format json`. The explicit `--json` flag takes precedence.
+    pub fn output_format(&self) -> OutputFormat {
+        if self.json {
+            OutputFormat::Json
+        } else {
+            self.format.unwrap_or_default()
+        }
+    }
 }
 
 /// Generate shell completion scripts for the specified shell

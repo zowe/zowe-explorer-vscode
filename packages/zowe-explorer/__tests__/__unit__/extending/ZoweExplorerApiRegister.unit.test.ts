@@ -87,7 +87,7 @@ function createGlobalMocks() {
     const newMocks = {
         registry: ZoweExplorerApiRegister.getInstance(),
         testProfile: createValidIProfile(),
-        mockGetInstance: jest.fn(),
+        mockGetInstance: vi.fn(),
         profiles: null,
     };
     newMocks.profiles = createInstanceOfProfile(newMocks.testProfile);
@@ -108,7 +108,7 @@ function createGlobalMocks() {
     return newMocks;
 }
 afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
 });
 
 describe("ZoweExplorerApiRegister unit testing", () => {
@@ -134,19 +134,19 @@ describe("ZoweExplorerApiRegister unit testing", () => {
 
     it("registers multiple API instances in parallel", async () => {
         const globalMocks = createGlobalMocks();
-        const mockRefresh = jest.fn((): Promise<void> => {
+        const mockRefresh = vi.fn((): Promise<void> => {
             return new Promise((resolve) => resolve());
         });
         const profilesForValidation = { status: "active", name: "fake" };
         Object.defineProperty(ZoweExplorerExtender.prototype, "getProfilesCache", {
-            value: jest.fn(() => {
+            value: vi.fn(() => {
                 return {
                     refresh: mockRefresh,
-                    checkCurrentProfile: jest.fn(() => {
+                    checkCurrentProfile: vi.fn(() => {
                         return profilesForValidation;
                     }),
-                    validateProfiles: jest.fn(),
-                    getProfiles: jest.fn(() => []),
+                    validateProfiles: vi.fn(),
+                    getProfiles: vi.fn(() => []),
                 };
             }),
         });
@@ -165,7 +165,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
     it("throws errors when registering invalid APIs", () => {
         const globalMocks = createGlobalMocks();
         const api1 = new MockUssApi1();
-        const mockGetProfileTypeName = jest.fn(() => undefined);
+        const mockGetProfileTypeName = vi.fn(() => undefined);
         api1.getProfileTypeName = mockGetProfileTypeName;
         expect(() => {
             globalMocks.registry.registerUssApi(api1);
@@ -216,7 +216,7 @@ describe("ZoweExplorerApiRegister unit testing", () => {
     });
 
     it("returns an API extender instance for getExplorerExtenderApi()", () => {
-        const explorerExtenderApiSpy = jest.spyOn(ZoweExplorerApiRegister.getInstance(), "getExplorerExtenderApi");
+        const explorerExtenderApiSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance(), "getExplorerExtenderApi");
         ZoweExplorerApiRegister.getExplorerExtenderApi();
         expect(explorerExtenderApiSpy).toHaveBeenCalled();
     });

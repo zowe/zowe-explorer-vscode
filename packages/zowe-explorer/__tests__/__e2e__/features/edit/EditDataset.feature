@@ -23,7 +23,7 @@ Scenario: User wants to edit a favorited PDS member
     Then the user can select the favorite in the list and open it
     When the user edits the PDS member
     Then the user should be able to save it successfully
-    
+
 Scenario: User wants to edit a PS
     Given a user who is looking at the Zowe Explorer tree views
     And the user has a profile in their Data Sets tree

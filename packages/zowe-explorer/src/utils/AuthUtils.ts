@@ -12,6 +12,7 @@
 import * as util from "util";
 import * as vscode from "vscode";
 import {
+    handleError,
     imperative,
     Gui,
     MainframeInteraction,
@@ -43,7 +44,7 @@ export class AuthUtils {
      * @param profile The profile to check.
      * @throws {AuthCancelledError} If the user has an unresolved authentication cancellation.
      */
-    public static async ensureAuthNotCancelled(profile: imperative.IProfileLoaded): Promise<void> {
+    public static ensureAuthNotCancelled(profile: imperative.IProfileLoaded): void {
         if (AuthHandler.wasAuthCancelled(profile)) {
             throw new AuthCancelledError(profile.name, "User cancelled previous authentication");
         }
@@ -92,17 +93,18 @@ export class AuthUtils {
 
     public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
         const executeWithRetries = async (): Promise<void> => {
+            // eslint-disable-next-line no-constant-condition
             while (true) {
                 try {
                     await AuthHandler.waitForUnlock(profile);
-                    await AuthUtils.ensureAuthNotCancelled(profile);
+                    AuthUtils.ensureAuthNotCancelled(profile);
                     const callbackValue = await callback();
                     AuthHandler.disableSequentialRequests(profile);
                     return callbackValue;
                 } catch (err) {
-                    if (err instanceof Error) {
-                        ZoweLogger.error(err.message);
-                    }
+                    await handleError(err, (error) => {
+                        ZoweLogger.error(error.message);
+                    });
                     if (
                         (err instanceof imperative.ImperativeError &&
                             (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
@@ -148,16 +150,16 @@ export class AuthUtils {
      * @param {label} - additional information such as profile name, credentials, messageID etc
      * @param {moreInfo} - additional/customized error messages
      *************************************************************************************************************/
-    public static async errorHandling(errorDetails: Error | string, moreInfo?: ErrorContext): Promise<boolean> {
+    public static async errorHandling(errorDetails: Error | string, moreInfo: ErrorContext = {}): Promise<boolean> {
         // Use util.inspect instead of JSON.stringify to handle circular references
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         ZoweLogger.error(`${errorDetails.toString()}\n` + util.inspect({ errorDetails, ...{ ...moreInfo, profile: undefined } }, { depth: null }));
 
-        const profile = typeof moreInfo?.profile === "string" ? Constants.PROFILES_CACHE.loadNamedProfile(moreInfo.profile) : moreInfo?.profile;
-        const errorCorrelation = ErrorCorrelator.getInstance().correlateError(moreInfo?.apiType ?? ZoweExplorerApiType.All, errorDetails, {
+        const profile = typeof moreInfo.profile === "string" ? Constants.PROFILES_CACHE.loadNamedProfile(moreInfo.profile) : moreInfo.profile;
+        const errorCorrelation = ErrorCorrelator.getInstance().correlateError(moreInfo.apiType ?? ZoweExplorerApiType.All, errorDetails, {
             profileType: profile?.type,
             ...Object.keys(moreInfo).reduce((all, k) => (typeof moreInfo[k] === "string" ? { ...all, [k]: moreInfo[k] } : all), {}),
-            templateArgs: { profileName: profile?.name ?? "", ...moreInfo?.templateArgs },
+            templateArgs: { profileName: profile?.name ?? "", ...(moreInfo.templateArgs ?? {}) },
         });
         if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
             const imperativeError: imperative.ImperativeError = errorDetails as imperative.ImperativeError;
@@ -407,10 +409,10 @@ export class AuthUtils {
             this.updateNodeToolTip(sessionNode, profile);
             sessionNode.setSessionToChoice(commonApi.getSession());
         } catch (err) {
-            if (err instanceof Error) {
+            void handleError(err, (error) => {
                 // API is not yet registered, or building the session failed for this profile
-                ZoweLogger.error(`Error syncing session for ${profileName}: ${err.message}`);
-            }
+                ZoweLogger.error(`Error syncing session for ${profileName}: ${error.message}`);
+            });
             return;
         }
         if (nodeToRefresh) {
@@ -446,6 +448,7 @@ export class AuthUtils {
         const baseProfile = Constants.PROFILES_CACHE.getDefaultProfile("base");
         const props = await Constants.PROFILES_CACHE.getPropsForProfile(profileName, false);
         const baseProps = await Constants.PROFILES_CACHE.getPropsForProfile(baseProfile?.name, false);
+        // eslint-disable-next-line deprecation/deprecation
         return AuthHandler.isUsingTokenAuth(props, baseProps);
     }
 }

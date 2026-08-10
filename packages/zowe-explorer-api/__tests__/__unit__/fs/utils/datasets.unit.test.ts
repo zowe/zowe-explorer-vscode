@@ -46,3 +46,18 @@ describe("isPdsEntry", () => {
         expect(FsDatasetsUtils.isPdsEntry(ds)).toBe(false);
     });
 });
+
+describe("trimExtension", () => {
+    it("returns a path without its extension", () => {
+        const uriBasename = "TEST.COBOL.DS.cbl";
+        expect(FsDatasetsUtils.trimExtension(uriBasename)).toBe("TEST.COBOL.DS");
+    });
+    it("returns a path as-is if no extension is detected", () => {
+        const uriBasename = "TEST.SOME.DS";
+        expect(FsDatasetsUtils.trimExtension(uriBasename)).toBe("TEST.SOME.DS");
+    });
+    it("returns a path as-is if extension is last qualifier of name", () => {
+        const uriBasename = "TEST.DS.REXX";
+        expect(FsDatasetsUtils.trimExtension(uriBasename)).toBe("TEST.DS.REXX");
+    });
+});

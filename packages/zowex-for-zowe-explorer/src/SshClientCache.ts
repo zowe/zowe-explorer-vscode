@@ -1,0 +1,414 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
+import type { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
+import { Gui, imperative, ProfilesCache, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import * as vscode from "vscode";
+import { type ClientOptions, type ExistingClientRequest, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { ConfigUtils } from "./ConfigUtils";
+import { deployWithProgress } from "./ServerDeployment";
+import { SshErrorHandler } from "./SshErrorHandler";
+import path from "path";
+import { ImperativeError } from "@zowe/imperative";
+
+class AsyncMutex extends imperative.DeferredPromise<void> implements Disposable {
+    public constructor(private onDispose?: () => void) {
+        super();
+    }
+
+    public [Symbol.dispose](): void {
+        this.resolve();
+        this.onDispose?.();
+    }
+}
+
+type ZSshRestartOptions = {
+    restart: boolean;
+    retryRequests: boolean;
+};
+
+type ZSshClientSessions = {
+    client: ZSshClient;
+    profile: imperative.IProfileLoaded;
+    status: ServerStatus;
+    startTime: number;
+    responseTimeoutMillis: number;
+};
+
+enum ServerStatus {
+    UP,
+    DOWN,
+    RESTARTING,
+}
+
+export class SshClientCache extends vscode.Disposable {
+    private static readonly mNoRestart: ZSshRestartOptions = { restart: false, retryRequests: false };
+    private static mInstance: SshClientCache;
+    private readonly mClientSessionMap: Map<string, ZSshClientSessions> = new Map();
+    private mMutexMap: Map<string, AsyncMutex> = new Map();
+    // Profiles with a reload prompt already on screen. One dropped connection can fail
+    // several in-flight requests, and each would otherwise stack its own prompt.
+    private readonly mActivePrompts: Set<string> = new Set();
+    private static readonly ERROR_SNIPPETS = {
+        FATAL: ["CEE5207E", "CEE3204S", "at compile unit offset", "Fatal error encountered in zowex"],
+        UNSUPPORTED: ["CEE3561S"],
+        TIMEOUT: ["Request timed out"],
+    };
+    private static readonly ACTIONS = {
+        RELOAD: "Reload",
+        RELOAD_RETRY: "Reload and Retry",
+        CLOSE: "Close",
+    };
+
+    private constructor(private readonly mProfilesCache: ProfilesCache) {
+        super(() => this.dispose());
+    }
+
+    public static readonly WRITE_ACCESS_TO_SERVER_PATH_ERR =
+        `You do not have write access to the deployment directory '{0}'. ` +
+        `The SSH server could not be started. Configure a different directory, ` +
+        `or grant yourself write permission to the deployment directory if possible. `;
+
+    public dispose(opts?: ZSshRestartOptions): void {
+        for (const session of this.mClientSessionMap.values()) {
+            session.client.dispose(opts?.restart);
+        }
+    }
+
+    public static initialize(profCache: ProfilesCache): SshClientCache {
+        SshClientCache.mInstance = new SshClientCache(profCache);
+        return SshClientCache.mInstance;
+    }
+
+    public static get inst(): SshClientCache {
+        return SshClientCache.mInstance;
+    }
+
+    public get profilesCache(): ProfilesCache {
+        return this.mProfilesCache;
+    }
+    /**
+     * Store the SSH server path for the given host
+     * @param host - host from the profile
+     * @param path - parent directory of the SSH server binary
+     */
+    public storeServerPath(host: string, serverPath: string): void {
+        const config = vscode.workspace.getConfiguration("zowe");
+        let serverPathMap: Record<string, string> = config.get("zowex.serverInstallPath") ?? {};
+        if (!serverPathMap) {
+            serverPathMap = {};
+        }
+        serverPathMap[host] = serverPath;
+        config.update("zowex.serverInstallPath", serverPathMap, vscode.ConfigurationTarget.Global);
+    }
+    /**
+     * Detect if a usable instance of our server binary exists on the user's USS environment.
+     * @param session - established SSH session used to detect the server
+     * @returns true if a usable version of the SSH backend server is detected on the user's path
+     */
+    public async detectServerOnPath(session: SshSession): Promise<string | undefined> {
+        try {
+            const pathServer = await ZSshUtils.detectServerOnPath(session);
+            imperative.Logger.getAppLogger().debug("detectServerOnPath return value: %s", JSON.stringify(pathServer));
+            if (pathServer.serverPath && pathServer.hasExecutePermission) {
+                imperative.Logger.getAppLogger().debug("A usable instance of the server exists on the user's PATH");
+                // path.resolve(): remove binary from the full path to set serverPath to the parent directory,
+                // the same as a user would configure the path manually
+                const parentDir = path.posix.dirname(pathServer.serverPath);
+                SshClientCache.inst.storeServerPath(session.ISshSession.hostname!, parentDir);
+                return parentDir;
+            }
+        } catch (e) {
+            imperative.Logger.getAppLogger().error(`Error detecting server on user's $PATH: ${(e as Error).toString()}`);
+            await SshErrorHandler.getInstance().handleError(e as Error, ZoweExplorerApiType.All, "Detecting server on $PATH");
+        }
+        return undefined;
+    }
+
+    public async connect(profile: imperative.IProfileLoaded, opts: ZSshRestartOptions = SshClientCache.mNoRestart): Promise<ZSshClient> {
+        const clientId = this.getClientId(profile);
+        let replayRequests: Set<ExistingClientRequest> = new Set();
+        await this.mMutexMap.get(clientId)?.promise;
+        if (opts.restart) {
+            if (opts.retryRequests) {
+                const existingClient = this.mClientSessionMap.get(clientId)?.client;
+                if (existingClient) {
+                    replayRequests = existingClient.collectAllRequests(opts.retryRequests);
+                }
+            }
+            this.end(clientId, opts);
+        }
+
+        if (!this.mClientSessionMap.has(clientId)) {
+            using _lock = this.acquireProfileLock(clientId);
+            const session = ZSshUtils.buildSession(profile.profile!);
+
+            let serverPath = ConfigUtils.getServerPath(profile.profile) ?? ZSshClient.DEFAULT_SERVER_PATH;
+
+            const vsceConfig = vscode.workspace.getConfiguration("zowe");
+            const keepAliveInterval = vsceConfig.get<number>("zowex.keepAliveInterval");
+            const numWorkers = vsceConfig.get<number>("zowex.workerCount");
+            const requestTimeout = vsceConfig.get<number>("settings.requestTimeout", 0) / 1000 || 60;
+            const responseTimeout = vsceConfig.get<number>("zowex.responseTimeout") ?? 60;
+            const useNativeSsh = vsceConfig.get<boolean>("zowex.experimentalNativeSsh", false);
+
+            let newClient: ZSshClient | undefined;
+            let serverNotFound = false;
+            let serverShouldDeploy = true;
+            const launchServer = async (): Promise<boolean> => {
+                newClient?.dispose();
+                newClient = await this.buildClient(session, clientId, {
+                    serverPath,
+                    keepAliveInterval,
+                    numWorkers,
+                    requestTimeout,
+                    responseTimeout,
+                    requests: replayRequests,
+                    useNativeSsh,
+                });
+                imperative.Logger.getAppLogger().debug(`Server version: ${newClient.serverVersion}`);
+                serverNotFound = false;
+                if (ZSshUtils.checkIfOutdated(newClient.serverVersion)) {
+                    // assume autoUpdate is allowed unless the SSH profile says otherwise
+                    if (profile.profile?.autoUpdate === false) {
+                        imperative.Logger.getAppLogger().warn(`Server is out of date, skipping update for ${profile.name}`);
+                        return false;
+                    } else {
+                        imperative.Logger.getAppLogger().info(`Server is out of date, deploying to ${profile.name} at %s`, serverPath);
+
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            try {
+                serverShouldDeploy = await launchServer();
+            } catch (err) {
+                if (err instanceof imperative.ImperativeError && err.errorCode === "ENOTFOUND") {
+                    serverNotFound = true;
+                    imperative.Logger.getAppLogger().info(`Server is missing, deploying to ${profile.name}`);
+                } else {
+                    throw err;
+                }
+            }
+            if (serverShouldDeploy) {
+                if (serverNotFound) {
+                    const onEnvPathServer = await this.detectServerOnPath(session);
+                    if (onEnvPathServer) {
+                        try {
+                            serverPath = onEnvPathServer;
+                            imperative.Logger.getAppLogger().info(`Launching the server found at the user's $PATH at ${onEnvPathServer}`);
+                            serverShouldDeploy = await launchServer();
+                        } catch (err) {
+                            imperative.Logger.getAppLogger().error(
+                                `Failed to launch server for profile ${profile.name} after detecting it on the user's $PATH:`,
+                                err
+                            );
+                            throw err;
+                        }
+                    }
+                }
+
+                if (serverShouldDeploy) {
+                    if (await ZSshUtils.lacksWriteAccess(session, serverPath)) {
+                        if (serverNotFound) {
+                            // the user has no usable instance of the SSH server so we should notify them
+                            const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, serverPath);
+                            imperative.Logger.getAppLogger().error(errMsg);
+                            throw new ImperativeError({ msg: errMsg });
+                        } else {
+                            // otherwise we were just trying to update and the user can use the old version
+                            imperative.Logger.getAppLogger().warn("Skipped deploy step as server path '%s' is not writeable by the user", serverPath);
+                        }
+                    } else {
+                        // The user appears to have write access
+                        await deployWithProgress(session, serverPath);
+                        newClient?.dispose();
+                        newClient = await this.buildClient(session, clientId, {
+                            serverPath,
+                            keepAliveInterval,
+                            numWorkers,
+                            requestTimeout,
+                            responseTimeout,
+                            requests: replayRequests,
+                            useNativeSsh,
+                        });
+                    }
+                }
+            }
+
+            this.mClientSessionMap.set(clientId, {
+                client: newClient!,
+                profile: profile,
+                status: ServerStatus.UP,
+                startTime: Date.now(),
+                responseTimeoutMillis: responseTimeout * 1000,
+            });
+        }
+
+        return this.mClientSessionMap.get(clientId)?.client as ZSshClient;
+    }
+
+    public end(hostOrProfile: string | imperative.IProfileLoaded, opts: ZSshRestartOptions = SshClientCache.mNoRestart): void {
+        const clientId = typeof hostOrProfile === "string" ? hostOrProfile : this.getClientId(hostOrProfile);
+        this.mClientSessionMap.get(clientId)?.client.dispose(opts.restart);
+        this.mClientSessionMap.delete(clientId);
+    }
+
+    private async reloadClient(profile: imperative.IProfileLoaded, retryRequests: boolean = false): Promise<void> {
+        const clientId = this.getClientId(profile);
+        const clientSession = this.mClientSessionMap.get(clientId);
+        if (clientSession) {
+            clientSession.status = ServerStatus.RESTARTING;
+        }
+
+        try {
+            // Reconnecting can take up to the server startup timeout, so surface progress
+            // rather than leaving the user with no feedback after they click Reload
+            await Gui.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: `Reconnecting to Zowe Remote SSH for profile "${profile.name as string}"...`,
+                },
+                async () => {
+                    const updatedProfile = await this.mProfilesCache.getLoadedProfConfig(profile.name!, profile.type);
+                    if (updatedProfile == null) {
+                        throw new Error(`Could not load profile ${profile.name}. Check that this profile still exists in your Zowe team config.`);
+                    }
+
+                    if (clientSession) {
+                        clientSession.profile = updatedProfile;
+                    }
+                    await this.connect(updatedProfile, {
+                        restart: clientSession != null,
+                        retryRequests: clientSession != null && retryRequests,
+                    });
+                }
+            );
+            Gui.showMessage(`Reconnected to Zowe Remote SSH for profile "${profile.name as string}".`);
+        } catch (err) {
+            if (clientSession) {
+                clientSession.status = ServerStatus.DOWN;
+            }
+            throw err;
+        }
+    }
+
+    private getClientId(profile: imperative.IProfileLoaded): string {
+        return `${profile.name}_${profile.type}`;
+    }
+
+    private acquireProfileLock(clientId: string): AsyncMutex {
+        const lock = new AsyncMutex(() => this.mMutexMap.delete(clientId));
+        this.mMutexMap.set(clientId, lock);
+        return lock;
+    }
+
+    private buildClient(session: SshSession, clientId: string, opts: ClientOptions): Promise<ZSshClient> {
+        return ZSshClient.create(session, {
+            ...opts,
+            onClose: () => {
+                this.end(clientId);
+            },
+            onError: (err: Error) => {
+                this.handleClientError(clientId, err);
+            },
+        });
+    }
+
+    private handleClientError(clientId: string, err: Error): void {
+        const errorMsg = err.toString();
+        const clientSession = this.mClientSessionMap.get(clientId);
+        if (!clientSession) {
+            imperative.Logger.getAppLogger().error(`Received SSH client error for untracked session ${clientId}: ${errorMsg}`);
+            vscode.window.showErrorMessage(`Zowe Remote SSH encountered an error: ${errorMsg}. Try the operation again.`);
+            return;
+        }
+
+        // If we're mid-reload, swallow the error notification (could be cascading)
+        if (clientSession.status === ServerStatus.RESTARTING) {
+            return;
+        }
+
+        const isFatal = SshClientCache.ERROR_SNIPPETS.FATAL.some((item) => errorMsg.includes(item));
+        const isTimeout = SshClientCache.ERROR_SNIPPETS.TIMEOUT.some((item) => errorMsg.includes(item));
+        const isUnsupported = SshClientCache.ERROR_SNIPPETS.UNSUPPORTED.some((item) => errorMsg.includes(item));
+
+        if (isFatal) {
+            clientSession.status = ServerStatus.DOWN;
+
+            /** FYI: with the below `delete` ZRS silently restarts on error (good when navigating file trees and recovering from an error),
+            /*   but makes managing sessions and replay requests more complex (repeated errors and restarts / merging long, multi-session replay queues)
+            /*   and de-syncs notification pop-ups from ZRS state, creating unintuitive ux in some scenarios
+            /*  Keeping this comment for posterity in case we revisit restart behavior later.
+             */
+            // this.mClientSessionMap.delete(clientId);
+            this.promptErrorAndReload(
+                "Zowe Remote SSH stopped unexpectedly. Choose 'Reload' to restart it, or 'Reload and Retry' to restart and automatically resend your active requests.",
+                clientSession.profile
+            );
+            return;
+        }
+
+        if (isTimeout) {
+            // This came before the server started, implying a crash and reload, and so we should ignore the error.
+            const isOldTimeout = Date.now() - clientSession.responseTimeoutMillis < clientSession.startTime;
+            if (!isOldTimeout) {
+                const isDown = clientSession?.status === ServerStatus.DOWN;
+                const msg = isDown
+                    ? "A request timed out because the server is down. Click 'Reload' to restart it, or 'Reload and Retry' to restart and resend your active requests."
+                    : "A request timed out. If the issue persists, select 'Reload' to restart the server, or 'Reload and Retry' to restart and resend your active requests.";
+
+                this.promptErrorAndReload(msg, clientSession.profile);
+            }
+
+            return;
+        }
+
+        if (isUnsupported) {
+            imperative.Logger.getAppLogger().error(JSON.stringify(err));
+            vscode.window.showErrorMessage(
+                "Zowe Remote SSH doesn't currently support this version of z/OS. Please check the documentation for supported systems, or contact support for help."
+            );
+            return;
+        }
+
+        // Fallback for unclassified errors
+        vscode.window.showErrorMessage(errorMsg);
+    }
+
+    private promptErrorAndReload(message: string, profile: imperative.IProfileLoaded): void {
+        const clientId = this.getClientId(profile);
+        if (this.mActivePrompts.has(clientId)) {
+            imperative.Logger.getAppLogger().debug(`Suppressed duplicate reload prompt for ${clientId}: ${message}`);
+            return;
+        }
+        this.mActivePrompts.add(clientId);
+
+        vscode.window
+            .showErrorMessage(message, SshClientCache.ACTIONS.RELOAD, SshClientCache.ACTIONS.RELOAD_RETRY, SshClientCache.ACTIONS.CLOSE)
+            .then((selection) => {
+                this.mActivePrompts.delete(clientId);
+                if (selection === SshClientCache.ACTIONS.RELOAD) {
+                    this.reloadClient(profile, false).catch((err) => {
+                        imperative.Logger.getAppLogger().error(`Failed to reload ZRS. Error: ${err.toString()}`);
+                        vscode.window.showErrorMessage(`Failed to reload ZRS. Try reloading your VSCode environment`);
+                    });
+                } else if (selection === SshClientCache.ACTIONS.RELOAD_RETRY) {
+                    this.reloadClient(profile, true).catch((err) => {
+                        imperative.Logger.getAppLogger().error(`Failed to reload ZRS and retry requests. Error: ${err.toString()}`);
+                        vscode.window.showErrorMessage(`Failed to reload ZRS and retry requests. Try reloading your VSCode environment`);
+                    });
+                }
+            });
+    }
+}

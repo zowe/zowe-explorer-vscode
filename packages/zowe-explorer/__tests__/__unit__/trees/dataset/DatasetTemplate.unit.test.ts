@@ -9,15 +9,12 @@
  *
  */
 
-import { Gui, Types } from "@zowe/zowe-explorer-api";
+import { Gui, Types, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { DataSetTemplates } from "../../../../src/trees/dataset/DatasetTemplates";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { FilterItem } from "../../../../src/management/FilterManagement";
-
-jest.mock("vscode");
-jest.mock("fs");
 
 describe("DataSetTemplates Class Unit Tests", () => {
     const templates: Types.DataSetAllocTemplate[] = [];
@@ -55,13 +52,20 @@ describe("DataSetTemplates Class Unit Tests", () => {
         },
     };
     templates.push(...[template1, template2]);
-    const setValueSpy = jest.spyOn(SettingsConfig, "setDirectValue");
-    const getValueSpy = jest.spyOn(SettingsConfig, "getDirectValue");
-    const traceLoggerSpy = jest.spyOn(ZoweLogger, "trace");
-    const infoLoggerSpy = jest.spyOn(ZoweLogger, "info");
+    const setValueSpy = vi.spyOn(SettingsConfig, "setDirectValue").mockResolvedValue(undefined);
+    const getValueSpy = vi.spyOn(SettingsConfig, "getDirectValue");
+    const traceLoggerSpy = vi.spyOn(ZoweLogger, "trace");
+    const infoLoggerSpy = vi.spyOn(ZoweLogger, "info");
     Object.defineProperty(vscode.workspace, "workspaceFolders", { value: [], configurable: true });
 
-    beforeEach(() => jest.resetAllMocks());
+    beforeEach(() => {
+        vi.resetAllMocks();
+        setValueSpy.mockResolvedValue(undefined);
+    });
+
+    afterEach(() => {
+        ZoweVsCodeExtension.resetWorkspaceRootCache();
+    });
 
     describe("getDsTemplates()", () => {
         it("should retrieve the available dataset templates", () => {
@@ -100,15 +104,20 @@ describe("DataSetTemplates Class Unit Tests", () => {
                 value: newMocks.mockWsFolder,
                 configurable: true,
             });
+            vi.spyOn(ZoweVsCodeExtension, "workspaceRoot", "get").mockReturnValue({
+                uri: { fsPath: "test" } as any,
+                name: "test",
+                index: 0,
+            });
 
-            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                inspect: jest.fn().mockReturnValue({ globalValue: [], workspaceValue: templates }),
+            vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                inspect: vi.fn().mockReturnValue({ globalValue: [], workspaceValue: templates }),
             } as any);
             return newMocks;
         }
         it("should add a dataset template to global setting by default", async () => {
-            jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                inspect: jest.fn().mockReturnValue({ globalValue: templates }),
+            vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+                inspect: vi.fn().mockReturnValue({ globalValue: templates }),
             } as any);
             getValueSpy.mockReturnValue([template2]);
             await DataSetTemplates.addDsTemplateSetting(template1 as any);
@@ -117,7 +126,7 @@ describe("DataSetTemplates Class Unit Tests", () => {
         it("should add a dataset template to global setting by choice", async () => {
             createBlockMocks();
             Object.defineProperty(Gui, "showQuickPick", {
-                value: jest.fn().mockResolvedValue(new FilterItem({ text: "Save as User setting" })),
+                value: vi.fn().mockResolvedValue(new FilterItem({ text: "Save as User setting" })),
                 configurable: true,
             });
             await DataSetTemplates.addDsTemplateSetting(newTemplate as any);
@@ -127,7 +136,7 @@ describe("DataSetTemplates Class Unit Tests", () => {
         it("should add a dataset template to workspace setting by choice", async () => {
             createBlockMocks();
             Object.defineProperty(Gui, "showQuickPick", {
-                value: jest.fn().mockResolvedValue(new FilterItem({ text: "Save as Workspace setting" })),
+                value: vi.fn().mockResolvedValue(new FilterItem({ text: "Save as Workspace setting" })),
                 configurable: true,
             });
             templates.unshift(newTemplate);

@@ -13,6 +13,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import {
     BaseProvider,
+    handleError,
     BufferBuilder,
     FsAbstractUtils,
     imperative,
@@ -120,7 +121,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             // Wait for any ongoing authentication process to complete
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            await AuthUtils.ensureAuthNotCancelled(profile);
+            AuthUtils.ensureAuthNotCancelled(profile);
             await AuthHandler.waitForUnlock(entry.metadata.profile);
 
             // Check if the profile is locked (indicating an auth error is being handled)
@@ -138,8 +139,14 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 const apiMtime = (fileResp.apiResponse?.items ?? [])?.[0]?.mtime;
 
                 if (apiMtime == null) {
+                    // No modification time was returned by the API. Invalidate the cache to force a
+                    // re-fetch on the next read, but leave `entry.mtime` untouched. Bumping `mtime`
+                    // here triggers VS Code's built-in stale-write detection (see
+                    // `FileService.validateWriteFile`) to compare the stored model mtime against an
+                    // always-advancing stat mtime, falsely raising a "content of the file is newer"
+                    // conflict on save. Etag-based conflict detection still runs in `writeFile` via
+                    // the 412 response from the mainframe.
                     entry.wasAccessed = false;
-                    entry.mtime = Date.now();
                 } else {
                     const newTime = dayjs(apiMtime).valueOf();
                     if (entry.mtime != newTime) {
@@ -150,9 +157,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 }
             }
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.error(err.message);
-            }
+            void handleError(err, (error) => {
+                ZoweLogger.error(error.message);
+            });
         }
 
         return entry;
@@ -222,7 +229,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         try {
             await AuthUtils.retryRequest(info.profile, async () => {
-                await AuthUtils.ensureAuthNotCancelled(info.profile);
+                AuthUtils.ensureAuthNotCancelled(info.profile);
                 await AuthHandler.waitForUnlock(info.profile);
                 await ussApi.move(oldInfo.path, info.path);
             });
@@ -248,7 +255,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const ussPath = queryParams.has("searchPath") ? queryParams.get("searchPath") : uri.path.substring(uri.path.indexOf("/", 1));
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -286,7 +293,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 // fileList was called on that file. Otherwise, it's a directory listing.
                 const hasSelfEntry = rawItems.some((item) => item.name === ".");
                 const isSingleFileMatch =
-                    rawItems.length === 1 && rawItems[0].name === uriBasename && !(rawItems[0].mode as string | undefined)?.startsWith("d");
+                    rawItems.length === 1 &&
+                    (rawItems[0].name === uriBasename || rawItems[0].name === ussPath) &&
+                    !(rawItems[0].mode as string | undefined)?.startsWith("d");
                 const isDirectoryResponse =
                     (hasSelfEntry && (rawItems.find((item) => item.name === ".")?.mode as string | undefined)?.startsWith("d")) ||
                     (rawItems.length > 0 && !hasSelfEntry && !isSingleFileMatch) ||
@@ -300,8 +309,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return {
             ...response,
             apiResponse: {
-                ...response.apiResponse,
-                items: (response.apiResponse.items ?? []).filter(keepRelative ? Boolean : (it): boolean => !/^\.{1,3}$/.test(it.name as string)),
+                ...(response.apiResponse ?? {}),
+                items: (response.apiResponse?.items ?? []).filter(keepRelative ? Boolean : (it): boolean => !/^\.{1,3}$/.test(it.name as string)),
             },
         };
     }
@@ -335,7 +344,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
+        AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
         await AuthHandler.waitForUnlock(uriInfo.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -502,7 +511,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profileEncoding = file.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(file.metadata.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -521,9 +530,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     stream: bufBuilder,
                 });
             } catch (err) {
-                if (err instanceof Error) {
-                    ZoweLogger.error(`[UssFSProvider] fetchFileAtUri failed due to an error. Details: \n${err.message}`);
-                }
+                void handleError(err, (error) => {
+                    ZoweLogger.error(`[UssFSProvider] fetchFileAtUri failed due to an error. Details: \n${error.message}`);
+                });
                 if (
                     !(
                         (err instanceof imperative.ImperativeError &&
@@ -554,7 +563,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         } else {
             file.data = data;
             if (file.etag !== resp.apiResponse.etag) {
-                file.mtime = Date.now();
                 if (file.etag) {
                     this.fireSoon({ type: vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
                 }
@@ -579,7 +587,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(entry.metadata.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -685,7 +693,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     private async uploadEntry(
         entry: UssFile,
         content: Uint8Array,
-        options?: { forceUpload?: boolean; noStatusMsg?: boolean }
+        options?: { forceUpload?: boolean; noStatusMsg?: boolean; isNew?: boolean }
     ): Promise<IZosFilesResponse> {
         const statusMsg =
             // only show a status message if "noStatusMsg" is not specified,
@@ -696,7 +704,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(entry.metadata.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -711,7 +719,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         let resp: IZosFilesResponse;
         try {
             await AuthUtils.retryRequest(entry.metadata.profile, async () => {
-                await this.autoDetectEncoding(entry);
+                if (!options?.isNew) {
+                    await this.autoDetectEncoding(entry);
+                }
                 const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
                 resp = await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
@@ -788,10 +798,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 return;
             }
 
-            if (!isNew || content.length > 0) {
-                const resp = await this.uploadEntry(entry as UssFile, content, { forceUpload });
-                entry.etag = resp.apiResponse.etag;
-            }
+            const resp = await this.uploadEntry(entry as UssFile, content, { forceUpload, isNew });
+            entry.etag = resp.apiResponse.etag;
             entry.data = content;
             entry.mtime = Date.now();
             entry.size = content.byteLength;
@@ -800,7 +808,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         } catch (err) {
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 // Some unknown error happened, rollback optimistic entry creation
-                if (isNew && parentDir?.entries.has(fileName)) {
+                if (isNew && parentDir.entries.has(fileName)) {
                     parentDir.entries.delete(fileName);
                     parentDir.size -= 1;
                 }
@@ -862,7 +870,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
 
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(entry.metadata.profile);
         // Check if the profile is locked (indicating an auth error is being handled)
         // If it's locked, we should wait and not make additional requests
@@ -932,7 +940,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(parent.metadata.profile.name);
-        await AuthUtils.ensureAuthNotCancelled(profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForUnlock(parent.metadata.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -1023,7 +1031,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const sourceInfo = this._getInfoFromUri(source);
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(destInfo.profile);
+        AuthUtils.ensureAuthNotCancelled(destInfo.profile);
         await AuthHandler.waitForUnlock(destInfo.profile);
 
         // Check if the profile is locked (indicating an auth error is being handled)
@@ -1079,12 +1087,16 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                         }
                     }
                 } else {
-                    const fileEntry = this.lookup(source);
+                    const fileEntry = this._lookupAsFile(source) as UssFile;
                     if (!fileEntry.wasAccessed) {
                         // must fetch contents of file first before pasting in new path
                         await this.readFile(source);
                     }
-                    await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath);
+                    const destProfile = Profiles.getInstance().loadNamedProfile(destInfo.profile.name);
+                    await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath, {
+                        binary: fileEntry.encoding?.kind === "binary",
+                        encoding: fileEntry.encoding?.kind === "other" ? fileEntry.encoding.codepage : destProfile.profile?.encoding,
+                    });
                 }
             });
         } catch (err) {

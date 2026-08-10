@@ -9,7 +9,7 @@
  *
  */
 
-import { Types, Gui, MainframeInteraction, IZoweUSSTreeNode, WebView } from "@zowe/zowe-explorer-api";
+import { Types, Gui, handleError, MainframeInteraction, IZoweUSSTreeNode, WebView } from "@zowe/zowe-explorer-api";
 import { ExtensionContext } from "vscode";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../shared/SharedContext";
@@ -147,9 +147,9 @@ export class USSAttributeView extends WebView {
             await this.panel.webview.postMessage({
                 updated: false,
             });
-            if (err instanceof Error) {
-                await Gui.errorMessage(`Failed to set file attributes for ${this.ussNode.fullPath}: ${err.toString()}`);
-            }
+            await handleError(err, async (error) => {
+                await Gui.errorMessage(`Failed to set file attributes for ${this.ussNode.fullPath}: ${error.toString()}`);
+            });
         }
     }
 }

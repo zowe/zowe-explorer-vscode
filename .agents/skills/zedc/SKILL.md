@@ -18,10 +18,12 @@ metadata:
 `zedc test` provides powerful sandboxed testing capabilities.
 
 - **Check Test Coverage:** `zedc test coverage` (or `zedc test cov`)
+
   - Runs unit tests and compares patch coverage with the main branch.
   - Options: `--verbose` (show verbose output), `--filter <package>` (filter tests to a specific package).
 
 - **Test Local VSIX in Sandbox:** `zedc test local <file.vsix>` (or `zedc test l <file.vsix>`)
+
   - Extracts a portable version of VS Code.
   - Installs the provided `.vsix` files.
   - Opens VS Code with `ZOWE_CLI_HOME` set to a sandboxed directory so it doesn't affect the user's global configuration.

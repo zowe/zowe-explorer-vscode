@@ -13,3 +13,4 @@ Scenario Outline: User wants to expand a child of a profile node
       | treeName | nodeType |
       | Data Sets | PDS |
       | USS | USS directory |
+      | Jobs | Job |

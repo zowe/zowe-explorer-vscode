@@ -10,6 +10,7 @@
  */
 
 import { realpathSync } from "fs";
+import { handleError } from "./ErrorUtils";
 import { platform } from "os";
 import { Constants } from "../globals";
 import { ImperativeConfig, ConfigUtils } from "@zowe/imperative";
@@ -76,12 +77,12 @@ export class FileManagement {
                 // TODO: FEATURE-FLAG(fetchByDefault): remove fetch=true
                 await workspace.fs.stat(folder.uri.with({ query: "fetch=true" }));
             } catch (err) {
-                if (err instanceof Error) {
+                void handleError(err, (error) => {
                     // TODO: Remove console.error in favor of logger
                     // (need to move logger to ZE API)
                     // eslint-disable-next-line no-console
-                    console.error("reloadWorkspacesForProfile:", err.message);
-                }
+                    console.error("reloadWorkspacesForProfile:", error.message);
+                });
             }
         }
     }

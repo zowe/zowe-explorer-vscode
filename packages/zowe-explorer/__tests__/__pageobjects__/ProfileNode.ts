@@ -17,7 +17,12 @@ import { TreeItem, ViewSection } from "wdio-vscode-service";
 export class ProfileNode {
     private mFavoritesNode: TreeItem;
 
-    constructor(private browser: WebdriverIO.Browser, private treePane: ViewSection, private profileName: string, private isFavorite = false) {}
+    constructor(
+        private browser: WebdriverIO.Browser,
+        private treePane: ViewSection,
+        private profileName: string,
+        private isFavorite = false
+    ) {}
 
     /**
      * Checks if the profile node exists in the tree pane
@@ -43,13 +48,21 @@ export class ProfileNode {
     }
 
     /**
-     * Expands child tree item and waits for its children to load
+     * Expands child tree item and waits for its children to load.
+     * Re-fetches the profile node inside the waitUntil callback to avoid stale element
+     * references after the tree re-renders following expand.
      */
     public async revealChildItem(itemName: string): Promise<TreeItem> {
-        const profileNode = await this.find();
-        await (await profileNode.findChildItem(itemName))?.expand();
-        await this.browser.waitUntil(async () => (await profileNode.findChildItem(itemName))?.hasChildren());
-        return (await profileNode.findChildItem(itemName)) as TreeItem;
+        await (await (await this.find()).findChildItem(itemName))?.expand();
+        await this.browser.waitUntil(async () => {
+            try {
+                const item = await (await this.find()).findChildItem(itemName);
+                return item != null && (await item.hasChildren());
+            } catch {
+                return false;
+            }
+        });
+        return (await (await this.find()).findChildItem(itemName)) as TreeItem;
     }
 
     /**

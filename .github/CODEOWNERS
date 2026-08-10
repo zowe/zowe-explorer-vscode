@@ -113,3 +113,11 @@ packages/zowe-explorer-api/src/index.ts                      @JillieBeanSim @tra
 # z/FTP extension
 # ============================================================================
 packages/zowe-explorer-ftp-extension/                        @zFernand0 @t1m0thyj
+
+# ============================================================================
+# Docs
+# ============================================================================
+README.md                                                    @anaxceron
+CONTRIBUTING.md                                              @anaxceron
+**/CHANGELOG.md                                              @anaxceron
+docs/                                                        @anaxceron

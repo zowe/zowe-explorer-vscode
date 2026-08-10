@@ -10,9 +10,21 @@
  */
 
 import { execFile } from "child_process";
+import { Key } from "webdriverio";
 import { ElementWithContextMenu, ViewContent, ViewControl, ViewSection } from "wdio-vscode-service";
 
 /* Helper functions */
+
+/**
+ * Fills the active VS Code quick-input box with {@link value} and confirms with Enter.
+ */
+export async function fillInputBox(value: string): Promise<void> {
+    const inputBox = await browser.$('.input[aria-describedby="quickInput_message"]');
+    await inputBox.waitForClickable({ timeout: 10000 });
+    await inputBox.clearValue();
+    await inputBox.setValue(value);
+    await browser.keys(Key.Enter);
+}
 
 export async function getZoweExplorerContainer(): Promise<ViewControl> {
     const activityBar = (await browser.getWorkbench()).getActivityBar();

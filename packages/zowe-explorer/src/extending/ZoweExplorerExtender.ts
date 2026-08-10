@@ -9,7 +9,7 @@
  *
  */
 
-import * as PromiseQueue from "promise-queue";
+import PromiseQueue = require("promise-queue");
 import * as path from "path";
 import * as fs from "fs";
 import * as vscode from "vscode";
@@ -90,7 +90,10 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
      * Returns the location of a Zowe config (if it exists) relative to rootPath.
      * @param rootPath The root path to check for Zowe configs
      */
-    public static getConfigLocation(rootPath: string): string | null {
+    public static getConfigLocation(rootPath: string | undefined): string | null {
+        if (!rootPath) {
+            return null;
+        }
         // First check for a user-specific v2 config
         let location = path.join(rootPath, "zowe.config.user.json");
         if (fs.existsSync(location)) {

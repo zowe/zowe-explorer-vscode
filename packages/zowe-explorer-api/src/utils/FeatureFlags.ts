@@ -87,6 +87,24 @@ export class FeatureFlags {
         }
     }
 
+    /**
+     * Check if a user-facing feature is enabled in VS Code settings.
+     * This bridges the gap between FeatureFlags and "zowe.featureEnablement" settings.
+     * @param id - The feature ID (e.g., "tableView" for "zowe.featureEnablement.tableView")
+     * @param defaultValue - Default value if setting is not defined (default: false)
+     * @returns The boolean value from VS Code settings
+     */
+    public static isEnabledInSettings(id: string, defaultValue: boolean = false): boolean {
+        try {
+            const config = vscode.workspace.getConfiguration("zowe.featureEnablement");
+            const value = config.get(id);
+            return value !== undefined ? Boolean(value) : defaultValue;
+        } catch {
+            // Fallback if vscode is not available (e.g., in tests or non-VS Code environments)
+            return defaultValue;
+        }
+    }
+
     private static async loadFromDisk(): Promise<void> {
         try {
             if (!existsSync(this.filePath)) {
@@ -118,6 +136,7 @@ export class FeatureFlags {
 export class FeatureFlagsAccess extends FeatureFlags {
     private static accessControl: FlagACL = {
         fetchByDefault: FlagAccessLevel.Read | FlagAccessLevel.Write,
+        tableView: FlagAccessLevel.Read | FlagAccessLevel.Write,
     };
 
     /**

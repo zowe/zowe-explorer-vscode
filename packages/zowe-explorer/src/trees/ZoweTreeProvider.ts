@@ -34,7 +34,10 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     protected log: imperative.Logger = imperative.Logger.getAppLogger();
     protected validProfile: number = -1;
 
-    public constructor(protected persistenceSchema: PersistenceSchemaEnum, public mFavoriteSession: IZoweTreeNode) {
+    public constructor(
+        protected persistenceSchema: PersistenceSchemaEnum,
+        public mFavoriteSession: IZoweTreeNode
+    ) {
         this.mPersistence = new ZowePersistentFilters(this.persistenceSchema);
     }
 
@@ -140,7 +143,9 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             // Only mark as dirty when the node is collapsing to avoid a duplicate refresh
             // This prepares the node for a refresh once it is expanded again
             element.dirty = true;
-            element.description = undefined;
+            if (!SharedContext.isSession(element)) {
+                element.description = undefined;
+            }
         }
     }
 

@@ -20,7 +20,7 @@ import { getZoweExplorerContainer } from "../../__common__/shared.wdio";
 After(async function () {
     try {
         // Switch back to main frame to ensure clean state for next scenario
-        await browser.switchToFrame(null);
+        await browser.switchFrame(null);
 
         // If there's a table view page object, close it
         if (this.tableViewPage) {
@@ -35,7 +35,7 @@ After(async function () {
 Given("a user who is looking at the Zowe Explorer tree views", async () => {
     // Ensure we're in the main frame before trying to access workbench
     try {
-        await browser.switchToFrame(null);
+        await browser.switchFrame(null);
     } catch {
         // Already in main frame
     }

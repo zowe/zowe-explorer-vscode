@@ -8,6 +8,8 @@ env:
   es6: true
 ignorePatterns:
   [
+    "**/benchmarks",
+    "**/russh-native-loader.js",
     "**/scripts",
     "**/__mocks__",
     "**/lib",
@@ -24,6 +26,7 @@ overrides:
     rules:
       no-magic-numbers: off
       "@typescript-eslint/require-await": warn
+      "@typescript-eslint/no-explicit-any": off
       "@typescript-eslint/no-misused-promises": warn
       "@typescript-eslint/no-unsafe-return": off
       "@typescript-eslint/restrict-plus-operands": warn
@@ -67,8 +70,13 @@ rules:
   "@typescript-eslint/no-unsafe-assignment": off
   "@typescript-eslint/no-unsafe-argument": off
   "@typescript-eslint/no-unsafe-call": off
+  "@typescript-eslint/no-explicit-any": warn
   "@typescript-eslint/no-unsafe-member-access": off
-
+  "@typescript-eslint/no-namespace": warn
+  "@typescript-eslint/no-redundant-type-constituents": warn
+  "@typescript-eslint/no-unsafe-enum-comparison": warn
+  "@typescript-eslint/no-base-to-string": warn
+  "@typescript-eslint/no-non-null-asserted-optional-chain": warn
   "@typescript-eslint/no-shadow": error
   "@typescript-eslint/no-unused-expressions": error
   "@typescript-eslint/no-var-requires": warn

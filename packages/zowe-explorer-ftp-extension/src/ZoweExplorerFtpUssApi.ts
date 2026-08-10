@@ -127,7 +127,7 @@ export class FtpUssApi extends AbstractFtpApi implements MainframeInteraction.IU
         const inputIsBuffer = input instanceof Buffer;
         const transferOptions = {
             content: inputIsBuffer ? input : undefined,
-            localFile: inputIsBuffer ? undefined : input,
+            localFile: (inputIsBuffer ? undefined : input) as string,
             transferType: CoreUtils.getBinaryTransferModeOrDefault(options?.binary),
         };
         const result = this.getDefaultResponse();

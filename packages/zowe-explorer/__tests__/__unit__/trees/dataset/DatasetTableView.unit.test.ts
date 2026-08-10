@@ -9,6 +9,7 @@
  *
  */
 
+import { Mock, MockInstance, Mocked } from "vitest";
 import { TreeItemCollapsibleState, commands, Uri, ExtensionContext } from "vscode";
 import {
     DatasetTableView,
@@ -32,7 +33,7 @@ import { ZoweExplorerExtender } from "../../../../src/extending/ZoweExplorerExte
 import * as imperative from "@zowe/imperative";
 import { l10n } from "vscode";
 
-jest.mock("../../../../src/tools/ZoweLocalStorage");
+vi.mock("../../../../src/tools/ZoweLocalStorage");
 
 describe("TreeDataSource", () => {
     describe("fetchDatasets", () => {
@@ -63,17 +64,17 @@ describe("TreeDataSource", () => {
                     user: "USER1",
                     vol: "WRK001",
                 },
-                getStatsMock: jest.fn(),
+                getStatsMock: vi.fn(),
             }));
 
             const dsNodes = dataSets.map((ds) => ds.node);
-            const getStatsMock = jest
-                .spyOn(ZoweDatasetNode.prototype, "getStats")
-                .mockImplementation(function (this: ZoweDatasetNode): Types.DatasetStats {
-                    return dataSets.find((ds) => ds.node.label === this.label)?.stats as Types.DatasetStats;
-                });
+            const getStatsMock = vi.spyOn(ZoweDatasetNode.prototype, "getStats").mockImplementation(function (
+                this: ZoweDatasetNode
+            ): Types.DatasetStats {
+                return dataSets.find((ds) => ds.node.label === this.label)?.stats as Types.DatasetStats;
+            });
             dsProfileNode.children = dsNodes;
-            const getChildrenMock = jest.spyOn(dsProfileNode, "getChildren").mockImplementation((_paginate) => {
+            const getChildrenMock = vi.spyOn(dsProfileNode, "getChildren").mockImplementation((_paginate) => {
                 return Promise.resolve(dsNodes);
             });
             const treeDataSource = new TreeDataSource(dsProfileNode);
@@ -125,11 +126,11 @@ describe("TreeDataSource", () => {
                 }),
             ];
             profileNode.children = [pdsNode];
-            const getChildrenMock = jest.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
+            const getChildrenMock = vi.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
                 return Promise.resolve(newChildren);
             });
-            const loadNamedProfile = jest.fn().mockResolvedValue(profile);
-            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            const loadNamedProfile = vi.fn().mockResolvedValue(profile);
+            const profilesMock = vi.spyOn(Profiles, "getInstance").mockReturnValue({
                 loadNamedProfile,
             } as any);
             const treeDataSource = new TreeDataSource(profileNode);
@@ -162,7 +163,7 @@ describe("TreeDataSource", () => {
                         contextOverride: Constants.DS_MEMBER_CONTEXT,
                     })
             );
-            const getProfileNameMock = jest.spyOn(pdsNode, "getProfileName").mockReturnValue("sestest");
+            const getProfileNameMock = vi.spyOn(pdsNode, "getProfileName").mockReturnValue("sestest");
             const treeDataSource = new TreeDataSource(pdsNode);
             expect(treeDataSource.getTitle()).toBe("[sestest]: TEST.PDS");
             expect(getProfileNameMock).toHaveBeenCalledTimes(1);
@@ -219,7 +220,7 @@ describe("TreeDataSource", () => {
                 }),
             ];
             const treeDataSource = new TreeDataSource(profileNode);
-            const getChildrenMock = jest.spyOn(profileNode, "getChildren").mockImplementation((_paginate) => {
+            const getChildrenMock = vi.spyOn(profileNode, "getChildren").mockImplementation((_paginate) => {
                 return Promise.resolve(profileNode.children);
             });
             expect(await treeDataSource.supportsHierarchy()).toBe(true);
@@ -235,7 +236,7 @@ describe("TreeDataSource", () => {
                 profile: createIProfile(),
             });
             const treeDataSource = new TreeDataSource(pdsNode);
-            const getChildrenMock = jest.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
+            const getChildrenMock = vi.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
                 return Promise.resolve(pdsNode.children);
             });
             expect(await treeDataSource.supportsHierarchy()).toBe(false);
@@ -266,7 +267,7 @@ describe("TreeDataSource", () => {
                 }),
             ];
             const treeDataSource = new TreeDataSource(profileNode);
-            const getChildrenMock = jest.spyOn(profileNode, "getChildren").mockImplementation((_paginate) => {
+            const getChildrenMock = vi.spyOn(profileNode, "getChildren").mockImplementation((_paginate) => {
                 return Promise.resolve(profileNode.children);
             });
             expect(await treeDataSource.supportsHierarchy()).toBe(false);
@@ -300,17 +301,17 @@ describe("TreeDataSource", () => {
                 parentNode: pdsNode,
             });
             const newChildren = [pdsMember];
-            const getStatsMock = jest.spyOn(pdsMember, "getStats").mockReturnValue({
+            vi.spyOn(pdsMember, "getStats").mockReturnValue({
                 migr: "NO",
                 user: "USER1",
                 createdDate: new Date(),
                 modifiedDate: new Date(),
             } as Types.DatasetStats);
             profileNode.children = [pdsNode];
-            const getChildrenMock = jest.spyOn(profileNode, "getChildren").mockImplementation((_paginate) => {
+            const getChildrenMock = vi.spyOn(profileNode, "getChildren").mockImplementation((_paginate) => {
                 return Promise.resolve(profileNode.children);
             });
-            const pdsGetChildrenMock = jest.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
+            const pdsGetChildrenMock = vi.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
                 return Promise.resolve(newChildren);
             });
             const treeDataSource = new TreeDataSource(profileNode);
@@ -357,11 +358,11 @@ describe("TreeDataSource", () => {
                 }),
             ];
             profileNode.children = [pdsNode];
-            const loadNamedProfile = jest.fn().mockResolvedValue(profile);
-            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            const loadNamedProfile = vi.fn().mockResolvedValue(profile);
+            const profilesMock = vi.spyOn(Profiles, "getInstance").mockReturnValue({
                 loadNamedProfile,
             } as any);
-            const getChildrenMock = jest.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
+            const getChildrenMock = vi.spyOn(pdsNode, "getChildren").mockImplementation((_paginate) => {
                 return Promise.resolve(newChildren);
             });
             const treeDataSource = new TreeDataSource(profileNode);
@@ -377,23 +378,23 @@ describe("TreeDataSource", () => {
 
 describe("PatternDataSource", () => {
     let profile: imperative.IProfileLoaded;
-    let getMvsApiMock: jest.SpyInstance;
-    let authUtilsMock: jest.SpyInstance;
+    let getMvsApiMock: MockInstance;
+    let authUtilsMock: MockInstance;
 
     beforeEach(() => {
         profile = createIProfile();
-        getMvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi");
-        authUtilsMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation(jest.fn());
+        getMvsApiMock = vi.spyOn(ZoweExplorerApiRegister, "getMvsApi");
+        authUtilsMock = vi.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation(vi.fn());
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     describe("fetchDataSets", () => {
         it("should use dataSetsMatchingPattern when available", async () => {
             const mvsApiMock = {
-                dataSetsMatchingPattern: jest.fn().mockResolvedValue({
+                dataSetsMatchingPattern: vi.fn().mockResolvedValue({
                     apiResponse: {
                         items: [
                             { dsname: "TEST.A", dsorg: "PO", migr: "no" },
@@ -418,7 +419,7 @@ describe("PatternDataSource", () => {
         it("should use dataSet as a fallback", async () => {
             const mvsApiMock = {
                 // dataSetsMatchingPattern is undefined
-                dataSet: jest
+                dataSet: vi
                     .fn()
                     .mockResolvedValueOnce({ apiResponse: [{ dsname: "TEST.A", dsorg: "PO", migr: "no" }] })
                     .mockResolvedValueOnce({ apiResponse: [{ dsname: "TEST.B", dsorg: "PS", lrecl: 80, migr: "no" }] }),
@@ -436,7 +437,7 @@ describe("PatternDataSource", () => {
 
         it("should skip VSAM datasets", async () => {
             const mvsApiMock = {
-                dataSetsMatchingPattern: jest.fn().mockResolvedValue({
+                dataSetsMatchingPattern: vi.fn().mockResolvedValue({
                     apiResponse: {
                         items: [
                             { dsname: "TEST.VSAM", dsorg: "VS" },
@@ -455,7 +456,7 @@ describe("PatternDataSource", () => {
         it("should handle API errors", async () => {
             const error = new Error("API Error");
             const mvsApiMock = {
-                dataSetsMatchingPattern: jest.fn().mockRejectedValue(error),
+                dataSetsMatchingPattern: vi.fn().mockRejectedValue(error),
             };
             getMvsApiMock.mockReturnValue(mvsApiMock as any);
             const patternDataSource = new PatternDataSource(profile, "TEST.*");
@@ -482,7 +483,7 @@ describe("PatternDataSource", () => {
     describe("loadChildren", () => {
         it("should load members of a PDS", async () => {
             const mvsApiMock = {
-                allMembers: jest.fn().mockResolvedValue({
+                allMembers: vi.fn().mockResolvedValue({
                     apiResponse: {
                         items: [
                             { member: "MEM1", user: "USER1" },
@@ -522,7 +523,7 @@ describe("PatternDataSource", () => {
         it("should handle API errors and return empty array", async () => {
             const error = new Error("API Error");
             const mvsApiMock = {
-                allMembers: jest.fn().mockRejectedValue(error),
+                allMembers: vi.fn().mockRejectedValue(error),
             };
             getMvsApiMock.mockReturnValue(mvsApiMock as any);
 
@@ -538,23 +539,23 @@ describe("PatternDataSource", () => {
 
 describe("PDSMembersDataSource", () => {
     let profile: imperative.IProfileLoaded;
-    let getMvsApiMock: jest.SpyInstance;
-    let authUtilsMock: jest.SpyInstance;
+    let getMvsApiMock: MockInstance;
+    let authUtilsMock: MockInstance;
     let parentDataSource: PatternDataSource;
     let pdsName: string;
     let pdsUri: string;
 
     beforeEach(() => {
         profile = createIProfile();
-        getMvsApiMock = jest.spyOn(ZoweExplorerApiRegister, "getMvsApi");
-        authUtilsMock = jest.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation(jest.fn());
+        getMvsApiMock = vi.spyOn(ZoweExplorerApiRegister, "getMvsApi");
+        authUtilsMock = vi.spyOn(AuthUtils, "handleProfileAuthOnError").mockImplementation(vi.fn());
         parentDataSource = new PatternDataSource(profile, "TEST.*");
         pdsName = "TEST.PDS";
         pdsUri = `zowe-ds:/${profile.name}/TEST.PDS`;
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     describe("getParentDataSource", () => {
@@ -582,7 +583,7 @@ describe("PDSMembersDataSource", () => {
                 { name: "MEM2", isMember: true, parentId: pdsUri },
             ];
 
-            jest.spyOn(parentDataSource, "loadChildren").mockResolvedValue(expectedMembers);
+            vi.spyOn(parentDataSource, "loadChildren").mockResolvedValue(expectedMembers);
 
             const pdsDataSource = new PDSMembersDataSource(parentDataSource, pdsName, pdsUri, profile);
 
@@ -596,7 +597,7 @@ describe("PDSMembersDataSource", () => {
             const treeDataSource = new TreeDataSource({} as any);
 
             const mvsApiMock = {
-                allMembers: jest.fn().mockResolvedValue({
+                allMembers: vi.fn().mockResolvedValue({
                     apiResponse: {
                         items: [
                             { member: "MEM1", user: "USER1" },
@@ -622,14 +623,14 @@ describe("PDSMembersDataSource", () => {
 
         it("should use API fallback when parentDataSource does not have loadChildren method", async () => {
             const parentWithoutLoadChildren = {
-                fetchDataSets: jest.fn(),
-                getTitle: jest.fn(),
-                supportsHierarchy: jest.fn(),
-                getParentDataSource: jest.fn(),
+                fetchDataSets: vi.fn(),
+                getTitle: vi.fn(),
+                supportsHierarchy: vi.fn(),
+                getParentDataSource: vi.fn(),
             };
 
             const mvsApiMock = {
-                allMembers: jest.fn().mockResolvedValue({
+                allMembers: vi.fn().mockResolvedValue({
                     apiResponse: {
                         items: [{ member: "MEM1", user: "USER1" }],
                     },
@@ -650,7 +651,7 @@ describe("PDSMembersDataSource", () => {
         it("should return empty array when API call fails and handle auth error", async () => {
             const error = new Error("API Error");
             const mvsApiMock = {
-                allMembers: jest.fn().mockRejectedValue(error),
+                allMembers: vi.fn().mockRejectedValue(error),
             };
             getMvsApiMock.mockReturnValue(mvsApiMock as any);
 
@@ -664,7 +665,7 @@ describe("PDSMembersDataSource", () => {
 
         it("should return empty array when API response has no items", async () => {
             const mvsApiMock = {
-                allMembers: jest.fn().mockResolvedValue({
+                allMembers: vi.fn().mockResolvedValue({
                     apiResponse: {
                         items: null,
                     },
@@ -681,7 +682,7 @@ describe("PDSMembersDataSource", () => {
 
         it("should return empty array when API response has empty items array", async () => {
             const mvsApiMock = {
-                allMembers: jest.fn().mockResolvedValue({
+                allMembers: vi.fn().mockResolvedValue({
                     apiResponse: {
                         items: [],
                     },
@@ -1014,7 +1015,7 @@ describe("DatasetTableView", () => {
     describe("generateRows", () => {
         it("should generate rows in tree mode", async () => {
             const mockDataSource = {
-                fetchDataSets: jest.fn().mockResolvedValue([
+                fetchDataSets: vi.fn().mockResolvedValue([
                     {
                         name: "TEST.PDS",
                         dsorg: "PO",
@@ -1023,7 +1024,7 @@ describe("DatasetTableView", () => {
                         isDirectory: true,
                     },
                 ]),
-                supportsHierarchy: jest.fn().mockReturnValue(true),
+                supportsHierarchy: vi.fn().mockReturnValue(true),
             };
 
             (datasetTableView as any).currentDataSource = mockDataSource;
@@ -1036,7 +1037,7 @@ describe("DatasetTableView", () => {
 
         it("should generate rows in flat mode", async () => {
             const mockDataSource = {
-                fetchDataSets: jest.fn().mockResolvedValue([
+                fetchDataSets: vi.fn().mockResolvedValue([
                     {
                         name: "TEST.DATASET",
                         dsorg: "PS",
@@ -1045,7 +1046,7 @@ describe("DatasetTableView", () => {
                         isDirectory: false,
                     },
                 ]),
-                supportsHierarchy: jest.fn().mockReturnValue(false),
+                supportsHierarchy: vi.fn().mockReturnValue(false),
             };
 
             (datasetTableView as any).currentDataSource = mockDataSource;
@@ -1058,10 +1059,12 @@ describe("DatasetTableView", () => {
     });
 
     describe("openInEditor", () => {
-        let executeCommandSpy: jest.SpyInstance;
+        let executeCommandSpy: MockInstance;
+
+        const mockViewWithContent = (content: Table.RowData[]): Table.View => ({ getContent: vi.fn().mockReturnValue(content) }) as any;
 
         beforeEach(() => {
-            executeCommandSpy = jest.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
+            executeCommandSpy = vi.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
         });
 
         afterEach(() => {
@@ -1072,8 +1075,9 @@ describe("DatasetTableView", () => {
             const rows: Record<number, Table.RowData> = {
                 0: { uri: "zowe-ds:/profile/DATA.SET.NAME" },
             };
+            const view = mockViewWithContent(Object.values(rows));
 
-            await (DatasetTableView as any).openInEditor(null, rows);
+            await (DatasetTableView as any).openInEditor(view, rows);
 
             expect(executeCommandSpy).toHaveBeenCalledTimes(1);
             expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME"), { preview: false });
@@ -1084,8 +1088,9 @@ describe("DatasetTableView", () => {
                 0: { uri: "zowe-ds:/profile/DATA.SET.NAME1" },
                 1: { uri: "zowe-ds:/profile/DATA.SET.NAME2" },
             };
+            const view = mockViewWithContent(Object.values(rows));
 
-            await (DatasetTableView as any).openInEditor(null, rows);
+            await (DatasetTableView as any).openInEditor(view, rows);
 
             expect(executeCommandSpy).toHaveBeenCalledTimes(2);
             expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME1"), { preview: false });
@@ -1094,8 +1099,35 @@ describe("DatasetTableView", () => {
 
         it("should do nothing for an empty list of rows", async () => {
             const rows: Record<number, Table.RowData> = {};
+            const view = mockViewWithContent([]);
 
-            await (DatasetTableView as any).openInEditor(null, rows);
+            await (DatasetTableView as any).openInEditor(view, rows);
+
+            expect(executeCommandSpy).not.toHaveBeenCalled();
+        });
+
+        it("should ignore rows whose URI scheme is not the data set scheme", async () => {
+            const rows: Record<number, Table.RowData> = {
+                0: { uri: "file:///etc/passwd" },
+                1: { uri: "zowe-ds:/profile/DATA.SET.NAME" },
+            };
+            // Even a manipulated scheme is only reachable if it also matches a row the table actually knows about.
+            const view = mockViewWithContent(Object.values(rows));
+
+            await (DatasetTableView as any).openInEditor(view, rows);
+
+            expect(executeCommandSpy).toHaveBeenCalledTimes(1);
+            expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME"), { preview: false });
+        });
+
+        it("should ignore rows whose URI is not present in the table's own row data", async () => {
+            const rows: Record<number, Table.RowData> = {
+                0: { uri: "zowe-ds:/profile/SPOOFED.DATASET" },
+            };
+            // The table only actually knows about a different data set - the webview's row doesn't match it.
+            const view = mockViewWithContent([{ uri: "zowe-ds:/profile/REAL.DATASET" }]);
+
+            await (DatasetTableView as any).openInEditor(view, rows);
 
             expect(executeCommandSpy).not.toHaveBeenCalled();
         });
@@ -1112,7 +1144,7 @@ describe("DatasetTableView", () => {
 
         beforeEach(() => {
             mockTreeView = {
-                reveal: jest.fn().mockResolvedValue(undefined),
+                reveal: vi.fn().mockResolvedValue(undefined),
             };
 
             const profile = createIProfile();
@@ -1172,7 +1204,7 @@ describe("DatasetTableView", () => {
             mockFavProfileNode.children = [mockFavPdsNode];
             mockFavPdsNode.children = [mockFavMemberNode];
 
-            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
                 mSessionNodes: [mockProfileNode],
                 mFavorites: [mockFavProfileNode],
                 getTreeView: () => mockTreeView,
@@ -1180,8 +1212,8 @@ describe("DatasetTableView", () => {
         });
 
         it("should reveal member in tree for member URI found in session nodes", async () => {
-            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue(mockProfileNode.children);
-            const mockPdsGetChildren = jest.spyOn(mockPdsNode, "getChildren").mockResolvedValue(mockPdsNode.children);
+            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue(mockProfileNode.children);
+            const mockPdsGetChildren = vi.spyOn(mockPdsNode, "getChildren").mockResolvedValue(mockPdsNode.children);
 
             const rowInfo: Table.RowInfo = {
                 row: {
@@ -1198,7 +1230,7 @@ describe("DatasetTableView", () => {
         });
 
         it("should reveal dataset in tree for dataset URI found in session nodes", async () => {
-            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue(mockProfileNode.children);
+            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue(mockProfileNode.children);
 
             const rowInfo: Table.RowInfo = {
                 row: {
@@ -1213,10 +1245,66 @@ describe("DatasetTableView", () => {
             expect(mockTreeView.reveal).toHaveBeenCalledWith(mockPdsNode, { expand: true });
         });
 
+        it("should reveal member in tree when the row URI carries a synthetic extension not present on the tree label", async () => {
+            const profile = createIProfile();
+            const jclPdsNode = new ZoweDatasetNode({
+                label: "TEST.JCL",
+                collapsibleState: TreeItemCollapsibleState.Collapsed,
+                contextOverride: Constants.DS_PDS_CONTEXT,
+                profile,
+            });
+            const jclMemberNode = new ZoweDatasetNode({
+                label: "MEMBER1",
+                collapsibleState: TreeItemCollapsibleState.None,
+                contextOverride: Constants.DS_MEMBER_CONTEXT,
+                profile,
+                parentNode: jclPdsNode,
+            });
+            jclPdsNode.children = [jclMemberNode];
+            mockProfileNode.children = [mockPdsNode, jclPdsNode];
+
+            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue(mockProfileNode.children);
+            const mockJclPdsGetChildren = vi.spyOn(jclPdsNode, "getChildren").mockResolvedValue(jclPdsNode.children);
+
+            const rowInfo: Table.RowInfo = {
+                row: { uri: "zowe-ds:/sestest/TEST.JCL/MEMBER1.jcl" },
+                index: 0,
+            };
+
+            await DatasetTableView.displayInTree(null as any, rowInfo);
+
+            expect(mockGetChildren).toHaveBeenCalled();
+            expect(mockJclPdsGetChildren).toHaveBeenCalled();
+            expect(mockTreeView.reveal).toHaveBeenCalledWith(jclMemberNode, { focus: true });
+        });
+
+        it("should reveal dataset in tree when the row URI carries a synthetic extension not present on the tree label", async () => {
+            const profile = createIProfile();
+            const jclDsNode = new ZoweDatasetNode({
+                label: "TEST.JCL",
+                collapsibleState: TreeItemCollapsibleState.None,
+                contextOverride: Constants.DS_DS_CONTEXT,
+                profile,
+            });
+            mockProfileNode.children = [mockPdsNode, jclDsNode];
+
+            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue(mockProfileNode.children);
+
+            const rowInfo: Table.RowInfo = {
+                row: { uri: "zowe-ds:/sestest/TEST.JCL.jcl" },
+                index: 0,
+            };
+
+            await DatasetTableView.displayInTree(null as any, rowInfo);
+
+            expect(mockGetChildren).toHaveBeenCalled();
+            expect(mockTreeView.reveal).toHaveBeenCalledWith(jclDsNode, { expand: true });
+        });
+
         it("should reveal member in tree for member URI found in favorites when not in session nodes", async () => {
-            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
-            const mockFavGetChildren = jest.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue(mockFavProfileNode.children);
-            const mockFavPdsGetChildren = jest.spyOn(mockFavPdsNode, "getChildren").mockResolvedValue(mockFavPdsNode.children);
+            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
+            const mockFavGetChildren = vi.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue(mockFavProfileNode.children);
+            const mockFavPdsGetChildren = vi.spyOn(mockFavPdsNode, "getChildren").mockResolvedValue(mockFavPdsNode.children);
 
             const rowInfo: Table.RowInfo = {
                 row: {
@@ -1234,8 +1322,8 @@ describe("DatasetTableView", () => {
         });
 
         it("should reveal dataset in tree for dataset URI found in favorites when not in session nodes", async () => {
-            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
-            const mockFavGetChildren = jest.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue(mockFavProfileNode.children);
+            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
+            const mockFavGetChildren = vi.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue(mockFavProfileNode.children);
 
             const rowInfo: Table.RowInfo = {
                 row: {
@@ -1252,8 +1340,8 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle member with tree data found in session nodes", async () => {
-            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue(mockProfileNode.children);
-            const mockPdsGetChildren = jest.spyOn(mockPdsNode, "getChildren").mockResolvedValue(mockPdsNode.children);
+            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue(mockProfileNode.children);
+            const mockPdsGetChildren = vi.spyOn(mockPdsNode, "getChildren").mockResolvedValue(mockPdsNode.children);
 
             const rowInfo: Table.RowInfo = {
                 row: {
@@ -1274,9 +1362,9 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle member with tree data found in favorites when not in session nodes", async () => {
-            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
-            const mockFavGetChildren = jest.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue(mockFavProfileNode.children);
-            const mockFavPdsGetChildren = jest.spyOn(mockFavPdsNode, "getChildren").mockResolvedValue(mockFavPdsNode.children);
+            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
+            const mockFavGetChildren = vi.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue(mockFavProfileNode.children);
+            const mockFavPdsGetChildren = vi.spyOn(mockFavPdsNode, "getChildren").mockResolvedValue(mockFavPdsNode.children);
 
             const rowInfo: Table.RowInfo = {
                 row: {
@@ -1298,10 +1386,10 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle case when profile not found in session nodes or favorites", async () => {
-            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
+            vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
 
             // Mock empty favorites
-            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
                 mSessionNodes: [],
                 mFavorites: [],
                 getTreeView: () => mockTreeView,
@@ -1320,8 +1408,8 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle case when dataset not found in profile children", async () => {
-            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
-            const mockFavGetChildren = jest.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue([]);
+            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
+            const mockFavGetChildren = vi.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue([]);
 
             const rowInfo: Table.RowInfo = {
                 row: {
@@ -1338,10 +1426,10 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle case when member not found in PDS children", async () => {
-            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([mockPdsNode]);
-            const mockPdsGetChildren = jest.spyOn(mockPdsNode, "getChildren").mockResolvedValue([]);
-            const mockFavGetChildren = jest.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue([mockFavPdsNode]);
-            const mockFavPdsGetChildren = jest.spyOn(mockFavPdsNode, "getChildren").mockResolvedValue([]);
+            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue([mockPdsNode]);
+            const mockPdsGetChildren = vi.spyOn(mockPdsNode, "getChildren").mockResolvedValue([]);
+            const mockFavGetChildren = vi.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue([mockFavPdsNode]);
+            const mockFavPdsGetChildren = vi.spyOn(mockFavPdsNode, "getChildren").mockResolvedValue([]);
 
             const rowInfo: Table.RowInfo = {
                 row: {
@@ -1362,12 +1450,12 @@ describe("DatasetTableView", () => {
 
         it("should prioritize session nodes over favorites when node exists in both", async () => {
             // Setup session nodes with a dataset that exists
-            const mockGetChildren = jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([mockPdsNode]);
-            const mockPdsGetChildren = jest.spyOn(mockPdsNode, "getChildren").mockResolvedValue([mockMemberNode]);
+            const mockGetChildren = vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue([mockPdsNode]);
+            const mockPdsGetChildren = vi.spyOn(mockPdsNode, "getChildren").mockResolvedValue([mockMemberNode]);
 
             // Setup favorites with a dataset of the same name
-            const mockFavGetChildren = jest.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue([mockFavPdsNode]);
-            const mockFavPdsGetChildren = jest.spyOn(mockFavPdsNode, "getChildren").mockResolvedValue([mockFavMemberNode]);
+            const mockFavGetChildren = vi.spyOn(mockFavProfileNode, "getChildren").mockResolvedValue([mockFavPdsNode]);
+            const mockFavPdsGetChildren = vi.spyOn(mockFavPdsNode, "getChildren").mockResolvedValue([mockFavMemberNode]);
 
             const rowInfo: Table.RowInfo = {
                 row: {
@@ -1408,25 +1496,25 @@ describe("DatasetTableView", () => {
             });
 
             mockTableViewProvider = {
-                setTableView: jest.fn().mockResolvedValue(undefined),
+                setTableView: vi.fn().mockResolvedValue(undefined),
             };
 
-            jest.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
-            jest.spyOn(SharedUtils, "getSelectedNodeList").mockReturnValue([mockNode]);
-            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
-                filterPrompt: jest.fn().mockResolvedValue(undefined),
+            vi.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
+            vi.spyOn(SharedUtils, "getSelectedNodeList").mockReturnValue([mockNode]);
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+                filterPrompt: vi.fn().mockResolvedValue(undefined),
             } as any);
-            jest.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
+            vi.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
         });
 
         it("should handle session node command", async () => {
             mockNode.pattern = "TEST.*";
             mockNode.children = [];
-            jest.spyOn(SharedContext, "isSession").mockReturnValue(true);
-            jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
-            jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
-            const loadNamedProfile = jest.fn().mockResolvedValue(createIProfile());
-            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            vi.spyOn(SharedContext, "isSession").mockReturnValue(true);
+            vi.spyOn(SharedContext, "isPds").mockReturnValue(false);
+            vi.spyOn(SharedContext, "isInformation").mockReturnValue(false);
+            const loadNamedProfile = vi.fn().mockResolvedValue(createIProfile());
+            const profilesMock = vi.spyOn(Profiles, "getInstance").mockReturnValue({
                 loadNamedProfile,
             } as any);
 
@@ -1438,9 +1526,9 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle PDS node command", async () => {
-            jest.spyOn(SharedContext, "isSession").mockReturnValue(false);
-            jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
-            jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
+            vi.spyOn(SharedContext, "isSession").mockReturnValue(false);
+            vi.spyOn(SharedContext, "isPds").mockReturnValue(true);
+            vi.spyOn(SharedContext, "isInformation").mockReturnValue(false);
             mockNode.children = [];
 
             await datasetTableView.handleCommand(mockContext, mockNode, [mockNode]);
@@ -1449,9 +1537,9 @@ describe("DatasetTableView", () => {
         });
 
         it("should show error for invalid node type", async () => {
-            jest.spyOn(SharedContext, "isSession").mockReturnValue(false);
-            jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
-            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+            vi.spyOn(SharedContext, "isSession").mockReturnValue(false);
+            vi.spyOn(SharedContext, "isPds").mockReturnValue(false);
+            const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
 
             await datasetTableView.handleCommand(mockContext, mockNode, [mockNode]);
 
@@ -1467,8 +1555,8 @@ describe("DatasetTableView", () => {
                 session: createISession(),
             });
 
-            jest.spyOn(SharedUtils, "getSelectedNodeList").mockReturnValue([mockNode, mockNode2]);
-            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+            vi.spyOn(SharedUtils, "getSelectedNodeList").mockReturnValue([mockNode, mockNode2]);
+            const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
 
             await datasetTableView.handleCommand(mockContext, mockNode, [mockNode, mockNode2]);
 
@@ -1485,22 +1573,35 @@ describe("DatasetTableView", () => {
                 extensionPath: "/mock/extension/path",
             } as ExtensionContext;
             mockTableViewProvider = {
-                setTableView: jest.fn().mockResolvedValue(undefined),
+                setTableView: vi.fn().mockResolvedValue(undefined),
             };
 
-            jest.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
-            jest.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
+            vi.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
+            vi.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
+
+            const mvsApiMock = {
+                dataSetsMatchingPattern: vi.fn().mockResolvedValue({
+                    apiResponse: {
+                        items: [{ dsname: "TEST.A", dsorg: "PO", migr: "no" }],
+                    },
+                }),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mvsApiMock as any);
+        });
+
+        afterEach(() => {
+            vi.restoreAllMocks();
         });
 
         it("should handle pattern search successfully", async () => {
             const mockProfile = createIProfile();
-            const loadNamedProfileMock = jest.fn().mockReturnValue(mockProfile);
-            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            const loadNamedProfileMock = vi.fn().mockReturnValue(mockProfile);
+            const profilesMock = vi.spyOn(Profiles, "getInstance").mockReturnValue({
                 loadNamedProfile: loadNamedProfileMock,
             } as any);
-            jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
-            jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest" as any);
-            jest.spyOn(Gui, "showInputBox").mockResolvedValue("TEST.*");
+            vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
+            vi.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest" as any);
+            vi.spyOn(Gui, "showInputBox").mockResolvedValue("TEST.*");
 
             await datasetTableView.handlePatternSearch(mockContext);
 
@@ -1511,8 +1612,8 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle no profiles available", async () => {
-            jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue([]);
-            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+            vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue([]);
+            const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
 
             await datasetTableView.handlePatternSearch(mockContext);
 
@@ -1521,8 +1622,8 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle cancelled profile selection", async () => {
-            jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
-            jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
+            vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
+            vi.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
 
             await datasetTableView.handlePatternSearch(mockContext);
 
@@ -1530,9 +1631,9 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle cancelled pattern input", async () => {
-            jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
-            jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest" as any);
-            jest.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
+            vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
+            vi.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest" as any);
+            vi.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
 
             await datasetTableView.handlePatternSearch(mockContext);
 
@@ -1540,14 +1641,14 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle profile not found error", async () => {
-            const loadNamedProfileMock = jest.fn().mockReturnValue(undefined);
-            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            const loadNamedProfileMock = vi.fn().mockReturnValue(undefined);
+            const profilesMock = vi.spyOn(Profiles, "getInstance").mockReturnValue({
                 loadNamedProfile: loadNamedProfileMock,
             } as any);
-            jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
-            jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest" as any);
-            jest.spyOn(Gui, "showInputBox").mockResolvedValue("TEST.*");
-            const errorMessageSpy = jest.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+            vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
+            vi.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest" as any);
+            vi.spyOn(Gui, "showInputBox").mockResolvedValue("TEST.*");
+            const errorMessageSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
 
             await datasetTableView.handlePatternSearch(mockContext);
 
@@ -1560,9 +1661,9 @@ describe("DatasetTableView", () => {
 
     describe("selectAndAddProfile", () => {
         beforeEach(() => {
-            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
                 mSessionNodes: [],
-                addSingleSession: jest.fn().mockResolvedValue(undefined),
+                addSingleSession: vi.fn().mockResolvedValue(undefined),
             } as any);
         });
 
@@ -1575,25 +1676,25 @@ describe("DatasetTableView", () => {
                 profile: mockProfile,
                 session: createISession(),
             });
-            const loadNamedProfileMock = jest.fn().mockReturnValue(mockProfile);
-            const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
+            const loadNamedProfileMock = vi.fn().mockReturnValue(mockProfile);
+            const profilesMock = vi.spyOn(Profiles, "getInstance").mockReturnValue({
                 loadNamedProfile: loadNamedProfileMock,
             } as any);
 
-            jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
-            jest.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest" as any);
+            vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
+            vi.spyOn(Gui, "showQuickPick").mockResolvedValue("sestest" as any);
 
             const sessionNodes: ZoweDatasetNode[] = [];
             // Mock the tree provider to return the profile node after adding
             const mockTreeProvider = {
                 mSessionNodes: sessionNodes,
-                addSingleSession: jest.fn().mockImplementation((_p) => {
+                addSingleSession: vi.fn().mockImplementation((_p) => {
                     sessionNodes.push(mockProfileNode);
                     return Promise.resolve(undefined);
                 }),
             };
-            jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockTreeProvider as any);
-            jest.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockTreeProvider as any);
+            vi.spyOn(mockProfileNode, "getChildren").mockResolvedValue([]);
 
             const result = await (datasetTableView as any).selectAndAddProfile();
 
@@ -1604,8 +1705,8 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle no profiles available", async () => {
-            jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue([]);
-            const infoMessageSpy = jest.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+            vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue([]);
+            const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
 
             const result = await (datasetTableView as any).selectAndAddProfile();
 
@@ -1614,8 +1715,8 @@ describe("DatasetTableView", () => {
         });
 
         it("should handle cancelled selection", async () => {
-            jest.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
-            jest.spyOn(Gui, "showQuickPick").mockResolvedValue(null as any);
+            vi.spyOn(ProfileManagement, "getRegisteredProfileNameList").mockReturnValue(["sestest"]);
+            vi.spyOn(Gui, "showQuickPick").mockResolvedValue(null as any);
 
             const result = await (datasetTableView as any).selectAndAddProfile();
 
@@ -1639,7 +1740,7 @@ describe("DatasetTableView", () => {
             let mockDataSource: any;
             let mockExtender: any;
             let mockTableBuilder: any;
-            let mockTableInstance: jest.Mocked<Table.Instance>;
+            let mockTableInstance: Mocked<Table.Instance>;
 
             beforeEach(() => {
                 mockContext = {
@@ -1648,24 +1749,24 @@ describe("DatasetTableView", () => {
 
                 // Create a mock table instance for this test suite
                 mockTableInstance = {
-                    getPinnedRows: jest.fn().mockResolvedValue([]),
-                    getGridState: jest.fn().mockResolvedValue({}),
-                    setGridState: jest.fn().mockResolvedValue(true),
-                    setPinnedRows: jest.fn().mockResolvedValue(true),
-                    pinRows: jest.fn().mockResolvedValue(true),
-                    unpinRows: jest.fn().mockResolvedValue(true),
-                    setPage: jest.fn().mockResolvedValue(true),
-                    waitForAPI: jest.fn().mockResolvedValue(true),
-                    setTitle: jest.fn(),
-                    setColumns: jest.fn(),
-                    setContent: jest.fn(),
-                    setOptions: jest.fn(),
-                    onDisposed: jest.fn(),
-                    onDidReceiveMessage: jest.fn(),
-                } as unknown as jest.Mocked<Table.Instance>;
+                    getPinnedRows: vi.fn().mockResolvedValue([]),
+                    getGridState: vi.fn().mockResolvedValue({}),
+                    setGridState: vi.fn().mockResolvedValue(true),
+                    setPinnedRows: vi.fn().mockResolvedValue(true),
+                    pinRows: vi.fn().mockResolvedValue(true),
+                    unpinRows: vi.fn().mockResolvedValue(true),
+                    setPage: vi.fn().mockResolvedValue(true),
+                    waitForAPI: vi.fn().mockResolvedValue(true),
+                    setTitle: vi.fn(),
+                    setColumns: vi.fn(),
+                    setContent: vi.fn(),
+                    setOptions: vi.fn(),
+                    onDisposed: vi.fn(),
+                    onDidReceiveMessage: vi.fn(),
+                } as unknown as Mocked<Table.Instance>;
 
                 mockDataSource = {
-                    fetchDataSets: jest.fn().mockResolvedValue([
+                    fetchDataSets: vi.fn().mockResolvedValue([
                         {
                             name: "TEST.DATASET",
                             dsorg: "PS",
@@ -1674,54 +1775,54 @@ describe("DatasetTableView", () => {
                             isDirectory: false,
                         },
                     ]),
-                    getTitle: jest.fn().mockReturnValue("Test Title"),
-                    supportsHierarchy: jest.fn().mockReturnValue(false),
-                    buildTable: jest.fn(),
+                    getTitle: vi.fn().mockReturnValue("Test Title"),
+                    supportsHierarchy: vi.fn().mockReturnValue(false),
+                    buildTable: vi.fn(),
                 };
 
                 mockTableBuilder = {
-                    options: jest.fn().mockReturnThis(),
-                    isView: jest.fn().mockReturnThis(),
-                    title: jest.fn().mockReturnThis(),
-                    addRows: jest.fn().mockReturnThis(),
-                    columns: jest.fn().mockReturnThis(),
-                    addContextOption: jest.fn().mockReturnThis(),
-                    addRowAction: jest.fn().mockReturnThis(),
-                    build: jest.fn().mockReturnValue(mockTableInstance),
+                    options: vi.fn().mockReturnThis(),
+                    isView: vi.fn().mockReturnThis(),
+                    title: vi.fn().mockReturnThis(),
+                    addRows: vi.fn().mockReturnThis(),
+                    columns: vi.fn().mockReturnThis(),
+                    addContextOption: vi.fn().mockReturnThis(),
+                    addRowAction: vi.fn().mockReturnThis(),
+                    build: vi.fn().mockReturnValue(mockTableInstance),
                 };
 
                 mockExtender = {
-                    getTableProviderRegistry: jest.fn().mockReturnValue({
-                        getActions: jest.fn().mockResolvedValue([]),
-                        getContextMenuItems: jest.fn().mockResolvedValue([]),
+                    getTableProviderRegistry: vi.fn().mockReturnValue({
+                        getActions: vi.fn().mockResolvedValue([]),
+                        getContextMenuItems: vi.fn().mockResolvedValue([]),
                     }),
                 };
 
-                jest.spyOn(ZoweExplorerExtender, "getInstance").mockReturnValue(mockExtender);
+                vi.spyOn(ZoweExplorerExtender, "getInstance").mockReturnValue(mockExtender);
 
                 // Mock TableBuilder constructor to return our mockTableBuilder
-                jest.spyOn(TableBuilder.prototype, "options").mockImplementation(function () {
+                vi.spyOn(TableBuilder.prototype, "options").mockImplementation(function () {
                     return this;
                 });
-                jest.spyOn(TableBuilder.prototype, "isView").mockImplementation(function () {
+                vi.spyOn(TableBuilder.prototype, "isView").mockImplementation(function () {
                     return this;
                 });
-                jest.spyOn(TableBuilder.prototype, "title").mockImplementation(function () {
+                vi.spyOn(TableBuilder.prototype, "title").mockImplementation(function () {
                     return this;
                 });
-                jest.spyOn(TableBuilder.prototype, "addRows").mockImplementation(function () {
+                vi.spyOn(TableBuilder.prototype, "addRows").mockImplementation(function () {
                     return this;
                 });
-                jest.spyOn(TableBuilder.prototype, "columns").mockImplementation(function () {
+                vi.spyOn(TableBuilder.prototype, "columns").mockImplementation(function () {
                     return this;
                 });
-                jest.spyOn(TableBuilder.prototype, "addContextOption").mockImplementation(function () {
+                vi.spyOn(TableBuilder.prototype, "addContextOption").mockImplementation(function () {
                     return this;
                 });
-                jest.spyOn(TableBuilder.prototype, "addRowAction").mockImplementation(function () {
+                vi.spyOn(TableBuilder.prototype, "addRowAction").mockImplementation(function () {
                     return this;
                 });
-                jest.spyOn(TableBuilder.prototype, "build").mockImplementation(() => mockTableInstance);
+                vi.spyOn(TableBuilder.prototype, "build").mockImplementation(() => mockTableInstance);
 
                 (datasetTableView as any).currentDataSource = mockDataSource;
             });
@@ -1737,7 +1838,7 @@ describe("DatasetTableView", () => {
             });
 
             it("should add both displayInTree and pinRow context options", async () => {
-                const addContextOptionSpy = jest.spyOn(TableBuilder.prototype, "addContextOption");
+                const addContextOptionSpy = vi.spyOn(TableBuilder.prototype, "addContextOption");
 
                 await (datasetTableView as any).generateTable(mockContext);
 
@@ -1753,7 +1854,7 @@ describe("DatasetTableView", () => {
 
             it("should set up tree mode when data source supports hierarchy", async () => {
                 mockDataSource.supportsHierarchy.mockReturnValue(true);
-                mockDataSource.loadChildren = jest.fn().mockResolvedValue([]);
+                mockDataSource.loadChildren = vi.fn().mockResolvedValue([]);
 
                 const result = await (datasetTableView as any).generateTable(mockContext);
 
@@ -1763,9 +1864,9 @@ describe("DatasetTableView", () => {
 
             it("should handle data source error during fetchDataSets", async () => {
                 const errorDataSource = {
-                    fetchDataSets: jest.fn().mockRejectedValue(new Error("Fetch error")),
-                    getTitle: jest.fn().mockReturnValue("Error Title"),
-                    supportsHierarchy: jest.fn().mockReturnValue(false),
+                    fetchDataSets: vi.fn().mockRejectedValue(new Error("Fetch error")),
+                    getTitle: vi.fn().mockReturnValue("Error Title"),
+                    supportsHierarchy: vi.fn().mockReturnValue(false),
                 };
 
                 (datasetTableView as any).currentDataSource = errorDataSource;
@@ -1776,8 +1877,8 @@ describe("DatasetTableView", () => {
             it("should capture system locale as userLocale at table build time", async () => {
                 // Mock Intl.DateTimeFormat to return a specific locale
                 const originalDateTimeFormat = Intl.DateTimeFormat;
-                const mockResolvedOptions = jest.fn().mockReturnValue({ locale: "fr-FR" });
-                (global as any).Intl.DateTimeFormat = jest.fn().mockImplementation(() => ({
+                const mockResolvedOptions = vi.fn().mockReturnValue({ locale: "fr-FR" });
+                (global as any).Intl.DateTimeFormat = vi.fn().mockImplementation(() => ({
                     resolvedOptions: mockResolvedOptions,
                 }));
 
@@ -1793,8 +1894,8 @@ describe("DatasetTableView", () => {
             it("should use captured locale for date formatting in table columns", async () => {
                 // Mock Intl.DateTimeFormat to return German locale
                 const originalDateTimeFormat = Intl.DateTimeFormat;
-                const mockResolvedOptions = jest.fn().mockReturnValue({ locale: "de-DE" });
-                (global as any).Intl.DateTimeFormat = jest.fn().mockImplementation(() => ({
+                const mockResolvedOptions = vi.fn().mockReturnValue({ locale: "de-DE" });
+                (global as any).Intl.DateTimeFormat = vi.fn().mockImplementation(() => ({
                     resolvedOptions: mockResolvedOptions,
                 }));
 
@@ -1834,25 +1935,25 @@ describe("DatasetTableView", () => {
                 });
 
                 mockTableViewProvider = {
-                    setTableView: jest.fn().mockResolvedValue(undefined),
+                    setTableView: vi.fn().mockResolvedValue(undefined),
                 };
 
-                jest.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
-                jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
-                    filterPrompt: jest.fn().mockResolvedValue(undefined),
+                vi.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
+                vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+                    filterPrompt: vi.fn().mockResolvedValue(undefined),
                 } as any);
-                jest.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
+                vi.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
             });
 
             it("should prepare and display table for session node", async () => {
                 mockNode.pattern = "TEST.*";
                 mockNode.children = [];
-                jest.spyOn(SharedContext, "isSession").mockReturnValue(true);
-                jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
-                jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
+                vi.spyOn(SharedContext, "isSession").mockReturnValue(true);
+                vi.spyOn(SharedContext, "isPds").mockReturnValue(false);
+                vi.spyOn(SharedContext, "isInformation").mockReturnValue(false);
 
-                const profilesMock = jest.spyOn(Profiles, "getInstance").mockReturnValue({
-                    loadNamedProfile: jest.fn().mockResolvedValue(createIProfile()),
+                const profilesMock = vi.spyOn(Profiles, "getInstance").mockReturnValue({
+                    loadNamedProfile: vi.fn().mockResolvedValue(createIProfile()),
                 } as any);
                 await (datasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
 
@@ -1864,11 +1965,11 @@ describe("DatasetTableView", () => {
             it("should call filterPrompt for session node without pattern", async () => {
                 mockNode.pattern = "";
                 mockNode.children = [];
-                jest.spyOn(SharedContext, "isSession").mockReturnValue(true);
-                jest.spyOn(SharedContext, "isPds").mockReturnValue(false);
-                jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
+                vi.spyOn(SharedContext, "isSession").mockReturnValue(true);
+                vi.spyOn(SharedContext, "isPds").mockReturnValue(false);
+                vi.spyOn(SharedContext, "isInformation").mockReturnValue(false);
 
-                const filterPromptSpy = jest.spyOn(SharedTreeProviders.ds, "filterPrompt");
+                const filterPromptSpy = vi.spyOn(SharedTreeProviders.ds, "filterPrompt");
 
                 await (datasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
 
@@ -1877,9 +1978,9 @@ describe("DatasetTableView", () => {
 
             it("should prepare and display table for PDS node", async () => {
                 mockNode.children = [];
-                jest.spyOn(SharedContext, "isSession").mockReturnValue(false);
-                jest.spyOn(SharedContext, "isPds").mockReturnValue(true);
-                jest.spyOn(SharedContext, "isInformation").mockReturnValue(false);
+                vi.spyOn(SharedContext, "isSession").mockReturnValue(false);
+                vi.spyOn(SharedContext, "isPds").mockReturnValue(true);
+                vi.spyOn(SharedContext, "isInformation").mockReturnValue(false);
 
                 await (datasetTableView as any).prepareAndDisplayTable(mockContext, mockNode);
 
@@ -1890,16 +1991,16 @@ describe("DatasetTableView", () => {
 
         describe("event emitter", () => {
             it("should emit events when table is created and disposed", async () => {
-                const eventSpy = jest.fn();
+                const eventSpy = vi.fn();
                 datasetTableView.onDataSetTableChanged(eventSpy);
 
                 const mockContext = {
                     extensionPath: "/mock/extension/path",
                 } as ExtensionContext;
                 const mockDataSource = {
-                    fetchDataSets: jest.fn().mockResolvedValue([]),
-                    getTitle: jest.fn().mockReturnValue("Test"),
-                    supportsHierarchy: jest.fn().mockReturnValue(false),
+                    fetchDataSets: vi.fn().mockResolvedValue([]),
+                    getTitle: vi.fn().mockReturnValue("Test"),
+                    supportsHierarchy: vi.fn().mockReturnValue(false),
                 };
 
                 (datasetTableView as any).currentDataSource = mockDataSource;
@@ -1912,7 +2013,7 @@ describe("DatasetTableView", () => {
                 });
 
                 // Simulate table disposal
-                const onDisposedCallback = jest.fn();
+                const onDisposedCallback = vi.fn();
                 table.onDisposed = onDisposedCallback;
 
                 // Call the onDisposed callback that was registered
@@ -2038,22 +2139,22 @@ describe("DatasetTableView", () => {
                 });
 
                 mockTableViewProvider = {
-                    setTableView: jest.fn().mockResolvedValue(undefined),
+                    setTableView: vi.fn().mockResolvedValue(undefined),
                 };
 
-                jest.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
-                jest.spyOn(SharedUtils, "getSelectedNodeList").mockReturnValue([mockNode]);
-                jest.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
-                    filterPrompt: jest.fn().mockResolvedValue(undefined),
+                vi.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
+                vi.spyOn(SharedUtils, "getSelectedNodeList").mockReturnValue([mockNode]);
+                vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue({
+                    filterPrompt: vi.fn().mockResolvedValue(undefined),
                 } as any);
-                jest.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
+                vi.spyOn(commands, "executeCommand").mockResolvedValue(undefined);
                 (DatasetTableView as any)._instance = undefined; // Reset the singleton instance
                 datasetTableView = DatasetTableView.getInstance();
             });
 
             it("should handle 'loadTreeChildren' command", async () => {
                 const mockDataSource = {
-                    loadChildren: jest.fn().mockResolvedValue([
+                    loadChildren: vi.fn().mockResolvedValue([
                         {
                             name: "MEMBER1",
                             volumes: "VOL001",
@@ -2084,9 +2185,10 @@ describe("DatasetTableView", () => {
                 (datasetTableView as any).currentDataSource = mockDataSource;
 
                 // Mock the table instance and its webview
-                const mockWebview = { postMessage: jest.fn() };
+                const mockWebview = { postMessage: vi.fn() };
                 const mockPanel = { webview: mockWebview };
-                (datasetTableView as any).table = { panel: mockPanel };
+                const mockTable = { panel: mockPanel, trackRows: vi.fn() };
+                (datasetTableView as any).table = mockTable;
 
                 const message = {
                     command: "loadTreeChildren",
@@ -2098,6 +2200,11 @@ describe("DatasetTableView", () => {
                 await datasetTableView["onDidReceiveMessage"](message);
 
                 expect(mockDataSource.loadChildren).toHaveBeenCalledWith(message.payload.nodeId);
+                // The newly-loaded member rows must be tracked so that later lookups (e.g. openInEditor) recognize them.
+                expect(mockTable.trackRows).toHaveBeenCalledWith(
+                    expect.objectContaining({ uri: "zowe-ds:/sestest/TEST.PDS/MEMBER1" }),
+                    expect.objectContaining({ uri: "zowe-ds:/sestest/TEST.PDS/MEMBER2" })
+                );
                 expect(mockWebview.postMessage).toHaveBeenCalledWith({
                     command: "treeChildrenLoaded",
                     data: {
@@ -2153,13 +2260,13 @@ describe("DatasetTableView", () => {
 
             it("should do nothing if 'loadTreeChildren' command is not provided", async () => {
                 const mockDataSource = {
-                    loadChildren: jest.fn(),
+                    loadChildren: vi.fn(),
                 };
 
                 (datasetTableView as any).currentDataSource = mockDataSource;
 
                 // Mock the table instance and its webview
-                const mockWebview = { postMessage: jest.fn() };
+                const mockWebview = { postMessage: vi.fn() };
                 const mockPanel = { webview: mockWebview };
                 (datasetTableView as any).table = { panel: mockPanel };
 
@@ -2184,7 +2291,7 @@ describe("DatasetTableView", () => {
                 (datasetTableView as any).currentDataSource = mockDataSource;
 
                 // Mock the table instance and its webview
-                const mockWebview = { postMessage: jest.fn() };
+                const mockWebview = { postMessage: vi.fn() };
                 const mockPanel = { webview: mockWebview };
                 (datasetTableView as any).table = { panel: mockPanel };
 
@@ -2205,8 +2312,8 @@ describe("DatasetTableView", () => {
 
 describe("DatasetTableView action handlers/callbacks", () => {
     let datasetTableView: DatasetTableView;
-    let mockTable: jest.Mocked<Table.Instance>;
-    let mockTableViewProvider: jest.Mocked<TableViewProvider>;
+    let mockTable: Mocked<Table.Instance>;
+    let mockTableViewProvider: Mocked<TableViewProvider>;
     let mockContext: ExtensionContext;
 
     beforeEach(() => {
@@ -2215,30 +2322,30 @@ describe("DatasetTableView action handlers/callbacks", () => {
         datasetTableView = DatasetTableView.getInstance();
 
         mockTable = {
-            getPinnedRows: jest.fn().mockResolvedValue([]),
-            getGridState: jest.fn().mockResolvedValue({}),
-            setGridState: jest.fn().mockResolvedValue(true),
-            setPinnedRows: jest.fn().mockResolvedValue(true),
-            pinRows: jest.fn().mockResolvedValue(true),
-            unpinRows: jest.fn().mockResolvedValue(true),
-            setPage: jest.fn().mockResolvedValue(true),
-            waitForAPI: jest.fn().mockResolvedValue(true),
-            setTitle: jest.fn(),
-            setColumns: jest.fn(),
-            setContent: jest.fn(),
-            setOptions: jest.fn(),
-            onDisposed: jest.fn(),
-            onDidReceiveMessage: jest.fn(),
-        } as unknown as jest.Mocked<Table.Instance>;
+            getPinnedRows: vi.fn().mockResolvedValue([]),
+            getGridState: vi.fn().mockResolvedValue({}),
+            setGridState: vi.fn().mockResolvedValue(true),
+            setPinnedRows: vi.fn().mockResolvedValue(true),
+            pinRows: vi.fn().mockResolvedValue(true),
+            unpinRows: vi.fn().mockResolvedValue(true),
+            setPage: vi.fn().mockResolvedValue(true),
+            waitForAPI: vi.fn().mockResolvedValue(true),
+            setTitle: vi.fn(),
+            setColumns: vi.fn(),
+            setContent: vi.fn(),
+            setOptions: vi.fn(),
+            onDisposed: vi.fn(),
+            onDidReceiveMessage: vi.fn(),
+        } as unknown as Mocked<Table.Instance>;
 
         mockTableViewProvider = {
-            setTableView: jest.fn().mockResolvedValue(undefined),
-        } as unknown as jest.Mocked<TableViewProvider>;
+            setTableView: vi.fn().mockResolvedValue(undefined),
+        } as unknown as Mocked<TableViewProvider>;
 
-        jest.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
-        jest.spyOn(Gui, "infoMessage").mockImplementation();
-        jest.spyOn(Gui, "errorMessage").mockImplementation();
-        jest.spyOn(l10n, "t").mockImplementation((key: any) => (typeof key === "string" ? key : key.message));
+        vi.spyOn(TableViewProvider, "getInstance").mockReturnValue(mockTableViewProvider);
+        vi.spyOn(Gui, "infoMessage").mockImplementation((() => undefined) as any);
+        vi.spyOn(Gui, "errorMessage").mockImplementation((() => undefined) as any);
+        vi.spyOn(l10n, "t").mockImplementation((key: any) => (typeof key === "string" ? key : key.message));
 
         (datasetTableView as any).table = mockTable;
 
@@ -2247,11 +2354,11 @@ describe("DatasetTableView action handlers/callbacks", () => {
         } as ExtensionContext;
 
         // Mock generateTable to avoid actual table generation logic
-        jest.spyOn(datasetTableView as any, "generateTable").mockResolvedValue(mockTable);
+        vi.spyOn(datasetTableView as any, "generateTable").mockResolvedValue(mockTable);
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe("focusOnPds", () => {
@@ -2281,7 +2388,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
                 profile,
                 session: createISession(),
             });
-            jest.spyOn(sessionNode, "getSessionNode").mockReturnValue(sessionNode);
+            vi.spyOn(sessionNode, "getSessionNode").mockReturnValue(sessionNode);
 
             const pdsRow = { dsname: "TEST.PDS", uri: "zowe-ds:/sestest/TEST.PDS", dsorg: "PO" };
             const dataSource = new TreeDataSource(sessionNode);
@@ -2336,27 +2443,27 @@ describe("DatasetTableView action handlers/callbacks", () => {
 
         it('should return "Unpin" if all provided rows are pinned', async () => {
             const rows = [{ dsname: "A" }, { dsname: "B" }];
-            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue(rows);
+            (mockTable.getPinnedRows as Mock).mockResolvedValue(rows);
             const title = await (datasetTableView as any).getPinTitle(rows);
             expect(title).toBe("Unpin");
         });
 
         it('should return "Pin" if some provided rows are not pinned', async () => {
             const rows = [{ dsname: "A" }, { dsname: "B" }];
-            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([{ dsname: "A" }]);
+            (mockTable.getPinnedRows as Mock).mockResolvedValue([{ dsname: "A" }]);
             const title = await (datasetTableView as any).getPinTitle(rows);
             expect(title).toBe("Pin");
         });
 
         it('should return "Pin" on error', async () => {
-            (mockTable.getPinnedRows as jest.Mock).mockRejectedValue(new Error("failure"));
+            (mockTable.getPinnedRows as Mock).mockRejectedValue(new Error("failure"));
             const title = await (datasetTableView as any).getPinTitle([{ dsname: "A" }]);
             expect(title).toBe("Pin");
         });
 
         it("should work for single row (context menu case)", async () => {
             const row = { dsname: "A" };
-            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([row]);
+            (mockTable.getPinnedRows as Mock).mockResolvedValue([row]);
             const title = await (datasetTableView as any).getPinTitle([row]);
             expect(title).toBe("Unpin");
         });
@@ -2372,7 +2479,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
         it("should unpin rows if all are pinned (multi-row case)", async () => {
             const rows = { 0: { dsname: "A" }, 1: { dsname: "B" } };
             const rowsArray = Object.values(rows);
-            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue(rowsArray);
+            (mockTable.getPinnedRows as Mock).mockResolvedValue(rowsArray);
 
             await (datasetTableView as any).togglePinRows({} as Table.View, rows);
 
@@ -2384,7 +2491,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
         it("should pin rows if some are not pinned (multi-row case)", async () => {
             const rows = { 0: { dsname: "A" }, 1: { dsname: "B" } };
             const rowsArray = Object.values(rows);
-            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([{ dsname: "A" }]);
+            (mockTable.getPinnedRows as Mock).mockResolvedValue([{ dsname: "A" }]);
 
             await (datasetTableView as any).togglePinRows({} as Table.View, rows);
 
@@ -2396,7 +2503,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
         it("should unpin single row if pinned (single-row case)", async () => {
             const rowInfo = { row: { dsname: "A" }, index: 0 };
             const rowsArray = [rowInfo.row];
-            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue(rowsArray);
+            (mockTable.getPinnedRows as Mock).mockResolvedValue(rowsArray);
 
             await (datasetTableView as any).togglePinRows({} as Table.View, rowInfo);
 
@@ -2408,7 +2515,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
         it("should pin single row if not pinned (single-row case)", async () => {
             const rowInfo = { row: { dsname: "A" }, index: 0 };
             const rowsArray = [rowInfo.row];
-            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([]);
+            (mockTable.getPinnedRows as Mock).mockResolvedValue([]);
 
             await (datasetTableView as any).togglePinRows({} as Table.View, rowInfo);
 
@@ -2419,7 +2526,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
 
         it("should show error message on failure", async () => {
             const rows = { 0: { dsname: "A" } };
-            (mockTable.pinRows as jest.Mock).mockResolvedValue(false);
+            (mockTable.pinRows as Mock).mockResolvedValue(false);
 
             await (datasetTableView as any).togglePinRows({} as Table.View, rows);
 
@@ -2429,7 +2536,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
         it("should show error message on exception", async () => {
             const rows = { 0: { dsname: "A" } };
             const error = new Error("API error");
-            (mockTable.getPinnedRows as jest.Mock).mockRejectedValue(error);
+            (mockTable.getPinnedRows as Mock).mockRejectedValue(error);
 
             await (datasetTableView as any).togglePinRows({} as Table.View, rows);
 
@@ -2440,7 +2547,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
             const rows = { 0: { dsname: "A" }, 1: { dsname: "B" }, 2: { dsname: "C" } };
             const rowsArray = Object.values(rows);
             // Only row A is pinned, so it should pin all rows
-            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([{ dsname: "A" }]);
+            (mockTable.getPinnedRows as Mock).mockResolvedValue([{ dsname: "A" }]);
 
             await (datasetTableView as any).togglePinRows({} as Table.View, rows);
 
@@ -2454,15 +2561,15 @@ describe("DatasetTableView action handlers/callbacks", () => {
             const singleRowInput = { row: { dsname: "A" }, index: 0 };
             const multiRowInput = { 0: { dsname: "A" }, 1: { dsname: "B" } };
 
-            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([]);
+            (mockTable.getPinnedRows as Mock).mockResolvedValue([]);
 
             // Test single-row case
             await (datasetTableView as any).togglePinRows({} as Table.View, singleRowInput);
             expect(mockTable.pinRows).toHaveBeenCalledWith([singleRowInput.row]);
 
             // Reset mocks
-            jest.clearAllMocks();
-            (mockTable.getPinnedRows as jest.Mock).mockResolvedValue([]);
+            vi.clearAllMocks();
+            (mockTable.getPinnedRows as Mock).mockResolvedValue([]);
 
             // Test multi-row case
             await (datasetTableView as any).togglePinRows({} as Table.View, multiRowInput);
@@ -2481,7 +2588,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
                 expect(contextOptions.pinRow.callback.typ).toBe("single-row");
 
                 // Mock getPinTitle to verify it gets called
-                const getPinTitleSpy = jest.spyOn(datasetTableView as any, "getPinTitle").mockResolvedValue("Pin");
+                const getPinTitleSpy = vi.spyOn(datasetTableView as any, "getPinTitle").mockResolvedValue("Pin");
 
                 const rowData = { dsname: "TEST.DS" };
                 const title = await contextOptions.pinRow.title(rowData);
@@ -2496,7 +2603,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
                 const contextOptions = (datasetTableView as any).contextOptions;
 
                 expect(contextOptions.displayInTree).toBeDefined();
-                expect(contextOptions.displayInTree.title).toBe("Display in Tree");
+                expect(contextOptions.displayInTree.title).toBe("Locate in Tree");
                 expect(contextOptions.displayInTree.command).toBe("display-in-tree");
                 expect(contextOptions.displayInTree.callback.typ).toBe("single-row");
                 expect(contextOptions.displayInTree.callback.fn).toBe(DatasetTableView.displayInTree);
@@ -2516,7 +2623,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
                 expect(rowActions.pinRows.type).toBe("secondary");
 
                 // Mock getPinTitle to verify it gets called
-                const getPinTitleSpy = jest.spyOn(datasetTableView as any, "getPinTitle").mockResolvedValue("Unpin");
+                const getPinTitleSpy = vi.spyOn(datasetTableView as any, "getPinTitle").mockResolvedValue("Unpin");
 
                 const rows = [{ dsname: "TEST.DS1" }, { dsname: "TEST.DS2" }];
                 const title = await rowActions.pinRows.title(rows);
@@ -2616,7 +2723,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
                 const expectedSort = { method: Sorting.DatasetSortOpts.DateCreated, direction: Sorting.SortDirection.Ascending };
                 mockTreeNode.sort = undefined;
                 mockSessionNode.sort = expectedSort;
-                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+                vi.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
 
                 const result = (datasetTableView as any).getEffectiveSortSettings(mockTreeNode);
                 expect(result).toEqual(expectedSort);
@@ -2625,7 +2732,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
             it("should return undefined when neither tree node nor session has sort settings", () => {
                 mockTreeNode.sort = undefined;
                 mockSessionNode.sort = undefined;
-                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+                vi.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
 
                 const result = (datasetTableView as any).getEffectiveSortSettings(mockTreeNode);
                 expect(result).toBeUndefined();
@@ -2633,7 +2740,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
 
             it("should return undefined when getSessionNode returns undefined", () => {
                 mockTreeNode.sort = undefined;
-                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(undefined as any);
+                vi.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(undefined as any);
 
                 const result = (datasetTableView as any).getEffectiveSortSettings(mockTreeNode);
                 expect(result).toBeUndefined();
@@ -2772,7 +2879,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
 
             it("should return original columns when tree node has no sort settings", () => {
                 mockTreeNode.sort = undefined;
-                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(undefined as any);
+                vi.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(undefined as any);
 
                 const result = (datasetTableView as any).applyTreeSortToColumns(columnDefs, mockTreeNode);
                 expect(result).toEqual(columnDefs.map((col) => ({ ...col, initialSort: undefined })));
@@ -2780,7 +2887,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
 
             it("should apply ascending sort to dsname column for Name sort method", () => {
                 mockTreeNode.sort = { method: Sorting.DatasetSortOpts.Name, direction: Sorting.SortDirection.Ascending };
-                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+                vi.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
 
                 const result = (datasetTableView as any).applyTreeSortToColumns(columnDefs, mockTreeNode);
 
@@ -2795,7 +2902,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
 
             it("should apply descending sort to modifiedDate column for LastModified sort method", () => {
                 mockTreeNode.sort = { method: Sorting.DatasetSortOpts.LastModified, direction: Sorting.SortDirection.Descending };
-                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+                vi.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
 
                 const result = (datasetTableView as any).applyTreeSortToColumns(columnDefs, mockTreeNode);
 
@@ -2810,7 +2917,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
 
             it("should apply ascending sort to createdDate column for DateCreated sort method", () => {
                 mockTreeNode.sort = { method: Sorting.DatasetSortOpts.DateCreated, direction: Sorting.SortDirection.Ascending };
-                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+                vi.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
 
                 const result = (datasetTableView as any).applyTreeSortToColumns(columnDefs, mockTreeNode);
 
@@ -2825,7 +2932,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
 
             it("should apply descending sort to user column for UserId sort method", () => {
                 mockTreeNode.sort = { method: Sorting.DatasetSortOpts.UserId, direction: Sorting.SortDirection.Descending };
-                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+                vi.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
 
                 const result = (datasetTableView as any).applyTreeSortToColumns(columnDefs, mockTreeNode);
 
@@ -2841,7 +2948,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
             it("should fall back to session sort when PDS has no sort settings", () => {
                 mockTreeNode.sort = undefined;
                 mockSessionNode.sort = { method: Sorting.DatasetSortOpts.LastModified, direction: Sorting.SortDirection.Ascending };
-                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+                vi.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
 
                 const result = (datasetTableView as any).applyTreeSortToColumns(columnDefs, mockTreeNode);
 
@@ -2861,7 +2968,7 @@ describe("DatasetTableView action handlers/callbacks", () => {
                 ];
 
                 mockTreeNode.sort = { method: Sorting.DatasetSortOpts.Name, direction: Sorting.SortDirection.Descending };
-                jest.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
+                vi.spyOn(mockTreeNode, "getSessionNode").mockReturnValue(mockSessionNode);
 
                 const result = (datasetTableView as any).applyTreeSortToColumns(enrichedColumnDefs, mockTreeNode);
 
@@ -3123,6 +3230,25 @@ describe("buildMemberInfo", () => {
                 mnorc: undefined,
                 sclm: undefined,
             });
+        });
+    });
+
+    describe("file extension inference", () => {
+        it("appends the inferred extension when the PDS name matches a known extension pattern", () => {
+            const jclParentUri = "zowe-ds:/profile/X.Y.Z.JCL.W";
+            const member = { member: "MEMBER1" };
+
+            const result = buildMemberInfo(member, jclParentUri);
+
+            expect(result.uri).toBe(`${jclParentUri}/MEMBER1.jcl`);
+        });
+
+        it("does not append an extension when the PDS name matches no known pattern", () => {
+            const member = { member: "MEMBER1" };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            expect(result.uri).toBe(`${parentUri}/MEMBER1`);
         });
     });
 });

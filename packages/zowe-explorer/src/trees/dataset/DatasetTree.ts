@@ -11,9 +11,10 @@
 
 import * as path from "path";
 import * as vscode from "vscode";
-import * as dayjs from "dayjs";
+import dayjs from "dayjs";
 import {
     Gui,
+    handleError,
     Validation,
     imperative,
     IZoweDatasetTreeNode,
@@ -126,7 +127,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 const { dsname: dsnameSource, ...rest } = sourceAttributesResponse.apiResponse.items[0];
                 // need to transform labels
                 const transformedAttrs = (zosfiles.Copy as any).generateDatasetOptions({}, rest);
-                let dataSetTypeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
+                const dataSetTypeEnum = zosfiles.CreateDataSetTypeEnum.DATA_SET_BLANK;
                 // if alcunit is cyl, divide primary by 15 to get the number of cylinders
                 const TRACKS_PER_CYLINDER = 15;
                 const primary = Number(transformedAttrs.primary);
@@ -210,9 +211,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 );
             } catch (err) {
                 // If the write fails, we cannot move to the next file
-                if (err instanceof Error) {
-                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
-                }
+                void handleError(err, (error) => {
+                    Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, error.message));
+                });
                 return;
             }
 
@@ -231,7 +232,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         _token: vscode.CancellationToken
     ): Promise<void> {
         const droppedItems = dataTransfer.get("application/vnd.code.tree.zowe.ds.explorer");
-        if (!droppedItems) return;
+        if (!droppedItems) {
+            return;
+        }
 
         let target = targetNode;
         if (!target) {
@@ -244,7 +247,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         // check each dropped node for same-object, member collision, and structure issues
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
-            if (!node) continue;
+            if (!node) {
+                continue;
+            }
             const srcDsn = (SharedContext.isDsMember(node) ? node.getParent() : node).getLabel() as string;
             const tgtDsn = target.getLabel() as string;
 
@@ -259,8 +264,8 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 const srcMembersResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).allMembers(srcDsn, { attributes: true });
                 const tgtMembersResp = await ZoweExplorerApiRegister.getMvsApi(target.getProfile()).allMembers(srcDsn, { attributes: true }); //using the same dsn, but checking against target
 
-                const srcNames = (srcMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
-                const tgtNames = (tgtMembersResp.apiResponse?.items ?? []).map((m) => m.name).filter(Boolean);
+                const srcNames = (srcMembersResp.apiResponse?.items ?? []).map((m: { name: string }) => m.name).filter(Boolean);
+                const tgtNames = (tgtMembersResp.apiResponse?.items ?? []).map((m: { name: string }) => m.name).filter(Boolean);
 
                 if (SharedUtils.hasNameCollision(srcNames, tgtNames)) {
                     Gui.errorMessage(
@@ -297,7 +302,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
 
         // 4. Overwrite prompt (name collision only)
         const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
-        if (!overwrite) return;
+        if (!overwrite) {
+            return;
+        }
 
         // 5. Move logic
         const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving MVS files...")}`);
@@ -307,7 +314,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         for (const item of droppedItems.value) {
             const node = this.draggedNodes[item.uri.path];
             const nodeParent = node.getParent();
-            if (!node || nodeParent === target) continue;
+            if (!node || nodeParent === target) {
+                continue;
+            }
 
             const nodeLabel = SharedUtils.getNodeProperty(node, "label");
             const newUriForNode = vscode.Uri.from({
@@ -534,9 +543,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 profile,
             });
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.warn(`Skipping creation of favorited profile. ${err.toString()}`);
-            }
+            void handleError(err, (error) => {
+                ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
+            });
             return null;
         }
 
@@ -576,13 +585,18 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
     }
 
     public async refreshFavorites(profileType?: string): Promise<void> {
-        const lines: string[] = this.mPersistence.readFavorites();
-        if (lines.length === 0) {
+        const combinedLines = [
+            ...this.mPersistence.readFavorites(),
+            ...this.mPersistence.readVsamFavorites(),
+            ...this.mPersistence.readMemberFavorites(),
+            ...this.mPersistence.readMigratedFavorites(),
+        ];
+        if (combinedLines.length === 0) {
             ZoweLogger.debug(vscode.l10n.t("No data set favorites found."));
             return;
         }
 
-        const favorites = SharedUtils.parseFavorites(lines);
+        const favorites = SharedUtils.parseFavorites(combinedLines);
         for (const fav of favorites) {
             // The profile node used for grouping respective favorited items.
             // Create a node if it does not already exist in the Favorites array
@@ -627,6 +641,10 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
             favProfileNode.children.push(favChildNode);
         }
+
+        for (const favProfileNode of this.mFavorites) {
+            SharedUtils.sortTreeItems(favProfileNode.children, Constants.DS_SESSION_CONTEXT + Constants.FAV_SUFFIX);
+        }
     }
 
     /**
@@ -642,8 +660,23 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         const profile = parentNode.getProfile();
 
         let node: ZoweDatasetNode;
-        if (contextValue.includes(Constants.DS_PDS_CONTEXT) || contextValue.includes(Constants.DS_DS_CONTEXT)) {
-            if (contextValue.includes(Constants.DS_PDS_CONTEXT)) {
+        if (
+            contextValue.includes(Constants.DS_PDS_CONTEXT) ||
+            contextValue.includes(Constants.DS_DS_CONTEXT) ||
+            contextValue.includes(Constants.VSAM_CONTEXT) ||
+            contextValue.includes(Constants.DS_MIGRATED_FILE_CONTEXT)
+        ) {
+            const isMigrated = contextValue.includes(Constants.DS_MIGRATED_FILE_CONTEXT);
+            if (isMigrated) {
+                node = new ZoweDatasetNode({
+                    label,
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode,
+                    profile,
+                    contextOverride: Constants.DS_MIGRATED_FILE_CONTEXT,
+                });
+                node.wasPds = contextValue.includes(Constants.DS_PDS_CONTEXT);
+            } else if (contextValue.includes(Constants.DS_PDS_CONTEXT)) {
                 node = new ZoweDatasetNode({
                     label,
                     collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -755,7 +788,9 @@ Would you like to do this now?`,
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
         const favsForProfile = profileInFavs.children;
         for (const favorite of favsForProfile) {
-            if (!DatasetFSProvider.instance.exists(favorite.resourceUri)) {
+            await this.syncFavoriteMigrationStatus(favorite);
+
+            if (favorite.resourceUri && !DatasetFSProvider.instance.exists(favorite.resourceUri)) {
                 if (SharedContext.isPds(favorite)) {
                     await vscode.workspace.fs.createDirectory(favorite.resourceUri);
                 } else if (SharedContext.isDs(favorite)) {
@@ -774,6 +809,41 @@ Would you like to do this now?`,
         }
         // This updates the profile node's children in the this.mFavorites array, as well.
         return updatedFavsForProfile;
+    }
+
+    /**
+     * Synchronizes the migration status of a favorited dataset node on startup by querying its cached/virtual filesystem entry.
+     * @param favorite The favorited dataset node to sync
+     */
+    private async syncFavoriteMigrationStatus(favorite: IZoweDatasetTreeNode): Promise<void> {
+        if (!favorite.resourceUri) {
+            return;
+        }
+        try {
+            await DatasetFSProvider.instance.stat(favorite.resourceUri);
+            const entry = DatasetFSProvider.instance.lookup(favorite.resourceUri, true) as any;
+            if (entry && entry.stats && favorite instanceof ZoweDatasetNode) {
+                const isMigrated = entry.stats.migr === "YES";
+                if (isMigrated) {
+                    if (favorite.justRecalled) {
+                        return;
+                    }
+                    if (!SharedContext.isMigrated(favorite)) {
+                        favorite.datasetMigrated();
+                        this.updateFavorites();
+                    }
+                } else {
+                    favorite.justRecalled = false;
+                    if (SharedContext.isMigrated(favorite)) {
+                        const isPds = entry.type === vscode.FileType.Directory || entry.stats.dsorg?.startsWith("PO") || favorite.wasPds || false;
+                        await favorite.datasetRecalled(isPds);
+                        this.updateFavorites();
+                    }
+                }
+            }
+        } catch (error) {
+            ZoweLogger.warn(`Failed to stat favorite ${favorite.label.toString()}: ${error}`);
+        }
     }
 
     /**
@@ -912,6 +982,7 @@ Would you like to do this now?`,
                 etag: await node.getEtag(),
                 profile: node.getProfile(),
             });
+            temp.wasPds = (node as ZoweDatasetNode).wasPds;
             temp.contextValue = SharedContext.asFavorite(temp);
             temp.resourceUri = node.resourceUri;
             if (SharedContext.isFavoriteDs(temp)) {
@@ -934,6 +1005,10 @@ Would you like to do this now?`,
                 this.updateNodeFavContext(node.getProfileName(), node.label as string, "pds");
             } else if (SharedContext.isFavoriteDs(temp)) {
                 this.updateNodeFavContext(node.getProfileName(), node.label as string, "ds");
+            } else if (SharedContext.isFavoriteVsam(temp)) {
+                this.updateNodeFavContext(node.getProfileName(), node.label as string, "vsam");
+            } else if (SharedContext.isMigrated(temp) && SharedContext.isFavorite(temp)) {
+                this.updateNodeFavContext(node.getProfileName(), node.label as string, "migr");
             } else if (SharedContext.isDsSession(temp)) {
                 this.updateSessionFilterFavContext(node.getProfileName());
             }
@@ -1096,13 +1171,13 @@ Would you like to do this now?`,
     }
 
     /**
-     * Updates the context value of a PDS, data set, or session node in the search tree to reflect whether it is currently favorited.
+     * Updates the context value of a PDS, data set, VSAM, or session node in the search tree to reflect whether it is currently favorited.
      *
      * @param profileName The profile name to search for
      * @param nodeLabel The label of the node to match
-     * @param nodeType "pds" | "ds" | "session" - the type of node to update
+     * @param nodeType "pds" | "ds" | "vsam" | "migr" - the type of node to update
      */
-    private updateNodeFavContext(profileName: string, nodeLabel: string, nodeType: "pds" | "ds"): void {
+    private updateNodeFavContext(profileName: string, nodeLabel: string, nodeType: "pds" | "ds" | "vsam" | "migr"): void {
         ZoweLogger.trace("DatasetTree.updateNodeFavContext called.");
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
 
@@ -1111,18 +1186,40 @@ Would you like to do this now?`,
                 continue;
             }
 
-            // For pds | ds nodes, find matching children of the session node
+            // For pds | ds | vsam | migr nodes, find matching children of the session node
             for (const child of sessionNode.children ?? []) {
                 if (child.label !== nodeLabel) {
                     continue;
                 }
-                const matchesType = nodeType === "pds" ? SharedContext.isPds(child) : SharedContext.isDs(child);
+                // Check if child matches the expected node type
+                let matchesType = false;
+                if (nodeType === "pds") {
+                    matchesType = SharedContext.isPds(child);
+                } else if (nodeType === "vsam") {
+                    matchesType = SharedContext.isVsam(child);
+                } else if (nodeType === "migr") {
+                    matchesType = SharedContext.isMigrated(child);
+                } else {
+                    matchesType = SharedContext.isDs(child);
+                }
+
                 if (!matchesType || SharedContext.isFilterFolder(child) || child.contextValue?.includes(Constants.FILTER_SEARCH)) {
                     continue;
                 }
                 const isFavInTree = SharedContext.isFavorite(child);
-                const isFavMatcher = (n: IZoweDatasetTreeNode): boolean =>
-                    nodeType === "pds" ? SharedContext.isFavoritePds(n) : SharedContext.isFavoriteDs(n);
+
+                // Determine the appropriate favorite matcher based on node type
+                const isFavMatcher = (n: IZoweDatasetTreeNode): boolean => {
+                    if (nodeType === "pds") {
+                        return SharedContext.isFavoritePds(n);
+                    } else if (nodeType === "vsam") {
+                        return SharedContext.isFavoriteVsam(n);
+                    } else if (nodeType === "migr") {
+                        return SharedContext.isMigrated(n) && SharedContext.isFavorite(n);
+                    } else {
+                        return SharedContext.isFavoriteDs(n);
+                    }
+                };
                 const existsInFavs = profileNodeInFavorites?.children.some((fav) => fav.label === nodeLabel && isFavMatcher(fav)) ?? false;
 
                 if (existsInFavs && !isFavInTree) {
@@ -1263,9 +1360,17 @@ Would you like to do this now?`,
         // Get node's profile node in favorites
         const profileName = node.getProfileName();
         const profileNodeInFavorites = this.findMatchingProfileInArray(this.mFavorites, profileName);
-        return profileNodeInFavorites?.children.find(
-            (temp) => temp.label === node.getLabel().toString() && temp.contextValue.includes(node.contextValue)
-        );
+        return profileNodeInFavorites?.children.find((temp) => {
+            if (temp.label !== node.getLabel().toString()) {
+                return false;
+            }
+            const tempBase = SharedContext.getBaseContext(temp);
+            const nodeBase = SharedContext.getBaseContext(node);
+            return (
+                tempBase === nodeBase ||
+                ((tempBase === "pds" || tempBase === "ds" || tempBase === "migr") && (nodeBase === "pds" || nodeBase === "ds" || nodeBase === "migr"))
+            );
+        });
     }
 
     /**
@@ -1372,6 +1477,7 @@ Would you like to do this now?`,
                         await (sourceForMembers as ZoweDatasetNode).listMembers(responses);
                         allMembers = responses
                             .filter((r) => r.success)
+                            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                             .flatMap((r) => (r.apiResponse?.items ?? r.apiResponse) as any[])
                             .filter((item) => item?.member)
                             .map((item) => item.member as string)
@@ -1407,6 +1513,8 @@ Would you like to do this now?`,
         const removedNodeLabel = node.label as string;
         const wasPds = SharedContext.isFavoritePds(node);
         const wasDs = SharedContext.isFavoriteDs(node);
+        const wasVsam = SharedContext.isFavoriteVsam(node);
+        const wasMigrated = SharedContext.isMigrated(node) && SharedContext.isFavorite(node);
         const wasSession = SharedContext.isFavorite(node) && SharedContext.isDsSession(node);
         profileNodeInFavorites.children = profileNodeInFavorites.children.filter(
             (temp) => !(temp.label === node.label && temp.contextValue.startsWith(node.contextValue))
@@ -1422,6 +1530,10 @@ Would you like to do this now?`,
             this.updateNodeFavContext(profileName, removedNodeLabel, "pds");
         } else if (wasDs) {
             this.updateNodeFavContext(profileName, removedNodeLabel, "ds");
+        } else if (wasVsam) {
+            this.updateNodeFavContext(profileName, removedNodeLabel, "vsam");
+        } else if (wasMigrated) {
+            this.updateNodeFavContext(profileName, removedNodeLabel, "migr");
         } else if (wasSession) {
             this.updateSessionFilterFavContext(profileName);
         }
@@ -1435,7 +1547,10 @@ Would you like to do this now?`,
      */
     public updateFavorites(): void {
         ZoweLogger.trace("DatasetTree.updateFavorites called.");
-        const favoritesArray = [];
+        const favoritesArray: string[] = [];
+        const vsamFavoritesArray: string[] = [];
+        const memberFavoritesArray: string[] = [];
+        const migratedFavoritesArray: string[] = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((favorite) => {
                 const pdsNode = favorite as ZoweDatasetNode;
@@ -1452,16 +1567,27 @@ Would you like to do this now?`,
                             "){" +
                             SharedContext.getBaseContext(favorite) +
                             "}";
-                        favoritesArray.push(favoriteEntry);
+                        memberFavoritesArray.push(favoriteEntry);
                     }
                 } else {
-                    const favoriteEntry =
-                        "[" + profileNode.label.toString() + "]: " + favorite.label.toString() + "{" + SharedContext.getBaseContext(favorite) + "}";
-                    favoritesArray.push(favoriteEntry);
+                    const baseContext = SharedContext.getBaseContext(favorite);
+                    const favoriteEntry = "[" + profileNode.label.toString() + "]: " + favorite.label.toString() + "{" + baseContext + "}";
+                    if (favorite.contextValue?.includes(Constants.VSAM_CONTEXT)) {
+                        vsamFavoritesArray.push(favoriteEntry);
+                    } else if (SharedContext.isMigrated(favorite)) {
+                        migratedFavoritesArray.push(favoriteEntry);
+                    } else {
+                        favoritesArray.push(favoriteEntry);
+                    }
                 }
             });
         });
-        this.mPersistence.updateFavorites(favoritesArray);
+        this.mPersistence.updateFavorites({
+            favorites: favoritesArray,
+            vsamFavorites: vsamFavoritesArray,
+            memberFavorites: memberFavoritesArray,
+            migratedFavorites: migratedFavoritesArray,
+        });
     }
 
     /**
@@ -1516,6 +1642,7 @@ Would you like to do this now?`,
             };
             if (!setting.persistence) {
                 setting.favorites = [];
+                setting.vsamFavorites = [];
                 setting.history = [];
                 await SettingsConfig.setDirectValue(DatasetTree.persistenceSchema, setting);
             }
@@ -1652,7 +1779,12 @@ Would you like to do this now?`,
 
     public getFavorites(): string[] {
         ZoweLogger.trace("DatasetTree.getFavorites called.");
-        return this.mPersistence.readFavorites();
+        return [
+            ...this.mPersistence.readFavorites(),
+            ...this.mPersistence.readVsamFavorites(),
+            ...this.mPersistence.readMemberFavorites(),
+            ...this.mPersistence.readMigratedFavorites(),
+        ];
     }
 
     public createFilterString(newFilter: string, node: IZoweDatasetTreeNode): string {
@@ -1893,6 +2025,10 @@ Would you like to do this now?`,
         }
 
         if (SharedContext.isSessionNotFav(node)) {
+            if (node.inFilterPrompt) {
+                ZoweLogger.debug("[DatasetTree.datasetFilterPrompt] Cancelled because filter prompt is already open for this node");
+                return;
+            }
             ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
             node.inFilterPrompt = true;
             try {
@@ -2031,16 +2167,16 @@ Would you like to do this now?`,
 
     public checkFilterPattern(dsName: string, itemName: string): boolean {
         ZoweLogger.trace("DatasetTree.checkFilterPattern called.");
-        let existing: boolean;
+        if (!itemName.includes("*")) {
+            return dsName ? dsName.localeCompare(itemName.toUpperCase()) === 0 : false;
+        }
+
+        if (!dsName) {
+            return false;
+        }
+
+        let existing = false;
         if (!/(\*?)(\w+)(\*)(\w+)(\*?)/.test(itemName)) {
-            if (/^[^*](\w+)[^*]$/.test(itemName)) {
-                if (dsName) {
-                    const compare = dsName.localeCompare(itemName.toUpperCase());
-                    if (compare === 0) {
-                        existing = true;
-                    }
-                }
-            }
             if (/^(\*)$/.test(itemName)) {
                 existing = true;
             }
@@ -2097,47 +2233,100 @@ Would you like to do this now?`,
      *
      * @param dsName - The name of the data set to focus on
      * @param sessProfile - The session profile to use for the operation
-     * @returns {boolean} - True if the data set was found and focused
+     * @returns {boolean} - True if the data set was found or successfully filtered (even if expansion fails), false only if filtering fails
      */
     public async focusOnDsInTree(dsName: string, sessProfile: imperative.IProfileLoaded): Promise<boolean> {
-        // Try to find in session nodes
-        for (const session of this.mSessionNodes) {
-            const children = await session.getChildren();
+        // Only look at the session node that matches the profile used for this action
+        const sessionNode = this.findMatchingProfileInArray(this.mSessionNodes, sessProfile.name);
+        // Try to find in the session node that matches the given profile
+        if (sessionNode) {
+            const children = await sessionNode.getChildren();
             const foundNode = children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
             if (foundNode) {
-                await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
+                try {
+                    await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
+                } catch (error) {
+                    ZoweLogger.warn(
+                        vscode.l10n.t({
+                            message: "Failed to expand PDS {0}: {1}",
+                            args: [dsName, error.message],
+                            comment: ["PDS name", "Error message"],
+                        })
+                    );
+                    // Still return true as the node was found and revealed, even if expansion failed
+                }
                 return true;
             }
         }
 
-        // Try to find in favorites
-        for (const favNode of this.mFavorites) {
-            if (favNode.children && favNode.children.length > 0) {
-                const foundNode = favNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
-                if (foundNode) {
+        // Try to find in favorites under the matching profile node
+        const favProfileNode = this.findMatchingProfileInArray(this.mFavorites, sessProfile.name);
+        if (favProfileNode?.children && favProfileNode.children.length > 0) {
+            const foundNode = favProfileNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+            if (foundNode) {
+                try {
                     // Cannot just reveal foundNode as it will not expand out fully
-                    await this.getTreeView().reveal(favNode, { expand: true });
+                    await this.getTreeView().reveal(favProfileNode, { expand: true });
                     await this.getTreeView().reveal(foundNode, { select: true, focus: true, expand: true });
-                    return true;
+                } catch (error) {
+                    ZoweLogger.warn(
+                        vscode.l10n.t({
+                            message: "Failed to expand PDS {0} in favorites: {1}",
+                            args: [dsName, error.message],
+                            comment: ["PDS name", "Error message"],
+                        })
+                    );
+                    // Still return true as the node was found and revealed, even if expansion failed
                 }
+                return true;
             }
         }
 
         // Not found: set filter on the session node and reveal
-        const sessionNode = this.mSessionNodes.find((session) => session.label?.toString().toUpperCase() === sessProfile.name.toUpperCase());
         if (sessionNode) {
             sessionNode.pattern = dsName.toUpperCase();
             sessionNode.dirty = true;
             try {
                 await this.filterTreeByPattern(sessionNode, sessProfile, dsName);
             } catch (error) {
+                ZoweLogger.error(
+                    vscode.l10n.t({
+                        message: "Failed to filter tree for PDS {0}: {1}",
+                        args: [dsName, error.message],
+                        comment: ["PDS name", "Error message"],
+                    })
+                );
                 return false;
             }
-            const pdsNode = sessionNode.children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
+
+            // Wait for children to be loaded after filtering
+            const children = await sessionNode.getChildren();
+            const pdsNode = children.find((child) => child.label?.toString().toUpperCase() === dsName.toUpperCase());
             if (pdsNode) {
-                await this.getTreeView().reveal(pdsNode, { select: true, focus: true, expand: true });
+                try {
+                    await this.getTreeView().reveal(pdsNode, { select: true, focus: true, expand: true });
+                } catch (error) {
+                    ZoweLogger.warn(
+                        vscode.l10n.t({
+                            message: "PDS {0} was filtered successfully but failed to expand: {1}. This may occur with large PDSs.",
+                            args: [dsName, error.message],
+                            comment: ["PDS name", "Error message"],
+                        })
+                    );
+                    // Return true because filtering succeeded - the PDS is now visible in the tree
+                    // even if we couldn't expand it (common with large PDSs with 10k+ members)
+                }
                 return true;
             }
+            // Filtering succeeded but node not found in children after loading
+            // This can happen if the dataset doesn't exist or doesn't match the filter
+            ZoweLogger.debug(
+                vscode.l10n.t({
+                    message: "PDS {0} was not found after filtering. The dataset may not exist or may not match the filter criteria.",
+                    args: [dsName],
+                    comment: ["PDS name"],
+                })
+            );
         }
         return false;
     }
@@ -2171,8 +2360,9 @@ Would you like to do this now?`,
             })
         );
         if (afterMemberName && afterMemberName !== beforeMemberName) {
+            const extension = path.parse(node.resourceUri.path).ext;
             const newUri = node.resourceUri.with({
-                path: path.posix.join(path.posix.dirname(node.resourceUri.path), afterMemberName),
+                path: path.posix.join(path.posix.dirname(node.resourceUri.path), extension ? afterMemberName.concat(extension) : afterMemberName),
             });
             await vscode.workspace.fs.rename(node.resourceUri, newUri, { overwrite: false });
             node.resourceUri = newUri;
@@ -2236,8 +2426,9 @@ Would you like to do this now?`,
             })
         );
         if (afterDataSetName && afterDataSetName !== beforeDataSetName) {
+            const extension = DatasetUtils.getExtension(afterDataSetName);
             const newUri = node.resourceUri.with({
-                path: path.posix.join(path.posix.dirname(node.resourceUri.path), afterDataSetName),
+                path: path.posix.join(path.posix.dirname(node.resourceUri.path), extension ? afterDataSetName.concat(extension) : afterDataSetName),
             });
             await vscode.workspace.fs.rename(node.resourceUri, newUri, { overwrite: false });
 

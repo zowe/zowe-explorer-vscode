@@ -22,11 +22,14 @@ import {
     DataSetTableEventType,
     Sorting,
     PersistenceSchemaEnum,
+    ZoweScheme,
+    FsDatasetsUtils,
 } from "@zowe/zowe-explorer-api";
 import { commands, Event, EventEmitter, ExtensionContext, l10n, Uri } from "vscode";
 import { SharedUtils } from "../shared/SharedUtils";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
+import { DatasetUtils } from "./DatasetUtils";
 import { ProfileManagement } from "../../management/ProfileManagement";
 import { Definitions } from "../../configuration/Definitions";
 import { Profiles } from "../../configuration/Profiles";
@@ -110,9 +113,9 @@ export class TreeDataSource implements IDataSetSource {
         });
 
         if (pdsNode) {
-            const children = await pdsNode.getChildren(false);
+            const theChildren = await pdsNode.getChildren(false);
             return (
-                children
+                theChildren
                     ?.filter((memberNode) => !SharedContext.isInformation(memberNode))
                     .map((memberNode) => this.mapNodeToInfo(memberNode, parentId)) ?? []
             );
@@ -204,7 +207,11 @@ export function buildMemberInfo(member: any, parentUri: string): IDataSetInfo {
         }
     }
 
-    const memberUri = `${parentUri}/${member.member as string}`;
+    // The virtual filesystem keys PDS members by name plus the extension inferred from the PDS's own
+    // qualifiers (e.g. ".jcl" for a `*.JCL.*`-style dataset) - the URI must match that or opening the member fails.
+    const pdsName = parentUri.substring(parentUri.lastIndexOf("/") + 1);
+    const extension = DatasetUtils.getExtension(pdsName) ?? "";
+    const memberUri = `${parentUri}/${member.member as string}${extension}`;
 
     return {
         name: member.member,
@@ -228,7 +235,10 @@ export function buildMemberInfo(member: any, parentUri: string): IDataSetInfo {
  * API-based data source that directly queries the MVS API with a pattern
  */
 export class PatternDataSource implements IDataSetSource {
-    public constructor(public profile: imperative.IProfileLoaded, private pattern: string) {
+    public constructor(
+        public profile: imperative.IProfileLoaded,
+        private pattern: string
+    ) {
         this.pattern = this.pattern.toLocaleUpperCase();
     }
 
@@ -395,7 +405,7 @@ export class DatasetTableView {
     private PAGE_SIZE_OPTIONS = [10, 25, 50, 100, 500, 1000];
     private contextOptions: Record<string, Table.ContextMenuOption> = {
         displayInTree: {
-            title: l10n.t("Display in Tree"),
+            title: l10n.t("Locate in Tree"),
             command: "display-in-tree",
             callback: {
                 fn: DatasetTableView.displayInTree,
@@ -433,7 +443,9 @@ export class DatasetTableView {
             headerName: l10n.t("Creation Date"),
             useDateComparison: true,
             valueFormatter: (params: { value: string }): string => {
-                if (!params.value) return "";
+                if (!params.value) {
+                    return "";
+                }
                 return new Date(params.value).toLocaleDateString(this.userLocale);
             },
         },
@@ -442,7 +454,9 @@ export class DatasetTableView {
             headerName: l10n.t("Modified Date"),
             useDateComparison: true,
             valueFormatter: (params: { value: string }): string => {
-                if (!params.value) return "";
+                if (!params.value) {
+                    return "";
+                }
                 return new Date(params.value).toLocaleString(this.userLocale);
             },
         },
@@ -533,10 +547,21 @@ export class DatasetTableView {
         DATASET: 2,
     };
 
-    private static async openInEditor(this: void, _view: Table.View, rows: Record<number, Table.RowData>): Promise<void> {
+    private static async openInEditor(this: void, view: Table.View, rows: Record<number, Table.RowData>): Promise<void> {
+        // Look up each row against the table's own row data instead of trusting the webview's copy verbatim.
+        const trustedRows = view.getContent();
         const allRows = Object.values(rows);
         for (const row of allRows) {
-            await commands.executeCommand("vscode.open", Uri.parse(row.uri as string), { preview: false });
+            const trustedRow = trustedRows.find((r) => r.uri === row.uri);
+            if (trustedRow == null) {
+                continue;
+            }
+
+            const uri = Uri.parse(trustedRow.uri as string);
+            if (uri.scheme !== ZoweScheme.DS) {
+                continue;
+            }
+            await commands.executeCommand("vscode.open", uri, { preview: false });
         }
     }
 
@@ -559,6 +584,7 @@ export class DatasetTableView {
         try {
             pinnedRows = await this.table.getPinnedRows();
         } catch (error) {
+            // eslint-disable-next-line no-console
             console.warn("Failed to get pinned rows:", error);
         }
 
@@ -631,6 +657,7 @@ export class DatasetTableView {
                 try {
                     await this.table.setPinnedRows(this.previousTableData.pinnedRows);
                 } catch (error) {
+                    // eslint-disable-next-line no-console
                     console.warn("Failed to restore pinned rows:", error);
                 }
             }
@@ -800,10 +827,13 @@ export class DatasetTableView {
             // For members, we need to find or create the PDS node in the tree
             const uri = data.row.uri as string;
             const uriParts = uri.substring(uri.indexOf("/") + 1).split("/");
-            const [profileName, datasetName, memberName] = uriParts;
+            const [profileName, datasetName, rawMemberName] = uriParts;
+            // Member rows carry a synthetic extension (e.g. ".jcl") in their URI for editor language detection,
+            // but tree node labels never include it - strip it before comparing against labels.
+            const memberName = FsDatasetsUtils.trimExtension(rawMemberName);
 
             // First, try to find in session nodes
-            let profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
+            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
             let foundInSession = false;
 
             if (profileNode) {
@@ -855,10 +885,13 @@ export class DatasetTableView {
             // For dataset nodes, try to find in tree or expand session
             const uri = data.row.uri as string;
             const uriParts = uri.substring(uri.indexOf("/") + 1).split("/");
-            const [profileName, datasetName] = uriParts;
+            const [profileName, rawDatasetName] = uriParts;
+            // PS dataset rows carry a synthetic extension in their URI for editor language detection,
+            // but tree node labels never include it - strip it before comparing against labels.
+            const datasetName = FsDatasetsUtils.trimExtension(rawDatasetName);
 
             // First, try to find in session nodes
-            let profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
+            const profileNode = SharedTreeProviders.ds.mSessionNodes.find((node) => node.label.toString() === profileName) as IZoweDatasetTreeNode;
             let foundInSession = false;
 
             if (profileNode) {
@@ -1071,14 +1104,11 @@ export class DatasetTableView {
         const sortField = this.mapSortOptionToColumnField(method);
         const sortDirection = direction === Sorting.SortDirection.Ascending ? "asc" : "desc";
 
-        return columnDefs.map((col) => {
+        return columnDefs.map((col): Table.Column => {
             if (col.field === sortField) {
-                return {
-                    ...col,
-                    initialSort: sortDirection,
-                };
+                return { ...col, initialSort: sortDirection } as Table.Column;
             }
-            return { ...col, initialSort: undefined };
+            return { ...col, initialSort: undefined } as Table.Column;
         });
     }
 
@@ -1235,6 +1265,10 @@ export class DatasetTableView {
                 const memberRows = await this.currentDataSource.loadChildren(nodeId);
                 const tableRows = memberRows.map((info) => this.mapDatasetInfoToRowWithTree(info));
 
+                // Record the newly-loaded rows as known table content so that later lookups
+                // (e.g. openInEditor validating a row against the table's own data) recognize them.
+                this.table.trackRows(...tableRows);
+
                 // Send the loaded children back to the webview
                 await ((this.table as any).panel ?? (this.table as any).view).webview.postMessage({
                     command: "treeChildrenLoaded",
@@ -1371,7 +1405,7 @@ export class DatasetTableView {
             this.originalPattern = selectedNode.pattern;
         } else if (SharedContext.isPds(selectedNode)) {
             const sessionNode = selectedNode.getSessionNode() as IZoweDatasetTreeNode;
-            const profile = sessionNode!.getProfile();
+            const profile = sessionNode.getProfile();
             const uri = selectedNode.resourceUri;
 
             this.currentDataSource = new PDSMembersDataSource(
