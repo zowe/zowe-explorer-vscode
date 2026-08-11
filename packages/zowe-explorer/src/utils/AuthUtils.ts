@@ -362,7 +362,7 @@ export class AuthUtils {
             }
         }
 
-        if (usingTokenAuth || usingBasicAuth || usingCertAuth) {
+        if (usingTokenAuth || usingBasicAuth || usingCertAuth || usingSshKey) {
             switch (true) {
                 case Boolean(sessionNode.fullPath): {
                     const pathIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Path: ")));
