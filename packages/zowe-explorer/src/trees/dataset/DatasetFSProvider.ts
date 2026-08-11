@@ -405,8 +405,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
 
             if (!entryExists || forceFetch) {
+                const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
                 if (pdsMember) {
-                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(uriPath[0]);
+                    const resp = await mvsApi.allMembers(uriPath[0]);
                     entryIsDir = false;
                     const memberName = path.parse(uriPath[1]).name;
                     if (
@@ -418,7 +419,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     }
                 } else {
                     const requestedDsName = FsDatasetsUtils.trimExtension(uriPath[0]);
-                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(requestedDsName, {
+                    const resp = await mvsApi.dataSet(requestedDsName, {
                         attributes: true,
                         maxLength: 1,
                     });
@@ -427,7 +428,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     const matchedItem = responseItems.find((item) => item.dsname?.toUpperCase() === requestedDsName.toUpperCase());
                     if (resp.success && matchedItem) {
                         entryStats = DatasetUtils.getDataSetStats(matchedItem);
+                        if (entryStats.vol === "*ALIAS" && mvsApi.resolveAlias) {
 
+                            const resolvedAlias = await mvsApi.resolveAlias(requestedDsName.toUpperCase());
+                            entryStats.aliasTargetDsn = resolvedAlias.apiResponse.targetDsn;
+                            const originalStatsResponse = await mvsApi.dataSet(entryStats.aliasTargetDsn, {
+                                attributes: true,
+                                maxLength: 1,
+                            });
+                            if (originalStatsResponse.apiResponse?.items?.length > 0) {
+                                const originalStats = originalStatsResponse.apiResponse.items[0];
+                                matchedItem.dsorg = originalStats.dsorg;
+                                matchedItem.migr = originalStats.migr;
+                            }
+                        }
                         entryIsDir = matchedItem.dsorg?.startsWith("PO");
                         isMigrated = matchedItem.migr?.toUpperCase() === "YES";
                     } else {
