@@ -93,8 +93,7 @@ describe("ServerDeployment", () => {
             vi.mocked(ZSshUtils.installServer).mockImplementation(async (_session, _serverPath, opts) => {
                 const proceed = await opts!.onInsufficientSpaceWarning!(1, 20);
                 return proceed;
-            }
-            );
+            });
             vi.spyOn(Gui, "showMessage").mockResolvedValue("Cancel");
             expect(await deployWithProgress(fakeSession, "/server/path")).toEqual(false);
             expect(Gui.showMessage).toHaveBeenCalled();
@@ -103,8 +102,7 @@ describe("ServerDeployment", () => {
             vi.mocked(ZSshUtils.installServer).mockImplementation(async (_session, _serverPath, opts) => {
                 const proceed = await opts!.onInsufficientSpaceWarning!(1, 20);
                 return proceed;
-            }
-            );
+            });
             vi.spyOn(Gui, "showMessage").mockResolvedValue(undefined); // no option selected
             expect(await deployWithProgress(fakeSession, "/server/path")).toEqual(false);
             expect(Gui.showMessage).toHaveBeenCalled();
@@ -113,8 +111,7 @@ describe("ServerDeployment", () => {
             vi.mocked(ZSshUtils.installServer).mockImplementation(async (_session, _serverPath, opts) => {
                 const proceed = await opts!.onInsufficientSpaceWarning!(1, 20);
                 return proceed;
-            }
-            );
+            });
             vi.spyOn(Gui, "showMessage").mockResolvedValue("Deploy");
             expect(await deployWithProgress(fakeSession, "/server/path")).toEqual(true);
             expect(Gui.showMessage).toHaveBeenCalled();

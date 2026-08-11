@@ -11,14 +11,22 @@
 
 import { ImperativeError } from "@zowe/imperative";
 import { type SshSession, ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
-import { AuthHandler, ErrorCorrelator, Gui, type IAuthMethods, imperative, type MainframeInteraction, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import {
+    AuthHandler,
+    ErrorCorrelator,
+    Gui,
+    type IAuthMethods,
+    imperative,
+    type MainframeInteraction,
+    ZoweExplorerApiType,
+} from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { SshClientCache } from "../SshClientCache";
 import { SshErrorHandler } from "../SshErrorHandler";
 
 export class SshCommonApi implements MainframeInteraction.ICommon {
-    public constructor(public profile?: imperative.IProfileLoaded) { }
+    public constructor(public profile?: imperative.IProfileLoaded) {}
 
     public getProfileTypeName(): string {
         return ZosUssProfile.type;
@@ -39,10 +47,10 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
 
                     const cancelButton = vscode.l10n.t("Cancel");
                     const message = vscode.l10n.t(
-                        "Connecting with an SSH profile will deploy the SSH server to z/OS UNIX to " +
-                        "enable you to perform actions on the mainframe. Would you like to proceed with connecting?",
+                        "Connecting with an SSH profile deploys the SSH server to z/OS UNIX to " +
+                            "enable you to perform actions on the mainframe. Would you like to proceed with connecting?"
                     );
-                    const selection = await Gui.showMessage(message, { items: [cancelButton, connectButton, connectDontAskButton,] });
+                    const selection = await Gui.showMessage(message, { items: [cancelButton, connectButton, connectDontAskButton] });
                     if (selection === connectButton) {
                         imperative.Logger.getAppLogger().info("User accepted the initial deployment warning");
                     } else if (selection == connectDontAskButton) {
