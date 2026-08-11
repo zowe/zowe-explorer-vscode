@@ -1072,11 +1072,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.memberPattern = this.memberPattern.toUpperCase();
             for (const memPattern of this.memberPattern.split(",")) {
                 baseOptions.pattern = memPattern.trim();
-                responses.push(await mvsApi.allMembers(this.label as string, baseOptions));
+                responses.push(await mvsApi.allMembers(this.aliasTargetDsn ?? this.label as string, baseOptions));
             }
         } else {
             // Fetching members for this PDS
-            responses.push(await mvsApi.allMembers(this.label as string, baseOptions));
+            responses.push(await mvsApi.allMembers(this.aliasTargetDsn ?? this.label as string, baseOptions));
         }
     }
 

@@ -68,7 +68,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
     public watch(_uri: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
-        return new vscode.Disposable(() => {});
+        return new vscode.Disposable(() => { });
     }
 
     protected async lookupWithCache(uri: vscode.Uri): Promise<DirEntry | DsEntry | IFileSystemEntry> {
@@ -426,8 +426,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     const responseItems = resp.apiResponse?.items ?? [];
                     const matchedItem = responseItems.find((item) => item.dsname?.toUpperCase() === requestedDsName.toUpperCase());
                     if (resp.success && matchedItem) {
-                        entryIsDir = matchedItem.dsorg?.startsWith("PO");
                         entryStats = DatasetUtils.getDataSetStats(matchedItem);
+
+                        entryIsDir = matchedItem.dsorg?.startsWith("PO");
                         isMigrated = matchedItem.migr?.toUpperCase() === "YES";
                     } else {
                         throw vscode.FileSystemError.FileNotFound(uri);
@@ -553,10 +554,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profInfo =
             parent !== this.root
                 ? new DsEntryMetadata({
-                      profile: parent.metadata.profile,
-                      // we can strip profile name from path because its not involved in API calls
-                      path: path.posix.join(parent.metadata.path, basename),
-                  })
+                    profile: parent.metadata.profile,
+                    // we can strip profile name from path because its not involved in API calls
+                    path: path.posix.join(parent.metadata.path, basename),
+                })
                 : this._getInfoFromUri(uri);
 
         if (FsAbstractUtils.isFilterEntry(parent)) {
@@ -900,11 +901,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         : await mvsApi.dataSet(FsDatasetsUtils.trimExtension(uriPath[0]));
                     const remoteExists = isPdsMember
                         ? remoteRes?.success &&
-                          remoteRes.apiResponse?.items?.some((m) => m.member === FsDatasetsUtils.trimExtension(uriPath[1]).toUpperCase())
+                        remoteRes.apiResponse?.items?.some((m) => m.member === FsDatasetsUtils.trimExtension(uriPath[1]).toUpperCase())
                         : remoteRes?.success &&
-                          remoteRes.apiResponse?.items?.some(
-                              (item) => item.dsname?.toUpperCase() === FsDatasetsUtils.trimExtension(uriPath[0]).toUpperCase()
-                          );
+                        remoteRes.apiResponse?.items?.some(
+                            (item) => item.dsname?.toUpperCase() === FsDatasetsUtils.trimExtension(uriPath[0]).toUpperCase()
+                        );
                     if (remoteExists) {
                         throw vscode.FileSystemError.FileExists(uri);
                     }
@@ -1178,9 +1179,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
         const profInfo = parent.metadata
             ? new DsEntryMetadata({
-                  profile: parent.metadata.profile,
-                  path: path.posix.join(parent.metadata.path, basename),
-              })
+                profile: parent.metadata.profile,
+                path: path.posix.join(parent.metadata.path, basename),
+            })
             : this._getInfoFromUri(uri);
         entry.metadata = profInfo;
         parent.entries.set(basename, entry);

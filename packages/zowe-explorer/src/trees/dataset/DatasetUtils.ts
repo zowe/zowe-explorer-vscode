@@ -143,7 +143,7 @@ export class DatasetUtils {
         dsStats["migr"] = item.migr;
         dsStats["recfm"] = item.recfm;
         dsStats["vols"] = item.vols;
-        dsStats["vol"] = item.vol;
+        dsStats.vol = item.vol;
         dsStats["blksz"] = item.blksz;
 
         return dsStats;
