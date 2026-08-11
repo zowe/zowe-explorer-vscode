@@ -421,11 +421,10 @@ export namespace MainframeInteraction {
 
         /**
          * Resolves an aliased data set to the original data set name
-         * @param {zosfiles.ISearchOptions} aliasName: data set name of the alias to resolve 
+         * @param {zosfiles.ISearchOptions} aliasName: data set name of the alias to resolve
          * @returns {Promise<zosfiles.IZosFilesResponse>} response containing key targetDsn to point to the original data set.
          */
         resolveAlias?(aliasName: string): Promise<zosfiles.IZosFilesResponse>;
-
     }
 
     /**

@@ -44,7 +44,7 @@ export class ZoweTreeNode extends vscode.TreeItem {
         collapsibleState: vscode.TreeItemCollapsibleState,
         private mParent: IZoweTreeNode,
         protected session: imperative.Session,
-        protected profile: imperative.IProfileLoaded,
+        protected profile: imperative.IProfileLoaded
     ) {
         super(label, collapsibleState);
         // TODO Check this
@@ -83,7 +83,8 @@ export class ZoweTreeNode extends vscode.TreeItem {
             } catch (err) {
                 // Profile does not exist. Log and return last known profile for backwards compatibility
                 Logger.getAppLogger().error(
-                    `[ZoweTreeNode.getProfile] Profile ${this.profile.name
+                    `[ZoweTreeNode.getProfile] Profile ${
+                        this.profile.name
                     } does not exist for node ${this.label?.toString()}, returning last known profile`
                 );
             }

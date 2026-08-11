@@ -37,7 +37,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         }
 
         private session: imperative.Session;
-        public constructor(public profile?: imperative.IProfileLoaded) { }
+        public constructor(public profile?: imperative.IProfileLoaded) {}
 
         public getProfileTypeName(): string {
             return CommonApi.getProfileTypeName();

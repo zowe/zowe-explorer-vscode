@@ -421,23 +421,21 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     dsNode.wasPds = item.dsorg?.startsWith("PO");
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.vol === "*ALIAS") {
-
                     const resolvedAlias = await this.resolveAlias(item);
-                    item.dsorg ??= resolvedAlias.dsorg;
-                    item.recfm ??= resolvedAlias.recfm;
-                    item.blksz ??= resolvedAlias.blksz;
+                    item.dsorg ??= resolvedAlias?.dsorg;
+                    item.recfm ??= resolvedAlias?.recfm;
+                    item.blksz ??= resolvedAlias?.blksz;
 
                     dsNode = new ZoweDatasetNode({
                         label: item.dsname,
-                        collapsibleState: item.dsorg?.startsWith("PO") ?
-                            vscode.TreeItemCollapsibleState.Collapsed :
-                            vscode.TreeItemCollapsibleState.None,
+                        collapsibleState: item.dsorg?.startsWith("PO")
+                            ? vscode.TreeItemCollapsibleState.Collapsed
+                            : vscode.TreeItemCollapsibleState.None,
                         parentNode: this,
                         profile: cachedProfile,
                         aliasTargetDsn: resolvedAlias?.dsname,
                     });
                     elementChildren[dsNode.label.toString()] = dsNode;
-
                 } else if (item.dsorg?.startsWith("PO")) {
                     // Creates a ZoweDatasetNode for a PDS
                     dsNode = new ZoweDatasetNode({
@@ -651,7 +649,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         return this.children;
     }
-
 
     /**
      * Returns a sorting function based on the given sorting method.
@@ -904,8 +901,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         };
     }
 
-    private async resolveAlias(item: IZosmfListResponse): Promise<IZosmfListResponse> {
-
+    private async resolveAlias(item: IZosmfListResponse): Promise<IZosmfListResponse | undefined> {
         const profile = Profiles.getInstance()?.loadNamedProfile(this.getProfile().name);
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
         if (mvsApi.resolveAlias) {
@@ -913,29 +909,32 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 const resolution = await mvsApi.resolveAlias(item.dsname);
                 if (resolution.apiResponse.targetDsn) {
                     const originalAttributes = await mvsApi.dataSet(resolution.apiResponse.targetDsn, { attributes: true });
-                    ZoweLogger.info(`[ZoweDatasetNode.resolveAlias] Resolved alias ${item.dsname} to ${resolution.apiResponse.targetDsn}.` +
-                        ` Retrieving attributes of the original data set.`);
+                    ZoweLogger.info(
+                        `[ZoweDatasetNode.resolveAlias] Resolved alias ${item.dsname} to ${resolution.apiResponse.targetDsn}.` +
+                        ` Retrieving attributes of the original data set.`
+                    );
                     const matchingOriginal = (originalAttributes.apiResponse.items ?? originalAttributes.apiResponse) as IZosmfListResponse[];
                     if (matchingOriginal.length > 0) {
                         return {
                             ...item,
                             dsorg: matchingOriginal[0].dsorg,
-                            // todo more attributes? 
+                            // todo more attributes?
                             recfm: matchingOriginal[0].recfm,
                             blksz: matchingOriginal[0].blksz,
-                            dsname: resolution.apiResponse.targetDsn
+                            dsname: resolution.apiResponse.targetDsn,
                         };
                     }
                 }
-
-            }
-            catch (e) {
+            } catch (e) {
                 ZoweLogger.error("[ZoweDatasetNode.resolveAlias] Encountered an error trying to  " + e);
             }
         } else {
-            ZoweLogger.warn(`[ZoweDatasetNode.resolveAlias] MVS API for ${profile.type} does not implement resolveAlias. Alias ${item.dsname} will not be resolved.`);
+            ZoweLogger.warn(
+                `[ZoweDatasetNode.resolveAlias] MVS API for ${profile.type} does not implement resolveAlias.` +
+                ` Alias ${item.dsname} will not be resolved.`
+            );
         }
-        return item;
+        return undefined;
     }
 
     public async listDatasets(responses: IZosFilesResponse[], options?: Definitions.DatasetListOpts): Promise<void> {
