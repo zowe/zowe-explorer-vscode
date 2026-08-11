@@ -112,16 +112,15 @@ describe("ServerDeployment", () => {
                 const proceed = await opts!.onInsufficientSpaceWarning!(1, 20);
                 return proceed;
             });
-            let guiMessage = '';
+            let guiMessage = "";
             vi.spyOn(Gui, "showMessage").mockImplementation(async (messageArg, _opts) => {
                 guiMessage = messageArg;
-                return 'Deploy';
+                return "Deploy";
             });
-            const mockServerPath = '/server/path';
+            const mockServerPath = "/server/path";
             expect(await deployWithProgress(fakeSession, mockServerPath)).toEqual(true);
             expect(Gui.showMessage).toHaveBeenCalled();
             expect(guiMessage).toContain(`The remote directory '${mockServerPath}' appears to have only 1 MB available`);
-
         });
 
         it("should adapt the warning message if the SSH SDK could not determine the available space", async () => {
@@ -129,11 +128,11 @@ describe("ServerDeployment", () => {
                 const proceed = await opts!.onInsufficientSpaceWarning!(-1, 20);
                 return proceed;
             });
-            let guiMessage = '';
-            const mockServerPath = '/server/path';
+            let guiMessage = "";
+            const mockServerPath = "/server/path";
             vi.spyOn(Gui, "showMessage").mockImplementation(async (messageArg, _opts) => {
                 guiMessage = messageArg;
-                return 'Cancel';
+                return "Cancel";
             });
             expect(await deployWithProgress(fakeSession, mockServerPath)).toEqual(false); // canceled
             expect(Gui.showMessage).toHaveBeenCalled();

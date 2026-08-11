@@ -22,15 +22,14 @@ export function deployWithProgress(session: SshSession, serverPath: string): The
                 onInsufficientSpaceWarning: async (remainingMB: number, recommendedMB: number) => {
                     const deployButton = vscode.l10n.t("Deploy");
                     const cancelButton = vscode.l10n.t("Cancel");
-                    let message = '';
+                    let message = "";
 
                     if (remainingMB == -1) {
                         message = vscode.l10n.t({
                             message: "We couldn't detect how much space is available in the remote directory '{0}'.",
                             args: [serverPath],
-                            comment: ["The user-specified or default server path"]
-                        }
-                        );
+                            comment: ["The user-specified or default server path"],
+                        });
                     } else {
                         message = vscode.l10n.t({
                             message:
@@ -39,14 +38,14 @@ export function deployWithProgress(session: SshSession, serverPath: string): The
                             args: [serverPath, remainingMB, recommendedMB],
                             comment: [
                                 "The user-specified or default server path, available space " +
-                                "for the server path and recommended available space in megabytes",
+                                    "for the server path and recommended available space in megabytes",
                             ],
                         });
                     }
                     message += vscode.l10n.t("Would you like to attempt deployment anyway?");
                     imperative.Logger.getAppLogger().info(
                         `Prompting the user to determine whether we should proceed` +
-                        ` with the deployment despite the apparent lack of disk space (${remainingMB} vs the recommended ${recommendedMB} MB)`
+                            ` with the deployment despite the apparent lack of disk space (${remainingMB} vs the recommended ${recommendedMB} MB)`
                     );
                     const selection = await Gui.showMessage(message, { items: [deployButton, cancelButton] });
                     if (selection === deployButton) {
