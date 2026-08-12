@@ -133,3 +133,55 @@ Feature: Config Editor profile drag and drop
     And the profile at dotted path "zosmf3.child2" should exist in the config file
     And the profile at dotted path "nested.child1" should not exist in the config file
     And the profile at dotted path "nested.child2" should not exist in the config file
+
+  @config-editor @drag-drop @profile-wizard
+  Scenario: Profile created via the wizard stays pending through multiple drag-and-drop moves until saved
+    When the user refreshes the Config Editor from disk
+    Then the Config Editor profile list is in tree view mode after reload
+
+    When the user opens the Profile Wizard modal
+    And the user types "wizardDragDropTest" as the profile name
+    And the user selects "zosmf" as the profile type
+    And the user clicks the populate defaults button
+    And the user presses Enter to submit the profile
+    Then the profile at dotted path "wizardDragDropTest" should not exist in the config file
+    And there are pending changes in the Config Editor
+
+    Given the drag drop source is profile key "wizardDragDropTest"
+    When the user starts dragging the prepared profile key source
+    And the user drops the drag on profile key "tso1" at root level in the tree
+    Then there are pending changes in the Config Editor
+    And the profile at dotted path "tso1.wizardDragDropTest" should not exist in the config file
+
+    Given the drag drop source is profile key "tso1.wizardDragDropTest"
+    When the user starts dragging the prepared profile key source
+    And the user drops the drag on profile key "base" at root level in the tree
+    Then there are pending changes in the Config Editor
+
+    # Give the new profile a child of its own by moving an unrelated root profile under it.
+    Given the user expands the profile tree node "base"
+    And the drag drop source is profile key "ssh1" at root level in the tree
+    When the user starts dragging the prepared profile key source
+    And the user drops the drag on profile key "base.wizardDragDropTest"
+    Then there are pending changes in the Config Editor
+
+    # Give it a second child so moving the parent has to carry more than one node along.
+    Given the drag drop source is profile key "zosmf1" at root level in the tree
+    When the user starts dragging the prepared profile key source
+    And the user drops the drag on profile key "base.wizardDragDropTest"
+    Then there are pending changes in the Config Editor
+
+    # Now move the parent itself - both children must move with it in the same pending batch.
+    Given the drag drop source is profile key "base.wizardDragDropTest"
+    When the user starts dragging the prepared profile key source
+    And the user drops the drag on profile key "tso1" at root level in the tree
+    Then there are pending changes in the Config Editor
+
+    And the user saves the changes
+    Then there are no pending changes in the Config Editor
+    And the profile at dotted path "tso1.wizardDragDropTest" should exist in the config file
+    And the profile at dotted path "tso1.wizardDragDropTest.ssh1" should exist in the config file
+    And the profile at dotted path "tso1.wizardDragDropTest.zosmf1" should exist in the config file
+    And the profile at dotted path "base.wizardDragDropTest" should not exist in the config file
+    And the profile at dotted path "base.ssh1" should not exist in the config file
+    And the profile at dotted path "zosmf1" should not exist in the config file

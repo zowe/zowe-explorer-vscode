@@ -11,6 +11,91 @@
 
 import { FormattedChange, RenameChange, RenamesMap, FormattedPendingChanges, PendingChangesMap, PendingDefaultsMap, DeletionsMap } from "../types";
 
+/**
+ * Resolves a dotted profile name through a chain of renames (e.g. a -> b, b -> c yields "a" -> "c"),
+ * also covering renames of an ancestor segment (e.g. rename "a" -> "x" updates "a.child" -> "x.child").
+ * Handles renames that change nesting depth in either direction (e.g. "b" -> "a.b" or "a.b" -> "c").
+ */
+const applyRenameChainToProfileName = (profileName: string, renames: RenameChange[]): string => {
+    let effectiveName = profileName;
+    const appliedRenames = new Set<string>();
+    let changed = true;
+    let iteration = 0;
+
+    while (changed && iteration < 10) {
+        changed = false;
+        iteration++;
+
+        for (const rename of renames) {
+            const renameKey = `${rename.originalKey}->${rename.newKey}`;
+            if (appliedRenames.has(renameKey)) {
+                continue;
+            }
+
+            if (effectiveName === rename.originalKey) {
+                effectiveName = rename.newKey;
+            } else if (effectiveName.startsWith(rename.originalKey + ".")) {
+                effectiveName = rename.newKey + effectiveName.slice(rename.originalKey.length);
+            } else {
+                continue;
+            }
+
+            appliedRenames.add(renameKey);
+            changed = true;
+            break;
+        }
+    }
+
+    return effectiveName;
+};
+
+/** Builds the "profiles" token sequence for a dotted profile name, e.g. "a.b" -> ["profiles", "a", "profiles", "b"]. */
+const buildProfileTokens = (profileName: string): string[] => profileName.split(".").flatMap((part) => ["profiles", part]);
+
+/**
+ * Splits a key/path token array anchored at "profiles" into the dotted profile-name chain it
+ * represents and the remaining suffix tokens (e.g. ["properties", "host"]). Returns null when the
+ * tokens aren't anchored at a profile (e.g. a path that was truncated elsewhere to just a property name).
+ */
+const splitProfileChain = (tokens: string[]): { chain: string; suffix: string[] } | null => {
+    if (tokens[0] !== "profiles" || tokens.length < 2) {
+        return null;
+    }
+
+    const chainParts: string[] = [];
+    let i = 1;
+    while (i < tokens.length) {
+        chainParts.push(tokens[i]);
+        i++;
+        if (tokens[i] === "profiles") {
+            i++;
+        } else {
+            break;
+        }
+    }
+
+    return { chain: chainParts.join("."), suffix: tokens.slice(i) };
+};
+
+/** Applies the resolved rename chain to a key string or path array that's anchored at "profiles". */
+const applyRenameChainToTokens = <T extends string | string[]>(tokens: T, renames: RenameChange[]): T => {
+    const isString = typeof tokens === "string";
+    const tokenArray = isString ? (tokens as string).split(".") : (tokens as string[]);
+
+    const split = splitProfileChain(tokenArray);
+    if (!split) {
+        return tokens;
+    }
+
+    const newChain = applyRenameChainToProfileName(split.chain, renames);
+    if (newChain === split.chain) {
+        return tokens;
+    }
+
+    const newTokens = [...buildProfileTokens(newChain), ...split.suffix];
+    return (isString ? newTokens.join(".") : newTokens) as T;
+};
+
 export const updateChangesForRenames = (changes: FormattedChange[], renames: RenameChange[]) => {
     if (!renames || renames.length === 0) {
         return changes;
@@ -18,182 +103,21 @@ export const updateChangesForRenames = (changes: FormattedChange[], renames: Ren
 
     return changes.map((change) => {
         const updatedChange = { ...change };
+        const relevantRenames = renames.filter((rename) => rename.configPath === change.configPath);
+        if (relevantRenames.length === 0) {
+            return updatedChange;
+        }
 
         if (updatedChange.profile) {
-            let effectiveProfileName = updatedChange.profile;
-            const appliedRenames = new Set();
-            let changed = true;
-            let iteration = 0;
-            while (changed && iteration < 10) {
-                changed = false;
-                iteration++;
-
-                for (const rename of renames) {
-                    if (rename.configPath === change.configPath) {
-                        const renameKey = `${rename.originalKey}->${rename.newKey}`;
-
-                        if (appliedRenames.has(renameKey)) {
-                            continue;
-                        }
-
-                        if (effectiveProfileName === rename.originalKey) {
-                            effectiveProfileName = rename.newKey;
-                            appliedRenames.add(renameKey);
-                            changed = true;
-                            break;
-                        }
-
-                        if (effectiveProfileName.startsWith(rename.originalKey + ".")) {
-                            const newEffectiveName = effectiveProfileName.replace(rename.originalKey + ".", rename.newKey + ".");
-                            effectiveProfileName = newEffectiveName;
-                            appliedRenames.add(renameKey);
-                            changed = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            updatedChange.profile = effectiveProfileName;
+            updatedChange.profile = applyRenameChainToProfileName(updatedChange.profile, relevantRenames);
         }
 
-        // Update the key field to use new profile name - handle complex nested paths
         if (updatedChange.key) {
-            let updatedKey = updatedChange.key;
-            let keyChanged = true;
-            let keyIteration = 0;
-            const appliedKeyRenames = new Set(); // Track applied renames for keys
-
-            while (keyChanged && keyIteration < 10) {
-                keyChanged = false;
-                keyIteration++;
-
-                for (const rename of renames) {
-                    if (rename.configPath === change.configPath) {
-                        const renameKey = `${rename.originalKey}->${rename.newKey}`;
-
-                        // Skip if we've already applied this exact rename
-                        if (appliedKeyRenames.has(renameKey)) {
-                            continue;
-                        }
-
-                        const originalKeyParts = rename.originalKey.split(".");
-                        const newKeyParts = rename.newKey.split(".");
-
-                        if (originalKeyParts.length > 1 && newKeyParts.length > 1) {
-                            // Handle complex nested profile renames
-                            // For test1.lpar1, we need to match "profiles.test1.profiles.lpar1"
-                            const originalPattern = "profiles." + originalKeyParts.join(".profiles.");
-                            const newPattern = "profiles." + newKeyParts.join(".profiles.");
-
-                            if (updatedKey.includes(originalPattern)) {
-                                updatedKey = updatedKey.split(originalPattern).join(newPattern);
-                                appliedKeyRenames.add(renameKey);
-                                keyChanged = true;
-                                break;
-                            }
-                        } else {
-                            // Handle simple renames
-                            // For simple renames like 'b' -> 'a.b', we need to replace 'b' with 'a.b'
-                            // but only when 'b' appears as a profile name (preceded by 'profiles')
-                            const keyParts = updatedKey.split(".");
-                            let updated = false;
-
-                            for (let i = 0; i < keyParts.length; i++) {
-                                if (keyParts[i] === rename.originalKey && i > 0 && keyParts[i - 1] === "profiles") {
-                                    // Check if this key already represents the correct profile structure
-                                    // For example, if we're renaming 'b' to 'a.b' and the key is 'profiles.a.profiles.b',
-                                    // this already represents the correct structure for profile 'a.b'
-                                    const currentProfileFromKey = extractProfileFromKey(updatedKey);
-                                    if (currentProfileFromKey === rename.newKey) {
-                                        // The key already represents the correct profile, don't update it
-                                        continue;
-                                    }
-
-                                    // This is a profile name that needs to be replaced
-                                    keyParts[i] = rename.newKey;
-                                    updated = true;
-                                }
-                            }
-
-                            if (updated) {
-                                updatedKey = keyParts.join(".");
-                                appliedKeyRenames.add(renameKey);
-                                keyChanged = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            updatedChange.key = updatedKey;
+            updatedChange.key = applyRenameChainToTokens(updatedChange.key, relevantRenames);
         }
 
-        // Update the path array to use new profile name
         if (updatedChange.path && Array.isArray(updatedChange.path)) {
-            let updatedPath = [...updatedChange.path];
-            let pathChanged = true;
-            let pathIteration = 0;
-            const appliedPathRenames = new Set(); // Track applied renames for paths
-
-            while (pathChanged && pathIteration < 10) {
-                pathChanged = false;
-                pathIteration++;
-
-                for (const rename of renames) {
-                    if (rename.configPath === change.configPath) {
-                        const renameKey = `${rename.originalKey}->${rename.newKey}`;
-
-                        // Skip if we've already applied this exact rename
-                        if (appliedPathRenames.has(renameKey)) {
-                            continue;
-                        }
-
-                        const originalKeyParts = rename.originalKey.split(".");
-                        const newKeyParts = rename.newKey.split(".");
-
-                        if (originalKeyParts.length > 1 && newKeyParts.length > 1) {
-                            // Handle complex nested profile path updates
-                            // Find the position where the original profile path starts in the path array
-                            for (let i = 0; i <= updatedPath.length - originalKeyParts.length; i++) {
-                                let matches = true;
-                                for (let j = 0; j < originalKeyParts.length; j++) {
-                                    if (updatedPath[i + j] !== originalKeyParts[j]) {
-                                        matches = false;
-                                        break;
-                                    }
-                                }
-
-                                if (matches) {
-                                    // Replace the matched segment with the new key parts
-                                    updatedPath.splice(i, originalKeyParts.length, ...newKeyParts);
-                                    appliedPathRenames.add(renameKey);
-                                    pathChanged = true;
-                                    break;
-                                }
-                            }
-                        } else {
-                            // Handle simple path updates
-                            const newPath = updatedPath.map((pathPart: string) => {
-                                // Only replace exact matches, not partial matches
-                                if (pathPart === rename.originalKey) {
-                                    return rename.newKey;
-                                }
-                                return pathPart;
-                            });
-
-                            if (JSON.stringify(newPath) !== JSON.stringify(updatedPath)) {
-                                updatedPath = newPath;
-                                appliedPathRenames.add(renameKey);
-                                pathChanged = true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            updatedChange.path = updatedPath;
+            updatedChange.path = applyRenameChainToTokens(updatedChange.path, relevantRenames);
         }
 
         return updatedChange;
@@ -253,20 +177,6 @@ export function buildFormattedPendingChanges(params: FormatPendingChangesParams)
         renames: renamesData,
     };
 }
-
-const extractProfileFromKey = (key: string): string => {
-    const parts = key.split(".");
-    const profileParts: string[] = [];
-
-    for (let i = 0; i < parts.length; i++) {
-        if (parts[i] === "profiles" && i + 1 < parts.length) {
-            profileParts.push(parts[i + 1]);
-            i++;
-        }
-    }
-
-    return profileParts.join(".");
-};
 
 export const consolidateRenames = (
     existingRenames: { [originalKey: string]: string },
@@ -355,8 +265,21 @@ export const consolidateConflictingRenames = (renames: { [originalKey: string]: 
             const newKey = consolidated[originalKey];
             if (consolidated[newKey] && consolidated[newKey] !== originalKey) {
                 const finalKey = consolidated[newKey];
+                const collapsedIntermediateKey = newKey;
                 consolidated[originalKey] = finalKey;
-                delete consolidated[newKey];
+                delete consolidated[collapsedIntermediateKey];
+
+                // Other renames may already be anchored under the intermediate key we just
+                // collapsed away (e.g. a child dragged onto this profile while it sat at that
+                // intermediate location) - re-anchor them under the final key so they don't end
+                // up orphaned under a parent path that no longer exists.
+                for (const [otherOriginalKey, otherNewKey] of Object.entries(consolidated)) {
+                    if (otherOriginalKey !== originalKey && otherNewKey.startsWith(collapsedIntermediateKey + ".")) {
+                        const childSuffix = otherNewKey.substring(collapsedIntermediateKey.length + 1);
+                        consolidated[otherOriginalKey] = finalKey + "." + childSuffix;
+                    }
+                }
+
                 changed = true;
             }
         }

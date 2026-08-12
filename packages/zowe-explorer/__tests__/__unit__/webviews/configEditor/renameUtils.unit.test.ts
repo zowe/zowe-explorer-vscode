@@ -81,7 +81,7 @@ describe("renameUtils", () => {
                 {
                     profile: "x.y",
                     key: "profiles.a.profiles.b.properties.host",
-                    path: ["profiles", "a", "b", "properties", "host"],
+                    path: ["profiles", "a", "profiles", "b", "properties", "host"],
                     configPath: "/c",
                 },
             ];
@@ -94,7 +94,7 @@ describe("renameUtils", () => {
                 {
                     profile: "a.b",
                     key: "profiles.a.profiles.b.properties.host",
-                    path: ["profiles", "a", "b", "properties", "host"],
+                    path: ["profiles", "a", "profiles", "b", "properties", "host"],
                     configPath: "/c",
                 },
             ];
@@ -107,13 +107,58 @@ describe("renameUtils", () => {
                 {
                     profile: "x.y",
                     key: "profiles.x.profiles.y.properties.host",
-                    path: ["profiles", "a", "b", "properties", "host"],
+                    path: ["profiles", "a", "profiles", "b", "properties", "host"],
                     configPath: "/c",
                 },
             ];
             const renames = [{ configPath: "/c", originalKey: "a.b", newKey: "x.y" }];
             const result = updateChangesForRenames(changes, renames);
-            expect(result[0].path).toEqual(["profiles", "x", "y", "properties", "host"]);
+            expect(result[0].path).toEqual(["profiles", "x", "profiles", "y", "properties", "host"]);
+        });
+        it("updates key/path when a top-level profile is renamed into a nested profile (single -> multi part)", () => {
+            const changes = [
+                {
+                    profile: "b",
+                    key: "profiles.b.properties.host",
+                    path: ["profiles", "b", "properties", "host"],
+                    configPath: "/c",
+                },
+            ];
+            const renames = [{ configPath: "/c", originalKey: "b", newKey: "a.b" }];
+            const result = updateChangesForRenames(changes, renames);
+            expect(result[0].profile).toBe("a.b");
+            expect(result[0].key).toBe("profiles.a.profiles.b.properties.host");
+            expect(result[0].path).toEqual(["profiles", "a", "profiles", "b", "properties", "host"]);
+        });
+        it("updates key/path when a nested profile is renamed to top-level (multi -> single part)", () => {
+            const changes = [
+                {
+                    profile: "a.b",
+                    key: "profiles.a.profiles.b.properties.host",
+                    path: ["profiles", "a", "profiles", "b", "properties", "host"],
+                    configPath: "/c",
+                },
+            ];
+            const renames = [{ configPath: "/c", originalKey: "a.b", newKey: "c" }];
+            const result = updateChangesForRenames(changes, renames);
+            expect(result[0].profile).toBe("c");
+            expect(result[0].key).toBe("profiles.c.properties.host");
+            expect(result[0].path).toEqual(["profiles", "c", "properties", "host"]);
+        });
+        it("does not corrupt an unrelated profile whose name is a superstring of the renamed profile", () => {
+            const changes = [
+                {
+                    profile: "bb",
+                    key: "profiles.bb.properties.host",
+                    path: ["profiles", "bb", "properties", "host"],
+                    configPath: "/c",
+                },
+            ];
+            const renames = [{ configPath: "/c", originalKey: "b", newKey: "a.b" }];
+            const result = updateChangesForRenames(changes, renames);
+            expect(result[0].profile).toBe("bb");
+            expect(result[0].key).toBe("profiles.bb.properties.host");
+            expect(result[0].path).toEqual(["profiles", "bb", "properties", "host"]);
         });
         it("leaves change unchanged when rename configPath does not match", () => {
             const changes = [{ profile: "old", key: "profiles.old.x", path: ["profiles", "old", "x"], configPath: "/c" }];
@@ -176,6 +221,23 @@ describe("renameUtils", () => {
             const result = consolidateConflictingRenames(renames);
             expect(result.a).toBe("c");
             expect(result.b).toBeUndefined();
+        });
+        it("re-anchors children when the intermediate parent location they were nested under gets collapsed away", () => {
+            // Reproduces: drag a profile to a first parent, drag it again to a second parent
+            // (collapsing the first parent into a pass-through), nest two other profiles under it
+            // while it sits there, then drag it a third time. The two nested children must follow
+            // the parent to its final location instead of being left pointing at the now-defunct
+            // intermediate parent path.
+            let renames: { [originalKey: string]: string } = {};
+            renames = consolidateRenames(renames, "wiz", "tso.wiz");
+            renames = consolidateRenames(renames, "tso.wiz", "base.wiz");
+            renames = consolidateRenames(renames, "ssh", "base.wiz.ssh");
+            renames = consolidateRenames(renames, "zosmf", "base.wiz.zosmf");
+            renames = consolidateRenames(renames, "base.wiz", "tso.wiz");
+
+            expect(renames.wiz).toBe("tso.wiz");
+            expect(renames.ssh).toBe("tso.wiz.ssh");
+            expect(renames.zosmf).toBe("tso.wiz.zosmf");
         });
         it("removes child when parent rename implies same target (early removal)", () => {
             const renames = { a: "a.b", "a.b": "a.b.c" };

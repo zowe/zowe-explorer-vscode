@@ -27,22 +27,6 @@ import {
 } from "../../../../src/webviews/src/config-editor/utils/MoveUtils";
 import { ConfigMoveAPI, IConfigLayer } from "../../../../src/webviews/src/config-editor/types";
 import { vi } from "vitest";
-import { set } from "es-toolkit/compat";
-
-vi.mock("es-toolkit/compat", () => ({
-    set: vi.fn((obj: Record<string, unknown>, path: string, value: unknown) => {
-        const keys = path.split(".");
-        let current: Record<string, unknown> = obj;
-        for (let i = 0; i < keys.length - 1; i++) {
-            const key = keys[i];
-            if (!(key in current) || typeof current[key] !== "object") {
-                current[key] = {};
-            }
-            current = current[key] as Record<string, unknown>;
-        }
-        current[keys[keys.length - 1]] = value;
-    }),
-}));
 
 // Mock console.warn to avoid noise in tests
 const originalConsoleWarn = console.warn;
@@ -291,8 +275,8 @@ describe("MoveUtils", () => {
 
             updateSecureArrays(() => layerWithSecure, "profiles.test", "profiles.test", ["password"], ["token"]);
 
-            // Verify that set was called (mocked lodash.set)
-            expect(set).toHaveBeenCalled();
+            // Verify the secure array was actually updated on the profile (source property removed, target property added)
+            expect(layerWithSecure.properties.profiles.test.secure).toEqual(["token"]);
         });
     });
 

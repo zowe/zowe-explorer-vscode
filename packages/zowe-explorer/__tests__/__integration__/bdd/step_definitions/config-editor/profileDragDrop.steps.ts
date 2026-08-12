@@ -258,6 +258,21 @@ Then("the profile {string} should still be a root profile in the config file", a
     expect(config.profiles?.[rootName]).toBeDefined();
 });
 
+Then("there are pending changes in the Config Editor", async () => {
+    const saveButton = await browser.$(".footer button[title='Save all changes']");
+    await expect(saveButton).toBeExisting();
+});
+
+Then("there are no pending changes in the Config Editor", async () => {
+    await browser.waitUntil(
+        async () => {
+            const saveButton = await browser.$(".footer button[title='No changes to save']");
+            return saveButton.isExisting();
+        },
+        { timeout: 10000, timeoutMsg: "Save button still shows pending changes after saving" }
+    );
+});
+
 Then("profile key {string} should appear under profile key {string} in the tree", async (childKey: string, parentKey: string) => {
     const shortName = childKey.split(".").pop() || childKey;
     const targetChildren = await browser.$$(`[data-testid='profile-tree-node'][data-profile-key='${parentKey}'] [data-testid='profile-tree-node']`);
