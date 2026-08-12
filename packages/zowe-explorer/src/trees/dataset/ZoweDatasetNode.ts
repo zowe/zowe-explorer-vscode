@@ -250,7 +250,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             if (!DatasetFSProvider.instance.exists(this.resourceUri)) {
                 DatasetFSProvider.instance.createEntry(this.resourceUri, DsType.Ps);
-                await vscode.workspace.fs.writeFile(this.resourceUri, new Uint8Array());
             }
         }
     }
