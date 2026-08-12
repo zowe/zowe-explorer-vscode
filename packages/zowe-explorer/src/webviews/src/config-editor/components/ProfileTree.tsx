@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { getOriginalProfileKeyWithNested } from "../utils/profileUtils";
 import { useIsLightTheme } from "../hooks/useIsLightTheme";
 import { useScrollToSelected } from "../hooks/useScrollToSelected";
@@ -145,6 +145,13 @@ export function ProfileTree({
   const [dragOverProfile, setDragOverProfile] = useState<string | null>(null);
   const scrollContainerRef = useScrollToSelected(selectedProfileKey);
 
+  const suppressNextClickRef = useRef(false);
+  const activeDragCleanupRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    return () => activeDragCleanupRef.current?.();
+  }, []);
+
   // Memoized helper function to find the original key from a current profile key
   const findOriginalKey = useMemo(() => {
     return (currentKey: string): string => {
@@ -239,92 +246,28 @@ export function ProfileTree({
 
   // Helper function to detect complex rename chains that could cause performance issues
 
-  // Drag and drop handlers
-  const handleDragStart = (e: any, profileKey: string) => {
-    e.stopPropagation();
+  // Compute the profile key that would result from dropping `sourceProfile` onto `targetProfileKey`,
+  // resolving any naming conflicts. Shared by the actual drop handler and the hover preview label.
+  const computeDropResultKey = (sourceProfile: string, targetProfileKey: string): string => {
+    const sourceProfileName = sourceProfile.split(".").pop() || sourceProfile;
 
-    // Drag is now always allowed - restrictions are handled in the drop handler
+    let proposedKey: string;
 
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", profileKey);
-      e.dataTransfer.setData("application/json", JSON.stringify({ profileKey }));
-
-      const dragImage = e.target.cloneNode(true);
-      dragImage.style.opacity = "0.5";
-
-      // Calculate the offset based on mouse position within the element
-      const rect = e.target.getBoundingClientRect();
-      const offsetX = e.clientX - rect.left;
-      const offsetY = e.clientY - rect.top;
-
-      // Ensure the offset is within reasonable bounds
-      const clampedOffsetX = Math.max(0, Math.min(offsetX, rect.width));
-      const clampedOffsetY = Math.max(0, Math.min(offsetY, rect.height));
-
-      e.dataTransfer.setDragImage(dragImage, clampedOffsetX, clampedOffsetY);
-    }
-
-    // Use setTimeout to ensure the drag operation starts before setting state
-    setTimeout(() => {
-      setDraggedProfile(profileKey);
-    }, 0);
-  };
-
-  const handleDragOver = (e: any, profileKey: string) => {
-    e.preventDefault();
-    if (e.dataTransfer) {
-      e.dataTransfer.dropEffect = "move";
-    }
-
-    // Only allow dropping if it's a valid target
-    if (draggedProfile && draggedProfile !== profileKey && !isInvalidDrop(draggedProfile, profileKey)) {
-      setDragOverProfile(profileKey);
-    }
-  };
-
-  const handleDragLeave = (e: any) => {
-    // Only clear drag over if we're leaving the profile item itself
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setDragOverProfile(null);
-    }
-  };
-
-  const handleDrop = (e: any, targetProfileKey: string) => {
-    e.preventDefault();
-
-    if (!draggedProfile || !onProfileRename) {
-      setDraggedProfile(null);
-      setDragOverProfile(null);
-      return;
-    }
-
-    if (isInvalidDrop(draggedProfile, targetProfileKey)) {
-      setDraggedProfile(null);
-      setDragOverProfile(null);
-      return;
-    }
-
-    const draggedProfileName = draggedProfile.split(".").pop() || draggedProfile;
-
-    let newProfileKey: string;
-
-    if (draggedProfile === targetProfileKey) {
-      newProfileKey = targetProfileKey;
-    } else if (draggedProfile === `${targetProfileKey}.${draggedProfileName}`) {
-      newProfileKey = targetProfileKey;
-    } else if (targetProfileKey === draggedProfileName) {
-      newProfileKey = targetProfileKey;
-    } else if (targetProfileKey.endsWith(`.${draggedProfileName}`)) {
-      newProfileKey = targetProfileKey;
+    if (sourceProfile === targetProfileKey) {
+      proposedKey = targetProfileKey;
+    } else if (sourceProfile === `${targetProfileKey}.${sourceProfileName}`) {
+      proposedKey = targetProfileKey;
+    } else if (targetProfileKey === sourceProfileName) {
+      proposedKey = targetProfileKey;
+    } else if (targetProfileKey.endsWith(`.${sourceProfileName}`)) {
+      proposedKey = targetProfileKey;
     } else {
-      newProfileKey = `${targetProfileKey}.${draggedProfileName}`;
+      proposedKey = `${targetProfileKey}.${sourceProfileName}`;
     }
 
-    // Check if the new profile key would conflict with an existing profile and resolve to a unique key
-    newProfileKey = resolveDropTargetKey({
-      proposedKey: newProfileKey,
-      draggedProfile,
+    return resolveDropTargetKey({
+      proposedKey,
+      draggedProfile: sourceProfile,
       profileKeys,
       pendingProfiles,
       renames,
@@ -332,24 +275,31 @@ export function ProfileTree({
       selectedTab,
       findOriginalKey,
     });
-
-    if (draggedProfile !== newProfileKey) {
-      const originalKey = findOriginalKey(draggedProfile);
-      const success = onProfileRename(originalKey, newProfileKey, true);
-
-      if (!success) {
-        return;
-      }
-    }
-
-    // Clear drag state only on successful rename
-    setDraggedProfile(null);
-    setDragOverProfile(null);
   };
 
-  const handleDragEnd = () => {
-    setDraggedProfile(null);
-    setDragOverProfile(null);
+  const performDrop = (sourceProfile: string, targetProfileKey: string) => {
+    if (!onProfileRename || isInvalidDrop(sourceProfile, targetProfileKey)) {
+      return;
+    }
+
+    const newProfileKey =
+      targetProfileKey === "ROOT"
+        ? resolveDropTargetKey({
+            proposedKey: sourceProfile.split(".").pop() || sourceProfile,
+            draggedProfile: sourceProfile,
+            profileKeys,
+            pendingProfiles,
+            renames,
+            configurations,
+            selectedTab,
+            findOriginalKey,
+          })
+        : computeDropResultKey(sourceProfile, targetProfileKey);
+
+    if (sourceProfile !== newProfileKey) {
+      const originalKey = findOriginalKey(sourceProfile);
+      onProfileRename(originalKey, newProfileKey, true);
+    }
   };
 
   // Helper function to check if a drop is invalid
@@ -401,6 +351,120 @@ export function ProfileTree({
     return false;
   };
 
+  const DRAG_MOVE_THRESHOLD_PX = 4;
+
+  const handleRowMouseDown = (e: any, profileKey: string) => {
+    if (e.button !== 0) {
+      return;
+    }
+
+    const rowEl = e.currentTarget;
+    const rect = rowEl.getBoundingClientRect();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const offsetX = startX - rect.left;
+    const offsetY = startY - rect.top;
+
+    let moved = false;
+    let ghost: HTMLDivElement | null = null;
+
+    const positionGhost = (clientX: number, clientY: number) => {
+      if (ghost) {
+        ghost.style.transform = `translate(${clientX - offsetX}px, ${clientY - offsetY}px)`;
+      }
+    };
+
+    const updateHoverTarget = (clientX: number, clientY: number): string | null => {
+      const elements = ghost ? [ghost] : [];
+
+      elements.forEach((el) => (el.style.visibility = "hidden"));
+      const under = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+      elements.forEach((el) => (el.style.visibility = "visible"));
+
+      const targetEl = under?.closest("[data-profile-key]") as HTMLElement | null;
+      const targetKey = targetEl?.getAttribute("data-profile-key") ?? null;
+
+      if (targetKey && !isInvalidDrop(profileKey, targetKey)) {
+        setDragOverProfile(targetKey);
+        return targetKey;
+      }
+
+      setDragOverProfile(null);
+      return null;
+    };
+
+    let lastHoverTarget: string | null = null;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      if (!moved) {
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+        if (Math.hypot(dx, dy) < DRAG_MOVE_THRESHOLD_PX) {
+          return;
+        }
+
+        moved = true;
+        setDraggedProfile(profileKey);
+        document.body.style.cursor = "grabbing";
+
+        ghost = rowEl.cloneNode(true) as HTMLDivElement;
+        // The cloned row carries over its own "transition: all 0.2s ease" (used for hover/select
+        // animations), which would ease every transform update below instead of applying it
+        // immediately — that's what made the ghost lag behind the cursor. Kill it explicitly.
+        ghost.style.transition = "none";
+        ghost.style.position = "fixed";
+        ghost.style.left = "0";
+        ghost.style.top = "0";
+        ghost.style.width = `${rect.width}px`;
+        ghost.style.margin = "0";
+        ghost.style.pointerEvents = "none";
+        ghost.style.zIndex = "10000";
+        ghost.style.opacity = "0.9";
+        ghost.style.boxShadow = "0 4px 14px rgba(0, 0, 0, 0.35)";
+        ghost.style.willChange = "transform";
+        document.body.appendChild(ghost);
+      }
+
+      positionGhost(moveEvent.clientX, moveEvent.clientY);
+      lastHoverTarget = updateHoverTarget(moveEvent.clientX, moveEvent.clientY);
+    };
+
+    const cleanup = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.cursor = "";
+      ghost?.remove();
+      ghost = null;
+      activeDragCleanupRef.current = null;
+    };
+
+    const onMouseUp = () => {
+      if (moved) {
+        suppressNextClickRef.current = true;
+        if (lastHoverTarget) {
+          performDrop(profileKey, lastHoverTarget);
+        }
+      }
+      setDraggedProfile(null);
+      setDragOverProfile(null);
+      cleanup();
+    };
+
+    const onKeyDown = (keyEvent: KeyboardEvent) => {
+      if (keyEvent.key === "Escape") {
+        setDraggedProfile(null);
+        setDragOverProfile(null);
+        cleanup();
+      }
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    document.addEventListener("keydown", onKeyDown);
+    activeDragCleanupRef.current = cleanup;
+  };
+
   const renderNode = (node: ProfileNode): React.ReactNode => {
     const isSelected = selectedProfileKey === node.key;
     const hasPendingChanges = pendingProfiles[node.key];
@@ -422,6 +486,7 @@ export function ProfileTree({
         data-profile-level={node.level}
         data-has-children={node.hasChildren}
         data-is-expanded={node.isExpanded}
+        style={{ position: "relative" }}
       >
         <div
           className={`profile-tree-item ${isSelected ? "selected" : ""} ${isDragging ? "dragging" : ""} ${isDragOver ? "drag-over" : ""} ${
@@ -449,14 +514,14 @@ export function ProfileTree({
             userSelect: "none",
             minHeight: "28px",
           }}
-          draggable={true}
-          onDragStart={(e) => handleDragStart(e, node.key)}
-          onDragOver={(e) => handleDragOver(e, node.key)}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, node.key)}
-          onDragEnd={handleDragEnd}
+          draggable={false}
+          onMouseDown={(e) => handleRowMouseDown(e, node.key)}
           onClick={(e) => {
             e.stopPropagation();
+            if (suppressNextClickRef.current) {
+              suppressNextClickRef.current = false;
+              return;
+            }
             if (isSelected) {
               onProfileSelect("");
             } else {
@@ -545,6 +610,7 @@ export function ProfileTree({
 
     return (
       <div
+        data-profile-key="ROOT"
         style={{
           position: "sticky",
           top: 0,
@@ -565,60 +631,25 @@ export function ProfileTree({
           backdropFilter: "blur(4px)",
           boxShadow: isDragging ? "0 2px 8px rgba(0, 0, 0, 0.1)" : "none",
         }}
-        onDragOver={(e) => {
-          e.preventDefault();
-          if (e.dataTransfer) {
-            e.dataTransfer.dropEffect = "move";
-          }
-          if (draggedProfile && !isInvalidDrop(draggedProfile, "ROOT")) {
-            setDragOverProfile("ROOT");
-          }
-        }}
-        onDragLeave={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-            setDragOverProfile(null);
-          }
-        }}
-        onDrop={(e) => {
-          e.preventDefault();
-          if (!draggedProfile || !onProfileRename) {
-            setDraggedProfile(null);
-            setDragOverProfile(null);
-            return;
-          }
-
-          // Validate the drop
-          if (isInvalidDrop(draggedProfile, "ROOT")) {
-            setDraggedProfile(null);
-            setDragOverProfile(null);
-            return;
-          }
-
-          // Extract only the profile name (last part) from the dragged profile
-          const draggedProfileName = draggedProfile.split(".").pop() || draggedProfile;
-
-          // Check if the new profile key would conflict with an existing profile and resolve to a unique key
-          const newProfileKey = resolveDropTargetKey({
-            proposedKey: draggedProfileName,
-            draggedProfile,
-            profileKeys,
-            pendingProfiles,
-            renames,
-            configurations,
-            selectedTab,
-            findOriginalKey,
-          });
-
-          // Call the rename handler to move to root
-          const originalKey = findOriginalKey(draggedProfile);
-          onProfileRename(originalKey, newProfileKey, true); // true indicates this is a drag-drop operation
-
-          // Clear drag state
-          setDraggedProfile(null);
-          setDragOverProfile(null);
-        }}
       >
-        {isDragOverRoot && canDropToRoot ? "Drop here to move to root level" : isDragging ? "Drop zone for root level" : ""}
+        {isDragOverRoot && canDropToRoot
+          ? `Move to root as "${
+              draggedProfile
+                ? resolveDropTargetKey({
+                    proposedKey: draggedProfile.split(".").pop() || draggedProfile,
+                    draggedProfile,
+                    profileKeys,
+                    pendingProfiles,
+                    renames,
+                    configurations,
+                    selectedTab,
+                    findOriginalKey,
+                  })
+                : ""
+            }"`
+          : isDragging
+            ? "Drop zone for root level"
+            : ""}
       </div>
     );
   };
