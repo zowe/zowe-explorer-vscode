@@ -1278,6 +1278,7 @@
   "Fixed an issue where pasting data sets failed with \"e.getChildren is not a function\" when using extenders that don't support allocateLikeDataSet, a function that allocates a copy of a data set with specified options. <a>#4107</a>": "",
   "Fixed an issue where profile encoding is not respected when opening job spool files. <a>#3504</a>": "",
   "Fixed an issue where profiles that were not utilizing tokens were improperly running checkJwtForProfile() function within the ZoweTreeProvider. <a>#3575</a>": "",
+  "Fixed an issue where recalling a sequential data set caused its contents to be overwritten, resulting in data loss. Now, when a data set is recalled, its contents are no longer modified. <a>#4412</a>": "",
   "Fixed an issue where registering new profile types from a Zowe Explorer extender could cause an internal API error on startup. <a>#3412</a>": "",
   "Fixed an issue where remote changes to a data set member are not detected by Zowe Explorer if the member's resource path ends in an extension. <a>#3555</a>": "",
   "Fixed an issue where remote lookup functionality caused the local side of a conflict to be overwritten with the remote contents. <a>#3085</a>": "",
