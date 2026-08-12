@@ -1070,7 +1070,9 @@ describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
         const existsSpy = vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         const writeFileMock = vi.spyOn(vscode.workspace.fs, "writeFile").mockImplementation((() => undefined) as any);
         await (dsNode as any).datasetRecalled(false);
-        expect(writeFileMock).toHaveBeenCalledWith(dsNode.resourceUri, new Uint8Array());
+        // writeFile should no longer be called now that writeFile always writes to remote
+        expect(writeFileMock).not.toHaveBeenCalled();
+        expect(writeFileMock).not.toHaveBeenCalledWith(dsNode.resourceUri, new Uint8Array());
         existsSpy.mockRestore();
     });
 
