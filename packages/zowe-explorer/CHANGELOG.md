@@ -18,6 +18,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where recalling a sequential data set caused its contents to be overwritten, resulting in data loss. Now, when a data set is recalled, its contents are no longer modified. [#4450](https://github.com/zowe/zowe-explorer-vscode/issues/4451)
 - Fixed an issue where expanding a profile in the Favorites section uploaded empty contents to each favorited USS file, which failed for users without write access and truncated the file for users with write access. [#4450](https://github.com/zowe/zowe-explorer-vscode/issues/4450)
 - Fixed an issue where expanding a profile in the Favorites section uploaded empty contents to each favorited sequential data set, which failed for users without write access and truncated the data set for users with write access. [#4451](https://github.com/zowe/zowe-explorer-vscode/issues/4451)
 - Fixed an issue where creating a new file in a Zowe Explorer virtual workspace would silently fail, causing write operations to fail on that file as a result. [#4426](https://github.com/zowe/zowe-explorer-vscode/pull/4426)
