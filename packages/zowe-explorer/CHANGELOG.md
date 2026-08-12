@@ -6,7 +6,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added "Edit in Zowe Configuration Editor" editor context menu action: right-clicking on a profile name or property line in `zowe.config.json` now opens the Config Editor webview, navigates to the corresponding profile, and highlights the profile card (and the specific property row when applicable) with a blink animation. [#4249](https://github.com/zowe/zowe-explorer-vscode/issues/4249)
+- Breaking: Removed the setting `zowe.zowex.serverAutoUpdate`, which was a global setting used to control whether the backend SSH server `zowex` would be automatically updated when it was outdated. To prevent such updates going forward, specify `"autoUpdate": false` in each desired `ssh` profile. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
+- Replaced the comparison of checksums of the backend SSH server `zowex` with comparing version numbers when checking if the remote server version is outdated. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
+- Renamed the `Connect to zowex server on host...` command to `Deploy SSH server on host and connect...`. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
+- Added an error message in the case that Zowe Explorer needs to deploy the backend SSH server `zowex`, but the user does not have write access to the specified directory when issuing the `Deploy SSH server on host and connect...` command or when validating `ssh` profiles. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
 - Added a new "Export Redacted Configuration Files" command to export team configuration files with sensitive values redacted, for sharing with others when troubleshooting. [#4432](https://github.com/zowe/zowe-explorer-vscode/pull/4432)
 - Added functionality to automatically detect the backend SSH server on the user's `$PATH` on USS, and use it by default if no serverPath exists in your configuration. Also updated the plug-in to avoid deploying the SSH server binary to directories to which the user does not have write access. [#4367](https://github.com/zowe/zowe-explorer-vscode/pull/4367)
 - Replaced repetitive `if (err instanceof Error)` patterns with `handleError` and `errorMessage` utility functions from `@zowe/zowe-explorer-api`. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
@@ -146,6 +149,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where a PDS member URI with the `conflict` query parameter was not returned as read-only by `DatasetFSProvider.stat`, causing the "remote" side of the conflict diff editor to be editable. [#4440](https://github.com/zowe/zowe-explorer-vscode/issues/4440)
 - Fixed an issue where an error appeared when moving an empty PDS across LPARs. [#4001](https://github.com/zowe/zowe-explorer-vscode/pull/4001)
 - Prevent drag-and-drop between profiles when the source and target resolve to the same physical object. The operation is now blocked and an explanatory error is shown. Users should refresh the target profile to see changes. [#3827](https://github.com/zowe/zowe-explorer-vscode/pull/3827)
 - Fixed an issue where the job spool pagination code lens was appearing even though the extender did not support pagination. [#3714](https://github.com/zowe/zowe-explorer-vscode/issues/3714)

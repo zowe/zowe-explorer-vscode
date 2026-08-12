@@ -203,6 +203,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             if (pdsEntry && pdsEntry.entries) {
                 const memberStat = pdsEntry.entries.get(memberName);
                 if (memberStat) {
+                    const queryParams = new URLSearchParams(uri.query);
+                    if (queryParams.has("conflict")) {
+                        return { ...memberStat, permissions: vscode.FilePermission.Readonly };
+                    }
                     return memberStat;
                 }
             }
