@@ -26,7 +26,7 @@ import { SshClientCache } from "../SshClientCache";
 import { SshErrorHandler } from "../SshErrorHandler";
 
 export class SshCommonApi implements MainframeInteraction.ICommon {
-    public constructor(public profile?: imperative.IProfileLoaded) {}
+    public constructor(public profile?: imperative.IProfileLoaded) { }
 
     public getProfileTypeName(): string {
         return ZosUssProfile.type;
@@ -48,12 +48,12 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                     const cancelButton = vscode.l10n.t("Cancel");
                     const message = vscode.l10n.t(
                         "Connecting with an SSH profile deploys the SSH server to z/OS UNIX to " +
-                            "enable you to perform actions on the mainframe. Would you like to proceed with connecting?"
+                        "enable you to perform actions on the mainframe. Would you like to proceed with connecting?"
                     );
                     const selection = await Gui.showMessage(message, { items: [cancelButton, connectButton, connectDontAskButton] });
                     if (selection === connectButton) {
                         imperative.Logger.getAppLogger().info("User accepted the initial deployment warning");
-                    } else if (selection == connectDontAskButton) {
+                    } else if (selection === connectDontAskButton) {
                         imperative.Logger.getAppLogger().info("User accepted the initial deployment warning, and requested not to be asked again");
                         await vsceConfig.update("confirmSshServerDeploy", false, vscode.ConfigurationTarget.Global);
                     } else {

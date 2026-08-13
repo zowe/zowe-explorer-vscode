@@ -107,7 +107,7 @@ describe("ServerDeployment", () => {
             expect(await deployWithProgress(fakeSession, "/server/path")).toEqual(false);
             expect(Gui.showMessage).toHaveBeenCalled();
         });
-        it("should continue the deployment if the user receives an insufficient space warning and the user presses cancel", async () => {
+        it("should continue the deployment if the user receives an insufficient space warning and the user presses deploy", async () => {
             vi.mocked(ZSshUtils.installServer).mockImplementation(async (_session, _serverPath, opts) => {
                 const proceed = await opts!.onInsufficientSpaceWarning!(1, 20);
                 return proceed;
