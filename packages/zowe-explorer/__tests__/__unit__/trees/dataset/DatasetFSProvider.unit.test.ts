@@ -235,8 +235,6 @@ describe("DatasetFSProvider", () => {
             });
         });
 
-
-
         it("throws an error if lookup returns a non-filesystem error", async () => {
             vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockRejectedValue(new Error());
             await expect(DatasetFSProvider.instance.readDirectory).rejects.toThrow();
@@ -248,31 +246,35 @@ describe("DatasetFSProvider", () => {
             const mockMvsApi = {
                 resolveAlias: vi.fn().mockResolvedValue({
                     apiResponse: {
-                        targetDsn: targetDsn
-                    }
+                        targetDsn: targetDsn,
+                    },
                 }),
                 dataSet: vi.fn().mockImplementation((dsn, _opts) => {
                     if (dsn === targetDsn) {
                         return {
                             success: true,
                             apiResponse: {
-                                items: [{
-                                    dsname: targetDsn,
-                                    recfm: "FB",
-                                    dsorg: "PO"
-                                }]
-                            }
-                        }
+                                items: [
+                                    {
+                                        dsname: targetDsn,
+                                        recfm: "FB",
+                                        dsorg: "PO",
+                                    },
+                                ],
+                            },
+                        };
                     } else if (dsn === aliasName) {
                         return {
                             success: true,
                             apiResponse: {
-                                items: [{
-                                    dsname: aliasName,
-                                    vol: "*ALIAS"
-                                }]
-                            }
-                        }
+                                items: [
+                                    {
+                                        dsname: aliasName,
+                                        vol: "*ALIAS",
+                                    },
+                                ],
+                            },
+                        };
                     }
                 }),
                 allMembers: vi.fn().mockResolvedValue({
@@ -281,12 +283,12 @@ describe("DatasetFSProvider", () => {
                         items: [{ member: "ALIASM1", m4date: "2024-08-08", mtime: "12", msec: "30" }],
                     },
                     commandResponse: "",
-                })
+                }),
             };
             vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
-            expect(await DatasetFSProvider.instance.readDirectory(Uri.from({ scheme: ZoweScheme.DS, path: "/aliastest/USER.WONDRFUL.ALIAS" }))).toStrictEqual([
-                ["ALIASM1", FileType.File],
-            ]);
+            expect(
+                await DatasetFSProvider.instance.readDirectory(Uri.from({ scheme: ZoweScheme.DS, path: "/aliastest/USER.WONDRFUL.ALIAS" }))
+            ).toStrictEqual([["ALIASM1", FileType.File]]);
             expect(mockMvsApi.resolveAlias).toHaveBeenCalledWith("USER.WONDRFUL.ALIAS");
         });
         describe("PDS entry", () => {
@@ -308,8 +310,6 @@ describe("DatasetFSProvider", () => {
                     ["MEMB4", FileType.File],
                 ]);
             });
-
-
         });
         let readDirImplSpy: any;
 
@@ -586,7 +586,7 @@ describe("DatasetFSProvider", () => {
             };
             vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue(undefined);
             vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakePo);
-            vi.spyOn(DatasetFSProvider.instance as any, "_updateResourceInEditor").mockImplementationOnce(() => { });
+            vi.spyOn(DatasetFSProvider.instance as any, "_updateResourceInEditor").mockImplementationOnce(() => {});
             vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
             vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
             expect(
@@ -2571,7 +2571,7 @@ describe("DatasetFSProvider", () => {
             warnLoggerMock = vi.spyOn(ZoweLogger, "warn").mockImplementation((() => undefined) as any);
         });
 
-        afterEach(() => { });
+        afterEach(() => {});
 
         describe("stat", () => {
             it("returns entry without API calls when profile is locked", async () => {
