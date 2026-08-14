@@ -147,6 +147,225 @@ describe("SshMvsApi", () => {
         });
     });
 
+    describe("searchDataSets", () => {
+        // Mirrors real ISRSUPC (SuperC) SEARCH-FOR output for a PDS with multiple matching members.
+        const multiMemberOutput = [
+            "\f  ASMFSUPC    -     MVS FILE/LINE/WORD/BYTE/SFOR COMPARE UTILITY- V1R6M0  (2021/11/01)  2026/04/21   8.53    PAGE     1",
+            " LINE-#  SOURCE SECTION                    SRCH DSN: IBMUSER.JCL",
+            "",
+            "",
+            " GDG                         --------- STRING(S) FOUND -------------------",
+            "",
+            "      1  //IEFBR14$ JOB (IZUACCT),'mainframer',REGION=0M                        JOB00730",
+            "      *  //*",
+            " IEFBR14                     --------- STRING(S) FOUND -------------------",
+            "",
+            "      4  //EXEC     EXEC PGM=IEFBR14",
+            "\f  ASMFSUPC    -     MVS FILE/LINE/WORD/BYTE/SFOR COMPARE UTILITY- V1R6M0  (2021/11/01)  2026/04/21   8.53    PAGE     3",
+            "     SEARCH-FOR SUMMARY SECTION            SRCH DSN: IBMUSER.JCL",
+            "",
+            "LINES-FOUND  LINES-PROC  MEMBERS-W/LNS  MEMBERS-WO/LNS  COMPARE-COLS  LONGEST-LINE",
+            "       10          937            8             37           1:80           80",
+            "",
+            "THE FOLLOWING PROCESS STATEMENTS (USING COLUMNS 1:72) WERE PROCESSED:",
+            "    SRCHFOR 'ief'",
+            "",
+            "",
+        ].join("\n");
+
+        // Mirrors ISRSUPC output for a sequential (non-PDS) data set: no member name in the header.
+        function sequentialOutput(content: string): string {
+            return [" LINE-#  SOURCE SECTION                    SRCH DSN: USER.SEQ", `      1  ${content}`].join("\n");
+        }
+
+        it("should return an unsupported error for regex searches without listing or searching", async () => {
+            const mvsApi = new SshMvsApi();
+            const listDatasetsSpy = vi.fn();
+            const searchSpy = vi.fn();
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { listDatasets: listDatasetsSpy }, tool: { search: searchSpy } });
+
+            const response = await mvsApi.searchDataSets({ pattern: "USER.*", searchString: "ief", regex: true });
+
+            expect(response).toEqual({ success: false, commandResponse: "", errorMessage: "Regex search is not supported for SSH connections." });
+            expect(listDatasetsSpy).not.toHaveBeenCalled();
+            expect(searchSpy).not.toHaveBeenCalled();
+        });
+
+        it("should search a PDS and map matches from every member into ISearchItem[]", async () => {
+            const mvsApi = new SshMvsApi();
+            const listDatasetsSpy = vi.fn().mockResolvedValue({ items: [{ name: "IBMUSER.JCL", dsorg: "PO" }] });
+            const searchSpy = vi.fn().mockResolvedValue({ data: multiMemberOutput });
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { listDatasets: listDatasetsSpy }, tool: { search: searchSpy } });
+
+            const response = await mvsApi.searchDataSets({ pattern: "IBMUSER.JCL", searchString: "ief", searchExactName: true });
+
+            expect(listDatasetsSpy).toHaveBeenCalledWith({ pattern: "IBMUSER.JCL", attributes: true, maxItems: 1 });
+            expect(searchSpy).toHaveBeenCalledWith({ dsname: "IBMUSER.JCL", string: "ief", parms: "ANYC" });
+            expect(response.success).toBe(true);
+            expect(response.apiResponse).toEqual([
+                {
+                    dsn: "IBMUSER.JCL",
+                    member: "GDG",
+                    matchList: [{ line: 1, column: 3, contents: "//IEFBR14$ JOB (IZUACCT),'mainframer',REGION=0M                        JOB00730", length: 3 }],
+                },
+                {
+                    dsn: "IBMUSER.JCL",
+                    member: "IEFBR14",
+                    matchList: [{ line: 4, column: 21, contents: "//EXEC     EXEC PGM=IEFBR14", length: 3 }],
+                },
+            ]);
+            expect(response.commandResponse).toContain('Found "ief" in 2 data sets and PDS members');
+        });
+
+        it("should search a sequential data set and report matches with no member name", async () => {
+            const mvsApi = new SshMvsApi();
+            const listDatasetsSpy = vi.fn().mockResolvedValue({ items: [{ name: "USER.SEQ", dsorg: "PS" }] });
+            const searchSpy = vi.fn().mockResolvedValue({ data: sequentialOutput("ABCABC") });
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { listDatasets: listDatasetsSpy }, tool: { search: searchSpy } });
+
+            const response = await mvsApi.searchDataSets({
+                pattern: "USER.SEQ",
+                searchString: "ABC",
+                searchExactName: true,
+                caseSensitive: true,
+            });
+
+            expect(response.apiResponse).toEqual([
+                {
+                    dsn: "USER.SEQ",
+                    member: undefined,
+                    matchList: [
+                        { line: 1, column: 1, contents: "ABCABC", length: 3 },
+                        { line: 1, column: 4, contents: "ABCABC", length: 3 },
+                    ],
+                },
+            ]);
+        });
+
+        it("should omit the ANYC parm for case-sensitive searches", async () => {
+            const mvsApi = new SshMvsApi();
+            const listDatasetsSpy = vi.fn().mockResolvedValue({ items: [{ name: "USER.SEQ", dsorg: "PS" }] });
+            const searchSpy = vi.fn().mockResolvedValue({ data: sequentialOutput("no match here") });
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { listDatasets: listDatasetsSpy }, tool: { search: searchSpy } });
+
+            await mvsApi.searchDataSets({ pattern: "USER.SEQ", searchString: "xyz", searchExactName: true, caseSensitive: true });
+
+            expect(searchSpy).toHaveBeenCalledWith({ dsname: "USER.SEQ", string: "xyz", parms: undefined });
+        });
+
+        it("should filter out migrated data sets and, when searchExactName is set, names that don't match exactly", async () => {
+            const mvsApi = new SshMvsApi();
+            const listDatasetsSpy = vi.fn().mockResolvedValue({
+                items: [
+                    { name: "USER.PDS", dsorg: "PO", migrated: false },
+                    { name: "USER.PDS.OLD", dsorg: "PO", migrated: false },
+                    { name: "USER.PDS.MIGR", dsorg: "PO", migrated: true },
+                    { name: "USER.ALIAS", migrated: false }, // no dsorg
+                ],
+            });
+            const searchSpy = vi.fn().mockResolvedValue({ data: "" });
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { listDatasets: listDatasetsSpy }, tool: { search: searchSpy } });
+
+            await mvsApi.searchDataSets({ pattern: "USER.PDS", searchString: "ief", searchExactName: true });
+
+            expect(searchSpy).toHaveBeenCalledTimes(1);
+            expect(searchSpy).toHaveBeenCalledWith({ dsname: "USER.PDS", string: "ief", parms: "ANYC" });
+        });
+
+        it("should search every candidate when searchExactName is false", async () => {
+            const mvsApi = new SshMvsApi();
+            const listDatasetsSpy = vi.fn().mockResolvedValue({
+                items: [
+                    { name: "USER.PDS1", dsorg: "PO" },
+                    { name: "USER.PDS2", dsorg: "PO" },
+                ],
+            });
+            const searchSpy = vi.fn().mockResolvedValue({ data: "" });
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { listDatasets: listDatasetsSpy }, tool: { search: searchSpy } });
+
+            await mvsApi.searchDataSets({ pattern: "USER.*", searchString: "ief" });
+
+            expect(listDatasetsSpy).toHaveBeenCalledWith({ pattern: "USER.*", attributes: true, maxItems: undefined });
+            expect(searchSpy).toHaveBeenCalledTimes(2);
+        });
+
+        it("should return a cancelled response without searching when continueSearch declines", async () => {
+            const mvsApi = new SshMvsApi();
+            const listDatasetsSpy = vi.fn().mockResolvedValue({ items: [{ name: "USER.PDS", dsorg: "PO" }] });
+            const searchSpy = vi.fn();
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { listDatasets: listDatasetsSpy }, tool: { search: searchSpy } });
+            const continueSearch = vi.fn().mockResolvedValue(false);
+
+            const response = await mvsApi.searchDataSets({ pattern: "USER.PDS", searchString: "ief", searchExactName: true, continueSearch });
+
+            expect(continueSearch).toHaveBeenCalledWith([{ dsn: "USER.PDS" }]);
+            expect(searchSpy).not.toHaveBeenCalled();
+            expect(response).toEqual({ success: false, commandResponse: "The search was cancelled." });
+        });
+
+        it("should stop searching further data sets once abortSearch returns true", async () => {
+            const mvsApi = new SshMvsApi();
+            const listDatasetsSpy = vi.fn().mockResolvedValue({
+                items: [
+                    { name: "USER.PDS1", dsorg: "PO" },
+                    { name: "USER.PDS2", dsorg: "PO" },
+                ],
+            });
+            const searchSpy = vi.fn().mockResolvedValue({ data: "" });
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { listDatasets: listDatasetsSpy }, tool: { search: searchSpy } });
+            const abortSearch = vi.fn().mockReturnValue(true);
+
+            const response = await mvsApi.searchDataSets({ pattern: "USER.*", searchString: "ief", abortSearch });
+
+            expect(searchSpy).not.toHaveBeenCalled();
+            expect(response.commandResponse).toContain("The search was cancelled.");
+        });
+
+        it("should record a failed data set without aborting the rest of the search", async () => {
+            const mvsApi = new SshMvsApi();
+            const listDatasetsSpy = vi.fn().mockResolvedValue({
+                items: [
+                    { name: "USER.PDS1", dsorg: "PO" },
+                    { name: "USER.PDS2", dsorg: "PO" },
+                ],
+            });
+            const searchSpy = vi
+                .fn()
+                .mockRejectedValueOnce(new Error("EDC5049I"))
+                .mockResolvedValueOnce({ data: sequentialOutput("no match") });
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { listDatasets: listDatasetsSpy }, tool: { search: searchSpy } });
+
+            const response = await mvsApi.searchDataSets({ pattern: "USER.*", searchString: "ief" });
+
+            expect(searchSpy).toHaveBeenCalledTimes(2);
+            expect(response.success).toBe(false);
+            expect(response.errorMessage).toContain("USER.PDS1");
+        });
+
+        it("should update the progress task as each candidate data set is searched", async () => {
+            const mvsApi = new SshMvsApi();
+            const listDatasetsSpy = vi.fn().mockResolvedValue({
+                items: [
+                    { name: "USER.PDS1", dsorg: "PO" },
+                    { name: "USER.PDS2", dsorg: "PO" },
+                ],
+            });
+            const searchSpy = vi.fn().mockResolvedValue({ data: "" });
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { listDatasets: listDatasetsSpy }, tool: { search: searchSpy } });
+            const percentCompleteValues: number[] = [];
+            const progressTask = {
+                set percentComplete(value: number) {
+                    percentCompleteValues.push(value);
+                },
+                statusMessage: "",
+            } as any;
+
+            await mvsApi.searchDataSets({ pattern: "USER.*", searchString: "ief", progressTask });
+
+            expect(percentCompleteValues).toEqual([0, 50]);
+        });
+    });
+
     describe("getContents", () => {
         it("should read dataset into memory when a stream is provided", async () => {
             const mvsApi = new SshMvsApi();
