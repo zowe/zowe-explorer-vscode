@@ -194,6 +194,7 @@
   "Added support for logging in to multiple API ML instances per team config file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team config file. <a>#2264</a>",
   "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>",
   "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>": "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>",
+  "Added support for resolving aliases in the Zowe data set tree and when using the Zowe dataset filesystem provider. Currently only supported when connecting via z/OSMF. <a>#4438</a>": "Added support for resolving aliases in the Zowe data set tree and when using the Zowe dataset filesystem provider. Currently only supported when connecting via z/OSMF. <a>#4438</a>",
   "Added support to delete VSAM data sets via right-click action.": "Added support to delete VSAM data sets via right-click action.",
   "Added support to delete VSAM data sets. <a>#3824</a>": "Added support to delete VSAM data sets. <a>#3824</a>",
   "Added support to view the Encoding history for MVS and Dataset in the History View. <a>#2776</a>": "Added support to view the Encoding history for MVS and Dataset in the History View. <a>#2776</a>",
