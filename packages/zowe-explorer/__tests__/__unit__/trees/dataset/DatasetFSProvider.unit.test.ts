@@ -244,12 +244,8 @@ describe("DatasetFSProvider", () => {
 
         it("calls resolveAlias on a data set with *ALIAS volume and renders as directory", async () => {
             const targetDsn = "OTHER.ORIGINAL.DATASET";
+            const aliasName = "USER.WONDRFUL.ALIAS";
             const mockMvsApi = {
-                dataSetsMatchingPattern: vi.fn().mockResolvedValue({
-                    apiResponse: [
-                        { dsname: "USER.WONDRFUL.ALIAS", vol: "*ALIAS" },
-                    ],
-                }),
                 resolveAlias: vi.fn().mockResolvedValue({
                     apiResponse: {
                         targetDsn: targetDsn
@@ -258,6 +254,7 @@ describe("DatasetFSProvider", () => {
                 dataSet: vi.fn().mockImplementation((dsn, _opts) => {
                     if (dsn === targetDsn) {
                         return {
+                            success: true,
                             apiResponse: {
                                 items: [{
                                     dsname: targetDsn,
@@ -266,14 +263,30 @@ describe("DatasetFSProvider", () => {
                                 }]
                             }
                         }
+                    } else if (dsn === aliasName) {
+                        return {
+                            success: true,
+                            apiResponse: {
+                                items: [{
+                                    dsname: aliasName,
+                                    vol: "*ALIAS"
+                                }]
+                            }
+                        }
                     }
+                }),
+                allMembers: vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [{ member: "ALIASM1", m4date: "2024-08-08", mtime: "12", msec: "30" }],
+                    },
+                    commandResponse: "",
                 })
             };
             vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
-            expect(await DatasetFSProvider.instance.readDirectory(testUris.session.with({ query: "pattern=USER.WONDRFUL.ALIAS" }))).toStrictEqual([
-                ["USER.WONDRFUL.ALIAS", FileType.Directory],
+            expect(await DatasetFSProvider.instance.readDirectory(Uri.from({ scheme: ZoweScheme.DS, path: "/aliastest/USER.WONDRFUL.ALIAS" }))).toStrictEqual([
+                ["ALIASM1", FileType.File],
             ]);
-            expect(mockMvsApi.dataSetsMatchingPattern).toHaveBeenCalledWith(["USER.WONDRFUL.ALIAS"]);
             expect(mockMvsApi.resolveAlias).toHaveBeenCalledWith("USER.WONDRFUL.ALIAS");
         });
         describe("PDS entry", () => {
