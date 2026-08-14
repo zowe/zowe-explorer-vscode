@@ -291,6 +291,33 @@ describe("DatasetFSProvider", () => {
             ).toStrictEqual([["ALIASM1", FileType.File]]);
             expect(mockMvsApi.resolveAlias).toHaveBeenCalledWith("USER.WONDRFUL.ALIAS");
         });
+
+        it("won't resolve an alias and throws an error if the MVS API does not support it ", async () => {
+            const aliasName = "USER.WONDRFUL.ALIAS";
+            const mockMvsApi = {
+                resolveAlias: undefined,
+                dataSet: vi.fn().mockImplementation((dsn, _opts) => {
+                    if (dsn === aliasName) {
+                        return {
+                            success: true,
+                            apiResponse: {
+                                items: [
+                                    {
+                                        dsname: aliasName,
+                                        vol: "*ALIAS",
+                                    },
+                                ],
+                            },
+                        };
+                    }
+                }),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            await expect(
+                DatasetFSProvider.instance.readDirectory(Uri.from({ scheme: ZoweScheme.DS, path: "/aliasnotsupportedtest/USER.WONDRFUL.ALIAS" }))
+            ).rejects.toBeInstanceOf(FileSystemError);
+        });
+
         describe("PDS entry", () => {
             it("calls allMembers to fetch the members of a PDS", async () => {
                 const mockPdsEntry = { ...testEntries.pds, metadata: { ...testEntries.pds.metadata } };

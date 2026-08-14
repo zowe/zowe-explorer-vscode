@@ -67,7 +67,8 @@ describe("Zosmf API tests", () => {
 
         const api = new ZoweExplorerZosmf.MvsApi();
         api.getSession = vi.fn();
-        await api.resolveAlias(dsName);
+        const resolved = await api.resolveAlias(dsName);
+        expect(resolved.apiResponse.targetDsn).toEqual("WOW.THE.ORIGINAL");
     });
 
     it("should test that copy data set uses enq only", async () => {
