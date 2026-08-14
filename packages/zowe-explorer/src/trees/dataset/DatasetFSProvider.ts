@@ -33,8 +33,9 @@ import {
     IFileSystemEntry,
     DsType,
     ConflictViewSelection,
+    MainframeInteraction,
 } from "@zowe/zowe-explorer-api";
-import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
+import { IZosFilesResponse, IZosmfListResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
@@ -268,10 +269,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         for (const resp of datasetResponses) {
-            for (const ds of resp.apiResponse?.items ?? resp.apiResponse ?? []) {
+            for (let ds of resp.apiResponse?.items ?? resp.apiResponse ?? []) {
                 let tempEntry = profileEntry.entries.get(ds.dsname);
                 if (tempEntry == null) {
                     let name = ds.dsname;
+                    if (ds.vol === "*ALIAS") {
+                        ds = await this.resolveAlias(ds, mvsApi);
+                    }
                     if (ds.dsorg?.startsWith("PO")) {
                         // Entry is a PDS
                         tempEntry = new PdsEntry(ds.dsname);
@@ -425,22 +429,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     });
 
                     const responseItems = resp.apiResponse?.items ?? [];
-                    const matchedItem = responseItems.find((item) => item.dsname?.toUpperCase() === requestedDsName.toUpperCase());
+                    let matchedItem = responseItems.find((item) => item.dsname?.toUpperCase() === requestedDsName.toUpperCase());
                     if (resp.success && matchedItem) {
                         entryStats = DatasetUtils.getDataSetStats(matchedItem);
-                        if (entryStats.vol === "*ALIAS" && mvsApi.resolveAlias) {
 
-                            const resolvedAlias = await mvsApi.resolveAlias(requestedDsName.toUpperCase());
-                            entryStats.aliasTargetDsn = resolvedAlias.apiResponse.targetDsn;
-                            const originalStatsResponse = await mvsApi.dataSet(entryStats.aliasTargetDsn, {
-                                attributes: true,
-                                maxLength: 1,
-                            });
-                            if (originalStatsResponse.apiResponse?.items?.length > 0) {
-                                const originalStats = originalStatsResponse.apiResponse.items[0];
-                                matchedItem.dsorg = originalStats.dsorg;
-                                matchedItem.migr = originalStats.migr;
-                            }
+                        if (entryStats.vol === "*ALIAS") {
+                            matchedItem = await this.resolveAlias(matchedItem, mvsApi);
                         }
                         entryIsDir = matchedItem.dsorg?.startsWith("PO");
                         isMigrated = matchedItem.migr?.toUpperCase() === "YES";
@@ -478,6 +472,25 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entry.stats = { ...entry.stats, ...entryStats };
         }
         return entry;
+    }
+
+    private async resolveAlias(item: IZosmfListResponse, mvsApi: MainframeInteraction.IMvs): Promise<IZosmfListResponse> {
+        if (!mvsApi?.resolveAlias) {
+            ZoweLogger.warn(`[DatasetFSProvider] MVS API does not implement resolveAlias. Alias '${item.dsname}' will not be resolved.`);
+            return item;
+        }
+        const resolvedAlias = await mvsApi.resolveAlias(item.dsname.toUpperCase());
+        const aliasTargetDsn = resolvedAlias.apiResponse.targetDsn;
+        const originalStatsResponse = await mvsApi.dataSet(aliasTargetDsn, {
+            attributes: true,
+            maxLength: 1,
+        });
+        if (originalStatsResponse.apiResponse?.items?.length > 0) {
+            const originalStats = originalStatsResponse.apiResponse.items[0];
+            item.dsorg = originalStats.dsorg;
+            item.migr = originalStats.migr;
+        }
+        return item;
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<DirEntry | DsEntry> {

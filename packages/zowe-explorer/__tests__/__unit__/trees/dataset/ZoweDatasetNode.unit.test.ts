@@ -1227,6 +1227,52 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             expect(pdsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
 
         });
+
+        it("should show an alias data set as not collapisble if the MVS API does not support resolving aliases", async () => {
+            const sessionNode = new ZoweDatasetNode({
+                label: "sestest",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session,
+                profile: profileOne,
+                contextOverride: Constants.DS_SESSION_CONTEXT,
+            });
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({
+                getSession: vi.fn().mockReturnValue(createISession()),
+                resolveAlias: undefined,
+            } as any);
+            sessionNode.pattern = "TEST.*";
+            sessionNode.children = [];
+            vi.spyOn(Profiles, "getInstance").mockReturnValue({
+                loadNamedProfile: vi.fn().mockReturnValue(profileOne),
+            } as any);
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
+                applyPatternsToChildren: vi.fn(),
+                resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
+            } as any);
+
+            vi.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                dsname: "TEST.PDS.ALIAS",
+                                vol: "*ALIAS",
+                            },
+                        ],
+                    },
+                },
+            ]);
+
+            await sessionNode.getChildren();
+            expect(sessionNode.children.length).toEqual(1);
+            const pdsNode = sessionNode.children[0];
+            expect(pdsNode.resourceUri.path).toEqual('/sestest/TEST.PDS.ALIAS');
+            expect(pdsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+        });
     });
 
     describe("migration/recall", () => {

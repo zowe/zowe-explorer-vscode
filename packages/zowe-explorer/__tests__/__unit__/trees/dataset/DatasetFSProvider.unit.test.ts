@@ -221,6 +221,7 @@ describe("DatasetFSProvider", () => {
                             ],
                         },
                     }),
+                    resolveAlias: vi.fn(),
                 };
                 vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
                 expect(await DatasetFSProvider.instance.readDirectory(testUris.session.with({ query: "pattern=USER.*" }))).toStrictEqual([
@@ -230,8 +231,11 @@ describe("DatasetFSProvider", () => {
                     ["USER.DATA.DS2", FileType.File],
                 ]);
                 expect(mockMvsApi.dataSet).toHaveBeenCalledWith("USER.*");
+                expect(mockMvsApi.resolveAlias).not.toHaveBeenCalled();
             });
         });
+
+
 
         it("throws an error if lookup returns a non-filesystem error", async () => {
             vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockRejectedValue(new Error());
@@ -257,6 +261,8 @@ describe("DatasetFSProvider", () => {
                     ["MEMB4", FileType.File],
                 ]);
             });
+
+
         });
         let readDirImplSpy: any;
 
@@ -533,7 +539,7 @@ describe("DatasetFSProvider", () => {
             };
             vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue(undefined);
             vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakePo);
-            vi.spyOn(DatasetFSProvider.instance as any, "_updateResourceInEditor").mockImplementationOnce(() => {});
+            vi.spyOn(DatasetFSProvider.instance as any, "_updateResourceInEditor").mockImplementationOnce(() => { });
             vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
             vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
             expect(
@@ -2518,7 +2524,7 @@ describe("DatasetFSProvider", () => {
             warnLoggerMock = vi.spyOn(ZoweLogger, "warn").mockImplementation((() => undefined) as any);
         });
 
-        afterEach(() => {});
+        afterEach(() => { });
 
         describe("stat", () => {
             it("returns entry without API calls when profile is locked", async () => {

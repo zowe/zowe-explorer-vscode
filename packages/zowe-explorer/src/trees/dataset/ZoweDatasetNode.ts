@@ -425,15 +425,16 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     item.dsorg ??= resolvedAlias?.dsorg;
                     item.recfm ??= resolvedAlias?.recfm;
                     item.blksz ??= resolvedAlias?.blksz;
-
+                    item.migr ??= resolvedAlias?.migr;
+                    const originalIsMigrated = item.migr?.toUpperCase() === "YES";
                     dsNode = new ZoweDatasetNode({
                         label: item.dsname,
-                        collapsibleState: item.dsorg?.startsWith("PO")
-                            ? vscode.TreeItemCollapsibleState.Collapsed
-                            : vscode.TreeItemCollapsibleState.None,
+                        collapsibleState: originalIsMigrated || !item.dsorg?.startsWith("PO")
+                            ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Collapsed,
                         parentNode: this,
                         profile: cachedProfile,
                         aliasTargetDsn: resolvedAlias?.dsname,
+                        contextOverride: originalIsMigrated ? Constants.DS_MIGRATED_FILE_CONTEXT : undefined,
                     });
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.dsorg?.startsWith("PO")) {
