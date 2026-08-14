@@ -10,10 +10,11 @@
  */
 
 import * as path from "path";
-import type { Config } from "@zowe/imperative";
+import * as vscode from "vscode";
+import type { Config, IConfigLayer } from "@zowe/imperative";
 import { ConfigSchemaHelpers } from "./ConfigSchemaHelpers";
 import { ConfigUtils } from "./ConfigUtils";
-import type { ChangeEntry } from "./ConfigTypes";
+import type { AutostoreToggleChange, ChangeEntry } from "./ConfigTypes";
 
 export type { ChangeEntry } from "./ConfigTypes";
 
@@ -141,6 +142,31 @@ export class ConfigChangeHandlers {
         // Only save if not in simulation mode
         if (!isSimulation) {
             await configToUse.save();
+        }
+    }
+
+    /**
+     * Applies pending autostore toggles to their target configuration layer.
+     */
+    public static async handleAutostoreToggle(otherChanges: AutostoreToggleChange[]): Promise<void> {
+        for (const change of otherChanges) {
+            if (change.type === "autostore") {
+                try {
+                    const profInfo = await ConfigUtils.createProfileInfoAndLoad();
+                    const teamConfig = profInfo.getTeamConfig();
+
+                    const targetLayer = teamConfig.layers.find((layer: IConfigLayer) => layer.path === change.configPath);
+
+                    if (targetLayer) {
+                        teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
+                        teamConfig.set("autoStore", change.value, { parseString: true });
+                        await teamConfig.save();
+                    }
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    vscode.window.showErrorMessage(`Error updating autostore setting: ${errorMessage}`);
+                }
+            }
         }
     }
 }

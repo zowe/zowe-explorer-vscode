@@ -12,6 +12,41 @@
 import { ConfigEditorProfileOperations } from "../../../../src/utils/ConfigEditorProfileOperations";
 import { ConfigMoveAPI, IConfigLayer } from "../../../../src/webviews/src/config-editor/types";
 import { vi, Mock } from "vitest";
+import * as vscode from "vscode";
+import { ConfigUtils } from "../../../../src/utils/ConfigUtils";
+import { ConfigEditorPathUtils } from "../../../../src/utils/ConfigEditorPathUtils";
+import { FavoritePersistenceUtils } from "../../../../src/utils/FavoritePersistenceUtils";
+import * as MoveUtils from "../../../../src/webviews/src/config-editor/utils/moveUtils";
+
+vi.mock("../../../../src/configuration/Profiles", () => ({
+    Profiles: {
+        getInstance: vi.fn().mockReturnValue({
+            overrideWithEnv: false,
+            refresh: vi.fn().mockResolvedValue(undefined),
+        }),
+    },
+}));
+
+vi.mock("../../../../src/utils/ConfigEditorPathUtils", () => ({
+    ConfigEditorPathUtils: {
+        constructNestedProfilePath: vi.fn(),
+        getNewProfilePath: vi.fn(),
+        updateChangeKey: vi.fn(),
+        updateChangePath: vi.fn(),
+    },
+}));
+
+vi.mock("../../../../src/utils/FavoritePersistenceUtils", () => ({
+    FavoritePersistenceUtils: {
+        applyProfileRenameToStoredTreePersistence: vi.fn().mockResolvedValue(undefined),
+        fireAndForgetExplorerTreeRebuildAfterRename: vi.fn(),
+    },
+}));
+
+vi.mock("../../../../src/webviews/src/config-editor/utils/moveUtils", () => ({
+    updateDefaultsAfterRename: vi.fn(),
+    simulateDefaultsUpdateAfterRename: vi.fn(),
+}));
 
 // Mock console.warn to avoid noise in tests
 const originalConsoleWarn = console.warn;
@@ -773,6 +808,582 @@ describe("ConfigEditorProfileOperations", () => {
                 renames: {},
             });
             expect(result.isValid).toBe(true);
+        });
+    });
+
+    describe("sortRenamesByDepth", () => {
+        it("should sort renames by newKey depth first, then by originalKey depth", () => {
+            const renames = [
+                { originalKey: "profiles.parent.child.grandchild", newKey: "profiles.parent.child.renamedGrandchild", configPath: "/c" },
+                { originalKey: "profiles.parent", newKey: "profiles.renamedParent", configPath: "/c" },
+                { originalKey: "profiles.parent.child", newKey: "profiles.parent.renamedChild", configPath: "/c" },
+                { originalKey: "profiles.other.deep.nested.profile", newKey: "profiles.parent.renamedChild", configPath: "/c" },
+                { originalKey: "profiles.simple", newKey: "profiles.parent.renamedChild", configPath: "/c" },
+            ];
+
+            const sortedRenames = profileOperations.sortRenamesByDepth(renames);
+
+            expect(sortedRenames).toHaveLength(5);
+            expect(sortedRenames[0].newKey).toBe("profiles.renamedParent");
+            expect(sortedRenames[1].newKey).toBe("profiles.parent.renamedChild");
+            expect(sortedRenames[2].newKey).toBe("profiles.parent.renamedChild");
+            expect(sortedRenames[3].newKey).toBe("profiles.parent.renamedChild");
+            expect(sortedRenames[4].newKey).toBe("profiles.parent.child.renamedGrandchild");
+
+            // Secondary sort by originalKey depth for renames that share the same newKey depth
+            expect(sortedRenames[1].originalKey).toBe("profiles.simple");
+            expect(sortedRenames[2].originalKey).toBe("profiles.parent.child");
+            expect(sortedRenames[3].originalKey).toBe("profiles.other.deep.nested.profile");
+        });
+
+        it("should handle empty array", () => {
+            expect(profileOperations.sortRenamesByDepth([])).toEqual([]);
+        });
+
+        it("should handle single rename", () => {
+            const renames = [{ originalKey: "profiles.test", newKey: "profiles.renamed", configPath: "/c" }];
+            expect(profileOperations.sortRenamesByDepth(renames)).toEqual(renames);
+        });
+    });
+
+    describe("prepareRenamesForProcessing", () => {
+        it("should drop renames whose originalKey equals its newKey", () => {
+            const renames = [
+                { originalKey: "profiles.unchanged", newKey: "profiles.unchanged", configPath: "/c" },
+                { originalKey: "profiles.changed", newKey: "profiles.renamed", configPath: "/c" },
+            ];
+
+            const result = profileOperations.prepareRenamesForProcessing(renames);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].originalKey).toBe("profiles.changed");
+        });
+
+        it("should re-parent an unrenamed child under its renamed parent and drop the now-redundant child rename", () => {
+            const renames = [
+                { originalKey: "parent.child", newKey: "parent.child", configPath: "/c" },
+                { originalKey: "parent", newKey: "renamedParent", configPath: "/c" },
+            ];
+
+            const result = profileOperations.prepareRenamesForProcessing(renames);
+
+            // Sorting puts the parent rename first; re-parenting rewrites the child's original/new key to
+            // "renamedParent.child" on both sides, which becomes a no-op and gets filtered out - the parent
+            // move alone relocates the child, so only the parent rename needs to be applied.
+            expect(result).toEqual([{ originalKey: "parent", newKey: "renamedParent", configPath: "/c" }]);
+        });
+
+        it("should remove duplicate renames that target the same final key", () => {
+            const renames = [
+                { originalKey: "profiles.one", newKey: "profiles.renamed", configPath: "/c" },
+                { originalKey: "profiles.two", newKey: "profiles.renamed", configPath: "/c" },
+            ];
+
+            const result = profileOperations.prepareRenamesForProcessing(renames);
+
+            expect(result).toHaveLength(1);
+        });
+    });
+
+    describe("handleProfileRenames", () => {
+        let teamConfig: any;
+        let mockReadProfilesFromDisk: Mock;
+        let mockProfileInfo: any;
+
+        beforeEach(() => {
+            teamConfig = {
+                layers: [{ path: "/test/config/path", user: true, global: false }],
+                api: {
+                    layers: {
+                        activate: vi.fn(),
+                        get: vi.fn(() => ({
+                            properties: {
+                                profiles: {
+                                    testProfile: { type: "zosmf", properties: { host: "test.host.com" } },
+                                },
+                            },
+                        })),
+                    },
+                },
+                set: vi.fn(),
+                delete: vi.fn(),
+                save: vi.fn().mockResolvedValue(undefined),
+            };
+            mockReadProfilesFromDisk = vi.fn().mockResolvedValue(undefined);
+            mockProfileInfo = {
+                readProfilesFromDisk: mockReadProfilesFromDisk,
+                getTeamConfig: vi.fn(() => teamConfig),
+            };
+            vi.spyOn(ConfigUtils, "createProfileInfoAndLoad").mockResolvedValue(mockProfileInfo as any);
+            (ConfigEditorPathUtils.constructNestedProfilePath as Mock).mockImplementation((key: string) => `profiles.${key}`);
+        });
+
+        it("should return early without loading profiles when renames array is empty", async () => {
+            await profileOperations.handleProfileRenames([]);
+            expect(ConfigUtils.createProfileInfoAndLoad).not.toHaveBeenCalled();
+        });
+
+        it("should apply a single profile rename end-to-end", async () => {
+            const renames = [{ originalKey: "testProfile", newKey: "renamedProfile", configPath: "/test/config/path" }];
+
+            await profileOperations.handleProfileRenames(renames);
+
+            expect(teamConfig.api.layers.activate).toHaveBeenCalledWith(true, false);
+            expect(teamConfig.set).toHaveBeenCalledWith(
+                "profiles.renamedProfile",
+                { type: "zosmf", properties: { host: "test.host.com" } },
+                { parseString: true }
+            );
+            expect(teamConfig.delete).toHaveBeenCalledWith("profiles.testProfile");
+            expect(teamConfig.save).toHaveBeenCalled();
+            expect(mockReadProfilesFromDisk).toHaveBeenCalled();
+            expect(FavoritePersistenceUtils.applyProfileRenameToStoredTreePersistence).toHaveBeenCalledWith(renames[0]);
+            expect(FavoritePersistenceUtils.fireAndForgetExplorerTreeRebuildAfterRename).toHaveBeenCalledWith(renames[0]);
+        });
+
+        it("should show a cancellation error and abort the batch when a critical error occurs", async () => {
+            // Both source and target already exist under the layer, which is a critical ("already exists") error.
+            (teamConfig.api.layers.get as Mock).mockReturnValue({
+                properties: {
+                    profiles: {
+                        testProfile: { type: "zosmf" },
+                        renamedProfile: { type: "zosmf" },
+                    },
+                },
+            });
+            const showErrorMessageSpy = vi.spyOn(vscode.window, "showErrorMessage").mockReturnValue(undefined as any);
+
+            const renames = [{ originalKey: "testProfile", newKey: "renamedProfile", configPath: "/test/config/path" }];
+
+            await expect(profileOperations.handleProfileRenames(renames)).rejects.toThrow("Critical error during profile rename");
+
+            expect(showErrorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Save operation cancelled"));
+            showErrorMessageSpy.mockRestore();
+        });
+
+        it("should show an error message and continue when a non-critical error occurs", async () => {
+            (ConfigEditorPathUtils.constructNestedProfilePath as Mock).mockImplementation(() => {
+                throw new Error("Some non-critical failure");
+            });
+            const showErrorMessageSpy = vi.spyOn(vscode.window, "showErrorMessage").mockReturnValue(undefined as any);
+
+            const renames = [{ originalKey: "testProfile", newKey: "renamedProfile", configPath: "/test/config/path" }];
+
+            await expect(profileOperations.handleProfileRenames(renames)).resolves.toBeUndefined();
+
+            expect(showErrorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Error renaming profile"));
+            showErrorMessageSpy.mockRestore();
+        });
+    });
+
+    describe("getProfileFromTeamConfig", () => {
+        it("should find a top-level profile", () => {
+            const teamConfig = {
+                api: { layers: { get: () => ({ properties: { profiles: { testProfile: { type: "zosmf" } } } }) } },
+            };
+            const result = (profileOperations as any).getProfileFromTeamConfig(teamConfig, "profiles.testProfile");
+            expect(result).toEqual({ type: "zosmf" });
+        });
+
+        it("should return null when the profile does not exist", () => {
+            const teamConfig = {
+                api: { layers: { get: () => ({ properties: { profiles: {} } }) } },
+            };
+            const result = (profileOperations as any).getProfileFromTeamConfig(teamConfig, "profiles.missing");
+            expect(result).toBeNull();
+        });
+    });
+
+    describe("moveProfileDirectly", () => {
+        it("should throw when the source profile does not exist", () => {
+            const teamConfig = {
+                api: { layers: { get: vi.fn(() => ({ properties: { profiles: {} } })) } },
+                set: vi.fn(),
+                delete: vi.fn(),
+            };
+            const layerActive = () => ({ properties: { profiles: {} } });
+
+            expect(() => {
+                (profileOperations as any).moveProfileDirectly(teamConfig, layerActive, "profiles.nonexistent", "profiles.targetProfile");
+            }).toThrow("Source profile not found at path: profiles.nonexistent");
+        });
+
+        it("should throw when the target profile already exists", () => {
+            const teamConfig = {
+                api: {
+                    layers: {
+                        get: vi.fn(() => ({ properties: { profiles: { sourceProfile: { type: "zosmf" }, targetProfile: { type: "zosmf" } } } })),
+                    },
+                },
+                set: vi.fn(),
+                delete: vi.fn(),
+            };
+            const layerActive = () => ({ properties: { profiles: { sourceProfile: { type: "zosmf" }, targetProfile: { type: "zosmf" } } } });
+
+            expect(() => {
+                (profileOperations as any).moveProfileDirectly(teamConfig, layerActive, "profiles.sourceProfile", "profiles.targetProfile");
+            }).toThrow("Target profile already exists at path: profiles.targetProfile");
+        });
+
+        it("should move the profile by setting the target path and deleting the source path", () => {
+            const teamConfig = {
+                api: { layers: { get: vi.fn(() => ({ properties: { profiles: { sourceProfile: { type: "zosmf" } } } })) } },
+                set: vi.fn(),
+                delete: vi.fn(),
+            };
+            const layerActive = () => ({ properties: { profiles: { sourceProfile: { type: "zosmf" } } } });
+
+            (profileOperations as any).moveProfileDirectly(teamConfig, layerActive, "profiles.sourceProfile", "profiles.targetProfile");
+
+            expect(teamConfig.set).toHaveBeenCalledWith("profiles.targetProfile", { type: "zosmf" }, { parseString: true });
+            expect(teamConfig.delete).toHaveBeenCalledWith("profiles.sourceProfile");
+        });
+    });
+
+    describe("createTeamConfigAdapter", () => {
+        it("should delegate get/set/delete to the underlying team config", () => {
+            const teamConfig = {
+                api: { layers: { get: vi.fn(() => ({ properties: { profiles: { testProfile: { type: "zosmf" } } } })) } },
+                set: vi.fn(),
+                delete: vi.fn(),
+            };
+
+            const adapter = (profileOperations as any).createTeamConfigAdapter(teamConfig);
+
+            expect(adapter.get("profiles.testProfile")).toEqual({ type: "zosmf" });
+
+            adapter.set("profiles.testProfile", { type: "zosmf", properties: {} });
+            expect(teamConfig.set).toHaveBeenCalledWith("profiles.testProfile", { type: "zosmf", properties: {} }, { parseString: true });
+
+            adapter.delete("profiles.testProfile");
+            expect(teamConfig.delete).toHaveBeenCalledWith("profiles.testProfile");
+        });
+    });
+
+    describe("createNestedProfileStructureDirectly", () => {
+        it("should create a nested profile structure via the team config adapter", () => {
+            const teamConfig = {
+                api: {
+                    layers: { get: vi.fn(() => ({ properties: { profiles: { tso: { type: "tso", properties: { host: "test.host.com" } } } } })) },
+                },
+                set: vi.fn(),
+            };
+
+            (profileOperations as any).createNestedProfileStructureDirectly(teamConfig, "profiles.tso", "profiles.tso.asdf", "tso", "tso.asdf");
+
+            expect(teamConfig.set).toHaveBeenCalledWith(
+                "profiles.tso",
+                expect.objectContaining({
+                    type: "tso",
+                    profiles: { asdf: expect.objectContaining({ type: "tso" }) },
+                }),
+                { parseString: true }
+            );
+        });
+    });
+
+    describe("findNestedProfile", () => {
+        it("should handle various nested and top-level lookup scenarios", () => {
+            const profilesObj = {
+                parent: {
+                    type: "zosmf",
+                    properties: { host: "test.host.com" },
+                    profiles: { child: { type: "zosmf", properties: { host: "child.host.com" } } },
+                },
+                simple: { type: "zosmf", properties: { host: "simple.host.com" } },
+            };
+
+            const nestedResult = (profileOperations as any).findNestedProfile("parent.child", profilesObj);
+            expect(nestedResult).toEqual({ type: "zosmf", properties: { host: "child.host.com" } });
+
+            const simpleResult = (profileOperations as any).findNestedProfile("simple", profilesObj);
+            expect(simpleResult).toEqual({ type: "zosmf", properties: { host: "simple.host.com" } });
+
+            const nonExistentResult = (profileOperations as any).findNestedProfile("nonexistent", profilesObj);
+            expect(nonExistentResult).toBeNull();
+        });
+    });
+
+    describe("validateProfileRename", () => {
+        it("should allow the rename when the original profile exists and the target does not", () => {
+            const mockTeamConfig = { api: { layers: { get: vi.fn() } } };
+            const getProfileFromTeamConfigSpy = vi
+                .spyOn(profileOperations as any, "getProfileFromTeamConfig")
+                .mockReturnValueOnce({ type: "zosmf" }) // original profile exists
+                .mockReturnValueOnce(null); // target profile doesn't exist
+
+            const rename = { originalKey: "profiles.testProfile", newKey: "profiles.renamedProfile" };
+            const result = (profileOperations as any).validateProfileRename(
+                mockTeamConfig,
+                "profiles.testProfile",
+                "profiles.renamedProfile",
+                rename
+            );
+
+            expect(result).toEqual({ skip: false });
+            expect(getProfileFromTeamConfigSpy).toHaveBeenCalledWith(mockTeamConfig, "profiles.testProfile");
+            expect(getProfileFromTeamConfigSpy).toHaveBeenCalledWith(mockTeamConfig, "profiles.renamedProfile");
+        });
+
+        it("should return skip:true when the original profile does not exist yet", () => {
+            const mockTeamConfig = { api: { layers: { get: vi.fn() } } };
+            const getProfileFromTeamConfigSpy = vi.spyOn(profileOperations as any, "getProfileFromTeamConfig").mockReturnValueOnce(null);
+
+            const rename = { originalKey: "profiles.nonExistentProfile", newKey: "profiles.renamedProfile" };
+            const result = (profileOperations as any).validateProfileRename(
+                mockTeamConfig,
+                "profiles.nonExistentProfile",
+                "profiles.renamedProfile",
+                rename
+            );
+
+            expect(result).toEqual({ skip: true });
+            expect(getProfileFromTeamConfigSpy).toHaveBeenCalledWith(mockTeamConfig, "profiles.nonExistentProfile");
+        });
+
+        it("should throw when the target profile already exists", () => {
+            const mockTeamConfig = { api: { layers: { get: vi.fn() } } };
+            const getProfileFromTeamConfigSpy = vi
+                .spyOn(profileOperations as any, "getProfileFromTeamConfig")
+                .mockReturnValueOnce({ type: "zosmf" })
+                .mockReturnValueOnce({ type: "zosmf" });
+
+            const rename = { originalKey: "profiles.testProfile", newKey: "profiles.existingProfile" };
+
+            expect(() => {
+                (profileOperations as any).validateProfileRename(mockTeamConfig, "profiles.testProfile", "profiles.existingProfile", rename);
+            }).toThrow("Cannot rename profile 'profiles.testProfile' to 'profiles.existingProfile': Profile 'profiles.existingProfile' already exists");
+
+            expect(getProfileFromTeamConfigSpy).toHaveBeenCalledWith(mockTeamConfig, "profiles.testProfile");
+            expect(getProfileFromTeamConfigSpy).toHaveBeenCalledWith(mockTeamConfig, "profiles.existingProfile");
+        });
+    });
+
+    describe("updateDefaultsAfterRename", () => {
+        it("should apply updated defaults returned by MoveUtils", () => {
+            const mockTeamConfig = {
+                api: { layers: { get: vi.fn().mockReturnValue({ properties: { defaults: { zosmf: "profiles.testProfile" } } }) } },
+                set: vi.fn(),
+            };
+
+            (MoveUtils.updateDefaultsAfterRename as Mock).mockImplementation((layerActive: any, originalKey: string, newKey: string, update: any) => {
+                const defaults = layerActive().properties.defaults;
+                const updated = { ...defaults };
+                if (updated.zosmf === originalKey) {
+                    updated.zosmf = newKey;
+                }
+                update(updated);
+            });
+
+            const rename = { originalKey: "profiles.testProfile", newKey: "profiles.renamedProfile" };
+
+            expect(() => {
+                (profileOperations as any).updateDefaultsAfterRename(mockTeamConfig, rename);
+            }).not.toThrow();
+
+            expect(mockTeamConfig.set).toHaveBeenCalledWith("defaults", { zosmf: "profiles.renamedProfile" }, { parseString: true });
+        });
+
+        it("should swallow errors from MoveUtils and log a warning", () => {
+            const mockTeamConfig = {
+                api: { layers: { get: vi.fn().mockReturnValue({ properties: { defaults: {} } }) } },
+                set: vi.fn(),
+            };
+
+            (MoveUtils.updateDefaultsAfterRename as Mock).mockImplementation(() => {
+                throw new Error("Defaults update failed");
+            });
+
+            const rename = { originalKey: "profiles.testProfile", newKey: "profiles.renamedProfile" };
+
+            expect(() => {
+                (profileOperations as any).updateDefaultsAfterRename(mockTeamConfig, rename);
+            }).not.toThrow();
+
+            expect(console.warn).toHaveBeenCalledWith(
+                expect.stringContaining("update defaults from 'profiles.testProfile' to 'profiles.renamedProfile': Defaults update failed")
+            );
+        });
+
+        it("should update defaults referencing a child of the renamed profile", () => {
+            const mockTeamConfig = {
+                api: {
+                    layers: {
+                        get: vi.fn().mockReturnValue({ properties: { defaults: { zosmf: "profiles.testProfile", tso: "profiles.testProfile.tso" } } }),
+                    },
+                },
+                set: vi.fn(),
+            };
+
+            (MoveUtils.updateDefaultsAfterRename as Mock).mockImplementation((layerActive: any, originalKey: string, newKey: string, update: any) => {
+                const defaults = layerActive().properties.defaults;
+                const updated = { ...defaults };
+                let hasChanges = false;
+                Object.entries(updated).forEach(([type, name]) => {
+                    if (typeof name === "string" && name.startsWith(originalKey + ".")) {
+                        updated[type] = newKey + name.substring(originalKey.length);
+                        hasChanges = true;
+                    }
+                });
+                if (hasChanges) {
+                    update(updated);
+                }
+            });
+
+            const rename = { originalKey: "profiles.testProfile", newKey: "profiles.renamedProfile" };
+            (profileOperations as any).updateDefaultsAfterRename(mockTeamConfig, rename);
+
+            expect(mockTeamConfig.set).toHaveBeenCalledWith(
+                "defaults",
+                { zosmf: "profiles.testProfile", tso: "profiles.renamedProfile.tso" },
+                { parseString: true }
+            );
+        });
+    });
+
+    describe("handleRenameError", () => {
+        it("should show an error message for a non-critical error without throwing", () => {
+            const showErrorMessageSpy = vi.spyOn(vscode.window, "showErrorMessage").mockReturnValue(undefined as any);
+
+            expect(() => {
+                (profileOperations as any).handleRenameError(new Error("Some failure"), { originalKey: "a", newKey: "b" });
+            }).not.toThrow();
+
+            expect(showErrorMessageSpy).toHaveBeenCalledWith("Error renaming profile from 'a' to 'b': Some failure");
+            showErrorMessageSpy.mockRestore();
+        });
+
+        it("should show a cancellation message and rethrow for a critical error", () => {
+            const showErrorMessageSpy = vi.spyOn(vscode.window, "showErrorMessage").mockReturnValue(undefined as any);
+
+            expect(() => {
+                (profileOperations as any).handleRenameError(new Error("Profile 'b' already exists"), { originalKey: "a", newKey: "b" });
+            }).toThrow("Critical error during profile rename");
+
+            expect(showErrorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Save operation cancelled"));
+            showErrorMessageSpy.mockRestore();
+        });
+    });
+
+    describe("updateProfileChangesForRenames", () => {
+        beforeEach(() => {
+            vi.spyOn(ConfigUtils, "createProfileInfoAndLoad").mockResolvedValue({} as any);
+        });
+
+        it("should return the message unchanged when there are no renames", async () => {
+            const message = { command: "SAVE_CHANGES", otherData: "test" } as any;
+            const result = await profileOperations.updateProfileChangesForRenames(message, []);
+            expect(result).toEqual(message);
+            expect(ConfigUtils.createProfileInfoAndLoad).not.toHaveBeenCalled();
+        });
+
+        it("should rewrite changes and deletions using the renamed profile paths", async () => {
+            const message = {
+                changes: [{ configPath: "/config.json", profile: "profiles.oldProfile", key: "profiles.oldProfile.host", path: [] }],
+                deletions: [{ configPath: "/config.json", profile: "profiles.oldProfile", key: "profiles.oldProfile.secure", path: [] }],
+            } as any;
+            const renames = [{ originalKey: "profiles.oldProfile", newKey: "profiles.newProfile", configPath: "/config.json" }];
+
+            (ConfigEditorPathUtils.getNewProfilePath as Mock).mockReturnValue("profiles.newProfile");
+            (ConfigEditorPathUtils.updateChangeKey as Mock).mockImplementation((change: any) => change);
+            (ConfigEditorPathUtils.updateChangePath as Mock).mockImplementation((change: any) => change);
+
+            const result = await profileOperations.updateProfileChangesForRenames(message, renames);
+
+            expect(ConfigUtils.createProfileInfoAndLoad).toHaveBeenCalled();
+            expect(result.changes![0].profile).toBe("profiles.newProfile");
+            expect(result.deletions![0].profile).toBe("profiles.newProfile");
+        });
+
+        it("should leave changes without a configPath untouched", async () => {
+            const message = {
+                changes: [{ profile: "profiles.oldProfile", key: "profiles.oldProfile.host", path: [], configPath: undefined }],
+            } as any;
+            const renames = [{ originalKey: "profiles.oldProfile", newKey: "profiles.newProfile", configPath: "/config.json" }];
+
+            const result = await profileOperations.updateProfileChangesForRenames(message, renames);
+
+            expect(result.changes).toEqual(message.changes);
+            expect(ConfigEditorPathUtils.getNewProfilePath).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("simulateProfileRenames", () => {
+        beforeEach(() => {
+            (ConfigEditorPathUtils.constructNestedProfilePath as Mock).mockImplementation((key: string) => `profiles.${key}`);
+        });
+
+        it("should return early when renames array is empty", () => {
+            const removeDuplicateRenamesSpy = vi.spyOn(profileOperations, "removeDuplicateRenames");
+            profileOperations.simulateProfileRenames([], {} as any);
+            expect(removeDuplicateRenamesSpy).not.toHaveBeenCalled();
+        });
+
+        it("should warn and return early when teamConfig is null or undefined", () => {
+            const renames = [{ originalKey: "profiles.testProfile", newKey: "profiles.renamedProfile", configPath: "/c" }];
+            profileOperations.simulateProfileRenames(renames, null as any);
+            expect(console.warn).toHaveBeenCalledWith("Cannot simulate profile renames: teamConfig is null or undefined");
+        });
+
+        it("should skip renames whose config layer cannot be found", () => {
+            const teamConfig = { layers: [], api: { layers: { activate: vi.fn(), get: vi.fn() } } };
+            const renames = [{ originalKey: "profiles.testProfile", newKey: "profiles.renamedProfile", configPath: "/missing" }];
+
+            expect(() => profileOperations.simulateProfileRenames(renames, teamConfig as any)).not.toThrow();
+            expect(teamConfig.api.layers.activate).not.toHaveBeenCalled();
+        });
+
+        it("should move a profile within the simulated team config", () => {
+            const teamConfig = {
+                layers: [{ path: "/test/config/path", user: true, global: false }],
+                api: {
+                    layers: {
+                        activate: vi.fn(),
+                        get: vi.fn(() => ({
+                            properties: { profiles: { testProfile: { type: "zosmf", properties: { host: "test.host.com" } } } },
+                        })),
+                    },
+                },
+                set: vi.fn(),
+                delete: vi.fn(),
+            };
+            const renames = [{ originalKey: "testProfile", newKey: "renamedProfile", configPath: "/test/config/path" }];
+
+            profileOperations.simulateProfileRenames(renames, teamConfig as any);
+
+            expect(teamConfig.api.layers.activate).toHaveBeenCalledWith(true, false);
+            expect(teamConfig.set).toHaveBeenCalledWith(
+                "profiles.renamedProfile",
+                { type: "zosmf", properties: { host: "test.host.com" } },
+                { parseString: true }
+            );
+            expect(teamConfig.delete).toHaveBeenCalledWith("profiles.testProfile");
+            expect(MoveUtils.simulateDefaultsUpdateAfterRename).toHaveBeenCalledWith(expect.any(Function), "testProfile", "renamedProfile");
+        });
+
+        it("should create a nested profile structure when the rename nests the profile under itself", () => {
+            const teamConfig = {
+                layers: [{ path: "/test/config/path", user: true, global: false }],
+                api: {
+                    layers: {
+                        activate: vi.fn(),
+                        get: vi.fn(() => ({
+                            properties: { profiles: { tso: { type: "tso", properties: { host: "test.host.com" } } } },
+                        })),
+                    },
+                },
+                set: vi.fn(),
+                delete: vi.fn(),
+            };
+            const renames = [{ originalKey: "tso", newKey: "tso.asdf", configPath: "/test/config/path" }];
+
+            profileOperations.simulateProfileRenames(renames, teamConfig as any);
+
+            expect(teamConfig.set).toHaveBeenCalledWith(
+                "profiles.tso",
+                expect.objectContaining({ profiles: { asdf: expect.objectContaining({ type: "tso" }) } }),
+                { parseString: true }
+            );
         });
     });
 });

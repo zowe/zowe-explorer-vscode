@@ -13,6 +13,13 @@ import { ConfigChangeHandlers, ChangeEntry } from "../../../../src/utils/ConfigC
 import { Mock, vi } from "vitest";
 import { ProfileInfo } from "@zowe/imperative";
 import { ConfigSchemaHelpers } from "../../../../src/utils/ConfigSchemaHelpers";
+import * as vscode from "vscode";
+
+vi.mock("vscode", () => ({
+    window: {
+        showErrorMessage: vi.fn(),
+    },
+}));
 
 // Mock all external dependencies
 vi.mock("@zowe/imperative", () => ({
@@ -976,6 +983,62 @@ describe("ConfigChangeHandlers", () => {
             expect(teamConfig.delete).toHaveBeenCalledTimes(2);
             expect(teamConfig.delete).toHaveBeenCalledWith("profiles.test1.port");
             expect(teamConfig.delete).toHaveBeenCalledWith("profiles.test2.port");
+        });
+    });
+
+    describe("handleAutostoreToggle", () => {
+        it("should apply an autostore toggle to its target layer", async () => {
+            const targetLayer = { path: "/mock/config.json", user: true, global: false };
+            mockLayers.find.mockReturnValue(targetLayer);
+
+            await ConfigChangeHandlers.handleAutostoreToggle([{ type: "autostore", value: true, configPath: "/mock/config.json" }]);
+
+            expect(mockTeamConfig.api.layers.activate).toHaveBeenCalledWith(true, false);
+            expect(mockTeamConfig.set).toHaveBeenCalledWith("autoStore", true, { parseString: true });
+            expect(mockTeamConfig.save).toHaveBeenCalled();
+        });
+
+        it("should handle multiple autostore changes across different config paths", async () => {
+            const targetLayer1 = { path: "/mock/config1.json", user: true, global: false };
+            const targetLayer2 = { path: "/mock/config2.json", user: false, global: true };
+            mockLayers.find.mockReturnValueOnce(targetLayer1).mockReturnValueOnce(targetLayer2);
+
+            await ConfigChangeHandlers.handleAutostoreToggle([
+                { type: "autostore", value: true, configPath: "/mock/config1.json" },
+                { type: "autostore", value: false, configPath: "/mock/config2.json" },
+            ]);
+
+            expect(mockTeamConfig.set).toHaveBeenCalledWith("autoStore", true, { parseString: true });
+            expect(mockTeamConfig.set).toHaveBeenCalledWith("autoStore", false, { parseString: true });
+            expect(mockTeamConfig.save).toHaveBeenCalledTimes(2);
+        });
+
+        it("should skip changes that are not of type autostore", async () => {
+            await ConfigChangeHandlers.handleAutostoreToggle([{ type: "other", value: "test", configPath: "/mock/config.json" } as any]);
+
+            expect(mockLayers.find).not.toHaveBeenCalled();
+            expect(mockTeamConfig.set).not.toHaveBeenCalled();
+            expect(mockTeamConfig.save).not.toHaveBeenCalled();
+        });
+
+        it("should not set or save when the target layer is not found", async () => {
+            mockLayers.find.mockReturnValue(undefined);
+
+            await ConfigChangeHandlers.handleAutostoreToggle([{ type: "autostore", value: true, configPath: "/missing/config.json" }]);
+
+            expect(mockTeamConfig.api.layers.activate).not.toHaveBeenCalled();
+            expect(mockTeamConfig.set).not.toHaveBeenCalled();
+            expect(mockTeamConfig.save).not.toHaveBeenCalled();
+        });
+
+        it("should show an error message when applying the toggle throws", async () => {
+            vi.mocked(ProfileInfo).mockImplementation(() => {
+                throw new Error("Test error");
+            });
+
+            await ConfigChangeHandlers.handleAutostoreToggle([{ type: "autostore", value: true, configPath: "/mock/config.json" }]);
+
+            expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Error updating autostore setting: Test error");
         });
     });
 });

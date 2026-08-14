@@ -137,11 +137,7 @@ async function scrollProfileTreeNodeIntoView(profileKey: string, rootOnly: boole
     }, sel);
 }
 
-/**
- * WebdriverIO dragAndDrop does not reliably fire HTML5 drag on the profile row twice in one session;
- * dispatch dragstart → (delay for React state) → dragover/drop/dragend in the webview document.
- */
-async function performProfileTreeHtml5DragDrop(sourceSelector: string, targetSelector: string): Promise<void> {
+async function performProfileTreeMouseDragDrop(sourceSelector: string, targetSelector: string): Promise<void> {
     const err = await browser.executeAsync(
         function (sourceSel: string, targetSel: string, done: (e: string | null) => void) {
             const src = document.querySelector(sourceSel);
@@ -158,12 +154,25 @@ async function performProfileTreeHtml5DragDrop(sourceSelector: string, targetSel
             }
             src.scrollIntoView({ block: "center", inline: "nearest" });
             tgt.scrollIntoView({ block: "center", inline: "nearest" });
-            const dt = new DataTransfer();
-            srcItem.dispatchEvent(new DragEvent("dragstart", { bubbles: true, cancelable: true, dataTransfer: dt }));
+
+            const dispatchMouse = (el: Element | Document, type: string, x: number, y: number) => {
+                el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window, clientX: x, clientY: y, button: 0 }));
+            };
+
+            const srcRect = srcItem.getBoundingClientRect();
+            const startX = srcRect.left + srcRect.width / 2;
+            const startY = srcRect.top + srcRect.height / 2;
+
+            dispatchMouse(srcItem, "mousedown", startX, startY);
+            dispatchMouse(document, "mousemove", startX + 10, startY + 10);
+
             setTimeout(() => {
-                tgtItem.dispatchEvent(new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: dt }));
-                tgtItem.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: dt }));
-                srcItem.dispatchEvent(new DragEvent("dragend", { bubbles: true, cancelable: true, dataTransfer: dt }));
+                const tgtRect = tgtItem.getBoundingClientRect();
+                const endX = tgtRect.left + tgtRect.width / 2;
+                const endY = tgtRect.top + tgtRect.height / 2;
+
+                dispatchMouse(document, "mousemove", endX, endY);
+                dispatchMouse(document, "mouseup", endX, endY);
                 done(null);
             }, 150);
         },
@@ -215,7 +224,7 @@ When("the user drops the drag on profile key {string}", async function (targetPr
     await this.targetElement.waitForDisplayed({ timeout: 5000 });
     const sourceSel = profileTreeNodeSelector(this.dragSourceKey as string, Boolean(this.dragSourceRootOnly));
     const targetSel = profileTreeNodeSelector(targetProfileKey, false);
-    await performProfileTreeHtml5DragDrop(sourceSel, targetSel);
+    await performProfileTreeMouseDragDrop(sourceSel, targetSel);
 });
 
 When("the user drops the drag on profile key {string} at root level in the tree", async function (targetProfileKey: string) {
@@ -226,7 +235,7 @@ When("the user drops the drag on profile key {string} at root level in the tree"
     await this.targetElement.waitForDisplayed({ timeout: 5000 });
     const sourceSel = profileTreeNodeSelector(this.dragSourceKey as string, Boolean(this.dragSourceRootOnly));
     const targetSel = profileTreeNodeSelector(targetProfileKey, true);
-    await performProfileTreeHtml5DragDrop(sourceSel, targetSel);
+    await performProfileTreeMouseDragDrop(sourceSel, targetSel);
 });
 
 Then("the profile at dotted path {string} should exist in the config file", async (dottedPath: string) => {

@@ -11,7 +11,7 @@
 
 export * from "./configUtils";
 export { postProfilesAndEnv } from "./extensionRequests";
-export * from "./MoveUtils";
+export * from "./moveUtils";
 export * from "./propertyUtils";
 export * from "./generalUtils";
 export * from "./sortingUtils";

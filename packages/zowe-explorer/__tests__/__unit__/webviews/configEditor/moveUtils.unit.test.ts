@@ -24,7 +24,7 @@ import {
     renameProfileInPlace,
     updateDefaultsAfterRename,
     simulateDefaultsUpdateAfterRename,
-} from "../../../../src/webviews/src/config-editor/utils/MoveUtils";
+} from "../../../../src/webviews/src/config-editor/utils/moveUtils";
 import { ConfigMoveAPI, IConfigLayer } from "../../../../src/webviews/src/config-editor/types";
 import { vi } from "vitest";
 

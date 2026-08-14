@@ -12,7 +12,39 @@
 import { ConfigUtils, LayerModifications } from "../../../../src/utils/ConfigUtils";
 import { ChangeEntry } from "../../../../src/utils/ConfigChangeHandlers";
 import { schemaValidation } from "../../../../src/utils/ConfigSchemaHelpers";
+import type { ConfigParseError } from "../../../../src/webviews/src/config-editor/types";
 import { vi } from "vitest";
+import * as fs from "fs";
+import { ZoweVsCodeExtension, FileManagement } from "@zowe/zowe-explorer-api";
+
+vi.mock("fs", () => ({
+    existsSync: vi.fn(),
+    readFileSync: vi.fn(),
+}));
+
+vi.mock("path", () => ({
+    resolve: vi.fn().mockImplementation((p: string) => p),
+    join: vi.fn().mockImplementation((...args: string[]) => args.join("/")),
+    dirname: vi.fn().mockImplementation((p: string) => p.split("/").slice(0, -1).join("/")),
+}));
+
+vi.mock("@zowe/zowe-explorer-api", () => ({
+    ZoweVsCodeExtension: {
+        getConfigLayers: vi.fn(),
+        workspaceRoot: undefined,
+    },
+    FileManagement: {
+        getZoweDir: vi.fn(),
+    },
+}));
+
+vi.mock("../../../../src/configuration/Profiles", () => ({
+    Profiles: {
+        getInstance: vi.fn().mockReturnValue({
+            overrideWithEnv: false,
+        }),
+    },
+}));
 
 describe("ConfigUtils", () => {
     describe("parseConfigChanges", () => {
@@ -780,6 +812,184 @@ describe("ConfigUtils", () => {
                 secure: ["password"],
                 custom: "value",
             });
+        });
+    });
+
+    describe("parseLineColumnFromErrorMessage", () => {
+        it("should extract 0-based line and column from a message", () => {
+            const result = ConfigUtils.parseLineColumnFromErrorMessage("Unexpected token in JSON at Line 5 Column 10");
+            expect(result).toEqual({ line: 4, column: 9 });
+        });
+
+        it("should return undefined line when message has no line info", () => {
+            const result = ConfigUtils.parseLineColumnFromErrorMessage("Column 10 only");
+            expect(result).toEqual({ line: undefined, column: 9 });
+        });
+
+        it("should return undefined column when message has no column info", () => {
+            const result = ConfigUtils.parseLineColumnFromErrorMessage("Line 5 only");
+            expect(result).toEqual({ line: 4, column: undefined });
+        });
+
+        it("should return undefined line and column when message has neither", () => {
+            const result = ConfigUtils.parseLineColumnFromErrorMessage("Some unrelated error message");
+            expect(result).toEqual({ line: undefined, column: undefined });
+        });
+    });
+
+    describe("pushParseError", () => {
+        it("should add a new parse error entry with extracted line/column", () => {
+            const errors: ConfigParseError[] = [];
+            ConfigUtils.pushParseError(errors, "/config/path.json", "Error at Line 3 Column 15");
+            expect(errors).toEqual([{ configPath: "/config/path.json", message: "Error at Line 3 Column 15", line: 2, column: 14 }]);
+        });
+
+        it("should replace an existing entry for the same configPath", () => {
+            const errors: ConfigParseError[] = [{ configPath: "/config/path.json", message: "Old message", line: 0, column: 0 }];
+            ConfigUtils.pushParseError(errors, "/config/path.json", "New message at Line 7 Column 2");
+            expect(errors).toHaveLength(1);
+            expect(errors[0]).toEqual({ configPath: "/config/path.json", message: "New message at Line 7 Column 2", line: 6, column: 1 });
+        });
+
+        it("should append a separate entry for a different configPath", () => {
+            const errors: ConfigParseError[] = [{ configPath: "/config/a.json", message: "Error A", line: 0, column: 0 }];
+            ConfigUtils.pushParseError(errors, "/config/b.json", "Error B");
+            expect(errors).toHaveLength(2);
+            expect(errors[1].configPath).toBe("/config/b.json");
+        });
+    });
+
+    describe("getKnownTeamConfigFilePaths", () => {
+        beforeEach(() => {
+            vi.clearAllMocks();
+            (ZoweVsCodeExtension as any).workspaceRoot = undefined;
+        });
+
+        it("should include resolved paths from config layers", async () => {
+            (ZoweVsCodeExtension.getConfigLayers as any).mockResolvedValue([{ path: "/layer/zowe.config.json" }, { path: "/layer/other.json" }]);
+            (FileManagement.getZoweDir as any).mockReturnValue(undefined);
+
+            const result = await ConfigUtils.getKnownTeamConfigFilePaths();
+
+            expect(result).toContain("/layer/zowe.config.json");
+            expect(result).toContain("/layer/other.json");
+        });
+
+        it("should fall back to known locations when Config.load fails", async () => {
+            (ZoweVsCodeExtension.getConfigLayers as any).mockRejectedValue(new Error("Config.load failed"));
+            (FileManagement.getZoweDir as any).mockReturnValue("/home/user/.zowe");
+
+            const result = await ConfigUtils.getKnownTeamConfigFilePaths();
+
+            expect(result).toContain("/home/user/.zowe/zowe.config.json");
+            expect(result).toContain("/home/user/.zowe/zowe.config.user.json");
+        });
+
+        it("should ignore errors thrown when resolving the zowe directory", async () => {
+            (ZoweVsCodeExtension.getConfigLayers as any).mockResolvedValue([]);
+            (FileManagement.getZoweDir as any).mockImplementation(() => {
+                throw new Error("Imperative not initialized");
+            });
+
+            const result = await ConfigUtils.getKnownTeamConfigFilePaths();
+
+            expect(result).toEqual([]);
+        });
+
+        it("should include workspace root candidates when a workspace is open", async () => {
+            (ZoweVsCodeExtension.getConfigLayers as any).mockResolvedValue([]);
+            (FileManagement.getZoweDir as any).mockReturnValue(undefined);
+            (ZoweVsCodeExtension as any).workspaceRoot = { uri: { fsPath: "/workspace" } };
+
+            const result = await ConfigUtils.getKnownTeamConfigFilePaths();
+
+            expect(result).toContain("/workspace/zowe.config.json");
+            expect(result).toContain("/workspace/zowe.config.user.json");
+        });
+
+        it("should de-duplicate paths that come from multiple sources", async () => {
+            (ZoweVsCodeExtension.getConfigLayers as any).mockResolvedValue([{ path: "/home/user/.zowe/zowe.config.json" }]);
+            (FileManagement.getZoweDir as any).mockReturnValue("/home/user/.zowe");
+
+            const result = await ConfigUtils.getKnownTeamConfigFilePaths();
+
+            expect(result.filter((p) => p === "/home/user/.zowe/zowe.config.json")).toHaveLength(1);
+        });
+    });
+
+    describe("appendJsonParseErrorsForKnownConfigFiles", () => {
+        beforeEach(() => {
+            vi.clearAllMocks();
+            (ZoweVsCodeExtension as any).workspaceRoot = undefined;
+            (ZoweVsCodeExtension.getConfigLayers as any).mockResolvedValue([]);
+            (FileManagement.getZoweDir as any).mockReturnValue(undefined);
+        });
+
+        it("should skip candidates that do not exist on disk", async () => {
+            (ZoweVsCodeExtension.getConfigLayers as any).mockResolvedValue([{ path: "/config/missing.json" }]);
+            (fs.existsSync as any).mockReturnValue(false);
+
+            const parseErrors: ConfigParseError[] = [];
+            await ConfigUtils.appendJsonParseErrorsForKnownConfigFiles(parseErrors);
+
+            expect(parseErrors).toEqual([]);
+        });
+
+        it("should skip candidates already reported in parseErrors", async () => {
+            (ZoweVsCodeExtension.getConfigLayers as any).mockResolvedValue([{ path: "/config/already-reported.json" }]);
+            (fs.existsSync as any).mockReturnValue(true);
+
+            const parseErrors: ConfigParseError[] = [{ configPath: "/config/already-reported.json", message: "existing", line: 0, column: 0 }];
+            await ConfigUtils.appendJsonParseErrorsForKnownConfigFiles(parseErrors);
+
+            expect(parseErrors).toHaveLength(1);
+            expect(fs.readFileSync).not.toHaveBeenCalled();
+        });
+
+        it("should push a parse error for files containing invalid JSON", async () => {
+            (ZoweVsCodeExtension.getConfigLayers as any).mockResolvedValue([{ path: "/config/invalid.json" }]);
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readFileSync as any).mockReturnValue("{ invalid json");
+
+            const parseErrors: ConfigParseError[] = [];
+            await ConfigUtils.appendJsonParseErrorsForKnownConfigFiles(parseErrors);
+
+            expect(parseErrors).toHaveLength(1);
+            expect(parseErrors[0].configPath).toBe("/config/invalid.json");
+            expect(parseErrors[0].message).toContain("Error reading or parsing file /config/invalid.json");
+        });
+
+        it("should not push a parse error for files containing valid JSON", async () => {
+            (ZoweVsCodeExtension.getConfigLayers as any).mockResolvedValue([{ path: "/config/valid.json" }]);
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readFileSync as any).mockReturnValue('{ "profiles": {} }');
+
+            const parseErrors: ConfigParseError[] = [];
+            await ConfigUtils.appendJsonParseErrorsForKnownConfigFiles(parseErrors);
+
+            expect(parseErrors).toEqual([]);
+        });
+
+        it("should strip JSONC comments and trailing commas before parsing", async () => {
+            (ZoweVsCodeExtension.getConfigLayers as any).mockResolvedValue([{ path: "/config/jsonc.json" }]);
+            (fs.existsSync as any).mockReturnValue(true);
+            (fs.readFileSync as any).mockReturnValue('{\n  // a comment\n  "profiles": {},\n}');
+
+            const parseErrors: ConfigParseError[] = [];
+            await ConfigUtils.appendJsonParseErrorsForKnownConfigFiles(parseErrors);
+
+            expect(parseErrors).toEqual([]);
+        });
+
+        it("should best-effort swallow unexpected errors without throwing", async () => {
+            (ZoweVsCodeExtension.getConfigLayers as any).mockRejectedValue(new Error("boom"));
+            (FileManagement.getZoweDir as any).mockImplementation(() => {
+                throw new Error("boom again");
+            });
+
+            const parseErrors: ConfigParseError[] = [];
+            await expect(ConfigUtils.appendJsonParseErrorsForKnownConfigFiles(parseErrors)).resolves.not.toThrow();
+            expect(parseErrors).toEqual([]);
         });
     });
 });
