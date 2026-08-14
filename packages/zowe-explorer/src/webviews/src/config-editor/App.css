@@ -26,8 +26,17 @@ body {
 }
 
 .property-highlight-blink {
-    animation: property-blink 0.9s ease-in-out forwards;
+    position: relative;
+}
+
+.property-highlight-blink::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
     border-radius: 3px;
+    animation: property-blink 0.9s ease-in-out forwards;
 }
 
 /* Profile highlight blink animation — triggered when navigating to a profile from the editor */
@@ -351,14 +360,13 @@ div:has(> .vscode-panel) {
     margin-top: 16px;
 }
 
-.defaults-toggle-button {
+.defaults-toggle-button,
+.profiles-toggle-button {
     transition: all 0.2s ease;
     padding: 6px 0;
 }
 
 .profiles-toggle-button {
-    transition: all 0.2s ease;
-    padding: 6px 0;
     text-align: left;
     justify-content: flex-start;
 }
@@ -372,11 +380,7 @@ div:has(> .vscode-panel) {
     margin-top: 16px;
 }
 
-.defaults-toggle-button:hover {
-    background-color: var(--vscode-list-hoverBackground) !important;
-    border-radius: 4px;
-}
-
+.defaults-toggle-button:hover,
 .profiles-toggle-button:hover {
     background-color: var(--vscode-list-hoverBackground) !important;
     border-radius: 4px;
@@ -692,7 +696,8 @@ ul {
     justify-content: center;
 }
 
-.modal {
+.modal,
+.modal-content {
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
     padding: 24px;
@@ -1017,19 +1022,6 @@ ul {
     color: var(--vscode-disabledForeground);
 }
 
-.modal-content {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
-    padding: 24px;
-    border-radius: 8px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
-    min-width: 300px;
-    max-width: 400px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
 .modal-body {
     display: flex;
     flex-direction: column;
@@ -1248,11 +1240,7 @@ ul {
         right: 0;
     }
 
-    .defaults-toggle-button {
-        padding: 8px 0;
-        font-size: 15px;
-    }
-
+    .defaults-toggle-button,
     .profiles-toggle-button {
         padding: 8px 0;
         font-size: 15px;
@@ -1305,19 +1293,7 @@ ul {
         overflow-y: auto;
     }
 
-    .config-section.defaults-section {
-        flex: 1;
-        min-width: 0;
-        overflow: visible;
-        margin-top: 16px;
-    }
-
-    .defaults-toggle-button {
-        padding: 6px 0;
-        font-size: 14px;
-        gap: 6px;
-    }
-
+    .defaults-toggle-button,
     .profiles-toggle-button {
         padding: 6px 0;
         font-size: 14px;
@@ -1364,19 +1340,7 @@ ul {
         overflow-y: auto;
     }
 
-    .config-section.defaults-section {
-        flex: 1;
-        min-width: 0;
-        overflow: visible;
-        margin-top: 16px;
-    }
-
-    .defaults-toggle-button {
-        padding: 4px 0;
-        font-size: 13px;
-        gap: 4px;
-    }
-
+    .defaults-toggle-button,
     .profiles-toggle-button {
         padding: 4px 0;
         font-size: 13px;
@@ -1393,12 +1357,7 @@ ul {
 
 /* Additional responsive improvements for very narrow screens */
 @media (max-width: 320px) {
-    .defaults-toggle-button {
-        padding: 3px 0;
-        font-size: 12px;
-        gap: 3px;
-    }
-
+    .defaults-toggle-button,
     .profiles-toggle-button {
         padding: 3px 0;
         font-size: 12px;
@@ -1408,13 +1367,6 @@ ul {
     .config-section.profiles-section [data-testid="profile-list"] {
         max-height: 120px !important;
         overflow-y: auto;
-    }
-
-    .config-section.defaults-section {
-        flex: 1;
-        min-width: 0;
-        overflow: visible;
-        margin-top: 16px;
     }
 
     .defaults-content {
@@ -1821,6 +1773,7 @@ ul {
 .wizard-button.secondary {
     background-color: var(--vscode-button-secondaryBackground);
     color: var(--vscode-button-secondaryForeground);
+    border-color: var(--vscode-input-border);
 }
 
 .wizard-button.secondary:hover {

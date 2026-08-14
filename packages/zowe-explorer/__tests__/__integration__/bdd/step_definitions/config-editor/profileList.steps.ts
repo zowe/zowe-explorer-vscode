@@ -125,10 +125,6 @@ Then("the profile list should be in tree view mode", async () => {
 
     const viewMode = await profileList.getAttribute("data-view-mode");
     expect(viewMode).toBe("tree");
-
-    // A freshly-opened Config Editor (e.g. via the Command Palette) shows the tutorial overlay,
-    // which otherwise sits over the tree and swallows the elementFromPoint hit-testing used by
-    // the drag-and-drop simulation below.
     await dismissTutorialOverlay();
 });
 

@@ -294,7 +294,6 @@ export class SharedInit {
                     existingConfigEditor.panel.reveal();
 
                     if (configPath) {
-                        existingConfigEditor.initialSelection = { profileName, configPath, profileType, propertyKey };
                         await existingConfigEditor.panel.webview.postMessage({
                             command: "INITIAL_SELECTION",
                             profileName,
@@ -302,6 +301,9 @@ export class SharedInit {
                             profileType,
                             propertyKey,
                         });
+                        // Not stored on initialSelection: it's already been posted directly above, and if left set
+                        // it would be replayed by handleConfigurationsReady on the next unrelated save's refresh.
+                        existingConfigEditor.initialSelection = undefined;
                     }
 
                     return existingConfigEditor;
@@ -329,13 +331,6 @@ export class SharedInit {
             vscode.commands.registerCommand("zowe.configEditorWithProfile", async (profileName: string, configPath: string, profileType: string) => {
                 // Check if there's already an open ConfigEditor
                 if (existingConfigEditor && existingConfigEditor.panel) {
-                    // Reuse existing ConfigEditor
-                    existingConfigEditor.initialSelection = {
-                        profileName: profileName,
-                        configPath: configPath,
-                        profileType: profileType,
-                    };
-
                     // Reveal the existing panel
                     existingConfigEditor.panel.reveal();
 
@@ -346,6 +341,9 @@ export class SharedInit {
                         configPath: configPath,
                         profileType: profileType,
                     });
+                    // Not stored on initialSelection: it's already been posted directly above, and if left set
+                    // it would be replayed by handleConfigurationsReady on the next unrelated save's refresh.
+                    existingConfigEditor.initialSelection = undefined;
 
                     return existingConfigEditor;
                 } else {

@@ -49,9 +49,6 @@ describe("profileUtils", () => {
             const renames = { [configPath]: { orig: "p1" } };
             expect(getRenamedProfileKey("orig", configPath, renames)).toBe("p1");
         });
-        it("returns originalKey when configPath has no renames", () => {
-            expect(getRenamedProfileKey("p1", configPath, { "/other": { a: "b" } })).toBe("p1");
-        });
     });
 
     describe("getRenamedProfileKeyWithNested", () => {

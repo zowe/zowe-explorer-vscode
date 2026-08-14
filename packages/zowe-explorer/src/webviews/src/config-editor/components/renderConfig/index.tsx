@@ -419,10 +419,13 @@ export const RenderConfig = ({
         "animationend",
         () => {
           row.classList.remove("property-highlight-blink");
-          onHighlightPropertyKeyConsumed?.();
         },
         { once: true }
       );
+      // Clear the key as soon as the blink starts, not on animationend: a save (even on another
+      // profile) force-remounts this tree via sortOrderVersion, and if the key were still set when
+      // that remount happens, the retry loop would replay the stale highlight.
+      onHighlightPropertyKeyConsumed?.();
     };
 
     // Initial delay — profile panel needs one render cycle after profile selection.

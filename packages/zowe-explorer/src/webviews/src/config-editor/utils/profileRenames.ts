@@ -225,35 +225,12 @@ interface MergePendingProfileKeysParams {
 export function mergePendingProfileKeys(params: MergePendingProfileKeysParams): string[] {
     const { pendingProfiles, configPath, renames, deletions, uniqueRenamedProfileKeys } = params;
 
-    const pendingProfileKeys = Object.keys(pendingProfiles).filter((key) => {
-        if (isProfileOrParentDeleted(key, deletions, configPath)) {
-            return false;
-        }
-        return true;
-    });
+    const pendingProfileKeys = Object.keys(pendingProfiles).filter((key) => !isProfileOrParentDeleted(key, deletions, configPath));
 
     return pendingProfileKeys.map((profileKey) => {
-        let renamedKey = profileKey;
+        let renamedKey = getRenamedProfileKeyWithNested(profileKey, configPath, renames);
+
         const configRenames = renames[configPath] || {};
-
-        let changed = true;
-        while (changed) {
-            changed = false;
-            for (const [originalKey, newKey] of Object.entries(configRenames)) {
-                if (renamedKey === originalKey) {
-                    renamedKey = newKey;
-                    changed = true;
-                    break;
-                }
-                if (renamedKey.startsWith(originalKey + ".")) {
-                    const newRenamedKey = renamedKey.replace(originalKey + ".", newKey + ".");
-                    renamedKey = newRenamedKey;
-                    changed = true;
-                    break;
-                }
-            }
-        }
-
         if (Object.keys(configRenames).length === 0 && renamedKey.includes(".")) {
             const rootProfileName = renamedKey.split(".").pop();
             if (rootProfileName && uniqueRenamedProfileKeys.includes(rootProfileName)) {
