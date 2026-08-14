@@ -918,7 +918,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         return {
                             ...item,
                             dsorg: matchingOriginal[0].dsorg,
-                            // todo more attributes?
                             recfm: matchingOriginal[0].recfm,
                             blksz: matchingOriginal[0].blksz,
                             dsname: resolution.apiResponse.targetDsn,
@@ -926,7 +925,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     }
                 }
             } catch (e) {
-                ZoweLogger.error("[ZoweDatasetNode.resolveAlias] Encountered an error trying to  " + e);
+                ZoweLogger.error("[ZoweDatasetNode.resolveAlias] Encountered an error trying to resolve the alias: " + e.message);
             }
         } else {
             ZoweLogger.warn(

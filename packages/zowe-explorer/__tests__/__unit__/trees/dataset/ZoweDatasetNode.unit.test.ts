@@ -149,8 +149,8 @@ describe("ZoweDatasetNode Unit Tests", () => {
     });
 
     it("calls setEncoding when constructing a node with encoding", () => {
-        vi.spyOn(BaseProvider.prototype, "setEncodingForFile").mockImplementationOnce(() => {});
-        const makeEmptyDsWithEncodingMock = vi.spyOn(DatasetFSProvider.instance, "makeEmptyDsWithEncoding").mockImplementationOnce(() => {});
+        vi.spyOn(BaseProvider.prototype, "setEncodingForFile").mockImplementationOnce(() => { });
+        const makeEmptyDsWithEncodingMock = vi.spyOn(DatasetFSProvider.instance, "makeEmptyDsWithEncoding").mockImplementationOnce(() => { });
         const setEncodingSpy = vi.spyOn(ZoweDatasetNode.prototype, "setEncoding");
         const testNode = new ZoweDatasetNode({
             label: "IBMUSER",
@@ -1153,6 +1153,80 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
 
     beforeEach(() => {
         vi.resetAllMocks();
+    });
+
+
+    describe("aliased data sets", () => {
+        it("should show children for an alias to a PDS", async () => {
+
+
+            const sessionNode = new ZoweDatasetNode({
+                label: "sestest",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session,
+                profile: profileOne,
+                contextOverride: Constants.DS_SESSION_CONTEXT,
+            });
+            const originalPdsName = "ORIGINAL.PDS";
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({
+                getSession: vi.fn().mockReturnValue(createISession()),
+                resolveAlias: vi.fn().mockResolvedValue({
+                    apiResponse: {
+                        targetDsn: originalPdsName,
+                    }
+                }),
+                dataSet: vi.fn().mockImplementation((dsname, opts) => {
+                    if (dsname === originalPdsName && opts.attributes) {
+                        return {
+                            apiResponse: {
+                                items: [{
+                                    dsname: originalPdsName,
+                                    dsorg: "PO",
+                                    recfm: "FB"
+                                }]
+                            }
+                        };
+                    }
+                    return undefined;
+                }),
+            } as any);
+            sessionNode.pattern = "TEST.*";
+            sessionNode.children = [];
+            vi.spyOn(Profiles, "getInstance").mockReturnValue({
+                loadNamedProfile: vi.fn().mockReturnValue(profileOne),
+            } as any);
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
+                applyPatternsToChildren: vi.fn(),
+                resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
+            } as any);
+
+            vi.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                dsname: "TEST.PDS.ALIAS",
+                                vol: "*ALIAS",
+                            },
+                        ],
+                    },
+                },
+            ]);
+
+            await sessionNode.getChildren();
+            expect(sessionNode.children.length).toEqual(1);
+            const pdsNode = sessionNode.children[0];
+            expect(pdsNode.resourceUri.path).toEqual('/sestest/TEST.PDS.ALIAS');
+
+
+            // collapsible state should change to Collapsed due to being an alias to a PDS
+            expect(pdsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+
+        });
     });
 
     describe("migration/recall", () => {
@@ -2601,7 +2675,7 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         });
         sessionNode.pattern = "PDS.*"; // getCount to run
         sessionNode.dirty = true;
-        const listDatasetsMock = vi.spyOn(sessionNode, "listDatasets").mockImplementationOnce(async () => {});
+        const listDatasetsMock = vi.spyOn(sessionNode, "listDatasets").mockImplementationOnce(async () => { });
         const result = await (sessionNode as any).listDatasetsInRange(undefined, 5);
         expect(getCountMock).toHaveBeenCalledWith(["PDS.*"]);
         expect(result.totalItems).toBe(42);
@@ -2665,13 +2739,13 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         it("should migrate a recalled dataset if migrationStatus is YES", async () => {
             vi.spyOn(SharedContext, "isMigrated").mockReturnValue(false);
             vi.spyOn(SharedContext, "isFavoriteDescendant").mockReturnValue(true);
-            const datasetMigratedSpy = vi.spyOn(dsNode, "datasetMigrated").mockImplementation(() => {});
+            const datasetMigratedSpy = vi.spyOn(dsNode, "datasetMigrated").mockImplementation(() => { });
 
             const equivNode = new ZoweDatasetNode({
                 label: "TEST.DATASET",
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
             });
-            const equivMigratedSpy = vi.spyOn(equivNode, "datasetMigrated").mockImplementation(() => {});
+            const equivMigratedSpy = vi.spyOn(equivNode, "datasetMigrated").mockImplementation(() => { });
             vi.spyOn(equivNode, "getParent").mockReturnValue({} as any);
             mockDsTree.findEquivalentNode.mockReturnValue(equivNode);
 
