@@ -56,6 +56,20 @@ describe("Zosmf API tests", () => {
         );
     });
 
+    it("should test that resolve alias", async () => {
+        const dsName = "ALIAS.DS";
+        const resolveAlias = vi.fn((_session, ds, _options) => {
+            expect(ds).toEqual(dsName);
+            return { apiResponse: { targetDsn: "WOW.THE.ORIGINAL" }, commandResponse: "", success: true };
+        });
+
+        vi.spyOn(zosfiles.List, "resolveAlias").mockImplementation(resolveAlias as any);
+
+        const api = new ZoweExplorerZosmf.MvsApi();
+        api.getSession = vi.fn();
+        await api.resolveAlias(dsName);
+    });
+
     it("should test that copy data set uses enq only", async () => {
         const dataSet = vi.fn((_session, _toDataSet, options) => {
             expect(options).toMatchSnapshot();

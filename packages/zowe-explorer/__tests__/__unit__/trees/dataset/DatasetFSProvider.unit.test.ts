@@ -242,6 +242,40 @@ describe("DatasetFSProvider", () => {
             await expect(DatasetFSProvider.instance.readDirectory).rejects.toThrow();
         });
 
+        it("calls resolveAlias on a data set with *ALIAS volume and renders as directory", async () => {
+            const targetDsn = "OTHER.ORIGINAL.DATASET";
+            const mockMvsApi = {
+                dataSetsMatchingPattern: vi.fn().mockResolvedValue({
+                    apiResponse: [
+                        { dsname: "USER.WONDRFUL.ALIAS", vol: "*ALIAS" },
+                    ],
+                }),
+                resolveAlias: vi.fn().mockResolvedValue({
+                    apiResponse: {
+                        targetDsn: targetDsn
+                    }
+                }),
+                dataSet: vi.fn().mockImplementation((dsn, _opts) => {
+                    if (dsn === targetDsn) {
+                        return {
+                            apiResponse: {
+                                items: [{
+                                    dsname: targetDsn,
+                                    recfm: "FB",
+                                    dsorg: "PO"
+                                }]
+                            }
+                        }
+                    }
+                })
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            expect(await DatasetFSProvider.instance.readDirectory(testUris.session.with({ query: "pattern=USER.WONDRFUL.ALIAS" }))).toStrictEqual([
+                ["USER.WONDRFUL.ALIAS", FileType.Directory],
+            ]);
+            expect(mockMvsApi.dataSetsMatchingPattern).toHaveBeenCalledWith(["USER.WONDRFUL.ALIAS"]);
+            expect(mockMvsApi.resolveAlias).toHaveBeenCalledWith("USER.WONDRFUL.ALIAS");
+        });
         describe("PDS entry", () => {
             it("calls allMembers to fetch the members of a PDS", async () => {
                 const mockPdsEntry = { ...testEntries.pds, metadata: { ...testEntries.pds.metadata } };
