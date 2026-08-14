@@ -18,6 +18,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where expanding a profile in the Favorites section uploaded empty contents to each favorited USS file, which failed for users without write access and truncated the file for users with write access. [#4450](https://github.com/zowe/zowe-explorer-vscode/issues/4450)
+- Fixed an issue where expanding a profile in the Favorites section uploaded empty contents to each favorited sequential data set, which failed for users without write access and truncated the data set for users with write access. [#4451](https://github.com/zowe/zowe-explorer-vscode/issues/4451)
 - Fixed an issue where creating a new file in a Zowe Explorer virtual workspace would silently fail, causing write operations to fail on that file as a result. [#4426](https://github.com/zowe/zowe-explorer-vscode/pull/4426)
 - Fixed an issue where calling the `AuthUtils.errorHandling` function without a `moreInfo` parameter would cause a runtime error. [#4399](https://github.com/zowe/zowe-explorer-vscode/pull/4399)
 - Fixed Zowe Explorer failing to activate in the VS Code web extension host (`vscode.dev`), which was blocking dependent extensions from activating. [#4389](https://github.com/zowe/zowe-explorer-vscode/issues/4389)

@@ -25,6 +25,7 @@ import {
     ZosEncoding,
     FsAbstractUtils,
     DatasetMatch,
+    DsType,
     ZoweExplorerApiType,
     ZoweScheme,
     NavigationTreeItem,
@@ -790,11 +791,15 @@ Would you like to do this now?`,
         for (const favorite of favsForProfile) {
             await this.syncFavoriteMigrationStatus(favorite);
 
+            // Seed a placeholder entry in the FS provider so the favorite has a backing resource.
+            // These must be local-only operations: going through `vscode.workspace.fs` would upload
+            // an empty data set to the remote system, which fails without write access (and truncates
+            // the data set when the user does have access).
             if (favorite.resourceUri && !DatasetFSProvider.instance.exists(favorite.resourceUri)) {
                 if (SharedContext.isPds(favorite)) {
-                    await vscode.workspace.fs.createDirectory(favorite.resourceUri);
+                    DatasetFSProvider.instance.createDirectory(favorite.resourceUri);
                 } else if (SharedContext.isDs(favorite)) {
-                    await vscode.workspace.fs.writeFile(favorite.resourceUri, new Uint8Array());
+                    DatasetFSProvider.instance.createEntry(favorite.resourceUri, DsType.Ps);
                 }
             }
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
