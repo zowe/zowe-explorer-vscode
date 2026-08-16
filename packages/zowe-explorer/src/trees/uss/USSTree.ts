@@ -1220,15 +1220,17 @@ Would you like to do this now?`,
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
         const favsForProfile = profileInFavs.children;
         for (const favorite of favsForProfile) {
+            // Seed a placeholder entry in the FS provider so the favorite has a backing resource.
+            // These must be local-only operations: going through `vscode.workspace.fs` would upload
+            // an empty file to the remote system, which fails without write access (and truncates the
+            // file when the user does have access).
             if (!UssFSProvider.instance.exists(favorite.resourceUri)) {
                 if (SharedContext.isUssDirectory(favorite)) {
-                    await vscode.workspace.fs.createDirectory(favorite.resourceUri);
+                    UssFSProvider.instance.createParentDirectories(favorite.resourceUri);
+                    UssFSProvider.instance.createDirectory(favorite.resourceUri);
                 } else if (SharedContext.isText(favorite) || SharedContext.isBinary(favorite)) {
-                    const parentUri = favorite.resourceUri.with({ path: path.posix.join(favorite.resourceUri.path, "..") });
-                    if (!UssFSProvider.instance.exists(parentUri)) {
-                        await vscode.workspace.fs.createDirectory(parentUri);
-                    }
-                    await vscode.workspace.fs.writeFile(favorite.resourceUri, new Uint8Array());
+                    UssFSProvider.instance.createParentDirectories(favorite.resourceUri);
+                    UssFSProvider.instance.createEntry(favorite.resourceUri, "file");
                 }
             }
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item

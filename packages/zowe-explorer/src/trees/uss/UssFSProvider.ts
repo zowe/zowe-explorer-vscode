@@ -1152,6 +1152,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     }
 
     /**
+     * Creates any missing directory entries leading up to the given URI, without making any API requests.
+     * @param uri The URI whose ancestor directories should exist in the provider
+     */
+    public createParentDirectories(uri: vscode.Uri): void {
+        const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
+        if (parentUri.path === uri.path || parentUri.path === "/" || this.exists(parentUri)) {
+            return;
+        }
+
+        this.createParentDirectories(parentUri);
+        this.createDirectory(parentUri);
+    }
+
+    /**
      * Creates a directory entry in the provider at the given URI.
      * @param uri The URI that represents a new directory path
      */
