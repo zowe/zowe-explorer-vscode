@@ -1782,6 +1782,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.changePassword",
+          "when": "never"
+        },
+        {
           "command": "zowe.selectForCompare",
           "when": "never"
         },
