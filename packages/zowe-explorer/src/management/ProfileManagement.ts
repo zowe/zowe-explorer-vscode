@@ -234,7 +234,7 @@ export class ProfileManagement {
         const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthUpdateQpItems);
         try {
             const commonApi = ZoweExplorerApiRegister.getInstance().getCommonApi(profile);
-            if (typeof commonApi.changePassword === "function") {
+            if (commonApi.changePassword != null) {
                 quickPickOptions.push(this.changePasswordQpItems[this.AuthQpLabels.changePassword]);
             }
         } catch {
