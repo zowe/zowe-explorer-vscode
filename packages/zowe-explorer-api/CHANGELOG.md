@@ -10,7 +10,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added a function `isEnabledInSettings` to the `FeatureFlags` class, which checks VS Code settings to see if a given Zowe Explorer feature ID is enabled. [#4242](https://github.com/zowe/zowe-explorer-vscode/issues/4242)
 - Added a function `trimExtension` in the `FsDatasetsUtils` class for stripping extension suffix off of a data set name. [#4326](https://github.com/zowe/zowe-explorer-vscode/pull/4326)
 - Added a `trackRows` method to the `Table.View` class for registering rows that were delivered to the webview outside of the standard update flow. [#4416](https://github.com/zowe/zowe-explorer-vscode/pull/4416)
-- Added the `changePassword` API which allows the user to update their password on the remote system. [#4212](https://github.com/zowe/zowe-explorer-vscode/pull/4212)
+- Added the `changePassword` API which allows the user to update their password on the remote system, alongside its `IChangePasswordResponse` interface. [#4212](https://github.com/zowe/zowe-explorer-vscode/pull/4212)
 
 ### Bug fixes
 

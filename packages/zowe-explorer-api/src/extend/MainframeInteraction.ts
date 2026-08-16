@@ -17,6 +17,7 @@ import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { Types } from "../Types";
 import { IDataSetCount } from "../dataset/IDataSetCount";
+import { IChangePasswordResponse } from "../profiles/IChangePasswordResponse";
 
 export namespace MainframeInteraction {
     export interface ICommon {
@@ -82,17 +83,15 @@ export namespace MainframeInteraction {
         getTokenTypeName?(): string;
 
         /**
-         * Change the password for a user on the remote system.
+         * Change the password for a user on the remote system
          *
-         * Unlike "Update Credentials", which only updates the locally stored
-         * password, this operation contacts the server to change the password
-         * on the mainframe and then updates the local credential store.
+         * Does not update the local credentials
          *
-         * @param {imperative.Session} session The session containing the current (old) credentials.
-         * @param {string} newPassword The new password to set on the remote system.
-         * @returns {Promise<void>} Resolves when the password has been changed.
+         * @param {imperative.Session} session the session containing the current (old) credentials
+         * @param {string} newPassword the new password to set on the remote system
+         * @returns {Promise<IChangePasswordResponse>} the outcome of the change request
          */
-        changePassword?(session: imperative.Session, newPassword: string): Promise<void>;
+        changePassword?(session: imperative.Session, newPassword: string): Promise<IChangePasswordResponse>;
     }
 
     /**

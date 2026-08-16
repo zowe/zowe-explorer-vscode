@@ -141,27 +141,23 @@ describe("CommonApi", () => {
     });
 
     describe("changePassword", () => {
-        it("should call ZosmfChangePassword.changePassword and resolve on success", async () => {
-            const commonApi = new ZoweExplorerZosmf.CommonApi(loadedProfile);
-            const changePasswordSpy = jest.spyOn(zosmf.ZosmfChangePassword, "changePassword").mockResolvedValue({
+        it("should call ZosmfChangePassword.changePassword and return the response", async () => {
+            const response = {
                 success: true,
                 returnCode: 0,
                 reasonCode: 0,
                 message: "Password changed successfully",
-            });
-            await expect(commonApi.changePassword(fakeSession, "newPass123")).resolves.toBeUndefined();
+            };
+            const commonApi = new ZoweExplorerZosmf.CommonApi(loadedProfile);
+            const changePasswordSpy = vi.spyOn(zosmf.ZosmfChangePassword, "changePassword").mockResolvedValue(response);
+            await expect(commonApi.changePassword(fakeSession, "newPass123")).resolves.toBe(response);
             expect(changePasswordSpy).toHaveBeenCalledWith(fakeSession, "newPass123");
             changePasswordSpy.mockRestore();
         });
 
-        it("should throw when the response indicates failure", async () => {
+        it("should propagate errors thrown by the SDK", async () => {
             const commonApi = new ZoweExplorerZosmf.CommonApi(loadedProfile);
-            const changePasswordSpy = jest.spyOn(zosmf.ZosmfChangePassword, "changePassword").mockResolvedValue({
-                success: false,
-                returnCode: 8,
-                reasonCode: 2,
-                message: "Change password failed.",
-            });
+            const changePasswordSpy = vi.spyOn(zosmf.ZosmfChangePassword, "changePassword").mockRejectedValue(new Error("Change password failed."));
             await expect(commonApi.changePassword(fakeSession, "bad")).rejects.toThrow("Change password failed.");
             changePasswordSpy.mockRestore();
         });
