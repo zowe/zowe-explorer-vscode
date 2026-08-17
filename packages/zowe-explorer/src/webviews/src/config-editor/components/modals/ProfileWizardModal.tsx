@@ -4,10 +4,8 @@ import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { isFileProperty } from "../../utils/propertyUtils";
 import { useWizardContext } from "../../context/WizardContext";
-import { useConfigContext } from "../../context/ConfigContext";
 
 export function ProfileWizardModal() {
-  const { configurations, selectedTab } = useConfigContext();
   const {
     wizardModalOpen: isOpen,
     wizardRootProfile,
@@ -55,12 +53,9 @@ export function ProfileWizardModal() {
     (displayKey: string, profileType: string): boolean => {
       if (!displayKey) return false;
       if (!profileType) return true;
-      const configPath = configurations[selectedTab ?? 0]?.configPath;
-      if (!configPath) return false;
-      const mockPath = ["profiles", "mockProfile", "properties"];
-      return utilityHelpers.canPropertyBeSecure(displayKey, mockPath);
+      return utilityHelpers.canPropertyBeSecureForType(displayKey, profileType);
     },
-    [configurations, selectedTab, utilityHelpers]
+    [utilityHelpers]
   );
 
   const onNewPropertySecureToggle = useCallback(() => {

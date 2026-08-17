@@ -351,6 +351,15 @@ export function ProfileTree({
     return false;
   };
 
+  // handleRowMouseDown's mousemove/mouseup listeners are attached once, at the start of a drag,
+  // so they'd otherwise keep closing over stale profileKeys/renames/configurations for the whole
+  // drag if any of that data changes mid-drag (e.g. an external config reload). Routing calls
+  // through this ref (refreshed every render) keeps them reading the latest data instead.
+  const dragHelpersRef = useRef({ isInvalidDrop, computeDropResultKey, performDrop, findOriginalKey });
+  useEffect(() => {
+    dragHelpersRef.current = { isInvalidDrop, computeDropResultKey, performDrop, findOriginalKey };
+  });
+
   const DRAG_MOVE_THRESHOLD_PX = 4;
 
   const handleRowMouseDown = (e: any, profileKey: string) => {
@@ -384,7 +393,7 @@ export function ProfileTree({
       const targetEl = under?.closest("[data-profile-key]") as HTMLElement | null;
       const targetKey = targetEl?.getAttribute("data-profile-key") ?? null;
 
-      if (targetKey && !isInvalidDrop(profileKey, targetKey)) {
+      if (targetKey && !dragHelpersRef.current.isInvalidDrop(profileKey, targetKey)) {
         setDragOverProfile(targetKey);
         return targetKey;
       }
@@ -433,6 +442,7 @@ export function ProfileTree({
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
       document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("blur", onWindowBlur);
       document.body.style.cursor = "";
       ghost?.remove();
       ghost = null;
@@ -443,7 +453,7 @@ export function ProfileTree({
       if (moved) {
         suppressNextClickRef.current = true;
         if (lastHoverTarget) {
-          performDrop(profileKey, lastHoverTarget);
+          dragHelpersRef.current.performDrop(profileKey, lastHoverTarget);
         }
       }
       setDraggedProfile(null);
@@ -459,9 +469,19 @@ export function ProfileTree({
       }
     };
 
+    // If the mouse is released outside the webview (e.g. over the editor pane), no mouseup ever
+    // reaches us. Losing window focus mid-drag is a reliable signal that this has happened, so
+    // treat it the same as an Escape cancel instead of leaving the drag state stuck.
+    const onWindowBlur = () => {
+      setDraggedProfile(null);
+      setDragOverProfile(null);
+      cleanup();
+    };
+
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
     document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("blur", onWindowBlur);
     activeDragCleanupRef.current = cleanup;
   };
 

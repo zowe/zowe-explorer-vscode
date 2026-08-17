@@ -115,6 +115,19 @@ export function useUtilityHelpers() {
                     selectedProfileKey,
                 }),
 
+            // Checks secure-eligibility against an explicit profile type rather than the
+            // currently-selected profile — used by the wizard, whose profile doesn't exist yet.
+            canPropertyBeSecureForType: (displayKey: string, profileType: string) =>
+                canPropertyBeSecure({
+                    displayKey,
+                    selectedTab,
+                    configurations,
+                    schemaValidations,
+                    pendingChanges,
+                    renames,
+                    profileType,
+                }),
+
             handleToggleSecure: (fullKey: string, displayKey: string, path: string[], value: unknown) => {
                 return handleToggleSecure({
                     fullKey,

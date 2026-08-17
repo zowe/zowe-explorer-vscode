@@ -154,6 +154,7 @@ export interface ValidateProfileNameMessage {
     profiles: NestedProfilesMap;
     pendingChanges: PendingChangesByConfig;
     renames: RenameMapByConfig;
+    requestSeq?: number;
 }
 
 /** VS Code webview panel postMessage target. */

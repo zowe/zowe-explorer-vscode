@@ -111,10 +111,13 @@ export const RenderProfileDetails = ({
       "animationend",
       () => {
         card.classList.remove("profile-highlight-blink");
-        onHighlightProfileCardConsumed?.();
       },
       { once: true }
     );
+    // Clear the flag as soon as the blink starts, not on animationend: an unrelated remount of
+    // this tree (e.g. after a save) can tear down the card before the animation finishes, which
+    // would otherwise leave highlightProfileCard stuck and replay the blink later.
+    onHighlightProfileCardConsumed?.();
   }, [highlightProfileCard]);
 
   const renderProfileDetails = useCallback(() => {

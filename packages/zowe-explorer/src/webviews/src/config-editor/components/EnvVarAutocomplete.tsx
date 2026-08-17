@@ -41,6 +41,13 @@ export const EnvVarAutocomplete: React.FC<EnvVarAutocompleteProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  // Every mounted EnvVarAutocomplete receives every ENV_VARS_RESPONSE/ENV_VARS_ERROR broadcast
+  // (the extension doesn't tag responses to a specific field), so only apply one if this instance
+  // is actually the one waiting on it — otherwise one field's request can clobber another's list.
+  const isLoadingRef = useRef(isLoading);
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
 
   const getCurrentVarName = useCallback((val: string) => {
     const match = val.match(/^\$([A-Za-z_][A-Za-z0-9_]*)/);
@@ -62,6 +69,8 @@ export const EnvVarAutocomplete: React.FC<EnvVarAutocompleteProps> = ({
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      if (!isLoadingRef.current) return;
+
       if (event.data.command === "ENV_VARS_RESPONSE") {
         setSuggestions(event.data.envVars || []);
         setIsLoading(false);

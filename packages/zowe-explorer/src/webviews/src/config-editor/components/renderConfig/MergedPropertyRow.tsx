@@ -11,7 +11,7 @@
 
 import * as l10n from "@vscode/l10n";
 import { stringifyValueByType } from "../../utils";
-import { getInheritedFromParts } from "./inheritedFrom";
+import { getInheritedFromPartsWithRenames } from "./inheritedFrom";
 import { InheritedFromIndicator } from "./InheritedFromIndicator";
 import type { RenderConfigCtx } from "./context";
 
@@ -31,7 +31,7 @@ interface MergedPropertyRowProps {
  * property should not actually be shown as merged.
  */
 export function MergedPropertyRow({ ctx, fullKey, displayKey, path, mergedProps, configPath, value }: MergedPropertyRowProps) {
-  const { isPropertyFromMergedProps, handleNavigateToSource, isMergedPropertySecure, handleUnlinkMergedProperty } = ctx;
+  const { isPropertyFromMergedProps, handleNavigateToSource, isMergedPropertySecure, handleUnlinkMergedProperty, selectedProfileKey, renames } = ctx;
 
   // Double-check that this property should actually be displayed as merged
   const shouldShowAsMerged = displayKey ? isPropertyFromMergedProps(displayKey, path, mergedProps, configPath) : false;
@@ -46,7 +46,7 @@ export function MergedPropertyRow({ ctx, fullKey, displayKey, path, mergedProps,
   const osLoc = mergedPropData?.osLoc;
   const secure = mergedPropData?.secure;
   const isSecureProperty = jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc, osLoc, secure) : false;
-  const inheritedFrom = jsonLoc ? getInheritedFromParts(jsonLoc, osLoc) : undefined;
+  const inheritedFrom = jsonLoc ? getInheritedFromPartsWithRenames(jsonLoc, osLoc, selectedProfileKey, configPath, renames) : undefined;
 
   // Render merged property with proper styling and behavior
   return (

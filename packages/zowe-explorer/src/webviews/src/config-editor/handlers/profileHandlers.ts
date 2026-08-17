@@ -20,6 +20,80 @@ import type { HandlerContext } from "../hooks/useHandlerContext";
 // Profile handler props interface
 // Replaced by HandlerContext from ../hooks/useHandlerContext
 
+// Applies a rename (originalKey -> newKey) on top of the existing renames map, consolidating
+// chains and dropping any closed loops. Shared by handleRenameProfile's renames-state update and
+// resolveKeyAfterRename below, so the two never compute a different result for the same input.
+function buildConsolidatedRenames(
+    currentRenames: { [originalKey: string]: string },
+    originalKey: string,
+    newKey: string
+): { [originalKey: string]: string } {
+    let updatedRenames = { ...currentRenames };
+    const wouldCancelOut = checkIfRenameCancelsOut(currentRenames, originalKey, newKey);
+
+    if (wouldCancelOut) {
+        const renamesToRemove = new Set<string>();
+        renamesToRemove.add(originalKey);
+        let currentKey = originalKey;
+        while (currentRenames[currentKey]) {
+            const targetKey = currentRenames[currentKey];
+            renamesToRemove.add(currentKey);
+            currentKey = targetKey;
+        }
+        for (const keyToRemove of renamesToRemove) {
+            delete updatedRenames[keyToRemove];
+        }
+    } else {
+        updatedRenames[originalKey] = newKey;
+    }
+
+    updatedRenames = consolidateRenames(updatedRenames, originalKey, newKey);
+
+    const closedLoops = detectClosedLoops(updatedRenames);
+    if (closedLoops.length > 0) {
+        const keysToRemove = new Set<string>();
+        closedLoops.forEach((loop) => loop.forEach((key) => keysToRemove.add(key)));
+        keysToRemove.forEach((key) => delete updatedRenames[key]);
+    }
+
+    return updatedRenames;
+}
+
+// Resolves what a profile key (selection, expanded-node entry, etc.) becomes after a rename of
+// originalKey -> newKey. Used everywhere handleRenameProfile needs to update a key that might be
+// the renamed profile itself, a child of it, or part of a chained rename.
+function resolveKeyAfterRename(
+    key: string,
+    originalKey: string,
+    newKey: string,
+    oldRenames: { [originalKey: string]: string },
+    updatedRenames: { [originalKey: string]: string }
+): string {
+    const oldRenamedValue = oldRenames[originalKey];
+
+    if (key === originalKey) {
+        return newKey;
+    }
+    if (key.startsWith(originalKey + ".")) {
+        return newKey + "." + key.substring(originalKey.length + 1);
+    }
+    if (oldRenamedValue && key.startsWith(oldRenamedValue + ".")) {
+        return newKey + "." + key.substring(oldRenamedValue.length + 1);
+    }
+    if (key === oldRenamedValue) {
+        return newKey;
+    }
+    for (const [origKey, renamedValue] of Object.entries(updatedRenames)) {
+        if (key === origKey) {
+            return renamedValue;
+        }
+        if (key === renamedValue) {
+            return key;
+        }
+    }
+    return key;
+}
+
 export const handleRenameProfile = (originalKey: string, newKey: string, isDragDrop: boolean = false, props: HandlerContext): boolean => {
     const {
         selectedTab,
@@ -83,149 +157,16 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
         }
     }
 
-    setRenames((prev) => {
-        const currentRenames = prev[configPath] || {};
-        let updatedRenames = { ...currentRenames };
-        const wouldCancelOut = checkIfRenameCancelsOut(currentRenames, originalKey, newKey);
+    // Build the consolidated renames map once; every downstream consumer below (renames state,
+    // selected profile, per-config selection, expanded nodes) resolves against this same map,
+    // so they can no longer drift out of sync with each other.
+    const updatedRenames = buildConsolidatedRenames(currentRenames, originalKey, newKey);
 
-        if (wouldCancelOut) {
-            const renamesToRemove = new Set<string>();
-            renamesToRemove.add(originalKey);
-            let currentKey = originalKey;
-            while (currentRenames[currentKey]) {
-                const targetKey = currentRenames[currentKey];
-                renamesToRemove.add(currentKey);
-                currentKey = targetKey;
-            }
-            for (const keyToRemove of renamesToRemove) {
-                delete updatedRenames[keyToRemove];
-            }
-        } else {
-            updatedRenames[originalKey] = newKey;
-        }
+    setRenames((prev) => ({ ...prev, [configPath]: updatedRenames }));
 
-        updatedRenames = consolidateRenames(updatedRenames, originalKey, newKey);
-
-        const closedLoops = detectClosedLoops(updatedRenames);
-        if (closedLoops.length > 0) {
-            const keysToRemove = new Set<string>();
-            closedLoops.forEach((loop) => {
-                loop.forEach((key) => keysToRemove.add(key));
-            });
-            keysToRemove.forEach((key) => {
-                delete updatedRenames[key];
-            });
-        }
-
-        return {
-            ...prev,
-            [configPath]: updatedRenames,
-        };
-    });
-
-    // Update the selected profile key based on the consolidated renames
-    const currentRenamesForSelection = renames[configPath] || {};
-    let updatedRenamesForSelection = { ...currentRenamesForSelection };
-
-    // Check for opposite renames and remove both if they cancel out
-    const wouldCancelOutForSelection = checkIfRenameCancelsOut(currentRenamesForSelection, originalKey, newKey);
-
-    if (wouldCancelOutForSelection) {
-        // This rename cancels out the existing chain, remove all related renames
-        const renamesToRemove = new Set<string>();
-
-        // Add the current original key
-        renamesToRemove.add(originalKey);
-
-        // Find all keys in the rename chain that should be removed
-        let currentKey = originalKey;
-        while (currentRenamesForSelection[currentKey]) {
-            const targetKey = currentRenamesForSelection[currentKey];
-            renamesToRemove.add(currentKey);
-            currentKey = targetKey;
-        }
-
-        // Remove all renames in the chain
-        for (const keyToRemove of renamesToRemove) {
-            delete updatedRenamesForSelection[keyToRemove];
-        }
-    } else {
-        // Apply the new rename
-        updatedRenamesForSelection[originalKey] = newKey;
-    }
-
-    // Apply consolidation to handle any other conflicts
-    let updatedRenames = consolidateRenames(updatedRenamesForSelection, originalKey, newKey);
-
-    // Detect and remove closed loops
-    const closedLoops = detectClosedLoops(updatedRenames);
-    if (closedLoops.length > 0) {
-        // Remove all keys that are part of closed loops
-        const keysToRemove = new Set<string>();
-        closedLoops.forEach((loop) => {
-            loop.forEach((key) => keysToRemove.add(key));
-        });
-
-        // Remove all keys in closed loops
-        keysToRemove.forEach((key) => {
-            delete updatedRenames[key];
-        });
-    }
-
-    // Find what the selectedProfileKey should be after consolidation
-    let newSelectedProfileKey = selectedProfileKey;
-    if (selectedProfileKey) {
-        // Get the old renames for checking chained renames
-        const oldRenames = renames[configPath] || {};
-        const oldRenamedValue = oldRenames[originalKey];
-
-        // Special case: if we're canceling a rename (newKey === originalKey)
-        if (newKey === originalKey) {
-            // If the selected profile was the renamed version, restore it to the original
-            if (selectedProfileKey === oldRenamedValue) {
-                newSelectedProfileKey = originalKey;
-            }
-            // If the selected profile was a child of the renamed version, restore it to the original
-            else if (oldRenamedValue && selectedProfileKey.startsWith(oldRenamedValue + ".")) {
-                const childPath = selectedProfileKey.substring(oldRenamedValue.length + 1);
-                newSelectedProfileKey = originalKey + "." + childPath;
-            }
-        }
-        // Check if the selected profile is directly renamed
-        else if (selectedProfileKey === originalKey) {
-            newSelectedProfileKey = newKey;
-        }
-        // Check if the selected profile is a child of the renamed profile
-        else if (selectedProfileKey.startsWith(originalKey + ".")) {
-            const childPath = selectedProfileKey.substring(originalKey.length + 1);
-            newSelectedProfileKey = newKey + "." + childPath;
-        }
-        // Check if the selected profile is a child of the old renamed value
-        else if (oldRenamedValue && selectedProfileKey.startsWith(oldRenamedValue + ".")) {
-            const childPath = selectedProfileKey.substring(oldRenamedValue.length + 1);
-            newSelectedProfileKey = newKey + "." + childPath;
-        }
-        // Check if the selected profile was part of a chained rename
-        else {
-            // First check if the selectedProfileKey matches the old renamed value that's being updated
-            if (selectedProfileKey === oldRenamedValue) {
-                // The selected profile is the old renamed value, update it to the new value
-                newSelectedProfileKey = newKey;
-            }
-            // Also check if the selected profile matches any key in the consolidated renames
-            else {
-                for (const [origKey, renamedValue] of Object.entries(updatedRenames)) {
-                    if (selectedProfileKey === origKey || selectedProfileKey === renamedValue) {
-                        // The selected profile is involved in the rename chain
-                        if (selectedProfileKey === origKey) {
-                            newSelectedProfileKey = renamedValue;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    const newSelectedProfileKey = selectedProfileKey
+        ? resolveKeyAfterRename(selectedProfileKey, originalKey, newKey, currentRenames, updatedRenames)
+        : selectedProfileKey;
 
     if (newSelectedProfileKey !== selectedProfileKey) {
         setSelectedProfileKey(newSelectedProfileKey);
@@ -239,44 +180,11 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
     // Update the selected profiles by config to reflect the rename
     setSelectedProfilesByConfig((prev) => {
         const currentSelectedProfile = prev[configPath];
-        let newCurrentSelectedProfile = currentSelectedProfile;
-
-        if (currentSelectedProfile) {
-            // Special case: if we're canceling a rename (newKey === originalKey)
-            if (newKey === originalKey) {
-                const oldRenames = renames[configPath] || {};
-                const oldRenamedValue = oldRenames[originalKey];
-                // If the selected profile was the renamed version, restore it to the original
-                if (currentSelectedProfile === oldRenamedValue) {
-                    newCurrentSelectedProfile = originalKey;
-                }
-                // If the selected profile was a child of the renamed version, restore it to the original
-                else if (oldRenamedValue && currentSelectedProfile.startsWith(oldRenamedValue + ".")) {
-                    const childPath = currentSelectedProfile.substring(oldRenamedValue.length + 1);
-                    newCurrentSelectedProfile = originalKey + "." + childPath;
-                }
-            }
-            // Check direct rename
-            else if (currentSelectedProfile === originalKey) {
-                newCurrentSelectedProfile = newKey;
-            }
-            // Check child rename
-            else if (currentSelectedProfile.startsWith(originalKey + ".")) {
-                const childPath = currentSelectedProfile.substring(originalKey.length + 1);
-                newCurrentSelectedProfile = newKey + "." + childPath;
-            }
-            // Check chained renames
-            else {
-                for (const [origKey, renamedValue] of Object.entries(updatedRenames)) {
-                    if (currentSelectedProfile === origKey || currentSelectedProfile === renamedValue) {
-                        if (currentSelectedProfile === origKey) {
-                            newCurrentSelectedProfile = renamedValue;
-                        }
-                        break;
-                    }
-                }
-            }
+        if (!currentSelectedProfile) {
+            return prev;
         }
+
+        const newCurrentSelectedProfile = resolveKeyAfterRename(currentSelectedProfile, originalKey, newKey, currentRenames, updatedRenames);
 
         if (newCurrentSelectedProfile !== currentSelectedProfile) {
             return {
@@ -292,46 +200,8 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
         const currentExpandedNodes = prev[configPath] || new Set();
         const newExpandedNodes = new Set<string>();
 
-        // Map old expanded node keys to new keys based on the rename
         for (const expandedKey of currentExpandedNodes) {
-            let newExpandedKey = expandedKey;
-
-            // Special case: if we're canceling a rename (newKey === originalKey)
-            if (newKey === originalKey) {
-                const oldRenames = renames[configPath] || {};
-                const oldRenamedValue = oldRenames[originalKey];
-                // If the expanded key was the renamed version, restore it to the original
-                if (expandedKey === oldRenamedValue) {
-                    newExpandedKey = originalKey;
-                }
-                // If the expanded key was a child of the renamed version, restore it to the original
-                else if (oldRenamedValue && expandedKey.startsWith(oldRenamedValue + ".")) {
-                    const childPath = expandedKey.substring(oldRenamedValue.length + 1);
-                    newExpandedKey = originalKey + "." + childPath;
-                }
-            }
-            // Check direct rename
-            else if (expandedKey === originalKey) {
-                newExpandedKey = newKey;
-            }
-            // Check child rename
-            else if (expandedKey.startsWith(originalKey + ".")) {
-                const childPath = expandedKey.substring(originalKey.length + 1);
-                newExpandedKey = newKey + "." + childPath;
-            }
-            // Check chained renames
-            else {
-                for (const [origKey, renamedValue] of Object.entries(updatedRenames)) {
-                    if (expandedKey === origKey || expandedKey === renamedValue) {
-                        if (expandedKey === origKey) {
-                            newExpandedKey = renamedValue;
-                        }
-                        break;
-                    }
-                }
-            }
-
-            newExpandedNodes.add(newExpandedKey);
+            newExpandedNodes.add(resolveKeyAfterRename(expandedKey, originalKey, newKey, currentRenames, updatedRenames));
         }
 
         return {
@@ -704,8 +574,8 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
         getAvailableProfilesForConfig,
     } = props;
 
-    if (selectedTab === null) return;
-    const configPath = configurations[selectedTab!]!.configPath;
+    if (selectedTab === null || !configurations[selectedTab]) return;
+    const configPath = configurations[selectedTab].configPath;
 
     // Get the current effective profile key considering pending renames
     const effectiveProfileKey = getRenamedProfileKeyWithNested(profileKey, configPath, renames);
@@ -757,7 +627,7 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
     });
 
     // Remove the deleted profile from defaults if it's set as a default
-    const config = configurations[selectedTab!].properties;
+    const config = configurations[selectedTab].properties;
     const defaults = config.defaults || {};
 
     const profilesToCheck = [profileKey, effectiveProfileKey];
@@ -829,7 +699,7 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
  * Handle navigation to source profile
  */
 export const handleNavigateToSource = (props: HandlerContext) => {
-    const { configurations, setSelectedTab, setSelectedProfileKey, setIsNavigating } = props;
+    const { configurations, setSelectedTab, setSelectedProfileKey } = props;
 
     return (jsonLoc: string, osLoc?: string[]) => {
         const parts = jsonLoc.split(".");
@@ -925,18 +795,10 @@ export const handleNavigateToSource = (props: HandlerContext) => {
                 }
 
                 if (sourceConfigIndex !== -1) {
-                    setIsNavigating(true);
+                    // React batches these into a single update, so the tab and profile change together
+                    // in one render instead of needing to be sequenced across ticks.
                     setSelectedTab(sourceConfigIndex);
-
-                    // Use a timeout to set the profile after the tab change has been processed
-                    setTimeout(() => {
-                        setSelectedProfileKey(sourceProfile);
-
-                        // Clear navigation flag after setting the profile
-                        setTimeout(() => {
-                            setIsNavigating(false);
-                        }, 100);
-                    }, 0);
+                    setSelectedProfileKey(sourceProfile);
                 }
             }
         }

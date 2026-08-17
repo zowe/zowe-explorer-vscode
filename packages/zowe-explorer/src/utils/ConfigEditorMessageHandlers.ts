@@ -229,7 +229,7 @@ export class ConfigEditorMessageHandlers {
 
     async handleValidateProfileName(message: ValidateProfileNameMessage): Promise<void> {
         try {
-            const { profileName, rootProfile, configPath, profiles, pendingChanges, renames } = message;
+            const { profileName, rootProfile, configPath, profiles, pendingChanges, renames, requestSeq } = message;
 
             const validationResult = this.profileOperations.validateProfileName({
                 profileName,
@@ -244,6 +244,7 @@ export class ConfigEditorMessageHandlers {
                 command: "PROFILE_NAME_VALIDATION_RESULT",
                 isValid: validationResult.isValid,
                 message: validationResult.message,
+                requestSeq,
             });
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
@@ -251,6 +252,7 @@ export class ConfigEditorMessageHandlers {
                 command: "PROFILE_NAME_VALIDATION_RESULT",
                 isValid: false,
                 message: errorMessage,
+                requestSeq: message.requestSeq,
             });
         }
     }

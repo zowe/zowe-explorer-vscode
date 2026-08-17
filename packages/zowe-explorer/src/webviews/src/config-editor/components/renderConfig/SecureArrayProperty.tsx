@@ -59,7 +59,7 @@ export function SecureArrayProperty({ ctx, fullKey, displayKey, path, currentPat
           )
             return;
           return (
-            <div key={index} className="config-item">
+            <div key={index} className="config-item" data-property-key={item}>
               <div className="config-item-container">
                 <span className="config-label">{item}</span>
                 <input

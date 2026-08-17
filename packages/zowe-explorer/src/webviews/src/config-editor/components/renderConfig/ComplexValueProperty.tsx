@@ -11,7 +11,7 @@
 
 import * as l10n from "@vscode/l10n";
 import { configComplexValueLines } from "../ConfigComplexValueLines";
-import { getInheritedFromParts } from "./inheritedFrom";
+import { getInheritedFromPartsWithRenames } from "./inheritedFrom";
 import { InheritedFromIndicator } from "./InheritedFromIndicator";
 import type { RenderConfigCtx } from "./context";
 
@@ -38,7 +38,8 @@ export function ComplexValueProperty({
   pendingValue,
   value,
 }: ComplexValuePropertyProps) {
-  const { handleNavigateToSource, configurations, selectedTab, vscodeApi, selectedProfileKey } = ctx;
+  const { handleNavigateToSource, configurations, selectedTab, vscodeApi, selectedProfileKey, renames } = ctx;
+  const configPath = configurations[selectedTab!]?.configPath;
 
   const renderComplexValue = (value: any, isMerged: boolean = false) => {
     const actualValue = typeof value === "object" && value !== null && value._mergedValue !== undefined ? value._mergedValue : value;
@@ -53,10 +54,12 @@ export function ComplexValueProperty({
   };
 
   const inheritedFrom =
-    isFromMergedProps && mergedPropData?.jsonLoc ? getInheritedFromParts(mergedPropData.jsonLoc, mergedPropData.osLoc) : undefined;
+    isFromMergedProps && mergedPropData?.jsonLoc
+      ? getInheritedFromPartsWithRenames(mergedPropData.jsonLoc, mergedPropData.osLoc, selectedProfileKey, configPath, renames)
+      : undefined;
 
   return (
-    <div key={fullKey} className="config-item">
+    <div key={fullKey} className="config-item" data-property-key={displayKey ?? ""}>
       <div className="config-item-container" style={{ gridTemplateColumns: "150px 1fr" }}>
         <span className="config-label" style={{ fontWeight: "bold" }}>
           <span className="config-label-text" title={displayKey ?? ""}>{displayKey}</span>
@@ -75,7 +78,6 @@ export function ComplexValueProperty({
               handleNavigateToSource(mergedPropData.jsonLoc, mergedPropData.osLoc);
             } else {
               // Navigate to profile for local properties
-              const configPath = configurations[selectedTab!]?.configPath;
               if (configPath) {
                 vscodeApi.postMessage({
                   command: "OPEN_CONFIG_FILE_WITH_PROFILE",

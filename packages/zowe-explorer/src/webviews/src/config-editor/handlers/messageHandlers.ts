@@ -67,6 +67,7 @@ export interface MessageHandlerProps {
     // Refs
     configurationsRef: React.MutableRefObject<Configuration[]>;
     mergedPropertiesLatestRequestSeqRef: React.MutableRefObject<number>;
+    validationRequestSeqRef: React.MutableRefObject<number>;
     selectedProfileKeyRef: React.MutableRefObject<string | null>;
 
     // State values
@@ -139,12 +140,14 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
         newValidDefaults[config.configPath] = config.schemaValidation?.validDefaults || [];
     });
 
+    // Any CONFIGURATIONS message means a prior save/refresh round-trip has completed.
+    setIsSaving(false);
+
     // Check if we have pending save selection to restore
     if (pendingSaveSelection) {
         setSelectedTab(pendingSaveSelection.tab);
         setSelectedProfileKey(pendingSaveSelection.profile);
         setPendingSaveSelection(null);
-        setIsSaving(false);
         // Increment sort order version to trigger re-render with updated merged properties after save
         setSortOrderVersion((prev) => prev + 1);
     } else {
@@ -516,10 +519,16 @@ export const handleSaveMessage = (props: MessageHandlerProps) => {
 interface ProfileNameValidationResultPayload {
     isValid: boolean;
     message?: string;
+    requestSeq?: number;
 }
 
 const handleProfileNameValidationResultMessage = (data: ProfileNameValidationResultPayload, props: MessageHandlerProps) => {
-    const { setWizardProfileNameValidation } = props;
+    const { setWizardProfileNameValidation, validationRequestSeqRef } = props;
+
+    if (data.requestSeq !== undefined && data.requestSeq !== validationRequestSeqRef.current) {
+        return;
+    }
+
     setWizardProfileNameValidation({
         isValid: data.isValid,
         message: data.message,

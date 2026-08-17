@@ -12,22 +12,17 @@
 import { useEffect, useCallback } from "react";
 import { ProfileWizardModal } from "./modals/ProfileWizardModal";
 import { useWizardContext } from "../context/WizardContext";
-import { useConfigContext } from "../context/ConfigContext";
 
 export function WizardManager() {
-  const { selectedTab } = useConfigContext();
-  const {
-    wizardModalOpen,
-    wizardRootProfile,
-    wizardSelectedType,
-    setWizardMergedProperties,
-    setWizardNewPropertyValue,
-    setWizardProperties,
-    requestWizardMergedProperties,
-  } = useWizardContext();
+  const { wizardModalOpen, setWizardMergedProperties, setWizardNewPropertyValue, setWizardProperties, wizardMergedPropertiesRequestSeqRef } =
+    useWizardContext();
 
   const onWizardMergedProperties = useCallback(
     (data: any) => {
+      if (data.requestSeq !== undefined && data.requestSeq !== wizardMergedPropertiesRequestSeqRef.current) {
+        return;
+      }
+
       const mergedPropsData: { [key: string]: any } = {};
       if (Array.isArray(data.mergedArgs)) {
         data.mergedArgs.forEach((item: any) => {
@@ -72,16 +67,6 @@ export function WizardManager() {
     },
     [setWizardNewPropertyValue, setWizardProperties]
   );
-
-  useEffect(() => {
-    if (wizardModalOpen && selectedTab !== null && (wizardRootProfile || wizardSelectedType)) {
-      const timeoutId = setTimeout(() => {
-        requestWizardMergedProperties();
-      }, 1000);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [wizardRootProfile, wizardSelectedType, wizardModalOpen, selectedTab, requestWizardMergedProperties]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {

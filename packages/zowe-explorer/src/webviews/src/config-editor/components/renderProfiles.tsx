@@ -329,6 +329,9 @@ export const RenderProfiles = ({
       profileSortOrder || "natural",
       sortProfilesAtLevel,
       setExpandedNodesForProfileList,
+      hasPendingRename,
+      getExpandedNodesForConfig,
+      setPendingDefaults,
     ]
   );
 

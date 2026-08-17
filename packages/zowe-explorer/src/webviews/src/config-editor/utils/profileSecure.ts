@@ -27,10 +27,13 @@ export function isMergedPropertySecure(_displayKey: string, jsonLoc: string, _os
 interface CanPropertyBeSecureParams extends SchemaContext {
     displayKey: string;
     selectedProfileKey?: string | null;
+    // When set, checks this profile type's schema directly instead of resolving a type from
+    // selectedProfileKey. Used by the profile wizard, where the profile doesn't exist yet.
+    profileType?: string;
 }
 
 export function canPropertyBeSecure(params: CanPropertyBeSecureParams): boolean {
-    const { displayKey, selectedTab, configurations, schemaValidations, pendingChanges, renames, selectedProfileKey } = params;
+    const { displayKey, selectedTab, configurations, schemaValidations, pendingChanges, renames, selectedProfileKey, profileType } = params;
 
     if (!displayKey || selectedTab === null) {
         return false;
@@ -46,6 +49,11 @@ export function canPropertyBeSecure(params: CanPropertyBeSecureParams): boolean 
 
     if (!validation) {
         return false;
+    }
+
+    if (profileType) {
+        const propertySchema = validation.propertySchema[profileType] || {};
+        return propertySchema[displayKey]?.secure === true;
     }
 
     if (selectedProfileKey) {

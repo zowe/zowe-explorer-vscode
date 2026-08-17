@@ -81,7 +81,6 @@ function AppContent() {
     setIsSaving,
     pendingSaveSelection,
     setPendingSaveSelection,
-    isNavigating,
     setProfileSearchTerm,
     profileFilterType,
     setProfileFilterType,
@@ -169,7 +168,7 @@ function AppContent() {
   });
 
   const { formatPendingChanges, hasPendingChanges } = useProfileUtils();
-  const { setWizardModalOpen, wizardModalOpen, setWizardProfileNameValidation } = useWizardContext();
+  const { setWizardModalOpen, wizardModalOpen, setWizardProfileNameValidation, validationRequestSeqRef } = useWizardContext();
 
   // Keep tutorialSeenRef in sync so other callbacks can read it without stale closures.
   useEffect(() => {
@@ -183,11 +182,11 @@ function AppContent() {
       const config = configurations[selectedTab].properties;
       setFlattenedConfig(flattenKeys(config.profiles ?? {}));
       setFlattenedDefaults(flattenKeys(config.defaults ?? {}));
-      if (!isSaving && !isNavigating) {
+      if (!isSaving) {
         setMergedProperties(null);
       }
     }
-  }, [selectedTab, configurations, isSaving, isNavigating]);
+  }, [selectedTab, configurations, isSaving]);
 
   useEffect(() => {
     if (!selectedProfileKey) {
@@ -206,7 +205,7 @@ function AppContent() {
       prevMergedFetchSelectionRef.current.profileKey !== selectedProfileKey || prevMergedFetchSelectionRef.current.tab !== selectedTab;
     prevMergedFetchSelectionRef.current = { profileKey: selectedProfileKey, tab: selectedTab };
 
-    if (selectionChanged && !isSaving && !isNavigating) {
+    if (selectionChanged && !isSaving) {
       setMergedProperties(null);
     }
 
@@ -229,7 +228,6 @@ function AppContent() {
     renames,
     sortOrderVersion,
     isSaving,
-    isNavigating,
     configurations,
     vscodeApi,
     setMergedProperties,
@@ -436,6 +434,7 @@ function AppContent() {
     setIsSaving,
     setPendingSaveSelection,
     setWizardProfileNameValidation,
+    validationRequestSeqRef,
     setRenames,
     setConfigParseErrors,
     setTutorialSeen,

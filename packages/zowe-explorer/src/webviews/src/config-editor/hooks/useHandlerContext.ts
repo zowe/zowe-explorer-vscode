@@ -17,7 +17,6 @@ export interface HandlerContext {
     setRenameProfileModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setDeletions: React.Dispatch<React.SetStateAction<{ [configPath: string]: string[] }>>;
     setSelectedTab: React.Dispatch<React.SetStateAction<number | null>>;
-    setIsNavigating: React.Dispatch<React.SetStateAction<boolean>>;
     setDragDroppedProfiles: React.Dispatch<React.SetStateAction<{ [configPath: string]: Set<string> }>>;
 
     // State values
@@ -48,7 +47,6 @@ export function useHandlerContext(vscodeApi: ConfigEditorWebviewApi): HandlerCon
         setRenameProfileModalOpen,
         setDeletions,
         setSelectedTab,
-        setIsNavigating,
         setDragDroppedProfiles,
         selectedTab,
         configurations,
@@ -74,7 +72,6 @@ export function useHandlerContext(vscodeApi: ConfigEditorWebviewApi): HandlerCon
         setRenameProfileModalOpen,
         setDeletions,
         setSelectedTab,
-        setIsNavigating,
         setDragDroppedProfiles,
         selectedTab,
         configurations,

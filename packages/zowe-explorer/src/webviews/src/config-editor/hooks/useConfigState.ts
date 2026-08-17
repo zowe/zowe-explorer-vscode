@@ -44,7 +44,6 @@ export function useConfigState(vscodeApi: ConfigEditorWebviewApi) {
     const [sortOrderVersion, setSortOrderVersion] = useState<number>(0);
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [pendingSaveSelection, setPendingSaveSelection] = useState<{ tab: number | null; profile: string | null } | null>(null);
-    const [isNavigating, setIsNavigating] = useState(false);
     const [profileSearchTerm, setProfileSearchTerm] = useState("");
     const [profileFilterType, setProfileFilterType] = useState<string | null>(null);
     const [hasWorkspace, setHasWorkspace] = useState<boolean>(false);
@@ -193,8 +192,6 @@ export function useConfigState(vscodeApi: ConfigEditorWebviewApi) {
         setIsSaving,
         pendingSaveSelection,
         setPendingSaveSelection,
-        isNavigating,
-        setIsNavigating,
         profileSearchTerm,
         setProfileSearchTerm,
         profileFilterType,
