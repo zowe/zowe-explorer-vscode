@@ -231,7 +231,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * Updates this node so the recalled data set can be interacted with.
      * @param isPds Whether the data set is a PDS
      */
-    public async datasetRecalled(isPds: boolean): Promise<void> {
+    public datasetRecalled(isPds: boolean): void {
         // Change context value to match dsorg, update collapsible state and assign resource URI
         // Preserve favorite context and any additional context values
         this.contextValue = this.contextValue.replace(Constants.DS_MIGRATED_FILE_CONTEXT, isPds ? Constants.DS_PDS_CONTEXT : Constants.DS_DS_CONTEXT);
@@ -255,7 +255,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
             if (!DatasetFSProvider.instance.exists(this.resourceUri)) {
                 DatasetFSProvider.instance.createEntry(this.resourceUri, DsType.Ps);
-                await vscode.workspace.fs.writeFile(this.resourceUri, new Uint8Array());
             }
         }
     }
@@ -296,20 +295,20 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
      * @param dsorg The dataset organization (e.g., "PO" for PDS)
      * @param dsTree The dataset tree provider
      */
-    private async syncNodeMigrationStatus(dsNode: ZoweDatasetNode, migr: string, dsorg: string, dsTree: DatasetTree): Promise<void> {
+    private syncNodeMigrationStatus(dsNode: ZoweDatasetNode, migr: string, dsorg: string, dsTree: DatasetTree): void {
         const migrationStatus = migr.toUpperCase();
         if (migrationStatus !== "YES") {
             dsNode.justRecalled = false;
         }
         if (SharedContext.isMigrated(dsNode) && migrationStatus !== "YES") {
             const isPds = dsorg?.startsWith("PO") ?? dsNode.wasPds ?? false;
-            await dsNode.datasetRecalled(isPds);
+            dsNode.datasetRecalled(isPds);
             if (dsTree) {
                 const isFav = SharedContext.isFavoriteDescendant(dsNode);
                 const equiv = dsTree.findEquivalentNode(dsNode, isFav) as ZoweDatasetNode;
                 if (equiv) {
                     equiv.justRecalled = false;
-                    await equiv.datasetRecalled(isPds);
+                    equiv.datasetRecalled(isPds);
                     dsTree.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
                 }
                 if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
@@ -407,7 +406,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 if (dsNode != null) {
                     elementChildren[dsNode.label.toString()] = dsNode;
                     if (item.migr) {
-                        await this.syncNodeMigrationStatus(dsNode, item.migr, item.dsorg, dsTree);
+                        this.syncNodeMigrationStatus(dsNode, item.migr, item.dsorg, dsTree);
                     }
                 } else if (item.migr && item.migr.toUpperCase() === "YES") {
                     // Creates a ZoweDatasetNode for a migrated dataset
