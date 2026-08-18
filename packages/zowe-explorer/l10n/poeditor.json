@@ -626,6 +626,9 @@
   "zowe.zowex.defaultHandshakeTimeout": {
     "Time in milliseconds to wait for the SSH handshake to complete.": ""
   },
+  "zowe.confirmSshServerDeploy": {
+    "Require user confirmation before connecting with an SSH profile": ""
+  },
   "#### Copy across LPAR updates": "",
   "#### Favorite VSAM data sets": "",
   "#### Favorite individual PDS members": "",
