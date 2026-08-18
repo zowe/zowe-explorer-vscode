@@ -14,6 +14,7 @@ import { ConfigEditorProfileOperations } from "../../../../src/utils/ConfigEdito
 import { ConfigUtils } from "../../../../src/utils/ConfigUtils";
 import { ConfigChangeHandlers } from "../../../../src/utils/ConfigChangeHandlers";
 import { vi, Mock } from "vitest";
+import * as path from "path";
 
 vi.mock("../../../../src/utils/ConfigUtils", () => ({
     ConfigUtils: {
@@ -63,7 +64,7 @@ describe("ConfigEditorMergedProperties", () => {
                         secure: { secureFields: vi.fn().mockReturnValue([]) },
                     },
                 })),
-                getAllProfiles: vi.fn(() => [{ profName: profPath, profType: "zosmf", profLoc: { osLoc: configPath } }]),
+                getAllProfiles: vi.fn(() => [{ profName: profPath, profType: "zosmf", profLoc: { osLoc: path.normalize(configPath) } }]),
                 mergeArgsForProfile: vi.fn(() => ({
                     knownArgs: [{ argLoc: { osLoc: configPath, jsonLoc: "profiles.testProfile.properties.host" }, argValue: "new.host.com" }],
                 })),
@@ -172,7 +173,7 @@ describe("ConfigEditorMergedProperties", () => {
             const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
             const mockProfileInfo = {
                 getTeamConfig: vi.fn(() => ({ layers: [], api: { layers: { activate: vi.fn() } } })),
-                getAllProfiles: vi.fn(() => [{ profName: "profiles.testProfile", profType: "zosmf", profLoc: { osLoc: configPath } }]),
+                getAllProfiles: vi.fn(() => [{ profName: "profiles.testProfile", profType: "zosmf", profLoc: { osLoc: path.normalize(configPath) } }]),
                 mergeArgsForProfile: vi.fn(() => {
                     throw new Error("schema load failed");
                 }),
