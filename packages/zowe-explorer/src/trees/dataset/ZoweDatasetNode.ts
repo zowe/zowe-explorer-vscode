@@ -140,17 +140,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (this.label !== vscode.l10n.t("Favorites") && !SharedContext.isMigrated(this)) {
             const sessionLabel = opts.profile?.name ?? SharedUtils.getSessionLabel(this);
             if (
-                this.contextValue === Constants.DS_DS_CONTEXT ||
-                this.contextValue === Constants.DS_FAV_CONTEXT ||
-                this.contextValue === Constants.DS_PDS_CONTEXT ||
-                this.contextValue === Constants.PDS_FAV_CONTEXT ||
+                this.contextValue.startsWith(Constants.DS_DS_CONTEXT) ||
+                this.contextValue.startsWith(Constants.DS_FAV_CONTEXT) ||
+                this.contextValue.startsWith(Constants.DS_PDS_CONTEXT) ||
+                this.contextValue.startsWith(Constants.PDS_FAV_CONTEXT) ||
                 this.contextValue === Constants.VSAM_CONTEXT
             ) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/${this.label as string}`,
                 });
-                if (this.contextValue === Constants.DS_DS_CONTEXT || this.contextValue === Constants.DS_FAV_CONTEXT) {
+                if (this.contextValue.startsWith(Constants.DS_DS_CONTEXT) || this.contextValue.startsWith(Constants.DS_FAV_CONTEXT)) {
                     const extension = DatasetUtils.getExtension(this.label as string);
                     this.resourceUri = this.resourceUri.with({ path: `${this.resourceUri.path}${extension ?? ""}` });
                     this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
