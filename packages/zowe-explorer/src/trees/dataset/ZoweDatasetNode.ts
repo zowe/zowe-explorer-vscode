@@ -73,6 +73,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public favoritedMemberNames?: string[];
     public wasPds?: boolean;
     public justRecalled?: boolean;
+    public isAlias?: boolean;
     public aliasTargetDsn?: string;
 
     private paginator?: Paginator<IZosFilesResponse>;
@@ -102,6 +103,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
         if (opts.isAlias) {
             this.contextValue += Constants.DS_ALIAS_SUFFIX;
+            this.isAlias = true;
         }
         if (opts.contextOverride?.includes(Constants.DS_SESSION_CONTEXT)) {
             const toolTipList: string[] = [];

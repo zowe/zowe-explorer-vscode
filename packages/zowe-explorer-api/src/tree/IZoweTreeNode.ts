@@ -196,6 +196,11 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
     inFilterPrompt?: boolean;
 
     /**
+     * True if this node represents an alias to another target data set.
+     */
+    isAlias?: boolean;
+
+    /**
      * If this node represents an alias, this field will contain the data set name
      * that the alias points to if the MVS API for its profile supports resolving aliases.
      */
