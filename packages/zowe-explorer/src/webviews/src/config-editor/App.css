@@ -775,12 +775,28 @@ ul {
     z-index: 999;
 }
 
-/* Full-viewport pointer capture while saving; no tint or inner chrome */
+/* Full-viewport pointer capture while saving; no tint or inner chrome until the spinner delay elapses */
 .save-modal-blocker {
     position: fixed;
     inset: 0;
     z-index: 999;
     background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.save-modal-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 24px;
+    background-color: var(--vscode-editor-background);
+    border: 1px solid var(--vscode-widget-border);
+    border-radius: 4px;
+    color: var(--vscode-foreground);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .modal-actions {
