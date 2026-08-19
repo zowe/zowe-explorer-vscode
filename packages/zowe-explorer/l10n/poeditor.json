@@ -998,6 +998,7 @@
   "Delete Selected": "",
   "Delete action was canceled.": "",
   "Delete action was cancelled.": "",
+  "Deleting aliases is not supported. Deselect any alias data sets.": "",
   "Deleting data set(s): {0}": "",
   "Deleting items": "",
   "Depth": "",
