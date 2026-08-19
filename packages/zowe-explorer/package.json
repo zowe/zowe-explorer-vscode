@@ -1310,17 +1310,17 @@
           "group": "099_zowe_dsModification@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/ && viewItem =~ /.*(?!_alias)/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^ds(?!.*_alias.*)/ && !listMultiSelection",
           "command": "zowe.ds.renameDataSet",
           "group": "099_zowe_dsModification@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && viewItem =~ /.*(?!_alias)/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^pds(?!.*_alias.*)/ && !listMultiSelection",
           "command": "zowe.ds.renameDataSet",
           "group": "099_zowe_dsModification@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/ && viewItem =~ /.*(?!_alias)/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^ds(?!.*_alias.*)/",
           "command": "zowe.ds.deleteDataset",
           "group": "099_zowe_dsModification@5"
         },
@@ -1330,7 +1330,7 @@
           "group": "099_zowe_dsModification@5"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && viewItem =~ /.*(?!_alias)/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^pds(?!.*_alias.*)/",
           "command": "zowe.ds.deleteDataset",
           "group": "099_zowe_dsModification@5"
         },
