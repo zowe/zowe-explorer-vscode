@@ -26,7 +26,7 @@ import { SshClientCache } from "../SshClientCache";
 import { SshErrorHandler } from "../SshErrorHandler";
 
 export class SshCommonApi implements MainframeInteraction.ICommon {
-    public constructor(public profile?: imperative.IProfileLoaded) { }
+    public constructor(public profile?: imperative.IProfileLoaded) {}
 
     public getProfileTypeName(): string {
         return ZosUssProfile.type;
@@ -38,12 +38,12 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
 
     /**
      * For a given profile, attempt get a new or existing connection status.
-     * 
-     * In order to keep the user informed of the fact that connecting to an SSH profile may trigger a 
+     *
+     * In order to keep the user informed of the fact that connecting to an SSH profile may trigger a
      * file upload, this method will trigger a confirmation dialog to be shown for new connections,
-     * unless the user has set "zowe.confirmSshServerDeploy" to false in their VSC configuration. 
-     * 
-     * @param profile - The profile to check 
+     * unless the user has set "zowe.confirmSshServerDeploy" to false in their VSC configuration.
+     *
+     * @param profile - The profile to check
      * @param profileType - This API only handles ZosUssProfile.type
      * @returns the status of the profile - "inactive" , "active", or "unverified".
      */
@@ -59,7 +59,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                     const cancelButton = vscode.l10n.t("Cancel");
                     const message = vscode.l10n.t(
                         "Connecting with an SSH profile deploys the SSH server to z/OS UNIX to " +
-                        "enable you to perform actions on the mainframe. Would you like to proceed with connecting?"
+                            "enable you to perform actions on the mainframe. Would you like to proceed with connecting?"
                     );
                     const selection = await Gui.showMessage(message, { items: [cancelButton, connectButton, connectDontAskButton] });
                     if (selection === connectButton) {

@@ -46,7 +46,7 @@ export function deployWithProgress(session: SshSession, serverPath: string): The
                     message += vscode.l10n.t("Would you like to attempt deployment anyway?");
                     imperative.Logger.getAppLogger().info(
                         `Prompting the user to determine whether we should proceed` +
-                        ` with the deployment despite the apparent lack of disk space (${remainingMB} vs the recommended ${recommendedMB} MB)`
+                            ` with the deployment despite the apparent lack of disk space (${remainingMB} vs the recommended ${recommendedMB} MB)`
                     );
                     const selection = await Gui.showMessage(message, { items: [deployButton, cancelButton] });
                     if (selection === deployButton) {
