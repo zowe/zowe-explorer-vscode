@@ -36,6 +36,9 @@ vi.mock("@zowe/zowe-explorer-api", () => ({
     FileManagement: {
         getZoweDir: vi.fn(),
     },
+    ProfilesCache: {
+        requireKeyring: vi.fn(),
+    },
 }));
 
 vi.mock("../../../../src/configuration/Profiles", () => ({
@@ -43,6 +46,19 @@ vi.mock("../../../../src/configuration/Profiles", () => ({
         getInstance: vi.fn().mockReturnValue({
             overrideWithEnv: false,
         }),
+    },
+}));
+
+const mockReadProfilesFromDisk = vi.fn();
+const mockGetTeamConfig = vi.fn();
+
+vi.mock("@zowe/imperative", () => ({
+    ProfileInfo: vi.fn().mockImplementation(() => ({
+        readProfilesFromDisk: mockReadProfilesFromDisk,
+        getTeamConfig: mockGetTeamConfig,
+    })),
+    ProfileCredentials: {
+        defaultCredMgrWithKeytar: vi.fn(),
     },
 }));
 
@@ -990,6 +1006,146 @@ describe("ConfigUtils", () => {
             const parseErrors: ConfigParseError[] = [];
             await expect(ConfigUtils.appendJsonParseErrorsForKnownConfigFiles(parseErrors)).resolves.not.toThrow();
             expect(parseErrors).toEqual([]);
+        });
+    });
+
+    describe("createProfileInfoAndLoad environment variable handling", () => {
+        // Stand-in for Imperative's Config: `envVarManaged` is a public read-only view over the
+        // private `mEnvVarManaged` bookkeeping that Config.set() consults before allowing a
+        // write, and `mLayers` is the private, mutable backing store for the `layers` getter
+        // (which itself returns a fresh JSONC clone on every access, so writes must target
+        // `mLayers` directly to actually stick).
+        const buildConfig = (mEnvVarManaged: any[], mLayers: any[]): any => ({
+            mEnvVarManaged,
+            mLayers,
+            get envVarManaged() {
+                return [...this.mEnvVarManaged];
+            },
+        });
+
+        const envEntry = (overrides: Record<string, unknown> = {}): any => ({
+            global: false,
+            user: false,
+            propPath: "profiles.lpar1.properties.color",
+            originalValue: "$FAVORITE_COLOR",
+            replacementValue: "blue",
+            ...overrides,
+        });
+
+        beforeEach(() => {
+            mockReadProfilesFromDisk.mockReset().mockResolvedValue(undefined);
+            mockGetTeamConfig.mockReset();
+        });
+
+        it("should put the literal $VAR reference back into the layer properties", async () => {
+            const layer = {
+                global: false,
+                user: false,
+                properties: { profiles: { lpar1: { properties: { color: "blue" } } } },
+            };
+            const config = buildConfig([envEntry()], [layer]);
+            mockGetTeamConfig.mockReturnValue(config);
+
+            await ConfigUtils.createProfileInfoAndLoad();
+
+            expect(layer.properties.profiles.lpar1.properties.color).toBe("$FAVORITE_COLOR");
+        });
+
+        it("should clear the tracking list so Config.set() is no longer blocked for that path", async () => {
+            const layer = {
+                global: false,
+                user: false,
+                properties: { profiles: { lpar1: { properties: { color: "blue" } } } },
+            };
+            const config = buildConfig([envEntry()], [layer]);
+            mockGetTeamConfig.mockReturnValue(config);
+
+            await ConfigUtils.createProfileInfoAndLoad();
+
+            expect(config.mEnvVarManaged).toEqual([]);
+        });
+
+        it("should only restore into the layer the substitution came from", async () => {
+            const projectLayer = {
+                global: false,
+                user: false,
+                properties: { profiles: { lpar1: { properties: { color: "blue" } } } },
+            };
+            const globalLayer = {
+                global: true,
+                user: false,
+                properties: { profiles: { lpar1: { properties: { color: "blue" } } } },
+            };
+            const config = buildConfig([envEntry({ global: false, user: false })], [projectLayer, globalLayer]);
+            mockGetTeamConfig.mockReturnValue(config);
+
+            await ConfigUtils.createProfileInfoAndLoad();
+
+            expect(projectLayer.properties.profiles.lpar1.properties.color).toBe("$FAVORITE_COLOR");
+            expect(globalLayer.properties.profiles.lpar1.properties.color).toBe("blue");
+        });
+
+        it("should restore multiple substitutions across nested profiles", async () => {
+            const layer = {
+                global: false,
+                user: false,
+                properties: {
+                    profiles: {
+                        lpar1: {
+                            properties: { host: "example.com", port: 443 },
+                            profiles: { zosmf: { properties: { user: "resolved-user" } } },
+                        },
+                    },
+                },
+            };
+            const config = buildConfig(
+                [
+                    envEntry({ propPath: "profiles.lpar1.properties.host", originalValue: "$MY_HOST" }),
+                    envEntry({ propPath: "profiles.lpar1.profiles.zosmf.properties.user", originalValue: "${MY_USER}" }),
+                ],
+                [layer]
+            );
+            mockGetTeamConfig.mockReturnValue(config);
+
+            await ConfigUtils.createProfileInfoAndLoad();
+
+            expect(layer.properties.profiles.lpar1.properties.host).toBe("$MY_HOST");
+            expect(layer.properties.profiles.lpar1.profiles.zosmf.properties.user).toBe("${MY_USER}");
+            // Untouched properties stay as-is.
+            expect(layer.properties.profiles.lpar1.properties.port).toBe(443);
+        });
+
+        it("should skip entries whose property path no longer exists without throwing", async () => {
+            const layer = {
+                global: false,
+                user: false,
+                properties: { profiles: {} },
+            };
+            const config = buildConfig([envEntry()], [layer]);
+            mockGetTeamConfig.mockReturnValue(config);
+
+            await expect(ConfigUtils.createProfileInfoAndLoad()).resolves.toBeDefined();
+            expect(layer.properties.profiles).toEqual({});
+        });
+
+        it("should leave the config untouched when nothing was substituted", async () => {
+            const layer = {
+                global: false,
+                user: false,
+                properties: { profiles: { lpar1: { properties: { color: "blue" } } } },
+            };
+            const config = buildConfig([], [layer]);
+            mockGetTeamConfig.mockReturnValue(config);
+
+            await ConfigUtils.createProfileInfoAndLoad();
+
+            expect(layer.properties.profiles.lpar1.properties.color).toBe("blue");
+        });
+
+        it("should not throw when there is no team config", async () => {
+            mockGetTeamConfig.mockReturnValue(undefined);
+
+            await expect(ConfigUtils.createProfileInfoAndLoad()).resolves.toBeDefined();
         });
     });
 });

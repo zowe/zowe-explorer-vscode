@@ -81,6 +81,43 @@ export class ConfigUtils {
         return result.replace(/,(\s*[}\]])/g, "$1");
     }
 
+    // Fix EnvVar literals due to Imperative resolving on its own
+    private static restoreEnvVarLiterals(profInfo: ProfileInfo): void {
+        const config = profInfo.getTeamConfig();
+        if (config == null) {
+            return;
+        }
+        const envVarManaged = config.envVarManaged;
+        if (envVarManaged == null || envVarManaged.length === 0) {
+            return;
+        }
+
+        const mLayers = (config as unknown as { mLayers: { global: boolean; user: boolean; properties: unknown }[] }).mLayers ?? [];
+        for (const layer of mLayers) {
+            for (const entry of envVarManaged) {
+                if (entry.global !== layer.global || entry.user !== layer.user) {
+                    continue;
+                }
+                const segments = entry.propPath.split(".");
+                let target = layer.properties as Record<string, unknown>;
+                let reachedParent = true;
+                for (const segment of segments.slice(0, -1)) {
+                    const next = target?.[segment];
+                    if (typeof next !== "object" || next === null) {
+                        reachedParent = false;
+                        break;
+                    }
+                    target = next as Record<string, unknown>;
+                }
+                if (reachedParent) {
+                    target[segments[segments.length - 1]] = entry.originalValue;
+                }
+            }
+        }
+
+        (config as unknown as { mEnvVarManaged: unknown[] }).mEnvVarManaged = [];
+    }
+
     /**
      * Creates a ProfileInfo instance for Zowe and loads profiles from disk.
      * @returns ProfileInfo after readProfilesFromDisk
@@ -91,6 +128,7 @@ export class ConfigUtils {
             credMgrOverride: ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
         });
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
+        ConfigUtils.restoreEnvVarLiterals(profInfo);
         return profInfo;
     }
 
