@@ -67,6 +67,8 @@
     "flatted": "^3.4.2",
     "minimatch": "^3.1.5",
     "brace-expansion": "^1.1.13",
+    "nanoid": "^3.3.17",
+    "postcss": "^8.5.23",
     "@zowe/cli/@zowe/imperative/markdown-it": "^14.2.0",
     "@zowe/cli/@zowe/imperative/markdown-it/linkify-it": "^5.0.1"
   },
@@ -82,6 +84,7 @@
     "package": "yarn workspaces run package",
     "pretest:integration": "ts-node ./scripts/create-env.ts",
     "posttest:integration": "ts-node ./scripts/clean-env.ts",
-    "install-private": "node scripts/installPrivate.js"
+    "install-private": "node scripts/installPrivate.js",
+    "audit-private": "node scripts/auditPrivate.js"
   }
 }

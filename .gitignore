@@ -7,6 +7,7 @@ testProfileData.ts
 results
 *.log
 npm-shrinkwrap.json
+package-lock.json
 tsconfig.tsbuildinfo
 vscode-extension-for-zowe*.vsix
 .vscode/settings.json
