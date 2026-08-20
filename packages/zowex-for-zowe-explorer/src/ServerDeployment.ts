@@ -37,8 +37,9 @@ export function deployWithProgress(session: SshSession, serverPath: string): The
                                 " less than the recommended {2} MB of free space. ",
                             args: [serverPath, remainingMB, recommendedMB],
                             comment: [
-                                "The user-specified or default server path, available space " +
-                                "for the server path and recommended available space in megabytes",
+                                "The user-specified or default server path",
+                                "The available space for the server path",
+                                "The recommended available space in megabytes",
                             ],
                         });
                     }
