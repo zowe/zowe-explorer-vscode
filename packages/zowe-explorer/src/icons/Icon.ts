@@ -82,8 +82,9 @@ export class Icon {
         path: Icon.getIconPathInResources("folder-open.svg"),
         check: (node) => {
             const parentCheck = Icon.folder.check(node);
-            return parentCheck && !node.contextValue.includes(Constants.DS_ALIAS_SUFFIX)
-                && node.collapsibleState === TreeItemCollapsibleState.Expanded;
+            return (
+                parentCheck && !node.contextValue.includes(Constants.DS_ALIAS_SUFFIX) && node.collapsibleState === TreeItemCollapsibleState.Expanded
+            );
         },
     };
 

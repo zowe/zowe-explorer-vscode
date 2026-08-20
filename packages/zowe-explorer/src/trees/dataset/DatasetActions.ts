@@ -1264,7 +1264,7 @@ export class DatasetActions {
             return;
         }
 
-        if (nodes.filter(n => n.isAlias).length > 0) {
+        if (nodes.filter((n) => n.isAlias).length > 0) {
             Gui.showMessage(vscode.l10n.t("Deleting aliases is not supported. Deselect any alias data sets."));
             return;
         }
@@ -1748,26 +1748,28 @@ export class DatasetActions {
 <body>
     <div class="attributes-container">
     ${DatasetActions.attributeInfo
-                    .map(({ title, reference, keys }) => {
-                        const linkedTitle = reference
-                            ? `<a href="${reference}" target="_blank" style="text-decoration: none;">
+        .map(({ title, reference, keys }) => {
+            const linkedTitle = reference
+                ? `<a href="${reference}" target="_blank" style="text-decoration: none;">
                     <h2 style="color: var(--vscode-textLink-foreground)">${title}</h2>
                 </a>`
-                            : `<h2>${title}</h2>`;
-                        const tableRows = Array.from(keys.entries())
-                            .filter(([key], _, all) => !(key === "vol" && all.some(([k]) => k === "vols")))
-                            .reduce((html, [key, info]) => {
-                                if (info.value === undefined || info.value === null) {
-                                    return html;
-                                }
-                                const formattedValue = formatAttributeValue(key, info.value, title);
-                                const isNumeric = typeof info.value === "number";
-                                return html.concat(`
-                        <tr ${info.displayName || info.description
-                                        ? `title="${info.displayName ? `(${key})` : ""}${info.description ? (info.displayName ? " " : "") + info.description : ""
-                                        }"`
-                                        : ""
-                                    }>
+                : `<h2>${title}</h2>`;
+            const tableRows = Array.from(keys.entries())
+                .filter(([key], _, all) => !(key === "vol" && all.some(([k]) => k === "vols")))
+                .reduce((html, [key, info]) => {
+                    if (info.value === undefined || info.value === null) {
+                        return html;
+                    }
+                    const formattedValue = formatAttributeValue(key, info.value, title);
+                    const isNumeric = typeof info.value === "number";
+                    return html.concat(`
+                        <tr ${
+                            info.displayName || info.description
+                                ? `title="${info.displayName ? `(${key})` : ""}${
+                                      info.description ? (info.displayName ? " " : "") + info.description : ""
+                                  }"`
+                                : ""
+                        }>
                             <td class="attribute-key">
                                 ${info.displayName || key}:
                             </td>
@@ -1776,9 +1778,9 @@ export class DatasetActions {
                             </td>
                         </tr>
                 `);
-                            }, "");
+                }, "");
 
-                        return `
+            return `
             <div class="attributes-section">
                 ${linkedTitle}
                 <table class="attributes-table">
@@ -1786,8 +1788,8 @@ export class DatasetActions {
                 </table>
             </div>
         `;
-                    })
-                    .join("")}
+        })
+        .join("")}
     </div>
 </body>
 </html>`;
