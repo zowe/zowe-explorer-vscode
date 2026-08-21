@@ -479,18 +479,23 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             ZoweLogger.warn(`[DatasetFSProvider] MVS API does not implement resolveAlias. Alias '${item.dsname}' will not be resolved.`);
             return item;
         }
-        const resolvedAlias = await mvsApi.resolveAlias(item.dsname.toUpperCase());
-        const aliasTargetDsn = resolvedAlias.apiResponse.targetDsn;
-        const originalStatsResponse = await mvsApi.dataSet(aliasTargetDsn, {
-            attributes: true,
-            maxLength: 1,
-        });
-        if (originalStatsResponse.apiResponse?.items?.length > 0) {
-            const originalStats = originalStatsResponse.apiResponse.items[0];
-            item.dsorg = originalStats.dsorg;
-            item.migr = originalStats.migr;
+        try {
+            const resolvedAlias = await mvsApi.resolveAlias(item.dsname.toUpperCase());
+            const aliasTargetDsn = resolvedAlias.apiResponse.targetDsn;
+            const originalStatsResponse = await mvsApi.dataSet(aliasTargetDsn, {
+                attributes: true,
+                maxLength: 1,
+            });
+            if (originalStatsResponse.apiResponse?.items?.length > 0) {
+                const originalStats = originalStatsResponse.apiResponse.items[0];
+                item.dsorg = originalStats.dsorg;
+                item.migr = originalStats.migr;
+            }
+            return item;
+        } catch (e) {
+            ZoweLogger.error(`Failed to resolve alias: ${item.dsname} with error: ${e.message}`);
+            return item;
         }
-        return item;
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<DirEntry | DsEntry> {
