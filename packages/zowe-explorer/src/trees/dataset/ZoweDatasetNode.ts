@@ -919,7 +919,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     const originalAttributes = await mvsApi.dataSet(resolution.apiResponse.targetDsn, { attributes: true });
                     ZoweLogger.info(
                         `[ZoweDatasetNode.resolveAlias] Resolved alias ${item.dsname} to ${resolution.apiResponse.targetDsn}.` +
-                            ` Retrieving attributes of the original data set.`
+                        ` Retrieving attributes of the original data set.`
                     );
                     const matchingOriginal = (originalAttributes.apiResponse.items ?? originalAttributes.apiResponse) as IZosmfListResponse[];
                     if (matchingOriginal.length > 0) {
@@ -929,6 +929,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                             recfm: matchingOriginal[0].recfm,
                             blksz: matchingOriginal[0].blksz,
                             dsname: resolution.apiResponse.targetDsn,
+                            migr: matchingOriginal[0].migr,
                         };
                     }
                 }
@@ -938,7 +939,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         } else {
             ZoweLogger.warn(
                 `[ZoweDatasetNode.resolveAlias] MVS API for ${profile.type} does not implement resolveAlias.` +
-                    ` Alias ${item.dsname} will not be resolved.`
+                ` Alias ${item.dsname} will not be resolved.`
             );
         }
         return undefined;
@@ -1033,12 +1034,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     apiResponse: Array.isArray(resp.apiResponse)
                         ? filteredItems
                         : {
-                              ...(resp.apiResponse ?? {}),
-                              items: filteredItems,
-                              // Update returnedRows to reflect the list without the cursor item
-                              // (difference between array length of `items` and `filteredItems`)
-                              returnedRows: resp.apiResponse.returnedRows - (items.length - filteredItems.length),
-                          },
+                            ...(resp.apiResponse ?? {}),
+                            items: filteredItems,
+                            // Update returnedRows to reflect the list without the cursor item
+                            // (difference between array length of `items` and `filteredItems`)
+                            returnedRows: resp.apiResponse.returnedRows - (items.length - filteredItems.length),
+                        },
                 };
             });
 
