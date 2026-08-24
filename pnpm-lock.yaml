@@ -448,8 +448,8 @@ importers:
         specifier: workspace:*
         version: link:../zowe-explorer-api
       '@zowe/zowex-for-zowe-sdk':
-        specifier: ^0.7.0
-        version: 0.7.0(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)
+        specifier: ^0.8.1
+        version: 0.8.1(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)
       ssh2:
         specifier: ^1.17.0
         version: 1.17.0
@@ -2297,7 +2297,7 @@ packages:
     engines: {node: '>=20.9.0'}
 
   '@zowe/secrets-for-zowe-sdk@8.32.0':
-    resolution: {integrity: sha512-nOKlBqvKs0eMJlBVDF2cbb/vlRlXjsu8TUQjf741S4I2XeiovJUh1iuisiI5a5SMnDXmtiGYoei80KrYw/jPZw==}
+    resolution: {integrity: sha512-nOKlBqvKs0eMJlBVDF2cbb/vlRlXjsu8TUQjf741S4I2XeiovJUh1iuisiI5a5SMnDXmtiGYoei80KrYw/jPZw==, tarball: https://usw1.packages.broadcom.com/artifactory/api/npm/msd-common-npm/@zowe/secrets-for-zowe-sdk/-/@zowe/secrets-for-zowe-sdk-8.32.0.tgz}
     engines: {node: '>=14'}
 
   '@zowe/zos-console-for-zowe-sdk@8.35.0':
@@ -2308,19 +2308,19 @@ packages:
       '@zowe/imperative': ^8.0.0
 
   '@zowe/zos-files-for-zowe-sdk@8.32.0':
-    resolution: {integrity: sha512-Hcjtnkf/uWI3iRB+rfx0DUgbfibWcOxh3S2I5PTh27ToqEI/EghBz3zt0C2b+hJ5uEs+hZNwCV/A6GpC5KCXPA==}
+    resolution: {integrity: sha512-Hcjtnkf/uWI3iRB+rfx0DUgbfibWcOxh3S2I5PTh27ToqEI/EghBz3zt0C2b+hJ5uEs+hZNwCV/A6GpC5KCXPA==, tarball: https://usw1.packages.broadcom.com/artifactory/api/npm/msd-common-npm/@zowe/zos-files-for-zowe-sdk/-/@zowe/zos-files-for-zowe-sdk-8.32.0.tgz}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
   '@zowe/zos-ftp-for-zowe-cli@3.0.0':
-    resolution: {integrity: sha512-lNt4t4VJMvnnjQXXusw5N5w5nVysbKZVSD+c7wvj/RJt6ceSV2aMH7QPeiyvTE0FEFErCkjCRl2AxeVtBkn82Q==}
+    resolution: {integrity: sha512-lNt4t4VJMvnnjQXXusw5N5w5nVysbKZVSD+c7wvj/RJt6ceSV2aMH7QPeiyvTE0FEFErCkjCRl2AxeVtBkn82Q==, tarball: https://usw1.packages.broadcom.com/artifactory/api/npm/msd-common-npm/@zowe/zos-ftp-for-zowe-cli/-/@zowe/zos-ftp-for-zowe-cli-3.0.0.tgz}
     peerDependencies:
       '@zowe/imperative': ^8.0.0
 
   '@zowe/zos-jobs-for-zowe-sdk@8.32.0':
-    resolution: {integrity: sha512-N8aj0dyaFH/E37ev+awzDPNtDMq5A2gK1eAfDdKEYZUyJeeaTuM5iN/p9R6dTRR2wbjh/QpjSmVUDAEjq9ATAw==}
+    resolution: {integrity: sha512-N8aj0dyaFH/E37ev+awzDPNtDMq5A2gK1eAfDdKEYZUyJeeaTuM5iN/p9R6dTRR2wbjh/QpjSmVUDAEjq9ATAw==, tarball: https://usw1.packages.broadcom.com/artifactory/api/npm/msd-common-npm/@zowe/zos-jobs-for-zowe-sdk/-/@zowe/zos-jobs-for-zowe-sdk-8.32.0.tgz}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
@@ -2334,7 +2334,7 @@ packages:
       '@zowe/imperative': ^8.0.0
 
   '@zowe/zos-uss-for-zowe-sdk@8.32.0':
-    resolution: {integrity: sha512-sAw560txs0NTlwKm2/97IFb23HIrJxpCz4daLxgMBIfsoUPLzWEBhIVFJm3Djold0gWe1oB/LJr4pbrCZmuHSg==}
+    resolution: {integrity: sha512-sAw560txs0NTlwKm2/97IFb23HIrJxpCz4daLxgMBIfsoUPLzWEBhIVFJm3Djold0gWe1oB/LJr4pbrCZmuHSg==, tarball: https://usw1.packages.broadcom.com/artifactory/api/npm/msd-common-npm/@zowe/zos-uss-for-zowe-sdk/-/@zowe/zos-uss-for-zowe-sdk-8.32.0.tgz}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/imperative': ^8.0.0
@@ -2346,8 +2346,8 @@ packages:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zowex-for-zowe-sdk@0.7.0':
-    resolution: {integrity: sha512-tsT8C8vfb+PxUpiU/RE79pais5/kscpS6F/WFZS16ng602ZoY236mNnedOCVTEYQ/VA0cZP/SMEnIigyR5GZQw==}
+  '@zowe/zowex-for-zowe-sdk@0.8.1':
+    resolution: {integrity: sha512-JVKIZngiv+iRSameJvGzNfpeSStRKQoX5jn/ul26Ss8OEDeV1nEe1uxsp+ar7MPUr+9/gRQm9dFmg4igIUxFjA==}
     peerDependencies:
       '@zowe/imperative': ^8.11.0
       '@zowe/zos-uss-for-zowe-sdk': ^8.11.0
@@ -8422,7 +8422,7 @@ snapshots:
       extract-zip: 2.0.1
       progress: 2.0.3
       proxy-agent: 6.5.0
-      semver: 7.7.4
+      semver: 7.8.5
       tar-fs: 3.1.1
       yargs: 17.7.2
     transitivePeerDependencies:
@@ -8868,7 +8868,7 @@ snapshots:
       debug: 4.4.3(supports-color@8.1.1)
       globby: 11.1.0
       is-glob: 4.0.3
-      semver: 7.7.4
+      semver: 7.8.5
       tsutils: 3.21.0(typescript@5.9.3)
     optionalDependencies:
       typescript: 5.9.3
@@ -8883,7 +8883,7 @@ snapshots:
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.9
-      semver: 7.7.4
+      semver: 7.8.5
       ts-api-utils: 1.3.0(typescript@5.9.3)
     optionalDependencies:
       typescript: 5.9.3
@@ -9073,7 +9073,7 @@ snapshots:
       https-proxy-agent: 7.0.6
       jszip: 3.10.1
       ora: 8.2.0
-      semver: 7.7.4
+      semver: 7.8.5
     transitivePeerDependencies:
       - supports-color
 
@@ -9659,7 +9659,7 @@ snapshots:
       '@zowe/core-for-zowe-sdk': 8.35.0(@zowe/imperative@8.35.0)
       '@zowe/imperative': 8.35.0
 
-  '@zowe/zowex-for-zowe-sdk@0.7.0(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)':
+  '@zowe/zowex-for-zowe-sdk@0.8.1(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)':
     dependencies:
       '@zowe/imperative': 8.35.0
       '@zowe/zos-uss-for-zowe-sdk': 8.32.0(@zowe/imperative@8.35.0)
@@ -10410,7 +10410,7 @@ snapshots:
       normalize-package-data: 7.0.1
       read-pkg-up: 10.1.0
       recursive-readdir: 2.2.3
-      semver: 7.7.4
+      semver: 7.8.5
       type-fest: 4.41.0
       yargs: 17.7.2
     transitivePeerDependencies:
@@ -11081,7 +11081,7 @@ snapshots:
       optionator: 0.9.4
       progress: 2.0.3
       regexpp: 3.2.0
-      semver: 7.7.4
+      semver: 7.8.5
       strip-ansi: 6.0.1
       strip-json-comments: 3.1.1
       table: 6.8.2
@@ -11364,7 +11364,7 @@ snapshots:
       process-warning: 5.0.0
       rfdc: 1.3.1
       secure-json-parse: 4.1.0
-      semver: 7.7.4
+      semver: 7.8.5
       toad-cache: 3.7.0
 
   fastq@1.17.1:
@@ -12389,7 +12389,7 @@ snapshots:
       lodash.isstring: 4.0.1
       lodash.once: 4.1.1
       ms: 2.1.3
-      semver: 7.7.4
+      semver: 7.8.5
 
   jszip@3.10.1:
     dependencies:
@@ -12641,7 +12641,7 @@ snapshots:
 
   make-dir@4.0.0:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
 
   make-error@1.3.6: {}
 
@@ -13049,7 +13049,7 @@ snapshots:
 
   node-abi@3.62.0:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
     optional: true
 
   node-abort-controller@3.1.1: {}
@@ -13127,13 +13127,13 @@ snapshots:
   normalize-package-data@6.0.2:
     dependencies:
       hosted-git-info: 7.0.2
-      semver: 7.7.4
+      semver: 7.8.5
       validate-npm-package-license: 3.0.4
 
   normalize-package-data@7.0.1:
     dependencies:
       hosted-git-info: 8.1.0
-      semver: 7.7.4
+      semver: 7.8.5
       validate-npm-package-license: 3.0.4
 
   normalize-path@3.0.0: {}
@@ -13144,7 +13144,7 @@ snapshots:
     dependencies:
       hosted-git-info: 7.0.2
       proc-log: 4.2.0
-      semver: 7.7.4
+      semver: 7.8.5
       validate-npm-package-name: 5.0.1
 
   npm-run-path@6.0.0:
