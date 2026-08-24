@@ -14,6 +14,7 @@ import { useConfigContext } from "../context/ConfigContext";
 import { useUtilityHelpers } from "./useUtilityHelpers";
 import { buildFormattedPendingChanges } from "../utils/renameUtils";
 import { flattenProfiles, getRenamedProfileKeyWithNested, sortProfilesAtLevel } from "../utils";
+import { doesSavedProfileExist as doesSavedProfileExistInConfig } from "../utils/profileKeyListing";
 import type { FormattedPendingChanges, ProfileData } from "../types";
 
 export function useProfileUtils() {
@@ -142,6 +143,11 @@ export function useProfileUtils() {
         [getAvailableProfilesForConfig]
     );
 
+    const doesSavedProfileExist = useCallback(
+        (profileKey: string, configPath: string): boolean => doesSavedProfileExistInConfig(profileKey, configPath, configurations),
+        [configurations]
+    );
+
     const hasPendingChanges = useCallback(() => {
         const hasChanges = Object.keys(pendingChanges).length > 0;
         const hasDeletions = Object.entries(deletions).some(([_, keys]) => keys.length > 0);
@@ -161,6 +167,7 @@ export function useProfileUtils() {
         getAvailableProfiles,
         getAvailableProfilesForConfig,
         doesProfileExist,
+        doesSavedProfileExist,
         hasPendingChanges,
     };
 }

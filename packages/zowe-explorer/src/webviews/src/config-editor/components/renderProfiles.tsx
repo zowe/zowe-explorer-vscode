@@ -58,6 +58,7 @@ export const RenderProfiles = ({
     setProfileFilterType,
     setProfileSortOrderWithStorage,
     setPendingDefaults,
+    pendingDefaults,
   } = useConfigContext();
 
   const { viewMode, profileSortOrder } = configEditorSettings;
@@ -283,6 +284,14 @@ export const RenderProfiles = ({
             hasPendingPropertyDeletions(profileKey, configurations[selectedTab!]?.configPath || "")
           }
           hasPendingRename={(profileKey: string) => hasPendingRename(profileKey, configurations[selectedTab!]?.configPath || "", renames)}
+          hasPendingDefaultChange={(profileKey: string) => {
+            const configPath = configurations[selectedTab!]?.configPath || "";
+            const savedDefaults = (configurations[selectedTab!]?.properties?.defaults ?? {}) as { [profileType: string]: unknown };
+            // A profile is "pending" if a staged default now points at it, or used to and no longer does.
+            return Object.entries(pendingDefaults[configPath] ?? {}).some(
+              ([profileType, entry]) => entry.value === profileKey || savedDefaults[profileType] === profileKey
+            );
+          }}
           searchTerm={profileSearchTerm}
           filterType={profileFilterType}
           onSearchChange={setProfileSearchTerm}

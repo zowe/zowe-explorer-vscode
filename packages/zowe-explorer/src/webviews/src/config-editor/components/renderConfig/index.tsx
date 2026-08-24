@@ -39,6 +39,19 @@ function getMergedPropertiesDisplayName(option: MergedPropertiesVisibility) {
   }
 }
 
+function getMergedPropertiesDescription(option: MergedPropertiesVisibility): string | undefined {
+  switch (option) {
+    case "hide":
+      return l10n.t("Only show properties defined directly on this profile.");
+    case "show":
+      return l10n.t("Show inherited properties, limited to those the profile type's schema allows.");
+    case "unfiltered":
+      return l10n.t("Show every inherited property, including ones that are not on the schema for this profile type.");
+    default:
+      return undefined;
+  }
+}
+
 interface RenderConfigProps {
   obj: any;
   path?: string[];
@@ -252,6 +265,7 @@ function ConfigEntry({
                   selectedOption={showMergedProperties}
                   onOptionChange={setShowMergedPropertiesWithStorage}
                   getDisplayName={getMergedPropertiesDisplayName}
+                  getDescription={getMergedPropertiesDescription}
                   icon="codicon-eye"
                 />
                 <SortDropdown<PropertySortOrder>

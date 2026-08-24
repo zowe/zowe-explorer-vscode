@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import * as l10n from "@vscode/l10n";
 import { ProfileSearchFilter } from "./ProfileSearchFilter";
 import { ProfileTree } from "./ProfileTree";
 import { useIsLightTheme } from "../hooks/useIsLightTheme";
@@ -22,6 +23,7 @@ interface ProfileListProps {
   viewMode: "flat" | "tree";
   hasPendingSecureChanges: (profileKey: string) => boolean;
   hasPendingRename: (profileKey: string) => boolean;
+  hasPendingDefaultChange: (profileKey: string) => boolean;
   searchTerm: string;
   filterType: string | null;
   onSearchChange: (searchTerm: string) => void;
@@ -49,6 +51,7 @@ export function ProfileList({
   viewMode,
   hasPendingSecureChanges,
   hasPendingRename,
+  hasPendingDefaultChange,
   searchTerm,
   filterType,
   onSearchChange,
@@ -242,6 +245,7 @@ export function ProfileList({
             getProfileType={getProfileType}
             hasPendingSecureChanges={hasPendingSecureChanges}
             hasPendingRename={hasPendingRename}
+            hasPendingDefaultChange={hasPendingDefaultChange}
             isFilteringActive={isFilteringActive}
             expandedNodes={expandedNodes}
             setExpandedNodes={setExpandedNodes}
@@ -256,13 +260,15 @@ export function ProfileList({
           />
         ) : (
           filteredProfileKeys.map((profileKey) => {
-            const rowHasPendingEdits = Boolean(pendingProfiles[profileKey]) || hasPendingSecureChanges(profileKey) || hasPendingRename(profileKey);
+            const rowHasPendingEdits =
+              Boolean(pendingProfiles[profileKey]) ||
+              hasPendingSecureChanges(profileKey) ||
+              hasPendingRename(profileKey) ||
+              hasPendingDefaultChange(profileKey);
             return (
               <div
                 key={profileKey}
-                className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""} ${
-                  rowHasPendingEdits ? "profile-list-item--pending" : ""
-                }`}
+                className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""}`}
                 style={{
                   cursor: "pointer",
                   margin: "2px 0",
@@ -294,15 +300,23 @@ export function ProfileList({
                 <span
                   style={{
                     flex: 1,
+                    minWidth: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
                     overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    opacity: rowHasPendingEdits ? 0.7 : 1,
                   }}
                   data-testid="profile-name"
                   data-profile-name={profileKey}
                 >
-                  {profileKey}
+                  <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profileKey}</span>
+                  {rowHasPendingEdits && (
+                    <span
+                      className="codicon codicon-circle-filled pending-change-indicator"
+                      title={l10n.t("Unsaved changes")}
+                      style={{ flexShrink: 0 }}
+                    />
+                  )}
                 </span>
                 <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
                   {getProfileType(profileKey) && (

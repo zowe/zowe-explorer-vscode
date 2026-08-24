@@ -10,6 +10,7 @@ import {
     FlattenedConfig,
 } from "../types";
 import type { ConfigEditorWebviewApi } from "../handlers/messageHandlers";
+import { useUndoHistory } from "./useUndoHistory";
 
 export function useConfigState(vscodeApi: ConfigEditorWebviewApi) {
     const [configurations, setConfigurations] = useState<Configuration[]>([]);
@@ -74,6 +75,20 @@ export function useConfigState(vscodeApi: ConfigEditorWebviewApi) {
         renamesRef.current = renames;
         selectedProfileKeyRef.current = selectedProfileKey;
     }, [pendingChanges, deletions, pendingDefaults, defaultsDeletions, autostoreChanges, renames, selectedProfileKey]);
+
+    const { undo, redo, clearHistory, canUndo, canRedo } = useUndoHistory(
+        { pendingChanges, pendingDefaults, deletions, defaultsDeletions, renames, dragDroppedProfiles, autostoreChanges, hiddenItems },
+        {
+            pendingChanges: setPendingChanges,
+            pendingDefaults: setPendingDefaults,
+            deletions: setDeletions,
+            defaultsDeletions: setDefaultsDeletions,
+            renames: setRenames,
+            dragDroppedProfiles: setDragDroppedProfiles,
+            autostoreChanges: setAutostoreChanges,
+            hiddenItems: setHiddenItems,
+        }
+    );
 
     const getLocalStorageValue = useCallback(
         <T>(key: string, defaultValue: T): T => {
@@ -210,6 +225,11 @@ export function useConfigState(vscodeApi: ConfigEditorWebviewApi) {
         setRenameProfileModalOpen,
         configParseErrors,
         setConfigParseErrors,
+        undo,
+        redo,
+        clearHistory,
+        canUndo,
+        canRedo,
         configurationsRef,
         pendingChangesRef,
         deletionsRef,

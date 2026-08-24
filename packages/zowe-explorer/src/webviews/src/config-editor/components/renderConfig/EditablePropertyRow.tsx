@@ -9,6 +9,7 @@
  *
  */
 
+import * as l10n from "@vscode/l10n";
 import { PropertyValueInput } from "./PropertyValueInput";
 import { PropertyActionButtons } from "./PropertyActionButtons";
 import { getInheritedFromPartsWithRenames } from "./inheritedFrom";
@@ -88,6 +89,8 @@ export function EditablePropertyRow({
 
   const inheritedInputClass = isFromMergedProps && !isDeletedMergedProperty ? " config-input-inherited" : "";
 
+  const hasPendingEdit = pendingChanges[configPath]?.[fullKey] !== undefined;
+
   const inheritedFrom =
     isFromMergedProps && !isDeletedMergedProperty && jsonLoc
       ? getInheritedFromPartsWithRenames(jsonLoc, osLoc, selectedProfileKey, configPath, renames)
@@ -113,6 +116,7 @@ export function EditablePropertyRow({
         <span className="config-label-text" title={displayKey ?? ""}>
           {displayKey}
         </span>
+        {hasPendingEdit && <span className="codicon codicon-circle-filled pending-change-indicator" title={l10n.t("Unsaved change")} />}
         {schemaDescription && displayKey && (
           <InfoIcon fieldKey={displayKey} description={schemaDescription} defaultValue={schemaDefault ?? undefined} />
         )}

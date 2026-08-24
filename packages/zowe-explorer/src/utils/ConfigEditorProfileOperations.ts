@@ -37,6 +37,9 @@ export type ValidateProfileNameOptions = {
 };
 
 export class ConfigEditorProfileOperations {
+    /** Property names that must never appear as a profile segment (mirrors Imperative's UNSAFE_PROP_NAMES). */
+    private static readonly RESERVED_PROFILE_SEGMENTS = ["__proto__", "constructor", "prototype"];
+
     /**
      * Validates if a profile name is available for creation
      */
@@ -44,6 +47,19 @@ export class ConfigEditorProfileOperations {
         const { profileName, rootProfile, configPath, profiles, pendingChanges, renames } = options;
         if (!profileName.trim()) {
             return { isValid: true };
+        }
+
+        // Enforce Imperative's own constraint here as well: the webview validates characters, but
+        // drag-and-drop renames reach the config without passing through any UI validation.
+        const unsafeSegment = profileName
+            .trim()
+            .split(".")
+            .find((segment) => segment.length === 0 || ConfigEditorProfileOperations.RESERVED_PROFILE_SEGMENTS.includes(segment));
+        if (unsafeSegment !== undefined) {
+            return {
+                isValid: false,
+                message: "Profile names may not be empty, contain consecutive dots, or use the names __proto__, constructor, or prototype",
+            };
         }
 
         const flatProfiles = ConfigUtils.flattenProfiles(profiles);

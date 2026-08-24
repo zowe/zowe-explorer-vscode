@@ -285,7 +285,6 @@ export const RenderProfileDetails = ({
               }
               return false;
             });
-            const shouldShowMergedProperties = showMergedProperties !== "hide";
             const propertyDescriptions =
               selectedTab !== null && currentConfig
                 ? getPropertyDescriptions({ path: effectivePath, selectedTab, configurations, schemaValidations, pendingChanges, renames })
@@ -296,7 +295,13 @@ export const RenderProfileDetails = ({
                 <RenderConfig
                   obj={effectiveProfile}
                   path={effectivePath}
-                  mergedProps={shouldShowMergedProperties ? mergedProperties : null}
+                  // `mergedProperties` covers local as well as inherited properties (its
+                  // entries carry a `jsonLoc` that tells the two apart), so it must reach
+                  // `RenderConfig` even in "hide" mode — that mode's row-hiding and disabled-input
+                  // behavior is already handled independently by `isPropertyFromMergedProps`
+                  // and `buildSortedEntries`. Nulling it here previously broke the "stored in
+                  // keyring" placeholder for local secure properties too, not just inherited ones.
+                  mergedProps={mergedProperties}
                   propertyDescriptions={propertyDescriptions}
                   handleChange={handleChange}
                   handleDeleteProperty={handleDeleteProperty}

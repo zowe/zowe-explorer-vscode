@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ModalShell } from "../ModalShell";
+import { isValidProfileNamePath, isValidProfileNameSegment, sanitizeProfileNamePath, sanitizeProfileNameSegment } from "../../utils/profileNames";
 
 interface RenameProfileModalProps {
   isOpen: boolean;
@@ -38,28 +39,12 @@ export function RenameProfileModal({
     }
   }, [isOpen, currentProfileName, currentProfileKey, isFullPathMode]);
 
-  const isValidSingleProfileName = (name: string): boolean => {
-    const validChars = /^[a-zA-Z0-9_-]+$/;
-    return validChars.test(name);
-  };
+  const isValidSingleProfileName = isValidProfileNameSegment;
 
-  const isValidFullProfilePath = (path: string): boolean => {
-    const parts = path.split(".");
-
-    if (parts.some((part) => part.trim() === "")) {
-      return false;
-    }
-
-    const validPartChars = /^[a-zA-Z0-9_-]+$/;
-    return parts.every((part) => validPartChars.test(part.trim()));
-  };
+  const isValidFullProfilePath = isValidProfileNamePath;
 
   const filterInputValue = (value: string): string => {
-    if (isFullPathMode) {
-      return value.replace(/[^a-zA-Z0-9._-]/g, "");
-    } else {
-      return value.replace(/[^a-zA-Z0-9_-]/g, "");
-    }
+    return isFullPathMode ? sanitizeProfileNamePath(value) : sanitizeProfileNameSegment(value);
   };
 
   const validateNewName = (name: string): string | null => {

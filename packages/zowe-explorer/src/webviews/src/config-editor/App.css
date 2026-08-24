@@ -590,6 +590,26 @@ select.invalid-default:focus {
     box-shadow: none !important;
 }
 
+.invalid-default-icon {
+    color: var(--vscode-inputValidation-warningForeground, var(--vscode-editorWarning-foreground));
+    flex-shrink: 0;
+    margin-left: auto;
+    padding-left: 4px;
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+}
+
+.pending-change-indicator {
+    color: var(--vscode-gitDecoration-modifiedResourceForeground, var(--vscode-editorInfo-foreground));
+    font-size: 8px !important;
+    width: 8px !important;
+    height: 8px !important;
+    margin-left: 4px;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
 .config-section.defaults-section .config-label {
     min-width: 0;
     overflow: hidden;
@@ -855,7 +875,7 @@ ul {
 
 .tab-unsaved-indicator {
     font-size: 12px;
-    color: var(--vscode-foreground);
+    color: var(--vscode-gitDecoration-modifiedResourceForeground, var(--vscode-editorInfo-foreground));
     margin-left: 4px;
     flex-shrink: 0;
     display: flex;
@@ -868,6 +888,24 @@ ul {
     align-items: center;
     gap: 4px;
     padding-right: 12px;
+}
+
+/* Divides the config-scoped actions (open, export) from the help actions. */
+.tabs-toolbar-separator {
+    width: 1px;
+    height: 16px;
+    margin: 0 2px;
+    background-color: var(--vscode-menu-separatorBackground, var(--vscode-widget-border));
+    flex-shrink: 0;
+}
+
+.ce-icon-button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.ce-icon-button:disabled:hover {
+    background-color: transparent;
 }
 
 .codicon-size-16 {
@@ -1012,6 +1050,30 @@ ul {
 .profile-tree-indent-spacer {
     width: 12px;
     flex-shrink: 0;
+}
+
+/*
+ * VS Code-style indent guides: a thin vertical line connecting a parent row's toggle down
+ * through its descendants, in place of relying on indentation alone to read the hierarchy.
+ * Lives on the children wrapper (not the row) so its height naturally spans exactly this
+ * subtree — it starts at the first child and stops at the last, with no last-child bookkeeping
+ * needed. Deeper levels nest their own wrapper + line inside this one, at a further `left`
+ * offset, so multiple guides stack as parallel lines exactly like VS Code's Explorer.
+ */
+.profile-tree-children {
+    position: relative;
+}
+
+.profile-tree-indent-guide {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--vscode-tree-indentGuidesStroke, var(--vscode-widget-border));
+    pointer-events: none;
+    /* Descendant rows set `position: relative` and paint an opaque background; without an
+       explicit z-index this line (first in DOM order) would paint underneath them and vanish. */
+    z-index: 1;
 }
 
 .profile-tree-icon-button {
@@ -2574,15 +2636,32 @@ ul {
     color: var(--vscode-list-activeSelectionForeground);
 }
 
-/* Profile rows with unsaved edits: left accent (title also uses reduced opacity) */
-.profile-list-item--pending:not(.selected),
-.profile-tree-item--pending:not(.selected):not(.drag-over) {
-    box-shadow: inset 3px 0 0 0 color-mix(in srgb, var(--vscode-textLink-foreground) 65%, transparent);
+/*
+ * Wider, wrapping variant used when options carry an explanatory line (e.g. merged-properties
+ * modes). Only three such dropdowns exist and none is ever tall enough to need scrolling, so the
+ * height cap (and the vertical scrollbar it implies) is dropped here.
+ */
+.sort-dropdown-list--described {
+    white-space: normal;
+    min-width: 260px;
+    max-width: 320px;
+    max-height: none;
+    overflow-y: visible;
 }
 
-.profile-list-item--pending.selected,
-.profile-tree-item--pending.selected:not(.drag-over) {
-    box-shadow: inset 3px 0 0 0 color-mix(in srgb, var(--vscode-textLink-foreground) 80%, transparent);
+.sort-dropdown-item-label {
+    font-weight: 500;
+}
+
+.sort-dropdown-item-description {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground);
+    line-height: 1.3;
+}
+
+.sort-dropdown-item.selected .sort-dropdown-item-description {
+    color: inherit;
 }
 
 /* Profile rows: separation from editor background (tree had no rules; input-border is weak on some light themes) */
@@ -2605,4 +2684,10 @@ body.vscode-light .profile-tree-item.selected:not(.drag-over) {
 .monaco-menu .monaco-action-bar.vertical .action-item:hover {
     background-color: var(--vscode-menu-selectionBackground) !important;
     color: var(--vscode-menu-selectionForeground) !important;
+}
+
+/* Undo/redo sit alongside the text buttons in the footer, so match their height. */
+.footer-history-button {
+    height: 32px;
+    width: 32px;
 }

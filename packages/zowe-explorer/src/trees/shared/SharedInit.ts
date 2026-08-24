@@ -53,6 +53,7 @@ import { SharedContext } from "./SharedContext";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { CertificateWizard } from "../../utils/CertificateWizard";
 import { ConfigEditor } from "../../utils/ConfigEditor";
+import { ConfigEditorCodeLensProvider } from "../../utils/ConfigEditorCodeLensProvider";
 import { ConfigUtils } from "../../utils/ConfigUtils";
 import { ZosConsoleViewProvider } from "../../zosconsole/ZosConsolePanel";
 import { ZoweUriHandler } from "../../utils/UriHandler";
@@ -393,6 +394,17 @@ export class SharedInit {
             vscode.commands.registerCommand("zowe.openTeamConfigJson", async () => {
                 await Profiles.getInstance().editZoweConfigFile(false);
             })
+        );
+
+        // Offers a route into the visual editor while a team config is open as raw JSON.
+        context.subscriptions.push(
+            vscode.languages.registerCodeLensProvider(
+                [
+                    { scheme: "file", language: "json", pattern: "**/zowe.config*.json" },
+                    { scheme: "file", language: "jsonc", pattern: "**/zowe.config*.json" },
+                ],
+                new ConfigEditorCodeLensProvider()
+            )
         );
 
         // Register functions & event listeners

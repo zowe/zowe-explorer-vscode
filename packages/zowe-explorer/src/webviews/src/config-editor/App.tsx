@@ -101,6 +101,11 @@ function AppContent() {
     setRenameProfileModalOpen,
     configParseErrors,
     setConfigParseErrors,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    clearHistory,
   } = useConfigContext();
 
   const { viewMode, profilesWidthPercent } = configEditorSettings;
@@ -178,6 +183,22 @@ function AppContent() {
   const handleOpenTutorial = () => setShowTutorial(true);
 
   useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "z") {
+        return;
+      }
+      event.preventDefault();
+      if (event.shiftKey) {
+        redo();
+      } else {
+        undo();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [undo, redo]);
+
+  useEffect(() => {
     if (selectedTab !== null && configurations[selectedTab]) {
       const config = configurations[selectedTab].properties;
       setFlattenedConfig(flattenKeys(config.profiles ?? {}));
@@ -221,17 +242,7 @@ function AppContent() {
       renames: changes.renames,
       mergedPropertiesRequestSeq: seq,
     });
-  }, [
-    selectedProfileKey,
-    selectedTab,
-    formatPendingChanges,
-    renames,
-    sortOrderVersion,
-    isSaving,
-    configurations,
-    vscodeApi,
-    setMergedProperties,
-  ]);
+  }, [selectedProfileKey, selectedTab, formatPendingChanges, renames, sortOrderVersion, isSaving, configurations, vscodeApi, setMergedProperties]);
 
   useEffect(() => {
     const isModalOpen =
@@ -291,6 +302,10 @@ function AppContent() {
 
   const handleOpenSchemaFile = (schemaPath: string) => {
     vscodeApi.postMessage({ command: "OPEN_SCHEMA_FILE", filePath: schemaPath });
+  };
+
+  const handleExportRedacted = () => {
+    vscodeApi.postMessage({ command: "EXPORT_REDACTED_CONFIG" });
   };
 
   const handleRenameProfile = useCallback(
@@ -437,6 +452,7 @@ function AppContent() {
     validationRequestSeqRef,
     setRenames,
     setConfigParseErrors,
+    clearHistory,
     setTutorialSeen,
     setShowTutorial,
     setHighlightPropertyKey,
@@ -464,6 +480,7 @@ function AppContent() {
         onAddNewConfig={handleAddNewConfig}
         onToggleAutostore={handleAutostoreToggle}
         onShowTutorial={handleOpenTutorial}
+        onExportRedacted={handleExportRedacted}
       />
       <Panels
         renderProfiles={(profilesObj) => (
@@ -514,6 +531,10 @@ function AppContent() {
           }
         }}
         hasPendingChanges={hasPendingChanges()}
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
       />
       {/* Modals */}
 

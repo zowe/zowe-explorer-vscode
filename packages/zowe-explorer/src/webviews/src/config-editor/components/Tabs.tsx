@@ -10,9 +10,19 @@ export interface TabsProps {
   onAddNewConfig: () => void;
   onToggleAutostore: (configPath: string) => void;
   onShowTutorial: () => void;
+  onExportRedacted: () => void;
 }
 
-export function Tabs({ onTabChange, onOpenFile, onRevealInFinder, onOpenSchemaFile, onAddNewConfig, onToggleAutostore, onShowTutorial }: TabsProps) {
+export function Tabs({
+  onTabChange,
+  onOpenFile,
+  onRevealInFinder,
+  onOpenSchemaFile,
+  onAddNewConfig,
+  onToggleAutostore,
+  onShowTutorial,
+  onExportRedacted,
+}: TabsProps) {
   const { configurations, selectedTab, pendingChanges, autostoreChanges, renames, deletions, pendingDefaults, defaultsDeletions } =
     useConfigContext();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabIndex: number } | null>(null);
@@ -148,6 +158,24 @@ export function Tabs({ onTabChange, onOpenFile, onRevealInFinder, onOpenSchemaFi
         </div>
 
         <div className="tabs-toolbar">
+          <button
+            className="ce-icon-button"
+            onClick={() => {
+              const configPath = selectedTab !== null ? configurations[selectedTab]?.configPath : undefined;
+              if (configPath) {
+                onOpenFile(configPath);
+              }
+            }}
+            disabled={selectedTab === null}
+            title={l10n.t("Open File")}
+            data-testid="open-config-file"
+          >
+            <span className="codicon codicon-go-to-file codicon-size-16"></span>
+          </button>
+          <button className="ce-icon-button" onClick={onExportRedacted} title={l10n.t("Export redacted configuration")} data-testid="export-redacted">
+            <span className="codicon codicon-export codicon-size-16"></span>
+          </button>
+          <span className="tabs-toolbar-separator" role="separator" />
           <button className="ce-icon-button" onClick={onShowTutorial} title={l10n.t("Open Tutorial")} data-testid="open-tutorial">
             <span className="codicon codicon-mortar-board codicon-size-16"></span>
           </button>

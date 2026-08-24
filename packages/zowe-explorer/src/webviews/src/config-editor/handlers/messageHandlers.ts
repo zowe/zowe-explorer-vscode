@@ -44,6 +44,8 @@ export interface MessageHandlerProps {
     setProfileSearchTerm: React.Dispatch<React.SetStateAction<string>>;
     setProfileFilterType: React.Dispatch<React.SetStateAction<string | null>>;
     setHasPromptedForZeroConfigs: React.Dispatch<React.SetStateAction<boolean>>;
+    /** Drops the undo/redo stack; the history is meaningless once state is reloaded from disk. */
+    clearHistory: () => void;
     setSaveModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
     setPendingMergedPropertiesRequest: React.Dispatch<React.SetStateAction<string | null>>;
     setNewProfileValue: React.Dispatch<React.SetStateAction<string>>;
@@ -477,11 +479,13 @@ export const handleReloadMessage = (props: MessageHandlerProps) => {
         setProfileSearchTerm,
         setProfileFilterType,
         setConfigParseErrors,
+        clearHistory,
         vscodeApi,
     } = props;
 
     // Handle explicit reload request from VS Code
     // Clear state and request fresh data
+    clearHistory();
     setConfigParseErrors([]);
     setConfigurations([]);
     setSelectedTab(null);

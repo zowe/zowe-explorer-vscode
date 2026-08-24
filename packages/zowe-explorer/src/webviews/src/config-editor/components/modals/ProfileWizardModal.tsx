@@ -3,6 +3,7 @@ import { ModalShell } from "../ModalShell";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { isFileProperty } from "../../utils/propertyUtils";
+import { sanitizeProfileNameSegment } from "../../utils/profileNames";
 import { useWizardContext } from "../../context/WizardContext";
 
 export function ProfileWizardModal() {
@@ -309,20 +310,9 @@ export function ProfileWizardModal() {
                 // Handle Escape key to close modal
                 if (e.key === "Escape") {
                   onCancel();
-                  return;
                 }
-                // Allow: backspace, delete, tab, escape, enter, and navigation keys
-                if ([8, 9, 27, 13, 46, 37, 38, 39, 40].includes(e.keyCode)) {
-                  return;
-                }
-                // Allow: alphanumeric characters and underscore
-                if (/^[a-zA-Z0-9_]$/.test(e.key)) {
-                  return;
-                }
-                // Prevent all other keys
-                e.preventDefault();
               }}
-              onChange={(e) => onProfileNameChange((e.target as HTMLInputElement).value)}
+              onChange={(e) => onProfileNameChange(sanitizeProfileNameSegment((e.target as HTMLInputElement).value))}
               className={`modal-input wizard-input ${isProfileNameTakenValue ? "error" : ""}`}
               placeholder={l10n.t("Enter profile name")}
             />

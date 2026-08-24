@@ -214,6 +214,20 @@ export function applyRenamesToProfileKeys(params: ApplyRenamesToProfileKeysParam
     return Array.from(new Set(allRenamedProfileKeys));
 }
 
+/**
+ * Whether `qualifiedKey`'s immediate parent path corresponds to a real profile (on-disk or
+ * still pending). Used to distinguish a nested pending profile (e.g. a brand-new
+ * "test.zosmf") from a stale/broken path prefix left over from an unrelated operation — only the
+ * latter should ever be collapsed down to its bare leaf name.
+ */
+function hasRealParentProfile(qualifiedKey: string, uniqueRenamedProfileKeys: string[], otherPendingKeys: string[]): boolean {
+    const lastDot = qualifiedKey.lastIndexOf(".");
+    if (lastDot === -1) return false;
+    const parentPath = qualifiedKey.slice(0, lastDot);
+    if (uniqueRenamedProfileKeys.includes(parentPath)) return true;
+    return otherPendingKeys.some((key) => key !== qualifiedKey && (key === parentPath || key.startsWith(parentPath + ".")));
+}
+
 interface MergePendingProfileKeysParams {
     pendingProfiles: ProfileMap;
     configPath: string;
@@ -231,7 +245,11 @@ export function mergePendingProfileKeys(params: MergePendingProfileKeysParams): 
         let renamedKey = getRenamedProfileKeyWithNested(profileKey, configPath, renames);
 
         const configRenames = renames[configPath] || {};
-        if (Object.keys(configRenames).length === 0 && renamedKey.includes(".")) {
+        if (
+            Object.keys(configRenames).length === 0 &&
+            renamedKey.includes(".") &&
+            !hasRealParentProfile(renamedKey, uniqueRenamedProfileKeys, pendingProfileKeys)
+        ) {
             const rootProfileName = renamedKey.split(".").pop();
             if (rootProfileName && uniqueRenamedProfileKeys.includes(rootProfileName)) {
                 renamedKey = rootProfileName;
@@ -277,10 +295,10 @@ export function filterConflictingProfileKeys(params: FilterConflictingProfileKey
             !isTargetOfPendingRename &&
             Object.keys(renames[configPath] || {}).length === 0 &&
             pendingProfileKeys.some((pendingKey) => {
-                return (
+                const matchesLeaf =
                     pendingKey !== profileKey &&
-                    (pendingKey.endsWith("." + profileKey) || pendingKey === profileKey + ".pending" || pendingKey.includes("." + profileKey + "."))
-                );
+                    (pendingKey.endsWith("." + profileKey) || pendingKey === profileKey + ".pending" || pendingKey.includes("." + profileKey + "."));
+                return matchesLeaf && !hasRealParentProfile(pendingKey, uniqueRenamedProfileKeys, pendingProfileKeys);
             });
 
         return !hasExactPendingMatch && !isResultOfRenameWithPending && !isTargetOfPendingRename && !shouldRenamePendingToThisKey;

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
+import * as l10n from "@vscode/l10n";
 import { getOriginalProfileKeyWithNested } from "../utils/profileUtils";
 import { useIsLightTheme } from "../hooks/useIsLightTheme";
 import { useScrollToSelected } from "../hooks/useScrollToSelected";
@@ -92,6 +93,7 @@ interface ProfileTreeProps {
   getProfileType: (profileKey: string) => string | null;
   hasPendingSecureChanges: (profileKey: string) => boolean;
   hasPendingRename: (profileKey: string) => boolean;
+  hasPendingDefaultChange: (profileKey: string) => boolean;
   isFilteringActive?: boolean;
   expandedNodes: Set<string>;
   setExpandedNodes: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -124,6 +126,7 @@ export function ProfileTree({
   getProfileType,
   hasPendingSecureChanges,
   hasPendingRename,
+  hasPendingDefaultChange,
   isFilteringActive,
   expandedNodes,
   setExpandedNodes,
@@ -491,6 +494,7 @@ export function ProfileTree({
     const hasSecureChanges = hasPendingSecureChanges(node.key);
     const isDefault = isProfileDefault(node.key);
     const hasRename = hasPendingRename(node.key);
+    const rowHasPendingEdits = Boolean(hasPendingChanges) || hasSecureChanges || hasRename || hasPendingDefaultChange(node.key);
     const isDragging = draggedProfile === node.key;
     const isDragOver = dragOverProfile === node.key;
     const canDrop = draggedProfile && draggedProfile !== node.key && !isInvalidDrop(draggedProfile, node.key);
@@ -509,9 +513,7 @@ export function ProfileTree({
         style={{ position: "relative" }}
       >
         <div
-          className={`profile-tree-item ${isSelected ? "selected" : ""} ${isDragging ? "dragging" : ""} ${isDragOver ? "drag-over" : ""} ${
-            hasPendingChanges || hasSecureChanges || hasRename ? "profile-tree-item--pending" : ""
-          }`}
+          className={`profile-tree-item ${isSelected ? "selected" : ""} ${isDragging ? "dragging" : ""} ${isDragOver ? "drag-over" : ""}`}
           style={{
             cursor: "pointer",
             margin: "2px 0",
@@ -565,21 +567,32 @@ export function ProfileTree({
           {/* Placeholder for consistent alignment when no arrow */}
           {!node.hasChildren && <span className="profile-tree-indent-spacer" draggable={false} />}
 
-          {/* Profile name */}
+          {/* Profile name. Wrapper takes the flexible space so the badge/star group stays pinned
+              right; the dot lives inside it, right after the (possibly truncated) name text, rather
+              than being pushed all the way over next to the type badge. */}
           <span
             style={{
               flex: 1,
+              minWidth: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
               overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              opacity: hasPendingChanges || hasSecureChanges || hasRename ? 0.7 : 1,
               pointerEvents: "none",
             }}
             draggable={false}
             data-testid="profile-name"
             data-profile-name={node.name}
           >
-            {node.name}
+            <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{node.name}</span>
+            {rowHasPendingEdits && (
+              <span
+                className="codicon codicon-circle-filled pending-change-indicator"
+                title={l10n.t("Unsaved changes")}
+                draggable={false}
+                style={{ flexShrink: 0 }}
+              />
+            )}
           </span>
 
           {/* Default profile indicator */}
@@ -613,8 +626,13 @@ export function ProfileTree({
           </div>
         </div>
 
-        {/* Render children if expanded */}
-        {node.isExpanded && node.children.length > 0 && <div>{node.children.map((child) => renderNode(child))}</div>}
+        {/* Render children if expanded, with a vertical guide connecting them back to this row's toggle */}
+        {node.isExpanded && node.children.length > 0 && (
+          <div className="profile-tree-children">
+            <span className="profile-tree-indent-guide" style={{ left: `${8 + node.level * 16 + 6}px` }} />
+            {node.children.map((child) => renderNode(child))}
+          </div>
+        )}
       </div>
     );
   };

@@ -23,7 +23,7 @@ interface ConfigHandlersParams {
 export function useConfigHandlers(params: ConfigHandlersParams) {
     const { setPendingProfileDeletion, setPendingPropertyDeletion } = params;
 
-    const { doesProfileExist } = useProfileUtils();
+    const { doesProfileExist, doesSavedProfileExist } = useProfileUtils();
 
     const {
         configurations,
@@ -51,7 +51,9 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
         setProfileSearchTerm,
         setProfileFilterType,
         setMergedProperties,
+        clearHistory,
         selectedProfilesByConfig,
+        setSelectedProfilesByConfig,
         configEditorSettings,
         pendingChangesRef,
         deletionsRef,
@@ -108,11 +110,13 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
         setAutostoreChanges({});
         setRenames({});
         setDragDroppedProfiles({});
+        clearHistory();
 
         // CONFIGURATIONS is pushed by the extension after SAVE_CHANGES; no GET_PROFILES here.
     }, [
         selectedTab,
         selectedProfileKey,
+        configurations,
         pendingChangesRef,
         deletionsRef,
         pendingDefaultsRef,
@@ -130,6 +134,7 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
         setAutostoreChanges,
         setRenames,
         setDragDroppedProfiles,
+        clearHistory,
     ]);
 
     const handleRefresh = useCallback(() => {
@@ -164,6 +169,13 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
         setDragDroppedProfiles({});
         setPendingPropertyDeletion(null);
         setPendingProfileDeletion(null);
+        clearHistory();
+
+        // Drop remembered per-tab selections that only existed as pending profiles, so switching
+        // tabs cannot resurrect a profile this revert just discarded.
+        setSelectedProfilesByConfig((prev) =>
+            Object.fromEntries(Object.entries(prev).filter(([configPath, profileKey]) => profileKey && doesSavedProfileExist(profileKey, configPath)))
+        );
 
         // Clear search bar and type filter if there are no pending changes
         if (!hasPendingChanges) {
@@ -179,7 +191,10 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
             }
             if (originalSelectedProfileKey !== null) {
                 const configPath = currentSelectedTab !== null ? configurations[currentSelectedTab]?.configPath : undefined;
-                if (configPath && doesProfileExist(originalSelectedProfileKey, configPath)) {
+                // Revert discards pending state, so the selection must be validated against the
+                // saved config only. `doesProfileExist` also counts profiles that live solely in
+                // `pendingChanges`, which would keep a just-discarded profile selected.
+                if (configPath && doesSavedProfileExist(originalSelectedProfileKey, configPath)) {
                     setSelectedProfileKey(originalSelectedProfileKey);
                 } else {
                     setSelectedProfileKey(null);
@@ -211,8 +226,10 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
         vscodeApi,
         setSelectedTab,
         setSelectedProfileKey,
-        doesProfileExist,
+        doesSavedProfileExist,
+        setSelectedProfilesByConfig,
         setMergedProperties,
+        clearHistory,
     ]);
 
     const handleTabChange = useCallback(

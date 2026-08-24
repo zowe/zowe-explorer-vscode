@@ -12,7 +12,7 @@
 import { flattenProfiles } from "./configUtils";
 import { Configuration, ConfigStateContext, ProfileMap } from "../types";
 import { getProfileType } from "./profileTypeResolution";
-import { getRenamedProfileKeyWithNested } from "./profileRenames";
+import { getAllQualifiedProfileKeys, getRenamedProfileKeyWithNested } from "./profileRenames";
 
 interface GetAvailableProfilesByTypeParams extends ConfigStateContext {
     profileType: string;
@@ -215,4 +215,17 @@ export function getReplacementProfileAfterDelete(orderedList: string[], deletedP
 
     const first = orderedList.find((p) => filteredSet.has(p));
     return first ?? null;
+}
+
+/**
+ * Whether `profileKey` exists in the configuration as saved on disk, ignoring pending changes and
+ * staged deletions entirely.
+ *
+ * Revert and undo need this rather than the pending-aware `doesProfileExist`: that one counts
+ * profiles which exist only in `pendingChanges`, which would keep a just-discarded profile
+ * selected in the details panel.
+ */
+export function doesSavedProfileExist(profileKey: string, configPath: string, configurations: Configuration[]): boolean {
+    const profiles = configurations.find((config) => config.configPath === configPath)?.properties?.profiles;
+    return profiles ? getAllQualifiedProfileKeys(profiles as ProfileMap).includes(profileKey) : false;
 }

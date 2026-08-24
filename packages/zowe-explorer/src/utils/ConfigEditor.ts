@@ -289,6 +289,10 @@ export class ConfigEditor extends WebView {
                 await this.messageHandlers.handleOpenSchemaFile(message as unknown as OpenFilePathMessage);
                 break;
             }
+            case "EXPORT_REDACTED_CONFIG": {
+                await vscode.commands.executeCommand("zowe.all.config.exportRedacted");
+                break;
+            }
             case "GET_ENV_INFORMATION": {
                 await this.messageHandlers.handleGetEnvInformation();
                 break;
@@ -400,6 +404,10 @@ export class ConfigEditor extends WebView {
             }
             case "SHOW_ERROR_MESSAGE": {
                 vscode.window.showErrorMessage(String((message as { message?: unknown }).message ?? ""));
+                break;
+            }
+            case "SHOW_WARNING_MESSAGE": {
+                vscode.window.showWarningMessage(String((message as { message?: unknown }).message ?? ""));
                 break;
             }
 

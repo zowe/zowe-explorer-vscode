@@ -4,32 +4,52 @@ interface FooterProps {
   onClearChanges: () => void;
   onSaveAll: () => void;
   hasPendingChanges: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
-export function Footer({ onClearChanges, onSaveAll, hasPendingChanges }: FooterProps) {
+const secondaryButtonStyle = {
+  padding: "8px 16px",
+  fontSize: "13px",
+  height: "32px",
+  lineHeight: "16px",
+  backgroundColor: "var(--vscode-button-secondaryBackground)",
+  color: "var(--vscode-button-secondaryForeground)",
+  border: "1px solid var(--vscode-button-secondaryBorder)",
+  borderRadius: "4px",
+  cursor: "pointer",
+  fontWeight: "normal",
+  boxSizing: "border-box",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+} as const;
+
+export function Footer({ onClearChanges, onSaveAll, hasPendingChanges, onUndo, onRedo, canUndo, canRedo }: FooterProps) {
   return (
     <div className="footer" data-tutorial-id="save-refresh-footer">
       <button
-        onClick={onClearChanges}
-        title={l10n.t("Refresh changes")}
-        style={{
-          padding: "8px 16px",
-          fontSize: "13px",
-          height: "32px",
-          lineHeight: "16px",
-          backgroundColor: "var(--vscode-button-secondaryBackground)",
-          color: "var(--vscode-button-secondaryForeground)",
-          border: "1px solid var(--vscode-button-secondaryBorder)",
-          borderRadius: "4px",
-          cursor: "pointer",
-          fontWeight: "normal",
-          boxSizing: "border-box",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        onClick={onUndo}
+        disabled={!canUndo}
+        title={canUndo ? l10n.t("Undo (Ctrl+Z)") : l10n.t("Nothing to undo")}
+        data-testid="undo-change"
+        className="ce-icon-button footer-history-button"
       >
-        {l10n.t("Refresh")}
+        <span className="codicon codicon-discard codicon-size-16"></span>
+      </button>
+      <button
+        onClick={onRedo}
+        disabled={!canRedo}
+        title={canRedo ? l10n.t("Redo (Ctrl+Shift+Z)") : l10n.t("Nothing to redo")}
+        data-testid="redo-change"
+        className="ce-icon-button footer-history-button"
+      >
+        <span className="codicon codicon-redo codicon-size-16"></span>
+      </button>
+      <button onClick={onClearChanges} title={l10n.t("Revert changes")} style={secondaryButtonStyle}>
+        {l10n.t("Revert")}
       </button>
       <button
         onClick={onSaveAll}

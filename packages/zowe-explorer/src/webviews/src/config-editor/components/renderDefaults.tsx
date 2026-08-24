@@ -114,11 +114,23 @@ export const RenderDefaults = ({ defaults, handleDefaultsChange }: RenderDefault
                 const selectedProfileExists = availableProfiles.includes(String(pendingValue));
                 const displayValue = String(pendingValue);
                 const hasInvalidValue = displayValue && !selectedProfileExists;
+                const hasPendingEdit = (pendingDefaults[configurations[selectedTab!]!.configPath] ?? {})[fullKey] !== undefined;
 
                 return (
                   <div key={fullKey} className="config-item">
                     <div className="config-item-container defaults-container">
-                      <span className="config-label">{key}</span>
+                      {/* Status icons live in the label cell so the dropdown keeps the same width on every row. */}
+                      <span className="config-label">
+                        {key}
+                        {hasPendingEdit && <span className="codicon codicon-circle-filled pending-change-indicator" title={l10n.t("Unsaved change")} />}
+                        {hasInvalidValue ? (
+                          <span
+                            className="codicon codicon-warning invalid-default-icon"
+                            role="img"
+                            title={l10n.t("Profile '{0}' does not exist", displayValue)}
+                          />
+                        ) : null}
+                      </span>
                       <select
                         id={`default-dropdown-${key}`}
                         className={`config-input ${!displayValue ? "placeholder-style" : ""} ${hasInvalidValue ? "invalid-default" : ""}`}

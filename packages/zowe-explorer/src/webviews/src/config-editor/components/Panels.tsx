@@ -13,6 +13,10 @@ interface PanelsProps {
   onClearChanges: () => void;
   onSaveAll: () => void;
   hasPendingChanges: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
 export function Panels({
@@ -24,6 +28,10 @@ export function Panels({
   onClearChanges,
   onSaveAll,
   hasPendingChanges,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }: PanelsProps) {
   const {
     configurations,
@@ -149,7 +157,15 @@ export function Panels({
               {selectedTab === index && (
                 <div className="profile-details-content">
                   {renderProfileDetails()}
-                  <Footer onClearChanges={onClearChanges} onSaveAll={onSaveAll} hasPendingChanges={hasPendingChanges} />
+                  <Footer
+                    onClearChanges={onClearChanges}
+                    onSaveAll={onSaveAll}
+                    hasPendingChanges={hasPendingChanges}
+                    onUndo={onUndo}
+                    onRedo={onRedo}
+                    canUndo={canUndo}
+                    canRedo={canRedo}
+                  />
                 </div>
               )}
             </div>

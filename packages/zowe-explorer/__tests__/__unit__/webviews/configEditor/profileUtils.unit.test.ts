@@ -665,6 +665,19 @@ describe("profileUtils", () => {
             const result = mergePendingProfileKeys({ pendingProfiles, configPath, renames: {}, deletions: {}, uniqueRenamedProfileKeys: ["child"] });
             expect(result).toContain("child");
         });
+        it("does not collapse a genuinely nested pending profile to an unrelated root profile sharing its leaf name", () => {
+            // Regression test: editing/creating "asd.zftp" must not get conflated with an unrelated
+            // pre-existing top-level "zftp" profile just because they share a leaf name.
+            const pendingProfiles = { "asd.zftp": { type: "zowe" } };
+            const result = mergePendingProfileKeys({
+                pendingProfiles,
+                configPath,
+                renames: {},
+                deletions: {},
+                uniqueRenamedProfileKeys: ["asd", "zftp"],
+            });
+            expect(result).toEqual(["asd.zftp"]);
+        });
     });
 
     describe("filterConflictingProfileKeys", () => {
@@ -755,6 +768,21 @@ describe("profileUtils", () => {
                     renames,
                 })
             ).toEqual(["p2"]);
+        });
+        it("keeps an existing root profile when an unrelated nested pending profile shares its leaf name", () => {
+            // Regression test: a pending "asd.zftp" must not hide the unrelated existing root "zftp".
+            const uniqueRenamed = ["asd", "zftp"];
+            const pendingProfiles = { "asd.zftp": {} };
+            expect(
+                filterConflictingProfileKeys({
+                    uniqueRenamedProfileKeys: uniqueRenamed,
+                    renamedPendingProfileKeys: ["asd.zftp"],
+                    pendingProfiles,
+                    deletions: {},
+                    configPath,
+                    renames: {},
+                })
+            ).toEqual(["asd", "zftp"]);
         });
     });
 

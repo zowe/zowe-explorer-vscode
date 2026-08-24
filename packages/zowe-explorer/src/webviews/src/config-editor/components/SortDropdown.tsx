@@ -6,6 +6,8 @@ interface SortDropdownProps<T extends string = string> {
   selectedOption: T;
   onOptionChange: (option: T) => void;
   getDisplayName?: (option: T) => string;
+  /** Optional one-line explanation rendered under an option's name inside the open dropdown. */
+  getDescription?: (option: T) => string | undefined;
   className?: string;
   icon?: string;
 }
@@ -15,6 +17,7 @@ export function SortDropdown<T extends string = string>({
   selectedOption,
   onOptionChange,
   getDisplayName = (option) => option,
+  getDescription,
   className = "",
   icon = "codicon-sort-precedence",
 }: SortDropdownProps<T>) {
@@ -72,18 +75,26 @@ export function SortDropdown<T extends string = string>({
         <span className={`codicon ${icon}`}></span>
       </button>
       {isOpen && (
-        <div className={`sort-dropdown-list ${alignLeft ? "align-left" : ""}`} role="listbox" ref={listRef}>
-          {options.map((option) => (
-            <div
-              key={option}
-              className={`sort-dropdown-item ${option === selectedOption ? "selected" : ""}`}
-              onClick={() => handleOptionClick(option)}
-              role="option"
-              aria-selected={option === selectedOption}
-            >
-              {getDisplayName(option)}
-            </div>
-          ))}
+        <div
+          className={`sort-dropdown-list ${alignLeft ? "align-left" : ""} ${getDescription ? "sort-dropdown-list--described" : ""}`}
+          role="listbox"
+          ref={listRef}
+        >
+          {options.map((option) => {
+            const description = getDescription?.(option);
+            return (
+              <div
+                key={option}
+                className={`sort-dropdown-item ${option === selectedOption ? "selected" : ""}`}
+                onClick={() => handleOptionClick(option)}
+                role="option"
+                aria-selected={option === selectedOption}
+              >
+                <div className="sort-dropdown-item-label">{getDisplayName(option)}</div>
+                {description && <div className="sort-dropdown-item-description">{description}</div>}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

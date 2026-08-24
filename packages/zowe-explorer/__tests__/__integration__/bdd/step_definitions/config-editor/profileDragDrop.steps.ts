@@ -57,7 +57,7 @@ Given("the zowe team config file is restored from backup", async () => {
 
 When("the user refreshes the Config Editor from disk", async () => {
     await dismissTutorialOverlay();
-    const refreshBtn = await browser.$(".footer > button");
+    const refreshBtn = await browser.$(".footer button[title='Revert changes']");
     await refreshBtn.waitForExist({ timeout: 10000 });
     await refreshBtn.click();
     await browser.pause(800);
