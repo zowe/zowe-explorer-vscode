@@ -14,8 +14,9 @@ import { doesSavedProfileExist } from "../../../../src/webviews/src/config-edito
 
 const configPath = "/c";
 
-const configWith = (defaults: Record<string, unknown>, profiles: Record<string, unknown>) =>
-    [{ configPath, user: false, global: false, properties: { defaults, profiles } } as any];
+const configWith = (defaults: Record<string, unknown>, profiles: Record<string, unknown>) => [
+    { configPath, user: false, global: false, properties: { defaults, profiles } } as any,
+];
 
 describe("defaultsValidation", () => {
     describe("getEffectiveDefaultValue", () => {

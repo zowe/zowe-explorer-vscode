@@ -62,7 +62,9 @@ export function ComplexValueProperty({
     <div key={fullKey} className="config-item" data-property-key={displayKey ?? ""}>
       <div className="config-item-container" style={{ gridTemplateColumns: "150px 1fr" }}>
         <span className="config-label" style={{ fontWeight: "bold" }}>
-          <span className="config-label-text" title={displayKey ?? ""}>{displayKey}</span>
+          <span className="config-label-text" title={displayKey ?? ""}>
+            {displayKey}
+          </span>
           {inheritedFrom && (
             <InheritedFromIndicator
               profilePath={inheritedFrom.profilePath}

@@ -165,7 +165,7 @@ export class ConfigEditorCodeLensProvider implements vscode.CodeLensProvider {
                 continue;
             }
 
-            if (char === "," ) {
+            if (char === ",") {
                 pendingKey = null;
             }
 

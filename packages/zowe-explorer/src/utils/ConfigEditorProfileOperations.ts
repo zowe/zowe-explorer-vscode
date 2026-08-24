@@ -776,8 +776,16 @@ export class ConfigEditorProfileOperations {
                         updatedDeletion.profile = ConfigEditorPathUtils.getNewProfilePath(updatedDeletion.profile, deletion.configPath, renameMap);
                     }
 
-                    updatedDeletion = ConfigEditorPathUtils.updateChangeKey(updatedDeletion, deletion.configPath, renameMap) as typeof updatedDeletion;
-                    updatedDeletion = ConfigEditorPathUtils.updateChangePath(updatedDeletion, deletion.configPath, renameMap) as typeof updatedDeletion;
+                    updatedDeletion = ConfigEditorPathUtils.updateChangeKey(
+                        updatedDeletion,
+                        deletion.configPath,
+                        renameMap
+                    ) as typeof updatedDeletion;
+                    updatedDeletion = ConfigEditorPathUtils.updateChangePath(
+                        updatedDeletion,
+                        deletion.configPath,
+                        renameMap
+                    ) as typeof updatedDeletion;
 
                     return updatedDeletion;
                 }
@@ -845,7 +853,13 @@ export class ConfigEditorProfileOperations {
                 try {
                     simulateDefaultsUpdateAfterRename(() => teamConfig.api.layers.get(), rename.originalKey, rename.newKey);
                 } catch (defaultsError) {
-                    const errorMessage = this.handleMoveUtilsError(defaultsError, "simulate defaults update", rename.originalKey, rename.newKey, true);
+                    const errorMessage = this.handleMoveUtilsError(
+                        defaultsError,
+                        "simulate defaults update",
+                        rename.originalKey,
+                        rename.newKey,
+                        true
+                    );
                     console.warn(errorMessage);
                 }
             } catch (error) {

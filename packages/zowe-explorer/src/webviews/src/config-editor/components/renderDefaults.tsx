@@ -122,7 +122,9 @@ export const RenderDefaults = ({ defaults, handleDefaultsChange }: RenderDefault
                       {/* Status icons live in the label cell so the dropdown keeps the same width on every row. */}
                       <span className="config-label">
                         {key}
-                        {hasPendingEdit && <span className="codicon codicon-circle-filled pending-change-indicator" title={l10n.t("Unsaved change")} />}
+                        {hasPendingEdit && (
+                          <span className="codicon codicon-circle-filled pending-change-indicator" title={l10n.t("Unsaved change")} />
+                        )}
                         {hasInvalidValue ? (
                           <span
                             className="codicon codicon-warning invalid-default-icon"

@@ -139,7 +139,15 @@ export function TutorialOverlay({ onClose, selectedProfileKey, onSelectProfile }
     if (current.expandDefaults && defaultsCollapsed) {
       setDefaultsCollapsedWithStorage(false);
     }
-  }, [step, current.expandProfiles, current.expandDefaults, profilesCollapsed, defaultsCollapsed, setProfilesCollapsedWithStorage, setDefaultsCollapsedWithStorage]);
+  }, [
+    step,
+    current.expandProfiles,
+    current.expandDefaults,
+    profilesCollapsed,
+    defaultsCollapsed,
+    setProfilesCollapsedWithStorage,
+    setDefaultsCollapsedWithStorage,
+  ]);
 
   // Restore the Profiles/Defaults collapsed state the user had before the tutorial opened.
   useEffect(() => {
@@ -241,11 +249,7 @@ export function TutorialOverlay({ onClose, selectedProfileKey, onSelectProfile }
           style={{ top: bottom, left: 0, width: viewportW, height: Math.max(0, viewportH - bottom) }}
           onClick={handleSkip}
         />
-        <div
-          className="tutorial-overlay-backdrop-segment"
-          style={{ top, left: 0, width: left, height: bottom - top }}
-          onClick={handleSkip}
-        />
+        <div className="tutorial-overlay-backdrop-segment" style={{ top, left: 0, width: left, height: bottom - top }} onClick={handleSkip} />
         <div
           className="tutorial-overlay-backdrop-segment"
           style={{ top, left: right, width: Math.max(0, viewportW - right), height: bottom - top }}

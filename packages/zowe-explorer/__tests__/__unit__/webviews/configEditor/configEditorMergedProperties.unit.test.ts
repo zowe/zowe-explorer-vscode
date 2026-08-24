@@ -173,7 +173,9 @@ describe("ConfigEditorMergedProperties", () => {
             const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
             const mockProfileInfo = {
                 getTeamConfig: vi.fn(() => ({ layers: [], api: { layers: { activate: vi.fn() } } })),
-                getAllProfiles: vi.fn(() => [{ profName: "profiles.testProfile", profType: "zosmf", profLoc: { osLoc: path.normalize(configPath) } }]),
+                getAllProfiles: vi.fn(() => [
+                    { profName: "profiles.testProfile", profType: "zosmf", profLoc: { osLoc: path.normalize(configPath) } },
+                ]),
                 mergeArgsForProfile: vi.fn(() => {
                     throw new Error("schema load failed");
                 }),
@@ -309,9 +311,7 @@ describe("ConfigEditorMergedProperties", () => {
 
             expect(mockProfileInfo.getAllProfiles).toHaveBeenCalled();
             expect(mockProfileInfo.mergeArgsForProfile).toHaveBeenCalled();
-            expect(result).toEqual([
-                { argLoc: { osLoc: configPath, jsonLoc: "profiles.testProfile.properties.host" }, argValue: "test.host.com" },
-            ]);
+            expect(result).toEqual([{ argLoc: { osLoc: configPath, jsonLoc: "profiles.testProfile.properties.host" }, argValue: "test.host.com" }]);
         });
 
         it("should return an empty array when the temporary profile cannot be found", async () => {

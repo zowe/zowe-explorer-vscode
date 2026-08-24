@@ -47,7 +47,9 @@ export function SecureArrayProperty({ ctx, fullKey, displayKey, path, currentPat
     <div key={fullKey} className="config-item">
       <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>
         <span className="config-label" style={{ fontWeight: "bold" }}>
-          <span className="config-label-text" title={displayKey ?? ""}>{displayKey}</span>
+          <span className="config-label-text" title={displayKey ?? ""}>
+            {displayKey}
+          </span>
         </span>
       </h3>
       <div style={{ paddingLeft: "0px" }}>

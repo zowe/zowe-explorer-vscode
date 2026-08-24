@@ -1152,7 +1152,9 @@ describe("ConfigEditorProfileOperations", () => {
 
             expect(() => {
                 (profileOperations as any).validateProfileRename(mockTeamConfig, "profiles.testProfile", "profiles.existingProfile", rename);
-            }).toThrow("Cannot rename profile 'profiles.testProfile' to 'profiles.existingProfile': Profile 'profiles.existingProfile' already exists");
+            }).toThrow(
+                "Cannot rename profile 'profiles.testProfile' to 'profiles.existingProfile': Profile 'profiles.existingProfile' already exists"
+            );
 
             expect(getProfileFromTeamConfigSpy).toHaveBeenCalledWith(mockTeamConfig, "profiles.testProfile");
             expect(getProfileFromTeamConfigSpy).toHaveBeenCalledWith(mockTeamConfig, "profiles.existingProfile");
@@ -1209,7 +1211,9 @@ describe("ConfigEditorProfileOperations", () => {
             const mockTeamConfig = {
                 api: {
                     layers: {
-                        get: vi.fn().mockReturnValue({ properties: { defaults: { zosmf: "profiles.testProfile", tso: "profiles.testProfile.tso" } } }),
+                        get: vi
+                            .fn()
+                            .mockReturnValue({ properties: { defaults: { zosmf: "profiles.testProfile", tso: "profiles.testProfile.tso" } } }),
                     },
                 },
                 set: vi.fn(),

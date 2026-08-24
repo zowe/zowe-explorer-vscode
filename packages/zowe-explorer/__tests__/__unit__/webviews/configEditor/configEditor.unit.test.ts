@@ -869,9 +869,7 @@ describe("configEditor", () => {
             };
 
             // Mock the required methods
-            const handleProfileRenamesSpy = vi
-                .spyOn((configEditor as any).profileOperations, "handleProfileRenames")
-                .mockResolvedValue(undefined);
+            const handleProfileRenamesSpy = vi.spyOn((configEditor as any).profileOperations, "handleProfileRenames").mockResolvedValue(undefined);
             const handleAutostoreToggleSpy = vi.spyOn(ConfigChangeHandlers, "handleAutostoreToggle").mockResolvedValue(undefined);
             const getLocalConfigsSpy = vi.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
             const areSecureValuesAllowedSpy = vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
@@ -1032,12 +1030,14 @@ describe("configEditor", () => {
                 renames: [],
             };
 
-            const getPendingMergedArgsForProfileSpy = vi.spyOn((configEditor as any).mergedProperties, "getPendingMergedArgsForProfile").mockResolvedValue([
-                {
-                    argLoc: { osLoc: "/test/config/path", jsonLoc: "profiles.testProfile.properties.host" },
-                    argValue: "test.host.com",
-                },
-            ]);
+            const getPendingMergedArgsForProfileSpy = vi
+                .spyOn((configEditor as any).mergedProperties, "getPendingMergedArgsForProfile")
+                .mockResolvedValue([
+                    {
+                        argLoc: { osLoc: "/test/config/path", jsonLoc: "profiles.testProfile.properties.host" },
+                        argValue: "test.host.com",
+                    },
+                ]);
             const postMessageSpy = vi.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
 
             await (configEditor as any).onDidReceiveMessage(mockMessage);
@@ -1251,9 +1251,7 @@ describe("configEditor", () => {
                 ],
             };
 
-            const handleProfileRenamesSpy = vi
-                .spyOn((configEditor as any).profileOperations, "handleProfileRenames")
-                .mockResolvedValue(undefined);
+            const handleProfileRenamesSpy = vi.spyOn((configEditor as any).profileOperations, "handleProfileRenames").mockResolvedValue(undefined);
             const updateProfileChangesForRenamesSpy = vi
                 .spyOn((configEditor as any).profileOperations, "updateProfileChangesForRenames")
                 .mockResolvedValue(mockMessage);
@@ -1394,5 +1392,4 @@ describe("configEditor", () => {
             postMessageSpy.mockRestore();
         });
     });
-
 });

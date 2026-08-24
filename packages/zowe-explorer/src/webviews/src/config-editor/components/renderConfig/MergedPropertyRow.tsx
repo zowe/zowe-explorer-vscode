@@ -65,7 +65,9 @@ export function MergedPropertyRow({ ctx, fullKey, displayKey, path, mergedProps,
             cursor: "pointer",
           }}
         >
-          <span className="config-label-text" title={displayKey ?? ""}>{displayKey}</span>
+          <span className="config-label-text" title={displayKey ?? ""}>
+            {displayKey}
+          </span>
           {inheritedFrom && (
             <InheritedFromIndicator
               profilePath={inheritedFrom.profilePath}
