@@ -446,6 +446,7 @@
   "Data Set Name": "Data Set Name",
   "Data Set Organization": "Data Set Organization",
   "Data Set Template Save Location": "Data Set Template Save Location",
+  "Data Set: ": "Data Set: ",
   "Data Sets": "Data Sets",
   "Data set": "Data set",
   "Data set member": "Data set member",
@@ -1412,6 +1413,7 @@
       "Job name"
     ]
   },
+  "Job: ": "Job: ",
   "JobId: ": "JobId: ",
   "Jobs": "Jobs",
   "Jobs table": "Jobs table",
@@ -1919,6 +1921,7 @@
   "Search by job ID": "Search by job ID",
   "Search data sets": "Search data sets",
   "Search data sets: use a comma to separate multiple patterns": "Search data sets: use a comma to separate multiple patterns",
+  "Search: ": "Search: ",
   "Searching for \"{0}\"/The string to search data sets for.": {
     "message": "Searching for \"{0}\"",
     "comment": [
