@@ -84,11 +84,12 @@ Migrated data sets are also now sorted correctly in **Favorites**.
 ### Notes for extenders
 
 The Zowe Explorer API adds:
- - a `handleError` and an `errorMessage` helper functions to replace repeated `if (err instanceof Error)` checks,
- - an optional `resolveAlias` function on `MainframeInteraction.IMvs` for providing data set alias support,
- - a `FeatureFlags.isEnabledInSettings` helper function for reading feature toggles from VS Code settings, e.g. Table Views,
- - a `FsDatasetsUtils.trimExtension` helper function for removing the file extension added to data set URIs, and
- - a `Table.View.trackRows` function to record rows delivered to a webview outside the normal update flow.
+
+- a `handleError` and an `errorMessage` helper functions to replace repeated `if (err instanceof Error)` checks,
+- an optional `resolveAlias` function on `MainframeInteraction.IMvs` for providing data set alias support,
+- a `FeatureFlags.isEnabledInSettings` helper function for reading feature toggles from VS Code settings, e.g. Table Views,
+- a `FsDatasetsUtils.trimExtension` helper function for removing the file extension added to data set URIs, and
+- a `Table.View.trackRows` function to record rows delivered to a webview outside the normal update flow.
 
 **Deprecated:** Passing a `string` to the `condition` property of a `TableView` action. Use a function instead.
 
