@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added a dialog to clarify that connecting to the mainframe with an SSH profile can result in deploying the SSH server if it is not present. The warning can be prevented by pressing the `"Connect, don't ask me again"` button or by setting the VS Code setting `zowe.confirmSshServerDeploy` to `false`. [#4445](https://github.com/zowe/zowe-explorer-vscode/pull/4445)
+- Added a dialog when there does not appear to be enough disk space on z/OS UNIX to deploy the SSH server, which can be bypassed by clicking the `"Deploy"` button on the dialog. [#4445](https://github.com/zowe/zowe-explorer-vscode/pull/4445)
 - Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. Currently only supported when connecting via z/OSMF. [#4438](https://github.com/zowe/zowe-explorer-vscode/pull/4438)
 - Breaking: Removed the setting `zowe.zowex.serverAutoUpdate`, which was a global setting used to control whether the backend SSH server `zowex` would be automatically updated when it was outdated. To prevent such updates going forward, specify `"autoUpdate": false` in each desired `ssh` profile. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
 - Replaced the comparison of checksums of the backend SSH server `zowex` with comparing version numbers when checking if the remote server version is outdated. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)

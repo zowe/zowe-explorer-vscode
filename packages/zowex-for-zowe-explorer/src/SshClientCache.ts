@@ -163,6 +163,7 @@ export class SshClientCache extends vscode.Disposable {
             let newClient: ZSshClient | undefined;
             let serverNotFound = false;
             let serverShouldDeploy = true;
+
             const launchServer = async (): Promise<boolean> => {
                 newClient?.dispose();
                 newClient = await this.buildClient(session, clientId, {
@@ -179,7 +180,7 @@ export class SshClientCache extends vscode.Disposable {
                 if (ZSshUtils.checkIfOutdated(newClient.serverVersion)) {
                     // assume autoUpdate is allowed unless the SSH profile says otherwise
                     if (profile.profile?.autoUpdate === false) {
-                        imperative.Logger.getAppLogger().warn(`Server is out of date, skipping update for ${profile.name}`);
+                        imperative.Logger.getAppLogger().warn(`Profile has autoUpdate set to false, skipping update for ${profile.name}`);
                         return false;
                     } else {
                         imperative.Logger.getAppLogger().info(`Server is out of date, deploying to ${profile.name} at %s`, serverPath);

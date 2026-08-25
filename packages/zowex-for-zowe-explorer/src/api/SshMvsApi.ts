@@ -143,9 +143,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
 
             const dsname = candidates[i].name;
             try {
-                const response = await (
-                    await this.client
-                ).tool.search({ dsname, string: searchOptions.searchString, parms });
+                const response = await (await this.client).tool.search({ dsname, string: searchOptions.searchString, parms });
                 for (const member of parseSearchOutput(response.data).members) {
                     if (member.matches.length === 0) {
                         continue;

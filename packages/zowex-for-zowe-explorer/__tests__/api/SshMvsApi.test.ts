@@ -206,7 +206,14 @@ describe("SshMvsApi", () => {
                 {
                     dsn: "IBMUSER.JCL",
                     member: "GDG",
-                    matchList: [{ line: 1, column: 3, contents: "//IEFBR14$ JOB (IZUACCT),'mainframer',REGION=0M                        JOB00730", length: 3 }],
+                    matchList: [
+                        {
+                            line: 1,
+                            column: 3,
+                            contents: "//IEFBR14$ JOB (IZUACCT),'mainframer',REGION=0M                        JOB00730",
+                            length: 3,
+                        },
+                    ],
                 },
                 {
                     dsn: "IBMUSER.JCL",

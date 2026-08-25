@@ -367,6 +367,9 @@ describe("SshErrorCorrelations", () => {
             const expectedCodes = [
                 // Request timeout
                 "REQUEST_TIMEOUT",
+                // Build incompatibility with z/OS maintenance level
+                "CEE3501S",
+                "CEE3561S",
                 // Connection failures
                 "FOTS4241",
                 "FOTS1668",
@@ -387,9 +390,6 @@ describe("SshErrorCorrelations", () => {
                 "FOTS4150",
                 "FOTS4312",
                 "UNRECOGNIZED_COMMAND",
-                // Server error
-                "CEE3501S",
-                "CEE3561S",
             ];
 
             // Sanity check: the curated list should match the SDK's full set of registered codes.
