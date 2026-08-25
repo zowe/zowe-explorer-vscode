@@ -4,7 +4,7 @@ All notable changes to the "zowex-for-zowe-explorer" package will be documented 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## Recent Changes
+## TBD Release
 
 - Added support for searching data set members with an SSH profile. [#4457](https://github.com/zowe/zowe-explorer-vscode/pull/4457)
 - Fixed an issue where the "Reload" and "Reload and Retry" actions did nothing after a Zowe Remote SSH connection dropped, and where an error raised before the session was cached could prevent the prompt from appearing at all. Reconnecting now reports progress and confirms on success, and repeated failures no longer stack duplicate prompts for the same profile. [#4425](https://github.com/zowe/zowe-explorer-vscode/issues/4425)
