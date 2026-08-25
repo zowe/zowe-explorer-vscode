@@ -3,6 +3,7 @@ name: Zowe Explorer CI
 on:
   push:
     paths:
+      - pnpm-lock.yaml
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
       - packages/zowex-for-zowe-explorer/**
