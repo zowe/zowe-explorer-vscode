@@ -26,6 +26,8 @@ export namespace IconUtils {
         "sessionOpen" = "sessionOpen",
         "sessionFavourite" = "sessionFavourite",
         "sessionFavouriteOpen" = "sessionFavouriteOpen",
+        "symlinkFile" = "symlinkFile",
+        "symlinkFolder" = "symlinkFolder",
         "filterFolder" = "filterFolder",
         "filterFolderOpen" = "filterFolderOpen",
         "folder" = "folder",

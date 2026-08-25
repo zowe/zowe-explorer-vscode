@@ -102,8 +102,8 @@ async function expectUnixCommandApiWithSshSession<T>(
             callback("test");
         }
     );
-    await apiInstance[name as string](sshobj, ...args, true, () => {});
-    await apiInstance[name as string](sshobj, ...args, false, () => {});
+    await apiInstance[name as string](sshobj, ...args, true, () => { });
+    await apiInstance[name as string](sshobj, ...args, false, () => { });
     expect(spy).toHaveBeenCalled();
 }
 async function expectApiWithSession<T>({ name, spy, args, transform }: ITestApi<T>, apiInstance: MainframeInteraction.ICommon): Promise<void> {
@@ -750,6 +750,21 @@ describe("ZosmfMvsApi", () => {
             const result = await mvsApi.getCount(patterns);
             expect(result).toStrictEqual({ count: 4, lastItem: "DS4" });
         });
+    });
+
+    it("should test that resolve alias calls the zosmf API", async () => {
+        const dsName = "ALIAS.DS";
+        const resolveAlias = vi.fn((_session, ds, _options) => {
+            expect(ds).toEqual(dsName);
+            return { apiResponse: { targetDsn: "WOW.THE.ORIGINAL" }, commandResponse: "", success: true };
+        });
+
+        vi.spyOn(zosfiles.List, "resolveAlias").mockImplementation(resolveAlias as any);
+
+        const api = new ZoweExplorerZosmf.MvsApi();
+        api.getSession = vi.fn();
+        const resolved = await api.resolveAlias(dsName);
+        expect(resolved.apiResponse.targetDsn).toEqual("WOW.THE.ORIGINAL");
     });
 });
 
