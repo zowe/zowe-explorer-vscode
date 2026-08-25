@@ -13,7 +13,7 @@ import { createReadStream, createWriteStream } from "node:fs";
 import * as path from "node:path";
 import type * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { imperative, Gui, type MainframeInteraction } from "@zowe/zowe-explorer-api";
-import { B64String, type Dataset, type DatasetAttributes, type ds } from "@zowe/zowex-for-zowe-sdk";
+import { B64String, type Dataset, type DatasetAttributes, type ds, parseSearchOutput, type SearchMatch } from "@zowe/zowex-for-zowe-sdk";
 import { SshCommonApi } from "./SshCommonApi";
 import type Stream from "node:stream";
 import { SshClientCache } from "../SshClientCache";
@@ -98,6 +98,105 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             }),
             returnedRows: response.returnedRows,
         });
+    }
+
+    public async searchDataSets(searchOptions: zosfiles.ISearchOptions): Promise<zosfiles.ISearchResponse> {
+        if (searchOptions.regex) {
+            return { success: false, commandResponse: "", errorMessage: "Regex search is not supported for SSH connections." };
+        }
+
+        const listResponse = await (
+            await this.client
+        ).ds.listDatasets({
+            pattern: searchOptions.pattern,
+            attributes: true,
+            maxItems: searchOptions.searchExactName ? 1 : undefined,
+        });
+
+        const candidates = listResponse.items.filter(
+            (item) =>
+                item.dsorg != null &&
+                !item.migrated &&
+                (!searchOptions.searchExactName || item.name.toUpperCase() === searchOptions.pattern.toUpperCase())
+        );
+
+        if (searchOptions.continueSearch) {
+            const proceed = await searchOptions.continueSearch(candidates.map((item) => ({ dsn: item.name })));
+            if (proceed !== true) {
+                return { success: false, commandResponse: "The search was cancelled." };
+            }
+        }
+
+        const matches: zosfiles.ISearchItem[] = [];
+        const failedDataSets: string[] = [];
+        // ISRSUPC compares case-sensitively by default; ANYC makes it case-insensitive.
+        const parms = searchOptions.caseSensitive ? undefined : "ANYC";
+
+        for (let i = 0; i < candidates.length; i++) {
+            if (searchOptions.abortSearch?.()) {
+                break;
+            }
+            if (searchOptions.progressTask) {
+                searchOptions.progressTask.percentComplete = Math.floor((i / candidates.length) * 100);
+                searchOptions.progressTask.statusMessage = `Performing search: ${i} of ${candidates.length} entries checked`;
+            }
+
+            const dsname = candidates[i].name;
+            try {
+                const response = await (
+                    await this.client
+                ).tool.search({ dsname, string: searchOptions.searchString, parms });
+                for (const member of parseSearchOutput(response.data).members) {
+                    if (member.matches.length === 0) {
+                        continue;
+                    }
+                    matches.push({
+                        dsn: dsname,
+                        member: member.name,
+                        matchList: this.locateSearchMatchColumns(member.matches, searchOptions.searchString, searchOptions.caseSensitive ?? false),
+                    });
+                }
+            } catch {
+                failedDataSets.push(dsname);
+            }
+        }
+
+        matches.sort((a, b) => a.dsn.localeCompare(b.dsn) || (a.member ?? "").localeCompare(b.member ?? ""));
+
+        let commandResponse = `Found "${searchOptions.searchString}" in ${matches.length} data sets and PDS members`;
+        if (searchOptions.abortSearch?.()) {
+            commandResponse = `The search was cancelled.\n${commandResponse}`;
+        }
+
+        return {
+            success: failedDataSets.length === 0,
+            commandResponse,
+            apiResponse: matches,
+            errorMessage: failedDataSets.length > 0 ? `The following data set(s) failed to be searched: \n${failedDataSets.join("\n")}` : undefined,
+        };
+    }
+
+    /**
+     * ISRSUPC reports which lines matched but not the column, so re-locate every occurrence of the
+     * search string within the reported line content (mirroring the column math z/OSMF's local search does).
+     */
+    private locateSearchMatchColumns(matches: SearchMatch[], searchString: string, caseSensitive: boolean): zosfiles.ISearchMatchLocation[] {
+        const needle = caseSensitive ? searchString : searchString.toUpperCase();
+        const locations: zosfiles.ISearchMatchLocation[] = [];
+        for (const match of matches) {
+            const haystack = caseSensitive ? match.content : match.content.toUpperCase();
+            let fromIndex = 0;
+            let found = false;
+            for (let column = haystack.indexOf(needle, fromIndex); column !== -1; column = haystack.indexOf(needle, fromIndex)) {
+                found = true;
+                locations.push({ line: match.lineNumber, column: column + 1, contents: match.content, length: searchString.length });
+                fromIndex = column + needle.length;
+            }
+            if (!found) {
+                locations.push({ line: match.lineNumber, column: 1, contents: match.content, length: searchString.length });
+            }
+        }
+        return locations;
     }
 
     public async getContents(dataSetName: string, options: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
