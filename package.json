@@ -56,7 +56,6 @@
     "webpack-cli": "^5.1.4"
   },
   "scripts": {
-    "clean": "pnpm -r clean",
     "fresh-clone": "pnpm -r --parallel fresh-clone && (rimraf node_modules || true)",
     "prepare": "husky install",
     "lint": "pnpm -r lint",

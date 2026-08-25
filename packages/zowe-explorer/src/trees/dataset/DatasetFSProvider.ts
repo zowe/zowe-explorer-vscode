@@ -33,8 +33,9 @@ import {
     IFileSystemEntry,
     DsType,
     ConflictViewSelection,
+    MainframeInteraction,
 } from "@zowe/zowe-explorer-api";
-import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
+import { IZosFilesResponse, IZosmfListResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
@@ -268,10 +269,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         for (const resp of datasetResponses) {
-            for (const ds of resp.apiResponse?.items ?? resp.apiResponse ?? []) {
+            for (let ds of resp.apiResponse?.items ?? resp.apiResponse ?? []) {
                 let tempEntry = profileEntry.entries.get(ds.dsname);
                 if (tempEntry == null) {
                     let name = ds.dsname;
+                    if (ds.vol === "*ALIAS") {
+                        ds = await this.resolveAlias(ds, mvsApi);
+                    }
                     if (ds.dsorg?.startsWith("PO")) {
                         // Entry is a PDS
                         tempEntry = new PdsEntry(ds.dsname);
@@ -405,8 +409,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
 
             if (!entryExists || forceFetch) {
+                const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
                 if (pdsMember) {
-                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(uriPath[0]);
+                    const resp = await mvsApi.allMembers(uriPath[0]);
                     entryIsDir = false;
                     const memberName = path.parse(uriPath[1]).name;
                     if (
@@ -418,16 +423,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     }
                 } else {
                     const requestedDsName = FsDatasetsUtils.trimExtension(uriPath[0]);
-                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(requestedDsName, {
+                    const resp = await mvsApi.dataSet(requestedDsName, {
                         attributes: true,
                         maxLength: 1,
                     });
 
                     const responseItems = resp.apiResponse?.items ?? [];
-                    const matchedItem = responseItems.find((item) => item.dsname?.toUpperCase() === requestedDsName.toUpperCase());
+                    let matchedItem = responseItems.find((item) => item.dsname?.toUpperCase() === requestedDsName.toUpperCase());
                     if (resp.success && matchedItem) {
-                        entryIsDir = matchedItem.dsorg?.startsWith("PO");
                         entryStats = DatasetUtils.getDataSetStats(matchedItem);
+
+                        if (entryStats.vol === "*ALIAS") {
+                            matchedItem = await this.resolveAlias(matchedItem, mvsApi);
+                        }
+                        entryIsDir = matchedItem.dsorg?.startsWith("PO");
                         isMigrated = matchedItem.migr?.toUpperCase() === "YES";
                     } else {
                         throw vscode.FileSystemError.FileNotFound(uri);
@@ -463,6 +472,30 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entry.stats = { ...entry.stats, ...entryStats };
         }
         return entry;
+    }
+
+    private async resolveAlias(item: IZosmfListResponse, mvsApi: MainframeInteraction.IMvs): Promise<IZosmfListResponse> {
+        if (!mvsApi?.resolveAlias) {
+            ZoweLogger.warn(`[DatasetFSProvider] MVS API does not implement resolveAlias. Alias '${item.dsname}' will not be resolved.`);
+            return item;
+        }
+        try {
+            const resolvedAlias = await mvsApi.resolveAlias(item.dsname.toUpperCase());
+            const aliasTargetDsn = resolvedAlias.apiResponse.targetDsn;
+            const originalStatsResponse = await mvsApi.dataSet(aliasTargetDsn, {
+                attributes: true,
+                maxLength: 1,
+            });
+            if (originalStatsResponse.apiResponse?.items?.length > 0) {
+                const originalStats = originalStatsResponse.apiResponse.items[0];
+                item.dsorg = originalStats.dsorg;
+                item.migr = originalStats.migr;
+            }
+            return item;
+        } catch (e) {
+            ZoweLogger.error(`Failed to resolve alias: ${item.dsname} with error: ${e.message}`);
+            return item;
+        }
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<DirEntry | DsEntry> {

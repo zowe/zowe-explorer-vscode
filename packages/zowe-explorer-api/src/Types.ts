@@ -68,6 +68,10 @@ export namespace Types {
         createdDate: Date;
         // built from "m4date", "mtime" and "msec" variables from z/OSMF API response
         modifiedDate: Date;
+        // volume serial
+        vol?: string;
+        // if this data set is an alias that we could resolve, this is the original DSN pointed to by the alias.
+        aliasTargetDsn?: string;
         // Indexable for storing custom items
         [key: string]: any;
     };

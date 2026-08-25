@@ -73,6 +73,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     public favoritedMemberNames?: string[];
     public wasPds?: boolean;
     public justRecalled?: boolean;
+    public isAlias?: boolean;
+    public aliasTargetDsn?: string;
 
     private paginator?: Paginator<IZosFilesResponse>;
     private paginatorData?: {
@@ -99,6 +101,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         } else {
             this.contextValue = isBinary ? Constants.DS_DS_BINARY_CONTEXT : Constants.DS_DS_CONTEXT;
         }
+        if (opts.isAlias) {
+            this.contextValue += Constants.DS_ALIAS_SUFFIX;
+            this.isAlias = true;
+        }
         if (opts.contextOverride?.includes(Constants.DS_SESSION_CONTEXT)) {
             const toolTipList: string[] = [];
             toolTipList.push(`${vscode.l10n.t("Profile: ")}${opts.label}`);
@@ -106,6 +112,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.tooltip = toolTipList.join("\n");
         } else {
             this.tooltip = this.label as string;
+        }
+        if (opts.aliasTargetDsn) {
+            this.tooltip += `\n${vscode.l10n.t("Alias to: ")}${opts.aliasTargetDsn}`;
+            this.aliasTargetDsn = opts.aliasTargetDsn;
         }
         const icon = IconGenerator.getIconByNode(this);
         if (icon) {
@@ -132,17 +142,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         if (this.label !== vscode.l10n.t("Favorites") && !SharedContext.isMigrated(this)) {
             const sessionLabel = opts.profile?.name ?? SharedUtils.getSessionLabel(this);
             if (
-                this.contextValue === Constants.DS_DS_CONTEXT ||
-                this.contextValue === Constants.DS_FAV_CONTEXT ||
-                this.contextValue === Constants.DS_PDS_CONTEXT ||
-                this.contextValue === Constants.PDS_FAV_CONTEXT ||
+                this.contextValue.startsWith(Constants.DS_DS_CONTEXT) ||
+                this.contextValue.startsWith(Constants.DS_FAV_CONTEXT) ||
+                this.contextValue.startsWith(Constants.DS_PDS_CONTEXT) ||
+                this.contextValue.startsWith(Constants.PDS_FAV_CONTEXT) ||
                 this.contextValue === Constants.VSAM_CONTEXT
             ) {
                 this.resourceUri = vscode.Uri.from({
                     scheme: ZoweScheme.DS,
                     path: `/${sessionLabel}/${this.label as string}`,
                 });
-                if (this.contextValue === Constants.DS_DS_CONTEXT || this.contextValue === Constants.DS_FAV_CONTEXT) {
+                if (this.contextValue.startsWith(Constants.DS_DS_CONTEXT) || this.contextValue.startsWith(Constants.DS_FAV_CONTEXT)) {
                     const extension = DatasetUtils.getExtension(this.label as string);
                     this.resourceUri = this.resourceUri.with({ path: `${this.resourceUri.path}${extension ?? ""}` });
                     this.command = { command: "vscode.open", title: "", arguments: [this.resourceUri] };
@@ -413,6 +423,26 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                         profile: cachedProfile,
                     });
                     dsNode.wasPds = item.dsorg?.startsWith("PO");
+                    elementChildren[dsNode.label.toString()] = dsNode;
+                } else if (item.vol === "*ALIAS") {
+                    const resolvedAlias = await this.resolveAlias(item);
+                    item.dsorg ??= resolvedAlias?.dsorg;
+                    item.recfm ??= resolvedAlias?.recfm;
+                    item.blksz ??= resolvedAlias?.blksz;
+                    item.migr ??= resolvedAlias?.migr;
+                    const originalIsMigrated = item.migr?.toUpperCase() === "YES";
+                    dsNode = new ZoweDatasetNode({
+                        label: item.dsname,
+                        collapsibleState:
+                            originalIsMigrated || !item.dsorg?.startsWith("PO")
+                                ? vscode.TreeItemCollapsibleState.None
+                                : vscode.TreeItemCollapsibleState.Collapsed,
+                        parentNode: this,
+                        profile: cachedProfile,
+                        isAlias: true,
+                        aliasTargetDsn: resolvedAlias?.dsname,
+                        contextOverride: originalIsMigrated ? Constants.DS_MIGRATED_FILE_CONTEXT : undefined,
+                    });
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.dsorg?.startsWith("PO")) {
                     // Creates a ZoweDatasetNode for a PDS
@@ -879,6 +909,42 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         };
     }
 
+    private async resolveAlias(item: IZosmfListResponse): Promise<IZosmfListResponse | undefined> {
+        const profile = Profiles.getInstance()?.loadNamedProfile(this.getProfile().name);
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+        if (mvsApi.resolveAlias) {
+            try {
+                const resolution = await mvsApi.resolveAlias(item.dsname);
+                if (resolution.apiResponse.targetDsn) {
+                    const originalAttributes = await mvsApi.dataSet(resolution.apiResponse.targetDsn, { attributes: true });
+                    ZoweLogger.info(
+                        `[ZoweDatasetNode.resolveAlias] Resolved alias ${item.dsname} to ${resolution.apiResponse.targetDsn}.` +
+                            ` Retrieving attributes of the original data set.`
+                    );
+                    const matchingOriginal = (originalAttributes.apiResponse.items ?? originalAttributes.apiResponse) as IZosmfListResponse[];
+                    if (matchingOriginal.length > 0) {
+                        return {
+                            ...item,
+                            dsorg: matchingOriginal[0].dsorg,
+                            recfm: matchingOriginal[0].recfm,
+                            blksz: matchingOriginal[0].blksz,
+                            dsname: resolution.apiResponse.targetDsn,
+                            migr: matchingOriginal[0].migr,
+                        };
+                    }
+                }
+            } catch (e) {
+                ZoweLogger.error("[ZoweDatasetNode.resolveAlias] Encountered an error trying to resolve the alias: " + e.message);
+            }
+        } else {
+            ZoweLogger.warn(
+                `[ZoweDatasetNode.resolveAlias] MVS API for ${profile.type} does not implement resolveAlias.` +
+                    ` Alias ${item.dsname} will not be resolved.`
+            );
+        }
+        return undefined;
+    }
+
     public async listDatasets(responses: IZosFilesResponse[], options?: Definitions.DatasetListOpts): Promise<void> {
         const dsPatterns = [
             ...new Set(
@@ -1014,11 +1080,11 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             this.memberPattern = this.memberPattern.toUpperCase();
             for (const memPattern of this.memberPattern.split(",")) {
                 baseOptions.pattern = memPattern.trim();
-                responses.push(await mvsApi.allMembers(this.label as string, baseOptions));
+                responses.push(await mvsApi.allMembers(this.aliasTargetDsn ?? (this.label as string), baseOptions));
             }
         } else {
             // Fetching members for this PDS
-            responses.push(await mvsApi.allMembers(this.label as string, baseOptions));
+            responses.push(await mvsApi.allMembers(this.aliasTargetDsn ?? (this.label as string), baseOptions));
         }
     }
 
