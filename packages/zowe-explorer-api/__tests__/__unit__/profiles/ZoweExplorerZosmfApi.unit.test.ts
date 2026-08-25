@@ -102,8 +102,8 @@ async function expectUnixCommandApiWithSshSession<T>(
             callback("test");
         }
     );
-    await apiInstance[name as string](sshobj, ...args, true, () => { });
-    await apiInstance[name as string](sshobj, ...args, false, () => { });
+    await apiInstance[name as string](sshobj, ...args, true, () => {});
+    await apiInstance[name as string](sshobj, ...args, false, () => {});
     expect(spy).toHaveBeenCalled();
 }
 async function expectApiWithSession<T>({ name, spy, args, transform }: ITestApi<T>, apiInstance: MainframeInteraction.ICommon): Promise<void> {

@@ -6,6 +6,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Recent Changes
 
+- Added support for searching data set members with an SSH profile. [#4457](https://github.com/zowe/zowe-explorer-vscode/pull/4457)
 - Fixed an issue where the "Reload" and "Reload and Retry" actions did nothing after a Zowe Remote SSH connection dropped, and where an error raised before the session was cached could prevent the prompt from appearing at all. Reconnecting now reports progress and confirms on success, and repeated failures no longer stack duplicate prompts for the same profile. [#4425](https://github.com/zowe/zowe-explorer-vscode/issues/4425)
 - Fixed an issue with the `updateAttributes` function in the `SshUssApi` class that caused the API's `success` property to always return `false`. [#4348](https://github.com/zowe/zowe-explorer-vscode/pull/4348)
 - Fixed an issue where the `SshJesApi.getJobsByParameters` function did not provide the status parameter to the request. Now, jobs are correctly filtered by status. [#4345](https://github.com/zowe/zowe-explorer-vscode/issues/4345)
