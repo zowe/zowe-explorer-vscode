@@ -194,6 +194,7 @@
   "Added support for logging in to multiple API ML instances per team config file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team config file. <a>#2264</a>",
   "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>",
   "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>": "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>",
+  "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. Currently only supported when connecting via z/OSMF. <a>#4438</a>": "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. Currently only supported when connecting via z/OSMF. <a>#4438</a>",
   "Added support to delete VSAM data sets via right-click action.": "Added support to delete VSAM data sets via right-click action.",
   "Added support to delete VSAM data sets. <a>#3824</a>": "Added support to delete VSAM data sets. <a>#3824</a>",
   "Added support to view the Encoding history for MVS and Dataset in the History View. <a>#2776</a>": "Added support to view the Encoding history for MVS and Dataset in the History View. <a>#2776</a>",
@@ -223,6 +224,7 @@
   "Adopted support for VS Code proxy settings with zosmf profile types. <a>#3010</a>": "Adopted support for VS Code proxy settings with zosmf profile types. <a>#3010</a>",
   "Advanced data set copy and paste": "Advanced data set copy and paste",
   "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager": "After installing the extension, please make sure to reload your VS Code window in order to start using the installed credential manager",
+  "Alias to: ": "Alias to: ",
   "All": "All",
   "All Files": "All Files",
   "All Jobs": "All Jobs",
@@ -482,6 +484,7 @@
   "Delete Selected": "Delete Selected",
   "Delete action was canceled.": "Delete action was canceled.",
   "Delete action was cancelled.": "Delete action was cancelled.",
+  "Deleting aliases is not supported. Deselect any alias data sets.": "Deleting aliases is not supported. Deselect any alias data sets.",
   "Deleting data set(s): {0}/Data Sets to delete": {
     "message": "Deleting data set(s): {0}",
     "comment": [

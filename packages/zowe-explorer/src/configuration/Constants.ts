@@ -37,6 +37,7 @@ export class Constants {
     public static readonly TYPE_SUFFIX = Constants.CONTEXT_PREFIX + "type=";
     public static readonly VALIDATE_SUFFIX = Constants.CONTEXT_PREFIX + "validate";
     public static readonly NO_VALIDATE_SUFFIX = Constants.CONTEXT_PREFIX + "noValidate";
+    public static readonly DS_ALIAS_SUFFIX = Constants.CONTEXT_PREFIX + "alias";
     public static readonly INFORMATION_CONTEXT = "information";
     public static readonly FAVORITE_CONTEXT = "favorite";
     public static readonly DS_FAV_CONTEXT = "ds_fav";

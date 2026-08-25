@@ -1955,10 +1955,10 @@ Would you like to do this now?`,
         for (const child of children.filter((c) => !(c instanceof NavigationTreeItem))) {
             let resetIcon: IconUtils.IIconItem;
             if (child.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-                resetIcon = IconGenerator.getIconById(IconUtils.IconId.folder);
+                resetIcon = IconGenerator.getIconById(child.isAlias ? IconUtils.IconId.symlinkFolder : IconUtils.IconId.folder);
             }
             if (child.collapsibleState === vscode.TreeItemCollapsibleState.Expanded) {
-                resetIcon = IconGenerator.getIconById(IconUtils.IconId.folderOpen);
+                resetIcon = IconGenerator.getIconById(child.isAlias ? IconUtils.IconId.symlinkFolder : IconUtils.IconId.folderOpen);
             }
             if (resetIcon) {
                 child.iconPath = resetIcon.path;
