@@ -8335,16 +8335,8 @@ snapshots:
 
   '@puppeteer/browsers@3.2.1(yauzl@2.10.0)':
     dependencies:
-      debug: 4.4.3(supports-color@8.1.1)
-      extract-zip: 2.0.1
-      progress: 2.0.3
-      proxy-agent: 6.5.0
-      semver: 7.8.5
-      tar-fs: 3.1.1
+      modern-tar: 0.8.4
       yargs: 18.1.0
-    transitivePeerDependencies:
-      - bare-buffer
-      - supports-color
     optionalDependencies:
       yauzl: 2.10.0
 
