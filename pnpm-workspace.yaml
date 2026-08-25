@@ -17,6 +17,7 @@ allowBuilds:
   ssh2: true
 overrides:
   "@fastify/static": "^10.1.1"
+  "@puppeteer/browsers": "^3.2.1"
   "@tootallnate/once": "^3.0.1"
   "@xhmikosr/decompress": "^10.2.1"
   "ajv@6": "^6.14.0"
