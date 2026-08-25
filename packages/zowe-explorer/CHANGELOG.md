@@ -21,6 +21,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed hover/tooltip inconsistencies in favorited search nodes where search criteria or path was displayed instead of the profile name. [#4011](https://github.com/zowe/zowe-explorer-vscode/issues/4011)
 - Fixed an issue where recalling a sequential data set caused its contents to be overwritten, resulting in data loss. Now, when a data set is recalled, its contents are no longer modified. [#4412](https://github.com/zowe/zowe-explorer-vscode/issues/4412)
 - Fixed an issue where expanding a profile in the Favorites section uploaded empty contents to each favorited USS file, which failed for users without write access and truncated the file for users with write access. [#4450](https://github.com/zowe/zowe-explorer-vscode/issues/4450)
 - Fixed an issue where expanding a profile in the Favorites section uploaded empty contents to each favorited sequential data set, which failed for users without write access and truncated the data set for users with write access. [#4451](https://github.com/zowe/zowe-explorer-vscode/issues/4451)

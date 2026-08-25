@@ -246,6 +246,21 @@ export class AuthUtils {
         return false;
     }
 
+    /**
+     * Builds a tooltip for a favorited node, keeping the profile/type keys and ordering in one place.
+     * @param profileName The profile name to display
+     * @param profileType The profile type to display
+     * @param extra An optional additional line to append (e.g. pattern or path)
+     * @returns The formatted tooltip string
+     */
+    public static buildFavoriteTooltip(profileName: string, profileType: string, extra?: string): string {
+        const toolTipList: string[] = [`${vscode.l10n.t("Profile: ")}${profileName}`, `${vscode.l10n.t("Profile Type: ")}${profileType}`];
+        if (extra) {
+            toolTipList.push(extra);
+        }
+        return toolTipList.join("\n");
+    }
+
     public static updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): void {
         const iSessFromProf = AuthHandler.getSessFromProfile(profile).ISession;
         imperative.AuthOrder.addCredsToSession(iSessFromProf, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
