@@ -1335,22 +1335,22 @@
           "group": "099_zowe_dsModification@1"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^member.*/  && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^member.*/ && !listMultiSelection",
           "command": "zowe.ds.renameDataSetMember",
           "group": "099_zowe_dsModification@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^ds(?!.*_alias.*)/ && !listMultiSelection",
           "command": "zowe.ds.renameDataSet",
           "group": "099_zowe_dsModification@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^pds(?!.*_alias.*)/ && !listMultiSelection",
           "command": "zowe.ds.renameDataSet",
           "group": "099_zowe_dsModification@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^ds.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^ds(?!.*_alias.*)/",
           "command": "zowe.ds.deleteDataset",
           "group": "099_zowe_dsModification@5"
         },
@@ -1360,7 +1360,7 @@
           "group": "099_zowe_dsModification@5"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^pds(?!.*_alias.*)/",
           "command": "zowe.ds.deleteDataset",
           "group": "099_zowe_dsModification@5"
         },
@@ -2335,6 +2335,12 @@
           "description": "%zowe.commands.tso.defaultProfile%",
           "scope": "window"
         },
+        "zowe.confirmSshServerDeploy": {
+          "type": "boolean",
+          "default": true,
+          "description": "%zowe.confirmSshServerDeploy%",
+          "scope": "window"
+        },
         "zowex.zowex.keepAliveInterval": {
           "type": "number",
           "default": 30,
@@ -2457,7 +2463,7 @@
     "@vscode/codicons": "^0.0.35",
     "@zowe/core-for-zowe-sdk": "^8.35.0",
     "@zowe/secrets-for-zowe-sdk": "^8.32.0",
-    "@zowe/zos-files-for-zowe-sdk": "^8.32.0",
+    "@zowe/zos-files-for-zowe-sdk": "^8.35.0",
     "@zowe/zos-jobs-for-zowe-sdk": "^8.32.0",
     "@zowe/zosmf-for-zowe-sdk": "^8.35.0",
     "@zowe/zowe-explorer-api": "workspace:*",

@@ -117,6 +117,8 @@ export namespace Definitions {
     export interface IZoweDatasetTreeOpts extends IZoweTreeOpts {
         encoding?: ZosEncoding;
         etag?: string;
+        isAlias?: boolean;
+        aliasTargetDsn?: string;
     }
 
     export type DatasetListOpts = Omit<IListOptions, "volume" | "recall"> & { profile?: imperative.IProfileLoaded };

@@ -207,5 +207,6 @@
   "zowe.zowex.workerCount": "Number of workers for the Zowe Remote SSH server. Each worker runs as a separate thread within a single address space.",
   "zowe.zowex.responseTimeout": "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.",
   "zowe.zowex.experimentalNativeSsh": "Use an experimental native SSH client for improved performance. Not yet fully tested.",
-  "zowe.zowex.defaultHandshakeTimeout": "Time in milliseconds to wait for the SSH handshake to complete."
+  "zowe.zowex.defaultHandshakeTimeout": "Time in milliseconds to wait for the SSH handshake to complete.",
+  "zowe.confirmSshServerDeploy": "Require user confirmation before connecting with an SSH profile"
 }

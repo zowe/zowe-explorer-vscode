@@ -11,9 +11,17 @@
 
 import { ImperativeError } from "@zowe/imperative";
 import { type SshSession, ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
-import { AuthHandler, ErrorCorrelator, type IAuthMethods, imperative, type MainframeInteraction, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import {
+    AuthHandler,
+    ErrorCorrelator,
+    Gui,
+    type IAuthMethods,
+    imperative,
+    type MainframeInteraction,
+    ZoweExplorerApiType,
+} from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { type ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { SshClientCache } from "../SshClientCache";
 import { SshErrorHandler } from "../SshErrorHandler";
 
@@ -28,9 +36,43 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
         return new imperative.Session(this.getSshSession(profile).ISshSession);
     }
 
+    /**
+     * For a given profile, attempt get a new or existing connection status.
+     *
+     * In order to keep the user informed of the fact that connecting to an SSH profile may trigger a
+     * file upload, this method will trigger a confirmation dialog to be shown for new connections,
+     * unless the user has set "zowe.confirmSshServerDeploy" to false in their VSC configuration.
+     *
+     * @param profile - The profile to check
+     * @param profileType - This API only handles ZosUssProfile.type
+     * @returns the status of the profile - "inactive" , "active", or "unverified".
+     */
     public async getStatus(profile: imperative.IProfileLoaded, profileType?: string): Promise<string> {
         if (profileType === ZosUssProfile.type) {
             try {
+                const vsceConfig = vscode.workspace.getConfiguration("zowe");
+                const confirmSshServerDeploy = vsceConfig.get<boolean>("confirmSshServerDeploy", true);
+                if (confirmSshServerDeploy) {
+                    const connectButton = vscode.l10n.t("Connect");
+                    const connectDontAskButton = vscode.l10n.t("Connect, don't ask me again");
+
+                    const cancelButton = vscode.l10n.t("Cancel");
+                    const message = vscode.l10n.t(
+                        "Connecting with an SSH profile deploys the SSH server to z/OS UNIX to " +
+                            "enable you to perform actions on the mainframe. Would you like to proceed with connecting?"
+                    );
+                    const selection = await Gui.showMessage(message, { items: [cancelButton, connectButton, connectDontAskButton] });
+                    if (selection === connectButton) {
+                        imperative.Logger.getAppLogger().info("User accepted the initial deployment warning");
+                    } else if (selection === connectDontAskButton) {
+                        imperative.Logger.getAppLogger().info("User accepted the initial deployment warning, and requested not to be asked again");
+                        await vsceConfig.update("confirmSshServerDeploy", false, vscode.ConfigurationTarget.Global);
+                    } else {
+                        imperative.Logger.getAppLogger().info("User declined the initial deployment warning");
+                        return "inactive";
+                    }
+                }
+
                 await SshClientCache.inst.connect(profile);
                 return "active";
             } catch (err) {

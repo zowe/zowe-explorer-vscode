@@ -221,6 +221,7 @@ describe("DatasetFSProvider", () => {
                             ],
                         },
                     }),
+                    resolveAlias: vi.fn(),
                 };
                 vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
                 expect(await DatasetFSProvider.instance.readDirectory(testUris.session.with({ query: "pattern=USER.*" }))).toStrictEqual([
@@ -230,12 +231,91 @@ describe("DatasetFSProvider", () => {
                     ["USER.DATA.DS2", FileType.File],
                 ]);
                 expect(mockMvsApi.dataSet).toHaveBeenCalledWith("USER.*");
+                expect(mockMvsApi.resolveAlias).not.toHaveBeenCalled();
             });
         });
 
         it("throws an error if lookup returns a non-filesystem error", async () => {
             vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockRejectedValue(new Error());
             await expect(DatasetFSProvider.instance.readDirectory).rejects.toThrow();
+        });
+
+        it("calls resolveAlias on a data set with *ALIAS volume and renders as directory", async () => {
+            const targetDsn = "OTHER.ORIGINAL.DATASET";
+            const aliasName = "USER.WONDRFUL.ALIAS";
+            const mockMvsApi = {
+                resolveAlias: vi.fn().mockResolvedValue({
+                    apiResponse: {
+                        targetDsn: targetDsn,
+                    },
+                }),
+                dataSet: vi.fn().mockImplementation((dsn, _opts) => {
+                    if (dsn === targetDsn) {
+                        return {
+                            success: true,
+                            apiResponse: {
+                                items: [
+                                    {
+                                        dsname: targetDsn,
+                                        recfm: "FB",
+                                        dsorg: "PO",
+                                    },
+                                ],
+                            },
+                        };
+                    } else if (dsn === aliasName) {
+                        return {
+                            success: true,
+                            apiResponse: {
+                                items: [
+                                    {
+                                        dsname: aliasName,
+                                        vol: "*ALIAS",
+                                    },
+                                ],
+                            },
+                        };
+                    }
+                }),
+                allMembers: vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [{ member: "ALIASM1", m4date: "2024-08-08", mtime: "12", msec: "30" }],
+                    },
+                    commandResponse: "",
+                }),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            expect(
+                await DatasetFSProvider.instance.readDirectory(Uri.from({ scheme: ZoweScheme.DS, path: "/aliastest/USER.WONDRFUL.ALIAS" }))
+            ).toStrictEqual([["ALIASM1", FileType.File]]);
+            expect(mockMvsApi.resolveAlias).toHaveBeenCalledWith("USER.WONDRFUL.ALIAS");
+        });
+
+        it("won't resolve an alias and throws an error if the MVS API does not support it ", async () => {
+            const aliasName = "USER.WONDRFUL.ALIAS";
+            const mockMvsApi = {
+                resolveAlias: undefined,
+                dataSet: vi.fn().mockImplementation((dsn, _opts) => {
+                    if (dsn === aliasName) {
+                        return {
+                            success: true,
+                            apiResponse: {
+                                items: [
+                                    {
+                                        dsname: aliasName,
+                                        vol: "*ALIAS",
+                                    },
+                                ],
+                            },
+                        };
+                    }
+                }),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            await expect(
+                DatasetFSProvider.instance.readDirectory(Uri.from({ scheme: ZoweScheme.DS, path: "/aliasnotsupportedtest/USER.WONDRFUL.ALIAS" }))
+            ).rejects.toBeInstanceOf(FileSystemError);
         });
 
         describe("PDS entry", () => {
