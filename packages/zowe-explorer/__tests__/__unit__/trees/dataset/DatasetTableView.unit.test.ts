@@ -325,7 +325,7 @@ describe("TreeDataSource", () => {
                 expect.objectContaining({
                     name: "MEM1",
                     migr: "NO",
-                    uri: "zowe-ds:///sestest/TEST.PDS/MEM1",
+                    uri: "zowe-ds:/sestest/TEST.PDS/MEM1",
                     isMember: true,
                     isDirectory: false,
                     parentId: "zowe-ds:/sestest/TEST.PDS",

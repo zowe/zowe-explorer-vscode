@@ -1695,23 +1695,23 @@ export class Uri {
     public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): Uri {
         let newUri = Uri.from(this);
 
-        if (change.scheme) {
+        if (change.scheme != null) {
             newUri.scheme = change.scheme;
         }
 
-        if (change.authority) {
+        if (change.authority != null) {
             newUri.authority = change.authority;
         }
 
-        if (change.path) {
+        if (change.path != null) {
             newUri.path = change.path;
         }
 
-        if (change.query) {
+        if (change.query != null) {
             newUri.query = change.query;
         }
 
-        if (change.fragment) {
+        if (change.fragment != null) {
             newUri.fragment = change.fragment;
         }
 
@@ -1729,16 +1729,16 @@ export class Uri {
         if (components.path != null) {
             uri.path = components.path;
         }
-        if (components.scheme) {
+        if (components.scheme != null) {
             uri.scheme = components.scheme;
         }
-        if (components.authority) {
+        if (components.authority != null) {
             uri.authority = components.authority;
         }
-        if (components.query) {
+        if (components.query != null) {
             uri.query = components.query;
         }
-        if (components.fragment) {
+        if (components.fragment != null) {
             uri.fragment = components.fragment;
         }
         return uri;
