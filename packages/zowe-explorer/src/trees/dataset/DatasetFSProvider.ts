@@ -196,8 +196,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
             const pdsEntry = await this.executeWithReuse<DirEntry>(parentUri, {
                 keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
-                checkLocal: () => (isVisibleEditor ? false : !!this._lookupAsDirectory(parentUri, true)),
-                execute: () => this.readDirectoryImplementation(parentUri, isVisibleEditor),
+                checkLocal: () => {
+                    if (isVisibleEditor) {
+                        return false;
+                    }
+                    const parentDir = this._lookupAsDirectory(parentUri, true) as PdsEntry;
+                    return !!(parentDir && parentDir.entries && parentDir.entries.has(memberName));
+                },
+                execute: () => this.readDirectoryImplementation(parentUri, true),
                 action: "readDirectory",
             });
 
