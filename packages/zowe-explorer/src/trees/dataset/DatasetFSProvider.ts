@@ -983,9 +983,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entry.size = content.byteLength;
 
             this.fireSoon({ type: isNew ? vscode.FileChangeType.Created : vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
-
-            const savedStat = await vscode.workspace.fs.stat(uri);
-            ZoweLogger.info(`[DatasetFSProvider] Saved resource stat: ${JSON.stringify(savedStat)}`);
         } catch (err) {
             if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 entry.data = content;
