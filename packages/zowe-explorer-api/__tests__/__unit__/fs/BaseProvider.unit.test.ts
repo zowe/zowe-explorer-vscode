@@ -340,6 +340,32 @@ describe("invalidateDirAtUri", () => {
     });
 });
 
+describe("invalidateCache", () => {
+    it("removes the entry from the parent directory", () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        const fileEntry = { ...globalMocks.fileFsEntry };
+        prov.root.entries.set("file.txt", fileEntry);
+        prov.invalidateCache(globalMocks.testFileUri);
+        expect(prov.root.entries.has("file.txt")).toBe(false);
+    });
+
+    it("does nothing when the parent directory does not exist", () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        // URI with no matching parent — should not throw
+        expect(() => prov.invalidateCache(globalMocks.testFileUri)).not.toThrow();
+    });
+
+    it("does nothing when the entry is not in the parent directory", () => {
+        const prov = new (BaseProvider as any)();
+        prov.root = new DirEntry("");
+        // Parent exists but entry is absent — no-op
+        expect(() => prov.invalidateCache(globalMocks.testFileUri)).not.toThrow();
+        expect(prov.root.entries.size).toBe(0);
+    });
+});
+
 describe("setEncodingForFile", () => {
     it("sets the encoding for a file entry", () => {
         const prov = new (BaseProvider as any)();

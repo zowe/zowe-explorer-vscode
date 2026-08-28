@@ -51,6 +51,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, this.onDidChangeFile);
         ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => this.updateProfile(profile));
+        ZoweExplorerApiRegister.getInstance().setDatasetFSProvider(this);
         this.root = new DirEntry("");
     }
 
@@ -893,6 +894,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      */
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
         const basename = path.posix.basename(uri.path);
+
         // TODO: Improve behavior of creating PDS members with lowercase names, to avoid data loss, just reject from the virtual workspace context if uri path contains lowercase.
         if (options.create && /[a-z]/.test(path.posix.basename(basename, path.posix.extname(basename)))) {
             throw vscode.FileSystemError.Unavailable(vscode.l10n.t("Unable to create data set or member with lowercase letters."));
@@ -982,6 +984,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             entry.size = content.byteLength;
 
             this.fireSoon({ type: isNew ? vscode.FileChangeType.Created : vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
+
+            const savedStat = await vscode.workspace.fs.stat(uri);
+            ZoweLogger.info(`[DatasetFSProvider] Saved resource stat: ${JSON.stringify(savedStat)}`);
         } catch (err) {
             if (err.message.includes("Rest API failure with HTTP(S) status 412")) {
                 entry.data = content;
@@ -1218,19 +1223,5 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         entry.metadata = profInfo;
         parent.entries.set(basename, entry);
         return entry;
-    }
-
-    public invalidateCache(uri: vscode.Uri): void {
-        try {
-            const parent = this.lookupParentDirectory(uri, true);
-            if (parent) {
-                const basename = path.posix.basename(uri.path);
-                if (parent.entries.has(basename)) {
-                    parent.entries.delete(basename);
-                }
-            }
-        } catch (e) {
-            // Ignore if parent directory cannot be looked up or doesn't exist
-        }
     }
 }

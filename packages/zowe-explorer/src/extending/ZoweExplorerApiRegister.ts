@@ -14,9 +14,11 @@ import * as zowex from "zowex-for-zowe-explorer";
 import {
     DataSetAttributesProvider,
     IApiExplorerExtender,
+    IZoweFSProvider,
     MainframeInteraction,
     Types,
     Validation,
+    ZosEncoding,
     ZoweExplorerZosmf,
     ZoweScheme,
     imperative,
@@ -35,6 +37,10 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
 
     public onProfileUpdatedEmitter: vscode.EventEmitter<imperative.IProfileLoaded> = new vscode.EventEmitter();
     public readonly onProfileUpdated = this.onProfileUpdatedEmitter.event;
+    private datasetFSProvider?: IZoweFSProvider;
+    private ussFSProvider?: IZoweFSProvider;
+    private jobFSProvider?: IZoweFSProvider;
+    private fileApi?: Types.IZoweExplorerFileApi;
 
     /**
      * Access the singleton instance.
@@ -408,5 +414,57 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
      */
     public static addFileSystemEvent(scheme: ZoweScheme | string, event: vscode.Event<vscode.FileChangeEvent[]>): void {
         ZoweExplorerApiRegister.eventMap[scheme] = event;
+    }
+
+    /** @internal Called by DatasetFSProvider during singleton construction. */
+    public setDatasetFSProvider(provider: IZoweFSProvider): void {
+        this.datasetFSProvider = provider;
+        this.fileApi = undefined;
+    }
+
+    /** @internal Called by UssFSProvider during singleton construction. */
+    public setUssFSProvider(provider: IZoweFSProvider): void {
+        this.ussFSProvider = provider;
+        this.fileApi = undefined;
+    }
+
+    /** @internal Called by JobFSProvider during singleton construction. */
+    public setJobFSProvider(provider: IZoweFSProvider): void {
+        this.jobFSProvider = provider;
+        this.fileApi = undefined;
+    }
+
+    /**
+     * Gets the helper API for mainframe file-system and cache queries.
+     * @returns the Zowe Explorer file API instance
+     */
+    public getFileApi(): Types.IZoweExplorerFileApi {
+        if (this.fileApi) {
+            return this.fileApi;
+        }
+        this.fileApi = {
+            getEncodingForUri: (uri: vscode.Uri): ZosEncoding | undefined => {
+                const provider = this.providerForScheme(uri.scheme);
+                return provider?.encodingMap[uri.path];
+            },
+            invalidateCacheForUri: (uri: vscode.Uri): void => {
+                const provider = this.providerForScheme(uri.scheme);
+                provider?.invalidateCache(uri);
+            },
+        };
+        return this.fileApi;
+    }
+
+    private providerForScheme(scheme: string): IZoweFSProvider | undefined {
+        switch (scheme as ZoweScheme) {
+            case ZoweScheme.DS:
+                return this.datasetFSProvider;
+            case ZoweScheme.USS:
+                return this.ussFSProvider;
+            case ZoweScheme.Jobs:
+                return this.jobFSProvider;
+            default:
+                return undefined;
+        }
     }
 }

@@ -484,7 +484,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (SharedContext.isSession(this)) {
                     // Creates a ZoweDatasetNode for a PS
-                    const cachedEncoding = this.getEncodingInMap(item.dsname);
+                    const sessionLabel = this.getProfile()?.name ?? SharedUtils.getSessionLabel(this);
+                    const dsExtension = DatasetUtils.getExtension(item.dsname) ?? "";
+                    const cachedEncoding = this.getEncodingInMap(`/${sessionLabel}/${item.dsname}${dsExtension}`);
                     dsNode = new ZoweDatasetNode({
                         label: item.dsname,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -496,7 +498,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.member) {
                     // Creates a ZoweDatasetNode for a PDS member
-                    const cachedEncoding = this.getEncodingInMap(`${item.dsname}(${item.member})`);
+                    const sessionLabel = this.getProfile()?.name ?? SharedUtils.getSessionLabel(this);
+                    const pdsName = this.label as string;
+                    const pdsExtension = DatasetUtils.getExtension(pdsName) ?? "";
+                    const cachedEncoding = this.getEncodingInMap(`/${sessionLabel}/${pdsName}/${item.member}${pdsExtension}`);
                     dsNode = new ZoweDatasetNode({
                         label: item.member,
                         collapsibleState: vscode.TreeItemCollapsibleState.None,
