@@ -487,7 +487,10 @@ describe("DatasetFSProvider", () => {
             });
 
             afterEach(() => {
-                delete (vscode.window as any).visibleTextEditors;
+                Object.defineProperty(vscode.window, "visibleTextEditors", {
+                    get: () => [],
+                    configurable: true,
+                });
                 remoteLookupSpy.mockRestore();
                 localLookupSpy.mockRestore();
             });
@@ -1749,6 +1752,10 @@ describe("DatasetFSProvider", () => {
                     },
                     commandResponse: "",
                 }),
+                dataSet: vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: { items: [{ dsname: "USER.DATA.PDS", dsorg: "PO" }] },
+                }),
             } as any);
 
             const fetchUri = Uri.from({ scheme: ZoweScheme.DS, path: "sestest/USER.DATA.PDS/MEM1", query: "fetch=true" });
@@ -1789,6 +1796,65 @@ describe("DatasetFSProvider", () => {
             await DatasetFSProvider.instance.stat(fetchUri);
 
             expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri.with({ path: "/sestest/USER.DATA.PDS.NEW" }));
+        });
+        describe("PDS member stat cache lookup behavior", () => {
+            it("fetches members from remote when the PDS directory exists locally but the member is not in the cache", async () => {
+                const allMembersMock = vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [{ member: "MEM1", m4date: "2024-08-08", mtime: "12", msec: "30" }],
+                    },
+                    commandResponse: "",
+                });
+                vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    allMembers: allMembersMock,
+                } as any);
+
+                const sessionUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest" });
+                DatasetFSProvider.instance.createDirectory(sessionUri);
+                const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.UNCACHED.PDS" });
+                DatasetFSProvider.instance.createDirectory(pdsUri);
+
+                const pdsEntry = DatasetFSProvider.instance.lookup(pdsUri, true) as PdsEntry;
+
+                const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.UNCACHED.PDS/MEM1" });
+                const res = await DatasetFSProvider.instance.stat(memberUri);
+
+                expect(allMembersMock).toHaveBeenCalledWith("USER.UNCACHED.PDS", { attributes: true });
+                expect(res).toBeDefined();
+                expect(pdsEntry.entries.has("MEM1")).toBe(true);
+            });
+
+            it("uses cached member stat without making a second remote call when the member exists in the parent PDS entries map", async () => {
+                const allMembersMock = vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            { member: "MEM1", m4date: "2024-08-08", mtime: "12", msec: "30" },
+                            { member: "MEM2", m4date: "2024-08-08", mtime: "12", msec: "30" },
+                        ],
+                    },
+                    commandResponse: "",
+                });
+                vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    allMembers: allMembersMock,
+                } as any);
+
+                const sessionUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest" });
+                DatasetFSProvider.instance.createDirectory(sessionUri);
+                const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.CACHED.PDS" });
+                DatasetFSProvider.instance.createDirectory(pdsUri);
+
+                const member1Uri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.CACHED.PDS/MEM1" });
+                const member2Uri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.CACHED.PDS/MEM2" });
+
+                await DatasetFSProvider.instance.stat(member1Uri);
+                expect(allMembersMock).toHaveBeenCalledTimes(1);
+
+                const res = await DatasetFSProvider.instance.stat(member2Uri);
+                expect(allMembersMock).toHaveBeenCalledTimes(1);
+                expect(res).toBeDefined();
+            });
         });
 
         describe("mtime update scenarios", () => {
@@ -2246,6 +2312,7 @@ describe("DatasetFSProvider", () => {
 
             describe("PDS member", () => {
                 it("non-existent member URI", async () => {
+                    DatasetFSProvider.instance.invalidateCache(testUris.pdsMember);
                     const allMembersMockNoMatch = vi.fn().mockResolvedValue({
                         success: true,
                         apiResponse: {
@@ -2275,6 +2342,7 @@ describe("DatasetFSProvider", () => {
                     expect(allMembersMockNoMatch).toHaveBeenCalledWith("USER.DATA.PDS");
                 });
                 it("existing member URI", async () => {
+                    DatasetFSProvider.instance.invalidateCache(testUris.pdsMember);
                     const allMembersMock = vi.fn().mockResolvedValue({
                         success: true,
                         apiResponse: {
@@ -2714,10 +2782,11 @@ describe("DatasetFSProvider", () => {
             //     expect(statResult.size).toBe(123);
             // });
 
-            //TODO: Replace with above test once readDirectory caching implemented
-            it("should not coalesce readDirectory and stat requests when a local entry exists because readDirectory bypasses the cache", async () => {
-                const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" });
-                const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS/MEMBER1" });
+            it("coalesces readDirectory and stat requests for the same PDS when the member isn't cached yet", async () => {
+                // Uses a PDS name not touched by any other test in this file - "USER.DATA.PDS" is reused
+                // widely, and leftover local entries from earlier tests would change checkLocal's outcome.
+                const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.COALESCE.PDS" });
+                const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.COALESCE.PDS/MEMBER1" });
 
                 const mockPdsEntry = {
                     type: FileType.Directory,
@@ -2734,7 +2803,9 @@ describe("DatasetFSProvider", () => {
 
                 const [dirResult, statResult] = await Promise.all([readDirPromise, statPromise]);
 
-                expect(readDirImplSpy).toHaveBeenCalledTimes(2);
+                // Since MEMBER1 isn't cached yet, stat's checkLocal reports "not local," landing on the
+                // same fetch key as readDirectory's request, so they reuse the same in-flight promise.
+                expect(readDirImplSpy).toHaveBeenCalledTimes(1);
                 expect(dirResult).toContainEqual(["MEMBER1", FileType.File]);
                 expect(statResult.size).toBe(123);
             });
