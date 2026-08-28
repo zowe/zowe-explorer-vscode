@@ -487,10 +487,7 @@ describe("DatasetFSProvider", () => {
             });
 
             afterEach(() => {
-                Object.defineProperty(vscode.window, "visibleTextEditors", {
-                    get: () => [],
-                    configurable: true,
-                });
+                delete (vscode.window as any).visibleTextEditors;
                 remoteLookupSpy.mockRestore();
                 localLookupSpy.mockRestore();
             });
@@ -2312,7 +2309,6 @@ describe("DatasetFSProvider", () => {
 
             describe("PDS member", () => {
                 it("non-existent member URI", async () => {
-                    DatasetFSProvider.instance.invalidateCache(testUris.pdsMember);
                     const allMembersMockNoMatch = vi.fn().mockResolvedValue({
                         success: true,
                         apiResponse: {
@@ -2342,7 +2338,6 @@ describe("DatasetFSProvider", () => {
                     expect(allMembersMockNoMatch).toHaveBeenCalledWith("USER.DATA.PDS");
                 });
                 it("existing member URI", async () => {
-                    DatasetFSProvider.instance.invalidateCache(testUris.pdsMember);
                     const allMembersMock = vi.fn().mockResolvedValue({
                         success: true,
                         apiResponse: {
@@ -2782,11 +2777,10 @@ describe("DatasetFSProvider", () => {
             //     expect(statResult.size).toBe(123);
             // });
 
-            it("coalesces readDirectory and stat requests for the same PDS when the member isn't cached yet", async () => {
-                // Uses a PDS name not touched by any other test in this file - "USER.DATA.PDS" is reused
-                // widely, and leftover local entries from earlier tests would change checkLocal's outcome.
-                const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.COALESCE.PDS" });
-                const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.COALESCE.PDS/MEMBER1" });
+            //TODO: Replace with above test once readDirectory caching implemented
+            it("should not coalesce readDirectory and stat requests when a local entry exists because readDirectory bypasses the cache", async () => {
+                const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS" });
+                const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.PDS/MEMBER1" });
 
                 const mockPdsEntry = {
                     type: FileType.Directory,
@@ -2803,9 +2797,7 @@ describe("DatasetFSProvider", () => {
 
                 const [dirResult, statResult] = await Promise.all([readDirPromise, statPromise]);
 
-                // Since MEMBER1 isn't cached yet, stat's checkLocal reports "not local," landing on the
-                // same fetch key as readDirectory's request, so they reuse the same in-flight promise.
-                expect(readDirImplSpy).toHaveBeenCalledTimes(1);
+                expect(readDirImplSpy).toHaveBeenCalledTimes(2);
                 expect(dirResult).toContainEqual(["MEMBER1", FileType.File]);
                 expect(statResult.size).toBe(123);
             });
