@@ -175,6 +175,23 @@ export class BaseProvider {
     }
 
     /**
+     * Silently removes a cached entry from its parent directory, forcing the next
+     * read to fetch fresh content from the mainframe. Does not fire a change event.
+     * @param uri the URI of the entry to remove from the cache
+     */
+    public invalidateCache(uri: vscode.Uri): void {
+        try {
+            const parent = this.lookupParentDirectory(uri, true);
+            if (parent) {
+                const basename = path.posix.basename(uri.path);
+                parent.entries.delete(basename);
+            }
+        } catch (e) {
+            // Ignore if parent directory cannot be looked up or doesn't exist
+        }
+    }
+
+    /**
      * Updates the profile reference for all cached entries matching the profile name and type.
      * Called when a profile is updated (reactivated, credentials changed, etc.)
      * @param updatedProfile The updated profile object

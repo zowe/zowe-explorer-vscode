@@ -9,6 +9,7 @@
  *
  */
 
+import * as vscode from "vscode";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { imperative, MainframeInteraction, ZoweExplorerZosmf, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
@@ -293,5 +294,52 @@ describe("ZoweExplorerApiRegister unit testing", () => {
     it("allows access to the DataSetAttributesProvider instance", () => {
         const ZEApiRegister = ZoweExplorerApiRegister.getInstance();
         expect(ZEApiRegister.getDataSetAttrProvider()).toBeDefined();
+    });
+
+    describe("getFileApi", () => {
+        it("returns the same object on repeated calls (memoized)", () => {
+            const register = ZoweExplorerApiRegister.getInstance();
+            expect(register.getFileApi()).toBe(register.getFileApi());
+        });
+
+        it("getEncodingForUri returns encoding from the DatasetFSProvider for a DS URI", () => {
+            const register = ZoweExplorerApiRegister.getInstance();
+            const uri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/DATA.SET" });
+            const expected = { kind: "other", codepage: "IBM-1047" } as const;
+            DatasetFSProvider.instance.encodingMap[uri.path] = expected;
+            expect(register.getFileApi().getEncodingForUri(uri)).toBe(expected);
+            delete DatasetFSProvider.instance.encodingMap[uri.path];
+        });
+
+        it("getEncodingForUri returns encoding from UssFSProvider for a USS URI", () => {
+            const register = ZoweExplorerApiRegister.getInstance();
+            const uri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/profile/u/user/file.txt" });
+            const expected = { kind: "other", codepage: "IBM-037" } as const;
+            UssFSProvider.instance.encodingMap[uri.path] = expected;
+            expect(register.getFileApi().getEncodingForUri(uri)).toBe(expected);
+            delete UssFSProvider.instance.encodingMap[uri.path];
+        });
+
+        it("getEncodingForUri returns undefined for an unknown scheme", () => {
+            const register = ZoweExplorerApiRegister.getInstance();
+            const uri = vscode.Uri.from({ scheme: "unknown", path: "/some/path" });
+            expect(register.getFileApi().getEncodingForUri(uri)).toBeUndefined();
+        });
+
+        it("invalidateCacheForUri delegates to the correct provider", () => {
+            const register = ZoweExplorerApiRegister.getInstance();
+            const uri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/DATA.SET" });
+            const invalidateSpy = vi.spyOn(DatasetFSProvider.instance, "invalidateCache").mockImplementation(() => {});
+            register.getFileApi().invalidateCacheForUri(uri);
+            expect(invalidateSpy).toHaveBeenCalledWith(uri);
+            invalidateSpy.mockRestore();
+        });
+
+        it("invalidateCacheForUri does nothing for an unknown scheme", () => {
+            const register = ZoweExplorerApiRegister.getInstance();
+            const uri = vscode.Uri.from({ scheme: "unknown", path: "/some/path" });
+            // No provider registered — should not throw
+            expect(() => register.getFileApi().invalidateCacheForUri(uri)).not.toThrow();
+        });
     });
 });
