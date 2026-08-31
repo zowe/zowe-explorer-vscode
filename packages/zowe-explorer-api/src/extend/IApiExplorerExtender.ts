@@ -61,4 +61,29 @@ export interface IApiExplorerExtender {
      * on the returned instance.
      */
     getLocalStorage?(): ILocalStorageAccess;
+
+    /**
+     * Log in to the authentication service for the given profile (SSO/token-based login
+     * through the API ML or the profile type's registered auth API). Behaves like the
+     * "Log in to Authentication Service" tree action: prompts for credentials or certificate,
+     * stores the token in the base or service profile as appropriate, fires the
+     * profile-updated event, and unlocks the profile on success.
+     * @version 3.6.0 or newer of Zowe Explorer
+     * @param profile Name of the profile or the loaded profile to log in
+     * @returns {Promise<boolean>} true if login succeeded, false otherwise
+     * @throws {Error} if no profile exists with the given name
+     */
+    ssoLogin?(profile: string | imperative.IProfileLoaded): Promise<boolean>;
+
+    /**
+     * Log out from the authentication service for the given profile. Behaves like the
+     * "Log out from Authentication Service" tree action: revokes the token and removes it
+     * from the base or service profile. When called through this interface (no tree node),
+     * active filters in Zowe Explorer's trees are not cleared.
+     * @version 3.6.0 or newer of Zowe Explorer
+     * @param profile Name of the profile or the loaded profile to log out
+     * @returns {Promise<boolean>} true if logout succeeded, false otherwise
+     * @throws {Error} if no profile exists with the given name
+     */
+    ssoLogout?(profile: string | imperative.IProfileLoaded): Promise<boolean>;
 }
