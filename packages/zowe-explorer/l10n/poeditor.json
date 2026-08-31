@@ -1354,6 +1354,7 @@
   "Fixed an issue where the mismatch etag error returned was not triggering the diff editor, resulting in possible loss of data due to the issue. <a>#2277</a>": "",
   "Fixed an issue where the onProfileUpdated event emitter was not guaranteed to be the same across Zowe Explorer and extenders, causing some event listeners to not fire when an extender fires the event emitter. <a>#3622</a>": "",
   "Fixed an issue where the onProfilesUpdate event did not fire after secure credentials were updated. <a>#2822</a>": "",
+  "Fixed an issue where the pound sign in a resource URI caused the data sets table view to strip off part of the resource path, causing table actions to fail. Now, supported characters are preserved in URIs when passed to the data sets table. <a>#4467</a>": "",
   "Fixed an issue where the profile status did not refresh after updating credentials <a>#4141</a>": "",
   "Fixed an issue where the remote conflict icons showed when using the \"Compare with Selected\" feature. <a>#3085</a>": "",
   "Fixed an issue where the selected profile name changed after the first Unix command was executed. <a>#4446</a>": "",

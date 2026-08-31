@@ -39,6 +39,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where migrated data sets were sorted incorrectly in favorites. [#4371](https://github.com/zowe/zowe-explorer-vscode/issues/4371)
 - Updated `js-yaml` and `nanoid` dependencies for technical currency. [#4447](https://github.com/zowe/zowe-explorer-vscode/pull/4447)
 - Fixed an issue where the selected profile name changed after the first Unix command was executed. [#4446](https://github.com/zowe/zowe-explorer-vscode/issues/4446)
+- Fixed an issue where the pound sign in a resource URI caused the data sets table view to strip off part of the resource path, causing table actions to fail. Now, supported characters are preserved in URIs when passed to the data sets table. [#4467](https://github.com/zowe/zowe-explorer-vscode/issues/4467)
 
 ## `3.5.1`
 
