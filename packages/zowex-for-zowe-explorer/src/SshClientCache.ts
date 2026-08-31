@@ -149,6 +149,7 @@ export class SshClientCache extends vscode.Disposable {
 
         if (!this.mClientSessionMap.has(clientId)) {
             using _lock = this.acquireProfileLock(clientId);
+            const statusBarMsg = Gui.setStatusBarMessage(`$(sync~spin) Restarting zowex server for profile "${profile.name as string}"...`);
             const session = ZSshUtils.buildSession(profile.profile!);
 
             let serverPath = ConfigUtils.getServerPath(profile.profile) ?? ZSshClient.DEFAULT_SERVER_PATH;
@@ -254,6 +255,7 @@ export class SshClientCache extends vscode.Disposable {
                 startTime: Date.now(),
                 responseTimeoutMillis: responseTimeout * 1000,
             });
+            statusBarMsg.dispose();
         }
 
         return this.mClientSessionMap.get(clientId)?.client as ZSshClient;
@@ -275,7 +277,7 @@ export class SshClientCache extends vscode.Disposable {
         try {
             // Reconnecting can take up to the server startup timeout, so surface progress
             // rather than leaving the user with no feedback after they click Reload
-            await Gui.withProgress(
+            const reconnectPromise = Gui.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,
                     title: `Reconnecting to Zowe Remote SSH for profile "${profile.name as string}"...`,
@@ -295,6 +297,8 @@ export class SshClientCache extends vscode.Disposable {
                     });
                 }
             );
+            Gui.setStatusBarMessage(`$(sync~spin) Restarting zowex server for profile "${profile.name as string}"...`, reconnectPromise);
+            await reconnectPromise;
             Gui.showMessage(`Reconnected to Zowe Remote SSH for profile "${profile.name as string}".`);
         } catch (err) {
             if (clientSession) {

@@ -31,6 +31,10 @@ export class Utilities {
             vscode.commands.registerCommand(`zowe.zowex.uninstall`, async (profName?: string) => {
                 await Utilities.uninstallCallback(zoweExplorerApi, profName);
             }),
+            // DEBUG ONLY — simulate a fatal ZRS crash to test the reload prompt and status bar message
+            vscode.commands.registerCommand(`zowe.zowex.debugSimulateCrash`, async (profName?: string) => {
+                await Utilities.debugSimulateCrash(zoweExplorerApi, profName);
+            }),
         ];
     }
 
@@ -121,5 +125,24 @@ export class Utilities {
         const infoMsg = `Uninstalled Zowe Remote SSH server from ${(profile.profile.host as string) ?? profile.name}`;
         imperative.Logger.getAppLogger().info(infoMsg);
         await Gui.showMessage(infoMsg);
+    }
+
+    // DEBUG ONLY — remove before merging to main
+    private static async debugSimulateCrash(zoweExplorerApi: IApiExplorerExtender, profName?: string): Promise<void> {
+        const profCache = zoweExplorerApi.getProfilesCache();
+        const vscePromptApi = new VscePromptApi(await profCache.getProfileInfo());
+        const profile = await vscePromptApi.promptForProfile(profName, { prioritizeProjectLevelConfig: false, disableCreateNewProfile: true });
+        if (!profile?.profile) {
+            return;
+        }
+        const clientId = `${profile.name}_${profile.type}`;
+        // Inject a fake session so handleClientError has something to work with
+        const cache = SshClientCache.inst as any;
+        if (!cache.mClientSessionMap.has(clientId)) {
+            vscode.window.showErrorMessage(`No active session found for profile "${profile.name as string}". Connect first then try again.`);
+            return;
+        }
+        // Simulate a fatal crash error — triggers the Reload/Reload and Retry popup
+        (cache as any).handleClientError(clientId, new Error("Fatal error encountered in zowex: simulated crash for testing"));
     }
 }
