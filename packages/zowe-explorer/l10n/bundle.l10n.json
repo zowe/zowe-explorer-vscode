@@ -33,7 +33,7 @@
   "**Breaking:** Zowe Explorer no longer uses a temporary directory for storing Data Sets and USS files. All settings related to the temporary downloads folder have been removed. In order to access resources stored by Zowe Explorer V3, refer to the <a>FileSystemProvider documentation</a> for information on how to build and access resource URIs. Extenders can detect changes to resources using the onResourceChanged function in the ZoweExplorerApiRegister class. <a>#2951</a>": "**Breaking:** Zowe Explorer no longer uses a temporary directory for storing Data Sets and USS files. All settings related to the temporary downloads folder have been removed. In order to access resources stored by Zowe Explorer V3, refer to the <a>FileSystemProvider documentation</a> for information on how to build and access resource URIs. Extenders can detect changes to resources using the onResourceChanged function in the ZoweExplorerApiRegister class. <a>#2951</a>",
   "**Breaking:** Zowe Explorer no longer uses a temporary directory for storing Data Sets and USS files. All settings related to the temporary downloads folder have been removed. In order to access resources stored by Zowe Explorer v3, refer to the <a>FileSystemProvider documentation</a> for information on how to build and access resource URIs. Extenders can detect changes to resources using the onResourceChanged function in the ZoweExplorerApiRegister class. <a>#2951</a>": "**Breaking:** Zowe Explorer no longer uses a temporary directory for storing Data Sets and USS files. All settings related to the temporary downloads folder have been removed. In order to access resources stored by Zowe Explorer v3, refer to the <a>FileSystemProvider documentation</a> for information on how to build and access resource URIs. Extenders can detect changes to resources using the onResourceChanged function in the ZoweExplorerApiRegister class. <a>#2951</a>",
   "**Commands:** issue TSO, console, and z/OS UNIX commands.": "**Commands:** issue TSO, console, and z/OS UNIX commands.",
-  "**Confirmation before deploying.** A dialog explains that connecting may deploy the server. Click **Connect, don't ask me again** to skip it in future, or turn off the **Zowe: Confirm Ssh Server Deploy** setting.": "**Confirmation before deploying.** A dialog explains that connecting may deploy the server. Click **Connect, don't ask me again** to skip it in future, or turn off the **Zowe: Confirm Ssh Server Deploy** setting.",
+  "**Confirmation before deploying.** A dialog explains that connecting might deploy the server. Click **Connect, don't ask me again** to skip it in future, or turn off the **Zowe: Confirm Ssh Server Deploy** setting.": "**Confirmation before deploying.** A dialog explains that connecting might deploy the server. Click **Connect, don't ask me again** to skip it in future, or turn off the **Zowe: Confirm Ssh Server Deploy** setting.",
   "**Data sets:** list and filter data sets and members, read and write contents, create data sets and members, allocate like, copy data sets and members (including across LPARs), rename, recall migrated data sets, delete, search members for a string, and view attributes including member ISPF statistics.": "**Data sets:** list and filter data sets and members, read and write contents, create data sets and members, allocate like, copy data sets and members (including across LPARs), rename, recall migrated data sets, delete, search members for a string, and view attributes including member ISPF statistics.",
   "**Deprecated:** Passing a string to the condition property of a TableView action. Use a function instead.": "**Deprecated:** Passing a string to the condition property of a TableView action. Use a function instead.",
   "**Disk space check.** If z/OS UNIX does not appear to have enough free space for the server, you get a warning. Click **Deploy** to continue anyway.": "**Disk space check.** If z/OS UNIX does not appear to have enough free space for the server, you get a warning. Click **Deploy** to continue anyway.",
@@ -64,6 +64,10 @@
   "1 member": "1 member",
   "1/1 member": "1/1 member",
   "<a>#2828</a>": "<a>#2828</a>",
+  "A FeatureFlags.isEnabledInSettings helper function for reading feature toggles from VS Code settings, for example, Table Views": "A FeatureFlags.isEnabledInSettings helper function for reading feature toggles from VS Code settings, for example, Table Views",
+  "A FsDatasetsUtils.trimExtension helper function for removing the file extension added to data set URIs": "A FsDatasetsUtils.trimExtension helper function for removing the file extension added to data set URIs",
+  "A Table.View.trackRows function to record rows delivered to a webview outside the normal update flow": "A Table.View.trackRows function to record rows delivered to a webview outside the normal update flow",
+  "A handleError and an errorMessage helper functions to replace repeated if (err instanceof Error) checks": "A handleError and an errorMessage helper functions to replace repeated if (err instanceof Error) checks",
   "A profile does not exist for this file.": "A profile does not exist for this file.",
   "A search must be set for {0} before it can be added to a workspace./Name of USS session": {
     "message": "A search must be set for {0} before it can be added to a workspace.",
@@ -260,6 +264,7 @@
   "Allow extenders to add context menu actions to a top level node, i.e. data sets, USS, Jobs, by encoding the profile type in the context value. <a>#3309</a>": "Allow extenders to add context menu actions to a top level node, i.e. data sets, USS, Jobs, by encoding the profile type in the context value. <a>#3309</a>",
   "Also available for a PDS in the Favorites tree": "Also available for a PDS in the Favorites tree",
   "An SSH profile will be used for issuing UNIX commands with the profile {0}.": "An SSH profile will be used for issuing UNIX commands with the profile {0}.",
+  "An optional resolveAlias function on MainframeInteraction.IMvs for providing data set alias support": "An optional resolveAlias function on MainframeInteraction.IMvs for providing data set alias support",
   "Applied credential manager options from imperative.json to default credential manager": "Applied credential manager options from imperative.json to default credential manager",
   "Apply Filter Options": "Apply Filter Options",
   "Apply changes": "Apply changes",
@@ -2512,10 +2517,6 @@
       "Data Set Search Pattern"
     ]
   },
-  "a FeatureFlags.isEnabledInSettings helper function for reading feature toggles from VS Code settings, e.g. Table Views,": "a FeatureFlags.isEnabledInSettings helper function for reading feature toggles from VS Code settings, e.g. Table Views,",
-  "a FsDatasetsUtils.trimExtension helper function for removing the file extension added to data set URIs, and": "a FsDatasetsUtils.trimExtension helper function for removing the file extension added to data set URIs, and",
-  "a Table.View.trackRows function to record rows delivered to a webview outside the normal update flow.": "a Table.View.trackRows function to record rows delivered to a webview outside the normal update flow.",
-  "a handleError and an errorMessage helper functions to replace repeated if (err instanceof Error) checks,": "a handleError and an errorMessage helper functions to replace repeated if (err instanceof Error) checks,",
   "action is not supported for this property type.": "action is not supported for this property type.",
   "addFileSystemEvent function to the ZoweExplorerApiRegister class to allow extenders to register their FileSystemProvider onDidChangeFile events.": "addFileSystemEvent function to the ZoweExplorerApiRegister class to allow extenders to register their FileSystemProvider onDidChangeFile events.",
   "all PDS members in {0}/Node label": {
@@ -2524,7 +2525,6 @@
       "Node label"
     ]
   },
-  "an optional resolveAlias function on MainframeInteraction.IMvs for providing data set alias support,": "an optional resolveAlias function on MainframeInteraction.IMvs for providing data set alias support,",
   "c, d, f, l, p, or s": "c, d, f, l, p, or s",
   "copyName was called on USS node {0}, but its fullPath is invalid./USS node label": {
     "message": "copyName was called on USS node {0}, but its fullPath is invalid.",
