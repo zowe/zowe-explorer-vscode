@@ -419,19 +419,16 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
     /** @internal Called by DatasetFSProvider during singleton construction. */
     public setDatasetFSProvider(provider: IZoweFSProvider): void {
         this.datasetFSProvider = provider;
-        this.fileApi = undefined;
     }
 
     /** @internal Called by UssFSProvider during singleton construction. */
     public setUssFSProvider(provider: IZoweFSProvider): void {
         this.ussFSProvider = provider;
-        this.fileApi = undefined;
     }
 
     /** @internal Called by JobFSProvider during singleton construction. */
     public setJobFSProvider(provider: IZoweFSProvider): void {
         this.jobFSProvider = provider;
-        this.fileApi = undefined;
     }
 
     /**
