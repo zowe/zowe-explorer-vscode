@@ -1,6 +1,6 @@
 ## `3.6.0`
 
-**Note:** Zowe Explorer now requires VS Code 1.101 or higher, as announced in the 3.5.0 release notes. This ensures you are running on Node.js 22, since Node.js 20 reached its End of Life on April 30, 2026 and no longer receives security fixes.
+**Note:** Zowe Explorer now requires VS Code 1.101 or higher, as announced in the 3.5.0 release notes. This ensures you are running on Node.js 22, which reached its End of Life on April 30 and no longer receives security fixes.
 
 ### Zowe Remote SSH for Zowe Explorer
 
@@ -14,7 +14,7 @@ Run **Zowe Explorer: Deploy SSH server on host and connect...** from the command
 
 This release adds several checks before anything is written to the host:
 
-- **Confirmation before deploying.** A dialog explains that connecting may deploy the server. Click **Connect, don't ask me again** to skip it in future, or turn off the **Zowe: Confirm Ssh Server Deploy** setting.
+- **Confirmation before deploying.** A dialog explains that connecting might deploy the server. Click **Connect, don't ask me again** to skip it in future, or turn off the **Zowe: Confirm Ssh Server Deploy** setting.
 - **Disk space check.** If z/OS UNIX does not appear to have enough free space for the server, you get a warning. Click **Deploy** to continue anyway.
 - **Reuse of an existing server.** If your profile has no `serverPath`, Zowe Explorer looks for `zowex` on your `$PATH` on USS and uses that instead of deploying another copy.
 - **Write access check.** If you do not have write access to the deploy directory, Zowe Explorer warns you instead of deploying.
@@ -85,11 +85,11 @@ Migrated data sets are also now sorted correctly in **Favorites**.
 
 The Zowe Explorer API adds:
 
-- a `handleError` and an `errorMessage` helper functions to replace repeated `if (err instanceof Error)` checks,
-- an optional `resolveAlias` function on `MainframeInteraction.IMvs` for providing data set alias support,
-- a `FeatureFlags.isEnabledInSettings` helper function for reading feature toggles from VS Code settings, e.g. Table Views,
-- a `FsDatasetsUtils.trimExtension` helper function for removing the file extension added to data set URIs, and
-- a `Table.View.trackRows` function to record rows delivered to a webview outside the normal update flow.
+- A `handleError` and an `errorMessage` helper functions to replace repeated `if (err instanceof Error)` checks
+- An optional `resolveAlias` function on `MainframeInteraction.IMvs` for providing data set alias support
+- A `FeatureFlags.isEnabledInSettings` helper function for reading feature toggles from VS Code settings, for example, Table Views
+- A `FsDatasetsUtils.trimExtension` helper function for removing the file extension added to data set URIs
+- A `Table.View.trackRows` function to record rows delivered to a webview outside the normal update flow
 
 **Deprecated:** Passing a `string` to the `condition` property of a `TableView` action. Use a function instead.
 
