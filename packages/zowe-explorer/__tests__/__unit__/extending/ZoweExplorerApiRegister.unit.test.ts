@@ -326,6 +326,15 @@ describe("ZoweExplorerApiRegister unit testing", () => {
             expect(register.getFileApi().getEncodingForUri(uri)).toBeUndefined();
         });
 
+        it("getEncodingForUri returns encoding from JobFSProvider for a Jobs URI", () => {
+            const register = ZoweExplorerApiRegister.getInstance();
+            const uri = vscode.Uri.from({ scheme: ZoweScheme.Jobs, path: "/profile/JOB00001/spool" });
+            const expected = { kind: "other", codepage: "IBM-1047" } as const;
+            JobFSProvider.instance.encodingMap[uri.path] = expected;
+            expect(register.getFileApi().getEncodingForUri(uri)).toBe(expected);
+            delete JobFSProvider.instance.encodingMap[uri.path];
+        });
+
         it("invalidateCacheForUri delegates to the correct provider", () => {
             const register = ZoweExplorerApiRegister.getInstance();
             const uri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/DATA.SET" });
