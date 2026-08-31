@@ -15,7 +15,16 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import * as vscode from "vscode";
-import { AuthHandler, ErrorCorrelator, Gui, imperative, ProfilesCache, ZoweVsCodeExtension, FsAbstractUtils } from "@zowe/zowe-explorer-api";
+import {
+    AuthHandler,
+    ErrorCorrelator,
+    Gui,
+    IZoweTreeNode,
+    imperative,
+    ProfilesCache,
+    ZoweVsCodeExtension,
+    FsAbstractUtils,
+} from "@zowe/zowe-explorer-api";
 import {
     createAltTypeIProfile,
     createInstanceOfProfile,
@@ -1589,6 +1598,285 @@ describe("ProfilesUtils unit tests", () => {
                 profile: {},
             };
             expect(ProfilesUtils.hasNoAuthType(session, profile)).toBeTruthy();
+        });
+    });
+
+    describe("changePassword", () => {
+        function createChangePasswordMocks() {
+            const fakeProfile: imperative.IProfileLoaded = {
+                name: "testProfile",
+                type: "zosmf",
+                message: "",
+                failNotFound: false,
+                profile: { user: "IBMUSER", password: "oldPass1" },
+            };
+            const fakeSession = {
+                ISession: { password: "oldPass1" },
+            } as unknown as imperative.Session;
+            const mockNode = {
+                getProfile: vi.fn().mockReturnValue(fakeProfile),
+            } as unknown as IZoweTreeNode;
+
+            const changePasswordFn = vi.fn().mockResolvedValue({ success: true, returnCode: 0, reasonCode: 0, message: "" });
+            const mockCommonApi = {
+                changePassword: changePasswordFn,
+                getSession: vi.fn().mockReturnValue(fakeSession),
+            };
+
+            const mockApiRegister = {
+                getCommonApi: vi.fn().mockReturnValue(mockCommonApi),
+            };
+            ProfilesUtils.setApiRegister(mockApiRegister as any);
+
+            const unlockProfileSpy = vi.spyOn(AuthHandler, "unlockProfile").mockImplementation(() => {});
+            const profileUpdatedEmitter = { fire: vi.fn() };
+            vi.spyOn(ZoweVsCodeExtension, "onProfileUpdatedEmitter", "get").mockReturnValue(profileUpdatedEmitter as any);
+            vi.spyOn(imperative.AuthOrder, "addCredsToSession").mockImplementation(() => {});
+
+            const errorMessageSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+            const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+            const warningMessageSpy = vi.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+            const showMessageSpy = vi.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
+            const showInputBoxSpy = vi.spyOn(Gui, "showInputBox");
+
+            return {
+                fakeProfile,
+                fakeSession,
+                mockNode,
+                mockCommonApi,
+                mockApiRegister,
+                changePasswordFn,
+                unlockProfileSpy,
+                profileUpdatedEmitter,
+                errorMessageSpy,
+                infoMessageSpy,
+                warningMessageSpy,
+                showMessageSpy,
+                showInputBoxSpy,
+            };
+        }
+
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it("should show error if node has no profile", async () => {
+            const mocks = createChangePasswordMocks();
+            const nodeWithoutProfile = { getProfile: vi.fn().mockReturnValue(null) } as unknown as IZoweTreeNode;
+            await ProfilesUtils.changePassword(nodeWithoutProfile);
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith("No profile found for the selected node.");
+        });
+
+        it("should show error if no API is found for the profile", async () => {
+            const mocks = createChangePasswordMocks();
+            ProfilesUtils.setApiRegister({
+                getCommonApi: vi.fn().mockImplementation(() => {
+                    throw new Error("No API");
+                }),
+            } as any);
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith("No API found for the selected profile.");
+        });
+
+        it("should show error if changePassword is not supported by the API", async () => {
+            const mocks = createChangePasswordMocks();
+            ProfilesUtils.setApiRegister({
+                getCommonApi: vi.fn().mockReturnValue({
+                    getSession: vi.fn().mockReturnValue(mocks.fakeSession),
+                }),
+            } as any);
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Change Password is not supported"));
+        });
+
+        it("should show error if unable to create a session", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.mockCommonApi.getSession = vi.fn().mockReturnValue(undefined);
+            ProfilesUtils.setApiRegister({
+                getCommonApi: vi.fn().mockReturnValue(mocks.mockCommonApi),
+            } as any);
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith("Unable to create a session for the selected profile.");
+        });
+
+        it("should cancel if old password input is dismissed", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy.mockResolvedValueOnce(undefined); // old password cancelled
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.infoMessageSpy).toHaveBeenCalledWith("Operation cancelled");
+            expect(mocks.changePasswordFn).not.toHaveBeenCalled();
+        });
+
+        it("should show error if old password does not match stored credentials", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy.mockResolvedValueOnce("wrongPassword"); // old password mismatch
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith("Current password does not match the stored credentials. Password was not changed.");
+            expect(mocks.changePasswordFn).not.toHaveBeenCalled();
+        });
+
+        it("should let the server validate the current password when it is not stored locally", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.fakeSession.ISession.password = undefined;
+            mocks.fakeSession.ISession.user = "IBMUSER";
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("someOldPass") // old password, cannot be compared locally
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce("newPass456"); // confirm
+            new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    getProfileInfo: vi.fn().mockResolvedValue({
+                        updateProperty: vi.fn().mockResolvedValue(undefined),
+                        isSecured: vi.fn().mockReturnValue(true),
+                    }),
+                    updateCachedProfile: vi.fn(),
+                },
+                configurable: true,
+            });
+            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({ refreshElement: vi.fn() } as any);
+
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.errorMessageSpy).not.toHaveBeenCalled();
+            expect(mocks.changePasswordFn).toHaveBeenCalledWith(mocks.fakeSession, "newPass456");
+        });
+
+        it("should clear the unverified password from the session when the server rejects the change", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.fakeSession.ISession.password = undefined;
+            mocks.fakeSession.ISession.user = "IBMUSER";
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("wrongOldPass") // old password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce("newPass456"); // confirm
+            mocks.changePasswordFn.mockRejectedValueOnce(new Error("Authentication failed"));
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.fakeSession.ISession.password).toBeUndefined();
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to change password: Authentication failed"));
+        });
+
+        it("should show error if neither a password nor a user is available for the profile", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.fakeSession.ISession.password = undefined;
+            mocks.showInputBoxSpy.mockResolvedValueOnce("someOldPass"); // old password
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Manage Profile -> Update Credentials"));
+            expect(mocks.changePasswordFn).not.toHaveBeenCalled();
+        });
+
+        it("should cancel if new password input is dismissed", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("oldPass1") // old password
+                .mockResolvedValueOnce(undefined); // new password cancelled
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.infoMessageSpy).toHaveBeenCalledWith("Operation cancelled");
+            expect(mocks.changePasswordFn).not.toHaveBeenCalled();
+        });
+
+        it("should show error if old password and new password are the same", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("oldPass1") // old password
+                .mockResolvedValueOnce("oldPass1"); // new password
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("New password cannot be the same as old password"));
+        });
+
+        it("should cancel if confirm password input is dismissed", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("oldPass1") // old password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce(undefined); // confirm cancelled
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.infoMessageSpy).toHaveBeenCalledWith("Operation cancelled");
+            expect(mocks.changePasswordFn).not.toHaveBeenCalled();
+        });
+
+        it("should show error if new password and confirm password do not match", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("oldPass1") // old password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce("differentPass"); // confirm mismatch
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith("Passwords do not match. Password was not changed.");
+            expect(mocks.changePasswordFn).not.toHaveBeenCalled();
+        });
+
+        it("should show error if changePassword API call fails", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("oldPass1") // old password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce("newPass456"); // confirm
+            mocks.changePasswordFn.mockRejectedValueOnce(new Error("Server rejected request"));
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to change password: Server rejected request"));
+        });
+
+        it("should show error if the changePassword response is unsuccessful", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("oldPass1") // old password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce("newPass456"); // confirm
+            mocks.changePasswordFn.mockResolvedValueOnce({ success: false, returnCode: 8, reasonCode: 2, message: "Change password failed." });
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to change password: Change password failed."));
+        });
+
+        it("should show warning if credentials update locally fails after server change", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("oldPass1") // old password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce("newPass456"); // confirm
+            new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: { getProfileInfo: vi.fn().mockRejectedValue(new Error("Disk write error")) },
+                configurable: true,
+            });
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.changePasswordFn).toHaveBeenCalledWith(mocks.fakeSession, "newPass456");
+            expect(mocks.warningMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Password changed on the server but failed"));
+        });
+
+        it("should successfully change password and show success message", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("oldPass1") // old password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce("newPass456"); // confirm
+            const mockProfInfo = {
+                updateProperty: vi.fn().mockResolvedValue(undefined),
+                isSecured: vi.fn().mockReturnValue(true),
+            };
+            const updateCachedProfileMock = vi.fn().mockResolvedValue(undefined);
+            new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    getProfileInfo: vi.fn().mockResolvedValue(mockProfInfo),
+                    updateCachedProfile: updateCachedProfileMock,
+                },
+                configurable: true,
+            });
+            const mockTreeProvider = { refreshElement: vi.fn() } as any;
+            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue(mockTreeProvider);
+
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.changePasswordFn).toHaveBeenCalledWith(mocks.fakeSession, "newPass456");
+            expect(mockProfInfo.updateProperty).toHaveBeenCalledWith({
+                profileName: "testProfile",
+                profileType: "zosmf",
+                property: "password",
+                value: "newPass456",
+                setSecure: true,
+            });
+            expect(mocks.fakeProfile.profile.password).toBe("newPass456");
+            expect(mocks.fakeSession.ISession.password).toBe("newPass456");
+            expect(updateCachedProfileMock).toHaveBeenCalledWith(mocks.fakeProfile, mocks.mockNode);
+            expect(mocks.unlockProfileSpy).toHaveBeenCalledWith(mocks.fakeProfile, true);
+            expect(mocks.profileUpdatedEmitter.fire).toHaveBeenCalledWith(mocks.fakeProfile);
+            expect(mocks.showMessageSpy).toHaveBeenCalledWith("Password for testProfile was successfully changed");
         });
     });
 });
