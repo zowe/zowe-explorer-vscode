@@ -353,14 +353,12 @@ describe("invalidateCache", () => {
     it("does nothing when the parent directory does not exist", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
-        // URI with no matching parent — should not throw
         expect(() => prov.invalidateCache(globalMocks.testFileUri)).not.toThrow();
     });
 
     it("does nothing when the entry is not in the parent directory", () => {
         const prov = new (BaseProvider as any)();
         prov.root = new DirEntry("");
-        // Parent exists but entry is absent — no-op
         expect(() => prov.invalidateCache(globalMocks.testFileUri)).not.toThrow();
         expect(prov.root.entries.size).toBe(0);
     });

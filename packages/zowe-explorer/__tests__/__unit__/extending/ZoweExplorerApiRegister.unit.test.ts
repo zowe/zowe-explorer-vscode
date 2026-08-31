@@ -338,7 +338,6 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         it("invalidateCacheForUri does nothing for an unknown scheme", () => {
             const register = ZoweExplorerApiRegister.getInstance();
             const uri = vscode.Uri.from({ scheme: "unknown", path: "/some/path" });
-            // No provider registered — should not throw
             expect(() => register.getFileApi().invalidateCacheForUri(uri)).not.toThrow();
         });
     });
