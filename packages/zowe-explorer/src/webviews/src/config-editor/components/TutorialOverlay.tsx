@@ -110,6 +110,41 @@ function getTargetRect(selectors?: string[]): Rect | null {
   return unionRects(rects);
 }
 
+// Picks where to place the info modal relative to the spotlighted target rect.
+function computeModalPosition(
+  rect: Rect,
+  modalWidth: number,
+  modalHeight: number,
+  viewportW: number,
+  viewportH: number
+): { top: number; left: number } {
+  const paddedTop = rect.top - SPOTLIGHT_PADDING;
+  const paddedLeft = rect.left - SPOTLIGHT_PADDING;
+  const paddedRight = rect.left + rect.width + SPOTLIGHT_PADDING;
+  const paddedBottom = rect.top + rect.height + SPOTLIGHT_PADDING;
+
+  const clampLeft = (left: number) => Math.max(VIEWPORT_MARGIN, Math.min(left, viewportW - modalWidth - VIEWPORT_MARGIN));
+  const clampTop = (top: number) => Math.max(VIEWPORT_MARGIN, Math.min(top, viewportH - modalHeight - VIEWPORT_MARGIN));
+
+  if (paddedBottom + MODAL_GAP + modalHeight <= viewportH - VIEWPORT_MARGIN) {
+    return { top: paddedBottom + MODAL_GAP, left: clampLeft(paddedLeft) };
+  }
+  if (paddedTop - MODAL_GAP - modalHeight >= VIEWPORT_MARGIN) {
+    return { top: paddedTop - MODAL_GAP - modalHeight, left: clampLeft(paddedLeft) };
+  }
+  if (paddedRight + MODAL_GAP + modalWidth <= viewportW - VIEWPORT_MARGIN) {
+    return { top: clampTop(paddedTop), left: paddedRight + MODAL_GAP };
+  }
+  if (paddedLeft - MODAL_GAP - modalWidth >= VIEWPORT_MARGIN) {
+    return { top: clampTop(paddedTop), left: paddedLeft - MODAL_GAP - modalWidth };
+  }
+
+  return {
+    top: Math.max(VIEWPORT_MARGIN, Math.min(viewportH - modalHeight - VIEWPORT_MARGIN, (viewportH - modalHeight) / 2)),
+    left: clampLeft(paddedRight + MODAL_GAP),
+  };
+}
+
 interface TutorialOverlayProps {
   onClose: () => void;
   selectedProfileKey: string | null;
@@ -184,22 +219,7 @@ export function TutorialOverlay({ onClose, selectedProfileKey, onSelectProfile }
     const modalWidth = modalEl?.offsetWidth ?? Math.min(600, viewportW * 0.9);
     const modalHeight = modalEl?.offsetHeight ?? 250;
 
-    const paddedTop = rect.top - SPOTLIGHT_PADDING;
-    const paddedLeft = rect.left - SPOTLIGHT_PADDING;
-    const paddedBottom = rect.top + rect.height + SPOTLIGHT_PADDING;
-
-    let top: number;
-    if (paddedBottom + MODAL_GAP + modalHeight <= viewportH - VIEWPORT_MARGIN) {
-      top = paddedBottom + MODAL_GAP;
-    } else if (paddedTop - MODAL_GAP - modalHeight >= VIEWPORT_MARGIN) {
-      top = paddedTop - MODAL_GAP - modalHeight;
-    } else {
-      top = Math.max(VIEWPORT_MARGIN, Math.min(viewportH - modalHeight - VIEWPORT_MARGIN, (viewportH - modalHeight) / 2));
-    }
-
-    const left = Math.max(VIEWPORT_MARGIN, Math.min(paddedLeft, viewportW - modalWidth - VIEWPORT_MARGIN));
-
-    setModalPosition({ top, left });
+    setModalPosition(computeModalPosition(rect, modalWidth, modalHeight, viewportW, viewportH));
   }, [current.targetSelectors]);
 
   useLayoutEffect(() => {

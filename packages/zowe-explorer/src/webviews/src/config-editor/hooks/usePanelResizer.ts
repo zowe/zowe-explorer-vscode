@@ -45,11 +45,14 @@ export function usePanelResizer({
         }
     }, [profilesWidthPercent]);
 
-    // Apply stored width on initialization and when configurations change
     useEffect(() => {
-        if (configurations.length > 0) {
-            setTimeout(applyStoredWidth, 100);
+        if (configurations.length === 0) {
+            return;
         }
+        let rafId = requestAnimationFrame(() => {
+            rafId = requestAnimationFrame(applyStoredWidth);
+        });
+        return () => cancelAnimationFrame(rafId);
     }, [profilesWidthPercent, configurations, applyStoredWidth]);
 
     // Resize divider functionality
