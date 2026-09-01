@@ -573,6 +573,7 @@ describe("ZoweUSSNode Unit Tests - Function node.rename()", () => {
 
         const newUri = vscode.Uri.from({
             scheme: "zowe-uss",
+            query: "",
             path: "/sestest/u/user/newName",
         });
 
