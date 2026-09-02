@@ -166,5 +166,4 @@ export interface HandleErrorOpts {
  */
 export interface IZoweFSProvider {
     encodingMap: Record<string, ZosEncoding>;
-    invalidateCache(uri: vscode.Uri): void;
 }

@@ -444,10 +444,6 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
                 const provider = this.providerForScheme(uri.scheme);
                 return provider?.encodingMap[uri.path];
             },
-            invalidateCacheForUri: (uri: vscode.Uri): void => {
-                const provider = this.providerForScheme(uri.scheme);
-                provider?.invalidateCache(uri);
-            },
         };
         return this.fileApi;
     }

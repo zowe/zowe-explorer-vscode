@@ -32,13 +32,6 @@ export namespace Types {
          * @returns the encoding if found, otherwise undefined
          */
         getEncodingForUri(uri: Uri): ZosEncoding | undefined;
-
-        /**
-         * Invalidates the cache for a given URI, forcing the next read/revert
-         * to download fresh content from the mainframe.
-         * @param uri the URI of the resource
-         */
-        invalidateCacheForUri(uri: Uri): void;
     };
 
     export type IApiRegisterClient = IRegisterClient & {

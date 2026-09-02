@@ -2907,7 +2907,6 @@ describe("DatasetFSProvider", () => {
 
             DatasetFSProvider.instance.invalidateCache(testUris.ps);
         });
-
     });
 
     describe("remoteLookupForResource with migrated directory entry", () => {

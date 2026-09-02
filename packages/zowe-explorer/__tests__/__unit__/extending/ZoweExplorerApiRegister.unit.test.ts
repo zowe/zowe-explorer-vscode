@@ -335,19 +335,5 @@ describe("ZoweExplorerApiRegister unit testing", () => {
             delete JobFSProvider.instance.encodingMap[uri.path];
         });
 
-        it("invalidateCacheForUri delegates to the correct provider", () => {
-            const register = ZoweExplorerApiRegister.getInstance();
-            const uri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/DATA.SET" });
-            const invalidateSpy = vi.spyOn(DatasetFSProvider.instance, "invalidateCache").mockImplementation(() => {});
-            register.getFileApi().invalidateCacheForUri(uri);
-            expect(invalidateSpy).toHaveBeenCalledWith(uri);
-            invalidateSpy.mockRestore();
-        });
-
-        it("invalidateCacheForUri does nothing for an unknown scheme", () => {
-            const register = ZoweExplorerApiRegister.getInstance();
-            const uri = vscode.Uri.from({ scheme: "unknown", path: "/some/path" });
-            expect(() => register.getFileApi().invalidateCacheForUri(uri)).not.toThrow();
-        });
     });
 });
