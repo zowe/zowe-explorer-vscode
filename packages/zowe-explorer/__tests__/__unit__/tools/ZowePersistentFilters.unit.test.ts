@@ -13,6 +13,8 @@ import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 import { ZowePersistentFilters } from "../../../src/tools/ZowePersistentFilters";
+import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
+import { Constants } from "../../../src/configuration/Constants";
 
 describe("PersistentFilters Unit Test", () => {
     Object.defineProperty(ZoweLogger, "trace", { value: vi.fn(), configurable: true });
@@ -48,9 +50,53 @@ describe("PersistentFilters Unit Test", () => {
         it("should pop search history if history length is larger than max length", () => {
             const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.USS, 1, 1);
             const privatePf = pf as any;
-            privatePf.mSearchHistory = ["testOne"];
+            privatePf.mSearchHistory = { __default__: ["testOne"] };
             pf.addSearchHistory("testTwo");
             expect(pf.getSearchHistory()).toEqual(["testTwo"]);
+        });
+
+        it("should keep all profiles in one group when grouping is disabled (default)", () => {
+            const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.USS, 5, 5);
+            pf.addSearchHistory("fromHostA", { profile: { host: "hostA" } } as any);
+            pf.addSearchHistory("fromHostB", { profile: { host: "hostB" } } as any);
+            expect(pf.getSearchHistory()).toEqual(["fromHostB", "fromHostA"]);
+        });
+
+        it("should group history by host when zowe.settings.historyGroupByHost is enabled", () => {
+            const settingsSpy = vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string, defaultValue?: any) => {
+                if (key === Constants.SETTINGS_HISTORY_GROUP_BY_HOST) {
+                    return true;
+                }
+                return defaultValue;
+            });
+            const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.USS, 5, 5);
+            const profileA = { profile: { host: "hostA" } } as any;
+            const profileB = { profile: { host: "hostB" } } as any;
+            pf.addSearchHistory("fromHostA", profileA);
+            pf.addSearchHistory("fromHostB", profileB);
+
+            expect(pf.getSearchHistory(profileA)).toEqual(["fromHostA"]);
+            expect(pf.getSearchHistory(profileB)).toEqual(["fromHostB"]);
+            expect(pf.getSearchHistory()).toEqual(expect.arrayContaining(["fromHostA", "fromHostB"]));
+            settingsSpy.mockRestore();
+        });
+
+        it("should group by historyGroup override instead of host when set", () => {
+            const settingsSpy = vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string, defaultValue?: any) => {
+                if (key === Constants.SETTINGS_HISTORY_GROUP_BY_HOST) {
+                    return true;
+                }
+                return defaultValue;
+            });
+            const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.USS, 5, 5);
+            const profileZosmf = { profile: { host: "10.1.2.3", historyGroup: "sysA" } } as any;
+            const profileSsh = { profile: { host: "mvs1.company.com", historyGroup: "sysA" } } as any;
+            pf.addSearchHistory("viaZosmf", profileZosmf);
+            pf.addSearchHistory("viaSsh", profileSsh);
+
+            expect(pf.getSearchHistory(profileZosmf)).toEqual(["viaSsh", "viaZosmf"]);
+            expect(pf.getSearchHistory(profileSsh)).toEqual(["viaSsh", "viaZosmf"]);
+            settingsSpy.mockRestore();
         });
     });
     describe("addFileHistory()", () => {
@@ -74,9 +120,28 @@ describe("PersistentFilters Unit Test", () => {
     describe("removeSearchHistory", () => {
         it("should remove the specified item from the persistent object", () => {
             const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.Job, 2, 2);
-            pf["mSearchHistory"] = ["test1", "test2"];
+            pf["mSearchHistory"] = { __default__: ["test1", "test2"] };
             pf.removeSearchHistory("test1");
             expect(pf.getSearchHistory().length).toEqual(1);
+        });
+
+        it("should remove a matching item regardless of which group it is in", () => {
+            const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.Job, 2, 2);
+            pf["mSearchHistory"] = { hostA: ["test1"], hostB: ["test2"] };
+            pf.removeSearchHistory("test1");
+            expect(pf.getSearchHistory()).toEqual(["test2"]);
+        });
+    });
+
+    describe("initialize() search history migration", () => {
+        it("should migrate a legacy flat-array searchHistory into the default group", () => {
+            const spy = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+                persistence: true,
+                searchHistory: ["legacyOne", "legacyTwo"],
+            } as any);
+            const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.Dataset, 5, 5);
+            expect(pf.getSearchHistory()).toEqual(["legacyOne", "legacyTwo"]);
+            spy.mockRestore();
         });
     });
     describe("removeSearchedKeywordHistory", () => {

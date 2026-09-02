@@ -1692,14 +1692,14 @@ Would you like to do this now?`,
         }
     }
 
-    public addSearchHistory(criteria: string): void {
+    public addSearchHistory(criteria: string, profile?: imperative.IProfileLoaded): void {
         ZoweLogger.trace("DatasetTree.addSearchHistory called.");
-        this.mPersistence.addSearchHistory(criteria);
+        this.mPersistence.addSearchHistory(criteria, profile);
     }
 
-    public getSearchHistory(): string[] {
+    public getSearchHistory(profile?: imperative.IProfileLoaded): string[] {
         ZoweLogger.trace("DatasetTree.getSearchHistory called.");
-        return this.mPersistence.getSearchHistory();
+        return this.mPersistence.getSearchHistory(profile);
     }
 
     public addSearchedKeywordHistory(criteria: string): void {
@@ -1795,7 +1795,7 @@ Would you like to do this now?`,
     public createFilterString(newFilter: string, node: IZoweDatasetTreeNode): string {
         ZoweLogger.trace("DatasetTree.createFilterString called.");
         // Store previous filters (before refreshing)
-        let theFilter = this.getSearchHistory()[0] || null;
+        let theFilter = this.getSearchHistory(node.getProfile())[0] || null;
 
         // Check if filter is currently applied
         if (node.pattern != null && node.pattern !== "" && theFilter) {
@@ -1868,11 +1868,11 @@ Would you like to do this now?`,
                 return;
             } else {
                 memberNode.getParent().collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-                this.addSearchHistory(`${parentName}(${memberName})`);
+                this.addSearchHistory(`${parentName}(${memberName})`, sessionNode.getProfile());
                 await vscode.commands.executeCommand(memberNode.command.command, memberNode.resourceUri);
             }
         } else {
-            this.addSearchHistory(parentName);
+            this.addSearchHistory(parentName, sessionNode.getProfile());
             await vscode.commands.executeCommand(parentNode.command.command, parentNode.resourceUri);
         }
     }
@@ -2037,8 +2037,10 @@ Would you like to do this now?`,
             ZoweLogger.debug(vscode.l10n.t("Prompting the user for a data set pattern"));
             node.inFilterPrompt = true;
             try {
-                if (this.mPersistence.getSearchHistory().length > 0) {
-                    const items: vscode.QuickPickItem[] = this.mPersistence.getSearchHistory().map((element) => new FilterItem({ text: element }));
+                if (this.mPersistence.getSearchHistory(node.getProfile()).length > 0) {
+                    const items: vscode.QuickPickItem[] = this.mPersistence
+                        .getSearchHistory(node.getProfile())
+                        .map((element) => new FilterItem({ text: element }));
                     const quickpick = Gui.createQuickPick();
                     quickpick.placeholder = vscode.l10n.t("Select a filter or type to create a new one");
                     quickpick.ignoreFocusOut = true;
@@ -2161,7 +2163,7 @@ Would you like to do this now?`,
             this.nodeDataChanged(node);
         }
         if (addToHistory) {
-            this.addSearchHistory(pattern);
+            this.addSearchHistory(pattern, profile);
         }
 
         // Update context menu for session node

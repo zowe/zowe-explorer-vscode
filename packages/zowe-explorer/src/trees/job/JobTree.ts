@@ -667,10 +667,10 @@ Would you like to do this now?`,
         return this.mPersistence.readFavorites();
     }
 
-    public async getUserJobsMenuChoice(): Promise<FilterItem | undefined> {
+    public async getUserJobsMenuChoice(profile?: imperative.IProfileLoaded): Promise<FilterItem | undefined> {
         ZoweLogger.trace("JobTree.getUserJobsMenuChoice called.");
         const items: FilterItem[] = this.mPersistence
-            .getSearchHistory()
+            .getSearchHistory(profile)
             .map((element) => new FilterItem({ text: element, menuType: Definitions.JobPickerTypes.History }));
 
         // VSCode route to create a QuickPick
@@ -716,7 +716,7 @@ Would you like to do this now?`,
 
     public async applyRegularSessionSearchLabel(node: IZoweJobTreeNode): Promise<string | undefined> {
         ZoweLogger.trace("JobTree.applyRegularSessionsSearchLabel called.");
-        const choice = await this.getUserJobsMenuChoice();
+        const choice = await this.getUserJobsMenuChoice(node.getProfile());
         const searchCriteriaObj = await this.getUserSearchQueryInput(choice, node);
 
         if (!searchCriteriaObj) {
@@ -872,7 +872,7 @@ Would you like to do this now?`,
                         }
                     }
                     node.tooltip = toolTipList.join("\n");
-                    this.addSearchHistory(searchCriteria);
+                    this.addSearchHistory(searchCriteria, node.getProfile());
                     await TreeViewUtils.expandNode(node, this);
                 }
             } else {

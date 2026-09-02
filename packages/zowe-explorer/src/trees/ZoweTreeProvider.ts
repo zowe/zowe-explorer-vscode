@@ -163,9 +163,9 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         }
     }
 
-    public getSearchHistory(): string[] {
+    public getSearchHistory(profile?: imperative.IProfileLoaded): string[] {
         ZoweLogger.trace("ZoweTreeProvider.getSearchHistory called.");
-        return this.mPersistence.getSearchHistory();
+        return this.mPersistence.getSearchHistory(profile);
     }
 
     public getTreeType(): PersistenceSchemaEnum {
@@ -173,10 +173,10 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         return this.persistenceSchema;
     }
 
-    public addSearchHistory(criteria: string): void {
+    public addSearchHistory(criteria: string, profile?: imperative.IProfileLoaded): void {
         ZoweLogger.trace("ZoweTreeProvider.addSearchHistory called.");
         if (criteria) {
-            this.mPersistence.addSearchHistory(criteria);
+            this.mPersistence.addSearchHistory(criteria, profile);
         }
     }
 

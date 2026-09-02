@@ -92,7 +92,7 @@ export namespace Definitions {
         migratedFavorites?: string[];
         history: string[];
         sessions: string[];
-        searchHistory: string[];
+        searchHistory: string[] | Record<string, string[]>;
         fileHistory: string[];
         encodingHistory: string[];
         templates: Types.DataSetAllocTemplate[];

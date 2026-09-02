@@ -886,7 +886,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         }
         node.dirty = true;
         if (addHistory) {
-            this.addSearchHistory(sanitizedPath);
+            this.addSearchHistory(sanitizedPath, node.getProfile());
         }
         await TreeViewUtils.expandNode(node, this);
         this.refresh();
@@ -905,8 +905,10 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             let remotepath: string;
             if (SharedContext.isSessionNotFav(node)) {
                 ZoweLogger.debug(vscode.l10n.t("Prompting the user for a USS path"));
-                if (this.mPersistence.getSearchHistory().length > 0) {
-                    const items: vscode.QuickPickItem[] = this.mPersistence.getSearchHistory().map((element) => new FilterItem({ text: element }));
+                if (this.mPersistence.getSearchHistory(node.getProfile()).length > 0) {
+                    const items: vscode.QuickPickItem[] = this.mPersistence
+                        .getSearchHistory(node.getProfile())
+                        .map((element) => new FilterItem({ text: element }));
                     const quickpick = Gui.createQuickPick();
                     quickpick.placeholder = vscode.l10n.t("Select a filter or type to create a new one");
                     quickpick.ignoreFocusOut = true;
@@ -1311,7 +1313,7 @@ Would you like to do this now?`,
         sessionNode.tooltip = sessionNode.fullPath = `/${nodePath.slice(0, nodePath.length - 1).join("/")}`;
         sessionNode.label = `${sessionNode.getProfileName()} [/${nodePath.join("/")}]`;
         sessionNode.dirty = true;
-        this.addSearchHistory(`[${sessionNode.getProfileName()}]: /${nodePath.join("/")}`);
+        this.addSearchHistory(`[${sessionNode.getProfileName()}]: /${nodePath.join("/")}`, sessionNode.getProfile());
         const children = await sessionNode.getChildren();
 
         // Reveal the searched item in the tree
