@@ -2971,4 +2971,43 @@ describe("DatasetFSProvider", () => {
             expect(result.type).toBe(FileType.File);
         });
     });
+
+    describe("remoteLookupForResource with fetch=true", () => {
+        it("fetches a sequential data set from the mainframe even if it is already cached locally", async () => {
+            const dataSetMock = vi.fn().mockResolvedValue({
+                success: true,
+                apiResponse: {
+                    items: [{ dsname: "USER.DATA.PS", dsorg: "PS", vol: "VOL001" }],
+                },
+                commandResponse: "",
+            });
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                dataSet: dataSetMock,
+            } as any);
+            vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+                getCommonApi: () => ({
+                    getSession: () => ({ ISession: { type: imperative.SessConstants.AUTH_TYPE_BASIC } }),
+                }),
+                registeredApiTypes: vi.fn().mockReturnValue(["zosmf"]),
+            } as any);
+            vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testProfile,
+            });
+            vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(true);
+
+            // Simulate a data set that is already cached locally (e.g. from a previous fetch).
+            const cachedPs = Object.assign(Object.create(Object.getPrototypeOf(testEntries.ps)), testEntries.ps);
+            vi.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue(cachedPs);
+
+            const fetchUri = testUris.ps.with({ query: "fetch=true" });
+            const result = await DatasetFSProvider.instance.remoteLookupForResource(fetchUri);
+
+            // The data set was already cached, but fetch=true should still trigger a remote lookup.
+            expect(dataSetMock).toHaveBeenCalledWith("USER.DATA.PS", { attributes: true, maxLength: 1 });
+            expect((result as DsEntry).stats?.vol).toBe("VOL001");
+        });
+    });
 });
