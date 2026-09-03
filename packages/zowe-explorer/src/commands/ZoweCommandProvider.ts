@@ -145,7 +145,10 @@ export abstract class ZoweCommandProvider {
                 this.history.addSearchHistory(command);
             }
         } catch (error) {
-            await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile });
+            const authUpdated = await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Command, profile });
+            if (authUpdated) {
+                await this.issueCommand(profile, command);
+            }
         }
     }
 
