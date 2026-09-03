@@ -30,6 +30,7 @@ export class BaseProvider {
     protected root: DirEntry;
     public openedUris: vscode.Uri[] = [];
     public onDocClosedEventDisposable: vscode.Disposable = null;
+    public encodingMap: Record<string, ZosEncoding> = {};
 
     protected constructor() {}
 

@@ -160,10 +160,3 @@ export interface HandleErrorOpts {
     additionalContext?: string;
 }
 
-/**
- * Minimal interface that each FS provider exposes for cache and encoding queries.
- * Used by {@link Types.IZoweExplorerFileApi} to avoid coupling the API register to concrete provider classes.
- */
-export interface IZoweFSProvider {
-    encodingMap: Record<string, ZosEncoding>;
-}

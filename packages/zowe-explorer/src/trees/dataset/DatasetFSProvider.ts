@@ -51,11 +51,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, this.onDidChangeFile);
         ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => this.updateProfile(profile));
-        ZoweExplorerApiRegister.getInstance().setDatasetFSProvider(this);
+        ZoweExplorerApiRegister.getInstance().registerFSProvider(ZoweScheme.DS, this);
         this.root = new DirEntry("");
     }
-
-    public encodingMap: Record<string, ZosEncoding> = {};
 
     /**
      * @returns the Data Set FileSystemProvider singleton instance

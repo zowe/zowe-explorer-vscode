@@ -26,7 +26,6 @@ import {
     FsJobsUtils,
     FsAbstractUtils,
     ZoweExplorerApiType,
-    ZosEncoding,
     AuthHandler,
 } from "@zowe/zowe-explorer-api";
 import { IDownloadSpoolContentParms, IJob, IJobFile } from "@zowe/zos-jobs-for-zowe-sdk";
@@ -58,11 +57,9 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.Jobs, this.onDidChangeFile);
         ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => this.updateProfile(profile));
-        ZoweExplorerApiRegister.getInstance().setJobFSProvider(this);
+        ZoweExplorerApiRegister.getInstance().registerFSProvider(ZoweScheme.Jobs, this);
         this.root = new DirEntry("");
     }
-
-    public encodingMap: Record<string, ZosEncoding> = {};
 
     public static get instance(): JobFSProvider {
         if (!JobFSProvider._instance) {
