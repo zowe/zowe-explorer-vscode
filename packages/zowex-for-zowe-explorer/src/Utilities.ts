@@ -122,5 +122,4 @@ export class Utilities {
         imperative.Logger.getAppLogger().info(infoMsg);
         await Gui.showMessage(infoMsg);
     }
-
 }

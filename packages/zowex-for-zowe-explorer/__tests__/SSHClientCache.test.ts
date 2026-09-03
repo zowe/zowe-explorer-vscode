@@ -251,15 +251,23 @@ describe("SshClientCache", () => {
             expect(map.has(clientId)).toBe(true);
         });
 
-        it("should show a status bar spinner while connecting a new session and dispose it on success", async () => {
+        it("should show a status bar spinner while connecting a new session and always dispose it", async () => {
             const disposeSpy = vi.fn();
             vi.mocked(Gui.setStatusBarMessage).mockReturnValue({ dispose: disposeSpy } as any);
 
             await cache.connect(mockProfile);
 
-            expect(Gui.setStatusBarMessage).toHaveBeenCalledWith(
-                expect.stringContaining("zowex server")
-            );
+            expect(Gui.setStatusBarMessage).toHaveBeenCalledWith(expect.stringContaining("Starting Zowe Remote SSH server"));
+            expect(disposeSpy).toHaveBeenCalled();
+        });
+
+        it("should dispose the status bar spinner even when connect throws an error", async () => {
+            const disposeSpy = vi.fn();
+            vi.mocked(Gui.setStatusBarMessage).mockReturnValue({ dispose: disposeSpy } as any);
+            vi.mocked(ZSshClient.create).mockRejectedValueOnce(new Error("connection failed"));
+
+            await expect(cache.connect(mockProfile)).rejects.toThrow("connection failed");
+
             expect(disposeSpy).toHaveBeenCalled();
         });
 
@@ -604,7 +612,7 @@ describe("SshClientCache", () => {
             await (cache as any).reloadClient(mockProfile);
 
             expect(Gui.setStatusBarMessage).toHaveBeenCalledWith(
-                expect.stringContaining("Restarting zowex server"),
+                expect.stringContaining("Restarting Zowe Remote SSH server"),
                 expect.anything() // the reconnectPromise thenable — VS Code auto-disposes when it settles
             );
         });
@@ -619,10 +627,7 @@ describe("SshClientCache", () => {
             // The spinner is shown immediately (before the await), so it is always created.
             // VS Code auto-dismisses it when the hideAfterTimeout promise rejects; dispose() is
             // only called explicitly on the success path.
-            expect(Gui.setStatusBarMessage).toHaveBeenCalledWith(
-                expect.stringContaining("Restarting zowex server"),
-                expect.anything()
-            );
+            expect(Gui.setStatusBarMessage).toHaveBeenCalledWith(expect.stringContaining("Restarting Zowe Remote SSH server"), expect.anything());
             expect(disposeSpy).not.toHaveBeenCalled();
         });
 
