@@ -1,10 +1,10 @@
 ## `3.6.0`
 
-**Note:** Zowe Explorer now requires VS Code 1.101 or higher, as announced in the 3.5.0 release notes. This ensures you are running on Node.js 22, which reached its End of Life on April 30 and no longer receives security fixes.
+**Note:** Zowe Explorer now requires VS Code 1.101 or higher, as announced in the 3.5.0 release notes. This ensures you are running on a supported node version. Node.js v20 reached End of Life on April 30th, 2026
 
 ### Zowe Remote SSH for Zowe Explorer
 
-Zowe Remote SSH is now generally available and ships with Zowe Explorer. It lets you work with data sets, USS files, and jobs over SSH, so you can use Zowe Explorer on systems where z/OSMF is not available.
+The Zowe Remote SSH capabilities are now built into Zowe Explorer. It allows you to work with data sets, USS files, and jobs using the SSH protocol on systems where z/OSMF is not available.
 
 It works by deploying a small server program called `zowex` to z/OS UNIX on the host you connect to. Zowe Explorer then talks to that server over your existing SSH connection. You need an `ssh` profile in your team configuration to get started.
 
@@ -24,7 +24,7 @@ This release adds several checks before anything is written to the host:
 - **Zowe Explorer: Restart zowex server on host...** restarts a server that is not responding.
 - **Zowe Explorer: Uninstall zowex server from host...** removes the server from the host.
 
-If the connection drops, Zowe Explorer offers to reconnect. The **Reload** and **Reload and Retry** actions now work as expected, show progress while reconnecting, and confirm on success. Repeated failures no longer stack up duplicate prompts for the same profile.
+If the connection drops, Zowe Explorer offers to reconnect. The **Reload** and **Reload and Retry** available actions show progress while reconnecting and confirm on success. Repeated failures no longer stack up duplicate prompts for the same profile.
 
 #### What you can do with an SSH profile
 
@@ -33,7 +33,7 @@ If the connection drops, Zowe Explorer offers to reconnect. The **Reload** and *
 - **Jobs:** list and filter jobs by status, view spool files and JCL, submit JCL, cancel, and delete.
 - **Commands:** issue TSO, console, and z/OS UNIX commands.
 
-Migrating data sets and uploading a local directory to USS are not supported over SSH yet.
+**Note:** Migrating data sets and uploading a local directory to USS are not supported over SSH yet.
 
 #### Keeping the server up to date
 
@@ -41,7 +41,7 @@ Zowe Explorer checks the version of the server on the host and updates it when i
 
 #### If you tried the preview
 
-Zowe Remote SSH was previously available as a separate preview extension. Now that it is part of Zowe Explorer, its settings have been renamed to match, so update your `settings.json` if you set any of them:
+Zowe Remote SSH was previously available as a separate preview extension. Now that it is part of Zowe Explorer, its settings have been renamed to match, so update your `settings.json` if you previously set any of them:
 
 - `zowex-vsce.requestTimeout` is now `zowe.settings.requestTimeout`.
 - Every other `zowex-vsce.*` setting keeps its name with the prefix changed to `zowe.zowex.*`.
