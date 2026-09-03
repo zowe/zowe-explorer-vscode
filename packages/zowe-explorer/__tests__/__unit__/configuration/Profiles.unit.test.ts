@@ -2485,6 +2485,56 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
         expect(onProfileUpdatedEmitterSpy).toHaveBeenCalledTimes(1);
         expect(onProfileUpdatedEmitterSpy).toHaveBeenCalledWith(globalMocks.testProfile);
     });
+
+    it("should logout without a tree node by resolving the profile name", async () => {
+        const clearFiltersSpy = vi.spyOn(Profiles.getInstance(), "clearFilterFromAllTrees");
+        const loadNamedProfileSpy = vi.spyOn(Profiles.getInstance(), "loadNamedProfile");
+        const getTokenTypeNameMock = vi.fn();
+        const logoutMock = vi.spyOn(ZoweVsCodeExtension, "ssoLogout").mockResolvedValueOnce(true);
+        vi.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockImplementation(() => ({
+            logout: logoutMock,
+            getSession: vi.fn(),
+            getProfileTypeName: vi.fn(),
+            getTokenTypeName: getTokenTypeNameMock,
+        }));
+        await expect(Profiles.getInstance().ssoLogout(undefined, "fake")).resolves.toBe(true);
+        expect(loadNamedProfileSpy).toHaveBeenCalledWith("fake");
+        expect(clearFiltersSpy).not.toHaveBeenCalled();
+        expect(logoutMock).toHaveBeenCalledTimes(1);
+    });
+    it("should resolve false when logout does not succeed", async () => {
+        const mockTreeProvider = {
+            mSessionNodes: [testNode],
+            onCollapsibleStateChange: vi.fn(),
+            refreshElement: vi.fn(),
+        } as any;
+        vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+        vi.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+        vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
+        const logoutMock = vi.spyOn(ZoweVsCodeExtension, "ssoLogout").mockResolvedValueOnce(false);
+        vi.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockImplementation(() => ({
+            logout: logoutMock,
+            getSession: vi.fn(),
+            getProfileTypeName: vi.fn(),
+            getTokenTypeName: vi.fn(),
+        }));
+        await expect(Profiles.getInstance().ssoLogout(testNode)).resolves.toBe(false);
+        expect(Gui.showMessage).not.toHaveBeenCalled();
+    });
+    it("should resolve false when an error occurs during logout", async () => {
+        const mockTreeProvider = {
+            mSessionNodes: [testNode],
+            onCollapsibleStateChange: vi.fn(),
+            refreshElement: vi.fn(),
+        } as any;
+        vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(mockTreeProvider);
+        vi.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(mockTreeProvider);
+        vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
+        vi.spyOn(ZoweVsCodeExtension, "ssoLogout").mockRejectedValueOnce(new Error("test error."));
+        const errorMessageSpy = vi.spyOn(Gui, "errorMessage").mockImplementation((() => undefined) as any);
+        await expect(Profiles.getInstance().ssoLogout(testNode)).resolves.toBe(false);
+        expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Unable to log out with"));
+    });
 });
 
 describe("Profiles Unit Tests - function updateBaseProfileFileLogin", () => {
