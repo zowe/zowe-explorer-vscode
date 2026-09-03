@@ -1,3 +1,104 @@
+## `3.6.0`
+
+**Note:** Zowe Explorer now requires VS Code 1.101 or higher, as announced in the 3.5.0 release notes. This ensures you are running on a supported node version. Node.js v20 reached End of Life on April 30th, 2026
+
+### Zowe Remote SSH for Zowe Explorer
+
+The Zowe Remote SSH capabilities are now built into Zowe Explorer. It allows you to work with data sets, USS files, and jobs using the SSH protocol on systems where z/OSMF is not available.
+
+It works by deploying a small server program called `zowex` to z/OS UNIX on the host you connect to. Zowe Explorer then talks to that server over your existing SSH connection. You need an `ssh` profile in your team configuration to get started.
+
+#### Connecting to a host
+
+Run **Zowe Explorer: Deploy SSH server on host and connect...** from the command palette and pick an `ssh` profile. Zowe Explorer checks the host for a server, deploys one if it is missing, and adds the profile to the **DATA SETS**, **USS**, and **JOBS** trees.
+
+This release adds several checks before anything is written to the host:
+
+- **Confirmation before deploying.** A dialog explains that connecting might deploy the server. Click **Connect, don't ask me again** to skip it in future, or turn off the **Zowe: Confirm Ssh Server Deploy** setting.
+- **Disk space check.** If z/OS UNIX does not appear to have enough free space for the server, you get a warning. Click **Deploy** to continue anyway.
+- **Reuse of an existing server.** If your profile has no `serverPath`, Zowe Explorer looks for `zowex` on your `$PATH` on USS and uses that instead of deploying another copy.
+- **Write access check.** If you do not have write access to the deploy directory, Zowe Explorer warns you instead of deploying.
+
+#### Managing the server
+
+- **Zowe Explorer: Restart zowex server on host...** restarts a server that is not responding.
+- **Zowe Explorer: Uninstall zowex server from host...** removes the server from the host.
+
+If the connection drops, Zowe Explorer offers to reconnect. The **Reload** and **Reload and Retry** available actions show progress while reconnecting and confirm on success. Repeated failures no longer stack up duplicate prompts for the same profile.
+
+#### What you can do with an SSH profile
+
+- **Data sets:** list and filter data sets and members, read and write contents, create data sets and members, allocate like, copy data sets and members (including across LPARs), rename, recall migrated data sets, delete, search members for a string, and view attributes including member ISPF statistics.
+- **USS:** list directories, read and write files, create, copy, move, rename, delete, and change file attributes.
+- **Jobs:** list and filter jobs by status, view spool files and JCL, submit JCL, cancel, and delete.
+- **Commands:** issue TSO, console, and z/OS UNIX commands.
+
+**Note:** Migrating data sets and uploading a local directory to USS are not supported over SSH yet.
+
+#### Keeping the server up to date
+
+Zowe Explorer checks the version of the server on the host and updates it when it is out of date. If you would rather keep a host on the version it already has, set `"autoUpdate": false` in your `ssh` profile.
+
+#### If you tried the preview
+
+Zowe Remote SSH was previously available as a separate preview extension. Now that it is part of Zowe Explorer, its settings have been renamed to match, so update your `settings.json` if you previously set any of them:
+
+- `zowex-vsce.requestTimeout` is now `zowe.settings.requestTimeout`.
+- Every other `zowex-vsce.*` setting keeps its name with the prefix changed to `zowe.zowex.*`.
+
+The `zowe.zowex.serverAutoUpdate` setting has also been removed in favor of the per-profile `autoUpdate` property described above. Nothing here affects you if this is your first time using Zowe Remote SSH.
+
+### Data set alias support
+
+Data set aliases now resolve to the data set they point to, both in the **DATA SETS** tree and when opening a data set through the Zowe filesystem provider. Previously an alias could not be opened.
+
+This works with `z/OSMF` profiles only in this release. Other profile types can add support through the new optional `resolveAlias` API.
+
+### Export configuration files for troubleshooting
+
+The new **Zowe Explorer: Export Redacted Configuration Files** command palette item writes out copies of your team configuration files with sensitive values removed. Use it when you need to share your setup with someone helping you troubleshoot, without sharing credentials.
+
+### Job filter improvements
+
+The **JOBS** tree filter now accepts comma-separated job prefixes, for example `JOB1*,TEST*`. This matches how the data set filter has always worked.
+
+---
+
+### Data integrity fixes
+
+Three fixes in this release address cases where Zowe Explorer could overwrite your data:
+
+- Recalling a sequential data set no longer overwrites its contents.
+- Expanding a profile in the **Favorites** section no longer uploads empty content to each favorited USS file. Previously this failed for users without write access and truncated the file for everyone else.
+- The same fix applies to favorited sequential data sets, which were being truncated the same way.
+
+Migrated data sets are also now sorted correctly in **Favorites**.
+
+### Table view improvements
+
+- **Display in Tree** is now called **Locate in Tree**, which better describes what it does.
+- The **Open** action validates the data set URI before opening it.
+- Opening a PDS member with a recognized file extension, such as JCL, from the data sets table now works.
+- The table view can be turned off with the new **Zowe > Feature Enablement: Table View** setting.
+
+### Notes for extenders
+
+The Zowe Explorer API adds:
+
+- A `handleError` and an `errorMessage` helper functions to replace repeated `if (err instanceof Error)` checks
+- An optional `resolveAlias` function on `MainframeInteraction.IMvs` for providing data set alias support
+- A `FeatureFlags.isEnabledInSettings` helper function for reading feature toggles from VS Code settings, for example, Table Views
+- A `FsDatasetsUtils.trimExtension` helper function for removing the file extension added to data set URIs
+- A `Table.View.trackRows` function to record rows delivered to a webview outside the normal update flow
+
+**Deprecated:** Passing a `string` to the `condition` property of a `TableView` action. Use a function instead.
+
+Zowe Explorer also handles extenders that return an `items` array as `undefined` or `null`, or that omit `apiResponse` entirely, instead of crashing during USS directory detection.
+
+See the respective changelogs for the full list of changes, including fixes for web extension host activation on `vscode.dev`, vault change handling, and USS context menus.
+
+---
+
 ## `3.5.0`
 
 **Warning:** This is the last release of Zowe Explorer that supports VS Code 1.90. Starting with the next minor release (Zowe v3.6), Zowe Explorer will require VS Code 1.101 or higher. This change ensures you are running on Node.js 22, as Node.js 20 reached its End of Life (EOL) on April 30, 2026, and is no longer receiving security fixes.
@@ -69,6 +170,8 @@ Localization is tied to the VS Code localization setting. If there are no locali
 
 If you wish to make localization contributions to these or generally across the rest of Zowe Explorer, please reach out in the usual places.
 
+---
+
 ## `3.4.0`
 
 ### VS Code engine support change
@@ -104,6 +207,8 @@ Added support for `encoding` profile property when retrieving JCL with z/OSMF. F
 #### Submit job with encoding
 
 Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. For example, include `"jobEncoding": "IBM-1147"` in the z/OSMF profile to submit jobs with "IBM-1147" encoding.
+
+---
 
 ## `3.3.0`
 
@@ -150,6 +255,8 @@ Active jobs in the filtered profile automatically refresh at the specified inter
 ![3.3-active-jobs-polling-2](./resources/release-notes/3.3-active-jobs-polling-2.png)
 
 When all jobs have completed, polling automatically stops. Alternatively, to stop polling, right-click the profile again and select **Stop Polling Active Jobs**.
+
+---
 
 ## `3.2.0`
 
@@ -201,6 +308,8 @@ The **USS** tree can now be filtered by any selected directory. Right-click a di
 Hovering over a data set, USS, or jobs profile now displays detailed connection information.
 
 ![3.2-hover-1](./resources/release-notes/3.2-hover-1.png)
+
+---
 
 ## `3.1.0`
 
@@ -260,5 +369,7 @@ Add data sets, USS profiles, or USS directories to a VS Code workspace to group 
 ### Edit history
 
 Edit history allows viewing, deleting, or adding a profile's search/filter history for data sets, USS, and jobs. Right-click a profile and select **Edit History**.
+
+---
 
 ## `` <!-- KEEP THIS HERE AS IT MARKS END OF FILE -->
