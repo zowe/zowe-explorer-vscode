@@ -444,7 +444,7 @@
     "Allow commands to be executed using integrated terminals": ""
   },
   "zowe.commands.zowex.connect": {
-    "Deploy SSH server on host and connect...": ""
+    "Deploy SSH server to host...": ""
   },
   "zowe.commands.zowex.restart": {
     "Restart zowex server on host...": ""
