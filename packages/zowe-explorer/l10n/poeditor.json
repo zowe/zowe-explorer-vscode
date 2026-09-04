@@ -2103,6 +2103,7 @@
   "Updated linter rules and addressed linter errors. <a>#2291</a>": "",
   "Updated minimum VS Code version from 1.79 to 1.90. We are dropping support for VS Code releases that bundle versions of Node.js no longer receiving security updates.": "",
   "Updated minimum VS Code version from 1.79 to 1.90. We are dropping support for VS Code releases that bundle versions of Node.js no longer receiving security updates. <a>#3684</a>": "",
+  "Updated sanitize-html dependency for technical currency. <a>#4478</a>": "",
   "Updated sorting of PDS members to show items without stats at bottom of list <a>#2660</a>": "",
   "Updated sorting of PDS members to show items without stats at bottom of list. <a>#2660</a>": "",
   "Updated the @zowe/cli dependency to address the \"blksz to 0 after an Allocate Like\" issue. <a>#2610</a>. Thanks @KevinLoesch1": "",
