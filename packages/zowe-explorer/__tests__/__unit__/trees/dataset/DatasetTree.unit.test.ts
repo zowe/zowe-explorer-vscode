@@ -3945,7 +3945,7 @@ describe("Dataset Tree Unit Tests - Function onDidConfiguration", () => {
 
         await testTree.onDidChangeConfiguration(event);
 
-        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenCalledTimes(2);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenCalledTimes(3);
     });
 
     it("Refreshes session nodes when pagination page size setting has changed", async () => {
@@ -3971,7 +3971,7 @@ describe("Dataset Tree Unit Tests - Function onDidConfiguration", () => {
 
         await testTree.onDidChangeConfiguration(event);
 
-        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenCalledTimes(2);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenCalledTimes(3);
         // verify that session node was refreshed after the page size was changed
         expect(refreshElement).toHaveBeenCalledTimes(2);
         expect(refreshElement).toHaveBeenCalledWith(blockMocks.datasetSessionNode);
@@ -6896,9 +6896,9 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
     describe("removeSearchHistory", () => {
         it("removes the search item passed in from the current history", () => {
             tree.addSearchHistory("test");
-            expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(1);
+            expect(tree.getSearchHistory().length).toEqual(1);
             tree.removeSearchHistory("test");
-            expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(0);
+            expect(tree.getSearchHistory().length).toEqual(0);
         });
     });
 
@@ -6908,9 +6908,9 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             tree.addSearchHistory("test2");
             tree.addSearchHistory("test3");
             tree.addSearchHistory("test4");
-            expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(4);
+            expect(tree.getSearchHistory().length).toEqual(4);
             tree.resetSearchHistory();
-            expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(0);
+            expect(tree.getSearchHistory().length).toEqual(0);
         });
     });
 
