@@ -28,15 +28,16 @@ export class ZowePersistentFilters {
     private static readonly memberFavorites: string = "memberFavorites";
     private static readonly migratedFavorites: string = "migratedFavorites";
     private static readonly searchHistory: string = "searchHistory";
+    private static readonly searchHistoryByGroup: string = "searchHistoryByGroup";
     private static readonly searchedKeywordHistory: string = "searchedKeywordHistory";
     private static readonly fileHistory: string = "fileHistory";
     private static readonly sessions: string = "sessions";
     private static readonly encodingHistory: string = "encodingHistory";
     private static readonly sortSettings: string = "sortSettings";
-    private static readonly DEFAULT_GROUP: string = "__default__";
 
     public schema: PersistenceSchemaEnum;
-    private mSearchHistory: Record<string, string[]> = {};
+    private mSearchHistory: string[] = [];
+    private mSearchHistoryByGroup: Record<string, string[]> = {};
     private mFileHistory: string[] = [];
     private mSessions: string[] = [];
     private mEncodingHistory: string[] = [];
@@ -61,6 +62,22 @@ export class ZowePersistentFilters {
     private static resolveMaxSearchHistory(): number {
         const configured = SettingsConfig.getDirectValue<number>(Constants.SETTINGS_MAX_SEARCH_HISTORY, Constants.MAX_SEARCH_HISTORY);
         return typeof configured === "number" && configured > 0 ? configured : Constants.MAX_SEARCH_HISTORY;
+    }
+
+    /**
+     * Re-reads `zowe.settings.maxSearchHistory` and trims the ungrouped list and every group down to the
+     * new limit. `maxSearchHistory` is otherwise only resolved once, at construction time, so callers whose
+     * persistence instance lives for the life of the extension (the ds/uss/job tree providers) need to call
+     * this from their configuration-change handler for a lowered limit to actually shrink existing history.
+     */
+    public updateMaxSearchHistory(): void {
+        ZoweLogger.trace("PersistentFilters.updateMaxSearchHistory called.");
+        this.maxSearchHistory = ZowePersistentFilters.resolveMaxSearchHistory();
+        this.mSearchHistory = this.mSearchHistory.slice(0, this.maxSearchHistory);
+        for (const groupKey of Object.keys(this.mSearchHistoryByGroup)) {
+            this.mSearchHistoryByGroup[groupKey] = this.mSearchHistoryByGroup[groupKey].slice(0, this.maxSearchHistory);
+        }
+        this.updateSearchHistory();
     }
 
     /**
@@ -108,24 +125,31 @@ export class ZowePersistentFilters {
     public addSearchHistory(criteria: string, profile?: imperative.IProfileLoaded): void {
         ZoweLogger.trace("PersistentFilters.addSearchHistory called.");
         if (criteria) {
-            const groupKey = ZowePersistentFilters.resolveGroupKey(profile) ?? ZowePersistentFilters.DEFAULT_GROUP;
-            let group = this.mSearchHistory[groupKey] ?? [];
+            // The ungrouped list is always kept up to date, even while grouping is enabled: it is the only
+            // shape older Zowe Explorer versions can read, so a user who downgrades keeps their history.
+            this.mSearchHistory = this.pushHistoryEntry(this.mSearchHistory, criteria);
 
-            // Remove any entries that match
-            group = group.filter((element) => {
-                return element.trim() !== criteria.trim();
-            });
-
-            // Add value to front of stack
-            group.unshift(criteria);
-
-            // If list getting too large remove last entry
-            if (group.length > this.maxSearchHistory) {
-                group.pop();
+            const groupKey = ZowePersistentFilters.resolveGroupKey(profile);
+            if (groupKey) {
+                this.mSearchHistoryByGroup[groupKey] = this.pushHistoryEntry(this.mSearchHistoryByGroup[groupKey] ?? [], criteria);
             }
-            this.mSearchHistory[groupKey] = group;
             this.updateSearchHistory();
         }
+    }
+
+    /**
+     * Applies one entry to a most-recently-used list: drops any existing match, pushes the entry to the
+     * front, and trims the list back down to `maxSearchHistory`.
+     */
+    private pushHistoryEntry(list: string[], criteria: string): string[] {
+        const updated = list.filter((element) => {
+            return element.trim() !== criteria.trim();
+        });
+        updated.unshift(criteria);
+        while (updated.length > this.maxSearchHistory) {
+            updated.pop();
+        }
+        return updated;
     }
 
     /**
@@ -232,16 +256,25 @@ export class ZowePersistentFilters {
     /*********************************************************************************************************************************************/
 
     /**
-     * @param {imperative.IProfileLoaded} [profile] - when provided, returns only the history entries for this
-     * profile's group. When omitted, returns every entry across all groups (used by the "manage history" view).
+     * @param {imperative.IProfileLoaded} [profile] - when provided and grouping is enabled, returns only the
+     * entries for this profile's group, falling back to the ungrouped list while that group has no entries of
+     * its own (so history carries over when grouping is first switched on). When omitted, returns every known
+     * entry across the ungrouped list and all groups (used by the "manage history" view).
      */
     public getSearchHistory(profile?: imperative.IProfileLoaded): string[] {
         ZoweLogger.trace("PersistentFilters.getSearchHistory called.");
         if (profile) {
-            const groupKey = ZowePersistentFilters.resolveGroupKey(profile) ?? ZowePersistentFilters.DEFAULT_GROUP;
-            return this.mSearchHistory[groupKey] ?? [];
+            const groupKey = ZowePersistentFilters.resolveGroupKey(profile);
+            const group = groupKey ? this.mSearchHistoryByGroup[groupKey] : undefined;
+            return group?.length ? group : this.mSearchHistory;
         }
-        return Object.values(this.mSearchHistory).flat();
+        const allEntries = [...this.mSearchHistory];
+        for (const entry of Object.values(this.mSearchHistoryByGroup).flat()) {
+            if (!allEntries.some((element) => element.trim() === entry.trim())) {
+                allEntries.push(entry);
+            }
+        }
+        return allEntries;
     }
 
     public getSessions(): string[] {
@@ -327,12 +360,12 @@ export class ZowePersistentFilters {
     }
 
     public removeSearchHistory(name: string): void {
-        for (const group of Object.values(this.mSearchHistory)) {
-            const index = group.findIndex((searchHistoryItem) => {
+        for (const list of [this.mSearchHistory, ...Object.values(this.mSearchHistoryByGroup)]) {
+            const index = list.findIndex((searchHistoryItem) => {
                 return searchHistoryItem.includes(name);
             });
             if (index >= 0) {
-                group.splice(index, 1);
+                list.splice(index, 1);
             }
         }
         return this.updateSearchHistory();
@@ -364,7 +397,8 @@ export class ZowePersistentFilters {
 
     public resetSearchHistory(): void {
         ZoweLogger.trace("PersistentFilters.resetSearchHistory called.");
-        this.mSearchHistory = {};
+        this.mSearchHistory = [];
+        this.mSearchHistoryByGroup = {};
         this.updateSearchHistory();
     }
 
@@ -422,6 +456,7 @@ export class ZowePersistentFilters {
         const settings = { ...ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema) };
         if (settings.persistence) {
             settings.searchHistory = this.mSearchHistory;
+            settings.searchHistoryByGroup = this.mSearchHistoryByGroup;
             ZoweLocalStorage.setValue<Definitions.ZowePersistentFilter>(this.schema, settings);
         }
     }
@@ -474,8 +509,16 @@ export class ZowePersistentFilters {
         const settings = ZoweLocalStorage.getValue<Definitions.ZowePersistentFilter>(this.schema);
         if (settings) {
             const rawSearchHistory = settings[ZowePersistentFilters.searchHistory];
-            // Migrate the legacy flat-array shape (one global list) into the default group.
-            this.mSearchHistory = Array.isArray(rawSearchHistory) ? { [ZowePersistentFilters.DEFAULT_GROUP]: rawSearchHistory } : rawSearchHistory ?? {};
+            const rawSearchHistoryByGroup = settings[ZowePersistentFilters.searchHistoryByGroup];
+            if (Array.isArray(rawSearchHistory) || rawSearchHistory == null) {
+                this.mSearchHistory = rawSearchHistory ?? [];
+                this.mSearchHistoryByGroup = rawSearchHistoryByGroup ?? {};
+            } else {
+                // Pre-release builds stored the grouped map under `searchHistory` itself, which older Zowe
+                // Explorer versions cannot read. Move it to its own key and rebuild the ungrouped list.
+                this.mSearchHistoryByGroup = rawSearchHistoryByGroup ?? rawSearchHistory;
+                this.mSearchHistory = [...new Set(Object.values(this.mSearchHistoryByGroup).flat())].slice(0, this.maxSearchHistory);
+            }
             this.mSessions = settings[ZowePersistentFilters.sessions] ?? [];
             this.mFileHistory = settings[ZowePersistentFilters.fileHistory] ?? [];
             this.mEncodingHistory = settings[ZowePersistentFilters.encodingHistory] ?? [];

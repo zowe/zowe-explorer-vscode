@@ -1652,6 +1652,9 @@ Would you like to do this now?`,
                 await SettingsConfig.setDirectValue(DatasetTree.persistenceSchema, setting);
             }
         }
+        if (e.affectsConfiguration(Constants.SETTINGS_MAX_SEARCH_HISTORY)) {
+            this.mPersistence.updateMaxSearchHistory();
+        }
         if (e.affectsConfiguration(Constants.SETTINGS_DS_DEFAULT_SORT)) {
             const defaultSortOpts = SharedUtils.getDefaultSortOptions(
                 DatasetUtils.DATASET_SORT_OPTS,

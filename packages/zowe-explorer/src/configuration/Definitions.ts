@@ -92,7 +92,10 @@ export namespace Definitions {
         migratedFavorites?: string[];
         history: string[];
         sessions: string[];
-        searchHistory: string[] | Record<string, string[]>;
+        /** Ungrouped search history. Always maintained, so older Zowe Explorer versions can still read it. */
+        searchHistory: string[];
+        /** Search history grouped by host, populated only while `zowe.settings.historyGroupByHost` is enabled. */
+        searchHistoryByGroup?: Record<string, string[]>;
         fileHistory: string[];
         encodingHistory: string[];
         templates: Types.DataSetAllocTemplate[];

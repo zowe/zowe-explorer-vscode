@@ -161,6 +161,9 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 await SettingsConfig.setDirectValue(this.persistenceSchema, setting);
             }
         }
+        if (e.affectsConfiguration(Constants.SETTINGS_MAX_SEARCH_HISTORY)) {
+            this.mPersistence.updateMaxSearchHistory();
+        }
     }
 
     public getSearchHistory(profile?: imperative.IProfileLoaded): string[] {

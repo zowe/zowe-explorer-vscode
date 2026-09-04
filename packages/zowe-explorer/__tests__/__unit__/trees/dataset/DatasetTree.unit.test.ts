@@ -3945,7 +3945,7 @@ describe("Dataset Tree Unit Tests - Function onDidConfiguration", () => {
 
         await testTree.onDidChangeConfiguration(event);
 
-        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenCalledTimes(2);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenCalledTimes(3);
     });
 
     it("Refreshes session nodes when pagination page size setting has changed", async () => {
@@ -3971,7 +3971,7 @@ describe("Dataset Tree Unit Tests - Function onDidConfiguration", () => {
 
         await testTree.onDidChangeConfiguration(event);
 
-        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenCalledTimes(2);
+        expect(mocked(vscode.workspace.getConfiguration)).toHaveBeenCalledTimes(3);
         // verify that session node was refreshed after the page size was changed
         expect(refreshElement).toHaveBeenCalledTimes(2);
         expect(refreshElement).toHaveBeenCalledWith(blockMocks.datasetSessionNode);

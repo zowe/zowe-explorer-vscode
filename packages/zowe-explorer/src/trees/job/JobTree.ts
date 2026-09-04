@@ -903,6 +903,9 @@ Would you like to do this now?`,
                 await SettingsConfig.setDirectValue(JobTree.persistenceSchema, setting);
             }
         }
+        if (e.affectsConfiguration(Constants.SETTINGS_MAX_SEARCH_HISTORY)) {
+            this.mPersistence.updateMaxSearchHistory();
+        }
         if (e.affectsConfiguration(Constants.SETTINGS_JOBS_DEFAULT_SORT)) {
             const sortOpts = SharedUtils.getDefaultSortOptions(JobUtils.JOB_SORT_OPTS, Constants.SETTINGS_JOBS_DEFAULT_SORT, Sorting.JobSortOpts);
             for (const sessionNode of this.mSessionNodes) {

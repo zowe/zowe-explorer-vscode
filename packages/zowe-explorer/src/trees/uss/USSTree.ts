@@ -637,6 +637,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 await SettingsConfig.setDirectValue(USSTree.persistenceSchema, setting);
             }
         }
+        if (e.affectsConfiguration(Constants.SETTINGS_MAX_SEARCH_HISTORY)) {
+            this.mPersistence.updateMaxSearchHistory();
+        }
         // Handle showHiddenFiles setting changes - refresh the tree to show/hide hidden files
         if (e.affectsConfiguration("zowe.files.showHiddenFiles")) {
             ZoweLogger.debug("showHiddenFiles setting changed, refreshing USS tree");
