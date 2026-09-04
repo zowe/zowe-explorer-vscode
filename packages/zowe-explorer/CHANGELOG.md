@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added a `getFileApi` method to `ZoweExplorerApiRegister` that returns a file API for querying mainframe file system state. The initial API includes `getEncodingForUri`, which returns the encoding ZE has determined for a given resource URI, checking auto-detected encodings (such as USS file-tag detection) before falling back to explicitly user-selected encodings. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
 - Added a dialog to clarify that connecting to the mainframe with an SSH profile can result in deploying the SSH server if it is not present. The warning can be prevented by pressing the `"Connect, don't ask me again"` button or by setting the VS Code setting `zowe.confirmSshServerDeploy` to `false`. [#4445](https://github.com/zowe/zowe-explorer-vscode/pull/4445)
 - Added a dialog when there does not appear to be enough disk space on z/OS UNIX to deploy the SSH server, which can be bypassed by clicking the `"Deploy"` button on the dialog. [#4445](https://github.com/zowe/zowe-explorer-vscode/pull/4445)
 - Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. Currently only supported when connecting via z/OSMF. [#4438](https://github.com/zowe/zowe-explorer-vscode/pull/4438)
