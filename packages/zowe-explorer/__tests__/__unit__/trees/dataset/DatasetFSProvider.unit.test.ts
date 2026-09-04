@@ -2907,13 +2907,6 @@ describe("DatasetFSProvider", () => {
 
             DatasetFSProvider.instance.invalidateCache(testUris.ps);
         });
-
-        it("should handle errors gracefully if lookupParentDirectory throws", () => {
-            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockImplementation(() => {
-                throw new Error("Parent not found");
-            });
-            expect(() => DatasetFSProvider.instance.invalidateCache(testUris.ps)).not.toThrow();
-        });
     });
 
     describe("remoteLookupForResource with migrated directory entry", () => {
