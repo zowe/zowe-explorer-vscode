@@ -605,8 +605,14 @@
   "Enter the logical record length": "Enter the logical record length",
   "Enter the name of the data set to copy attributes from": "Enter the name of the data set to copy attributes from",
   "Enter the number of directory blocks": "Enter the number of directory blocks",
-  "Enter the password for the {0} connection. Leave blank to not store./Profile name": {
-    "message": "Enter the password for the {0} connection. Leave blank to not store.",
+  "Enter the password for the {0} connection. Leave blank to cancel./Profile name": {
+    "message": "Enter the password for the {0} connection. Leave blank to cancel.",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Enter the password for the {0} connection./Profile name": {
+    "message": "Enter the password for the {0} connection.",
     "comment": [
       "Profile name"
     ]
@@ -617,8 +623,14 @@
   "Enter the secondary space allocation": "Enter the secondary space allocation",
   "Enter the size of the data set": "Enter the size of the data set",
   "Enter the text to search for.": "Enter the text to search for.",
-  "Enter the user name for the {0} connection. Leave blank to not store./Profile name": {
-    "message": "Enter the user name for the {0} connection. Leave blank to not store.",
+  "Enter the user name for the {0} connection. Leave blank to cancel./Profile name": {
+    "message": "Enter the user name for the {0} connection. Leave blank to cancel.",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Enter the user name for the {0} connection./Profile name": {
+    "message": "Enter the user name for the {0} connection.",
     "comment": [
       "Profile name"
     ]
