@@ -6,6 +6,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added optional `ssoLogin` and `ssoLogout` functions to the `IApiExplorerExtender` interface to expose SSO login and logout capabilities to Zowe Explorer extenders. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Added an optional `resolveAlias` function to the `MainframeInteraction.IMvs` interface, initially only implemented by the `ZoweExplorerZosmf` class. [#4438](https://github.com/zowe/zowe-explorer-vscode/pull/4438)
 - Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 - Added a function `isEnabledInSettings` to the `FeatureFlags` class, which checks VS Code settings to see if a given Zowe Explorer feature ID is enabled. [#4242](https://github.com/zowe/zowe-explorer-vscode/issues/4242)
