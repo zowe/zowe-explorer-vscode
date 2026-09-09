@@ -1,7 +1,5 @@
 import * as l10n from "@vscode/l10n";
-import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
-import VscodeToolbarButton from "@vscode-elements/react-elements/dist/components/VscodeToolbarButton.js";
-
+import { VscodeToolbarButton, VscodeButton } from "@vscode-elements/react-elements";
 interface FooterProps {
   onClearChanges: () => void;
   onSaveAll: () => void;

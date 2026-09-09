@@ -10,7 +10,7 @@
  */
 
 import * as l10n from "@vscode/l10n";
-import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
+import { VscodeButton } from "@vscode-elements/react-elements";
 import type { ConfigParseError } from "../../types";
 import { ModalShell } from "../ModalShell";
 
@@ -58,9 +58,7 @@ export function ConfigParseErrorsModal({ errors, vscodeApi }: ConfigParseErrorsM
           <li key={`${err.configPath}-${i}`}>
             {err.configPath ? <div className="config-parse-error-path">{err.configPath}</div> : null}
             <div className="config-parse-error-message">{err.message}</div>
-            {err.configPath ? (
-              <VscodeButton onClick={() => handleOpenFile(err)}>{l10n.t("Open in editor")}</VscodeButton>
-            ) : null}
+            {err.configPath ? <VscodeButton onClick={() => handleOpenFile(err)}>{l10n.t("Open in editor")}</VscodeButton> : null}
           </li>
         ))}
       </ul>

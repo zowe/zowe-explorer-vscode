@@ -1,8 +1,5 @@
 import * as l10n from "@vscode/l10n";
-import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
-import VscodeTextfield from "@vscode-elements/react-elements/dist/components/VscodeTextfield.js";
-import VscodeSingleSelect from "@vscode-elements/react-elements/dist/components/VscodeSingleSelect.js";
-import VscodeOption from "@vscode-elements/react-elements/dist/components/VscodeOption.js";
+import { VscodeButton, VscodeTextfield, VscodeSingleSelect, VscodeOption } from "@vscode-elements/react-elements";
 import { ModalShell } from "../ModalShell";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 import { isFileProperty } from "../../utils/propertyUtils";

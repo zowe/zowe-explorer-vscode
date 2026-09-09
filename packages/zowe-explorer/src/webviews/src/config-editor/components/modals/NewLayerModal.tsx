@@ -1,6 +1,6 @@
 import * as l10n from "@vscode/l10n";
-import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
-import VscodeTextfield from "@vscode-elements/react-elements/dist/components/VscodeTextfield.js";
+import { VscodeButton, VscodeTextfield } from "@vscode-elements/react-elements";
+
 import { ModalShell } from "../ModalShell";
 
 interface NewLayerModalProps {

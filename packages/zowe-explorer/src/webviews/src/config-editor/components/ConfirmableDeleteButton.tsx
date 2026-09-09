@@ -10,7 +10,7 @@
  */
 
 import * as l10n from "@vscode/l10n";
-import VscodeToolbarButton from "@vscode-elements/react-elements/dist/components/VscodeToolbarButton.js";
+import { VscodeToolbarButton } from "@vscode-elements/react-elements";
 
 interface ConfirmableDeleteButtonProps {
   /** When true, shows the confirm/cancel pair instead of the trash button. */

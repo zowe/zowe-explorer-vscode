@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import * as l10n from "@vscode/l10n";
-import VscodeToolbarButton from "@vscode-elements/react-elements/dist/components/VscodeToolbarButton.js";
+import { VscodeToolbarButton } from "@vscode-elements/react-elements";
 import { useConfigContext } from "../context/ConfigContext";
 
 export interface TabsProps {

@@ -10,8 +10,7 @@
  */
 
 import { useCallback, useEffect, useRef } from "react";
-import VscodeToolbarButton from "@vscode-elements/react-elements/dist/components/VscodeToolbarButton.js";
-
+import { VscodeToolbarButton } from "@vscode-elements/react-elements";
 import { RenderConfig } from "./renderConfig";
 import { ConfirmableDeleteButton } from "./ConfirmableDeleteButton";
 import { flattenProfiles, ensureProfileProperties, isMergedPropertySecure, getOriginalProfileKey } from "../utils";
@@ -194,9 +193,7 @@ export const RenderProfileDetails = ({
 
               <VscodeToolbarButton
                 id="rename-profile"
-                onClick={
-                  selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey) ? undefined : () => setRenameProfileModalOpen(true)
-                }
+                onClick={selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey) ? undefined : () => setRenameProfileModalOpen(true)}
                 title={
                   selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey)
                     ? l10n.t(

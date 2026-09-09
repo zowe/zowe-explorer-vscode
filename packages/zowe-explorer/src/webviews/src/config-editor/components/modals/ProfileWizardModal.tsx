@@ -1,7 +1,5 @@
 import * as l10n from "@vscode/l10n";
-import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
-import VscodeSingleSelect from "@vscode-elements/react-elements/dist/components/VscodeSingleSelect.js";
-import VscodeOption from "@vscode-elements/react-elements/dist/components/VscodeOption.js";
+import { VscodeButton, VscodeSingleSelect, VscodeOption } from "@vscode-elements/react-elements";
 import { ModalShell } from "../ModalShell";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 import { useState, useRef, useEffect, useCallback } from "react";

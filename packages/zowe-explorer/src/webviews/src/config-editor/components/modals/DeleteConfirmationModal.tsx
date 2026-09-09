@@ -10,7 +10,7 @@
  */
 
 import * as l10n from "@vscode/l10n";
-import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
+import { VscodeButton } from "@vscode-elements/react-elements";
 import { ModalShell } from "../ModalShell";
 
 interface DeleteConfirmationModalProps {

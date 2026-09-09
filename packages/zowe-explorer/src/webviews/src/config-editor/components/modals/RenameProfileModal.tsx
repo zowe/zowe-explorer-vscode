@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
-import VscodeTextfield from "@vscode-elements/react-elements/dist/components/VscodeTextfield.js";
+import { VscodeButton, VscodeTextfield } from "@vscode-elements/react-elements";
 import { ModalShell } from "../ModalShell";
 import { isValidProfileNamePath, isValidProfileNameSegment, sanitizeProfileNamePath, sanitizeProfileNameSegment } from "../../utils/profileNames";
 

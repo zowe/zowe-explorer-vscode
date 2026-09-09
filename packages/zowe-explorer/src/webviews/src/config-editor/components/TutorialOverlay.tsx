@@ -12,8 +12,7 @@
 
 import { useState, useRef, useCallback, useLayoutEffect, useEffect, useMemo } from "react";
 import * as l10n from "@vscode/l10n";
-import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
-import VscodeToolbarButton from "@vscode-elements/react-elements/dist/components/VscodeToolbarButton.js";
+import { VscodeButton, VscodeToolbarButton } from "@vscode-elements/react-elements";
 import { useConfigContext } from "../context/ConfigContext";
 
 interface TutorialStep {
@@ -305,11 +304,7 @@ export function TutorialOverlay({ onClose, selectedProfileKey, onSelectProfile }
         <div className="tutorial-content">
           <div className="tutorial-progress-steps" role="progressbar" aria-valuenow={step + 1} aria-valuemin={1} aria-valuemax={total}>
             {steps.map((tutorialStep, index) => (
-              <div
-                key={tutorialStep.title}
-                className={`tutorial-progress-step ${index <= step ? "completed" : ""}`}
-                title={tutorialStep.title}
-              />
+              <div key={tutorialStep.title} className={`tutorial-progress-step ${index <= step ? "completed" : ""}`} title={tutorialStep.title} />
             ))}
           </div>
           <p className="tutorial-progress-text">{l10n.t("Step {0} of {1}", step + 1, total)}</p>

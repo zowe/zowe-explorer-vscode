@@ -10,7 +10,7 @@
  */
 
 import type { Dispatch, SetStateAction } from "react";
-import VscodeToolbarButton from "@vscode-elements/react-elements/dist/components/VscodeToolbarButton.js";
+import { VscodeToolbarButton } from "@vscode-elements/react-elements";
 import { toggleProfileDefault } from "../utils/profileHelpers";
 
 type SimplePendingDefaultsMap = { [configPath: string]: { [key: string]: { value: string; path: string[] } } };

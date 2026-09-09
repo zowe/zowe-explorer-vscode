@@ -10,9 +10,7 @@
  */
 
 import * as l10n from "@vscode/l10n";
-import VscodeTextfield from "@vscode-elements/react-elements/dist/components/VscodeTextfield.js";
-import VscodeSingleSelect from "@vscode-elements/react-elements/dist/components/VscodeSingleSelect.js";
-import VscodeOption from "@vscode-elements/react-elements/dist/components/VscodeOption.js";
+import { VscodeTextfield, VscodeSingleSelect, VscodeOption } from "@vscode-elements/react-elements";
 import { stringifyValueByType, getPropertyTypeForConfigEditor } from "../../utils";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 import type { RenderConfigCtx } from "./context";

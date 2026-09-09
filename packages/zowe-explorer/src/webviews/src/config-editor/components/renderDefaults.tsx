@@ -11,8 +11,7 @@
 
 import { useCallback } from "react";
 import * as l10n from "@vscode/l10n";
-import VscodeSingleSelect from "@vscode-elements/react-elements/dist/components/VscodeSingleSelect.js";
-import VscodeOption from "@vscode-elements/react-elements/dist/components/VscodeOption.js";
+import { VscodeSingleSelect, VscodeOption } from "@vscode-elements/react-elements";
 import { useConfigContext } from "../context/ConfigContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 
