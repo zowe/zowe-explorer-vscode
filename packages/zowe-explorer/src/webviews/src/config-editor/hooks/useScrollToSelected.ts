@@ -31,11 +31,9 @@ export function useScrollToSelected(selectedProfileKey: string | null) {
                     const isElementVisible = elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
 
                     if (!isElementVisible || elementRect.top < containerRect.top + 50 || elementRect.bottom > containerRect.bottom - 50) {
-                        selectedElement.scrollIntoView({
-                            behavior: "smooth",
-                            block: "center",
-                            inline: "nearest",
-                        });
+                        // Not scrollIntoView: that also scrolls every scrollable ancestor, jolting the whole editor.
+                        const offset = elementRect.top - containerRect.top - (container.clientHeight - elementRect.height) / 2;
+                        container.scrollTo({ top: container.scrollTop + offset, behavior: "smooth" });
                         return true;
                     }
                 }
