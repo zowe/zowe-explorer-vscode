@@ -4275,6 +4275,30 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
 
         expect(blockMocks.datasetSessionNode.pattern).toEqual("TEST");
     });
+    it("Tests that allocateLike sets dirty before refresh and does not call refreshElement", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        vi.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockResolvedValue({ success: true } as any);
+        const callOrder: string[] = [];
+        vi.spyOn(blockMocks.datasetSessionNode, "getChildren").mockImplementation(async () => {
+            callOrder.push("getChildren");
+            return [blockMocks.testNode, blockMocks.testSDSNode];
+        });
+        blockMocks.testDatasetTree.refresh.mockImplementation(() => {
+            callOrder.push("refresh");
+            // dirty must already be set when refresh fires
+            expect(blockMocks.datasetSessionNode.dirty).toBe(true);
+        });
+
+        await DatasetActions.allocateLike(blockMocks.testDatasetTree, blockMocks.testNode);
+
+        expect(callOrder[0]).toBe("refresh");
+        expect(blockMocks.testDatasetTree.refreshElement).not.toHaveBeenCalled();
+        expect(blockMocks.datasetSessionNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
+        // search history must be updated so repeated allocateLike calls don't accumulate stale filters
+        expect(blockMocks.testDatasetTree.addSearchHistory).toHaveBeenCalledWith("TEST");
+    });
     it("Tests that allocateLike fails if no profile is selected", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
@@ -4295,7 +4319,7 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
 
         expect(mocked(Gui.showMessage)).toHaveBeenCalledWith("You must enter a new data set name.");
     });
-    it("Tests that allocateLike fails if error is thrown", async () => {
+    it("Tests that allocateLike handles API error without re-throwing", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
 
@@ -4303,11 +4327,8 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
         const errorMessage = new Error("Test error");
         vi.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockRejectedValue(errorMessage);
 
-        try {
-            await DatasetActions.allocateLike(blockMocks.testDatasetTree);
-        } catch (err) {
-            // do nothing
-        }
+        // Should not throw — error is handled internally and returns gracefully
+        await expect(DatasetActions.allocateLike(blockMocks.testDatasetTree)).resolves.toBeUndefined();
 
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
         expect(errorHandlingSpy).toHaveBeenCalledWith(

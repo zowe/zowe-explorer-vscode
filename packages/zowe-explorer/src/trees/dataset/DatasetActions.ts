@@ -443,7 +443,7 @@ export class DatasetActions {
             return;
         } else {
             ZoweLogger.trace(`${newDSName} was entered for the name of the new data set.`);
-            // Allocate the data set, or throw an error
+            // Allocate the data set, or show an error
             try {
                 await ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName);
             } catch (err) {
@@ -455,7 +455,7 @@ export class DatasetActions {
                         scenario: vscode.l10n.t("Unable to create data set."),
                     });
                 });
-                throw err;
+                return;
             }
         }
 
@@ -468,9 +468,10 @@ export class DatasetActions {
 
         const theFilter = datasetProvider.createFilterString(newDSName, currSession);
         currSession.pattern = theFilter.toUpperCase();
-        datasetProvider.refresh();
+        datasetProvider.addSearchHistory(currSession.pattern);
+        currSession.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         currSession.dirty = true;
-        datasetProvider.refreshElement(currSession);
+        datasetProvider.refresh();
         const newNode = (await currSession.getChildren()).find((child) => child.label.toString() === newDSName.toUpperCase());
         await datasetProvider.getTreeView().reveal(currSession, { select: true, focus: true });
         datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
