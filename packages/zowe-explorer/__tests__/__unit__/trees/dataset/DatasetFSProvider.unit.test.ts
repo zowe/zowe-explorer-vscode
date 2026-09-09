@@ -1749,6 +1749,10 @@ describe("DatasetFSProvider", () => {
                     },
                     commandResponse: "",
                 }),
+                dataSet: vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: { items: [{ dsname: "USER.DATA.PDS", dsorg: "PO" }] },
+                }),
             } as any);
 
             const fetchUri = Uri.from({ scheme: ZoweScheme.DS, path: "sestest/USER.DATA.PDS/MEM1", query: "fetch=true" });
@@ -1789,6 +1793,65 @@ describe("DatasetFSProvider", () => {
             await DatasetFSProvider.instance.stat(fetchUri);
 
             expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri.with({ path: "/sestest/USER.DATA.PDS.NEW" }));
+        });
+        describe("PDS member stat cache lookup behavior", () => {
+            it("fetches members from remote when the PDS directory exists locally but the member is not in the cache", async () => {
+                const allMembersMock = vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [{ member: "MEM1", m4date: "2024-08-08", mtime: "12", msec: "30" }],
+                    },
+                    commandResponse: "",
+                });
+                vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    allMembers: allMembersMock,
+                } as any);
+
+                const sessionUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest" });
+                DatasetFSProvider.instance.createDirectory(sessionUri);
+                const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.UNCACHED.PDS" });
+                DatasetFSProvider.instance.createDirectory(pdsUri);
+
+                const pdsEntry = DatasetFSProvider.instance.lookup(pdsUri, true) as PdsEntry;
+
+                const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.UNCACHED.PDS/MEM1" });
+                const res = await DatasetFSProvider.instance.stat(memberUri);
+
+                expect(allMembersMock).toHaveBeenCalledWith("USER.UNCACHED.PDS", { attributes: true });
+                expect(res).toBeDefined();
+                expect(pdsEntry.entries.has("MEM1")).toBe(true);
+            });
+
+            it("uses cached member stat without making a second remote call when the member exists in the parent PDS entries map", async () => {
+                const allMembersMock = vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            { member: "MEM1", m4date: "2024-08-08", mtime: "12", msec: "30" },
+                            { member: "MEM2", m4date: "2024-08-08", mtime: "12", msec: "30" },
+                        ],
+                    },
+                    commandResponse: "",
+                });
+                vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    allMembers: allMembersMock,
+                } as any);
+
+                const sessionUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest" });
+                DatasetFSProvider.instance.createDirectory(sessionUri);
+                const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.CACHED.PDS" });
+                DatasetFSProvider.instance.createDirectory(pdsUri);
+
+                const member1Uri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.CACHED.PDS/MEM1" });
+                const member2Uri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.CACHED.PDS/MEM2" });
+
+                await DatasetFSProvider.instance.stat(member1Uri);
+                expect(allMembersMock).toHaveBeenCalledTimes(1);
+
+                const res = await DatasetFSProvider.instance.stat(member2Uri);
+                expect(allMembersMock).toHaveBeenCalledTimes(1);
+                expect(res).toBeDefined();
+            });
         });
 
         describe("mtime update scenarios", () => {
@@ -2913,6 +2976,45 @@ describe("DatasetFSProvider", () => {
             expect(mockParent.entries.get("USER.DATA.PDS")?.type).toBe(FileType.File);
             expect(result).toBeDefined();
             expect(result.type).toBe(FileType.File);
+        });
+    });
+
+    describe("remoteLookupForResource with fetch=true", () => {
+        it("fetches a sequential data set from the mainframe even if it is already cached locally", async () => {
+            const dataSetMock = vi.fn().mockResolvedValue({
+                success: true,
+                apiResponse: {
+                    items: [{ dsname: "USER.DATA.PS", dsorg: "PS", vol: "VOL001" }],
+                },
+                commandResponse: "",
+            });
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                dataSet: dataSetMock,
+            } as any);
+            vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+                getCommonApi: () => ({
+                    getSession: () => ({ ISession: { type: imperative.SessConstants.AUTH_TYPE_BASIC } }),
+                }),
+                registeredApiTypes: vi.fn().mockReturnValue(["zosmf"]),
+            } as any);
+            vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testProfile,
+            });
+            vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(true);
+
+            // Simulate a data set that is already cached locally (e.g. from a previous fetch).
+            const cachedPs = Object.assign(Object.create(Object.getPrototypeOf(testEntries.ps)), testEntries.ps);
+            vi.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue(cachedPs);
+
+            const fetchUri = testUris.ps.with({ query: "fetch=true" });
+            const result = await DatasetFSProvider.instance.remoteLookupForResource(fetchUri);
+
+            // The data set was already cached, but fetch=true should still trigger a remote lookup.
+            expect(dataSetMock).toHaveBeenCalledWith("USER.DATA.PS", { attributes: true, maxLength: 1 });
+            expect((result as DsEntry).stats?.vol).toBe("VOL001");
         });
     });
 });
