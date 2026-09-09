@@ -12,8 +12,6 @@
     --ce-overlay-scrim: rgba(0, 0, 0, 0.4);
 }
 
-vscode-textfield.config-input,
-vscode-single-select.config-input,
 vscode-textfield.modal-input,
 vscode-single-select.modal-input {
     border: none;
@@ -21,11 +19,32 @@ vscode-single-select.modal-input {
     background-color: transparent;
 }
 
-vscode-textfield.config-input:focus,
-vscode-single-select.config-input:focus,
+vscode-textfield.config-input,
+vscode-single-select.config-input {
+    display: block;
+    box-sizing: border-box;
+    padding: 0;
+    background-color: var(--ce-field-bg);
+    border: 1px solid var(--ce-field-border);
+    --vscode-focusBorder: transparent;
+}
+
+vscode-single-select.config-input {
+    --vscode-settings-dropdownBorder: transparent;
+}
+
+vscode-textfield.config-input {
+    --vscode-settings-textInputBorder: transparent;
+}
+
 vscode-textfield.modal-input:focus,
 vscode-single-select.modal-input:focus {
     box-shadow: none;
+}
+
+vscode-textfield.config-input:focus,
+vscode-single-select.config-input:focus {
+    border-color: var(--vscode-button-background);
 }
 
 vscode-single-select,
@@ -55,35 +74,7 @@ body {
     overflow: hidden;
 }
 
-@keyframes property-blink {
-    0%,
-    50%,
-    100% {
-        opacity: 0;
-    }
-    25%,
-    75% {
-        opacity: 1;
-    }
-}
-
-.property-highlight-blink {
-    position: relative;
-}
-
-.property-highlight-blink::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    border-radius: var(--ce-radius-sm);
-    box-shadow: 0 0 0 3px var(--vscode-inputValidation-warningBorder, #cca700);
-    opacity: 0;
-    animation: property-blink 0.9s ease-in-out forwards;
-}
-
-@keyframes profile-blink {
+@keyframes highlight-blink {
     0%,
     50%,
     100% {
@@ -97,10 +88,12 @@ body {
     }
 }
 
+.property-highlight-blink,
 .profile-highlight-blink {
     position: relative;
 }
 
+.property-highlight-blink::after,
 .profile-highlight-blink::after {
     content: "";
     position: absolute;
@@ -109,10 +102,10 @@ body {
     pointer-events: none;
     border-radius: var(--ce-radius-sm);
     box-shadow:
-        0 0 0 3px var(--vscode-focusBorder, #0078d4),
-        0 0 20px 4px var(--vscode-focusBorder, #0078d4);
+        0 0 0 2px var(--vscode-focusBorder, #0078d4),
+        0 0 6px 0 var(--vscode-focusBorder, #0078d4);
     opacity: 0;
-    animation: profile-blink 1.4s ease-in-out forwards;
+    animation: highlight-blink 1.4s ease-in-out forwards;
 }
 
 /* Drag and drop styles */
@@ -649,7 +642,7 @@ div:has(> .vscode-panel) {
 
 .config-input {
     flex: 1;
-    padding: 4px 8px;
+    padding: 4px 5px;
     border: 1px solid var(--ce-field-border);
     border-radius: var(--ce-radius-md);
     background-color: var(--ce-field-bg);
@@ -1253,6 +1246,10 @@ ul {
     background-repeat: no-repeat;
     background-size: contain;
     margin-top: 2px !important;
+}
+
+vscode-toolbar-button .codicon {
+    margin-top: 0 !important;
 }
 
 .tab .codicon {
@@ -2481,7 +2478,7 @@ vscode-single-select.wizard-select {
 
 .env-var-input {
     flex: 1;
-    padding: 4px 8px;
+    padding: 4px 5px;
     border: 1px solid var(--ce-field-border);
     border-radius: var(--ce-radius-md);
     background-color: var(--ce-field-bg);
