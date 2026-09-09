@@ -90,7 +90,7 @@ Feature: Profile List Management - Comprehensive Testing
 
   @config-editor @profile-sorting
   Scenario: Test profile sorting dropdown functionality
-    Then the profile sort dropdown should show "Natural" as selected
+    Then the profile sort dropdown should show "File Order" as selected
     And the profiles should be displayed in natural order
     
     When the user clicks on the profile sort dropdown
@@ -104,8 +104,8 @@ Feature: Profile List Management - Comprehensive Testing
     And the profiles should be displayed in reverse alphabetical order
     
     When the user clicks on the profile sort dropdown
-    And the user selects "Natural" from the sort dropdown
-    Then the profile sort dropdown should show "Natural" as selected
+    And the user selects "File Order" from the sort dropdown
+    Then the profile sort dropdown should show "File Order" as selected
     And the profiles should be displayed in natural order
     
     When the user switches to flat view mode
@@ -120,7 +120,7 @@ Feature: Profile List Management - Comprehensive Testing
     And the profiles should be displayed in reverse alphabetical order in flat view
     
     When the user clicks on the profile sort dropdown
-    And the user selects "Natural" from the sort dropdown
+    And the user selects "File Order" from the sort dropdown
     And the user switches to tree view mode
 
   @config-editor @profile-combined-filters

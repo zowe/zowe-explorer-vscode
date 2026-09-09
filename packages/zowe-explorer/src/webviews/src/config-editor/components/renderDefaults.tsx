@@ -11,6 +11,8 @@
 
 import { useCallback } from "react";
 import * as l10n from "@vscode/l10n";
+import VscodeSingleSelect from "@vscode-elements/react-elements/dist/components/VscodeSingleSelect.js";
+import VscodeOption from "@vscode-elements/react-elements/dist/components/VscodeOption.js";
 import { useConfigContext } from "../context/ConfigContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 
@@ -133,31 +135,29 @@ export const RenderDefaults = ({ defaults, handleDefaultsChange }: RenderDefault
                           />
                         ) : null}
                       </span>
-                      <select
+                      <VscodeSingleSelect
                         id={`default-dropdown-${key}`}
                         className={`config-input ${!displayValue ? "placeholder-style" : ""} ${hasInvalidValue ? "invalid-default" : ""}`}
                         value={displayValue || ""}
-                        onChange={(e) => handleDefaultsChange(fullKey, (e.target as HTMLSelectElement).value)}
+                        onChange={(e: any) => handleDefaultsChange(fullKey, e.target!.value as string)}
                         style={{
                           width: "100%",
                           height: "28px",
                           fontSize: "0.9em",
-                          padding: "2px 6px",
-                          marginBottom: "0",
                           minWidth: "150px",
-                          border: hasInvalidValue ? "1px solid var(--vscode-inputValidation-errorBorder, #f48771)" : undefined,
+                          border: hasInvalidValue ? "1px solid var(--ce-error-border)" : undefined,
                           color: hasInvalidValue ? "var(--vscode-input-foreground)" : undefined,
                         }}
                         title={hasInvalidValue ? l10n.t("Warning: Profile '{0}' is not a valid option", displayValue) : undefined}
                       >
-                        <option value="">{l10n.t("Select a profile")}</option>
-                        {hasInvalidValue ? <option value={displayValue}>{displayValue}</option> : null}
+                        <VscodeOption value="">{l10n.t("Select a profile")}</VscodeOption>
+                        {hasInvalidValue ? <VscodeOption value={displayValue}>{displayValue}</VscodeOption> : null}
                         {availableProfiles.map((profile) => (
-                          <option key={profile} value={profile}>
+                          <VscodeOption key={profile} value={profile}>
                             {profile === "root" ? "/" : profile}
-                          </option>
+                          </VscodeOption>
                         ))}
-                      </select>
+                      </VscodeSingleSelect>
                     </div>
                   </div>
                 );

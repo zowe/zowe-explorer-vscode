@@ -20,6 +20,7 @@
   "dependencies": {
     "@szhsin/react-menu": "^4.2.2",
     "@types/vscode-webview": "^1.57.5",
+    "@vscode-elements/react-elements": "^2.4.0",
     "@vscode/codicons": "^0.0.36",
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "ag-grid-community": "^34.0.0",

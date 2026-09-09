@@ -14,6 +14,7 @@
 
 import { useState, useCallback } from "react";
 import * as l10n from "@vscode/l10n";
+import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
 import { useAnchoredTooltip } from "../../hooks/useAnchoredTooltip";
 
 interface InheritedFromIndicatorProps {
@@ -51,16 +52,16 @@ export function InheritedFromIndicator({ profilePath, configPath, onNavigate }: 
             <p>{configPath}</p>
           </div>
           {onNavigate && (
-            <button
-              className="tutorial-button tutorial-button-secondary"
-              onClick={(e) => {
+            <VscodeButton
+              secondary
+              onClick={(e: any) => {
                 e.stopPropagation();
                 setVisible(false);
                 onNavigate();
               }}
             >
               {l10n.t("Go to source")}
-            </button>
+            </VscodeButton>
           )}
         </div>
       )}

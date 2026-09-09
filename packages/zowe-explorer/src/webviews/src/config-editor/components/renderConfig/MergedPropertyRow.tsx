@@ -14,6 +14,7 @@ import { stringifyValueByType } from "../../utils";
 import { getInheritedFromPartsWithRenames } from "./inheritedFrom";
 import { InheritedFromIndicator } from "./InheritedFromIndicator";
 import type { RenderConfigCtx } from "./context";
+import { INHERITED_INPUT_STYLE } from "./styles";
 
 interface MergedPropertyRowProps {
   ctx: RenderConfigCtx;
@@ -83,10 +84,7 @@ export function MergedPropertyRow({ ctx, fullKey, displayKey, path, mergedProps,
           value={isSecureProperty ? "••••••••" : stringifyValueByType(mergedPropData?.value ?? "")}
           disabled={true}
           style={{
-            backgroundColor: "var(--vscode-input-disabledBackground)",
-            color: "var(--vscode-descriptionForeground)",
-            cursor: "pointer",
-            pointerEvents: "none",
+            ...INHERITED_INPUT_STYLE,
             fontFamily: isSecureProperty ? "monospace" : undefined,
           }}
         />

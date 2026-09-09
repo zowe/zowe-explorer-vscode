@@ -1,4 +1,6 @@
 import * as l10n from "@vscode/l10n";
+import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
+import VscodeTextfield from "@vscode-elements/react-elements/dist/components/VscodeTextfield.js";
 import { ModalShell } from "../ModalShell";
 
 interface NewLayerModalProps {
@@ -16,25 +18,28 @@ export function NewLayerModal({ isOpen, newLayerName, onNewLayerNameChange, onAd
     <ModalShell
       isOpen={isOpen}
       onClose={onCancel}
-      initialFocusSelector="input"
+      initialFocusSelector="vscode-textfield"
       titleId="new-layer-modal-title"
       overlayClassName="modal-backdrop"
       panelClassName="modal"
     >
       <h3 id="new-layer-modal-title">{l10n.t("Add New Layer")}</h3>
-      <input
+      <VscodeTextfield
         placeholder={l10n.t("New Layer Name")}
         value={newLayerName}
-        onChange={(e) => onNewLayerNameChange((e.target as HTMLInputElement).value)}
-        onKeyDown={(e) => {
+        onInput={(e: any) => onNewLayerNameChange(e.target!.value as string)}
+        onKeyDown={(e: any) => {
           if (e.key === "Enter") {
             onAdd();
           }
         }}
+        style={{ width: "100%" }}
       />
       <div className="modal-actions">
-        <button onClick={onAdd}>{l10n.t("Add")}</button>
-        <button onClick={onCancel}>{l10n.t("Cancel")}</button>
+        <VscodeButton onClick={onAdd}>{l10n.t("Add")}</VscodeButton>
+        <VscodeButton secondary onClick={onCancel}>
+          {l10n.t("Cancel")}
+        </VscodeButton>
       </div>
     </ModalShell>
   );

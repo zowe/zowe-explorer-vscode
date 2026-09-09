@@ -1,4 +1,7 @@
 import * as l10n from "@vscode/l10n";
+import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
+import VscodeSingleSelect from "@vscode-elements/react-elements/dist/components/VscodeSingleSelect.js";
+import VscodeOption from "@vscode-elements/react-elements/dist/components/VscodeOption.js";
 import { ModalShell } from "../ModalShell";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -320,11 +323,11 @@ export function ProfileWizardModal() {
               <div className="wizard-error" id="profile-name-error">
                 {l10n.t("Profile name already exists under this root")}
               </div>
-            ) : !wizardProfileName.trim() ? (
+            ) : (
               <div className="wizard-hint" id="profile-name-required-hint">
                 {l10n.t("A profile name is required to create a profile.")}
               </div>
-            ) : null}
+            )}
           </div>
 
           {/* Type Selection with Populate Defaults Button */}
@@ -333,21 +336,21 @@ export function ProfileWizardModal() {
               {l10n.t("Profile Type")}
             </label>
             <div style={{ display: "flex", gap: "8px", alignItems: "stretch" }}>
-              <select
+              <VscodeSingleSelect
                 id="profile-type-select"
                 value={wizardSelectedType}
-                onChange={(e) => onSelectedTypeChange((e.target as HTMLSelectElement).value)}
+                onChange={(e: any) => onSelectedTypeChange(e.target!.value as string)}
                 onKeyDown={handleKeyDown}
                 className="modal-input wizard-select"
-                style={{ flex: 1 }}
+                style={{ flex: "1 1 auto", width: "100%", minWidth: 0 }}
               >
-                <option value="">{l10n.t("Select a type")}</option>
+                <VscodeOption value="">{l10n.t("Select a type")}</VscodeOption>
                 {typeOptions.map((type) => (
-                  <option key={type} value={type}>
+                  <VscodeOption key={type} value={type}>
                     {type}
-                  </option>
+                  </VscodeOption>
                 ))}
-              </select>
+              </VscodeSingleSelect>
               <button
                 id="populate-defaults-button"
                 onClick={onPopulateDefaults}
@@ -356,8 +359,11 @@ export function ProfileWizardModal() {
                 style={{
                   padding: "4px 8px",
                   fontSize: "12px",
+                  width: "32px",
                   minWidth: "32px",
                   height: "32px",
+                  flexShrink: 0,
+                  flexGrow: 0,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -368,7 +374,7 @@ export function ProfileWizardModal() {
                 }}
                 title="Populate defaults"
               >
-                <span className="codicon codicon-sparkle"></span>
+                <span className="codicon codicon-library"></span>
               </button>
             </div>
           </div>
@@ -481,7 +487,7 @@ export function ProfileWizardModal() {
                           className={`auth-order-button ${isSelected ? "selected" : ""}`}
                           title={`${getAuthMethodTooltip(authMethod)} (${isSelected ? "Click to remove" : "Click to add"})`}
                         >
-                          <span className={`codicon ${iconClass}`} style={{ marginRight: "4px" }}></span>
+                          <span className={`codicon ${iconClass}`} style={{ marginRight: "2px" }}></span>
                           {authMethod}
                         </button>
                       );
@@ -518,11 +524,11 @@ export function ProfileWizardModal() {
                     );
                   } else if (propertyType === "boolean") {
                     return (
-                      <select
+                      <VscodeSingleSelect
                         id="new-property-value-select"
                         value={wizardNewPropertyValue}
-                        onChange={(e) => onNewPropertyValueChange((e.target as HTMLSelectElement).value)}
-                        onKeyDown={(e) => {
+                        onChange={(e: any) => onNewPropertyValueChange(e.target!.value as string)}
+                        onKeyDown={(e: any) => {
                           if (e.key === "Enter") {
                             onAddProperty();
                           } else if (e.key === "Escape") {
@@ -530,10 +536,11 @@ export function ProfileWizardModal() {
                           }
                         }}
                         className="modal-input wizard-property-value-input"
+                        style={{ width: "100%" }}
                       >
-                        <option value="true">true</option>
-                        <option value="false">false</option>
-                      </select>
+                        <VscodeOption value="true">true</VscodeOption>
+                        <VscodeOption value="false">false</VscodeOption>
+                      </VscodeSingleSelect>
                     );
                   } else if (propertyType === "number") {
                     return (
@@ -639,7 +646,7 @@ export function ProfileWizardModal() {
                   ) : null}
                 </div>
               </div>
-              <button
+              <VscodeButton
                 id="add-property-button"
                 onClick={onAddProperty}
                 disabled={
@@ -650,7 +657,7 @@ export function ProfileWizardModal() {
                 className="wizard-add-property-button"
               >
                 {l10n.t("Add Property")}
-              </button>
+              </VscodeButton>
             </div>
           </div>
         </div>
@@ -729,15 +736,16 @@ export function ProfileWizardModal() {
                                     placeholder="••••••••"
                                   />
                                 ) : propertyType === "boolean" ? (
-                                  <select
+                                  <VscodeSingleSelect
                                     id={`property-value-select-${index}`}
                                     value={stringifyValueByType(prop.value)}
-                                    onChange={(e) => onPropertyValueChange(index, (e.target as HTMLSelectElement).value)}
+                                    onChange={(e: any) => onPropertyValueChange(index, e.target!.value as string)}
                                     className="modal-input wizard-property-value-input-small"
+                                    style={{ width: "100%" }}
                                   >
-                                    <option value="true">true</option>
-                                    <option value="false">false</option>
-                                  </select>
+                                    <VscodeOption value="true">true</VscodeOption>
+                                    <VscodeOption value="false">false</VscodeOption>
+                                  </VscodeSingleSelect>
                                 ) : propertyType === "number" ? (
                                   <input
                                     id={`property-value-number-${index}`}
@@ -829,14 +837,13 @@ export function ProfileWizardModal() {
       </div>
 
       <div className="wizard-actions" id="wizard-actions">
-        <button id="cancel-button" onClick={onCancel} className="wizard-button secondary">
+        <VscodeButton id="cancel-button" secondary onClick={onCancel}>
           {l10n.t("Cancel")}
-        </button>
-        <button
+        </VscodeButton>
+        <VscodeButton
           id="create-profile-button"
           onClick={onCreateProfile}
           disabled={!wizardProfileName.trim() || isProfileNameTakenValue || isParentProfileInvalid}
-          className="wizard-button primary"
           title={
             !wizardProfileName.trim()
               ? l10n.t("Enter a profile name to create the profile.")
@@ -848,7 +855,7 @@ export function ProfileWizardModal() {
           }
         >
           {l10n.t("Create Profile")}
-        </button>
+        </VscodeButton>
       </div>
     </ModalShell>
   );

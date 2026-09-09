@@ -393,6 +393,9 @@ importers:
       '@types/vscode-webview':
         specifier: ^1.57.5
         version: 1.57.5
+      '@vscode-elements/react-elements':
+        specifier: ^2.4.0
+        version: 2.4.0(@types/react@19.2.18)(@vscode/codicons@0.0.36)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@vscode/codicons':
         specifier: ^0.0.36
         version: 0.0.36
@@ -1374,6 +1377,20 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
+  '@lit-labs/ssr-dom-shim@1.6.0':
+    resolution: {integrity: sha512-VHb0ALPMTlgKjM6yIxxoQNnpKyUKLD04VzeQdsiXkMqkvYlAHxq9glGLmgbb889/1GsohSOAjvQYoiBppXFqrQ==}
+
+  '@lit/context@1.1.6':
+    resolution: {integrity: sha512-M26qDE6UkQbZA2mQ3RjJ3Gzd8TxP+/0obMgE5HfkfLhEEyYE3Bui4A5XHiGPjy0MUGAyxB3QgVuw2ciS0kHn6A==}
+
+  '@lit/react@1.0.8':
+    resolution: {integrity: sha512-p2+YcF+JE67SRX3mMlJ1TKCSTsgyOVdAwd/nxp3NuV1+Cb6MWALbN6nT7Ld4tpmYofcE5kcaSY1YBB9erY+6fw==}
+    peerDependencies:
+      '@types/react': 17 || 18 || 19
+
+  '@lit/reactive-element@2.1.2':
+    resolution: {integrity: sha512-pbCDiVMnne1lYUIaYNN5wrwQXDtHaYtg7YEFPeW+hws6U47WeFvISGUWekPGKWOP1ygrs0ef0o1VJMk1exos5A==}
+
   '@lukeed/ms@2.0.2':
     resolution: {integrity: sha512-9I2Zn6+NJLfaGoz9jN3lpwDgAYvfGeNYdbAIjJOqzs4Tpc+VU3Jqq4IofSUBKajiDS8k9fZIg18/z13mpk1bsA==}
     engines: {node: '>=8'}
@@ -1803,6 +1820,9 @@ packages:
   '@types/promise-queue@2.2.3':
     resolution: {integrity: sha512-CuEQpGSYKvHr3SQ7C7WkluLg9CFjVORbn8YFRsQ5u6mqGbZVfSOv03ic9t95HtZuMchnlNqnIsQGFOpxqdhjTQ==}
 
+  '@types/react@19.2.18':
+    resolution: {integrity: sha512-AnzbBERsrLKtk2XSfTbYRLjQPdy116Sty4q+T+Bp3IC4l6jNBvreVPAHmpq9qhXQM7CXZPjLVmGMw9sy+hxQ3w==}
+
   '@types/sarif@2.1.7':
     resolution: {integrity: sha512-kRz0VEkJqWLf1LLVN4pT1cg1Z9wAuvI6L97V3m2f5B76Tg8d413ddvLBPTEHAZJlnn4XSvu0FkZtViCQGVyrXQ==}
 
@@ -2001,6 +2021,17 @@ packages:
 
   '@vitest/utils@4.1.8':
     resolution: {integrity: sha512-uOJamYALNhfJ6iolExyQM40yIQwDqYnkKtQ5VCiSe17E33H0aQ/u+1GlRuz4LZBk6Mm3sg90G9hEbmEt37C1Zg==}
+
+  '@vscode-elements/elements@2.5.1':
+    resolution: {integrity: sha512-HiKgIj9GwlfYkw1LrxG7dM5bMQUr8/GkOqG1HU1+npGHd51nRKCF6ZZ9FtnfoC2wujNN0lc+m0emH/wMpAseYQ==}
+    peerDependencies:
+      '@vscode/codicons': '>=0.0.40'
+
+  '@vscode-elements/react-elements@2.4.0':
+    resolution: {integrity: sha512-gDLHE+JE0ViYN+Bzp0obUKBA+guc8Vk0X3n1157z9J+X9GCwHo5ZNziDmiNXyd3QA4IE/kkcg5+3RsemYLlZqg==}
+    peerDependencies:
+      react: 17 || 18 || 19
+      react-dom: 17 || 18 || 19
 
   '@vscode/codicons@0.0.35':
     resolution: {integrity: sha512-7iiKdA5wHVYSbO7/Mm0hiHD3i4h+9hKUe1O4hISAe/nHhagMwb2ZbFC8jU6d7Cw+JNT2dWXN2j+WHbkhT5/l2w==}
@@ -2321,8 +2352,6 @@ packages:
 
   '@zowe/zos-ftp-for-zowe-cli@3.0.0':
     resolution: {integrity: sha512-lNt4t4VJMvnnjQXXusw5N5w5nVysbKZVSD+c7wvj/RJt6ceSV2aMH7QPeiyvTE0FEFErCkjCRl2AxeVtBkn82Q==}
-    peerDependencies:
-      '@zowe/imperative': ^8.0.0
 
   '@zowe/zos-jobs-for-zowe-sdk@8.32.0':
     resolution: {integrity: sha512-N8aj0dyaFH/E37ev+awzDPNtDMq5A2gK1eAfDdKEYZUyJeeaTuM5iN/p9R6dTRR2wbjh/QpjSmVUDAEjq9ATAw==}
@@ -2340,9 +2369,6 @@ packages:
 
   '@zowe/zos-uss-for-zowe-sdk@8.32.0':
     resolution: {integrity: sha512-sAw560txs0NTlwKm2/97IFb23HIrJxpCz4daLxgMBIfsoUPLzWEBhIVFJm3Djold0gWe1oB/LJr4pbrCZmuHSg==}
-    engines: {node: '>=20.9.0'}
-    peerDependencies:
-      '@zowe/imperative': ^8.0.0
 
   '@zowe/zosmf-for-zowe-sdk@8.35.0':
     resolution: {integrity: sha512-L3gIQ11fqR+rZ7rEF8OtgLqgSpKRVP/3Y/+KHGvs3V/bS2hdFJs2qzvv6kE32FpJzQqh6oFVl6RT2bLcBIwM1Q==}
@@ -3124,6 +3150,9 @@ packages:
   css-what@6.1.0:
     resolution: {integrity: sha512-HTUrgRJ7r4dsZKU6GjmpfRK1O76h97Z8MfS1G0FozR+oF2kG6Vfe8JE6zwrkbxigziPHinCJ+gCPjA9EaBDtRw==}
     engines: {node: '>= 6'}
+
+  csstype@3.2.3:
+    resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
   data-uri-to-buffer@4.0.1:
     resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
@@ -4811,6 +4840,15 @@ packages:
 
   listenercount@1.0.1:
     resolution: {integrity: sha512-3mk/Zag0+IJxeDrxSgaDPy4zZ3w05PRZeJNnlWhzFz5OkX49J4krc+A8X2d2M69vGMBEX0uyl8M+W+8gH+kBqQ==}
+
+  lit-element@4.2.2:
+    resolution: {integrity: sha512-aFKhNToWxoyhkNDmWZwEva2SlQia+jfG0fjIWV//YeTaWrVnOxD89dPKfigCUspXFmjzOEUQpOkejH5Ly6sG0w==}
+
+  lit-html@3.3.3:
+    resolution: {integrity: sha512-el8M6jK2o3RXBnrSHX3ZKrsN8zEV63pSExTO1wYJz7QndGYZ8353e2a5PPX+qHe2aGayfnchQmkAojaWAREOIA==}
+
+  lit@3.3.3:
+    resolution: {integrity: sha512-fycuvZg/hkpozL00lm1pEJH5nN/lr9ZXd6mJI2HSN4+Bzc+LDNdEApJ6HFbPkdFNHLvOplIIuJvxkS4XUxqirw==}
 
   loader-runner@4.3.1:
     resolution: {integrity: sha512-IWqP2SCPhyVFTBtRcgMHdzlf9ul25NwaFx4wCEH/KjAXuuHY4yNjvPXsBokp8jCB936PyWRaPKUNh8NvylLp2Q==}
@@ -8245,6 +8283,20 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
 
+  '@lit-labs/ssr-dom-shim@1.6.0': {}
+
+  '@lit/context@1.1.6':
+    dependencies:
+      '@lit/reactive-element': 2.1.2
+
+  '@lit/react@1.0.8(@types/react@19.2.18)':
+    dependencies:
+      '@types/react': 19.2.18
+
+  '@lit/reactive-element@2.1.2':
+    dependencies:
+      '@lit-labs/ssr-dom-shim': 1.6.0
+
   '@lukeed/ms@2.0.2': {}
 
   '@microsoft/fast-element@1.13.0': {}
@@ -8655,6 +8707,10 @@ snapshots:
 
   '@types/promise-queue@2.2.3': {}
 
+  '@types/react@19.2.18':
+    dependencies:
+      csstype: 3.2.3
+
   '@types/sarif@2.1.7': {}
 
   '@types/semver@7.5.8': {}
@@ -8673,8 +8729,7 @@ snapshots:
 
   '@types/triple-beam@1.3.5': {}
 
-  '@types/trusted-types@2.0.7':
-    optional: true
+  '@types/trusted-types@2.0.7': {}
 
   '@types/unist@2.0.11': {}
 
@@ -8940,6 +8995,22 @@ snapshots:
       '@vitest/pretty-format': 4.1.8
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.0
+
+  '@vscode-elements/elements@2.5.1(@vscode/codicons@0.0.36)':
+    dependencies:
+      '@lit/context': 1.1.6
+      '@vscode/codicons': 0.0.36
+      lit: 3.3.3
+
+  '@vscode-elements/react-elements@2.4.0(@types/react@19.2.18)(@vscode/codicons@0.0.36)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@lit/react': 1.0.8(@types/react@19.2.18)
+      '@vscode-elements/elements': 2.5.1(@vscode/codicons@0.0.36)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+    transitivePeerDependencies:
+      - '@types/react'
+      - '@vscode/codicons'
 
   '@vscode/codicons@0.0.35': {}
 
@@ -10345,6 +10416,8 @@ snapshots:
   css-value@0.0.1: {}
 
   css-what@6.1.0: {}
+
+  csstype@3.2.3: {}
 
   data-uri-to-buffer@4.0.1: {}
 
@@ -12339,6 +12412,22 @@ snapshots:
       uc.micro: 2.1.0
 
   listenercount@1.0.1: {}
+
+  lit-element@4.2.2:
+    dependencies:
+      '@lit-labs/ssr-dom-shim': 1.6.0
+      '@lit/reactive-element': 2.1.2
+      lit-html: 3.3.3
+
+  lit-html@3.3.3:
+    dependencies:
+      '@types/trusted-types': 2.0.7
+
+  lit@3.3.3:
+    dependencies:
+      '@lit/reactive-element': 2.1.2
+      lit-element: 4.2.2
+      lit-html: 3.3.3
 
   loader-runner@4.3.1: {}
 

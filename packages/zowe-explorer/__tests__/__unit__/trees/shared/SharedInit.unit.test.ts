@@ -1809,4 +1809,134 @@ describe("Test src/shared/extension", () => {
             resolveSpy.mockRestore();
         });
     });
+
+    describe("zowe.configEditorWithProfile with cursor context (propertyKey forwarding)", () => {
+        let registeredCommands: { [key: string]: (...args: any[]) => any };
+        const testContext: any = { subscriptions: [] };
+
+        beforeEach(() => {
+            registeredCommands = {};
+            testContext.subscriptions = [];
+            vi.spyOn(vscode.commands, "registerCommand").mockImplementation((command, callback) => {
+                registeredCommands[command] = callback;
+                return { dispose: vi.fn() } as any;
+            });
+            vi.spyOn(vscode.window, "registerWebviewPanelSerializer").mockReturnValue({ dispose: vi.fn() } as any);
+            vi.spyOn(vscode.window, "registerWebviewViewProvider").mockReturnValue({ dispose: vi.fn() } as any);
+            vi.spyOn(vscode.workspace, "onDidChangeConfiguration").mockReturnValue({ dispose: vi.fn() } as any);
+            vi.spyOn(ConsoleCommandHandler, "getInstance").mockReturnValue({ issueMvsCommand: vi.fn() } as any);
+            vi.spyOn(TsoCommandHandler, "getInstance").mockReturnValue({ issueTsoCommand: vi.fn() } as any);
+            vi.spyOn(UnixCommandHandler, "getInstance").mockReturnValue({ issueUnixCommand: vi.fn() } as any);
+            vi.spyOn(TableViewProvider, "getInstance").mockReturnValue({} as any);
+            vi.spyOn(SharedHistoryView, "SharedHistoryView").mockImplementation();
+        });
+
+        afterEach(() => {
+            vi.clearAllMocks();
+        });
+
+        it("sets propertyKey on initialSelection when the cursor is on a property inside the same profile", async () => {
+            SharedInit.registerCommonCommands(testContext, {} as any);
+            const cmd = registeredCommands["zowe.configEditorWithProfile"];
+
+            const mockConfigEditorInstance = {
+                panel: {
+                    onDidDispose: vi.fn(),
+                    dispose: vi.fn(),
+                    reveal: vi.fn(),
+                    webview: { postMessage: vi.fn() },
+                },
+                userSubmission: { promise: Promise.resolve("done") },
+            };
+            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+
+            const resolveSpy = vi
+                .spyOn(SharedInit, "resolveZoweConfigCursorContext")
+                .mockReturnValue({ profileName: "lpar1.zosmf", profileType: "zosmf", propertyKey: "host" });
+
+            await cmd("lpar1.zosmf", "/home/user/.zowe/zowe.config.json", "zosmf");
+
+            expect(ConfigEditor).toHaveBeenCalledWith(testContext, {
+                profileName: "lpar1.zosmf",
+                configPath: "/home/user/.zowe/zowe.config.json",
+                profileType: "zosmf",
+                propertyKey: "host",
+            });
+            resolveSpy.mockRestore();
+        });
+
+        it("omits propertyKey when the cursor is inside a different profile than the one targeted", async () => {
+            SharedInit.registerCommonCommands(testContext, {} as any);
+            const cmd = registeredCommands["zowe.configEditorWithProfile"];
+
+            const mockConfigEditorInstance = {
+                panel: {
+                    onDidDispose: vi.fn(),
+                    dispose: vi.fn(),
+                    reveal: vi.fn(),
+                    webview: { postMessage: vi.fn() },
+                },
+                userSubmission: { promise: Promise.resolve("done") },
+            };
+            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+
+            // Cursor context resolves to a different profile than the one this CodeLens targets —
+            // e.g. a stale cursor position left over from browsing elsewhere in the file.
+            const resolveSpy = vi
+                .spyOn(SharedInit, "resolveZoweConfigCursorContext")
+                .mockReturnValue({ profileName: "lpar1.tso", profileType: "tso", propertyKey: "port" });
+
+            await cmd("lpar1.zosmf", "/home/user/.zowe/zowe.config.json", "zosmf");
+
+            expect(ConfigEditor).toHaveBeenCalledWith(testContext, {
+                profileName: "lpar1.zosmf",
+                configPath: "/home/user/.zowe/zowe.config.json",
+                profileType: "zosmf",
+                propertyKey: undefined,
+            });
+            resolveSpy.mockRestore();
+        });
+
+        it("forwards propertyKey to panel.webview.postMessage when reusing an existing ConfigEditor", async () => {
+            SharedInit.registerCommonCommands(testContext, {} as any);
+            const initCmd = registeredCommands["zowe.configEditor"];
+            const cmd = registeredCommands["zowe.configEditorWithProfile"];
+
+            const mockConfigEditorInstance = {
+                panel: {
+                    onDidDispose: vi.fn(),
+                    dispose: vi.fn(),
+                    reveal: vi.fn(),
+                    visible: true,
+                    webview: { postMessage: vi.fn().mockResolvedValue(true) },
+                },
+                initialSelection: {} as any,
+                userSubmission: { promise: Promise.resolve("success") },
+            };
+            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+
+            // First call — creates the instance (no cursor context needed for this one)
+            vi.spyOn(SharedInit, "resolveZoweConfigCursorContext").mockReturnValue(undefined);
+            initCmd(undefined);
+            expect(ConfigEditor).toHaveBeenCalledTimes(1);
+
+            const resolveSpy = vi
+                .spyOn(SharedInit, "resolveZoweConfigCursorContext")
+                .mockReturnValue({ profileName: "lpar1.zosmf", profileType: "zosmf", propertyKey: "port" });
+
+            const result = await cmd("lpar1.zosmf", "/home/user/.zowe/zowe.config.json", "zosmf");
+
+            expect(ConfigEditor).toHaveBeenCalledTimes(1); // still reusing
+            expect(mockConfigEditorInstance.panel.reveal).toHaveBeenCalled();
+            expect(mockConfigEditorInstance.panel.webview.postMessage).toHaveBeenCalledWith({
+                command: "INITIAL_SELECTION",
+                profileName: "lpar1.zosmf",
+                configPath: "/home/user/.zowe/zowe.config.json",
+                profileType: "zosmf",
+                propertyKey: "port",
+            });
+            expect(result).toBe(mockConfigEditorInstance);
+            resolveSpy.mockRestore();
+        });
+    });
 });

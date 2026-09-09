@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
+import VscodeTextfield from "@vscode-elements/react-elements/dist/components/VscodeTextfield.js";
 import { ModalShell } from "../ModalShell";
 import { isValidProfileNamePath, isValidProfileNameSegment, sanitizeProfileNamePath, sanitizeProfileNameSegment } from "../../utils/profileNames";
 
@@ -174,14 +176,14 @@ export function RenameProfileModal({
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = (e.target as HTMLInputElement).value;
+  const handleInputChange = (e: any) => {
+    const rawValue = e.target!.value as string;
     const filteredValue = filterInputValue(rawValue);
 
     // Only update if the filtered value is different (prevents cursor jumping)
     if (filteredValue !== rawValue) {
       // Update the input value directly to prevent invalid characters
-      (e.target as HTMLInputElement).value = filteredValue;
+      e.target!.value = filteredValue;
     }
 
     setNewName(filteredValue);
@@ -206,29 +208,31 @@ export function RenameProfileModal({
       <h2 id="rename-profile-modal-title">Rename Profile</h2>
       <div className="modal-body">
         <div style={{ marginBottom: "16px" }}>
-          <label htmlFor="profile-name" style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>
+          <label htmlFor="profile-name" style={{ display: "block", marginBottom: "8px", fontWeight: "var(--ce-font-weight-emphasis)" }}>
             New Profile Name
           </label>
-          <input
+          <VscodeTextfield
             id="profile-name"
             type="text"
             className={`modal-input ${error ? "error" : ""}`}
             value={newName}
-            onChange={handleInputChange}
+            onInput={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="e.g., tso-new"
           />
           {error && <div className="modal-error">{error}</div>}
-          <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>Use letters, numbers, underscores, and hyphens only</div>
+          <div style={{ fontSize: "12px", color: "var(--vscode-descriptionForeground)", marginTop: "4px" }}>
+            Use letters, numbers, underscores, and hyphens only
+          </div>
         </div>
       </div>
       <div className="modal-actions">
-        <button className="modal-button secondary" id="rename-cancel" onClick={onCancel}>
+        <VscodeButton secondary id="rename-cancel" onClick={onCancel}>
           Cancel
-        </button>
-        <button className="modal-button primary" id="rename-confirm" onClick={handleSubmit}>
+        </VscodeButton>
+        <VscodeButton id="rename-confirm" onClick={handleSubmit}>
           Rename
-        </button>
+        </VscodeButton>
       </div>
     </ModalShell>
   );

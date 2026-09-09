@@ -498,6 +498,11 @@ export function ProfileTree({
     const isDragging = draggedProfile === node.key;
     const isDragOver = dragOverProfile === node.key;
     const canDrop = draggedProfile && draggedProfile !== node.key && !isInvalidDrop(draggedProfile, node.key);
+    // Rendered as an actual (non-interactive) row under this node, at the exact spot and
+    // indentation level a real one would occupy, rather than a floating label near the cursor.
+    const previewChildKey = isDragOver && canDrop && draggedProfile ? computeDropResultKey(draggedProfile, node.key) : null;
+    const previewChildName = previewChildKey?.split(".").pop() ?? null;
+    const previewChildType = previewChildName && draggedProfile ? getProfileType(draggedProfile) : null;
 
     return (
       <div
@@ -626,11 +631,37 @@ export function ProfileTree({
           </div>
         </div>
 
-        {/* Render children if expanded, with a vertical guide connecting them back to this row's toggle */}
-        {node.isExpanded && node.children.length > 0 && (
+        {/* Render children if expanded, with a vertical guide connecting them back to this row's
+            toggle. Also renders (even if collapsed/childless) while this row is a valid drop
+            target, purely to host the preview row below. */}
+        {((node.isExpanded && node.children.length > 0) || previewChildName) && (
           <div className="profile-tree-children">
             <span className="profile-tree-indent-guide" style={{ left: `${8 + node.level * 16 + 6}px` }} />
-            {node.children.map((child) => renderNode(child))}
+            {node.isExpanded && node.children.map((child) => renderNode(child))}
+            {previewChildName && (
+              <div className="profile-tree-node" data-testid="profile-tree-drop-preview">
+                <div
+                  className="profile-tree-item profile-tree-drop-preview-row"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    margin: "2px 0",
+                    padding: "6px 8px",
+                    paddingLeft: `${8 + (node.level + 1) * 16}px`,
+                    borderRadius: "4px",
+                    minHeight: "28px",
+                    fontSize: "0.9em",
+                  }}
+                >
+                  <span className="profile-tree-indent-spacer" />
+                  <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{previewChildName}</span>
+                  {previewChildType && (
+                    <ProfileTypeBadge profileType={previewChildType} isLightTheme={isLightTheme} filterActive={false} onToggleFilter={() => {}} />
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

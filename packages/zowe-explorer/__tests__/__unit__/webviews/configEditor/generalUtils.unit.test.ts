@@ -36,7 +36,7 @@ describe("generalUtils", () => {
 
     describe("getProfileSortOrderDisplayName", () => {
         it("returns localized label for natural", () => {
-            expect(getProfileSortOrderDisplayName("natural")).toBe("Natural");
+            expect(getProfileSortOrderDisplayName("natural")).toBe("File Order");
         });
         it("returns localized label for alphabetical", () => {
             expect(getProfileSortOrderDisplayName("alphabetical")).toBe("Alphabetical");

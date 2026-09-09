@@ -1,4 +1,8 @@
 import * as l10n from "@vscode/l10n";
+import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
+import VscodeTextfield from "@vscode-elements/react-elements/dist/components/VscodeTextfield.js";
+import VscodeSingleSelect from "@vscode-elements/react-elements/dist/components/VscodeSingleSelect.js";
+import VscodeOption from "@vscode-elements/react-elements/dist/components/VscodeOption.js";
 import { ModalShell } from "../ModalShell";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 import { isFileProperty } from "../../utils/propertyUtils";
@@ -198,10 +202,10 @@ export function AddProfileModal({
           const propertyType = getPropertyType(newProfileKey.trim());
           if (isSecure) {
             return (
-              <input
+              <VscodeTextfield
                 placeholder="••••••••"
                 value={newProfileValue}
-                onChange={(e) => onNewProfileValueChange((e.target as HTMLInputElement).value)}
+                onInput={(e: any) => onNewProfileValueChange(e.target!.value as string)}
                 onKeyDown={handleKeyDown}
                 className="modal-input add-profile-input"
                 type="password"
@@ -209,15 +213,16 @@ export function AddProfileModal({
             );
           } else if (propertyType === "boolean") {
             return (
-              <select
+              <VscodeSingleSelect
                 value={newProfileValue}
-                onChange={(e) => onNewProfileValueChange((e.target as HTMLSelectElement).value)}
+                onChange={(e: any) => onNewProfileValueChange(e.target!.value as string)}
                 onKeyDown={handleKeyDown}
                 className="modal-input add-profile-input"
+                style={{ width: "100%" }}
               >
-                <option value="true">true</option>
-                <option value="false">false</option>
-              </select>
+                <VscodeOption value="true">true</VscodeOption>
+                <VscodeOption value="false">false</VscodeOption>
+              </VscodeSingleSelect>
             );
           } else if (propertyType === "number") {
             return (
@@ -311,16 +316,16 @@ export function AddProfileModal({
       </div>
       <div className="modal-actions">
         <div className="add-profile-actions">
-          <button className="wizard-button secondary" onClick={onCancel}>
+          <VscodeButton secondary onClick={onCancel} data-testid="add-property-cancel">
             {l10n.t("Cancel")}
-          </button>
-          <button
-            className="wizard-button primary"
+          </VscodeButton>
+          <VscodeButton
             onClick={onAdd}
             disabled={isAuthOrderProperty(newProfileKey.trim()) && !isValidAuthOrder(newProfileValue)}
+            data-testid="add-property-confirm"
           >
             {l10n.t("Add")}
-          </button>
+          </VscodeButton>
         </div>
       </div>
     </ModalShell>

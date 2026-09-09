@@ -7,6 +7,7 @@
   "#### Submit job with encoding": "#### Submit job with encoding",
   "#### VSAM support updates": "#### VSAM support updates",
   "#### Windows custom persistence levels": "#### Windows custom persistence levels",
+  "$(edit) Edit '{0}'": "$(edit) Edit '{0}'",
   "$(gear) Edit in Zowe Configuration Editor": "$(gear) Edit in Zowe Configuration Editor",
   "$(plus) Create a new Unix command": "$(plus) Create a new Unix command",
   "'{0}' not found in directory '{1}'/Item nameDirectory path": {
@@ -564,7 +565,6 @@
   "Duplicated profile schema writing on repeated Team Config file initialization:": "Duplicated profile schema writing on repeated Team Config file initialization:",
   "EBCDIC": "EBCDIC",
   "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>": "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>",
-  "Edit '{0}'": "Edit '{0}'",
   "Edit Attributes": "Edit Attributes",
   "Edit History": "Edit History",
   "Edit Options (Case Sensitive: {0}, Regex: {1})/Case SensitiveRegex": {
@@ -911,6 +911,7 @@
   "Fetching spool file...": "Fetching spool file...",
   "Fields shown here map directly to your zowe.config.json. Click the ɍ icon next to a field name for a description and default value.": "Fields shown here map directly to your zowe.config.json. Click the ɍ icon next to a field name for a description and default value.",
   "File History": "File History",
+  "File Order": "File Order",
   "File Properties": "File Properties",
   "File Type": "File Type",
   "File does not exist. It may have been deleted.": "File does not exist. It may have been deleted.",
@@ -1592,7 +1593,6 @@
   "Name of Data Set Template": "Name of Data Set Template",
   "Name of data set member": "Name of data set member",
   "Name of member": "Name of member",
-  "Natural": "Natural",
   "New Key": "New Key",
   "New Layer Name": "New Layer Name",
   "New features and enhancements": "New features and enhancements",

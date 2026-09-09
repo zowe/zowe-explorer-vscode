@@ -10,10 +10,13 @@
  */
 
 import * as l10n from "@vscode/l10n";
+import VscodeTextfield from "@vscode-elements/react-elements/dist/components/VscodeTextfield.js";
+import VscodeSingleSelect from "@vscode-elements/react-elements/dist/components/VscodeSingleSelect.js";
+import VscodeOption from "@vscode-elements/react-elements/dist/components/VscodeOption.js";
 import { stringifyValueByType, getPropertyTypeForConfigEditor } from "../../utils";
 import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 import type { RenderConfigCtx } from "./context";
-import { MERGED_DISABLED_INPUT_STYLE } from "./styles";
+import { INHERITED_INPUT_STYLE } from "./styles";
 
 interface PropertyValueInputProps {
   ctx: RenderConfigCtx;
@@ -69,17 +72,13 @@ export function PropertyValueInput({
   if (displayKey === "type" && path[path.length - 1] !== "properties") {
     return (
       <div style={{ position: "relative", width: "100%" }}>
-        <select
+        <VscodeSingleSelect
           className="config-input"
           value={String(pendingValue)}
-          onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
+          onChange={(e: any) => handleChange(fullKey, e.target!.value as string)}
           style={{
             width: "100%",
             height: "28px",
-            fontSize: "0.9em",
-            padding: "2px",
-            marginBottom: "0",
-            textTransform: "lowercase",
             ...(showMergedProperties && isCurrentProfileUntyped()
               ? {
                   border: "2px solid var(--vscode-warningForeground)",
@@ -89,13 +88,13 @@ export function PropertyValueInput({
               : {}),
           }}
         >
-          <option value="">{l10n.t("Select a type")}</option>
+          <VscodeOption value="">{l10n.t("Select a type")}</VscodeOption>
           {getWizardTypeOptions().map((type: string) => (
-            <option key={type} value={type}>
+            <VscodeOption key={type} value={type}>
               {type.toLowerCase()}
-            </option>
+            </VscodeOption>
           ))}
-        </select>
+        </VscodeSingleSelect>
       </div>
     );
   }
@@ -120,13 +119,13 @@ export function PropertyValueInput({
       const isCredentialDisabled = !isMergedDisabled && !secureValuesAllowed && (isSecureProperty || isLocalSecureProperty);
       const credentialDisabledTitle = l10n.t("A credential manager is not available. Click to open VS Code settings to enable secure credentials.");
       return (
-        <input
+        <VscodeTextfield
           className={`config-input${inheritedInputClass}`}
           type="password"
           placeholder={storedInKeyring || secureDisplayValue || isUntypedProfile ? "••••••••" : ""}
           value={secureDisplayValue}
-          readOnly={isCredentialDisabled}
-          onChange={isCredentialDisabled ? undefined : (e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
+          readonly={isCredentialDisabled}
+          onInput={isCredentialDisabled ? undefined : (e: any) => handleChange(fullKey, e.target!.value as string)}
           onClick={
             isCredentialDisabled
               ? () =>
@@ -138,36 +137,33 @@ export function PropertyValueInput({
           }
           disabled={isMergedDisabled}
           title={isCredentialDisabled ? credentialDisabledTitle : undefined}
-          style={
-            isMergedDisabled || isCredentialDisabled
-              ? {
-                  backgroundColor: "var(--vscode-input-disabledBackground)",
-                  color: "var(--vscode-descriptionForeground)",
-                  cursor: isCredentialDisabled ? "pointer" : "default",
-                  fontFamily: "monospace",
-                  pointerEvents: isMergedDisabled ? "none" : undefined,
-                }
-              : {
-                  fontFamily: "monospace",
-                  backgroundColor: "var(--vscode-input-background)",
-                  color: "var(--vscode-input-foreground)",
-                }
-          }
+          style={{
+            width: "100%",
+            fontFamily: "monospace",
+            ...(isMergedDisabled ? INHERITED_INPUT_STYLE : {}),
+            // Not inherited, but equally non-editable, so it borrows the same shared dim rather
+            // than a second set of "disabled" colors. Stays clickable: the click opens settings.
+            ...(isCredentialDisabled ? { opacity: "var(--ce-field-dim-opacity)", cursor: "pointer" } : {}),
+          }}
         />
       );
     } else if (propertyType === "boolean") {
       return (
-        <select
+        <VscodeSingleSelect
           className={`config-input${inheritedInputClass}`}
           value={stringifyValueByType(pendingValue)}
-          onChange={(e) => handleChange(fullKey, (e.target as HTMLSelectElement).value)}
+          onChange={(e: any) => handleChange(fullKey, e.target!.value as string)}
           disabled={isFromMergedProps && !isDeletedMergedProperty}
-          style={isFromMergedProps && !isDeletedMergedProperty ? MERGED_DISABLED_INPUT_STYLE : {}}
+          style={{
+            width: "100%",
+            height: "28px",
+            ...(isFromMergedProps && !isDeletedMergedProperty ? INHERITED_INPUT_STYLE : {}),
+          }}
           data-property-key={displayKey}
         >
-          <option value="true">true</option>
-          <option value="false">false</option>
-        </select>
+          <VscodeOption value="true">true</VscodeOption>
+          <VscodeOption value="false">false</VscodeOption>
+        </VscodeSingleSelect>
       );
     } else if (propertyType === "number") {
       return (
@@ -185,7 +181,7 @@ export function PropertyValueInput({
           })()}
           onChange={(e) => handleChange(fullKey, (e.target as HTMLInputElement).value)}
           disabled={isFromMergedProps && !isDeletedMergedProperty}
-          style={isFromMergedProps && !isDeletedMergedProperty ? MERGED_DISABLED_INPUT_STYLE : {}}
+          style={isFromMergedProps && !isDeletedMergedProperty ? INHERITED_INPUT_STYLE : {}}
           data-property-key={displayKey}
         />
       );
@@ -206,7 +202,7 @@ export function PropertyValueInput({
           className={`config-input${inheritedInputClass}`}
           placeholder=""
           disabled={isFromMergedProps && !isDeletedMergedProperty}
-          style={isFromMergedProps && !isDeletedMergedProperty ? MERGED_DISABLED_INPUT_STYLE : {}}
+          style={isFromMergedProps && !isDeletedMergedProperty ? INHERITED_INPUT_STYLE : {}}
           vscodeApi={vscodeApi}
           dataPropertyKey={displayKey}
         />
@@ -221,7 +217,7 @@ export function PropertyValueInput({
           fontFamily: "monospace",
           fontStyle: "italic",
           color: "var(--vscode-disabledForeground)",
-          opacity: 0.7,
+          opacity: "var(--ce-field-dim-opacity)",
         }}
       >
         null

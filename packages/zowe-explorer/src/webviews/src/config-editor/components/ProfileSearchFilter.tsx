@@ -1,4 +1,7 @@
 import * as l10n from "@vscode/l10n";
+import VscodeTextfield from "@vscode-elements/react-elements/dist/components/VscodeTextfield.js";
+import VscodeSingleSelect from "@vscode-elements/react-elements/dist/components/VscodeSingleSelect.js";
+import VscodeOption from "@vscode-elements/react-elements/dist/components/VscodeOption.js";
 
 interface ProfileSearchFilterProps {
   onSearchChange: (searchTerm: string) => void;
@@ -12,12 +15,8 @@ interface ProfileSearchFilterProps {
 }
 
 export function ProfileSearchFilter({ onSearchChange, onFilterChange, availableTypes, searchTerm, filterType }: ProfileSearchFilterProps) {
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onSearchChange((e.target as HTMLInputElement).value);
-  };
-
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = (e.target as HTMLSelectElement).value;
+  const handleFilterChange = (e: any) => {
+    const value = e.target!.value as string;
     onFilterChange(value === "all" ? null : value);
   };
 
@@ -36,88 +35,42 @@ export function ProfileSearchFilter({ onSearchChange, onFilterChange, availableT
       }}
     >
       {/* Search Bar */}
-      <div
-        style={{
-          position: "relative",
-          display: "flex",
-          alignItems: "center",
-          flex: 1,
-        }}
+      <VscodeTextfield
+        type="text"
+        data-testid="profile-search-input"
+        placeholder={l10n.t("Search...")}
+        value={searchTerm}
+        onInput={(e: any) => onSearchChange(e.target!.value as string)}
+        style={{ flex: 1, width: "100%", fontStyle: "italic" }}
       >
-        <input
-          type="text"
-          placeholder={l10n.t("Search...")}
-          value={searchTerm}
-          onChange={handleSearchChange}
-          style={{
-            width: "100%",
-            padding: "8px 32px 8px 12px",
-            border: "1px solid var(--vscode-input-border)",
-            borderRadius: "4px",
-            backgroundColor: "var(--vscode-input-background)",
-            color: "var(--vscode-input-foreground)",
-            fontSize: "12px",
-            outline: "none",
-          }}
-          onFocus={(e) => {
-            (e.target as HTMLInputElement).style.borderColor = "var(--vscode-focusBorder)";
-          }}
-          onBlur={(e) => {
-            (e.target as HTMLInputElement).style.borderColor = "var(--vscode-input-border)";
-          }}
-        />
+        <span slot="content-before" className="codicon codicon-search"></span>
         {searchTerm && (
-          <button
+          <span
+            slot="content-after"
+            className="codicon codicon-close"
+            data-testid="clear-search"
+            role="button"
             onClick={clearSearch}
-            style={{
-              position: "absolute",
-              right: "8px",
-              background: "none",
-              border: "none",
-              color: "var(--vscode-input-foreground)",
-              cursor: "pointer",
-              padding: "2px",
-              borderRadius: "2px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
             title={l10n.t("Clear search")}
-          >
-            <span className="codicon codicon-close" style={{ fontSize: "12px" }}></span>
-          </button>
+            style={{ cursor: "pointer" }}
+          ></span>
         )}
-      </div>
+      </VscodeTextfield>
 
       {/* Filter Dropdown */}
-      <select
+      <VscodeSingleSelect
         value={filterType || "all"}
         onChange={handleFilterChange}
-        style={{
-          padding: "8px 8px",
-          border: "1px solid var(--vscode-input-border)",
-          borderRadius: "4px",
-          backgroundColor: "var(--vscode-input-background)",
-          color: "var(--vscode-input-foreground)",
-          fontSize: "12px",
-          outline: "none",
-          cursor: "pointer",
-          minWidth: "120px",
-        }}
-        onFocus={(e) => {
-          (e.target as HTMLSelectElement).style.borderColor = "var(--vscode-focusBorder)";
-        }}
-        onBlur={(e) => {
-          (e.target as HTMLSelectElement).style.borderColor = "var(--vscode-input-border)";
-        }}
+        data-testid="profile-type-filter"
+        style={{ width: "auto", minWidth: "120px" }}
       >
-        <option value="all">{l10n.t("All Types")}</option>
+        <VscodeOption value="all">{l10n.t("All Types")}</VscodeOption>
         {availableTypes.map((type) => (
-          <option key={type} value={type}>
+          <VscodeOption key={type} value={type}>
             {type}
-          </option>
+          </VscodeOption>
         ))}
-      </select>
+      </VscodeSingleSelect>
     </div>
   );
 }

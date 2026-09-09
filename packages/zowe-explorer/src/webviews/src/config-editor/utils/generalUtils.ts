@@ -29,7 +29,7 @@ export function getSortOrderDisplayName(sortOrder: PropertySortOrder): string {
 export function getProfileSortOrderDisplayName(sortOrder: ProfileSortOrder): string {
     switch (sortOrder) {
         case "natural":
-            return l10n.t("Natural");
+            return l10n.t("File Order");
         case "alphabetical":
             return l10n.t("Alphabetical");
         case "reverse-alphabetical":

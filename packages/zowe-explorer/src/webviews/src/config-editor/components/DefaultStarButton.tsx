@@ -10,6 +10,7 @@
  */
 
 import type { Dispatch, SetStateAction } from "react";
+import VscodeToolbarButton from "@vscode-elements/react-elements/dist/components/VscodeToolbarButton.js";
 import { toggleProfileDefault } from "../utils/profileHelpers";
 
 type SimplePendingDefaultsMap = { [configPath: string]: { [key: string]: { value: string; path: string[] } } };
@@ -66,21 +67,11 @@ export function DefaultStarButton({
   }
 
   return (
-    <button
+    <VscodeToolbarButton
       className="profile-star-button"
-      onClick={(e) => {
+      onClick={(e: any) => {
         e.stopPropagation();
         runToggle();
-      }}
-      style={{
-        background: "transparent",
-        border: "none",
-        padding: "2px",
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
       }}
       title={title}
     >
@@ -91,6 +82,6 @@ export function DefaultStarButton({
           color: isDefault ? "var(--vscode-textPreformat-foreground)" : "var(--vscode-disabledForeground)",
         }}
       />
-    </button>
+    </VscodeToolbarButton>
   );
 }

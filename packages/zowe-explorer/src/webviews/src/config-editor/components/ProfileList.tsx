@@ -93,9 +93,12 @@ export function ProfileList({
     let filtered = sortedProfileKeys;
     let isFiltering = false;
 
-    // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter((profileKey) => profileKey.toLowerCase().includes(searchTerm.toLowerCase()));
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      filtered = filtered.filter((profileKey) => {
+        const leafName = profileKey.split(".").pop() ?? profileKey;
+        return leafName.toLowerCase().includes(lowerSearchTerm);
+      });
       isFiltering = true;
     }
 
@@ -219,7 +222,7 @@ export function ProfileList({
         style={{
           position: "sticky",
           top: 0,
-          backgroundColor: "var(--vscode-editor-background)",
+          backgroundColor: "var(--ce-card-background, var(--vscode-editor-background))",
           zIndex: 10,
           flexShrink: 0,
         }}

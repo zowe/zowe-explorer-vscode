@@ -178,29 +178,21 @@ export function useProfileWizard({
         const config = configurations[selectedTab!].properties;
         const flatProfiles = flattenProfiles(config.profiles);
 
+        const newProfileKeyLower = (
+            wizardRootProfile === "root" ? wizardProfileName.trim() : `${wizardRootProfile}.${wizardProfileName.trim()}`
+        ).toLowerCase();
+
         // Get all existing profile names under the selected root
         const existingProfilesUnderRoot = Object.keys(flatProfiles).filter((profileKey) => {
-            if (wizardRootProfile === "root") {
-                return profileKey === wizardProfileName.trim();
-            } else {
-                return (
-                    profileKey === `${wizardRootProfile}.${wizardProfileName.trim()}` ||
-                    profileKey.startsWith(`${wizardRootProfile}.${wizardProfileName.trim()}.`)
-                );
-            }
+            const profileKeyLower = profileKey.toLowerCase();
+            return profileKeyLower === newProfileKeyLower || profileKeyLower.startsWith(`${newProfileKeyLower}.`);
         });
 
         // check pending changes for profiles being created
         const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([_, entry]) => {
             if (entry.profile) {
-                if (wizardRootProfile === "root") {
-                    return entry.profile === wizardProfileName.trim();
-                } else {
-                    return (
-                        entry.profile === `${wizardRootProfile}.${wizardProfileName.trim()}` ||
-                        entry.profile.startsWith(`${wizardRootProfile}.${wizardProfileName.trim()}.`)
-                    );
-                }
+                const entryProfileLower = entry.profile.toLowerCase();
+                return entryProfileLower === newProfileKeyLower || entryProfileLower.startsWith(`${newProfileKeyLower}.`);
             }
             return false;
         });

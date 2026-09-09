@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react";
+import VscodeProgressRing from "@vscode-elements/react-elements/dist/components/VscodeProgressRing.js";
 import * as l10n from "@vscode/l10n";
 
 interface SaveModalProps {
@@ -28,7 +28,7 @@ export function SaveModal({ isOpen }: SaveModalProps) {
     <div className="save-modal-blocker" aria-hidden={!showSpinner}>
       {showSpinner && (
         <div className="save-modal-spinner">
-          <VSCodeProgressRing aria-label={l10n.t("Saving configuration")} />
+          <VscodeProgressRing aria-label={l10n.t("Saving configuration")} />
           <span>{l10n.t("Saving configuration...")}</span>
         </div>
       )}

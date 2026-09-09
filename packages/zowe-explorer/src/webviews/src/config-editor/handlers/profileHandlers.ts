@@ -10,7 +10,7 @@
  */
 
 import { checkIfRenameCancelsOut, consolidateRenames, detectClosedLoops } from "../utils/renameUtils";
-import { getRenamedProfileKeyWithNested, getReplacementProfileAfterDelete } from "../utils/profileUtils";
+import { getRenamedProfileKeyWithNested } from "../utils/profileUtils";
 import { flattenProfiles } from "../utils";
 
 // Types
@@ -571,7 +571,6 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
         setSelectedProfileKey,
         setSelectedProfilesByConfig,
         setPendingDefaults,
-        getAvailableProfilesForConfig,
     } = props;
 
     if (selectedTab === null || !configurations[selectedTab]) return;
@@ -677,19 +676,16 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
         return prev;
     });
 
-    // If this profile is currently selected, or if the selected profile is a child of this profile, select the replacement profile
+    // If this profile is currently selected, or if the selected profile is a child of this
+    // profile, clear the selection instead of jumping to another profile the user didn't ask for.
     if (selectedProfileKey === profileKey || (selectedProfileKey && selectedProfileKey.startsWith(profileKey + "."))) {
-        const orderedProfiles = getAvailableProfilesForConfig(configPath);
-        const nearestProfileKey = getReplacementProfileAfterDelete(orderedProfiles, profileKey);
-
-        // Set the nearest profile as selected, or null if no profile available
-        setSelectedProfileKey(nearestProfileKey);
+        setSelectedProfileKey(null);
 
         // Also update the stored profiles for this config
         if (configPath) {
             setSelectedProfilesByConfig((prev) => ({
                 ...prev,
-                [configPath]: nearestProfileKey,
+                [configPath]: null,
             }));
         }
     }

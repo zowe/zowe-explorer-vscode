@@ -11,10 +11,7 @@
 
 import type { CSSProperties } from "react";
 
-/** Style applied to inputs whose value is inherited/merged and therefore read-only. */
-export const MERGED_DISABLED_INPUT_STYLE: CSSProperties = {
-    backgroundColor: "var(--vscode-input-disabledBackground)",
-    color: "var(--vscode-disabledForeground)",
+export const INHERITED_INPUT_STYLE: CSSProperties = {
     cursor: "pointer",
     pointerEvents: "none",
 };

@@ -13,7 +13,17 @@ import { Given, When, Then } from "@cucumber/cucumber";
 import { expect } from "@wdio/globals";
 import * as fs from "fs";
 import * as path from "path";
-import { verifyProfiles, robustClick, dismissTutorialOverlay } from "./profileListHelpers";
+import { verifyProfiles, robustClick, dismissTutorialOverlay, waitForSaveToComplete } from "./profileListHelpers";
+import {
+    getControlValueOn,
+    getSelectOptions,
+    getTextValue,
+    isVscodeElement,
+    setSelectValue,
+    setSelectValueOn,
+    setTextValue,
+    textInputOf,
+} from "./vscodeElementHelpers";
 
 declare const browser: any;
 
@@ -59,6 +69,21 @@ Given("the profile list is set to flat view mode", async function () {
     }
 });
 
+/** The defaults dropdowns keep their ids, but they are `vscode-single-select` hosts now. */
+function defaultDropdownSelector(type: string): string {
+    return `[id="default-dropdown-${type}"]`;
+}
+
+async function waitForDefaultsDropdown(dropdownSelector: string): Promise<void> {
+    await browser.waitUntil(
+        async () => {
+            const dropdown = await browser.$(dropdownSelector);
+            return (await dropdown.isExisting()) && (await dropdown.isDisplayed());
+        },
+        { timeout: 15000, timeoutMsg: `Dropdown ${dropdownSelector} not visible` }
+    );
+}
+
 When("the user clicks the defaults toggle button to open the defaults section", async () => {
     const selectors = [".defaults-toggle-button", "[data-testid='defaults-toggle']", "button[title*='Defaults']", "button[aria-label*='Defaults']"];
     let defaultsToggleButton = null;
@@ -77,7 +102,7 @@ When("the user clicks the defaults toggle button to open the defaults section", 
     // ensure defaults section is visible by waiting for any default-dropdown select
     await browser.waitUntil(
         async () => {
-            const anyDefaultSelect = await browser.$("select[id^='default-dropdown-']");
+            const anyDefaultSelect = await browser.$("[id^='default-dropdown-']");
             return await anyDefaultSelect.isExisting();
         },
         { timeout: 15000, timeoutMsg: "Defaults section did not become visible" }
@@ -85,24 +110,10 @@ When("the user clicks the defaults toggle button to open the defaults section", 
 });
 
 When("the user selects the {word} default dropdown", async (type: string) => {
-    const dropdownSelector = `select[id="default-dropdown-${type}"]`;
-    let typeFilterSelect = await browser.$(dropdownSelector);
+    const dropdownSelector = defaultDropdownSelector(type);
+    await waitForDefaultsDropdown(dropdownSelector);
 
-    await browser.waitUntil(
-        async () => {
-            typeFilterSelect = await browser.$(dropdownSelector);
-            return (await typeFilterSelect.isExisting()) && (await typeFilterSelect.isDisplayed());
-        },
-        { timeout: 15000, timeoutMsg: `Dropdown ${dropdownSelector} not visible` }
-    );
-
-    // gather options
-    const options = await typeFilterSelect.$$("option");
-    foundOptions = [];
-    for (let i = 0; i < options.length; i++) {
-        const optionValue = await options[i].getAttribute("value");
-        foundOptions.push(optionValue);
-    }
+    foundOptions = (await getSelectOptions(dropdownSelector)).map((option) => option.value);
 });
 
 Then("the dropdown should have {string} as options", async (expectedOptions: string) => {
@@ -111,29 +122,9 @@ Then("the dropdown should have {string} as options", async (expectedOptions: str
 });
 
 When("the user selects {string} in the {word} default dropdown", async (option: string, type: string) => {
-    const dropdownSelector = `select[id="default-dropdown-${type}"]`;
-    const typeFilterSelect = await browser.$(dropdownSelector);
-    await browser.waitUntil(async () => (await typeFilterSelect.isExisting()) && (await typeFilterSelect.isDisplayed()), {
-        timeout: 15000,
-        timeoutMsg: `Dropdown ${dropdownSelector} not visible`,
-    });
-
-    try {
-        await typeFilterSelect.selectByAttribute("value", option);
-    } catch (err) {
-        // fallback: click the select then click option element
-        try {
-            await typeFilterSelect.click();
-        } catch {}
-        const options = await typeFilterSelect.$$("option");
-        for (const opt of options) {
-            const val = await opt.getAttribute("value");
-            if (val === option) {
-                await opt.click();
-                break;
-            }
-        }
-    }
+    const dropdownSelector = defaultDropdownSelector(type);
+    await waitForDefaultsDropdown(dropdownSelector);
+    await setSelectValue(dropdownSelector, option);
 });
 
 Then("the {word} default should be {string}", async (type: string, expectedDefault: string) => {
@@ -161,12 +152,14 @@ When("the user clicks the {string} button", async function (buttonText: string) 
     await browser.pause(50);
     let button;
 
+    // The header actions are `vscode-toolbar-button` hosts now: their inner <button> lives in a
+    // shadow root, so each one is addressed by the id/test id on the host element.
     switch (buttonText) {
         case "open config with profile highlighted":
-            button = await browser.$(".profile-action-button .codicon-go-to-file");
+            button = await browser.$("#open-with-highlight");
             break;
         case "set as default":
-            button = await browser.$(".profile-action-button .codicon-star-empty, .profile-action-button .codicon-star-full");
+            button = await browser.$("#set-as-default");
             break;
         case "hide merged properties":
             const mergedPropsDropdown = await browser.$(
@@ -185,10 +178,10 @@ When("the user clicks the {string} button", async function (buttonText: string) 
             button = await browser.$("#rename-profile");
             break;
         case "delete profile":
-            button = await browser.$(".profile-action-button .codicon-trash");
+            button = await browser.$("#delete-profile");
             break;
         case "confirm delete profile":
-            button = await browser.$(".profile-action-button .codicon-check");
+            button = await browser.$(".profile-actions [data-testid='confirmable-delete-confirm']");
             break;
         case "rename confirm":
             button = await browser.$("#rename-confirm");
@@ -204,26 +197,29 @@ When("the user clicks the {string} button", async function (buttonText: string) 
 
 When("the user appends {string} to the profile name in the modal", async function (textToAppend: string) {
     await ensureConfigEditorReady();
-    const profileNameInput = await browser.$("#profile-name");
-    await profileNameInput.waitForExist({ timeout: 10000 });
+    const profileNameField = await browser.$("#profile-name");
+    await profileNameField.waitForExist({ timeout: 10000 });
 
-    const currentValue = await profileNameInput.getValue();
-    await profileNameInput.setValue(currentValue + textToAppend);
+    const currentValue = await getTextValue(profileNameField);
+    await setTextValue(profileNameField, currentValue + textToAppend);
     await browser.pause(50);
 });
 
 When("the user saves the changes", async () => {
     await ensureConfigEditorReady();
 
-    const saveButton = await browser.$(".footer button[title='Save all changes']");
-    const saveButtonExists = await saveButton.isExisting().catch(() => false);
-    if (saveButtonExists) {
-        await saveButton.waitForExist({ timeout: 10000 });
-        await saveButton.click();
-        await browser.pause(500);
-    } else {
-        await browser.pause(100);
-    }
+    const saveButton = await browser.$('[data-testid="save-all-button"]');
+    await saveButton.waitForExist({ timeout: 10000 });
+    // `vscode-button` is a custom element, so WebDriver does not report its `disabled` state
+    // dependably; the title the app sets from hasPendingChanges is the signal to key off.
+    await browser.waitUntil(async () => (await saveButton.getAttribute("title")) === "Save all changes", {
+        timeout: 10000,
+        timeoutMsg: "Save button stayed disabled -- no pending changes were registered before trying to save",
+    });
+    await saveButton.click();
+    // The save blocker covers the webview until the extension has written the config and pushed
+    // the refreshed CONFIGURATIONS back, so anything that follows a save must wait it out.
+    await waitForSaveToComplete();
 });
 
 When("the user closes the zowe.config.json file", async () => {
@@ -573,7 +569,13 @@ When("the user opens the Profile Wizard modal", async function () {
     let wizardModal = null;
 
     const createProfileButton = await browser.$(
-        "[data-testid='create-profile-button'], .create-profile-button, [title*='Create Profile'], [title*='Add Profile']"
+        [
+            "[data-testid='profile-wizard-button']",
+            "[data-testid='create-profile-button']",
+            ".create-profile-button",
+            "[title*='Create Profile']",
+            "[title*='Add Profile']",
+        ].join(", ")
     );
     if (await createProfileButton.isExisting()) {
         await createProfileButton.click();
@@ -649,9 +651,7 @@ When("the user types {string} as the profile name", async function (profileName:
 When("the user selects {string} as the profile type", async function (profileType: string) {
     await ensureConfigEditorReady();
 
-    const profileTypeSelect = await browser.$("#profile-type-select");
-    await profileTypeSelect.waitForExist({ timeout: 10000 });
-    await profileTypeSelect.selectByVisibleText(profileType);
+    await setSelectValue("#profile-type-select", profileType);
     await browser.pause(100);
 });
 
@@ -937,99 +937,83 @@ Then("the properties should be displayed according to the current sort order", a
     expect(propertyElements.length).toBeGreaterThan(0);
 });
 
-When("the user clicks on the {string} property input field", async (propertyName: string) => {
+/**
+ * The value control of a property row: a native `<input>` for text and number properties, a
+ * `vscode-textfield` for secure ones and a `vscode-single-select` for booleans. The steps below
+ * work off the element resolved here instead of off `:focus`, because focusing a custom element
+ * leaves `document.activeElement` pointing at the host, which reports its own tag name rather than
+ * the inner input's.
+ */
+async function findPropertyControl(propertyName: string) {
+    const candidates = await browser.$$(`.config-section.profile-details-section [data-property-key="${propertyName}"]`);
+    for (const candidate of candidates) {
+        const tagName = (await candidate.getTagName()).toLowerCase();
+        if (tagName === "input" || tagName === "select" || tagName.startsWith("vscode-")) {
+            return candidate;
+        }
+    }
+    return null;
+}
+
+When("the user clicks on the {string} property input field", async function (propertyName: string) {
     const profileDetailsSection = await browser.$(".config-section.profile-details-section");
     await profileDetailsSection.waitForExist({ timeout: 10000 });
     await profileDetailsSection.waitForDisplayed({ timeout: 10000 });
 
-    let inputField = null;
-
-    const elementsWithDataKey = await browser.$$(`[data-property-key="${propertyName}"]`);
-    for (const element of elementsWithDataKey) {
-        const tagName = await element.getTagName();
-        if (tagName === "input" || tagName === "select") {
-            inputField = element;
-            break;
-        }
+    const control = await findPropertyControl(propertyName);
+    if (!control) {
+        throw new Error(`Could not find a value control for property: ${propertyName}`);
     }
+    await control.waitForDisplayed({ timeout: 10000 });
 
-    if (!inputField) {
-        const allInputs = await browser.$$(".env-var-input, .config-input");
-        for (const input of allInputs) {
-            const tagName = await input.getTagName();
-            if (tagName !== "input" && tagName !== "select") continue;
+    this.propertyControl = control;
+    this.propertyControlIsSelect = (await control.getTagName()).toLowerCase().includes("select");
 
-            const dataKey = await input.getAttribute("data-property-key");
-            if (dataKey === propertyName) {
-                inputField = input;
-                break;
-            }
-        }
-    }
-
-    if (inputField) {
-        await inputField.waitForExist({ timeout: 10000 });
-        await inputField.waitForDisplayed({ timeout: 10000 });
-        await inputField.click();
-        await browser.pause(50);
+    if (this.propertyControlIsSelect) {
+        // Clicking a select would leave its dropdown open over the rows the next steps need.
+        await browser.execute((el: HTMLElement) => el.focus(), control);
     } else {
-        const allInputs = await browser.$$(".env-var-input, .config-input");
-        for (const input of allInputs) {
-            const tagName = await input.getTagName();
-            if (tagName === "input" || tagName === "select") {
-                await input.click();
-                await browser.pause(50);
-                break;
-            }
-        }
+        await (await textInputOf(control)).click();
     }
+    await browser.pause(50);
 });
 
-When("the user clears the current value", async () => {
+When("the user clears the current value", async function () {
+    if (!this.propertyControl || this.propertyControlIsSelect) {
+        // A select always holds one of its options; there is nothing to clear.
+        return;
+    }
+    await (await textInputOf(this.propertyControl)).clearValue();
     await browser.pause(25);
-    const modifier = process.platform === "darwin" ? "Meta" : "Control";
-    await browser.keys([modifier, "a"]);
-    await browser.pause(25);
-    await browser.keys(["Delete"]);
 });
 
-When("the user types {string} into the input field", async (value: string) => {
-    const focusedElement = await browser.$(":focus");
-    if (focusedElement) {
-        const tagName = await focusedElement.getTagName();
-
-        if (tagName === "select") {
-            await focusedElement.selectByVisibleText(value);
-            await browser.pause(50);
-        } else {
-            await browser.keys(value);
-            await browser.pause(50);
-        }
-    } else {
-        throw new Error("No focused element found");
+When("the user types {string} into the input field", async function (value: string) {
+    if (!this.propertyControl) {
+        throw new Error("No property input field was selected");
     }
+    if (this.propertyControlIsSelect) {
+        await setSelectValueOn(this.propertyControl, value);
+    } else {
+        await setTextValue(this.propertyControl, value);
+    }
+    await browser.pause(50);
 });
 
-Then("the input field should be focused and editable", async () => {
-    const focusedElement = await browser.$(":focus");
-    if (focusedElement) {
-        const tagName = await focusedElement.getTagName();
-        const isEnabled = await focusedElement.isEnabled();
-        expect(tagName === "input" || tagName === "select").toBe(true);
-        expect(isEnabled).toBe(true);
-    } else {
-        throw new Error("No focused input/select field found");
+Then("the input field should be focused and editable", async function () {
+    if (!this.propertyControl) {
+        throw new Error("No property input field was selected");
     }
+    const control = this.propertyControlIsSelect ? this.propertyControl : await textInputOf(this.propertyControl);
+    expect(await control.isDisplayed()).toBe(true);
+    expect(await control.isEnabled()).toBe(true);
 });
 
-Then("the input field should contain {string}", async (expectedValue: string) => {
-    const focusedElement = await browser.$(":focus");
-    if (focusedElement) {
-        const actualValue = await focusedElement.getValue();
-        expect(actualValue).toBe(expectedValue);
-    } else {
-        throw new Error("No focused input field found");
+Then("the input field should contain {string}", async function (expectedValue: string) {
+    if (!this.propertyControl) {
+        throw new Error("No property input field was selected");
     }
+    const actualValue = this.propertyControlIsSelect ? await getControlValueOn(this.propertyControl) : await getTextValue(this.propertyControl);
+    expect(actualValue).toBe(expectedValue);
 });
 
 Then("the {string} property should contain {string}", async (propertyName: string, expectedValue: string) => {
@@ -1079,10 +1063,10 @@ Then("the {string} property should contain {string}", async (propertyName: strin
 });
 
 When("the user clicks the save button", async () => {
-    const saveButton = await browser.$(".footer button[title='Save all changes']");
+    const saveButton = await browser.$("[data-testid='save-all-button']");
     await saveButton.waitForExist({ timeout: 10000 });
     await saveButton.click();
-    await browser.pause(250);
+    await waitForSaveToComplete();
 });
 
 Then("the changes should be saved successfully", async () => {
@@ -1191,50 +1175,26 @@ When("the user clicks the delete button for the {string} property", async (prope
     await profileDetailsSection.waitForExist({ timeout: 10000 });
     await profileDetailsSection.waitForDisplayed({ timeout: 10000 });
 
-    let propertyContainer = null;
-    const allContainers = await browser.$$(".config-item, .property-item");
-
-    for (const container of allContainers) {
-        const containerText = await container.getText();
-        if (containerText.includes(propertyName)) {
-            propertyContainer = container;
-            break;
-        }
+    const propertyRow = await browser.$(`.config-section.profile-details-section .config-item[data-property-key="${propertyName}"]`);
+    if (!(await propertyRow.isExisting())) {
+        throw new Error(`Could not find property row for: ${propertyName}`);
     }
 
-    if (propertyContainer) {
-        let deleteButton = await propertyContainer.$(".action-button");
-        if (!deleteButton) {
-            deleteButton = await propertyContainer.$("button[title*='delete']");
-        }
-        if (!deleteButton) {
-            deleteButton = await propertyContainer.$("button[title*='Delete']");
-        }
-        if (!deleteButton) {
-            deleteButton = await propertyContainer.$("button .codicon-trash");
-        }
-        if (!deleteButton) {
-            deleteButton = await propertyContainer.$("button");
-        }
-
-        if (deleteButton) {
-            await deleteButton.waitForExist({ timeout: 10000 });
-            await deleteButton.waitForDisplayed({ timeout: 10000 });
-            await deleteButton.click();
-            await browser.pause(100);
-        } else {
-            throw new Error(`Could not find delete button for property: ${propertyName}`);
-        }
-    } else {
-        throw new Error(`Could not find property container for: ${propertyName}`);
+    const deleteButton = await propertyRow.$("[data-testid='confirmable-delete']");
+    if (!(await deleteButton.isExisting())) {
+        throw new Error(`Could not find delete button for property: ${propertyName}`);
     }
+    await deleteButton.waitForDisplayed({ timeout: 10000 });
+    await deleteButton.click();
+    await browser.pause(100);
 });
 
 Then("the delete button should be clicked successfully", async () => {
     await browser.pause(100);
-    const confirmButton = await browser.$(".action-button .codicon-check");
-    await confirmButton.waitForExist({ timeout: 2000 });
-    await confirmButton.waitForDisplayed({ timeout: 2000 });
+    // Only the row awaiting confirmation renders a confirm button.
+    const confirmButton = await browser.$(".config-section.profile-details-section [data-testid='confirmable-delete-confirm']");
+    await confirmButton.waitForExist({ timeout: 10000 });
+    await confirmButton.waitForDisplayed({ timeout: 10000 });
     await confirmButton.click();
     await browser.pause(100);
 });
@@ -1338,47 +1298,11 @@ When("the user enters {string} as the number value", async (value: string) => {
 });
 
 When("the user selects {string} as the boolean value", async (value: string) => {
-    let booleanSelect = await browser.$("#new-property-value-select, .add-profile-input, .wizard-property-value-input");
-
-    if (!booleanSelect || !(await booleanSelect.isExisting()) || !(await booleanSelect.isDisplayed())) {
-        const selects = await browser.$$("select");
-        for (const select of selects) {
-            if (await select.isDisplayed()) {
-                const className = await select.getAttribute("class").catch(() => "");
-                if (className.includes("add-profile-input") || className.includes("wizard-property-value-input")) {
-                    booleanSelect = select;
-                    break;
-                }
-            }
-        }
-    }
-
-    if (!booleanSelect || !(await booleanSelect.isExisting()) || !(await booleanSelect.isDisplayed())) {
-        booleanSelect = await browser.$(".modal select, .add-profile-modal select, .wizard-modal select, select");
-    }
-
-    await booleanSelect.waitForExist({ timeout: 2000 });
-    await booleanSelect.waitForDisplayed({ timeout: 2000 });
-
-    await browser.pause(100);
-
-    try {
-        await booleanSelect.selectByVisibleText(value);
-    } catch (error) {
-        try {
-            await booleanSelect.selectByAttribute("value", value);
-        } catch (error2) {
-            const options = await booleanSelect.$$("option");
-            for (const option of options) {
-                const optionText = await option.getText();
-                const optionValue = await option.getAttribute("value");
-                if (optionText === value || optionValue === value) {
-                    await option.click();
-                    break;
-                }
-            }
-        }
-    }
+    // For a boolean property the modal renders its value control as a `vscode-single-select`.
+    const booleanSelect = await browser.$(".modal .add-profile-input");
+    await booleanSelect.waitForExist({ timeout: 10000 });
+    await booleanSelect.waitForDisplayed({ timeout: 10000 });
+    await setSelectValueOn(booleanSelect, value);
     await browser.pause(50);
 });
 
@@ -1405,21 +1329,7 @@ When("the user toggles the secure property option", async () => {
 });
 
 When("the user clicks the add property button in the modal", async () => {
-    let addButton = await browser.$(".modal button[type='submit']");
-    if (!addButton || !(await addButton.isExisting())) {
-        addButton = await browser.$(".modal .add-button");
-    }
-    if (!addButton || !(await addButton.isExisting())) {
-        const modalButtons = await browser.$$(".modal button");
-        for (const button of modalButtons) {
-            const text = await button.getText();
-            if (text.toLowerCase().includes("add") || text.toLowerCase().includes("save")) {
-                addButton = button;
-                break;
-            }
-        }
-    }
-
+    const addButton = await browser.$("[data-testid='add-property-confirm']");
     await addButton.waitForExist({ timeout: 10000 });
     await addButton.waitForDisplayed({ timeout: 10000 });
     await addButton.click();
@@ -1431,34 +1341,21 @@ Then("the property should be added to the profile", async () => {
 });
 
 When("the user closes the modal", async () => {
-    let closeButton = await browser.$(".modal .close-button");
-    if (!closeButton || !(await closeButton.isExisting())) {
-        closeButton = await browser.$(".modal button[title*='close']");
-    }
-    if (!closeButton || !(await closeButton.isExisting())) {
-        closeButton = await browser.$(".modal button[title*='Close']");
-    }
-    if (!closeButton || !(await closeButton.isExisting())) {
-        const modalButtons = await browser.$$(".modal button");
-        for (const button of modalButtons) {
-            const text = await button.getText();
-            if (text.toLowerCase().includes("cancel")) {
-                closeButton = button;
-                break;
-            }
-        }
-    }
-    if (!closeButton || !(await closeButton.isExisting())) {
+    const cancelButton = await browser.$("[data-testid='add-property-cancel']");
+    if (await cancelButton.isExisting()) {
+        await cancelButton.waitForDisplayed({ timeout: 10000 });
+        await cancelButton.click();
+    } else {
+        // Any other modal: ModalShell dismisses on a backdrop click.
         const backdrop = await browser.$(".modal-backdrop");
-        if (backdrop && (await backdrop.isExisting())) {
+        if (await backdrop.isExisting()) {
             await backdrop.click();
         }
     }
-
-    if (closeButton && (await closeButton.isExisting())) {
-        await closeButton.click();
-        await browser.pause(100);
-    }
+    await browser.waitUntil(async () => !(await (await browser.$(".modal")).isExisting()), {
+        timeout: 10000,
+        timeoutMsg: "Modal did not close",
+    });
 });
 
 Then("the modal should be closed", async () => {

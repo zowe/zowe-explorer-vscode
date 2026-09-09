@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import * as l10n from "@vscode/l10n";
+import VscodeToolbarButton from "@vscode-elements/react-elements/dist/components/VscodeToolbarButton.js";
 import { useConfigContext } from "../context/ConfigContext";
 
 export interface TabsProps {
@@ -158,27 +159,31 @@ export function Tabs({
         </div>
 
         <div className="tabs-toolbar">
-          <button
-            className="ce-icon-button"
-            onClick={() => {
-              const configPath = selectedTab !== null ? configurations[selectedTab]?.configPath : undefined;
-              if (configPath) {
-                onOpenFile(configPath);
-              }
-            }}
-            disabled={selectedTab === null}
+          <VscodeToolbarButton
+            onClick={
+              selectedTab === null
+                ? undefined
+                : () => {
+                    const configPath = configurations[selectedTab]?.configPath;
+                    if (configPath) {
+                      onOpenFile(configPath);
+                    }
+                  }
+            }
+            aria-disabled={selectedTab === null}
+            tabIndex={selectedTab === null ? -1 : 0}
             title={l10n.t("Open File")}
             data-testid="open-config-file"
           >
             <span className="codicon codicon-go-to-file codicon-size-16"></span>
-          </button>
-          <button className="ce-icon-button" onClick={onExportRedacted} title={l10n.t("Export redacted configuration")} data-testid="export-redacted">
+          </VscodeToolbarButton>
+          <VscodeToolbarButton onClick={onExportRedacted} title={l10n.t("Export redacted configuration")} data-testid="export-redacted">
             <span className="codicon codicon-export codicon-size-16"></span>
-          </button>
+          </VscodeToolbarButton>
           <span className="tabs-toolbar-separator" role="separator" />
-          <button className="ce-icon-button" onClick={onShowTutorial} title={l10n.t("Open Tutorial")} data-testid="open-tutorial">
+          <VscodeToolbarButton onClick={onShowTutorial} title={l10n.t("Open Tutorial")} data-testid="open-tutorial">
             <span className="codicon codicon-mortar-board codicon-size-16"></span>
-          </button>
+          </VscodeToolbarButton>
           <a
             className="ce-icon-button"
             href="https://docs.zowe.org/stable/user-guide/cli-using-using-team-profiles"

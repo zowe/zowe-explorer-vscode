@@ -12,6 +12,8 @@
 
 import { useState, useRef, useCallback, useLayoutEffect, useEffect, useMemo } from "react";
 import * as l10n from "@vscode/l10n";
+import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
+import VscodeToolbarButton from "@vscode-elements/react-elements/dist/components/VscodeToolbarButton.js";
 import { useConfigContext } from "../context/ConfigContext";
 
 interface TutorialStep {
@@ -294,15 +296,21 @@ export function TutorialOverlay({ onClose, selectedProfileKey, onSelectProfile }
         {/* Header */}
         <div className="tutorial-header">
           <h2>{current.title}</h2>
-          <button className="tutorial-close-button" onClick={handleSkip} aria-label={l10n.t("Close tutorial")}>
+          <VscodeToolbarButton onClick={handleSkip} aria-label={l10n.t("Close tutorial")}>
             <span className="codicon codicon-close"></span>
-          </button>
+          </VscodeToolbarButton>
         </div>
 
         {/* Content */}
         <div className="tutorial-content">
-          <div className="tutorial-progress-bar">
-            <div className="tutorial-progress-fill" style={{ width: `${((step + 1) / total) * 100}%` }} />
+          <div className="tutorial-progress-steps" role="progressbar" aria-valuenow={step + 1} aria-valuemin={1} aria-valuemax={total}>
+            {steps.map((tutorialStep, index) => (
+              <div
+                key={tutorialStep.title}
+                className={`tutorial-progress-step ${index <= step ? "completed" : ""}`}
+                title={tutorialStep.title}
+              />
+            ))}
           </div>
           <p className="tutorial-progress-text">{l10n.t("Step {0} of {1}", step + 1, total)}</p>
           <div className="tutorial-description">
@@ -313,27 +321,27 @@ export function TutorialOverlay({ onClose, selectedProfileKey, onSelectProfile }
         {/* Footer */}
         <div className="tutorial-footer">
           <div className="tutorial-footer-left">
-            <button className="tutorial-button tutorial-button-secondary" onClick={handleSkip}>
+            <VscodeButton secondary onClick={handleSkip}>
               {l10n.t("Skip")}
-            </button>
+            </VscodeButton>
           </div>
           <div className="tutorial-footer-right">
             {step > 0 && (
-              <button className="tutorial-button tutorial-button-secondary" onClick={() => setStep((s) => s - 1)}>
-                <span className="codicon codicon-arrow-left"></span>
+              <VscodeButton secondary onClick={() => setStep((s) => s - 1)}>
+                <span slot="content-before" className="codicon codicon-arrow-left"></span>
                 {l10n.t("Back")}
-              </button>
+              </VscodeButton>
             )}
             {isLast ? (
-              <button className="tutorial-button tutorial-button-primary" onClick={handleFinish}>
+              <VscodeButton onClick={handleFinish}>
                 {l10n.t("Finish")}
-                <span className="codicon codicon-check"></span>
-              </button>
+                <span slot="content-after" className="codicon codicon-check"></span>
+              </VscodeButton>
             ) : (
-              <button className="tutorial-button tutorial-button-primary" onClick={() => setStep((s) => s + 1)}>
+              <VscodeButton onClick={() => setStep((s) => s + 1)}>
                 {l10n.t("Next")}
-                <span className="codicon codicon-arrow-right"></span>
-              </button>
+                <span slot="content-after" className="codicon codicon-arrow-right"></span>
+              </VscodeButton>
             )}
           </div>
         </div>

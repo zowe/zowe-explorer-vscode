@@ -41,16 +41,9 @@ export function ComplexValueProperty({
   const { handleNavigateToSource, configurations, selectedTab, vscodeApi, selectedProfileKey, renames } = ctx;
   const configPath = configurations[selectedTab!]?.configPath;
 
-  const renderComplexValue = (value: any, isMerged: boolean = false) => {
+  const renderComplexValue = (value: any) => {
     const actualValue = typeof value === "object" && value !== null && value._mergedValue !== undefined ? value._mergedValue : value;
-    const disabledStyle = isMerged
-      ? {
-          backgroundColor: "var(--vscode-input-disabledBackground)",
-          color: "var(--vscode-disabledForeground)",
-          opacity: 0.7,
-        }
-      : {};
-    return configComplexValueLines(actualValue, disabledStyle);
+    return configComplexValueLines(actualValue, {});
   };
 
   const inheritedFrom =
@@ -92,17 +85,16 @@ export function ComplexValueProperty({
           }}
           title={isFromMergedProps && mergedPropData?.jsonLoc ? undefined : l10n.t("Click to navigate to profile")}
           style={{
-            backgroundColor: isFromMergedProps ? "var(--vscode-input-disabledBackground)" : "var(--vscode-input-background)",
-            border: isFromMergedProps ? "1px solid var(--vscode-input-background)" : "1px solid var(--vscode-input-border)",
-            borderRadius: "3px",
+            backgroundColor: "var(--ce-field-bg)",
+            border: "1px solid var(--ce-field-border)",
+            borderRadius: "var(--ce-radius-md)",
             padding: "8px",
-            fontSize: "0.9em",
-            color: isFromMergedProps ? "var(--vscode-disabledForeground)" : "var(--vscode-input-foreground)",
+            color: "var(--ce-field-fg)",
             cursor: "pointer",
-            opacity: isFromMergedProps ? 0.7 : 1,
+            opacity: isFromMergedProps ? "var(--ce-field-dim-opacity)" : 1,
           }}
         >
-          {renderComplexValue(isFromMergedProps ? value : pendingValue, isFromMergedProps)}
+          {renderComplexValue(isFromMergedProps ? value : pendingValue)}
         </div>
       </div>
     </div>

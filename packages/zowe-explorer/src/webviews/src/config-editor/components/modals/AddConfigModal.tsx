@@ -1,4 +1,5 @@
 import * as l10n from "@vscode/l10n";
+import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
 import { ModalShell } from "../ModalShell";
 
 interface AddConfigModalProps {
@@ -202,20 +203,9 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
       )}
 
       <div className="modal-actions">
-        <button
-          onClick={onCancel}
-          style={{
-            padding: "8px 16px",
-            border: "1px solid var(--vscode-button-border)",
-            borderRadius: "4px",
-            backgroundColor: "var(--vscode-button-secondaryBackground)",
-            color: "var(--vscode-button-secondaryForeground)",
-            cursor: "pointer",
-            fontSize: "14px",
-          }}
-        >
+        <VscodeButton secondary onClick={onCancel}>
           {l10n.t("Cancel")}
-        </button>
+        </VscodeButton>
       </div>
     </ModalShell>
   );

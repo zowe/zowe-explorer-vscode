@@ -40,7 +40,7 @@ export class ConfigEditorCodeLensProvider implements vscode.CodeLensProvider {
         for (const { profileKey, line } of ConfigEditorCodeLensProvider.findProfileLocations(document.getText())) {
             lenses.push(
                 new vscode.CodeLens(new vscode.Range(line, 0, line, 0), {
-                    title: vscode.l10n.t("Edit '{0}'", profileKey),
+                    title: vscode.l10n.t("$(edit) Edit '{0}'", profileKey),
                     command: "zowe.configEditorWithProfile",
                     // The lens already knows its profile, so pass it rather than relying on the
                     // cursor-position inference `zowe.configEditor` falls back to.

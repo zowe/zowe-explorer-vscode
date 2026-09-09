@@ -65,12 +65,11 @@ export class ConfigEditorProfileOperations {
         const flatProfiles = ConfigUtils.flattenProfiles(profiles);
         const newProfileKey = rootProfile === "root" ? profileName.trim() : `${rootProfile}.${profileName.trim()}`;
 
+        const newProfileKeyLower = newProfileKey.toLowerCase();
+
         const existingProfilesUnderRoot = Object.keys(flatProfiles).some((profileKey) => {
-            if (rootProfile === "root") {
-                return profileKey === profileName.trim();
-            } else {
-                return profileKey === `${rootProfile}.${profileName.trim()}` || profileKey.startsWith(`${rootProfile}.${profileName.trim()}.`);
-            }
+            const profileKeyLower = profileKey.toLowerCase();
+            return profileKeyLower === newProfileKeyLower || profileKeyLower.startsWith(`${newProfileKeyLower}.`);
         });
 
         if (existingProfilesUnderRoot) {
@@ -79,13 +78,8 @@ export class ConfigEditorProfileOperations {
 
         const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([_, entry]) => {
             if (entry.profile) {
-                if (rootProfile === "root") {
-                    return entry.profile === profileName.trim();
-                } else {
-                    return (
-                        entry.profile === `${rootProfile}.${profileName.trim()}` || entry.profile.startsWith(`${rootProfile}.${profileName.trim()}.`)
-                    );
-                }
+                const entryProfileLower = entry.profile.toLowerCase();
+                return entryProfileLower === newProfileKeyLower || entryProfileLower.startsWith(`${newProfileKeyLower}.`);
             }
             return false;
         });
@@ -96,13 +90,14 @@ export class ConfigEditorProfileOperations {
 
         const renamesForConfig = renames[configPath] || {};
         const renameIsOccupyingName = Object.entries(renamesForConfig).some(([, newName]) => {
-            if (newName === newProfileKey) {
+            const newNameLower = newName.toLowerCase();
+            if (newNameLower === newProfileKeyLower) {
                 return true;
             }
-            if (newProfileKey.startsWith(newName + ".")) {
+            if (newProfileKeyLower.startsWith(newNameLower + ".")) {
                 return true;
             }
-            if (newName.startsWith(newProfileKey + ".")) {
+            if (newNameLower.startsWith(newProfileKeyLower + ".")) {
                 return true;
             }
             return false;

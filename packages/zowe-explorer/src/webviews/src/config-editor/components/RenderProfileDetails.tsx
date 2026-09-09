@@ -10,6 +10,7 @@
  */
 
 import { useCallback, useEffect, useRef } from "react";
+import VscodeToolbarButton from "@vscode-elements/react-elements/dist/components/VscodeToolbarButton.js";
 
 import { RenderConfig } from "./renderConfig";
 import { ConfirmableDeleteButton } from "./ConfirmableDeleteButton";
@@ -139,8 +140,7 @@ export const RenderProfileDetails = ({
           </h2>
           {selectedProfileKey && (
             <div className="profile-actions">
-              <button
-                className="profile-action-button"
+              <VscodeToolbarButton
                 id="open-with-highlight"
                 onClick={() => {
                   const configPath = configurations[selectedTab!]?.configPath;
@@ -155,28 +155,32 @@ export const RenderProfileDetails = ({
                 title={l10n.t("Open config file with profile highlighted")}
               >
                 <span className="codicon codicon-go-to-file"></span>
-              </button>
-              <button
-                className="profile-action-button"
+              </VscodeToolbarButton>
+              <VscodeToolbarButton
                 id="set-as-default"
-                onClick={() => {
-                  if (isProfileDefault(selectedProfileKey)) {
-                    const profileType = getProfileType(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
-                    if (profileType) {
-                      const configPath = configurations[selectedTab!]!.configPath;
-                      setPendingDefaults((prev) => ({
-                        ...prev,
-                        [configPath]: {
-                          ...prev[configPath],
-                          [profileType]: { value: "", path: [profileType] },
-                        },
-                      }));
-                    }
-                  } else {
-                    handleSetAsDefault(selectedProfileKey);
-                  }
-                }}
-                disabled={isCurrentProfileUntyped()}
+                onClick={
+                  isCurrentProfileUntyped()
+                    ? undefined
+                    : () => {
+                        if (isProfileDefault(selectedProfileKey)) {
+                          const profileType = getProfileType(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
+                          if (profileType) {
+                            const configPath = configurations[selectedTab!]!.configPath;
+                            setPendingDefaults((prev) => ({
+                              ...prev,
+                              [configPath]: {
+                                ...prev[configPath],
+                                [profileType]: { value: "", path: [profileType] },
+                              },
+                            }));
+                          }
+                        } else {
+                          handleSetAsDefault(selectedProfileKey);
+                        }
+                      }
+                }
+                aria-disabled={isCurrentProfileUntyped()}
+                tabIndex={isCurrentProfileUntyped() ? -1 : 0}
                 title={
                   isCurrentProfileUntyped()
                     ? l10n.t("Cannot set as default: Profile must have a valid type")
@@ -184,18 +188,15 @@ export const RenderProfileDetails = ({
                       ? l10n.t("Click to remove default")
                       : l10n.t("Set as default")
                 }
-                style={{
-                  opacity: isCurrentProfileUntyped() ? 0.5 : 1,
-                  cursor: isCurrentProfileUntyped() ? "not-allowed" : "pointer",
-                }}
               >
                 <span className={`codicon codicon-${isProfileDefault(selectedProfileKey) ? "star-full" : "star-empty"}`}></span>
-              </button>
+              </VscodeToolbarButton>
 
-              <button
-                className="profile-action-button"
+              <VscodeToolbarButton
                 id="rename-profile"
-                onClick={() => setRenameProfileModalOpen(true)}
+                onClick={
+                  selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey) ? undefined : () => setRenameProfileModalOpen(true)
+                }
                 title={
                   selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey)
                     ? l10n.t(
@@ -203,17 +204,13 @@ export const RenderProfileDetails = ({
                       )
                     : l10n.t("Rename profile")
                 }
-                disabled={selectedProfileKey ? isProfileAffectedByDragDrop(selectedProfileKey) : false}
-                style={{
-                  opacity: selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey) ? 0.5 : 1,
-                  cursor: selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey) ? "not-allowed" : "pointer",
-                }}
+                aria-disabled={selectedProfileKey ? isProfileAffectedByDragDrop(selectedProfileKey) : false}
+                tabIndex={selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey) ? -1 : 0}
               >
                 <span className="codicon codicon-edit"></span>
-              </button>
+              </VscodeToolbarButton>
               <ConfirmableDeleteButton
                 isConfirming={pendingProfileDeletion === selectedProfileKey}
-                buttonClassName="profile-action-button"
                 confirmWrapperClassName="config-editor-flex-gap"
                 deleteId="delete-profile"
                 deleteTitle={l10n.t("Delete profile")}

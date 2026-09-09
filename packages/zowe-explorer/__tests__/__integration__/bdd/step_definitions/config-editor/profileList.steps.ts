@@ -12,6 +12,7 @@
 import { When, Then } from "@cucumber/cucumber";
 import { expect } from "@wdio/globals";
 import { robustClick, dismissTutorialOverlay } from "./profileListHelpers";
+import { setSelectValueByText, setTextValue, textInputOf } from "./vscodeElementHelpers";
 
 declare const browser: any;
 
@@ -176,23 +177,24 @@ When("the user switches to tree view mode", async function () {
 
 When("the user clicks on the search input field", async () => {
     await dismissTutorialOverlay();
-    const searchInput = await browser.$("input[placeholder='Search...']");
+    // The search box is a `vscode-textfield`, so the click has to land on its shadow input.
+    const searchInput = await textInputOf(await browser.$("[data-testid='profile-search-input']"));
     await searchInput.waitForExist({ timeout: 10000 });
     await searchInput.click();
     await browser.pause(50);
 });
 
 When("the user types {string} in the search field", async (searchTerm: string) => {
-    const searchInput = await browser.$("input[placeholder='Search...']");
-    await searchInput.waitForExist({ timeout: 10000 });
-    await searchInput.clearValue();
-    await searchInput.setValue(searchTerm);
+    const searchField = await browser.$("[data-testid='profile-search-input']");
+    await searchField.waitForExist({ timeout: 10000 });
+    await setTextValue(searchField, searchTerm);
     await browser.pause(50);
 });
 
 When("the user clicks the clear search button", async () => {
     await dismissTutorialOverlay();
-    const clearButton = await browser.$("button[title='Clear search']");
+    // Rendered as a codicon with role="button" in the textfield's content-after slot.
+    const clearButton = await browser.$("[data-testid='clear-search']");
     await clearButton.waitForExist({ timeout: 10000 });
     await clearButton.click();
     await browser.pause(50);
@@ -329,9 +331,7 @@ Then("the profile list should show the nested profile and its children", async (
 });
 
 When("the user selects {string} from the type filter dropdown", async (filterType: string) => {
-    const typeFilterSelect = await browser.$("select");
-    await typeFilterSelect.waitForExist({ timeout: 10000 });
-    await typeFilterSelect.selectByVisibleText(filterType);
+    await setSelectValueByText("[data-testid='profile-type-filter']", filterType);
     await browser.pause(50);
 });
 

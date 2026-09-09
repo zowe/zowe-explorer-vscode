@@ -1,3 +1,52 @@
+:root {
+    --ce-radius-sm: 2px;
+    --ce-radius-md: 4px;
+    --ce-font-weight-emphasis: 600;
+    --ce-font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    --ce-error-color: var(--vscode-errorForeground);
+    --ce-error-border: var(--vscode-inputValidation-errorBorder, var(--vscode-errorForeground));
+    --ce-field-bg: var(--vscode-input-background);
+    --ce-field-border: var(--vscode-input-border);
+    --ce-field-fg: var(--vscode-input-foreground);
+    --ce-field-dim-opacity: 0.6;
+    --ce-overlay-scrim: rgba(0, 0, 0, 0.4);
+}
+
+vscode-textfield.config-input,
+vscode-single-select.config-input,
+vscode-textfield.modal-input,
+vscode-single-select.modal-input {
+    border: none;
+    padding: 0;
+    background-color: transparent;
+}
+
+vscode-textfield.config-input:focus,
+vscode-single-select.config-input:focus,
+vscode-textfield.modal-input:focus,
+vscode-single-select.modal-input:focus {
+    box-shadow: none;
+}
+
+vscode-single-select,
+vscode-multi-select {
+    --vscode-settings-dropdownBackground: var(--ce-field-bg);
+    --vscode-settings-dropdownBorder: var(--ce-field-border);
+    --vscode-settings-dropdownForeground: var(--ce-field-fg);
+    --vscode-settings-dropdownListBorder: var(--ce-field-border);
+}
+
+vscode-textfield {
+    --vscode-settings-textInputBackground: var(--ce-field-bg);
+    --vscode-settings-textInputBorder: var(--ce-field-border);
+    --vscode-settings-textInputForeground: var(--ce-field-fg);
+}
+
+vscode-toolbar-button[aria-disabled="true"] {
+    opacity: 0.4;
+    cursor: default;
+}
+
 html,
 body {
     height: 100%;
@@ -6,22 +55,15 @@ body {
     overflow: hidden;
 }
 
-/* Property highlight blink animation — triggered when opening webview from editor cursor context */
 @keyframes property-blink {
-    0% {
-        background-color: transparent;
-    }
-    25% {
-        background-color: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 200, 0, 0.35));
-    }
-    50% {
-        background-color: transparent;
-    }
-    75% {
-        background-color: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 200, 0, 0.35));
-    }
+    0%,
+    50%,
     100% {
-        background-color: transparent;
+        opacity: 0;
+    }
+    25%,
+    75% {
+        opacity: 1;
     }
 }
 
@@ -35,36 +77,42 @@ body {
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    border-radius: 3px;
+    border-radius: var(--ce-radius-sm);
+    box-shadow: 0 0 0 3px var(--vscode-inputValidation-warningBorder, #cca700);
+    opacity: 0;
     animation: property-blink 0.9s ease-in-out forwards;
 }
 
-/* Profile highlight blink animation — triggered when navigating to a profile from the editor */
 @keyframes profile-blink {
-    0% {
-        outline: 2px solid transparent;
-    }
-    25% {
-        outline: 2px solid var(--vscode-focusBorder, rgba(0, 120, 212, 0.8));
-        background-color: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 200, 0, 0.25));
-    }
-    50% {
-        outline: 2px solid transparent;
-        background-color: transparent;
-    }
-    75% {
-        outline: 2px solid var(--vscode-focusBorder, rgba(0, 120, 212, 0.8));
-        background-color: var(--vscode-editor-findMatchHighlightBackground, rgba(255, 200, 0, 0.25));
-    }
+    0%,
+    50%,
     100% {
-        outline: 2px solid transparent;
-        background-color: transparent;
+        opacity: 0;
+    }
+    8%,
+    42%,
+    58%,
+    92% {
+        opacity: 1;
     }
 }
 
 .profile-highlight-blink {
-    animation: profile-blink 1s ease-in-out forwards;
-    border-radius: 3px;
+    position: relative;
+}
+
+.profile-highlight-blink::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    border-radius: var(--ce-radius-sm);
+    box-shadow:
+        0 0 0 3px var(--vscode-focusBorder, #0078d4),
+        0 0 20px 4px var(--vscode-focusBorder, #0078d4);
+    opacity: 0;
+    animation: profile-blink 1.4s ease-in-out forwards;
 }
 
 /* Drag and drop styles */
@@ -92,11 +140,29 @@ body {
     transition: all 0.2s ease;
 }
 
+.profile-tree-drop-preview-row {
+    border: 1px dashed var(--vscode-focusBorder);
+    background-color: transparent;
+    color: var(--vscode-descriptionForeground);
+    opacity: 0.8;
+    pointer-events: none;
+}
+
 body {
     font-size: 14px;
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
-    font-family: var(--vscode-font-family, monospace);
+    font-family: var(--ce-font-family);
+}
+
+body.vscode-dark,
+body.vscode-high-contrast:not(.vscode-high-contrast-light) {
+    color-scheme: dark;
+}
+
+body.vscode-light,
+body.vscode-high-contrast-light {
+    color-scheme: light;
 }
 
 /* Footer styles */
@@ -106,7 +172,7 @@ body {
     align-items: center;
     gap: 8px;
     padding: 12px 16px;
-    background: var(--vscode-editor-background);
+    background: var(--ce-card-background, var(--vscode-editor-background));
     flex-shrink: 0;
 }
 
@@ -180,7 +246,7 @@ div:has(> .vscode-panel) {
     padding: 0 12px;
     cursor: pointer;
     background-color: var(--vscode-tab-inactiveBackground);
-    color: var(--vscode-tab-inactiveForeground);
+    color: var(--vscode-tab-inactiveForeground, var(--vscode-panelTitle-inactiveForeground, #9d9d9d));
     border: 1px solid var(--vscode-tab-border);
     border-bottom: 1px solid var(--vscode-tab-border);
     font-size: 13px;
@@ -192,19 +258,22 @@ div:has(> .vscode-panel) {
 }
 
 .tab:hover {
-    background-color: var(--vscode-tab-hoverBackground);
-    color: var(--vscode-tab-hoverForeground);
+    background-color: var(--vscode-tab-hoverBackground, var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.1)));
+    color: var(--vscode-tab-hoverForeground, var(--vscode-panelTitle-activeForeground, #cccccc));
 }
 
 .tab.active {
     background-color: var(--vscode-editor-background);
-    color: var(--vscode-tab-activeForeground);
+    color: var(--vscode-tab-activeForeground, var(--vscode-panelTitle-activeForeground, #cccccc));
     border-color: var(--vscode-tab-border);
     border-bottom: none;
-    font-weight: 500;
+    font-weight: var(--ce-font-weight-emphasis);
     position: relative;
     z-index: 1;
-    border-top: 2px solid var(--vscode-tab-activeBorderTop);
+}
+
+.tab.active:hover {
+    background-color: var(--vscode-editor-background);
 }
 
 .tab.active::after {
@@ -223,8 +292,8 @@ div:has(> .vscode-panel) {
     top: 0;
     left: 0;
     right: 0;
-    height: 1px;
-    background-color: var(--vscode-tab-activeBorderTop);
+    height: 2px;
+    background-color: var(--vscode-tab-activeBorderTop, var(--vscode-panelTitle-activeBorder, #0078d4));
 }
 
 .tab.add-tab {
@@ -257,7 +326,7 @@ div:has(> .vscode-panel) {
     border-top: none;
     background-color: var(--vscode-editor-background);
     padding: 12px;
-    border-radius: 0 0 4px 4px;
+    border-radius: 0 0 var(--ce-radius-md) var(--ce-radius-md);
     overflow: auto;
     display: flex;
     flex-direction: column;
@@ -354,36 +423,103 @@ div:has(> .vscode-panel) {
 }
 
 .config-section.defaults-section {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
     min-width: 0;
     overflow: visible;
     margin-top: 16px;
+}
+
+/* Each section gets its own card; padding is per-card because the details section pads its own content wrapper. */
+.section-card {
+    /* Inherited by descendants that need to paint their own opaque surface (sticky rows, footer). */
+    --ce-card-background: var(--vscode-editorWidget-background);
+    background-color: var(--ce-card-background);
+    border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border));
+    border-radius: var(--ce-radius-md);
+    box-sizing: border-box;
+}
+
+.profiles-card,
+.defaults-section.section-card {
+    padding: 4px 12px 10px;
+    /* Never crush below content height (see the .defaults-section rule above for why this matters). */
+    flex-shrink: 0;
+}
+
+/* Collapsed sections have no content below the header, so the card is just the header bar. */
+.profiles-card:not(:has(> .profile-list-container)),
+.defaults-section.section-card:not(:has(> .defaults-content)) {
+    padding-bottom: 4px;
+}
+
+/* Negative margins let the header span the full card width despite the card's padding. */
+.section-card > .profile-heading-container,
+.section-card > .defaults-heading-container {
+    margin: 0 -12px;
+    padding: 0 12px;
+}
+
+/* Only rule off the header when there is content below it to separate. */
+.profiles-card:has(> .profile-list-container) > .profile-heading-container,
+.defaults-section.section-card:has(> .defaults-content) > .defaults-heading-container {
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border));
+}
+
+/* Negative margin cancels the header's padding so the hover highlight spans the whole row. */
+.section-card > .profile-heading-container > .profiles-toggle-button,
+.section-card > .defaults-heading-container > .defaults-toggle-button {
+    margin-left: -12px;
+    padding: 6px 12px;
+    align-self: stretch;
+    border-radius: var(--ce-radius-md);
+}
+
+.section-card > .defaults-heading-container > .defaults-toggle-button {
+    margin-right: -12px;
+    flex: 1;
 }
 
 .defaults-toggle-button,
 .profiles-toggle-button {
     transition: all 0.2s ease;
     padding: 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: var(--vscode-editor-foreground);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: var(--ce-font-weight-emphasis);
 }
 
 .profiles-toggle-button {
     text-align: left;
     justify-content: flex-start;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.profiles-toggle-button h2,
+.defaults-toggle-button h2 {
+    margin: 0;
 }
 
 .profiles-content {
     margin-top: 16px;
 }
 
-/* Add margin to profile list when profiles section is expanded */
+/* The card header's bottom margin now provides this gap. */
 .config-section.profiles-section .profile-list-container {
-    margin-top: 16px;
+    margin-top: 0;
 }
 
 .defaults-toggle-button:hover,
 .profiles-toggle-button:hover {
     background-color: var(--vscode-list-hoverBackground) !important;
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
 }
 
 .defaults-content {
@@ -408,12 +544,12 @@ div:has(> .vscode-panel) {
 
 .resize-divider:hover {
     background-color: var(--vscode-button-background);
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 4px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.1));
 }
 
 .resize-divider:active {
     background-color: var(--vscode-button-background);
-    box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 6px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.2));
 }
 
 .resize-divider::before {
@@ -479,6 +615,11 @@ div:has(> .vscode-panel) {
     width: 100%;
 }
 
+/* Re-zeroes the margin from `.config-section h2`, which would skew this flex-centered heading above its chevron. */
+.defaults-heading-container h2 {
+    margin: 0;
+}
+
 .config-item {
     margin: 6px 0;
 }
@@ -488,7 +629,7 @@ div:has(> .vscode-panel) {
 }
 
 .config-label {
-    font-weight: 500;
+    font-weight: var(--ce-font-weight-emphasis);
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -509,12 +650,12 @@ div:has(> .vscode-panel) {
 .config-input {
     flex: 1;
     padding: 4px 8px;
-    border: 1px solid var(--vscode-input-border);
-    border-radius: 4px;
-    background-color: var(--vscode-input-background);
-    color: var(--vscode-input-foreground);
+    border: 1px solid var(--ce-field-border);
+    border-radius: var(--ce-radius-md);
+    background-color: var(--ce-field-bg);
+    color: var(--ce-field-fg);
     font-size: 13px;
-    font-family: var(--vscode-font-family);
+    font-family: var(--ce-font-family);
     min-width: 120px;
     height: 28px;
     box-sizing: border-box;
@@ -526,22 +667,31 @@ div:has(> .vscode-panel) {
     box-shadow: 0 0 0 1px var(--vscode-button-background);
 }
 
-select:focus {
+select:focus,
+vscode-single-select:focus {
     outline: none;
-    border-color: var(--vscode-input-border);
+    border-color: var(--ce-field-border);
     box-shadow: 0 0 0 1px var(--vscode-button-background);
 }
 
 .config-input::placeholder {
-    color: var(--vscode-input-foreground);
+    color: var(--ce-field-fg);
     opacity: 0.7;
 }
 
-/* Inherited (merged) values: border matches editable input background so rows align with non-inherited fields */
-.config-input.config-input-inherited,
-select.config-input.config-input-inherited:disabled,
-.env-var-input.config-input-inherited {
-    border: 1px solid var(--vscode-input-background);
+/* Inherited (merged) values: an editable field's own face, dimmed as a whole. */
+input.config-input.config-input-inherited {
+    border-color: var(--ce-field-border);
+    background-color: var(--ce-field-bg);
+    color: var(--ce-field-fg);
+    opacity: var(--ce-field-dim-opacity);
+}
+
+/* Same, for the toolkit controls: the face already comes from the repointed tokens above, but their
+   shadow DOM dims `[disabled]` to 0.4 — override it so every merged row shares the one dim. */
+vscode-textfield.config-input-inherited[disabled],
+vscode-single-select.config-input-inherited[disabled] {
+    opacity: var(--ce-field-dim-opacity);
 }
 
 .config-item-container {
@@ -552,12 +702,19 @@ select.config-input.config-input-inherited:disabled,
     max-width: 100%;
 }
 
+/* A bare check reads as "save", so the confirm is outlined in the error color to signal a deletion. */
+.delete-confirm-button {
+    color: var(--vscode-errorForeground);
+    border: 1px solid var(--vscode-errorForeground);
+}
+
 .config-item-container.defaults-container {
     grid-template-columns: minmax(100px, 150px) minmax(150px, 250px);
     overflow: hidden;
 }
 
-.config-section.defaults-section select {
+.config-section.defaults-section select,
+.config-section.defaults-section vscode-single-select {
     max-width: 100%;
     box-sizing: border-box;
     overflow: hidden;
@@ -584,9 +741,10 @@ select option:disabled:focus {
 }
 
 /* Override focus styles for invalid defaults to keep only the error border */
-select.invalid-default:focus {
+select.invalid-default:focus,
+vscode-single-select.invalid-default:focus {
     outline: none !important;
-    border-color: var(--vscode-inputValidation-errorBorder, #f48771) !important;
+    border-color: var(--ce-error-border) !important;
     box-shadow: none !important;
 }
 
@@ -623,7 +781,7 @@ select.invalid-default:focus {
     background-color: var(--vscode-button-secondaryBackground);
     color: var(--vscode-button-secondaryForeground);
     border: 1px solid var(--vscode-button-border);
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
     cursor: pointer;
     transition: background-color 0.2s ease;
     padding: 4px 8px;
@@ -637,7 +795,8 @@ select.invalid-default:focus {
     background-color: var(--vscode-button-secondaryHoverBackground);
 }
 
-/* Shared icon-only button: consistent 28px hit area and hover */
+/* Shared icon-only button. --vscode-foreground, not --vscode-editor-foreground: matches the
+   <vscode-toolbar-button> icons beside it (Tabs.tsx), which themes can color differently. */
 .ce-icon-button {
     min-width: 28px;
     min-height: 28px;
@@ -648,9 +807,9 @@ select.invalid-default:focus {
     align-items: center;
     justify-content: center;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
     background-color: transparent;
-    color: var(--vscode-editor-foreground);
+    color: var(--vscode-foreground);
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
@@ -667,10 +826,11 @@ a.ce-icon-button {
     text-decoration: none;
 }
 
+/* Wins over .ce-icon-button above, so it needs the same --vscode-foreground fix. */
 .tabs a.ce-icon-button,
 .tabs a.ce-icon-button:hover,
 .tabs a.ce-icon-button:visited {
-    color: var(--vscode-editor-foreground);
+    color: var(--vscode-foreground);
 }
 
 .header-button {
@@ -679,8 +839,8 @@ a.ce-icon-button {
     background-color: var(--vscode-button-background);
     color: var(--vscode-button-foreground);
     border: none;
-    border-radius: 4px;
-    font-weight: bold;
+    border-radius: var(--ce-radius-md);
+    font-weight: var(--ce-font-weight-emphasis);
     align-self: flex-start;
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -694,7 +854,7 @@ a.ce-icon-button {
 h3 {
     margin: 6px 0;
     font-size: 14px;
-    font-weight: bold;
+    font-weight: var(--ce-font-weight-emphasis);
 }
 
 ul {
@@ -709,7 +869,7 @@ ul {
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: var(--ce-overlay-scrim);
     z-index: 10;
     display: flex;
     align-items: center;
@@ -721,8 +881,8 @@ ul {
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
     padding: 24px;
-    border-radius: 8px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+    border-radius: var(--ce-radius-md);
+    box-shadow: 0 8px 16px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.25));
     min-width: 300px;
     max-width: 400px;
     display: flex;
@@ -735,7 +895,7 @@ ul {
     background-color: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
     border: 1px solid var(--vscode-input-border);
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
     width: 100%;
 }
 
@@ -747,7 +907,7 @@ ul {
     color: var(--vscode-input-foreground);
     background-color: var(--vscode-input-background);
     border: 1px solid var(--vscode-input-border);
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
     box-sizing: border-box;
 }
 
@@ -755,20 +915,6 @@ ul {
     outline: none;
     border-color: var(--vscode-inputValidation-infoBorder);
     box-shadow: 0 0 3px var(--vscode-inputValidation-infoBorder);
-}
-
-.modal button {
-    padding: 8px 12px;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-    font-weight: 500;
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-}
-
-.modal button:hover {
-    background-color: var(--vscode-button-hoverBackground);
 }
 
 .defaults-header {
@@ -788,7 +934,7 @@ ul {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: var(--ce-overlay-scrim);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -814,9 +960,9 @@ ul {
     padding: 16px 24px;
     background-color: var(--vscode-editor-background);
     border: 1px solid var(--vscode-widget-border);
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
     color: var(--vscode-foreground);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.3));
 }
 
 .modal-actions {
@@ -916,8 +1062,8 @@ ul {
     position: fixed;
     background-color: var(--vscode-menu-background);
     border: 1px solid var(--vscode-menu-border);
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-radius: var(--ce-radius-md);
+    box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.15));
     z-index: 1000;
     min-width: 150px;
 }
@@ -946,7 +1092,7 @@ ul {
 .config-editor-modal-overlay {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--ce-overlay-scrim);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -960,7 +1106,7 @@ ul {
 .config-editor-modal-panel {
     background-color: var(--vscode-editor-background);
     border: 1px solid var(--vscode-panel-border);
-    border-radius: 6px;
+    border-radius: var(--ce-radius-md);
     padding: 20px;
     max-height: 80vh;
     overflow: auto;
@@ -983,7 +1129,7 @@ ul {
 .config-editor-modal-title {
     margin: 0 0 12px 0;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: var(--ce-font-weight-emphasis);
 }
 
 .config-editor-modal-description {
@@ -1003,7 +1149,7 @@ ul {
 }
 
 .config-parse-error-path {
-    font-weight: 600;
+    font-weight: var(--ce-font-weight-emphasis);
     font-size: 13px;
     word-break: break-all;
 }
@@ -1015,25 +1161,8 @@ ul {
     white-space: pre-wrap;
 }
 
-.config-parse-error-open-btn {
+.config-parse-errors-list vscode-button {
     margin-top: 8px;
-    padding: 6px 12px;
-    font-size: 13px;
-    cursor: pointer;
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-    border: none;
-    border-radius: 4px;
-}
-
-.config-editor-btn-secondary-outline {
-    padding: 8px 14px;
-    font-size: 13px;
-    cursor: pointer;
-    background-color: var(--vscode-button-secondaryBackground);
-    color: var(--vscode-button-secondaryForeground);
-    border: 1px solid var(--vscode-button-border);
-    border-radius: 4px;
 }
 
 .profile-tree-scroll {
@@ -1052,14 +1181,8 @@ ul {
     flex-shrink: 0;
 }
 
-/*
- * VS Code-style indent guides: a thin vertical line connecting a parent row's toggle down
- * through its descendants, in place of relying on indentation alone to read the hierarchy.
- * Lives on the children wrapper (not the row) so its height naturally spans exactly this
- * subtree — it starts at the first child and stops at the last, with no last-child bookkeeping
- * needed. Deeper levels nest their own wrapper + line inside this one, at a further `left`
- * offset, so multiple guides stack as parallel lines exactly like VS Code's Explorer.
- */
+/* VS Code-style indent guides. Lives on the children wrapper, not the row, so its height spans exactly
+   this subtree; deeper levels nest their own guide at a further `left` offset. */
 .profile-tree-children {
     position: relative;
 }
@@ -1123,34 +1246,6 @@ ul {
     border-color: var(--vscode-inputValidation-errorBorder);
 }
 
-.modal-button {
-    padding: 8px 12px;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-    font-weight: 500;
-    font-size: 14px;
-    transition: background-color 0.2s ease;
-}
-
-.modal-button.primary {
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-}
-
-.modal-button.primary:hover {
-    background-color: var(--vscode-button-hoverBackground);
-}
-
-.modal-button.secondary {
-    background-color: var(--vscode-button-secondaryBackground);
-    color: var(--vscode-button-secondaryForeground);
-}
-
-.modal-button.secondary:hover {
-    background-color: var(--vscode-button-secondaryHoverBackground);
-}
-
 .codicon {
     display: inline-block;
     width: 16px;
@@ -1192,7 +1287,7 @@ ul {
     max-height: 150px;
     overflow-y: auto;
     z-index: 10000;
-    border-radius: 0 0 4px 4px;
+    border-radius: 0 0 var(--ce-radius-md) var(--ce-radius-md);
     margin-top: -1px;
     list-style: none;
     list-style-position: inside;
@@ -1232,14 +1327,13 @@ ul {
     color: var(--vscode-button-secondaryForeground) !important;
 }
 
+/* The selected-value text lives in shadow DOM and reads this token, not the host's `color`. */
 .config-input.placeholder-style {
-    color: #666 !important;
-    font-style: italic !important;
+    --vscode-settings-dropdownForeground: var(--vscode-descriptionForeground);
 }
 
 .config-input.placeholder-style option {
     color: var(--vscode-input-foreground) !important;
-    font-style: normal !important;
 }
 
 @media (max-width: 1200px) {
@@ -1297,7 +1391,8 @@ ul {
     }
 
     .config-section.defaults-section {
-        flex: 1;
+        /* Same reasoning as the base rule: never shrink below the rows' own content height. */
+        flex: 0 0 auto;
         min-width: 0;
         overflow: visible;
         margin-top: 16px;
@@ -1529,19 +1624,25 @@ ul {
 .wizard-label {
     display: block;
     margin-bottom: 0.5rem;
-    font-weight: bold;
+    font-weight: var(--ce-font-weight-emphasis);
     font-size: 0.9em;
 }
 
-.wizard-select {
+/* `display: flex` would collapse the shadow face to the selected text's width. The face is also stuck
+   at 26px with no `::part`, so the host draws the 32px chrome and the face's border is made transparent
+   to disappear into it — only the border token, since the background one is shared with the options panel. */
+vscode-single-select.wizard-select {
     position: relative;
     z-index: 1;
-    display: flex;
-    align-items: center;
-    padding: 0 8px;
-    line-height: 32px;
+    display: block;
     width: 100%;
     height: 32px;
+    padding: 3px 0;
+    box-sizing: border-box;
+    background-color: var(--vscode-input-background);
+    border: 1px solid var(--vscode-input-border);
+    border-radius: var(--ce-radius-md);
+    --vscode-settings-dropdownBorder: transparent;
 }
 
 .wizard-select:focus {
@@ -1566,12 +1667,12 @@ ul {
 }
 
 .wizard-input.error {
-    border-color: #ff6b6b;
+    border-color: var(--ce-error-border);
 }
 
 .wizard-error {
     font-size: 0.8em;
-    color: #ff6b6b;
+    color: var(--ce-error-color);
     margin-top: 2px;
 }
 
@@ -1628,7 +1729,7 @@ ul {
     align-items: center;
     justify-content: center;
     border: 1px solid var(--vscode-button-border);
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 13px;
@@ -1665,7 +1766,7 @@ ul {
     background-color: var(--vscode-button-secondaryBackground) !important;
     color: var(--vscode-button-secondaryForeground) !important;
     border: 1px solid var(--vscode-button-border) !important;
-    border-radius: 4px !important;
+    border-radius: var(--ce-radius-md) !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
     font-size: 13px !important;
@@ -1680,15 +1781,13 @@ ul {
 }
 
 .wizard-add-property-button {
-    padding: 0.5rem;
-    height: 32px;
     width: 100%;
 }
 
 .wizard-properties-container {
     flex: 1;
     border: 1px solid var(--vscode-input-border);
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
     padding: 0.5rem;
     overflow: auto;
     background-color: transparent;
@@ -1704,7 +1803,7 @@ ul {
     padding: 6px 8px;
     margin-bottom: 4px;
     background-color: var(--vscode-input-background);
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
     border: 1px solid var(--vscode-input-border);
     width: 100%;
     max-width: 100%;
@@ -1718,7 +1817,7 @@ ul {
 }
 
 .wizard-property-key {
-    font-weight: bold;
+    font-weight: var(--ce-font-weight-emphasis);
     flex: 0 0 50%;
     font-size: 1em;
     overflow: hidden;
@@ -1752,7 +1851,7 @@ ul {
     padding: 0 8px;
     background-color: var(--vscode-input-background);
     border: 1px solid var(--vscode-input-border);
-    border-radius: 2px;
+    border-radius: var(--ce-radius-sm);
     font-size: 0.95em;
     color: var(--vscode-descriptionForeground);
     cursor: not-allowed;
@@ -1789,7 +1888,7 @@ ul {
     align-items: center;
     justify-content: center;
     border: 1px solid var(--vscode-button-border);
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -1814,13 +1913,13 @@ ul {
     background-color: var(--vscode-button-secondaryBackground);
     color: var(--vscode-button-secondaryForeground);
     border: 1px solid var(--vscode-button-border);
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .wizard-no-properties {
-    color: #666;
+    color: var(--vscode-descriptionForeground);
     font-style: italic;
     text-align: center;
     padding: 1rem;
@@ -1840,11 +1939,11 @@ ul {
 .wizard-button {
     padding: 0.5rem 1rem;
     min-width: 80px;
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
     border: 1px solid var(--vscode-button-border);
     cursor: pointer;
     font-size: 13px;
-    font-family: var(--vscode-font-family);
+    font-family: var(--ce-font-family);
     transition: all 0.2s ease;
 }
 
@@ -2167,20 +2266,22 @@ ul {
 
 .auth-order-button-container {
     display: flex;
-    gap: 0.375rem;
+    gap: 0.25rem;
+    /* Sized to fit all four buttons on one line at the wizard's 300px column; wrap is a
+       safety net for the narrower breakpoints below. */
     flex-wrap: wrap;
 }
 
 .auth-order-button {
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0.375rem;
     border: 1px solid var(--vscode-button-border);
-    border-radius: 3px;
+    border-radius: var(--ce-radius-sm);
     background-color: var(--vscode-button-secondaryBackground) !important;
     color: var(--vscode-button-secondaryForeground) !important;
     cursor: pointer;
     font-size: 0.75rem;
     transition: all 0.2s ease;
-    font-family: var(--vscode-font-family, monospace);
+    font-family: var(--ce-font-family);
     min-width: auto;
     height: 24px;
     display: flex;
@@ -2200,11 +2301,12 @@ ul {
     border-color: var(--vscode-button-hoverBorder);
 }
 
+/* No font-weight change: `min-width: auto` means bolding on select would widen the button and shift
+   every one after it. The color inversion already reads as "selected". */
 .auth-order-button.selected {
     background-color: var(--vscode-button-background) !important;
     color: var(--vscode-button-foreground) !important;
     border-color: var(--vscode-button-border);
-    font-weight: 600;
 }
 
 .auth-order-button.selected:hover {
@@ -2329,7 +2431,7 @@ ul {
 }
 
 .font-bold {
-    font-weight: bold;
+    font-weight: var(--ce-font-weight-emphasis);
 }
 
 .font-mono {
@@ -2380,12 +2482,12 @@ ul {
 .env-var-input {
     flex: 1;
     padding: 4px 8px;
-    border: 1px solid var(--vscode-input-border);
-    border-radius: 4px;
-    background-color: var(--vscode-input-background);
-    color: var(--vscode-input-foreground);
+    border: 1px solid var(--ce-field-border);
+    border-radius: var(--ce-radius-md);
+    background-color: var(--ce-field-bg);
+    color: var(--ce-field-fg);
     font-size: 13px;
-    font-family: var(--vscode-font-family);
+    font-family: var(--ce-font-family);
     min-width: 120px;
     width: 100%;
     box-sizing: border-box;
@@ -2407,8 +2509,8 @@ ul {
     z-index: 1000;
     background-color: var(--vscode-dropdown-background);
     border: 1px solid var(--vscode-dropdown-border);
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border-radius: var(--ce-radius-md);
+    box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.2));
     max-height: 200px;
     overflow-y: auto;
     margin-top: 2px;
@@ -2441,7 +2543,7 @@ ul {
 }
 
 .env-var-suggestion-name {
-    font-weight: 500;
+    font-weight: var(--ce-font-weight-emphasis);
     color: var(--vscode-foreground);
 }
 
@@ -2486,7 +2588,7 @@ ul {
 }
 
 .border-radius-4 {
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
 }
 
 .border-radius-8 {
@@ -2517,7 +2619,7 @@ ul {
     justify-content: center;
     background-color: transparent;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
     cursor: pointer;
     transition: background-color 0.2s ease;
     color: var(--vscode-editor-foreground);
@@ -2578,8 +2680,10 @@ ul {
     justify-content: center;
     background-color: transparent;
     border: none;
-    border-radius: 4px;
-    color: var(--vscode-editor-foreground);
+    border-radius: var(--ce-radius-md);
+    /* --vscode-foreground, not --vscode-editor-foreground: matches the toolbar-button icons
+       beside it (Panels.tsx), which themes can color differently. */
+    color: var(--vscode-foreground);
     cursor: pointer;
     padding: 0;
     min-width: 28px;
@@ -2605,8 +2709,8 @@ ul {
     left: 0;
     background-color: var(--vscode-dropdown-background);
     border: 1px solid var(--vscode-dropdown-border);
-    border-radius: 3px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-radius: var(--ce-radius-sm);
+    box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.15));
     z-index: 500;
     max-height: 200px;
     overflow-y: auto;
@@ -2636,11 +2740,7 @@ ul {
     color: var(--vscode-list-activeSelectionForeground);
 }
 
-/*
- * Wider, wrapping variant used when options carry an explanatory line (e.g. merged-properties
- * modes). Only three such dropdowns exist and none is ever tall enough to need scrolling, so the
- * height cap (and the vertical scrollbar it implies) is dropped here.
- */
+/* Wider, wrapping variant for options that carry an explanatory line; none is tall enough to scroll. */
 .sort-dropdown-list--described {
     white-space: normal;
     min-width: 260px;
@@ -2650,7 +2750,7 @@ ul {
 }
 
 .sort-dropdown-item-label {
-    font-weight: 500;
+    font-weight: var(--ce-font-weight-emphasis);
 }
 
 .sort-dropdown-item-description {
@@ -2690,4 +2790,81 @@ body.vscode-light .profile-tree-item.selected:not(.drag-over) {
 .footer-history-button {
     height: 32px;
     width: 32px;
+}
+
+/* High contrast themes don't guarantee --vscode-button-background / --vscode-tab-border are visible
+   against their surroundings, so these affordances re-anchor to the dedicated HC tokens. */
+body.vscode-high-contrast .profile-list-item.selected,
+body.vscode-high-contrast .profile-tree-item.selected:not(.drag-over),
+body.vscode-high-contrast-light .profile-list-item.selected,
+body.vscode-high-contrast-light .profile-tree-item.selected:not(.drag-over) {
+    border: 2px solid var(--vscode-contrastActiveBorder, var(--vscode-focusBorder)) !important;
+}
+
+body.vscode-high-contrast .profile-list-item:not(.selected),
+body.vscode-high-contrast .profile-tree-item:not(.selected):not(.drag-over),
+body.vscode-high-contrast-light .profile-list-item:not(.selected),
+body.vscode-high-contrast-light .profile-tree-item:not(.selected):not(.drag-over) {
+    border: 2px solid var(--vscode-contrastBorder, transparent) !important;
+}
+
+body.vscode-high-contrast .tab,
+body.vscode-high-contrast-light .tab {
+    border-color: var(--vscode-contrastBorder, var(--vscode-tab-border));
+}
+
+body.vscode-high-contrast .section-card,
+body.vscode-high-contrast-light .section-card,
+body.vscode-high-contrast .section-card > .profile-heading-container,
+body.vscode-high-contrast .section-card > .defaults-heading-container,
+body.vscode-high-contrast-light .section-card > .profile-heading-container,
+body.vscode-high-contrast-light .section-card > .defaults-heading-container {
+    border-color: var(--vscode-contrastBorder, var(--vscode-editorWidget-border));
+}
+
+body.vscode-high-contrast .tab.active::before,
+body.vscode-high-contrast-light .tab.active::before {
+    background-color: var(--vscode-contrastActiveBorder, var(--vscode-tab-activeBorderTop));
+}
+
+body.vscode-high-contrast .resize-divider,
+body.vscode-high-contrast-light .resize-divider {
+    background-color: var(--vscode-contrastBorder, var(--vscode-tab-border));
+}
+
+body.vscode-high-contrast .resize-divider:hover,
+body.vscode-high-contrast .resize-divider:active,
+body.vscode-high-contrast .resize-divider.dragging,
+body.vscode-high-contrast-light .resize-divider:hover,
+body.vscode-high-contrast-light .resize-divider:active,
+body.vscode-high-contrast-light .resize-divider.dragging {
+    background-color: var(--vscode-contrastActiveBorder, var(--vscode-focusBorder));
+    outline: 1px solid var(--vscode-contrastActiveBorder, var(--vscode-focusBorder));
+}
+
+/* Dimming would undercut the contrast HC themes guarantee; merged rows are still marked by their
+   muted label, "inherited from" indicator and being read-only. */
+body.vscode-high-contrast,
+body.vscode-high-contrast-light {
+    --ce-field-dim-opacity: 1;
+}
+
+body.vscode-high-contrast .config-input:focus,
+body.vscode-high-contrast select:focus,
+body.vscode-high-contrast vscode-single-select:focus,
+body.vscode-high-contrast-light .config-input:focus,
+body.vscode-high-contrast-light select:focus,
+body.vscode-high-contrast-light vscode-single-select:focus {
+    outline: 1px solid var(--vscode-contrastActiveBorder, var(--vscode-focusBorder));
+    outline-offset: -1px;
+}
+
+body.vscode-high-contrast .ce-icon-button:focus,
+body.vscode-high-contrast .action-button:focus,
+body.vscode-high-contrast .profile-action-button:focus,
+body.vscode-high-contrast-light .ce-icon-button:focus,
+body.vscode-high-contrast-light .action-button:focus,
+body.vscode-high-contrast-light .profile-action-button:focus {
+    outline: 1px solid var(--vscode-contrastActiveBorder, var(--vscode-focusBorder));
+    outline-offset: -1px;
 }

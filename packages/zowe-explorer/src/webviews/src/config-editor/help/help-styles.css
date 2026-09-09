@@ -36,7 +36,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 3px;
+    border-radius: var(--ce-radius-sm);
     width: 16px;
     height: 16px;
 }
@@ -62,7 +62,7 @@
     z-index: 10000;
     background-color: var(--vscode-editorHoverWidget-background);
     border: 1px solid var(--vscode-editorHoverWidget-border);
-    border-radius: 4px;
+    border-radius: var(--ce-radius-md);
     padding: 12px 16px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     width: min(450px, calc(100vw - 32px));
@@ -87,7 +87,7 @@
     display: block;
     margin-bottom: 4px;
     color: var(--vscode-textLink-foreground);
-    font-weight: 600;
+    font-weight: var(--ce-font-weight-emphasis);
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -113,7 +113,7 @@
 .help-section code {
     background-color: var(--vscode-textCodeBlock-background);
     padding: 3px 6px;
-    border-radius: 3px;
+    border-radius: var(--ce-radius-sm);
     font-family: var(--vscode-editor-font-family);
     font-size: 12px;
     color: var(--vscode-textPreformat-foreground);
@@ -127,7 +127,7 @@
     padding: 8px 10px;
     background-color: var(--vscode-inputValidation-warningBackground);
     border-left: 3px solid var(--vscode-inputValidation-warningBorder);
-    border-radius: 3px;
+    border-radius: var(--ce-radius-sm);
 }
 
 .help-required strong {
@@ -137,7 +137,7 @@
     letter-spacing: normal;
 }
 
-.field-help-tooltip > .tutorial-button {
+.field-help-tooltip > vscode-button {
     margin-top: 8px;
 }
 
@@ -166,7 +166,7 @@
     z-index: 9998;
     pointer-events: none;
     border: 2px solid var(--vscode-focusBorder);
-    border-radius: 6px;
+    border-radius: var(--ce-radius-md);
     box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12);
     transition:
         top 0.2s ease,
@@ -183,7 +183,7 @@
     z-index: 9999;
     background-color: var(--vscode-editor-background);
     border: 1px solid var(--vscode-panel-border);
-    border-radius: 8px;
+    border-radius: var(--ce-radius-md);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     width: 90%;
     max-width: 600px;
@@ -206,26 +206,8 @@
 .tutorial-header h2 {
     margin: 0;
     font-size: 18px;
-    font-weight: 600;
+    font-weight: var(--ce-font-weight-emphasis);
     color: var(--vscode-foreground);
-}
-
-.tutorial-close-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    color: var(--vscode-foreground);
-    opacity: 0.7;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.tutorial-close-button:hover {
-    opacity: 1;
-    background-color: var(--vscode-toolbar-hoverBackground);
 }
 
 .tutorial-content {
@@ -234,20 +216,22 @@
     overflow-y: auto;
 }
 
-.tutorial-progress-bar {
-    width: 100%;
-    height: 6px;
-    background-color: var(--vscode-progressBar-background);
-    border-radius: 3px;
-    overflow: hidden;
+.tutorial-progress-steps {
+    display: flex;
+    gap: 4px;
     margin-bottom: 8px;
 }
 
-.tutorial-progress-fill {
-    height: 100%;
-    background-color: var(--vscode-button-background);
-    border-radius: 3px;
-    transition: width 0.3s ease;
+.tutorial-progress-step {
+    flex: 1;
+    height: 6px;
+    background-color: var(--vscode-panel-border, rgba(128, 128, 128, 0.4));
+    border-radius: var(--ce-radius-sm);
+    transition: background-color 0.2s ease;
+}
+
+.tutorial-progress-step.completed {
+    background-color: var(--vscode-button-background, #0078d4);
 }
 
 .tutorial-progress-text {
@@ -278,44 +262,12 @@
     gap: 8px;
 }
 
-.tutorial-button {
-    padding: 6px 14px;
-    border-radius: 4px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: none;
-}
-
 .tutorial-overlay-modal .codicon {
     margin-top: 0 !important;
 }
 
-.tutorial-button-primary {
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-}
-
-.tutorial-button-primary:hover {
-    background-color: var(--vscode-button-hoverBackground);
-}
-
-.tutorial-button-secondary {
-    background-color: var(--vscode-button-secondaryBackground);
-    color: var(--vscode-button-secondaryForeground);
-}
-
-.tutorial-button-secondary:hover {
-    background-color: var(--vscode-button-secondaryHoverBackground);
-}
-
 /* Accessibility */
-.tutorial-button:focus,
-.info-icon-button:focus,
-.tutorial-close-button:focus {
+.info-icon-button:focus {
     outline: 2px solid var(--vscode-focusBorder);
     outline-offset: 2px;
 }

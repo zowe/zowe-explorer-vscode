@@ -10,6 +10,7 @@
  */
 
 import * as l10n from "@vscode/l10n";
+import VscodeToolbarButton from "@vscode-elements/react-elements/dist/components/VscodeToolbarButton.js";
 import { stringifyValueByType } from "../../utils";
 import { isFileProperty } from "../../utils/propertyUtils";
 import type { RenderConfigCtx } from "./context";
@@ -70,8 +71,7 @@ export function PropertyActionButtons({ ctx, displayKey, path, fullKey, pendingV
     return (
       <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
         {showFilePickerButton && (
-          <button
-            className="action-button"
+          <VscodeToolbarButton
             onClick={() => {
               vscodeApi.postMessage({
                 command: "SELECT_FILE",
@@ -83,33 +83,30 @@ export function PropertyActionButtons({ ctx, displayKey, path, fullKey, pendingV
             title={l10n.t("Select file")}
           >
             <span className="codicon codicon-folder-opened" style={{ position: "relative", top: "2px" }}></span>
-          </button>
+          </VscodeToolbarButton>
         )}
         {showAuthOrderButton && (
-          <button
-            className="action-button"
+          <VscodeToolbarButton
             onClick={() => {
               openAddProfileModalAtPath(path, displayKey, stringifyValueByType(pendingValue));
             }}
             title={l10n.t("Edit authentication order")}
           >
             <span className="codicon codicon-list-selection"></span>
-          </button>
+          </VscodeToolbarButton>
         )}
         {showSecureButton &&
           (secureValuesAllowed ? (
-            <button
-              className="action-button"
+            <VscodeToolbarButton
               onClick={() => {
                 handleToggleSecure(fullKey, displayKey, path, pendingValue);
               }}
               title={l10n.t("Make property secure")}
             >
               <span className="codicon codicon-unlock"></span>
-            </button>
+            </VscodeToolbarButton>
           ) : (
-            <button
-              className="action-button"
+            <VscodeToolbarButton
               onClick={() => {
                 vscodeApi.postMessage({
                   command: "OPEN_VSCODE_SETTINGS",
@@ -119,7 +116,7 @@ export function PropertyActionButtons({ ctx, displayKey, path, fullKey, pendingV
               title={l10n.t("A credential manager is not available. Click to open VS Code settings to enable secure credentials.")}
             >
               <span className="codicon codicon-lock" style={{ opacity: 0.5, position: "relative", top: "-1px" }}></span>
-            </button>
+            </VscodeToolbarButton>
           ))}
         {showDeleteButton && (
           <ConfirmableDeleteButton
@@ -130,16 +127,15 @@ export function PropertyActionButtons({ ctx, displayKey, path, fullKey, pendingV
           />
         )}
         {showUnlinkButton && (
-          <button
-            className="action-button"
-            onClick={(e) => {
+          <VscodeToolbarButton
+            onClick={(e: any) => {
               e.stopPropagation();
               handleUnlinkMergedProperty(displayKey, fullKey);
             }}
             title={l10n.t("Overwrite merged property")}
           >
             <span className="codicon codicon-add"></span>
-          </button>
+          </VscodeToolbarButton>
         )}
       </div>
     );

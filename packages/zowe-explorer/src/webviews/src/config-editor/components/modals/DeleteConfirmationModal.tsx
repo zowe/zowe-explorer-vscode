@@ -10,6 +10,7 @@
  */
 
 import * as l10n from "@vscode/l10n";
+import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
 import { ModalShell } from "../ModalShell";
 
 interface DeleteConfirmationModalProps {
@@ -41,55 +42,25 @@ export function DeleteConfirmationModal({ isOpen, type, name, onConfirm, onCance
     <ModalShell
       isOpen={isOpen}
       onClose={onCancel}
-      initialFocusSelector=".delete-confirm-button"
+      initialFocusSelector="#delete-confirmation-confirm-button"
       titleId="delete-confirmation-modal-title"
       overlayClassName="modal-backdrop"
       panelClassName="modal"
       panelStyle={{ minWidth: "400px", maxWidth: "500px" }}
     >
       <div style={{ marginBottom: "16px" }}>
-        <h2 id="delete-confirmation-modal-title" style={{ margin: "0 0 12px 0", fontSize: "18px", fontWeight: "600" }}>
+        <h2 id="delete-confirmation-modal-title" style={{ margin: "0 0 12px 0", fontSize: "18px", fontWeight: "var(--ce-font-weight-emphasis)" }}>
           {getTitle()}
         </h2>
         <p style={{ margin: "0", fontSize: "13px", lineHeight: "1.5", color: "var(--vscode-foreground)" }}>{getMessage()}</p>
       </div>
       <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "20px" }}>
-        <button
-          className="modal-button secondary"
-          onClick={onCancel}
-          style={{
-            padding: "8px 16px",
-            fontSize: "13px",
-            height: "32px",
-            lineHeight: "16px",
-            backgroundColor: "var(--vscode-button-secondaryBackground)",
-            color: "var(--vscode-button-secondaryForeground)",
-            border: "1px solid var(--vscode-button-secondaryBorder)",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontWeight: "normal",
-          }}
-        >
+        <VscodeButton secondary onClick={onCancel}>
           {l10n.t("Cancel")}
-        </button>
-        <button
-          className="modal-button delete-confirm-button"
-          onClick={onConfirm}
-          style={{
-            padding: "8px 16px",
-            fontSize: "13px",
-            height: "32px",
-            lineHeight: "16px",
-            backgroundColor: "var(--vscode-button-background)",
-            color: "var(--vscode-button-foreground)",
-            border: "1px solid var(--vscode-button-border)",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontWeight: "500",
-          }}
-        >
+        </VscodeButton>
+        <VscodeButton id="delete-confirmation-confirm-button" onClick={onConfirm}>
           {l10n.t("Delete")}
-        </button>
+        </VscodeButton>
       </div>
     </ModalShell>
   );

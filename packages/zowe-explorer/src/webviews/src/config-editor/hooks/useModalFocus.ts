@@ -33,7 +33,7 @@ export function useModalFocus(isOpen: boolean, focusSelector?: string) {
                 }
 
                 const focusableElements = modalRef.current?.querySelectorAll(
-                    'input, select, textarea, button, [tabindex]:not([tabindex="-1"])'
+                    'input, select, textarea, button, vscode-button, vscode-toolbar-button, vscode-textfield, vscode-single-select, vscode-checkbox, [tabindex]:not([tabindex="-1"])'
                 ) as NodeListOf<HTMLElement>;
 
                 if (focusableElements && focusableElements.length > 0) {

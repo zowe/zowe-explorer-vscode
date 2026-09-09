@@ -14,7 +14,8 @@ import { useCallback } from "react";
 import { useModalClickOutside } from "../hooks/useModalClickOutside";
 import { useModalFocus } from "../hooks/useModalFocus";
 
-const FOCUSABLE_SELECTOR = 'input, select, textarea, button, a[href], [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE_SELECTOR =
+  'input, select, textarea, button, a[href], vscode-button, vscode-toolbar-button, vscode-textfield, vscode-single-select, vscode-checkbox, [tabindex]:not([tabindex="-1"])';
 
 interface ModalShellProps {
   isOpen: boolean;

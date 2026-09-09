@@ -28,6 +28,36 @@ export async function dismissTutorialOverlay(): Promise<void> {
 }
 
 /**
+ * Wait until the Config Editor's save blocker is gone.
+ *
+ * A save renders `.save-modal-blocker` (position: fixed; inset: 0) over the whole webview and
+ * only clears it once the extension has written the config, re-read it from disk and posted
+ * DISABLE_OVERLAY. While that blocker is up, native clicks are intercepted and profile tree
+ * drag-and-drop silently does nothing, because the tree resolves its drop target with
+ * `document.elementFromPoint()` and that returns the blocker instead of a tree row.
+ */
+export async function waitForSaveOverlayGone(timeout = 30000): Promise<void> {
+    await browser.waitUntil(
+        async () => {
+            const blocker = await browser.$(".save-modal-blocker");
+            return !(await blocker.isExisting());
+        },
+        { timeout, timeoutMsg: "Config Editor save overlay never cleared - the save round-trip did not finish" }
+    );
+}
+
+/** Same wait, for use right after clicking Save: gives the blocker a moment to be rendered first. */
+export async function waitForSaveToComplete(timeout = 30000): Promise<void> {
+    // A check that lands before the save click's re-render would report the save as already
+    // finished, so wait for the blocker to come up before waiting for it to clear.
+    await browser
+        .waitUntil(async () => await (await browser.$(".save-modal-blocker")).isExisting(), { timeout: 2000, interval: 50 })
+        .catch(() => undefined);
+
+    await waitForSaveOverlayGone(timeout);
+}
+
+/**
  * Robust click helper for webview elements in CI.
  * Dismisses the tutorial overlay if present, then uses DOM-level scrollIntoView
  * (avoids Actions API / CDP commands that fail with

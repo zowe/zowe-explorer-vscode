@@ -10,6 +10,7 @@
  */
 
 import * as l10n from "@vscode/l10n";
+import VscodeButton from "@vscode-elements/react-elements/dist/components/VscodeButton.js";
 import type { ConfigParseError } from "../../types";
 import { ModalShell } from "../ModalShell";
 
@@ -41,7 +42,7 @@ export function ConfigParseErrorsModal({ errors, vscodeApi }: ConfigParseErrorsM
   return (
     <ModalShell
       isOpen={errors.length > 0}
-      initialFocusSelector="button:not([disabled])"
+      initialFocusSelector="button:not([disabled]), vscode-button:not([disabled])"
       titleId="config-parse-errors-title"
       overlayClassName="config-editor-modal-overlay config-editor-modal-overlay--elevated"
       panelClassName="config-editor-modal-panel config-editor-modal-panel--parse-errors"
@@ -58,17 +59,15 @@ export function ConfigParseErrorsModal({ errors, vscodeApi }: ConfigParseErrorsM
             {err.configPath ? <div className="config-parse-error-path">{err.configPath}</div> : null}
             <div className="config-parse-error-message">{err.message}</div>
             {err.configPath ? (
-              <button type="button" onClick={() => handleOpenFile(err)} className="config-parse-error-open-btn">
-                {l10n.t("Open in editor")}
-              </button>
+              <VscodeButton onClick={() => handleOpenFile(err)}>{l10n.t("Open in editor")}</VscodeButton>
             ) : null}
           </li>
         ))}
       </ul>
       <div className="modal-actions">
-        <button type="button" onClick={handleRefresh} className="config-editor-btn-secondary-outline">
+        <VscodeButton secondary onClick={handleRefresh}>
           {l10n.t("Refresh")}
-        </button>
+        </VscodeButton>
       </div>
     </ModalShell>
   );

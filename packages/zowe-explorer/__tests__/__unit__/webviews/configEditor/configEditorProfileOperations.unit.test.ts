@@ -716,6 +716,25 @@ describe("ConfigEditorProfileOperations", () => {
             expect(result.message).toBe("Profile name already exists under this root");
         });
 
+        it("should return invalid when profile name differs only by case from an existing profile", () => {
+            const profiles = {
+                zosmf: {
+                    type: "zosmf",
+                    properties: {},
+                },
+            };
+            const result = profileOperations.validateProfileName({
+                profileName: "zOSmF",
+                rootProfile: "root",
+                configPath: "/config.json",
+                profiles,
+                pendingChanges: {},
+                renames: {},
+            });
+            expect(result.isValid).toBe(false);
+            expect(result.message).toBe("Profile name already exists under this root");
+        });
+
         it("should return invalid when profile name exists under nested root", () => {
             const profiles = {
                 parent: {

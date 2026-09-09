@@ -330,6 +330,10 @@ export class SharedInit {
 
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.configEditorWithProfile", async (profileName: string, configPath: string, profileType: string) => {
+                const activeEditorAtInvocation = vscode.window.activeTextEditor;
+                const cursorContext = SharedInit.resolveZoweConfigCursorContext(configPath, activeEditorAtInvocation);
+                const propertyKey = cursorContext?.profileName === profileName ? cursorContext.propertyKey : undefined;
+
                 // Check if there's already an open ConfigEditor
                 if (existingConfigEditor && existingConfigEditor.panel) {
                     // Reveal the existing panel
@@ -341,6 +345,7 @@ export class SharedInit {
                         profileName: profileName,
                         configPath: configPath,
                         profileType: profileType,
+                        propertyKey,
                     });
                     // Not stored on initialSelection: it's already been posted directly above, and if left set
                     // it would be replayed by handleConfigurationsReady on the next unrelated save's refresh.
@@ -349,7 +354,7 @@ export class SharedInit {
                     return existingConfigEditor;
                 } else {
                     // Create new ConfigEditor, passing selection so it's set before GET_PROFILES fires
-                    const configEditor = new ConfigEditor(context, { profileName, configPath, profileType });
+                    const configEditor = new ConfigEditor(context, { profileName, configPath, profileType, propertyKey });
 
                     // Track this instance
                     existingConfigEditor = configEditor;
