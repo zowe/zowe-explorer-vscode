@@ -188,7 +188,7 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
         vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await SharedActions.searchInAllLoadedItems(testDatasetTree, testUssTree);
-        expect(testDatasetTree.addSearchHistory).toHaveBeenCalledWith("HLQ.PROD2.STUFF");
+        expect(testDatasetTree.addSearchHistory).toHaveBeenCalledWith("HLQ.PROD2.STUFF", testNode.getProfile());
     });
     it("Checking that searchInAllLoadedItems works for a PDS", async () => {
         const globalMocks = await createGlobalMocks();
@@ -271,7 +271,7 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
         vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
 
         await SharedActions.searchInAllLoadedItems(testDatasetTree, testUssTree);
-        expect(testDatasetTree.addSearchHistory).toHaveBeenCalledWith("HLQ.PROD2.STUFF(TESTMEMB)");
+        expect(testDatasetTree.addSearchHistory).toHaveBeenCalledWith("HLQ.PROD2.STUFF(TESTMEMB)", testNode.getProfile());
     });
     it("Checking that searchInAllLoadedItems works for a USS folder", async () => {
         const globalMocks = await createGlobalMocks();
@@ -345,7 +345,7 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
         const openNode = vi.spyOn(file, "openUSS").mockImplementation((() => undefined) as any);
         await SharedActions.searchInAllLoadedItems(undefined, testUssTree);
 
-        expect(testUssTree.addSearchHistory).toHaveBeenCalledWith("/folder/file");
+        expect(testUssTree.addSearchHistory).toHaveBeenCalledWith("/folder/file", file.getProfile());
         expect(openNode).toHaveBeenCalledWith(false, true, testUssTree);
     });
     it("Checking that searchInAllLoadedItems fails when no pattern is entered", async () => {

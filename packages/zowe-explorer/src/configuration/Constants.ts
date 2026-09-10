@@ -94,6 +94,8 @@ export class Constants {
     public static readonly SETTINGS_ZOSMF_QUEUE_TIMEOUT = "zowe.settings.zosmfRequestQueueTimeout";
     public static readonly LOGGER_SETTINGS = "zowe.logger";
     public static readonly SETTINGS_OVERRIDE_WITH_ENV_VAR = "zowe.settings.overrideWithEnvironmentVariables";
+    public static readonly SETTINGS_HISTORY_GROUP_BY_HOST = "zowe.settings.historyGroupByHost";
+    public static readonly SETTINGS_MAX_SEARCH_HISTORY = "zowe.settings.maxSearchHistory";
     public static EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
     public static readonly ZOWE_CLI_SCM = "@zowe/cli";
     public static readonly MAX_DATASET_LENGTH = 44;

@@ -28,7 +28,7 @@ import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import * as fs from "fs";
 
 vi.mock("fs");
-async function initializeHistoryViewMock(blockMocks: any, globalMocks: any): Promise<SharedHistoryView> {
+async function initializeHistoryViewMock(blockMocks: any, globalMocks: any, invokingNode?: any): Promise<SharedHistoryView> {
     return new SharedHistoryView(
         {
             extensionPath: "",
@@ -37,7 +37,9 @@ async function initializeHistoryViewMock(blockMocks: any, globalMocks: any): Pro
             ds: await createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView),
             uss: createUSSTree([blockMocks.datasetSessionNode], [globalMocks.testSession], globalMocks.treeView),
             jobs: await createJobsTree(globalMocks.testSession, createIJobObject(), globalMocks.testProfile, createTreeView()),
-        } as any
+        } as any,
+        undefined,
+        invokingNode
     );
 }
 
@@ -162,7 +164,7 @@ describe("HistoryView Unit Tests", () => {
             vi.spyOn(historyView as any, "refreshView").mockImplementation((() => undefined) as any);
             await historyView["onDidReceiveMessage"]({ command: "add-item", attrs: { type: "uss" } });
             expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
-            expect(addSearchHistorySpy).toHaveBeenCalledWith("test");
+            expect(addSearchHistorySpy).toHaveBeenCalledWith("test", undefined);
         });
 
         it("should handle the case where 'remove-item' is the command sent and the selection is 'search'", async () => {
@@ -364,6 +366,20 @@ describe("HistoryView Unit Tests", () => {
                 sessions: [],
                 encodingHistory: [],
             });
+        });
+
+        it("should scope the search history subset to the invoking node's type and profile", async () => {
+            const globalMocks = await createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const historyView = await initializeHistoryViewMock(blockMocks, globalMocks, blockMocks.datasetSessionNode);
+            const dsSearchHistorySpy = vi.spyOn(historyView["treeProviders"].ds, "getSearchHistory");
+            const ussSearchHistorySpy = vi.spyOn(historyView["treeProviders"].uss, "getSearchHistory");
+
+            historyView["getHistoryData"]("ds");
+            historyView["getHistoryData"]("uss");
+
+            expect(dsSearchHistorySpy).toHaveBeenCalledWith(blockMocks.datasetSessionNode.getProfile());
+            expect(ussSearchHistorySpy).toHaveBeenCalledWith(undefined);
         });
     });
 });

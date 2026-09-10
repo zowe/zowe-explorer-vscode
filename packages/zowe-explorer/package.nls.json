@@ -101,6 +101,8 @@
   "zowe.ds.default.sort.description": "Default sort order for datasets",
   "zowe.ds.history": "Toggle if favorite files persist locally",
   "zowe.ds.templates": "Zowe Explorer saved data set templates",
+  "zowe.settings.historyGroupByHost": "Group data set, USS, and job filter search history by system instead of sharing one list across all profiles. Each profile's history group is its host, unless overridden by a `historyGroup` property set on the profile.",
+  "zowe.settings.maxSearchHistory": "Maximum number of entries kept in filter search history. Applies per history group when `zowe.settings.historyGroupByHost` is enabled, and to the single shared history list otherwise.",
   "zowe.files.logsFolder.path": "Path to Zowe Explorer logs folder",
   "zowe.files.showHiddenFiles": "Show hidden files in USS explorer",
   "zowe.uss.history": "Toggle if USS favorite files persist locally",

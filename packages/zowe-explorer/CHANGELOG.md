@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added the `zowe.settings.historyGroupByHost` setting to group filter search history by host instead of sharing one list across all profiles, and the `zowe.settings.maxSearchHistory` setting to configure the maximum number of entries kept in filter search history. [#4477](https://github.com/zowe/zowe-explorer-vscode/pull/4477)
 - Added `ssoLogin` and `ssoLogout` methods to the API returned by `getExplorerExtenderApi()`, allowing extenders to perform SSO login and logout for a profile by name or loaded profile. The `Profiles.ssoLogout` function can now be called without a tree node and returns a boolean indicating success. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Added a dialog to clarify that connecting to the mainframe with an SSH profile can result in deploying the SSH server if it is not present. The warning can be prevented by pressing the `"Connect, don't ask me again"` button or by setting the VS Code setting `zowe.confirmSshServerDeploy` to `false`. [#4445](https://github.com/zowe/zowe-explorer-vscode/pull/4445)
 - Added a dialog when there does not appear to be enough disk space on z/OS UNIX to deploy the SSH server, which can be bypassed by clicking the `"Deploy"` button on the dialog. [#4445](https://github.com/zowe/zowe-explorer-vscode/pull/4445)
