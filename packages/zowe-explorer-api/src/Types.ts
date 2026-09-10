@@ -12,7 +12,7 @@
 import { FileDecoration, Uri } from "vscode";
 import { ICreateDataSetOptions } from "@zowe/zos-files-for-zowe-sdk";
 import type { IApiExplorerExtender, IRegisterClient } from "./extend";
-import type { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode, IZoweTree } from "./tree";
+import type { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode, IZoweTree, ZosEncoding } from "./tree";
 
 export namespace Types {
     export type IZoweNodeType = IZoweDatasetTreeNode | IZoweUSSTreeNode | IZoweJobTreeNode;
@@ -25,12 +25,27 @@ export namespace Types {
         date?: Date;
     };
 
+    export type IZoweExplorerFileApi = {
+        /**
+         * Gets the selected encoding for a mainframe dataset/member URI.
+         * @param uri the URI of the resource
+         * @returns the encoding if found, otherwise undefined
+         */
+        getEncodingForUri(uri: Uri): ZosEncoding | undefined;
+    };
+
     export type IApiRegisterClient = IRegisterClient & {
         /**
          * Lookup of an API for the generic extender API.
          * @returns the registered API instance
          */
         getExplorerExtenderApi(): IApiExplorerExtender;
+
+        /**
+         * Gets the helper API for mainframe file-system and cache queries.
+         * @returns the Zowe Explorer file API instance
+         */
+        getFileApi(): IZoweExplorerFileApi;
     };
 
     export type WebviewUris = {
