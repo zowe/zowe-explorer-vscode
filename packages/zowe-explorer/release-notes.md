@@ -4,7 +4,7 @@
 
 ### Zowe Remote SSH for Zowe Explorer
 
-The Zowe Remote SSH capabilities are now built into Zowe Explorer. It allows you to work with data sets, USS files, and jobs using the SSH protocol on systems where z/OSMF is not available.
+The Zowe Remote SSH capabilities are now built into Zowe Explorer. It allows you to work with data sets, z/OS Unix files, and jobs using the SSH protocol on systems where z/OSMF is not available.
 
 It works by deploying a small server program called `zo` to z/OS UNIX on the host you connect to. Zowe Explorer then talks to that server over your existing SSH connection. You need an `ssh` profile in your team configuration to get started.
 
@@ -16,7 +16,7 @@ This release adds several checks before anything is written to the host:
 
 - **Confirmation before deploying.** A dialog explains that connecting might deploy the server. Click **Connect, don't ask me again** to skip it in future, or turn off the **Zowe: Confirm Ssh Server Deploy** setting.
 - **Disk space check.** If z/OS UNIX does not appear to have enough free space for the server, you get a warning. Click **Deploy** to continue anyway.
-- **Reuse of an existing server.** If your profile has no `serverPath`, Zowe Explorer looks for `zo` on your `$PATH` on USS and uses that instead of deploying another copy.
+- **Reuse of an existing server.** If your profile has no `serverPath`, Zowe Explorer looks for `zo` on your `$PATH` on z/OS Unix and uses that instead of deploying another copy.
 - **Write access check.** If you do not have write access to the deploy directory, Zowe Explorer warns you instead of deploying.
 
 #### Managing the server
@@ -33,7 +33,7 @@ If the connection drops, Zowe Explorer offers to reconnect. The **Reload** and *
 - **Jobs:** list and filter jobs by status, view spool files and JCL, submit JCL, cancel, and delete.
 - **Commands:** issue TSO, console, and z/OS UNIX commands.
 
-**Note:** Migrating data sets and uploading a local directory to USS are not supported over SSH yet.
+**Note:** Migrating data sets and uploading a local directory to z/OS Unix are not supported over SSH yet.
 
 #### Keeping the server up to date
 
@@ -69,7 +69,7 @@ The **JOBS** tree filter now accepts comma-separated job prefixes, for example `
 Three fixes in this release address cases where Zowe Explorer could overwrite your data:
 
 - Recalling a sequential data set no longer overwrites its contents.
-- Expanding a profile in the **Favorites** section no longer uploads empty content to each favorited USS file. Previously this failed for users without write access and truncated the file for everyone else.
+- Expanding a profile in the **Favorites** section no longer uploads empty content to each favorited z/OS Unix file. Previously this failed for users without write access and truncated the file for everyone else.
 - The same fix applies to favorited sequential data sets, which were being truncated the same way.
 
 Migrated data sets are also now sorted correctly in **Favorites**.
@@ -93,9 +93,9 @@ The Zowe Explorer API adds:
 
 **Deprecated:** Passing a `string` to the `condition` property of a `TableView` action. Use a function instead.
 
-Zowe Explorer also handles extenders that return an `items` array as `undefined` or `null`, or that omit `apiResponse` entirely, instead of crashing during USS directory detection.
+Zowe Explorer also handles extenders that return an `items` array as `undefined` or `null`, or that omit `apiResponse` entirely, instead of crashing during z/OS Unix directory detection.
 
-See the respective changelogs for the full list of changes, including fixes for web extension host activation on `vscode.dev`, vault change handling, and USS context menus.
+See the respective changelogs for the full list of changes, including fixes for web extension host activation on `vscode.dev`, vault change handling, and z/OS Unix context menus.
 
 ## `3.5.0`
 
