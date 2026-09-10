@@ -426,10 +426,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     elementChildren[dsNode.label.toString()] = dsNode;
                 } else if (item.vol === "*ALIAS") {
                     const resolvedAlias = await this.resolveAlias(item);
-                    item.dsorg ??= resolvedAlias?.dsorg;
-                    item.recfm ??= resolvedAlias?.recfm;
-                    item.blksz ??= resolvedAlias?.blksz;
-                    item.migr ??= resolvedAlias?.migr;
+                    item.dsorg = resolvedAlias?.dsorg || item.dsorg;
+                    item.recfm = resolvedAlias?.recfm || item.recfm;
+                    item.blksz = resolvedAlias?.blksz || item.blksz;
+                    item.migr = resolvedAlias?.migr || item.migr;
                     const originalIsMigrated = item.migr?.toUpperCase() === "YES";
                     dsNode = new ZoweDatasetNode({
                         label: item.dsname,
