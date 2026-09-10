@@ -38,7 +38,7 @@
   "**Commands:** issue TSO, console, and z/OS UNIX commands.": "**Commands:** issue TSO, console, and z/OS UNIX commands.",
   "**Confirmation before deploying.** A dialog explains that connecting might deploy the server. Click **Connect, don't ask me again** to skip it in future, or turn off the **Zowe: Confirm Ssh Server Deploy** setting.": "**Confirmation before deploying.** A dialog explains that connecting might deploy the server. Click **Connect, don't ask me again** to skip it in future, or turn off the **Zowe: Confirm Ssh Server Deploy** setting.",
   "**Data sets:** list and filter data sets and members, read and write contents, create data sets and members, allocate like, copy data sets and members (including across LPARs), rename, recall migrated data sets, delete, search members for a string, and view attributes including member ISPF statistics.": "**Data sets:** list and filter data sets and members, read and write contents, create data sets and members, allocate like, copy data sets and members (including across LPARs), rename, recall migrated data sets, delete, search members for a string, and view attributes including member ISPF statistics.",
-  "**Deprecated:** Passing a string to the condition property of a TableView action. Use a function instead.": "**Deprecated:** Passing a string to the condition property of a TableView action. Use a function instead.",
+  "**Deprecated:** Passing a string to the condition property of a TableView action. Use a callback function instead.": "**Deprecated:** Passing a string to the condition property of a TableView action. Use a callback function instead.",
   "**Disk space check.** If z/OS UNIX does not appear to have enough free space for the server, you get a warning. Click **Deploy** to continue anyway.": "**Disk space check.** If z/OS UNIX does not appear to have enough free space for the server, you get a warning. Click **Deploy** to continue anyway.",
   "**Display in Tree** is now called **Locate in Tree**, which better describes what it does.": "**Display in Tree** is now called **Locate in Tree**, which better describes what it does.",
   "**Enable:** Go to Zowe Explorer settings and check **Use Integrated Terminals**.": "**Enable:** Go to Zowe Explorer settings and check **Use Integrated Terminals**.",
@@ -2232,7 +2232,6 @@
       "Profile name"
     ]
   },
-  "This works with z/OSMF profiles only in this release. Other profile types can add support through the new optional resolveAlias API.": "This works with z/OSMF profiles only in this release. Other profile types can add support through the new optional resolveAlias API.",
   "Three fixes in this release address cases where Zowe Explorer could overwrite your data:": "Three fixes in this release address cases where Zowe Explorer could overwrite your data:",
   "Time Ended": "Time Ended",
   "Time Started": "Time Started",

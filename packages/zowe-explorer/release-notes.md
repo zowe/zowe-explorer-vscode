@@ -50,8 +50,6 @@ The `zowe.zowex.serverAutoUpdate` setting has also been removed in favor of the 
 
 Data set aliases now resolve to the data set they point to, both in the **DATA SETS** tree and when opening a data set through the Zowe filesystem provider. Previously an alias could not be opened.
 
-This works with `z/OSMF` profiles only in this release. Other profile types can add support through the new optional `resolveAlias` API.
-
 ### Export configuration files for troubleshooting
 
 The new **Zowe Explorer: Export Redacted Configuration Files** command palette item writes out copies of your team configuration files with sensitive values removed. Use it when you need to share your setup with someone helping you troubleshoot, without the risk of sharing sensitive information.
@@ -87,7 +85,7 @@ The Zowe Explorer API adds:
 - A `FsDatasetsUtils.trimExtension` helper function for removing the file extension added to data set URIs
 - A `Table.View.trackRows` function to record rows delivered to a webview outside the normal update flow
 
-**Deprecated:** Passing a `string` to the `condition` property of a `TableView` action. Use a function instead.
+**Deprecated:** Passing a `string` to the `condition` property of a `TableView` action. Use a callback function instead.
 
 See the respective changelogs for the full list of changes, including fixes for web extension host activation on `vscode.dev`, vault change handling, and z/OS Unix context menus.
 
