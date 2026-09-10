@@ -1866,8 +1866,8 @@
   "Renamed 'Display in Tree' to 'Locate in Tree' in table views to improve clarity. <a>#3771</a>": "Renamed 'Display in Tree' to 'Locate in Tree' in table views to improve clarity. <a>#3771</a>",
   "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>": "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>",
   "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>": "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>",
-  "Renamed the \"Restart zowex server on host...\" command to \"\"Restart SSH server on host...\" <a>#4489</a>": "Renamed the \"Restart zowex server on host...\" command to \"\"Restart SSH server on host...\" <a>#4489</a>",
-  "Renamed the \"Uninstall zowex server on host...\" command to \"\"Uninstall SSH server on host...\" <a>#4489</a>": "Renamed the \"Uninstall zowex server on host...\" command to \"\"Uninstall SSH server on host...\" <a>#4489</a>",
+  "Renamed the \"Restart zowex server on host...\" command to \"\"Restart SSH server on host...\". <a>#4489</a>": "Renamed the \"Restart zowex server on host...\" command to \"\"Restart SSH server on host...\". <a>#4489</a>",
+  "Renamed the \"Uninstall zowex server on host...\" command to \"\"Uninstall SSH server on host...\". <a>#4489</a>": "Renamed the \"Uninstall zowex server on host...\" command to \"\"Uninstall SSH server on host...\". <a>#4489</a>",
   "Renamed the Connect to zowex server on host... command to Deploy SSH server on host and connect.... <a>#4436</a>": "Renamed the Connect to zowex server on host... command to Deploy SSH server on host and connect.... <a>#4436</a>",
   "Renaming data set {0}/Old data set name": {
     "message": "Renaming data set {0}",
