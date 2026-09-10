@@ -10,6 +10,7 @@ on:
       - .github/workflows/zowe-explorer-ci.yml
   pull_request:
     paths:
+      - package.json
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
       - packages/zowex-for-zowe-explorer/**
