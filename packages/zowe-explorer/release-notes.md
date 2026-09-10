@@ -24,7 +24,7 @@ This release adds several checks before anything is written to the host:
 - **Zowe Explorer: Restart zowex server on host...** restarts a server that is not responding.
 - **Zowe Explorer: Uninstall zowex server from host...** removes the server from the host.
 
-If the connection drops, Zowe Explorer offers to reconnect. The **Reload** and **Reload and Retry** available actions show progress while reconnecting and confirm on success. Repeated failures no longer stack up duplicate prompts for the same profile.
+If the connection drops, Zowe Explorer offers to reconnect. The **Reload** and **Reload and Retry** available actions show progress while reconnecting and confirm on success.
 
 #### What you can do with an SSH profile
 
