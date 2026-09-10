@@ -56,7 +56,7 @@ This works with `z/OSMF` profiles only in this release. Other profile types can 
 
 ### Export configuration files for troubleshooting
 
-The new **Zowe Explorer: Export Redacted Configuration Files** command palette item writes out copies of your team configuration files with sensitive values removed. Use it when you need to share your setup with someone helping you troubleshoot, without sharing credentials.
+The new **Zowe Explorer: Export Redacted Configuration Files** command palette item writes out copies of your team configuration files with sensitive values removed. Use it when you need to share your setup with someone helping you troubleshoot, without the risk of sharing sensitive information.
 
 ### Job filter improvements
 
