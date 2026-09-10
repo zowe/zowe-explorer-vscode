@@ -4275,6 +4275,28 @@ describe("Dataset Actions Unit Tests - Function allocateLike", () => {
 
         expect(blockMocks.datasetSessionNode.pattern).toEqual("TEST");
     });
+    it("Tests that allocateLike sets dirty before refresh and does not call refreshElement", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+
+        vi.spyOn(blockMocks.mvsApi, "allocateLikeDataSet").mockResolvedValue({ success: true } as any);
+        const callOrder: string[] = [];
+        vi.spyOn(blockMocks.datasetSessionNode, "getChildren").mockImplementation(async () => {
+            callOrder.push("getChildren");
+            return [blockMocks.testNode, blockMocks.testSDSNode];
+        });
+        blockMocks.testDatasetTree.refresh.mockImplementation(() => {
+            callOrder.push("refresh");
+            // dirty must already be set when refresh fires
+            expect(blockMocks.datasetSessionNode.dirty).toBe(true);
+        });
+
+        await DatasetActions.allocateLike(blockMocks.testDatasetTree, blockMocks.testNode);
+
+        expect(callOrder[0]).toBe("refresh");
+        expect(blockMocks.testDatasetTree.refreshElement).not.toHaveBeenCalled();
+        expect(blockMocks.datasetSessionNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Expanded);
+    });
     it("Tests that allocateLike fails if no profile is selected", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
