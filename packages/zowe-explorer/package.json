@@ -2023,7 +2023,7 @@
         "zowe.settings.historyGroupByHost": {
           "type": "boolean",
           "default": false,
-          "description": "%zowe.settings.historyGroupByHost%",
+          "markdownDescription": "%zowe.settings.historyGroupByHost%",
           "scope": "window"
         },
         "zowe.settings.maxSearchHistory": {
@@ -2031,7 +2031,7 @@
           "default": 5,
           "minimum": 1,
           "maximum": 100,
-          "description": "%zowe.settings.maxSearchHistory%",
+          "markdownDescription": "%zowe.settings.maxSearchHistory%",
           "scope": "window"
         },
         "zowe.files.logsFolder.path": {
