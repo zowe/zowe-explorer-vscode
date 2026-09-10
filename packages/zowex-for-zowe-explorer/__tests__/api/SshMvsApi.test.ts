@@ -394,7 +394,7 @@ describe("SshMvsApi", () => {
         it("should create a write stream to a file when a file path is provided", async () => {
             const mvsApi = new SshMvsApi();
             const readDatasetSpy = vi.fn().mockResolvedValue({ data: "", etag: "etag1" });
-            const createDirsSpy = vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => {});
+            const createDirsSpy = vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => { });
             vi.spyOn(mvsApi as any, "buildZosFilesResponse");
             vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { readDataset: readDatasetSpy } });
 
@@ -408,7 +408,7 @@ describe("SshMvsApi", () => {
         it("should forward a custom encoding string when binary is falsy", async () => {
             const mvsApi = new SshMvsApi();
             const readDatasetSpy = vi.fn().mockResolvedValue({ data: "", etag: "etag1" });
-            vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => {});
+            vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => { });
             vi.spyOn(mvsApi as any, "buildZosFilesResponse");
             vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { readDataset: readDatasetSpy } });
 
@@ -421,7 +421,7 @@ describe("SshMvsApi", () => {
             const mvsApi = new SshMvsApi();
             const fakeWriteStream = { mock: "writeStream" };
             vi.mocked(fs.createWriteStream).mockReturnValue(fakeWriteStream as any);
-            vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => {});
+            vi.spyOn(imperative.IO, "createDirsSyncFromFilePath").mockImplementation(() => { });
             const readDatasetSpy = vi.fn().mockImplementation(async (opts: any) => {
                 expect(opts.stream()).toBe(fakeWriteStream);
                 return { data: "", etag: "etag1" };
@@ -1317,4 +1317,21 @@ describe("SshMvsApi", () => {
             expect(response.success).toEqual(false);
         });
     });
+
+    describe("resolveAlias", () => {
+
+        it("should call the resolveDsAlias", async () => {
+            const mvsApi = new SshMvsApi();
+            const aliasName = "MY.ALIAS";
+            const resolveAliasSpy = vi.fn().mockResolvedValue({ success: true });
+            vi.spyOn(mvsApi as any, "resolveAlias");
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { resolveDsAlias: resolveAliasSpy } });
+
+            await mvsApi.resolveAlias(aliasName);
+
+            expect(resolveAliasSpy).toHaveBeenCalledWith({
+                dsname: aliasName,
+            });
+        });
+    })
 });
