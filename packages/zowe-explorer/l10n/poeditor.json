@@ -444,7 +444,7 @@
     "Allow commands to be executed using integrated terminals": ""
   },
   "zowe.commands.zowex.connect": {
-    "Deploy SSH server on host and connect...": ""
+    "Deploy SSH server to host...": ""
   },
   "zowe.commands.zowex.restart": {
     "Restart zowex server on host...": ""
@@ -804,6 +804,7 @@
   "Added remote lookup functionality for data sets and USS, allowing Zowe Explorer to locate and resolve mainframe resources on demand. <a>#3040</a>": "",
   "Added retry support for file system calls so operations can continue after credentials are updated. <a>#3726</a>": "",
   "Added script that will fetch latest localizations at every build now. <a>#3573</a>": "",
+  "Added ssoLogin and ssoLogout methods to the API returned by getExplorerExtenderApi(), allowing extenders to perform SSO login and logout for a profile by name or loaded profile. The Profiles.ssoLogout function can now be called without a tree node and returns a boolean indicating success. <a>#4137</a>": "",
   "Added support for CLI home directory environment variable in Team Config file watcher, and support watching Team Config files named zowe.config.json and zowe.config.user.json at both locations. <a>#1913</a>": "",
   "Added support for Local Storage settings for persistent settings in Zowe Explorer <a>#2208</a>": "",
   "Added support for TTY-dependent scripts when using integrated terminals. <a>#3640</a>": "",
@@ -2153,6 +2154,7 @@
   "Updated linter rules and addressed linter errors. <a>#2291</a>": "",
   "Updated minimum VS Code version from 1.79 to 1.90. We are dropping support for VS Code releases that bundle versions of Node.js no longer receiving security updates.": "",
   "Updated minimum VS Code version from 1.79 to 1.90. We are dropping support for VS Code releases that bundle versions of Node.js no longer receiving security updates. <a>#3684</a>": "",
+  "Updated sanitize-html dependency for technical currency. <a>#4478</a>": "",
   "Updated sorting of PDS members to show items without stats at bottom of list <a>#2660</a>": "",
   "Updated sorting of PDS members to show items without stats at bottom of list. <a>#2660</a>": "",
   "Updated the @zowe/cli dependency to address the \"blksz to 0 after an Allocate Like\" issue. <a>#2610</a>. Thanks @KevinLoesch1": "",
