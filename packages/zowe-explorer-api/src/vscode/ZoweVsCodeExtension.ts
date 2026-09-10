@@ -559,7 +559,7 @@ export class ZoweVsCodeExtension {
                 : undefined;
             newUser = await Gui.showInputBox({
                 placeHolder: "User Name",
-                prompt: "Enter the user name for the connection." + (options.rePrompt ? "" : " Leave blank to not store."),
+                prompt: "Enter the user name for the connection." + (options.rePrompt ? "" : " Leave blank to cancel."),
                 ignoreFocusOut: true,
                 value: newUser,
                 ...(options.userInputBoxOptions ?? {}),
@@ -582,7 +582,7 @@ export class ZoweVsCodeExtension {
         if (!newPass || options.rePrompt) {
             newPass = await Gui.showInputBox({
                 placeHolder: "Password",
-                prompt: "Enter the password for the connection." + (options.rePrompt ? "" : " Leave blank to not store."),
+                prompt: "Enter the password for the connection." + (options.rePrompt ? "" : " Leave blank to cancel."),
                 password: true,
                 ignoreFocusOut: true,
                 value: newPass,

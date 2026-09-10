@@ -665,6 +665,40 @@ describe("Profiles Unit Tests - function promptCredentials", () => {
         await expect(Profiles.getInstance().promptCredentials("secure_config_props")).resolves.toEqual(["test", "12345"]);
     });
 
+    it("should omit the 'leave blank' hint from the prompts when re-prompting", async () => {
+        vi.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            isSecured: () => false,
+        } as any);
+        const updateCredentialsSpy = vi.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValue({
+            profile: {
+                user: "test",
+                password: "12345",
+            } as imperative.IProfile,
+        } as imperative.IProfileLoaded);
+        vi.spyOn(Profiles.getInstance(), "updateProfilesArrays").mockImplementation((() => undefined) as any);
+        await Profiles.getInstance().promptCredentials("secure_config_props", true);
+        const opts = updateCredentialsSpy.mock.calls[0][0];
+        expect(opts.userInputBoxOptions?.prompt).toBe("Enter the user name for the secure_config_props connection.");
+        expect(opts.passwordInputBoxOptions?.prompt).toBe("Enter the password for the secure_config_props connection.");
+    });
+
+    it("should include the 'leave blank to cancel' hint in the prompts when not re-prompting", async () => {
+        vi.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            isSecured: () => false,
+        } as any);
+        const updateCredentialsSpy = vi.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValue({
+            profile: {
+                user: "test",
+                password: "12345",
+            } as imperative.IProfile,
+        } as imperative.IProfileLoaded);
+        vi.spyOn(Profiles.getInstance(), "updateProfilesArrays").mockImplementation((() => undefined) as any);
+        await Profiles.getInstance().promptCredentials("secure_config_props");
+        const opts = updateCredentialsSpy.mock.calls[0][0];
+        expect(opts.userInputBoxOptions?.prompt).toBe("Enter the user name for the secure_config_props connection. Leave blank to cancel.");
+        expect(opts.passwordInputBoxOptions?.prompt).toBe("Enter the password for the secure_config_props connection. Leave blank to cancel.");
+    });
+
     it("Tests that promptCredentials catches error and logs it", async () => {
         const globalMocks = await createGlobalMocks();
         vi.spyOn(Profiles.getInstance(), "getProfileInfo").mockRejectedValueOnce(new Error("test error"));
