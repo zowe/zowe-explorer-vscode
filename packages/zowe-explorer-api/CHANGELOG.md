@@ -6,6 +6,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added `encodingMap` to the `BaseProvider` class, exposing the encoding map for extenders that need to query or override the encoding for a given resource URI. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
+- Added `getFileApi` and `IZoweExplorerFileApi` to `Types.IApiRegisterClient`, exposing a `getEncodingForUri` function that extenders can use to retrieve the encoding ZE has determined for a resource URI. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
 - Added support for resolving data set aliases when using SSH profiles in the `SshMvsApi` class. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
 - Added an optional `resolveAlias` function to the `MainframeInteraction.IMvs` interface, initially only implemented by the `ZoweExplorerZosmf` class. [#4438](https://github.com/zowe/zowe-explorer-vscode/pull/4438)
 - Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
