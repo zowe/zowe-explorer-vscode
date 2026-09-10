@@ -61,13 +61,13 @@
     "lint": "pnpm -r lint",
     "madge": "pnpm -r madge",
     "pretty": "prettier --write .",
-    "build": "pnpm -r --sequential --color --reporter=append-only build",
+    "build": "pnpm run -r --sequential --color --reporter=append-only build",
     "build:parallel": "pnpm -r build",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
-    "test:packages": "pnpm -r --sequential --color --reporter=append-only test",
+    "test:packages": "pnpm run -r --sequential --color --reporter=append-only test",
     "test:parallel": "pnpm -r --parallel --color test",
-    "package": "pnpm -r --sequential package",
+    "package": "pnpm run -r --sequential package",
     "preinstall": "npx only-allow pnpm",
     "update-sdks": "pnpm -r update \"@zowe/*@zowe-v3-lts\" \"!@zowe/zowe-explorer-api\" \"!@zowe/zos-ftp-for-zowe-cli\" \"!@zowe/zowex-for-zowe-sdk\""
   }
