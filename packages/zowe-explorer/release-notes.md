@@ -1,6 +1,6 @@
 ## `3.6.0`
 
-**Note:** Zowe Explorer now requires VS Code 1.101 or higher, as announced in the 3.5.0 release notes. This ensures you are running on a supported node version. Node.js v20 reached End of Life on April 30th, 2026
+**Note:** Zowe Explorer now requires VS Code 1.101 or higher, as announced in the 3.5.0 release notes. This ensures you are running on a supported Node.js version. Node.js v20 reached End of Life on April 30th, 2026.
 
 ### Zowe Remote SSH for Zowe Explorer
 
