@@ -72,8 +72,6 @@ Three fixes in this release address cases where Zowe Explorer could overwrite yo
 - Expanding a profile in the **Favorites** section no longer uploads empty content to each favorited z/OS Unix file. Previously this failed for users without write access and truncated the file for everyone else.
 - The same fix applies to favorited sequential data sets, which were being truncated the same way.
 
-Migrated data sets are also now sorted correctly in **Favorites**.
-
 #### Table view improvements
 
 - **Display in Tree** is now called **Locate in Tree**, which better describes what it does.
@@ -92,8 +90,6 @@ The Zowe Explorer API adds:
 - A `Table.View.trackRows` function to record rows delivered to a webview outside the normal update flow
 
 **Deprecated:** Passing a `string` to the `condition` property of a `TableView` action. Use a function instead.
-
-Zowe Explorer also handles extenders that return an `items` array as `undefined` or `null`, or that omit `apiResponse` entirely, instead of crashing during z/OS Unix directory detection.
 
 See the respective changelogs for the full list of changes, including fixes for web extension host activation on `vscode.dev`, vault change handling, and z/OS Unix context menus.
 
