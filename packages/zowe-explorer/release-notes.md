@@ -33,8 +33,6 @@ If the connection drops, Zowe Explorer offers to reconnect. The **Reload** and *
 - **Jobs:** list and filter jobs by status, view spool files and JCL, submit JCL, cancel, and delete.
 - **Commands:** issue TSO, console, and z/OS UNIX commands.
 
-**Note:** Migrating data sets and uploading a local directory to z/OS Unix are not supported over SSH yet.
-
 #### Keeping the server up to date
 
 Zowe Explorer checks the version of the server on the host and updates it when it is out of date. If you would rather keep a host on the version it already has, set `"autoUpdate": false` in your `ssh` profile.
