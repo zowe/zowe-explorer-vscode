@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added a `getFileApi` method to `ZoweExplorerApiRegister` that returns a file API for querying mainframe file system state. The initial API includes `getEncodingForUri`, which returns the encoding ZE has determined for a given resource URI, checking auto-detected encodings (such as USS file-tag detection) before falling back to explicitly user-selected encodings. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
 - Renamed the `"Uninstall zowex server on host..."` command to `""Uninstall SSH server on host..."`. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
 - Renamed the `"Restart zowex server on host..."` command to `""Restart SSH server on host..."`. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
 - Added support for resolving data set aliases when using SSH profiles. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
