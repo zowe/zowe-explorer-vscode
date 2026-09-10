@@ -21,8 +21,8 @@ This release adds several checks before anything is written to the host:
 
 #### Managing the server
 
-- **Zowe Explorer: Restart zo server on host...** restarts a server that is not responding.
-- **Zowe Explorer: Uninstall zo server from host...** removes the server from the host.
+- **Zowe Explorer: Restart SSH server on host...** restarts a server that is not responding.
+- **Zowe Explorer: Uninstall SSH server from host...** removes the server from the host.
 
 If the connection drops, Zowe Explorer offers to reconnect. The **Reload** and **Reload and Retry** available actions show progress while reconnecting and confirm on success.
 
