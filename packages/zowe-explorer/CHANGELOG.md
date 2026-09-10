@@ -7,6 +7,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### New features and enhancements
 
 - Added a `getFileApi` method to `ZoweExplorerApiRegister` that returns a file API for querying mainframe file system state. The initial API includes `getEncodingForUri`, which returns the encoding ZE has determined for a given resource URI, checking auto-detected encodings (such as USS file-tag detection) before falling back to explicitly user-selected encodings. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
+- Added `ssoLogin` and `ssoLogout` methods to the API returned by `getExplorerExtenderApi()`, allowing extenders to perform SSO login and logout for a profile by name or loaded profile. The `Profiles.ssoLogout` function can now be called without a tree node and returns a boolean indicating success. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Added a dialog to clarify that connecting to the mainframe with an SSH profile can result in deploying the SSH server if it is not present. The warning can be prevented by pressing the `"Connect, don't ask me again"` button or by setting the VS Code setting `zowe.confirmSshServerDeploy` to `false`. [#4445](https://github.com/zowe/zowe-explorer-vscode/pull/4445)
 - Added a dialog when there does not appear to be enough disk space on z/OS UNIX to deploy the SSH server, which can be bypassed by clicking the `"Deploy"` button on the dialog. [#4445](https://github.com/zowe/zowe-explorer-vscode/pull/4445)
 - Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. Currently only supported when connecting via z/OSMF. [#4438](https://github.com/zowe/zowe-explorer-vscode/pull/4438)
@@ -43,6 +44,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated `js-yaml` and `nanoid` dependencies for technical currency. [#4447](https://github.com/zowe/zowe-explorer-vscode/pull/4447)
 - Fixed an issue where the selected profile name changed after the first Unix command was executed. [#4446](https://github.com/zowe/zowe-explorer-vscode/issues/4446)
 - Fixed an issue where the pound sign in a resource URI caused the data sets table view to strip off part of the resource path, causing table actions to fail. Now, supported characters are preserved in URIs when passed to the data sets table. [#4467](https://github.com/zowe/zowe-explorer-vscode/issues/4467)
+- Updated `sanitize-html` dependency for technical currency. [#4478](https://github.com/zowe/zowe-explorer-vscode/pull/4478)
 
 ## `3.5.1`
 

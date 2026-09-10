@@ -45,7 +45,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       # install pnpm
-      - run: npm install -g pnpm
+      - run: npm install -g pnpm@11
 
       - run: pnpm config set fetchTimeout 60000 && pnpm install
 
