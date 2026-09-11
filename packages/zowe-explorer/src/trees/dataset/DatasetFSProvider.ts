@@ -51,10 +51,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, this.onDidChangeFile);
         ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => this.updateProfile(profile));
+        ZoweExplorerApiRegister.getInstance().registerFSProvider(ZoweScheme.DS, this);
         this.root = new DirEntry("");
     }
-
-    public encodingMap: Record<string, ZosEncoding> = {};
 
     /**
      * @returns the Data Set FileSystemProvider singleton instance
@@ -194,10 +193,18 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const parentPath = segments.slice(0, 2).join("/");
             const parentUri = uri.with({ path: `/${parentPath}` });
 
+            const hasMemberLocally = (): boolean => {
+                if (isVisibleEditor) {
+                    return false;
+                }
+                const parentDir = this._lookupAsDirectory(parentUri, true) as PdsEntry;
+                return !!(parentDir && parentDir.entries && parentDir.entries.has(memberName));
+            };
+
             const pdsEntry = await this.executeWithReuse<DirEntry>(parentUri, {
                 keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
-                checkLocal: () => (isVisibleEditor ? false : !!this._lookupAsDirectory(parentUri, true)),
-                execute: () => this.readDirectoryImplementation(parentUri, isVisibleEditor),
+                checkLocal: hasMemberLocally,
+                execute: () => this.readDirectoryImplementation(parentUri, !hasMemberLocally()),
                 action: "readDirectory",
             });
 
@@ -507,10 +514,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             this.createDirectory(profileUri);
         }
 
+        const urlQuery = new URLSearchParams(uri.query);
         if (uriInfo.isRoot) {
             // profile entry; check if "pattern" filter is in query.
-
-            const urlQuery = new URLSearchParams(uri.query);
             if (!urlQuery.has("pattern")) {
                 return this._lookupAsDirectory(profileUri, false);
             }
@@ -518,7 +524,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             return this.fetchEntriesForProfile(uri, uriInfo, urlQuery.get("pattern"));
         } else {
             // data set or one of its members
-            return this.fetchDataset(uri, uriInfo);
+            return this.fetchDataset(uri, uriInfo, urlQuery.get("fetch") === "true");
         }
     }
 
@@ -1218,19 +1224,5 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         entry.metadata = profInfo;
         parent.entries.set(basename, entry);
         return entry;
-    }
-
-    public invalidateCache(uri: vscode.Uri): void {
-        try {
-            const parent = this.lookupParentDirectory(uri, true);
-            if (parent) {
-                const basename = path.posix.basename(uri.path);
-                if (parent.entries.has(basename)) {
-                    parent.entries.delete(basename);
-                }
-            }
-        } catch (e) {
-            // Ignore if parent directory cannot be looked up or doesn't exist
-        }
     }
 }
