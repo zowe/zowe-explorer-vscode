@@ -15,7 +15,7 @@ import { platform } from "os";
 import { Constants } from "../globals";
 import { ImperativeConfig, ConfigUtils } from "@zowe/imperative";
 import { IFileSystemEntry, ZoweScheme } from "../fs/types";
-import { window, workspace } from "vscode";
+import { TabInputText, window, workspace, Uri } from "vscode";
 
 export class FileManagement {
     public static permStringToOctal(perms: string): number {
@@ -52,6 +52,28 @@ export class FileManagement {
             }
         }
         return realpathSync(anyPath);
+    }
+
+    public static async reloadTabsForProfile(profileName: string): Promise<void> {
+        const tabs = window.tabGroups.all
+            .flatMap((tg) => tg.tabs)
+            .filter(
+                (t) =>
+                    t.input instanceof TabInputText &&
+                    t.input.uri.path.startsWith(`/${profileName}/`) &&
+                    (Object.values(ZoweScheme) as string[]).includes(t.input.uri.scheme)
+            );
+
+        for (const tab of tabs) {
+            try {
+                const tabUri = (tab.input as TabInputText).uri;
+                const fsEntry = (await workspace.fs.stat(tabUri)) as IFileSystemEntry;
+                fsEntry.wasAccessed = false;
+                await workspace.fs.readFile(tabUri);
+            } catch (err) {
+                // todo: log?
+            }
+        }
     }
 
     public static async reloadActiveEditorForProfile(profileName: string): Promise<void> {
