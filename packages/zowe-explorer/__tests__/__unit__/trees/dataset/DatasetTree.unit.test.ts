@@ -244,8 +244,9 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         };
     }
     it("Checking function for PDS favorite", () => {
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         const testTree = new DatasetTree();
         const favProfileNode = new ZoweDatasetNode({
             label: "testProfile",
@@ -257,6 +258,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             label: "IBMUSER.PUBLIC",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: favProfileNode,
+            profile: blockMocks.imperativeProfile,
             contextOverride: Constants.PDS_FAV_CONTEXT,
         });
         node.resourceUri = blockMocks.datasetSessionNode.resourceUri?.with({

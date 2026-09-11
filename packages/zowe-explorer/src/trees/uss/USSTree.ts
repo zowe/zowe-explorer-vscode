@@ -727,7 +727,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     public async saveSearch(node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.saveSearch called.");
         const fullPathLabel = node.fullPath;
-        node.label = node.tooltip = fullPathLabel;
+        node.label = fullPathLabel;
         node.contextValue = Constants.USS_SESSION_CONTEXT + Constants.FAV_SUFFIX;
         await this.checkCurrentProfile(node);
     }
@@ -1133,7 +1133,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     profile,
                 });
                 node.fullPath = label;
-                node.label = node.tooltip = label;
+                node.label = label;
                 break;
             default:
                 // assume context is "textFile"
