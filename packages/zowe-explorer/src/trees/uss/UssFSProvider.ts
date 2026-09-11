@@ -121,14 +121,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             // Wait for any ongoing authentication process to complete
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
             AuthUtils.ensureAuthNotCancelled(profile);
-            await AuthHandler.waitForUnlock(entry.metadata.profile);
-
-            // Check if the profile is locked (indicating an auth error is being handled)
-            // If it's locked, we should wait and not make additional requests
-            if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-                ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
-                return entry;
-            }
+            await AuthHandler.waitForAuthFlow(profile);
 
             const fileResp = await this.listFiles(entry.metadata.profile, uri, true);
 
@@ -255,18 +248,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         AuthUtils.ensureAuthNotCancelled(profile);
-        await AuthHandler.waitForUnlock(profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${profile.name} is locked, waiting for authentication`);
-            return {
-                success: false,
-                commandResponse: "Profile is locked due to authentication error",
-                apiResponse: { items: [] },
-            };
-        }
+        await AuthHandler.waitForAuthFlow(profile);
 
         const loadedProfile = Profiles.getInstance().loadNamedProfile(profile.name);
 
@@ -344,17 +326,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
-            if (entryExists) {
-                return this.lookup(uri, false) as UssDirectory | UssFile;
-            }
-            throw vscode.FileSystemError.FileNotFound(uri);
-        }
+        await AuthHandler.waitForAuthFlow(uriInfo.profile);
 
         let resp: IZosFilesResponse;
         if (!entryExists) {
@@ -511,14 +483,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         AuthUtils.ensureAuthNotCancelled(profile);
-        await AuthHandler.waitForUnlock(file.metadata.profile);
+        await AuthHandler.waitForAuthFlow(profile);
 
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(file.metadata.profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${file.metadata.profile.name} is locked, waiting for authentication`);
-            return;
-        }
         await AuthUtils.retryRequest(uriInfo.profile, async () => {
             try {
                 resp = await ZoweExplorerApiRegister.getUssApi(profile).getContents(filePath, {
@@ -587,14 +553,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
         AuthUtils.ensureAuthNotCancelled(profile);
-        await AuthHandler.waitForUnlock(entry.metadata.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
-            return;
-        }
+        await AuthHandler.waitForAuthFlow(profile);
 
         const ussApi = ZoweExplorerApiRegister.getUssApi(profile);
         await AuthUtils.retryRequest(entry.metadata.profile, async () => {
@@ -704,15 +663,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
         AuthUtils.ensureAuthNotCancelled(profile);
-        await AuthHandler.waitForUnlock(entry.metadata.profile);
+        await AuthHandler.waitForAuthFlow(profile);
 
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-            statusMsg.dispose();
-            ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
-            throw new Error(`Profile ${entry.metadata.profile.name} is locked due to authentication error`);
-        }
         const ussApi = ZoweExplorerApiRegister.getUssApi(profile);
 
         let resp: IZosFilesResponse;
@@ -870,13 +822,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
 
         AuthUtils.ensureAuthNotCancelled(profile);
-        await AuthHandler.waitForUnlock(entry.metadata.profile);
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
-            return;
-        }
+        await AuthHandler.waitForAuthFlow(profile);
 
         try {
             await AuthUtils.retryRequest(entry.metadata.profile, async () => {
@@ -940,14 +886,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(parent.metadata.profile.name);
         AuthUtils.ensureAuthNotCancelled(profile);
-        await AuthHandler.waitForUnlock(parent.metadata.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(parent.metadata.profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${parent.metadata.profile.name} is locked, waiting for authentication`);
-            return;
-        }
+        await AuthHandler.waitForAuthFlow(profile);
 
         try {
             await AuthUtils.retryRequest(parent.metadata.profile, async () => {
@@ -1031,14 +970,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         AuthUtils.ensureAuthNotCancelled(destInfo.profile);
-        await AuthHandler.waitForUnlock(destInfo.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(destInfo.profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${destInfo.profile.name} is locked, waiting for authentication`);
-            return;
-        }
+        await AuthHandler.waitForAuthFlow(destInfo.profile);
 
         const api = ZoweExplorerApiRegister.getUssApi(destInfo.profile);
 
