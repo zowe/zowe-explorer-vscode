@@ -2,7 +2,7 @@
   "name": "zowex-for-zowe-explorer",
   "displayName": "Zowe Remote SSH",
   "description": "Zowe Remote SSH VS Code APIs for Zowe Explorer",
-  "version": "3.6.0",
+  "version": "3.7.0-SNAPSHOT",
   "publisher": "Zowe",
   "repository": "https://github.com/zowe/zowe-explorer-vscode/tree/main/packages/zowex-for-zowe-explorer",
   "license": "EPL-2.0",

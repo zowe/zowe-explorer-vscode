@@ -4,6 +4,12 @@ All notable changes to the "zowex-for-zowe-explorer" package will be documented 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## TBD Release
+
+### New features and enhancements
+
+### Bug fixes
+
 ## `3.6.0`
 
 - Added a visual progress indicator in the VS Code status bar while the Zowe Remote SSH server is starting or reconnecting, so users can see when ZRS is active rather than waiting without feedback. [#4449](https://github.com/zowe/zowe-explorer-vscode/issues/4449)
