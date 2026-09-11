@@ -9,6 +9,7 @@
   "zowe.placeholderCommand": "Placeholder",
   "zowe.setupRemoteWorkspaceFolders": "Setup Remote Workspace Folders",
   "zowe.promptCredentials": "Update Credentials",
+  "zowe.changePassword": "Change Password",
   "zowe.profileManagement": "Manage Profile",
   "zowe.updateSchema": "Update Profile Configuration Schema",
   "zowe.editHistory": "Edit History",
