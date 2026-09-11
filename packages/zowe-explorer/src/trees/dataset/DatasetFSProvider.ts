@@ -133,14 +133,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         // Wait for any ongoing authentication process to complete
         AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-            ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
-            return entry;
-        }
+        await AuthHandler.waitForAuthFlow(uriInfo.profile);
 
         await AuthUtils.retryRequest(uriInfo.profile, async () => {
             resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(dsPath), {
@@ -233,14 +226,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         // Wait for any ongoing authentication process to complete
         AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-            ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
-            return profileEntry;
-        }
+        await AuthHandler.waitForAuthFlow(uriInfo.profile);
 
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
         const datasetResponses: IZosFilesResponse[] = [];
@@ -312,15 +298,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
         // Wait for any ongoing authentication process to complete
         AuthUtils.ensureAuthNotCancelled(profile);
-
-        await AuthHandler.waitForUnlock(entry.metadata.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-            ZoweLogger.warn(`[DatasetFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
-            return;
-        }
+        await AuthHandler.waitForAuthFlow(profile);
 
         await AuthUtils.retryRequest(uriInfo.profile, async () => {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
@@ -399,21 +377,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 .split("/")
                 .filter(Boolean);
             pdsMember = uriPath.length === this.EXPECTED_MEMBER_LENGTH;
-
-            // Wait for any ongoing authentication process to complete
-            AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
-
-            await AuthHandler.waitForUnlock(uriInfo.profile);
-
-            // Check if the profile is locked (indicating an auth error is being handled)
-            // If it's locked, we should wait and not make additional requests
-            if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-                ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
-                if (entryExists) {
-                    return;
-                }
-                throw vscode.FileSystemError.FileNotFound(uri);
-            }
 
             if (!entryExists || forceFetch) {
                 const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
@@ -631,16 +594,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         try {
             // Wait for any ongoing authentication process to complete
             AuthUtils.ensureAuthNotCancelled(profile);
-
-            await AuthHandler.waitForUnlock(metadata.profile);
-
-            // Check if the profile is locked (indicating an auth error is being handled)
-            // If it's locked, we should wait and not make additional requests
-            if (AuthHandler.isProfileLocked(metadata.profile)) {
-                ZoweLogger.warn(`[DatasetFSProvider] Profile ${metadata.profile.name} is locked, waiting for authentication`);
-                return null;
-            }
-
+            await AuthHandler.waitForAuthFlow(profile);
+ 
             let resp;
 
             await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());

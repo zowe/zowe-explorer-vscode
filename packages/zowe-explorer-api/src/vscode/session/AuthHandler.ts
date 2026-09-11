@@ -409,6 +409,26 @@ export class AuthHandler {
         }
     }
 
+    public static async waitForAuthFlow(profile: ProfileLike, maxIterations: number = 3): Promise<void> {
+        for (let i = 0; i < maxIterations; i++) {
+            await AuthHandler.waitForUnlock(profile);
+            if (this.wasAuthCancelled(profile)) {
+                throw new AuthCancelledError(
+                    typeof profile === "string" ? profile : profile.name || "<unknown profile name>",
+                    "Authentication was cancelled by the user"
+                );
+            }
+            const flow = AuthHandler.getActiveAuthFlow(profile);
+            if (flow == null && !this.isProfileLocked(profile)) {
+                return;
+            }
+
+            if (flow != null) {
+                await flow;
+            }
+        }
+    }
+
     /**
      * Releases locks for all profiles.
      * Used for scenarios such as the `onVaultChanged` event, where we don't know what secure values have changed,
