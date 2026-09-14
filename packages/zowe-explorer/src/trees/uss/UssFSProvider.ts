@@ -103,11 +103,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             registeredTypes: apiRegister.registeredApiTypes(),
         });
         const session = commonApi.getSession(uriInfo.profile);
-        if (
-            ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
-            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
-        ) {
-            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+        if (ProfilesUtils.hasNoCredentials(session.ISession, uriInfo.profile)) {
+            await AuthUtils.promptForMissingCredentials(uriInfo.profile);
         }
 
         // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on USS files only
@@ -317,11 +314,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             registeredTypes: apiRegister.registeredApiTypes(),
         });
         const session = commonApi.getSession(uriInfo.profile);
-        if (
-            ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
-            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
-        ) {
-            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+        if (ProfilesUtils.hasNoCredentials(session.ISession, uriInfo.profile)) {
+            await AuthUtils.promptForMissingCredentials(uriInfo.profile);
         }
 
         // Wait for any ongoing authentication process to complete

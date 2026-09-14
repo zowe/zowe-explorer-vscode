@@ -116,9 +116,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const session = commonApi.getSession(uriInfo.profile);
         if (
             (isFetching && ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile)) ||
-            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
+            ProfilesUtils.isMissingToken(session.ISession, uriInfo.profile)
         ) {
-            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+            await AuthUtils.promptForMissingCredentials(uriInfo.profile);
         }
 
         const entry = isFetching ? await this.remoteLookupForResource(uri) : await this.lookupWithCache(uri);
@@ -355,11 +355,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         });
         const session = commonApi.getSession(uriInfo.profile);
 
-        if (
-            ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
-            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
-        ) {
-            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+        if (ProfilesUtils.hasNoCredentials(session.ISession, uriInfo.profile)) {
+            await AuthUtils.promptForMissingCredentials(uriInfo.profile);
         }
 
         await AuthUtils.retryRequest(uriInfo.profile, async () => {
@@ -508,13 +505,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         try {
             dsEntry = shouldFetch ? await this.remoteLookupForResource(uri) : this._lookupAsDirectory(uri, false);
         } catch (err) {
-            if (!(err instanceof vscode.FileSystemError)) {
+            // Only a local cache miss falls back to the network. Any other failure - an unavailable
+            // profile or a cancelled authentication prompt - has to surface to the caller, otherwise
+            // VS Code reports a data set that exists on the remote system as a missing file.
+            if (shouldFetch || !(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
                 throw err;
             }
-            // If the local lookup fails (e.g. it wasn't cached yet), fallback to network
-            if (err.code === "FileNotFound" && !shouldFetch) {
-                dsEntry = await this.remoteLookupForResource(uri);
-            }
+            dsEntry = await this.remoteLookupForResource(uri);
         }
 
         this.validatePath(uri);
@@ -687,11 +684,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             registeredTypes: apiRegister.registeredApiTypes(),
         });
         const session = commonApi.getSession(uriInfo.profile);
-        if (
-            ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
-            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
-        ) {
-            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+        if (ProfilesUtils.hasNoCredentials(session.ISession, uriInfo.profile)) {
+            await AuthUtils.promptForMissingCredentials(uriInfo.profile);
         }
 
         try {

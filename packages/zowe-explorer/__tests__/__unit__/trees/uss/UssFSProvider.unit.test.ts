@@ -939,6 +939,29 @@ describe("UssFSProvider", () => {
     });
 
     describe("fetchEntries", () => {
+        it("prompts for authentication when the profile has no credentials", async () => {
+            vi.spyOn(ZoweExplorerApiRegister.prototype, "getCommonApi").mockReturnValue({
+                getSession: () => ({ ISession: { type: imperative.SessConstants.AUTH_TYPE_NONE } }),
+            } as any);
+            const promptForMissingCredentialsMock = vi.spyOn(AuthUtils, "promptForMissingCredentials").mockResolvedValueOnce(undefined);
+            const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(true);
+            const lookupMock = vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(testEntries.file);
+
+            await (UssFSProvider.instance as any).fetchEntries(testUris.file, {
+                isRoot: false,
+                slashAfterProfilePos: testUris.file.path.indexOf("/", 1),
+                profile: testProfile,
+                profileName: testProfile.name,
+            });
+
+            expect(promptForMissingCredentialsMock).toHaveBeenCalledWith(testProfile);
+            // the entry is returned once the user has authenticated
+            expect(lookupMock).toHaveBeenCalledWith(testUris.file, true);
+
+            existsMock.mockRestore();
+            lookupMock.mockRestore();
+        });
+
         describe("file", () => {
             it("existing URI", async () => {
                 const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
