@@ -590,6 +590,45 @@ describe("DatasetFSProvider", () => {
             expect(await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { isConflict: true })).toBe(null);
         });
 
+        it("supplies a fresh response stream to each retry attempt after an auth failure", async () => {
+            const contents = "dataset contents";
+            const getContents = vi
+                .fn()
+                // First attempt fails with a 401. Imperative ends the response stream even on the
+                // error path ("Ending response stream"), so the stream cannot be reused afterwards.
+                .mockImplementationOnce((_dsn, opts) => {
+                    opts.stream.end();
+                    throw new imperative.ImperativeError({
+                        msg: "Rest API failure with HTTP(S) status 401",
+                        errorCode: imperative.RestConstants.HTTP_STATUS_401.toString(),
+                    });
+                })
+                // Retry after the user re-authenticates: rejects the way Imperative does if it is
+                // handed a stream that was already ended by a previous attempt.
+                .mockImplementationOnce((_dsn, opts) => {
+                    if (opts.stream.writableEnded) {
+                        throw new imperative.ImperativeError({ msg: "Error writing to responseStream" });
+                    }
+                    opts.stream.write(contents);
+                    return { apiResponse: { etag: "1234ETAG" } };
+                });
+
+            const fakePo = { ...testEntries.ps };
+            vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue(fakePo);
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ getContents } as any);
+            // Simulate the user successfully re-authenticating so that retryRequest makes a second attempt
+            const handleProfileAuthOnErrorMock = vi.spyOn(AuthUtils, "handleProfileAuthOnError").mockResolvedValue(undefined);
+
+            const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
+
+            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledTimes(1);
+            expect(getContents).toHaveBeenCalledTimes(2);
+            expect(entry).not.toBeNull();
+            expect(fakePo.data?.toString()).toStrictEqual(contents);
+            expect(fakePo.etag).toBe("1234ETAG");
+            handleProfileAuthOnErrorMock.mockRestore();
+        });
+
         it("should fetchUri info and lookup returns undefined", async () => {
             const contents = "dataset contents";
             const mockMvsApi = {
