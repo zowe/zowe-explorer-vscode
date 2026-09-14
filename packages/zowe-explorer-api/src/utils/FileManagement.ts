@@ -15,7 +15,7 @@ import { platform } from "os";
 import { Constants } from "../globals";
 import { ImperativeConfig, ConfigUtils } from "@zowe/imperative";
 import { IFileSystemEntry, ZoweScheme } from "../fs/types";
-import { TabInputText, window, workspace, Uri } from "vscode";
+import { TabInputText, window, workspace } from "vscode";
 
 export class FileManagement {
     public static permStringToOctal(perms: string): number {
