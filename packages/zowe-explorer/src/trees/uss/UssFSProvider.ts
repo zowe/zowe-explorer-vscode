@@ -472,7 +472,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         ZoweLogger.trace(`[UssFSProvider] fetchFileAtUri called with ${uri.toString()}`);
         const file = this._lookupAsFile(uri) as UssFile;
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-        const bufBuilder = new BufferBuilder();
+        let bufBuilder = new BufferBuilder();
         const filePath = uri.path.substring(uriInfo.slashAfterProfilePos);
         const profile = Profiles.getInstance().loadNamedProfile(file.metadata.profile.name);
 
@@ -486,6 +486,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         await AuthHandler.waitForAuthFlow(profile);
 
         await AuthUtils.retryRequest(uriInfo.profile, async () => {
+            bufBuilder = new BufferBuilder();
             try {
                 resp = await ZoweExplorerApiRegister.getUssApi(profile).getContents(filePath, {
                     binary: file.encoding?.kind === "binary",

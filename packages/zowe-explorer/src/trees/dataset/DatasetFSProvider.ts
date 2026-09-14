@@ -587,7 +587,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     ): Promise<FileEntry | null> {
         ZoweLogger.trace(`[DatasetFSProvider] fetchDatasetAtUri called with ${uri.toString()}`);
         let dsEntry = this._lookupAsFile(uri, { silent: true }) as DsEntry | undefined;
-        const bufBuilder = new BufferBuilder();
         const metadata = dsEntry?.metadata ?? this._getInfoFromUri(uri);
         const profile = Profiles.getInstance().loadNamedProfile(metadata.profile.name);
         const profileEncoding = dsEntry?.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
@@ -596,11 +595,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             // Wait for any ongoing authentication process to complete
             AuthUtils.ensureAuthNotCancelled(profile);
             await AuthHandler.waitForAuthFlow(profile);
- 
+
             let resp;
 
             await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
             await AuthUtils.retryRequest(metadata.profile, async () => {
+                const bufBuilder = new BufferBuilder();
                 const isRecordEncoding = dsEntry?.encoding?.kind === "other" && dsEntry?.encoding.codepage?.toLowerCase() === "record";
                 resp = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(metadata.dsName, {
                     binary: dsEntry?.encoding?.kind === "binary",
@@ -656,7 +656,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
             return dsEntry;
         } catch (error) {
-            if (error instanceof AuthCancelledError || (error instanceof vscode.FileSystemError && error.code === "Unavailable") || AuthUtils.isAuthError(error)) {
+            if (
+                error instanceof AuthCancelledError ||
+                (error instanceof vscode.FileSystemError && error.code === "Unavailable") ||
+                AuthUtils.isAuthError(error)
+            ) {
                 throw error;
             }
             return null;
