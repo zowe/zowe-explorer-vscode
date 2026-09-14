@@ -197,11 +197,11 @@ export class AuthHandler {
         return getAuthHandlerImpl().isProfileLocked(profile);
     }
 
-    public static getActiveAuthFlow(profile: ProfileLike): Promise<void> | undefined {
+    public static getActiveAuthFlow(profile: ProfileLike): Promise<boolean> | undefined {
         return getAuthHandlerImpl().getActiveAuthFlow(profile);
     }
 
-    public static getOrCreateAuthFlow(profile: ProfileLike, authOpts: AuthPromptParams): Promise<void> {
+    public static getOrCreateAuthFlow(profile: ProfileLike, authOpts: AuthPromptParams): Promise<boolean> {
         return getAuthHandlerImpl().getOrCreateAuthFlow(profile, authOpts);
     }
 }

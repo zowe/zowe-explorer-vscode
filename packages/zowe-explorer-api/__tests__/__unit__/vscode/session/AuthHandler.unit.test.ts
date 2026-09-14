@@ -387,11 +387,11 @@ describe("AuthHandler", () => {
         });
 
         it("refreshes resources if refreshResources parameter is true", async () => {
-            const reloadActiveEditorMock = vi.spyOn(FileManagement, "reloadActiveEditorForProfile").mockResolvedValueOnce(undefined);
+            const reloadTabsMock = vi.spyOn(FileManagement, "reloadTabsForProfile").mockResolvedValueOnce(undefined);
             const reloadWorkspaceMock = vi.spyOn(FileManagement, "reloadWorkspacesForProfile").mockResolvedValueOnce(undefined);
             await AuthHandler.lockProfile(TEST_PROFILE_NAME);
             AuthHandler.unlockProfile(TEST_PROFILE_NAME, true);
-            expect(reloadActiveEditorMock).toHaveBeenCalledWith(TEST_PROFILE_NAME);
+            expect(reloadTabsMock).toHaveBeenCalledWith(TEST_PROFILE_NAME);
             expect(reloadWorkspaceMock).toHaveBeenCalledWith(TEST_PROFILE_NAME);
         });
     });
@@ -430,7 +430,7 @@ describe("AuthHandler", () => {
             expect(lockProfileMock).toHaveBeenCalledTimes(1);
 
             resolveFlow?.(true);
-            await expect(flowOne).resolves.toBeUndefined();
+            await expect(flowOne).resolves.toBe(true);
             expect(AuthHandler.getActiveAuthFlow(TEST_PROFILE_NAME)).toBeUndefined();
             lockProfileMock.mockRestore();
         });
@@ -448,10 +448,10 @@ describe("AuthHandler", () => {
         it("starts a new flow after the previous one resolves", async () => {
             const lockProfileMock = vi.spyOn(AuthHandler, "lockProfile").mockClear().mockResolvedValueOnce(true).mockResolvedValueOnce(true);
 
-            await expect(AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts)).resolves.toBeUndefined();
+            await expect(AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts)).resolves.toBe(true);
             expect(AuthHandler.getActiveAuthFlow(TEST_PROFILE_NAME)).toBeUndefined();
 
-            await expect(AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts)).resolves.toBeUndefined();
+            await expect(AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts)).resolves.toBe(true);
             expect(lockProfileMock).toHaveBeenCalledTimes(2);
             lockProfileMock.mockRestore();
         });

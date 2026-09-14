@@ -60,6 +60,7 @@ export class FileManagement {
             .filter(
                 (t) =>
                     t.input instanceof TabInputText &&
+                    !t.isDirty &&
                     t.input.uri.path.startsWith(`/${profileName}/`) &&
                     (Object.values(ZoweScheme) as string[]).includes(t.input.uri.scheme)
             );

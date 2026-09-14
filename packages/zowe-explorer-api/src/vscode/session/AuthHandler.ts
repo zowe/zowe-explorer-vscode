@@ -61,7 +61,7 @@ export class AuthHandler {
     public static authPromptLocks = new Map<string, Mutex>();
     private static profileLocks = new Map<string, Mutex>();
     private static authCancelledProfiles = new Set<string>();
-    private static authFlows = new Map<string, Promise<void>>();
+    private static authFlows = new Map<string, Promise<boolean>>();
     private static sequentialLocks = new Map<string, Mutex>();
     private static parallelEnabledProfiles = new Set<string>();
     private static enabledProfileTypes: Set<string> = new Set(["zosmf"]);
@@ -179,8 +179,8 @@ export class AuthHandler {
         mutex.release();
         if (refreshResources) {
             // TODO: Log errors using ZoweLogger once available in ZE API
-            // refresh an active, unsaved editor if it uses the profile
-            FileManagement.reloadActiveEditorForProfile(profileName)
+            // refresh any open, unsaved editor tabs that use this profile
+            FileManagement.reloadTabsForProfile(profileName)
                 // eslint-disable-next-line no-console
                 .catch((err) => console.error(errorMessage(err)));
 
@@ -462,20 +462,20 @@ export class AuthHandler {
         return mutex.isLocked();
     }
 
-    public static getActiveAuthFlow(profile: ProfileLike): Promise<void> | undefined {
+    public static getActiveAuthFlow(profile: ProfileLike): Promise<boolean> | undefined {
         return this.authFlows.get(AuthHandler.getProfileName(profile));
     }
 
-    public static async getOrCreateAuthFlow(profile: ProfileLike, authOpts: AuthPromptParams): Promise<void> {
+    public static async getOrCreateAuthFlow(profile: ProfileLike, authOpts: AuthPromptParams): Promise<boolean> {
         const profileName = AuthHandler.getProfileName(profile);
         const existingFlow = this.authFlows.get(profileName);
         if (existingFlow != null) {
             return existingFlow;
         }
 
-        const flow = (async (): Promise<void> => {
+        const flow = (async (): Promise<boolean> => {
             try {
-                await AuthHandler.lockProfile(profile, authOpts);
+                return await AuthHandler.lockProfile(profile, authOpts);
             } finally {
                 this.authFlows.delete(profileName);
             }

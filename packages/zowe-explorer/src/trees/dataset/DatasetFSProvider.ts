@@ -34,6 +34,7 @@ import {
     DsType,
     ConflictViewSelection,
     MainframeInteraction,
+    AuthCancelledError,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse, IZosmfListResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -655,6 +656,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
             return dsEntry;
         } catch (error) {
+            if (error instanceof AuthCancelledError || (error instanceof vscode.FileSystemError && error.code === "Unavailable") || AuthUtils.isAuthError(error)) {
+                throw error;
+            }
             return null;
         }
     }
