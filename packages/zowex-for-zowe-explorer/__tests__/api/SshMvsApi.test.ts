@@ -1317,4 +1317,20 @@ describe("SshMvsApi", () => {
             expect(response.success).toEqual(false);
         });
     });
+
+    describe("resolveAlias", () => {
+        it("should call the resolveDsAlias", async () => {
+            const mvsApi = new SshMvsApi();
+            const aliasName = "MY.ALIAS";
+            const resolveAliasSpy = vi.fn().mockResolvedValue({ success: true });
+            vi.spyOn(mvsApi as any, "resolveAlias");
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { resolveDsAlias: resolveAliasSpy } });
+
+            await mvsApi.resolveAlias(aliasName);
+
+            expect(resolveAliasSpy).toHaveBeenCalledWith({
+                dsname: aliasName,
+            });
+        });
+    });
 });
