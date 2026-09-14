@@ -97,7 +97,8 @@ export class FileManagement {
         );
         for (const folder of foldersWithProfile) {
             try {
-                // TODO: FEATURE-FLAG(fetchByDefault): remove fetch=true
+                // Force a fetch for each folder to ensure latest contents are in the cache.
+                // May be able to revisit in v4, but keeping as-is for v3 to prevent regressions (forcing a fetch = no downsides in this case).
                 await workspace.fs.stat(folder.uri.with({ query: "fetch=true" }));
             } catch (err) {
                 void handleError(err, (error) => {
