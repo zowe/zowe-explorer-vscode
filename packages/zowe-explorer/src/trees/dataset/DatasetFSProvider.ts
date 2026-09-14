@@ -35,6 +35,7 @@ import {
     ConflictViewSelection,
     MainframeInteraction,
     AuthCancelledError,
+    errorMessage,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse, IZosmfListResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -663,6 +664,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             ) {
                 throw error;
             }
+            ZoweLogger.error(`[DatasetFSProvider] fetchDatasetAtUri failed for ${uri.toString()}: ${errorMessage(error)}`);
             return null;
         }
     }
