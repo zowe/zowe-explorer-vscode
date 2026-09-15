@@ -675,6 +675,37 @@ describe("ZosmfMvsApi", () => {
         expect(copySpy).toHaveBeenCalled();
     });
 
+    it("passes tsoAccount and tsoProc from the profile to List.dataSet as tso header options", async () => {
+        const listSpy = vi.spyOn(zosfiles.List, "dataSet").mockResolvedValue({ success: true } as any);
+        const profileWithTso: imperative.IProfileLoaded = {
+            ...loadedProfile,
+            profile: { ...fakeProfile, tsoAccount: "1234", tsoProc: "MYPROC" },
+        };
+        const zosmfApi = new ZoweExplorerZosmf.MvsApi(profileWithTso);
+        await zosmfApi.dataSet("SOME.FILTER");
+        expect(listSpy).toHaveBeenCalledWith(
+            expect.any(Object), // session
+            "SOME.FILTER",
+            expect.objectContaining({ tsoAccount: "1234", tsoProcedure: "MYPROC" })
+        );
+    });
+
+    it("passes tsoAccount and tsoProc from the profile to Create.dataSet as tso header options", async () => {
+        const createSpy = vi.spyOn(zosfiles.Create, "dataSet").mockResolvedValue({ success: true } as any);
+        const profileWithTso: imperative.IProfileLoaded = {
+            ...loadedProfile,
+            profile: { ...fakeProfile, tsoAccount: "1234", tsoProc: "MYPROC" },
+        };
+        const zosmfApi = new ZoweExplorerZosmf.MvsApi(profileWithTso);
+        await zosmfApi.createDataSet(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "SOME.DSNAME");
+        expect(createSpy).toHaveBeenCalledWith(
+            expect.any(Object), // session
+            zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
+            "SOME.DSNAME",
+            expect.objectContaining({ tsoAccount: "1234", tsoProcedure: "MYPROC" })
+        );
+    });
+
     describe("deleteDataSet with undefined options", () => {
         it("should call Delete.dataSet and not throw TypeError when options is undefined", () => {
             const mvsApi = new ZoweExplorerZosmf.MvsApi(loadedProfile);
