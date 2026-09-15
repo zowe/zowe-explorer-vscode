@@ -223,7 +223,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         return this.executeWithReuse<vscode.FileStat>(uri, {
             keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().split("/").slice(0, 3).join("/"),
-            checkLocal: () => (isVisibleEditor ? false : !!this.lookup(uri, true)),
+            checkLocal: () => !isVisibleEditor && !!this.lookup(uri, true),
             execute: () => this.statImplementation(uri),
         });
     }
