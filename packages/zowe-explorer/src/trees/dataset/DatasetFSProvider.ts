@@ -156,11 +156,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 if (m4date) {
                     // Handle both formats: separate mtime/msec fields vs combined in m4date
                     const newTime = mtime ? dayjs(`${m4date} ${mtime}:${msec || "00"}`).valueOf() : dayjs(m4date).valueOf();
+                    ZoweLogger.info(`[TEMP] statImplementation: m4date=${m4date} existingMtime=${entry.mtime} newMtime=${newTime} changed=${entry.mtime != newTime}`);
                     if (entry.mtime != newTime) {
                         entry.mtime = newTime;
                         entry.wasAccessed = false;
                     }
                 } else {
+                    ZoweLogger.info(`[TEMP] statImplementation: m4date=NONE existingMtime=${entry.mtime} — no mtime update possible`);
                     // The data set has no timestamp attributes available. Invalidate the cache to
                     // force a re-fetch on the next read, but leave `mtime` untouched. Bumping `mtime`
                     // here triggers VS Code's built-in stale-write detection (see
@@ -187,6 +189,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const isMemberRequest = segments.length === 3;
 
         const isVisibleEditor = vscode.window.visibleTextEditors.some((editor) => editor.document.uri.toString() === uri.toString());
+        ZoweLogger.info(`[TEMP] stat() uri=${uri.toString()} isVisibleEditor=${isVisibleEditor} visibleEditorUris=${vscode.window.visibleTextEditors.map((e) => e.document.uri.toString()).join(", ")}`);
 
         if (isMemberRequest) {
             const memberName = segments[2];
@@ -223,7 +226,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         return this.executeWithReuse<vscode.FileStat>(uri, {
             keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().split("/").slice(0, 3).join("/"),
-            checkLocal: () => (isVisibleEditor ? false : !!this.lookup(uri, true)),
+            checkLocal: () => {
+                const local = isVisibleEditor ? false : !!this.lookup(uri, true);
+                ZoweLogger.info(`[TEMP] stat() checkLocal result=${local} isVisibleEditor=${isVisibleEditor}`);
+                return local;
+            },
             execute: () => this.statImplementation(uri),
         });
     }
