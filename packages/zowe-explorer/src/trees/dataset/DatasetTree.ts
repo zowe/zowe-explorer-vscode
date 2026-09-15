@@ -2044,6 +2044,7 @@ Would you like to do this now?`,
                     const items: vscode.QuickPickItem[] = this.mPersistence
                         .getSearchHistory(node.getProfile())
                         .map((element) => new FilterItem({ text: element }));
+                    const historySeparator = this.mPersistence.getSearchHistorySeparator(node.getProfile());
                     const quickpick = Gui.createQuickPick();
                     quickpick.placeholder = vscode.l10n.t("Select a filter or type to create a new one");
                     quickpick.ignoreFocusOut = true;
@@ -2054,11 +2055,11 @@ Would you like to do this now?`,
                         const createPick = trimmedValue
                             ? new FilterDescriptor(`$(plus) ${vscode.l10n.t("Create a new filter")}: "${value.trim()}"`)
                             : new FilterDescriptor(DatasetTree.defaultDialogText);
-                        quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+                        quickpick.items = [createPick, historySeparator, ...items];
                     });
 
                     const createPick = new FilterDescriptor(DatasetTree.defaultDialogText);
-                    quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+                    quickpick.items = [createPick, historySeparator, ...items];
 
                     quickpick.show();
                     const choice = await Gui.resolveQuickPick(quickpick);

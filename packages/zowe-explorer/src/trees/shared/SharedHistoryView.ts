@@ -18,6 +18,7 @@ import { JobTree } from "../job/JobTree";
 import { Constants } from "../../configuration/Constants";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
 import { DatasetTree } from "../dataset/DatasetTree";
+import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
 import { SharedContext } from "./SharedContext";
 import * as fs from "fs";
 
@@ -227,9 +228,14 @@ export class SharedHistoryView extends WebView {
         ZoweLogger.trace("HistoryView.clearAll called.");
         const treeProvider = this.getTreeProvider(message.attrs.type);
         const infoMessage = vscode.l10n.t("Clear all history items for this persistent property?");
+
+        const detail =
+            message.attrs.selection === "search" && ZowePersistentFilters.isGroupingEnabled()
+                ? vscode.l10n.t("History grouping is enabled. Search history will be cleared for all groups, not just the one shown here.")
+                : undefined;
         const yesButton = vscode.l10n.t("Yes");
         const noButton = vscode.l10n.t("No");
-        const choice = await Gui.showMessage(infoMessage, { items: [yesButton, noButton], vsCodeOpts: { modal: true } });
+        const choice = await Gui.showMessage(infoMessage, { items: [yesButton, noButton], vsCodeOpts: { modal: true, detail } });
         if (choice === yesButton) {
             switch (message.attrs.selection) {
                 case "search":

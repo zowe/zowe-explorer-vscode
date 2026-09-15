@@ -9,6 +9,7 @@
  *
  */
 
+import * as vscode from "vscode";
 import { imperative, IZoweDatasetTreeNode, PersistenceSchemaEnum, Sorting } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { ZoweLogger } from "./ZoweLogger";
@@ -92,7 +93,7 @@ export class ZowePersistentFilters {
      * different ports and should still share history.
      */
     public static resolveGroupKey(profile?: imperative.IProfileLoaded | imperative.IProfile): string | undefined {
-        if (!SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_HISTORY_GROUP_BY_HOST, false)) {
+        if (!ZowePersistentFilters.isGroupingEnabled()) {
             return undefined;
         }
         const profAttrs: imperative.IProfile = (profile as imperative.IProfileLoaded)?.profile ?? (profile as imperative.IProfile);
@@ -102,6 +103,13 @@ export class ZowePersistentFilters {
         }
         const host = profAttrs?.host as string | undefined;
         return host?.trim() ? host.trim().toLowerCase() : undefined;
+    }
+
+    /**
+     * Whether search/filter history is currently being grouped, per the `zowe.settings.historyGroupByHost` setting.
+     */
+    public static isGroupingEnabled(): boolean {
+        return SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_HISTORY_GROUP_BY_HOST, false);
     }
 
     /*********************************************************************************************************************************************/
@@ -275,6 +283,30 @@ export class ZowePersistentFilters {
             }
         }
         return allEntries;
+    }
+
+    /**
+     * Builds the quick-pick separator that sits above the recent search/filter entries.
+     *
+     * The separator names the group only when the entries below it actually came from that group, making it
+     * obvious at a glance that grouping is on. Otherwise - grouping disabled, or grouping enabled but the
+     * group is still empty so `getSearchHistory` is falling back to the shared list - the plain
+     * "Recent Filters" separator is used, since the entries are not scoped to a host in either case.
+     */
+    public getSearchHistorySeparator(profile?: imperative.IProfileLoaded): vscode.QuickPickItem {
+        const groupKey = ZowePersistentFilters.resolveGroupKey(profile);
+        const group = groupKey ? this.mSearchHistoryByGroup[groupKey] : undefined;
+        if (!group?.length) {
+            return Constants.SEPARATORS.RECENT_FILTERS;
+        }
+        return {
+            kind: vscode.QuickPickItemKind.Separator,
+            label: vscode.l10n.t({
+                message: "Recent Filters (grouped by host: {0})",
+                args: [groupKey],
+                comment: ["Host (or group name) that the listed filter history belongs to"],
+            }),
+        };
     }
 
     public getSessions(): string[] {

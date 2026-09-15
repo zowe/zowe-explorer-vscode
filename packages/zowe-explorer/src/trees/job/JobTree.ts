@@ -675,7 +675,7 @@ Would you like to do this now?`,
 
         // VSCode route to create a QuickPick
         const quickpick = Gui.createQuickPick();
-        quickpick.items = [this.searchByQuery, this.searchById, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+        quickpick.items = [this.searchByQuery, this.searchById, this.mPersistence.getSearchHistorySeparator(profile), ...items];
         quickpick.placeholder = vscode.l10n.t("Select a filter");
         quickpick.ignoreFocusOut = true;
         quickpick.show();
