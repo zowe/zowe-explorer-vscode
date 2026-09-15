@@ -224,8 +224,10 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileNotFound(uri);
         }
 
+        const keyGen = (u: vscode.Uri): string => "list" + this.getQueryKey(u) + "_" + u.toString().split("/").slice(0, 3).join("/");
+        ZoweLogger.info(`[TEMP] stat() cacheKey=${keyGen(uri.with({ query: "fetch=true" }))} cacheHit=${this.requestCache.has(keyGen(uri.with({ query: "fetch=true" })))}`);
         return this.executeWithReuse<vscode.FileStat>(uri, {
-            keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().split("/").slice(0, 3).join("/"),
+            keyGenerator: keyGen,
             checkLocal: () => {
                 const local = isVisibleEditor ? false : !!this.lookup(uri, true);
                 ZoweLogger.info(`[TEMP] stat() checkLocal result=${local} isVisibleEditor=${isVisibleEditor}`);
