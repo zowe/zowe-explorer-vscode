@@ -222,6 +222,26 @@ export class ZoweExplorerExtender implements IApiExplorerExtender, IZoweExplorer
     }
 
     /**
+     * @implements IApiExplorerExtender.ssoLogin()
+     * @param profile Name of the profile or the loaded profile to log in
+     * @returns {Promise<boolean>} true if login succeeded
+     */
+    public async ssoLogin(profile: string | imperative.IProfileLoaded): Promise<boolean> {
+        const profileName = typeof profile === "string" ? profile : profile.name;
+        return Constants.PROFILES_CACHE.ssoLogin(null, profileName);
+    }
+
+    /**
+     * @implements IApiExplorerExtender.ssoLogout()
+     * @param profile Name of the profile or the loaded profile to log out
+     * @returns {Promise<boolean>} true if logout succeeded
+     */
+    public async ssoLogout(profile: string | imperative.IProfileLoaded): Promise<boolean> {
+        const profileName = typeof profile === "string" ? profile : profile.name;
+        return Constants.PROFILES_CACHE.ssoLogout(null, profileName);
+    }
+
+    /**
      * After an extenders registered all its API extensions it
      * might want to request that profiles should get reloaded
      * to make them automatically appears in the Explorer drop-

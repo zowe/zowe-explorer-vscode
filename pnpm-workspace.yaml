@@ -60,5 +60,6 @@ overrides:
   "browserslist": "^4.28.7"
   "qs": "^6.16.0"
   "fflate": "^0.8.3"
+  "smol-toml": "^1.7.1"
 # Previously set using `pnpm config set network-timeout`
 fetchTimeout: 60000

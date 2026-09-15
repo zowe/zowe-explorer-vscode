@@ -49,6 +49,7 @@ overrides:
   browserslist: ^4.28.7
   qs: ^6.16.0
   fflate: ^0.8.3
+  smol-toml: ^1.7.1
 
 importers:
 
@@ -453,8 +454,8 @@ importers:
         specifier: workspace:*
         version: link:../zowe-explorer-api
       '@zowe/zowex-for-zowe-sdk':
-        specifier: ^0.8.1
-        version: 0.8.1(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)
+        specifier: ^1.0.0
+        version: 1.0.0(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)
       ssh2:
         specifier: ^1.17.0
         version: 1.17.0
@@ -2368,8 +2369,8 @@ packages:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zowex-for-zowe-sdk@0.8.1':
-    resolution: {integrity: sha512-JVKIZngiv+iRSameJvGzNfpeSStRKQoX5jn/ul26Ss8OEDeV1nEe1uxsp+ar7MPUr+9/gRQm9dFmg4igIUxFjA==}
+  '@zowe/zowex-for-zowe-sdk@1.0.0':
+    resolution: {integrity: sha512-eNlVElTmOZUJmaf4UzIRbnBzLF4MvMWhW98YZG86B7ubH461NgAseuZBCohK6rGKJuuRKmEmg+CKAweQN91kpA==}
     peerDependencies:
       '@zowe/imperative': ^8.11.0
       '@zowe/zos-uss-for-zowe-sdk': ^8.11.0
@@ -6227,8 +6228,8 @@ packages:
     resolution: {integrity: sha512-qMCMfhY040cVHT43K9BFygqYbUPFZKHOg7K73mtTWJRb8pyP3fzf4Ixd5SzdEJQ6MRUg/WBnOLxghZtKKurENQ==}
     engines: {node: '>=10'}
 
-  smol-toml@1.6.1:
-    resolution: {integrity: sha512-dWUG8F5sIIARXih1DTaQAX4SsiTXhInKf1buxdY9DIg4ZYPZK5nGM1VRIYmEbDbsHt7USo99xSLFu5Q1IqTmsg==}
+  smol-toml@1.8.0:
+    resolution: {integrity: sha512-kCZr2V3ch9i00x8zXRhjUNVcjG9ijES5dDudkXvUVCT5QlJNQWElSJdZqyPemffHoLNUYwOcou0Fy+ojN0uHSQ==}
     engines: {node: '>= 18'}
 
   sonic-boom@4.0.1:
@@ -9601,7 +9602,7 @@ snapshots:
       '@zowe/core-for-zowe-sdk': 8.35.0(@zowe/imperative@8.35.0)
       '@zowe/imperative': 8.35.0
 
-  '@zowe/zowex-for-zowe-sdk@0.8.1(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)':
+  '@zowe/zowex-for-zowe-sdk@1.0.0(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)':
     dependencies:
       '@zowe/imperative': 8.35.0
       '@zowe/zos-uss-for-zowe-sdk': 8.32.0(@zowe/imperative@8.35.0)
@@ -12535,7 +12536,7 @@ snapshots:
       markdownlint: 0.40.0(supports-color@8.1.1)
       minimatch: 10.2.4
       run-con: 1.3.2
-      smol-toml: 1.6.1
+      smol-toml: 1.8.0
       tinyglobby: 0.2.15
     transitivePeerDependencies:
       - supports-color
@@ -13989,7 +13990,7 @@ snapshots:
       astral-regex: 2.0.0
       is-fullwidth-code-point: 3.0.0
 
-  smol-toml@1.6.1: {}
+  smol-toml@1.8.0: {}
 
   sonic-boom@4.0.1:
     dependencies:
