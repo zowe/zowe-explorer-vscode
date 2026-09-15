@@ -6,6 +6,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added a `getFileApi` method to `ZoweExplorerApiRegister` that returns a file API for querying mainframe file system state. The initial API includes `getEncodingForUri`, which returns the encoding ZE has determined for a given resource URI, checking auto-detected encodings (such as USS file-tag detection) before falling back to explicitly user-selected encodings. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
+- Renamed the `"Uninstall zowex server on host..."` command to `""Uninstall SSH server on host..."`. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
+- Renamed the `"Restart zowex server on host..."` command to `""Restart SSH server on host..."`. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
+- Added support for resolving data set aliases when using SSH profiles. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
+- Added `ssoLogin` and `ssoLogout` methods to the API returned by `getExplorerExtenderApi()`, allowing extenders to perform SSO login and logout for a profile by name or loaded profile. The `Profiles.ssoLogout` function can now be called without a tree node and returns a boolean indicating success. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Added a dialog to clarify that connecting to the mainframe with an SSH profile can result in deploying the SSH server if it is not present. The warning can be prevented by pressing the `"Connect, don't ask me again"` button or by setting the VS Code setting `zowe.confirmSshServerDeploy` to `false`. [#4445](https://github.com/zowe/zowe-explorer-vscode/pull/4445)
 - Added a dialog when there does not appear to be enough disk space on z/OS UNIX to deploy the SSH server, which can be bypassed by clicking the `"Deploy"` button on the dialog. [#4445](https://github.com/zowe/zowe-explorer-vscode/pull/4445)
 - Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. Currently only supported when connecting via z/OSMF. [#4438](https://github.com/zowe/zowe-explorer-vscode/pull/4438)
@@ -21,6 +26,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where the tooltip for SSH profiles was incorrectly displaying the auth method or missing the username. [#4417](https://github.com/zowe/zowe-explorer-vscode/pull/4417)
+- Fixed an issue where using "Allocate Like" on a data set caused the tree nodes to disappear until the profile was collapsed and re-expanded. [#4444](https://github.com/zowe/zowe-explorer-vscode/issues/4444)
 - Fixed an issue where a data set that was already cached locally would not be re-fetched from the mainframe when explicitly requested (`fetch=true`), causing stale data to be returned. [#4476](https://github.com/zowe/zowe-explorer-vscode/pull/4476)
 - Fixed an issue where opening a PDS member from the table view would fail with a file not found error, if the PDS had not been expanded in the tree. [#4415](https://github.com/zowe/zowe-explorer-vscode/issues/4415)
 - Fixed an issue where recalling a sequential data set caused its contents to be overwritten, resulting in data loss. Now, when a data set is recalled, its contents are no longer modified. [#4412](https://github.com/zowe/zowe-explorer-vscode/issues/4412)
@@ -42,6 +49,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated `js-yaml` and `nanoid` dependencies for technical currency. [#4447](https://github.com/zowe/zowe-explorer-vscode/pull/4447)
 - Fixed an issue where the selected profile name changed after the first Unix command was executed. [#4446](https://github.com/zowe/zowe-explorer-vscode/issues/4446)
 - Fixed an issue where the pound sign in a resource URI caused the data sets table view to strip off part of the resource path, causing table actions to fail. Now, supported characters are preserved in URIs when passed to the data sets table. [#4467](https://github.com/zowe/zowe-explorer-vscode/issues/4467)
+- Updated `sanitize-html` dependency for technical currency. [#4478](https://github.com/zowe/zowe-explorer-vscode/pull/4478)
 
 ## `3.5.1`
 

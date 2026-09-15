@@ -51,10 +51,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, this.onDidChangeFile);
         ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => this.updateProfile(profile));
+        ZoweExplorerApiRegister.getInstance().registerFSProvider(ZoweScheme.DS, this);
         this.root = new DirEntry("");
     }
-
-    public encodingMap: Record<string, ZosEncoding> = {};
 
     /**
      * @returns the Data Set FileSystemProvider singleton instance
@@ -1225,19 +1224,5 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         entry.metadata = profInfo;
         parent.entries.set(basename, entry);
         return entry;
-    }
-
-    public invalidateCache(uri: vscode.Uri): void {
-        try {
-            const parent = this.lookupParentDirectory(uri, true);
-            if (parent) {
-                const basename = path.posix.basename(uri.path);
-                if (parent.entries.has(basename)) {
-                    parent.entries.delete(basename);
-                }
-            }
-        } catch (e) {
-            // Ignore if parent directory cannot be looked up or doesn't exist
-        }
     }
 }
