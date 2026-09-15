@@ -1118,7 +1118,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
         const newUriEntry = this.lookup(newUri, true);
         if (!options.overwrite && newUriEntry) {
-            throw vscode.FileSystemError.FileExists(`Rename failed: ${path.posix.basename(newUri.path)} already exists`);
+            throw vscode.FileSystemError.FileExists(`Rename failed: ${decodeURIComponent(path.posix.basename(newUri.path))} already exists`);
         }
 
         const entry = this.lookup(oldUri, false) as PdsEntry | DsEntry;
