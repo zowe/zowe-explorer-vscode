@@ -340,6 +340,8 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Create.dataSetLike(this.getSession(), dataSetName, likeDataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProc,
             });
         }
 
@@ -394,12 +396,16 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public hMigrateDataSet(dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.HMigrate.dataSet(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProc,
             });
         }
 
         public hRecallDataSet(dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.HRecall.dataSet(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProc,
             });
         }
 
@@ -449,10 +455,14 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                 ...searchOptions,
                 getOptions: {
                     responseTimeout: this.profile?.profile?.responseTimeout,
+                    tsoAccount: this.profile?.profile?.tsoAccount,
+                    tsoProcedure: this.profile?.profile?.tsoProc,
                     ...searchOptions.getOptions,
                 },
                 listOptions: {
                     responseTimeout: this.profile?.profile?.responseTimeout,
+                    tsoAccount: this.profile?.profile?.tsoAccount,
+                    tsoProcedure: this.profile?.profile?.tsoProc,
                     ...searchOptions.listOptions,
                 },
             });
@@ -489,6 +499,8 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public async resolveAlias(aliasName: string): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.List.resolveAlias(this.getSession(), aliasName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProc,
             });
         }
     }
