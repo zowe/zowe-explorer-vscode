@@ -803,4 +803,19 @@ export class ProfilesUtils {
     public static hasNoAuthType(session: ISession, profile: IProfileLoaded): boolean {
         return session.type === SessConstants.AUTH_TYPE_NONE && profile.type !== "ssh";
     }
+
+    /**
+     * Whether the profile is set up for token authentication, but has no token to send.
+     * This is the state that a profile is left in after logging out of the authentication service.
+     */
+    public static isMissingToken(session: ISession, profile: IProfileLoaded): boolean {
+        return session.type === SessConstants.AUTH_TYPE_TOKEN && !profile.profile.tokenValue;
+    }
+
+    /**
+     * Whether the profile has no credentials available to send with a request.
+     */
+    public static hasNoCredentials(session: ISession, profile: IProfileLoaded): boolean {
+        return ProfilesUtils.hasNoAuthType(session, profile) || ProfilesUtils.isMissingToken(session, profile);
+    }
 }
