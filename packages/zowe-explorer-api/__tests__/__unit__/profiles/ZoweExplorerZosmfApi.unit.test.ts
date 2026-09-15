@@ -684,7 +684,7 @@ describe("ZosmfMvsApi", () => {
         const zosmfApi = new ZoweExplorerZosmf.MvsApi(profileWithTso);
         await zosmfApi.dataSet("SOME.FILTER");
         expect(listSpy).toHaveBeenCalledWith(
-            expect.any(Object), // session
+            expect.any(Object),
             "SOME.FILTER",
             expect.objectContaining({ tsoAccount: "1234", tsoProcedure: "MYPROC" })
         );
@@ -699,7 +699,7 @@ describe("ZosmfMvsApi", () => {
         const zosmfApi = new ZoweExplorerZosmf.MvsApi(profileWithTso);
         await zosmfApi.createDataSet(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "SOME.DSNAME");
         expect(createSpy).toHaveBeenCalledWith(
-            expect.any(Object), // session
+            expect.any(Object),
             zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
             "SOME.DSNAME",
             expect.objectContaining({ tsoAccount: "1234", tsoProcedure: "MYPROC" })
