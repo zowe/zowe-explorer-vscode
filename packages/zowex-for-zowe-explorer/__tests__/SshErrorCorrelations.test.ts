@@ -367,6 +367,9 @@ describe("SshErrorCorrelations", () => {
             const expectedCodes = [
                 // Request timeout
                 "REQUEST_TIMEOUT",
+                // Build incompatibility with z/OS maintenance level
+                "CEE3501S",
+                "CEE3561S",
                 // Connection failures
                 "FOTS4241",
                 "FOTS1668",

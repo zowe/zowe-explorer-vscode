@@ -9,12 +9,14 @@ permissions:
 jobs:
   processLabelAction:
     name: Process Label Action
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          sparse-checkout: .github
 
       - name: Process Label Action
-        uses: dessant/label-actions@v4
+        uses: dessant/label-actions@65225c179d3b2502f6eda7b3d15101a3f412366b # v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           config-path: '.github/label-actions.yml'
