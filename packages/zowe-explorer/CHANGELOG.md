@@ -23,9 +23,13 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Replaced repetitive `if (err instanceof Error)` patterns with `handleError` and `errorMessage` utility functions from `@zowe/zowe-explorer-api`. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 - Added new VS Code toggle setting for enabling various features within Zowe Explorer. [#4242](https://github.com/zowe/zowe-explorer-vscode/issues/4242)
 - Added support for comma-separated job prefixes in the **JOBS** tree filter, matching existing data set filter behavior. [#4395](https://github.com/zowe/zowe-explorer-vscode/issues/4395)
+- Added `Created` and `Deleted` file change events for PDS members and USS resources that are added or removed on the mainframe outside of Zowe Explorer. [#4497](https://github.com/zowe/zowe-explorer-vscode/pull/4497)
+- Added a `Changed` event for the parent PDS or USS directory when one of its entries is created or deleted. [#4497](https://github.com/zowe/zowe-explorer-vscode/pull/4497)
 
 ### Bug fixes
 
+- Fixed an issue where the USS tree discarded its cached children on every listing, rebuilding each node on refresh and never clearing files that were removed on the mainframe. [#4497](https://github.com/zowe/zowe-explorer-vscode/pull/4497)
+- Fixed an issue where the data set file system provider kept stale PDS members in its cache after they were deleted on the mainframe. [#4497](https://github.com/zowe/zowe-explorer-vscode/pull/4497)
 - Fixed an issue where a data set that was already cached locally would not be re-fetched from the mainframe when explicitly requested (`fetch=true`), causing stale data to be returned. [#4476](https://github.com/zowe/zowe-explorer-vscode/pull/4476)
 - Fixed an issue where opening a PDS member from the table view would fail with a file not found error, if the PDS had not been expanded in the tree. [#4415](https://github.com/zowe/zowe-explorer-vscode/issues/4415)
 - Fixed an issue where recalling a sequential data set caused its contents to be overwritten, resulting in data loss. Now, when a data set is recalled, its contents are no longer modified. [#4412](https://github.com/zowe/zowe-explorer-vscode/issues/4412)

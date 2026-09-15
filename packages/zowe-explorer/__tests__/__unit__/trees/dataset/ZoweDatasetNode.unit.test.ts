@@ -2844,3 +2844,171 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         });
     });
 });
+
+describe("ZoweDatasetNode Unit Tests - getChildren() remote member change detection", () => {
+    const session = createISession();
+    const profileOne: imperative.IProfileLoaded = createIProfile();
+
+    interface PdsHarness {
+        pds: ZoweDatasetNode;
+        paginator: { pageIndex: number; hasNextPage: boolean };
+        getDatasets: MockInstance;
+        removeEntry: MockInstance;
+        fireSoon: MockInstance;
+    }
+
+    function setupPds(hasNextPage: boolean): PdsHarness {
+        vi.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: vi.fn().mockReturnValue(profileOne),
+        } as any);
+        const sessionNode = createDatasetSessionNode(session, profileOne);
+        vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(createDatasetTree(sessionNode, createTreeView()));
+        vi.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
+        vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+
+        const pds = new ZoweDatasetNode({
+            label: "SAMPLE.PDS",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: sessionNode,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_PDS_CONTEXT,
+        });
+
+        // Stands in for a paginator whose page can be moved between listings.
+        const paginator = { pageIndex: 0, hasNextPage };
+        (pds as any).paginator = {
+            getCurrentPageIndex: () => paginator.pageIndex,
+            canGoNext: () => paginator.hasNextPage,
+            canGoPrevious: () => paginator.pageIndex > 0,
+        };
+
+        return {
+            pds,
+            paginator,
+            getDatasets: vi.spyOn(pds as any, "getDatasets"),
+            removeEntry: vi.spyOn(DatasetFSProvider.instance, "removeEntry").mockReturnValue(true),
+            fireSoon: vi.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation((() => undefined) as any),
+        };
+    }
+
+    const listing = (...members: string[]): any[] => [
+        { success: true, apiResponse: { items: members.map((member) => ({ member })), returnedRows: members.length } },
+    ];
+
+    /** Lists the members of a page and returns after `getChildren` has diffed it. */
+    async function listPage(harness: PdsHarness, ...members: string[]): Promise<void> {
+        harness.getDatasets.mockResolvedValueOnce(listing(...members));
+        harness.pds.dirty = true;
+        await harness.pds.getChildren();
+    }
+
+    const memberNameOf = (uri: vscode.Uri): string => uri.path.split("/").pop();
+
+    const deletedMembers = (removeEntry: MockInstance): string[] => removeEntry.mock.calls.map(([uri]: any[]) => memberNameOf(uri));
+
+    const createdMembers = (fireSoon: MockInstance): string[] =>
+        fireSoon.mock.calls
+            .filter(([event]: any[]) => event.type === vscode.FileChangeType.Created)
+            .map(([event]: any[]) => memberNameOf(event.uri));
+
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("fires no change events for the first listing of a PDS", async () => {
+        const harness = setupPds(true);
+        await listPage(harness, "MEMA", "MEMB", "MEMC");
+
+        expect(deletedMembers(harness.removeEntry)).toEqual([]);
+        expect(createdMembers(harness.fireSoon)).toEqual([]);
+    });
+
+    it("does not report a deletion when a new member pushes the last one onto the next page", async () => {
+        const harness = setupPds(true);
+        await listPage(harness, "MEMA", "MEMB", "MEMC", "MEMD", "MEME");
+
+        // MEMBB was created remotely, pushing MEME off the end of the page.
+        await listPage(harness, "MEMA", "MEMB", "MEMBB", "MEMC", "MEMD");
+
+        expect(deletedMembers(harness.removeEntry)).toEqual([]);
+        expect(createdMembers(harness.fireSoon)).toEqual(["MEMBB"]);
+    });
+
+    it("does not report a creation when a deleted member pulls one back from the next page", async () => {
+        const harness = setupPds(true);
+        await listPage(harness, "MEMA", "MEMB", "MEMC", "MEMD", "MEME");
+
+        // MEMC was deleted remotely, pulling MEMF back from the next page.
+        await listPage(harness, "MEMA", "MEMB", "MEMD", "MEME", "MEMF");
+
+        expect(deletedMembers(harness.removeEntry)).toEqual(["MEMC"]);
+        expect(createdMembers(harness.fireSoon)).toEqual([]);
+    });
+
+    it("reports deletions at the end of the listing when there is no next page", async () => {
+        const harness = setupPds(false);
+        await listPage(harness, "MEMA", "MEMB", "MEMC");
+        await listPage(harness, "MEMA", "MEMB");
+
+        expect(deletedMembers(harness.removeEntry)).toEqual(["MEMC"]);
+        expect(createdMembers(harness.fireSoon)).toEqual([]);
+    });
+
+    it("fires no change events when navigating to a page that was not listed before", async () => {
+        const harness = setupPds(true);
+        await listPage(harness, "MEMA", "MEMB", "MEMC", "MEMD", "MEME");
+
+        harness.paginator.pageIndex = 1;
+        harness.paginator.hasNextPage = false;
+        await listPage(harness, "MEMF", "MEMG");
+
+        expect(deletedMembers(harness.removeEntry)).toEqual([]);
+        expect(createdMembers(harness.fireSoon)).toEqual([]);
+    });
+
+    it("reports a member created on an earlier page once that page is revisited", async () => {
+        const harness = setupPds(true);
+        await listPage(harness, "MEMA", "MEMB", "MEMC", "MEMD", "MEME");
+
+        // Move to the last page, then return to the first - where MEMBB was created in the meantime.
+        harness.paginator.pageIndex = 1;
+        harness.paginator.hasNextPage = false;
+        await listPage(harness, "MEMF", "MEMG");
+
+        harness.paginator.pageIndex = 0;
+        harness.paginator.hasNextPage = true;
+        await listPage(harness, "MEMA", "MEMB", "MEMBB", "MEMC", "MEMD");
+
+        expect(deletedMembers(harness.removeEntry)).toEqual([]);
+        expect(createdMembers(harness.fireSoon)).toEqual(["MEMBB"]);
+    });
+
+    it("does not diff members while a member search pattern is active", async () => {
+        const harness = setupPds(false);
+        await listPage(harness, "MEMA", "MEMB", "MEMC");
+
+        harness.pds.memberPattern = "MEMA*";
+        await listPage(harness, "MEMA");
+
+        expect(deletedMembers(harness.removeEntry)).toEqual([]);
+        expect(createdMembers(harness.fireSoon)).toEqual([]);
+
+        // Clearing the pattern compares against the last unfiltered listing, not the filtered one.
+        harness.pds.memberPattern = undefined;
+        await listPage(harness, "MEMA", "MEMB", "MEMC");
+
+        expect(deletedMembers(harness.removeEntry)).toEqual([]);
+        expect(createdMembers(harness.fireSoon)).toEqual([]);
+    });
+
+    it("addresses removed members by the URI their node would have had", async () => {
+        const harness = setupPds(false);
+        await listPage(harness, "MEMA", "MEMB");
+        await listPage(harness, "MEMA");
+
+        expect(harness.removeEntry).toHaveBeenCalledTimes(1);
+        expect((harness.removeEntry.mock.calls[0][0] as vscode.Uri).path).toBe("/sestest/SAMPLE.PDS/MEMB");
+    });
+});

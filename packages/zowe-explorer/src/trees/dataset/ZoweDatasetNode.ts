@@ -82,6 +82,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         lastItemName?: string;
     };
     private itemsPerPage?: number;
+    // lets us tell a member that was really added/removed apart from one that simply slid across a
+    // page boundary. Only allocated for PDS nodes.
+    private lastListedMemberNames?: Map<number, string[]>;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -387,6 +390,17 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             return [];
         }
 
+        // Detect PDS members that were added/removed remotely since the last listing, so we can fire
+        // the corresponding file change events on the FS provider's cache.
+        const canDiffChildren = SharedContext.isPds(this) && !this.memberPattern && this.resourceUri != null;
+        // Each page is compared against what that same page last held.
+        const currentPageIndex = this.paginator?.getCurrentPageIndex() ?? 0;
+        const previousMemberNames = canDiffChildren ? this.lastListedMemberNames?.get(currentPageIndex) : undefined;
+        // Member names returned by this listing, in API order, plus the URIs of members this listing
+        // introduced.
+        const listedMemberNames: string[] = [];
+        const newMemberUris = new Map<string, vscode.Uri>();
+
         // push nodes to an object with property names to avoid duplicates
         const elementChildren: { [k: string]: ZoweDatasetNode } = {};
         for (const response of responses) {
@@ -407,6 +421,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 existingItems[element.label.toString()] = element;
             }
             for (const item of (response.apiResponse.items ?? response.apiResponse) as IZosmfListResponse[]) {
+                if (item.member != null) {
+                    listedMemberNames.push(item.member);
+                }
                 let dsNode = existingItems[item.dsname ?? item.member];
                 if (dsNode != null) {
                     elementChildren[dsNode.label.toString()] = dsNode;
@@ -523,6 +540,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     // Create an empty entry for the PDS if it doesn't exist.
                     if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
                         DatasetFSProvider.instance.createEntry(dsNode.resourceUri, dsType);
+                        if (previousMemberNames != null && item.member != null) {
+                            newMemberUris.set(item.member, dsNode.resourceUri);
+                        }
                     }
                     dsNode.updateStats(item);
                 }
@@ -602,6 +622,28 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
         }
 
+        if (previousMemberNames != null) {
+            // Compare the raw API listings rather than the final `this.children`: local
+            // filters/favorites narrow the displayed list without the member actually being added or
+            // removed remotely, and `this.children` only ever holds the page currently on screen.
+            const pageEndIsVolatile = this.paginator?.canGoNext() ?? false;
+            for (const name of ZoweDatasetNode.namesConfirmedMissing(previousMemberNames, new Set(listedMemberNames), pageEndIsVolatile)) {
+                DatasetFSProvider.instance.removeEntry(this.memberResourceUri(name));
+            }
+
+            const createdNames = ZoweDatasetNode.namesConfirmedMissing(listedMemberNames, new Set(previousMemberNames), pageEndIsVolatile);
+            for (const [name, resourceUri] of newMemberUris) {
+                if (createdNames.has(name)) {
+                    DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: resourceUri });
+                }
+            }
+        }
+
+        if (canDiffChildren) {
+            this.lastListedMemberNames ??= new Map();
+            this.lastListedMemberNames.set(currentPageIndex, listedMemberNames);
+        }
+
         const canNavigate = this.paginator && (this.paginator.canGoPrevious() || this.paginator.canGoNext());
 
         if (
@@ -656,6 +698,54 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         }
 
         return this.children;
+    }
+
+    /**
+     * Builds the file system URI for one of this PDS's members, matching the URI the member's node
+     * would be given. Lets the change detection in {@link getChildren} address a member that was
+     * removed remotely, which no longer has a node to read the URI from.
+     *
+     * @param memberName The member name, as returned by the MVS list API
+     */
+    private memberResourceUri(memberName: string): vscode.Uri {
+        const extension = DatasetUtils.getExtension(this.label as string);
+        return this.resourceUri.with({ path: `${this.resourceUri.path}/${memberName}${extension ?? ""}` });
+    }
+
+    /**
+     * Compares two listings of the same PDS to find the names that are confirmed absent from the newer one.
+     *
+     * A paginated listing is only a window over the PDS. The start of a page is anchored to the
+     * previous page's cursor, but its end is not: adding a member shifts the page's last member onto
+     * the next page, and removing one pulls a member back from it. Neither is a create or a delete,
+     * so when a next page exists a name is only reported as missing if a name that followed it in
+     * {@link listingOrder} is still present - proof that the comparison covers that name's position.
+     *
+     * @param listingOrder Names from the older listing, in the order the API returned them
+     * @param laterListing Names present in the newer listing
+     * @param pageEndIsVolatile Whether a next page exists, making the end of the page unreliable
+     * @returns The names from {@link listingOrder} that are confirmed absent from {@link laterListing}
+     */
+    private static namesConfirmedMissing(listingOrder: string[], laterListing: Set<string>, pageEndIsVolatile: boolean): Set<string> {
+        // Exclusive upper bound of the region that both listings are known to cover.
+        let comparableUntil = listingOrder.length;
+        if (pageEndIsVolatile) {
+            comparableUntil = 0;
+            for (let i = listingOrder.length - 1; i >= 0; i--) {
+                if (laterListing.has(listingOrder[i])) {
+                    comparableUntil = i;
+                    break;
+                }
+            }
+        }
+
+        const missing = new Set<string>();
+        for (let i = 0; i < comparableUntil; i++) {
+            if (!laterListing.has(listingOrder[i])) {
+                missing.add(listingOrder[i]);
+            }
+        }
+        return missing;
     }
 
     /**
