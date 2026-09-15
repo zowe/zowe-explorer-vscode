@@ -26,6 +26,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where a data set or USS file would fail to open with "The editor could not be opened due to an unexpected error" after re-authenticating with valid credentials. [#4495](https://github.com/zowe/zowe-explorer-vscode/pull/4495)
+- Fixed an issue where open editor tabs showed an error when launching VS Code if the profile's token value was missing or expired. [#4059](https://github.com/zowe/zowe-explorer-vscode/issues/4059)
 - Fixed an issue where a data set that was already cached locally would not be re-fetched from the mainframe when explicitly requested (`fetch=true`), causing stale data to be returned. [#4476](https://github.com/zowe/zowe-explorer-vscode/pull/4476)
 - Fixed an issue where opening a PDS member from the table view would fail with a file not found error, if the PDS had not been expanded in the tree. [#4415](https://github.com/zowe/zowe-explorer-vscode/issues/4415)
 - Fixed an issue where recalling a sequential data set caused its contents to be overwritten, resulting in data loss. Now, when a data set is recalled, its contents are no longer modified. [#4412](https://github.com/zowe/zowe-explorer-vscode/issues/4412)
