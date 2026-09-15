@@ -8,6 +8,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where using "Allocate Like" on a data set caused the tree nodes to disappear until the profile was collapsed and re-expanded. [#4444](https://github.com/zowe/zowe-explorer-vscode/issues/4444)
+
 ## `3.6.0`
 
 ### New features and enhancements
