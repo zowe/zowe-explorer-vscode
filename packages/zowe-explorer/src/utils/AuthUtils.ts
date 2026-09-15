@@ -229,7 +229,9 @@ export class AuthUtils {
                 const stillLocked = await AuthHandler.getOrCreateAuthFlow(profile, {
                     authMethods: Constants.PROFILES_CACHE,
                     imperativeError,
-                    isUsingTokenAuth: sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
+                    isUsingTokenAuth:
+                        sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
+                        sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
                     errorCorrelation,
                 });
                 return !stillLocked;
@@ -476,7 +478,8 @@ export class AuthUtils {
     public static isAuthError(err: unknown): boolean {
         return (
             (err instanceof imperative.ImperativeError &&
-                (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 || err.message.includes("All configured authentication methods failed"))) ||
+                (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                    err.message.includes("All configured authentication methods failed"))) ||
             (err instanceof Error && err.message.includes("HTTP(S) status 401"))
         );
     }

@@ -1557,7 +1557,7 @@ describe("ProfilesUtils unit tests", () => {
     });
     describe("Profiles unit tests - function isMissingToken", () => {
         const tokenProfile = (tokenValue?: string) =>
-            ({ name: "profile123", type: "zosmf", message: "", failNotFound: false, profile: { tokenValue } } as any);
+            ({ name: "profile123", type: "zosmf", message: "", failNotFound: false, profile: { tokenValue } }) as any;
 
         it("returns true when the session uses token auth without a token value", () => {
             expect(ProfilesUtils.isMissingToken({ type: "token" } as any, tokenProfile())).toBe(true);
