@@ -1070,7 +1070,9 @@ describe("ZoweDatasetNode Unit Tests - function datasetRecalled", () => {
         const existsSpy = vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         const writeFileMock = vi.spyOn(vscode.workspace.fs, "writeFile").mockImplementation((() => undefined) as any);
         await (dsNode as any).datasetRecalled(false);
-        expect(writeFileMock).toHaveBeenCalledWith(dsNode.resourceUri, new Uint8Array());
+        // writeFile should no longer be called now that writeFile always writes to remote
+        expect(writeFileMock).not.toHaveBeenCalled();
+        expect(writeFileMock).not.toHaveBeenCalledWith(dsNode.resourceUri, new Uint8Array());
         existsSpy.mockRestore();
     });
 
@@ -1153,6 +1155,123 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
 
     beforeEach(() => {
         vi.resetAllMocks();
+    });
+
+    describe("aliased data sets", () => {
+        it("should show children for an alias to a PDS", async () => {
+            const sessionNode = new ZoweDatasetNode({
+                label: "sestest",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session,
+                profile: profileOne,
+                contextOverride: Constants.DS_SESSION_CONTEXT,
+            });
+            const originalPdsName = "ORIGINAL.PDS";
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({
+                getSession: vi.fn().mockReturnValue(createISession()),
+                resolveAlias: vi.fn().mockResolvedValue({
+                    apiResponse: {
+                        targetDsn: originalPdsName,
+                    },
+                }),
+                dataSet: vi.fn().mockImplementation((dsname, opts) => {
+                    if (dsname === originalPdsName && opts.attributes) {
+                        return {
+                            apiResponse: {
+                                items: [
+                                    {
+                                        dsname: originalPdsName,
+                                        dsorg: "PO",
+                                        recfm: "FB",
+                                    },
+                                ],
+                            },
+                        };
+                    }
+                    return undefined;
+                }),
+            } as any);
+            sessionNode.pattern = "TEST.*";
+            sessionNode.children = [];
+            vi.spyOn(Profiles, "getInstance").mockReturnValue({
+                loadNamedProfile: vi.fn().mockReturnValue(profileOne),
+            } as any);
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
+                applyPatternsToChildren: vi.fn(),
+                resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
+            } as any);
+
+            vi.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                dsname: "TEST.PDS.ALIAS",
+                                vol: "*ALIAS",
+                            },
+                        ],
+                    },
+                },
+            ]);
+
+            await sessionNode.getChildren();
+            expect(sessionNode.children.length).toEqual(1);
+            const pdsNode = sessionNode.children[0];
+            expect(pdsNode.resourceUri.path).toEqual("/sestest/TEST.PDS.ALIAS");
+
+            // collapsible state should change to Collapsed due to being an alias to a PDS
+            expect(pdsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+        });
+
+        it("should show an alias data set as not collapisble if the MVS API does not support resolving aliases", async () => {
+            const sessionNode = new ZoweDatasetNode({
+                label: "sestest",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                session,
+                profile: profileOne,
+                contextOverride: Constants.DS_SESSION_CONTEXT,
+            });
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({
+                getSession: vi.fn().mockReturnValue(createISession()),
+                resolveAlias: undefined,
+            } as any);
+            sessionNode.pattern = "TEST.*";
+            sessionNode.children = [];
+            vi.spyOn(Profiles, "getInstance").mockReturnValue({
+                loadNamedProfile: vi.fn().mockReturnValue(profileOne),
+            } as any);
+            vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
+                applyPatternsToChildren: vi.fn(),
+                resetFilterForChildren: vi.fn(),
+                findEquivalentNode: vi.fn(),
+                updateFavorites: vi.fn(),
+                refreshElement: vi.fn(),
+            } as any);
+
+            vi.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
+                {
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            {
+                                dsname: "TEST.PDS.ALIAS",
+                                vol: "*ALIAS",
+                            },
+                        ],
+                    },
+                },
+            ]);
+
+            await sessionNode.getChildren();
+            expect(sessionNode.children.length).toEqual(1);
+            const pdsNode = sessionNode.children[0];
+            expect(pdsNode.resourceUri.path).toEqual("/sestest/TEST.PDS.ALIAS");
+            expect(pdsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+        });
     });
 
     describe("migration/recall", () => {

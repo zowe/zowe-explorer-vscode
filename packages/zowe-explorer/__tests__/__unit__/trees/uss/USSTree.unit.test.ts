@@ -2054,8 +2054,10 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         globalMocks.testTree.mFavorites.push(favProfileNode);
 
         vi.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
-        const createDirectorySpy = vi.spyOn(vscode.workspace.fs, "createDirectory");
+        const createParentDirsSpy = vi.spyOn(UssFSProvider.instance, "createParentDirectories").mockImplementation(() => {});
+        const createDirectorySpy = vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(() => {});
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        expect(createParentDirsSpy).toHaveBeenCalledWith(favDirNode.resourceUri);
         expect(createDirectorySpy).toHaveBeenCalledWith(favDirNode.resourceUri);
     });
     it("Tests that filesystem entry is created for favorited file that doesn't exist in filesystem", async () => {
@@ -2078,12 +2080,54 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
         favProfileNode.children.push(favFileNode);
         globalMocks.testTree.mFavorites.push(favProfileNode);
 
-        vi.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false).mockReturnValueOnce(false);
-        const createDirectorySpy = vi.spyOn(vscode.workspace.fs, "createDirectory").mockClear();
-        const writeFileSpy = vi.spyOn(vscode.workspace.fs, "writeFile");
+        vi.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
+        const createParentDirsSpy = vi.spyOn(UssFSProvider.instance, "createParentDirectories").mockImplementation(() => {});
+        const createEntrySpy = vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation(() => undefined as any);
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
-        expect(createDirectorySpy).toHaveBeenCalled();
-        expect(writeFileSpy).toHaveBeenCalledWith(favFileNode.resourceUri, new Uint8Array());
+        expect(createParentDirsSpy).toHaveBeenCalledWith(favFileNode.resourceUri);
+        expect(createEntrySpy).toHaveBeenCalledWith(favFileNode.resourceUri, "file");
+    });
+    it("Tests that no API requests are made when seeding filesystem entries for favorites", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const favProfileNode = new ZoweUSSNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testTree.mFavoriteSession,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
+        const favDirNode = new ZoweUSSNode({
+            label: "favDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
+        const favFileNode = new ZoweUSSNode({
+            label: "favFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: favProfileNode,
+            session: globalMocks.testSession,
+            profile: globalMocks.testProfile,
+        });
+        favProfileNode.children.push(favDirNode, favFileNode);
+        globalMocks.testTree.mFavorites.push(favProfileNode);
+
+        vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+        vi.spyOn(UssFSProvider.instance, "createParentDirectories").mockImplementation(() => {});
+        vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(() => {});
+        vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation(() => undefined as any);
+        // `vscode.workspace.fs` routes through the FS provider, which makes API requests to the remote system
+        const fsWriteFileSpy = vi.spyOn(vscode.workspace.fs, "writeFile");
+        const fsCreateDirectorySpy = vi.spyOn(vscode.workspace.fs, "createDirectory");
+        const uploadSpy = vi.spyOn(blockMocks.ussApi, "uploadFromBuffer");
+
+        await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+
+        expect(fsWriteFileSpy).not.toHaveBeenCalled();
+        expect(fsCreateDirectorySpy).not.toHaveBeenCalled();
+        expect(uploadSpy).not.toHaveBeenCalled();
     });
 });
 

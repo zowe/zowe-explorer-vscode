@@ -848,7 +848,7 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         testTree.mFavorites.push(favProfileNode);
 
         vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false);
-        const createDirectorySpy = vi.spyOn(vscode.workspace.fs, "createDirectory");
+        const createDirectorySpy = vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => {});
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         expect(createDirectorySpy).toHaveBeenCalledWith(favPdsNode.resourceUri);
     });
@@ -877,9 +877,55 @@ describe("Dataset Tree Unit Tests - Function loadProfilesForFavorites", () => {
         testTree.mFavorites.push(favProfileNode);
 
         vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(false);
-        const writeFileSpy = vi.spyOn(vscode.workspace.fs, "writeFile");
+        const createEntrySpy = vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation(() => undefined as any);
         await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
-        expect(writeFileSpy).toHaveBeenCalledWith(favDsNode.resourceUri, new Uint8Array());
+        expect(createEntrySpy).toHaveBeenCalledWith(favDsNode.resourceUri, DsType.Ps);
+    });
+
+    it("Checking that no API requests are made when seeding filesystem entries for favorites", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const favProfileNode = new ZoweDatasetNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.datasetFavoriteNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.FAV_PROFILE_CONTEXT,
+        });
+        const favPdsNode = new ZoweDatasetNode({
+            label: "favoritePds",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.PDS_FAV_CONTEXT,
+        });
+        const favDsNode = new ZoweDatasetNode({
+            label: "favoriteDs",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: favProfileNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.DS_FAV_CONTEXT,
+        });
+        const testTree = new DatasetTree();
+        favProfileNode.children.push(favPdsNode, favDsNode);
+        testTree.mFavorites.push(favProfileNode);
+
+        vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation(() => {});
+        vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation(() => undefined as any);
+        // `vscode.workspace.fs` routes through the FS provider, which makes API requests to the remote system
+        const fsWriteFileSpy = vi.spyOn(vscode.workspace.fs, "writeFile");
+        const fsCreateDirectorySpy = vi.spyOn(vscode.workspace.fs, "createDirectory");
+        const uploadSpy = vi.spyOn(blockMocks.mvsApi, "uploadFromBuffer");
+
+        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+
+        expect(fsWriteFileSpy).not.toHaveBeenCalled();
+        expect(fsCreateDirectorySpy).not.toHaveBeenCalled();
+        expect(uploadSpy).not.toHaveBeenCalled();
     });
 });
 describe("Dataset Tree Unit Tests - Function getParent", () => {

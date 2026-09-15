@@ -15,12 +15,12 @@ on:
 jobs:
     rfr_add_date:
         name: "Build table and notify users"
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-slim
         permissions:
             discussions: write
             pull-requests: write
         steps:
-            - uses: zowe-actions/shared-actions/merge-by@main
+            - uses: zowe-actions/shared-actions/merge-by@77d7d9b50e60fedc8132b5e5eb6d611c4e483416 # main
               continue-on-error: true
               with:
                 operation: "build-table"

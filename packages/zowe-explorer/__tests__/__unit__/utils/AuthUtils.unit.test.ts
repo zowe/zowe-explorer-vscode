@@ -40,7 +40,6 @@ import { SettingsConfig } from "../../../src/configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
-import { IProfAttrs } from "@zowe/imperative";
 
 vi.mock("../../../src/tools/ZoweLocalStorage");
 const testProfile = createIProfile();
@@ -168,7 +167,6 @@ describe("AuthUtils", () => {
 
     describe("retryRequest", () => {
         let loadNamedProfileMock;
-        let getProfileFromConfigMock;
         let mockMvsApi;
         let promptForAuthErrorMock;
         let profilesCacheMock: MockedProperty;
@@ -268,7 +266,10 @@ describe("AuthUtils", () => {
         describe("successful authentication retry", () => {
             it("should return stat value when handleProfileAuthOnError receives correct credentials", async () => {
                 const successfulMvsApi = {
-                    dataSet: vi.fn(() => ({ success: true })),
+                    dataSet: vi.fn(() => ({
+                        success: true,
+                        apiResponse: { items: [{ dsname: "USER.DATA.PS", dsorg: "PS" }] },
+                    })),
                 };
 
                 // Mock sequence: fail twice, then succeed

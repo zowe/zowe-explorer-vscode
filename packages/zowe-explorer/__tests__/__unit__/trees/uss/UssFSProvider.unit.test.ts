@@ -2680,6 +2680,43 @@ describe("UssFSProvider", () => {
         });
     });
 
+    describe("createParentDirectories", () => {
+        it("creates each missing ancestor directory, deepest last", () => {
+            const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createDirectoryMock = vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(() => {});
+            const deepUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/u/myuser/aFile.txt" });
+
+            UssFSProvider.instance.createParentDirectories(deepUri);
+
+            expect(createDirectoryMock.mock.calls.map((call) => call[0].path)).toStrictEqual(["/sestest", "/sestest/u", "/sestest/u/myuser"]);
+            existsMock.mockRestore();
+            createDirectoryMock.mockRestore();
+        });
+
+        it("stops walking up once an ancestor already exists", () => {
+            const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockImplementation((uri) => uri.path === "/sestest/u");
+            const createDirectoryMock = vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(() => {});
+            const deepUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/u/myuser/aFile.txt" });
+
+            UssFSProvider.instance.createParentDirectories(deepUri);
+
+            expect(createDirectoryMock.mock.calls.map((call) => call[0].path)).toStrictEqual(["/sestest/u/myuser"]);
+            existsMock.mockRestore();
+            createDirectoryMock.mockRestore();
+        });
+
+        it("does nothing for a URI directly beneath the root", () => {
+            const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createDirectoryMock = vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(() => {});
+
+            UssFSProvider.instance.createParentDirectories(testUris.session);
+
+            expect(createDirectoryMock).not.toHaveBeenCalled();
+            existsMock.mockRestore();
+            createDirectoryMock.mockRestore();
+        });
+    });
+
     describe("createEntry", () => {
         it("creates a file entry", () => {
             const fakeFolderEntry = new UssDirectory("aFolder");

@@ -46,10 +46,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.USS, this.onDidChangeFile);
         ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => this.updateProfile(profile));
+        ZoweExplorerApiRegister.getInstance().registerFSProvider(ZoweScheme.USS, this);
         this.root = new UssDirectory();
     }
-
-    public encodingMap: Record<string, ZosEncoding> = {};
 
     /**
      * @returns the USS FileSystemProvider singleton instance
@@ -1149,6 +1148,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.mtime = Date.now();
         parent.size += 1;
         return entry;
+    }
+
+    /**
+     * Creates any missing directory entries leading up to the given URI, without making any API requests.
+     * @param uri The URI whose ancestor directories should exist in the provider
+     */
+    public createParentDirectories(uri: vscode.Uri): void {
+        const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
+        if (parentUri.path === uri.path || parentUri.path === "/" || this.exists(parentUri)) {
+            return;
+        }
+
+        this.createParentDirectories(parentUri);
+        this.createDirectory(parentUri);
     }
 
     /**

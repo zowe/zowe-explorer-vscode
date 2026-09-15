@@ -67,6 +67,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
     public sshSession: zosuss.SshSession;
     public sshProfile: imperative.IProfileLoaded;
     public isSshRequiredForProf: boolean = false;
+    private useIntegratedTerminal: boolean;
 
     public readonly dialogs: ICommandProviderDialogs = {
         commandSubmitted: vscode.l10n.t("Unix command submitted."),
@@ -176,8 +177,8 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                     return;
                 }
             }
-            const iTerms = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS);
-            if (!command && !iTerms) {
+            this.useIntegratedTerminal = SettingsConfig.getDirectValue(Constants.SETTINGS_COMMANDS_INTEGRATED_TERMINALS);
+            if (!command && !this.useIntegratedTerminal) {
                 command = await this.getQuickPick([this.sshCwd]);
             }
             await this.issueCommand(this.nodeProfile, command ?? "");
@@ -264,17 +265,19 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         // Use the profile name from the SSH profile if one was used to issue the command - fallback to
         // the node that the user interacted with in the USS tree
         const prof = this.sshProfile ?? this.nodeProfile ?? profile;
-        const user: string = prof?.profile.user;
-        if (prof) {
-            return `> ${user}@${prof.name}:${this.sshCwd ?? "~"} $ ${command}`;
-        } else {
-            return `> ${user}:${this.sshCwd ?? "~"} $ ${command}`;
+        if (!prof) {
+            return `> ${this.sshCwd ?? "~"} $ ${command}`;
         }
+        const userPrefix = prof.profile.user ? `${prof.profile.user}@` : "";
+        return `> ${userPrefix}${prof.name}:${this.sshCwd ?? "~"} $ ${command}`;
     }
 
     public runCommand(profile: imperative.IProfileLoaded, command: string): Promise<string> {
         // Clear path and selected profile for follow up commands from the command palette
-        this.nodeProfile = this.sshProfile = undefined;
+        // ONLY if we are *NOT* using integrated terminals
+        if (!this.useIntegratedTerminal) {
+            this.nodeProfile = this.sshProfile = undefined;
+        }
         const newCmd = `if [ -n "$SSH_TTY" ]; then $SHELL <$SSH_TTY >$SSH_TTY 2>$SSH_TTY | ${command}; else ${command}; fi`;
         return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(newCmd, this.sshCwd, this.sshSession);
     }

@@ -33,8 +33,9 @@ import {
     IFileSystemEntry,
     DsType,
     ConflictViewSelection,
+    MainframeInteraction,
 } from "@zowe/zowe-explorer-api";
-import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
+import { IZosFilesResponse, IZosmfListResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
@@ -50,10 +51,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, this.onDidChangeFile);
         ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => this.updateProfile(profile));
+        ZoweExplorerApiRegister.getInstance().registerFSProvider(ZoweScheme.DS, this);
         this.root = new DirEntry("");
     }
-
-    public encodingMap: Record<string, ZosEncoding> = {};
 
     /**
      * @returns the Data Set FileSystemProvider singleton instance
@@ -193,16 +193,28 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const parentPath = segments.slice(0, 2).join("/");
             const parentUri = uri.with({ path: `/${parentPath}` });
 
+            const hasMemberLocally = (): boolean => {
+                if (isVisibleEditor) {
+                    return false;
+                }
+                const parentDir = this._lookupAsDirectory(parentUri, true) as PdsEntry;
+                return !!(parentDir && parentDir.entries && parentDir.entries.has(memberName));
+            };
+
             const pdsEntry = await this.executeWithReuse<DirEntry>(parentUri, {
                 keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().replace(/\/$/, ""),
-                checkLocal: () => (isVisibleEditor ? false : !!this._lookupAsDirectory(parentUri, true)),
-                execute: () => this.readDirectoryImplementation(parentUri, isVisibleEditor),
+                checkLocal: hasMemberLocally,
+                execute: () => this.readDirectoryImplementation(parentUri, !hasMemberLocally()),
                 action: "readDirectory",
             });
 
             if (pdsEntry && pdsEntry.entries) {
                 const memberStat = pdsEntry.entries.get(memberName);
                 if (memberStat) {
+                    const queryParams = new URLSearchParams(uri.query);
+                    if (queryParams.has("conflict")) {
+                        return { ...memberStat, permissions: vscode.FilePermission.Readonly };
+                    }
                     return memberStat;
                 }
             }
@@ -264,10 +276,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         }
 
         for (const resp of datasetResponses) {
-            for (const ds of resp.apiResponse?.items ?? resp.apiResponse ?? []) {
+            for (let ds of resp.apiResponse?.items ?? resp.apiResponse ?? []) {
                 let tempEntry = profileEntry.entries.get(ds.dsname);
                 if (tempEntry == null) {
                     let name = ds.dsname;
+                    if (ds.vol === "*ALIAS") {
+                        ds = await this.resolveAlias(ds, mvsApi);
+                    }
                     if (ds.dsorg?.startsWith("PO")) {
                         // Entry is a PDS
                         tempEntry = new PdsEntry(ds.dsname);
@@ -401,8 +416,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
 
             if (!entryExists || forceFetch) {
+                const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
                 if (pdsMember) {
-                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).allMembers(uriPath[0]);
+                    const resp = await mvsApi.allMembers(uriPath[0]);
                     entryIsDir = false;
                     const memberName = path.parse(uriPath[1]).name;
                     if (
@@ -414,16 +430,20 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     }
                 } else {
                     const requestedDsName = FsDatasetsUtils.trimExtension(uriPath[0]);
-                    const resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(requestedDsName, {
+                    const resp = await mvsApi.dataSet(requestedDsName, {
                         attributes: true,
                         maxLength: 1,
                     });
 
                     const responseItems = resp.apiResponse?.items ?? [];
-                    const matchedItem = responseItems.find((item) => item.dsname?.toUpperCase() === requestedDsName.toUpperCase());
+                    let matchedItem = responseItems.find((item) => item.dsname?.toUpperCase() === requestedDsName.toUpperCase());
                     if (resp.success && matchedItem) {
-                        entryIsDir = matchedItem.dsorg?.startsWith("PO");
                         entryStats = DatasetUtils.getDataSetStats(matchedItem);
+
+                        if (entryStats.vol === "*ALIAS") {
+                            matchedItem = await this.resolveAlias(matchedItem, mvsApi);
+                        }
+                        entryIsDir = matchedItem.dsorg?.startsWith("PO");
                         isMigrated = matchedItem.migr?.toUpperCase() === "YES";
                     } else {
                         throw vscode.FileSystemError.FileNotFound(uri);
@@ -461,6 +481,30 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         return entry;
     }
 
+    private async resolveAlias(item: IZosmfListResponse, mvsApi: MainframeInteraction.IMvs): Promise<IZosmfListResponse> {
+        if (!mvsApi?.resolveAlias) {
+            ZoweLogger.warn(`[DatasetFSProvider] MVS API does not implement resolveAlias. Alias '${item.dsname}' will not be resolved.`);
+            return item;
+        }
+        try {
+            const resolvedAlias = await mvsApi.resolveAlias(item.dsname.toUpperCase());
+            const aliasTargetDsn = resolvedAlias.apiResponse.targetDsn;
+            const originalStatsResponse = await mvsApi.dataSet(aliasTargetDsn, {
+                attributes: true,
+                maxLength: 1,
+            });
+            if (originalStatsResponse.apiResponse?.items?.length > 0) {
+                const originalStats = originalStatsResponse.apiResponse.items[0];
+                item.dsorg = originalStats.dsorg;
+                item.migr = originalStats.migr;
+            }
+            return item;
+        } catch (e) {
+            ZoweLogger.error(`Failed to resolve alias: ${item.dsname} with error: ${e.message}`);
+            return item;
+        }
+    }
+
     public async remoteLookupForResource(uri: vscode.Uri): Promise<DirEntry | DsEntry> {
         await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
@@ -470,10 +514,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             this.createDirectory(profileUri);
         }
 
+        const urlQuery = new URLSearchParams(uri.query);
         if (uriInfo.isRoot) {
             // profile entry; check if "pattern" filter is in query.
-
-            const urlQuery = new URLSearchParams(uri.query);
             if (!urlQuery.has("pattern")) {
                 return this._lookupAsDirectory(profileUri, false);
             }
@@ -481,7 +524,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             return this.fetchEntriesForProfile(uri, uriInfo, urlQuery.get("pattern"));
         } else {
             // data set or one of its members
-            return this.fetchDataset(uri, uriInfo);
+            return this.fetchDataset(uri, uriInfo, urlQuery.get("fetch") === "true");
         }
     }
 
@@ -1181,19 +1224,5 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         entry.metadata = profInfo;
         parent.entries.set(basename, entry);
         return entry;
-    }
-
-    public invalidateCache(uri: vscode.Uri): void {
-        try {
-            const parent = this.lookupParentDirectory(uri, true);
-            if (parent) {
-                const basename = path.posix.basename(uri.path);
-                if (parent.entries.has(basename)) {
-                    parent.entries.delete(basename);
-                }
-            }
-        } catch (e) {
-            // Ignore if parent directory cannot be looked up or doesn't exist
-        }
     }
 }

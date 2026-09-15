@@ -3,12 +3,14 @@ name: Zowe Explorer CI
 on:
   push:
     paths:
+      - pnpm-lock.yaml
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
       - packages/zowex-for-zowe-explorer/**
       - .github/workflows/zowe-explorer-ci.yml
   pull_request:
     paths:
+      - package.json
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
       - packages/zowex-for-zowe-explorer/**
@@ -44,7 +46,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       # install pnpm
-      - run: npm install -g pnpm
+      - run: npm install -g pnpm@11
 
       - run: pnpm config set fetchTimeout 60000 && pnpm install
 
