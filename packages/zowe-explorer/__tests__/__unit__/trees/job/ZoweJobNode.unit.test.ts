@@ -704,6 +704,28 @@ describe("ZoweJobNode unit tests - Function addFavorite", () => {
         expect(profileNodeInFavs.children[0].label).toEqual("Owner: myHLQ | Prefix: * | Status: *");
         expect(profileNodeInFavs.children[0].contextValue).toEqual(Constants.JOBS_SESSION_CONTEXT + Constants.FAV_SUFFIX);
     });
+
+    it("Tests that a favorited job node's tooltip displays the profile name and type instead of the job label", async () => {
+        const globalMocks = await createGlobalMocks();
+
+        const favProfileNode = new ZoweJobNode({
+            label: globalMocks.testProfile.name,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: globalMocks.testProfile,
+        });
+        favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
+
+        const favJobNode = new ZoweJobNode({
+            label: "MYHLQ(JOB1283)",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            profile: globalMocks.testProfile,
+            job: globalMocks.testIJob,
+        });
+
+        expect(favJobNode.tooltip).toContain(`Profile: ${globalMocks.testProfile.name}`);
+        expect(favJobNode.tooltip).toContain(`Profile Type: ${globalMocks.testProfile.type}`);
+    });
 });
 
 describe("ZoweJobNode unit tests - Function removeFavorite", () => {
