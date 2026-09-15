@@ -2624,6 +2624,23 @@ describe("DatasetFSProvider", () => {
             ).rejects.toThrow("Rename failed: USER.DATA.PS2 already exists");
         });
 
+        it("shows a decoded member name in the error when target already exists and name contains special characters", async () => {
+            const specialMemberName = "#TEST.cbl";
+            const encodedPath = "/sestest/ADAM.PUBLIC.COBOL/%23TEST.cbl";
+
+            const existingMember = new DsEntry(specialMemberName, true);
+            existingMember.metadata = new DsEntryMetadata({ profile: testProfile, path: `/ADAM.PUBLIC.COBOL/${specialMemberName}` });
+
+            const oldUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/ADAM.PUBLIC.COBOL/TEST.cbl" });
+            const newUri = Uri.from({ scheme: ZoweScheme.DS, path: encodedPath });
+
+            vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(existingMember);
+            
+            await expect(DatasetFSProvider.instance.rename(oldUri, newUri, { overwrite: false })).rejects.toThrow(
+                `Rename failed: ${specialMemberName} already exists`
+            );
+        });
+
         it("displays an error message when renaming fails on the remote system", async () => {
             const oldPds = new PdsEntry("USER.DATA.PDS");
             oldPds.metadata = testEntries.pds.metadata;
