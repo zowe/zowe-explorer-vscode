@@ -12,14 +12,13 @@
 import { FileChangeType, Uri } from "vscode";
 import * as vscode from "vscode";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
-import { UssFile, UssDirectory, FilterEntry, ZoweScheme, FsAbstractUtils } from "@zowe/zowe-explorer-api";
+import { UssFile, UssDirectory, FilterEntry, ZoweScheme, FsAbstractUtils, AuthHandler } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { ProfilesUtils } from "../../../../src/utils/ProfilesUtils";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
-import { AuthHandler } from "@zowe/zowe-explorer-api";
 import { Mock } from "vitest";
 
 const testProfile = createIProfile();
@@ -410,6 +409,20 @@ describe("UssFSProvider File System Notifications", () => {
 
             expect(await refresh(directory)).toEqual([]);
             expect([...directory.entries.keys()]).toEqual(["file.txt", "other.txt"]);
+        });
+
+        it("emits Created for an entry that appeared in a directory that was listed while empty", async () => {
+            // An empty cache alone cannot tell a listed-but-empty directory apart from an unlisted one,
+            // so the directory has to be remembered as listed for this listing to be diffed against it.
+            mockListing([]);
+            const directory = cachedDirectory();
+            expect(await refresh(directory)).toEqual([]);
+
+            mockListing(["newFile.txt"]);
+            const events = await refresh(directory);
+
+            expect(eventsOfType(events, FileChangeType.Created)).toEqual(["/sestest/u/myuser/folderName/newFile.txt"]);
+            expect(eventsOfType(events, FileChangeType.Changed)).toEqual(["/sestest/u/myuser/folderName"]);
         });
     });
 });

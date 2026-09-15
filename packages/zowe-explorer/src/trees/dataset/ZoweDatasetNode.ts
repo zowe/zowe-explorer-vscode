@@ -82,9 +82,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         lastItemName?: string;
     };
     private itemsPerPage?: number;
-    // lets us tell a member that was really added/removed apart from one that simply slid across a
-    // page boundary. Only allocated for PDS nodes.
     private lastListedMemberNames?: Map<number, string[]>;
+    private lastDiffedPattern?: string;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -390,14 +389,20 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             return [];
         }
 
-        // Detect PDS members that were added/removed remotely since the last listing, so we can fire
-        // the corresponding file change events on the FS provider's cache.
-        const canDiffChildren = SharedContext.isPds(this) && !this.memberPattern && this.resourceUri != null;
+        // Detect PDS members, or top-level data sets under a session's filter search, that were
+        // added/removed remotely since the last listing, so we can fire the corresponding file change
+        // events on the FS provider's cache.
+        const canDiffChildren = (SharedContext.isPds(this) && !this.memberPattern) || SharedContext.isSession(this);
+        if (SharedContext.isSession(this) && this.lastDiffedPattern !== this.pattern) {
+            // A new search pattern lists an unrelated set of data sets; comparing it against a baseline
+            // captured under the old pattern would report every data set as created and/or deleted.
+            this.lastListedMemberNames = undefined;
+        }
         // Each page is compared against what that same page last held.
         const currentPageIndex = this.paginator?.getCurrentPageIndex() ?? 0;
-        const previousMemberNames = canDiffChildren ? this.lastListedMemberNames?.get(currentPageIndex) : undefined;
-        // Member names returned by this listing, in API order, plus the URIs of members this listing
-        // introduced.
+        const previousMemberNames = canDiffChildren && this.resourceUri != null ? this.lastListedMemberNames?.get(currentPageIndex) : undefined;
+        // Names returned by this listing (member names, or top-level data set names), in API order, plus
+        // the URIs of the children this listing introduced.
         const listedMemberNames: string[] = [];
         const newMemberUris = new Map<string, vscode.Uri>();
 
@@ -421,10 +426,13 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 existingItems[element.label.toString()] = element;
             }
             for (const item of (response.apiResponse.items ?? response.apiResponse) as IZosmfListResponse[]) {
-                if (item.member != null) {
-                    listedMemberNames.push(item.member);
+                // The name this item is tracked under for diffing: a data set name at the session level,
+                // or a member name inside a PDS (member listings don't populate `dsname`).
+                const diffKey = item.dsname ?? item.member;
+                if (diffKey != null) {
+                    listedMemberNames.push(diffKey);
                 }
-                let dsNode = existingItems[item.dsname ?? item.member];
+                let dsNode = existingItems[diffKey];
                 if (dsNode != null) {
                     elementChildren[dsNode.label.toString()] = dsNode;
                     if (item.migr) {
@@ -540,8 +548,8 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                     // Create an empty entry for the PDS if it doesn't exist.
                     if (!DatasetFSProvider.instance.exists(dsNode.resourceUri)) {
                         DatasetFSProvider.instance.createEntry(dsNode.resourceUri, dsType);
-                        if (previousMemberNames != null && item.member != null) {
-                            newMemberUris.set(item.member, dsNode.resourceUri);
+                        if (previousMemberNames != null && diffKey != null) {
+                            newMemberUris.set(diffKey, dsNode.resourceUri);
                         }
                     }
                     dsNode.updateStats(item);
@@ -628,7 +636,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // removed remotely, and `this.children` only ever holds the page currently on screen.
             const pageEndIsVolatile = this.paginator?.canGoNext() ?? false;
             for (const name of ZoweDatasetNode.namesConfirmedMissing(previousMemberNames, new Set(listedMemberNames), pageEndIsVolatile)) {
-                DatasetFSProvider.instance.removeEntry(this.memberResourceUri(name));
+                DatasetFSProvider.instance.removeEntry(this.childResourceUri(name));
             }
 
             const createdNames = ZoweDatasetNode.namesConfirmedMissing(listedMemberNames, new Set(previousMemberNames), pageEndIsVolatile);
@@ -639,9 +647,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             }
         }
 
-        if (canDiffChildren) {
+        if (canDiffChildren && this.resourceUri != null) {
             this.lastListedMemberNames ??= new Map();
             this.lastListedMemberNames.set(currentPageIndex, listedMemberNames);
+            if (SharedContext.isSession(this)) {
+                this.lastDiffedPattern = this.pattern;
+            }
         }
 
         const canNavigate = this.paginator && (this.paginator.canGoPrevious() || this.paginator.canGoNext());
@@ -701,15 +712,22 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     /**
-     * Builds the file system URI for one of this PDS's members, matching the URI the member's node
-     * would be given. Lets the change detection in {@link getChildren} address a member that was
-     * removed remotely, which no longer has a node to read the URI from.
+     * Builds the file system URI for one of this node's remotely-listed children - a PDS's member, or a
+     * top-level data set under a session's filter search - matching the URI the child's own node would
+     * be given. Lets the change detection in {@link getChildren} address a child that was removed
+     * remotely, which no longer has a node to read the URI from.
      *
-     * @param memberName The member name, as returned by the MVS list API
+     * @param childName The child's name, as returned by the MVS list API (a member name, or a data set name)
      */
-    private memberResourceUri(memberName: string): vscode.Uri {
+    private childResourceUri(childName: string): vscode.Uri {
+        if (SharedContext.isSession(this)) {
+            // A session's own `resourceUri` already ends in a slash, so the child's name is appended
+            // directly. The extension comes from the child's own name, not the session's.
+            const extension = DatasetUtils.getExtension(childName);
+            return this.resourceUri.with({ path: `${this.resourceUri.path}${childName}${extension ?? ""}` });
+        }
         const extension = DatasetUtils.getExtension(this.label as string);
-        return this.resourceUri.with({ path: `${this.resourceUri.path}/${memberName}${extension ?? ""}` });
+        return this.resourceUri.with({ path: `${this.resourceUri.path}/${childName}${extension ?? ""}` });
     }
 
     /**

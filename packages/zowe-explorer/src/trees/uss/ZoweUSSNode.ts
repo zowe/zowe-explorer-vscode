@@ -65,6 +65,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     private etag?: string;
     public lastValidPath?: string;
     public lastValidTooltip?: string | vscode.MarkdownString;
+    private lastListedPath?: string;
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -277,10 +278,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.lastValidPath = this.fullPath;
         this.lastValidTooltip = this.tooltip;
 
-        // If search path has changed, invalidate all children
-        const slashAfterProfile = this.resourceUri.path.indexOf("/", 1);
-        const uriPathWithoutProfile = slashAfterProfile === -1 ? "" : this.resourceUri.path.substring(slashAfterProfile);
-        if (uriPathWithoutProfile !== this.fullPath) {
+        // If the path has changed since the last listing, invalidate all children. `resourceUri` cannot be
+        // used for this comparison: a session node's URI is only the profile root, so it never matches the
+        // filter search path its children are listed from, which would discard the children on every refresh.
+        const isFirstListing = this.lastListedPath !== this.fullPath;
+        if (isFirstListing) {
             this.children = [];
         }
 
@@ -289,8 +291,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             existingItems[`${element.parentPath}/${element.label.toString()}`] = element;
         }
         // The tree lists USS files directly rather than through the file system provider, so the
-        // provider never sees this listing and cannot report what appeared since the last one
-        const canReportCreations = this.children.length > 0;
+        // provider never sees this listing and cannot report what appeared since the last one.
+        // Nothing is reported for a first listing, as everything in it would look newly created.
+        const canReportCreations = !isFirstListing;
         const createdUris: vscode.Uri[] = [];
         const responseNodes: IZoweUSSTreeNode[] = [];
         for (const item of response.apiResponse?.items ?? []) {
@@ -316,6 +319,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     perms: item.mode,
                     owner: item.user,
                 });
+                // Re-listing this node means its descendants are out of date too
+                ussNode.dirty = true;
                 responseNodes.push(ussNode);
                 ussNode.onUpdateEmitter.fire(ussNode);
                 continue;
@@ -379,6 +384,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             .concat(nodesToAdd)
             .filter((c) => !nodesToRemove.includes(c))
             .sort((a, b) => (a.label as string).localeCompare(b.label as string));
+        this.lastListedPath = this.fullPath;
         this.dirty = false;
         return this.children;
     }

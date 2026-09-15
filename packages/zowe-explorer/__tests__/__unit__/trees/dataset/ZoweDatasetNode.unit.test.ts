@@ -3012,3 +3012,132 @@ describe("ZoweDatasetNode Unit Tests - getChildren() remote member change detect
         expect((harness.removeEntry.mock.calls[0][0] as vscode.Uri).path).toBe("/sestest/SAMPLE.PDS/MEMB");
     });
 });
+
+describe("ZoweDatasetNode Unit Tests - getChildren() remote session-level change detection", () => {
+    const session = createISession();
+    const profileOne: imperative.IProfileLoaded = createIProfile();
+
+    interface SessionHarness {
+        sessionNode: ZoweDatasetNode;
+        paginator: { pageIndex: number; hasNextPage: boolean };
+        getDatasets: MockInstance;
+        removeEntry: MockInstance;
+        fireSoon: MockInstance;
+    }
+
+    function setupSession(hasNextPage: boolean): SessionHarness {
+        vi.spyOn(Profiles, "getInstance").mockReturnValue({
+            loadNamedProfile: vi.fn().mockReturnValue(profileOne),
+        } as any);
+        vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+        vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+
+        // `contextOverride` has to be supplied at construction time, matching how a real session node is
+        // built - resourceUri is derived from the context value the node has *during* construction.
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+        });
+        sessionNode.pattern = "SAMPLE.*";
+        vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(createDatasetTree(sessionNode, createTreeView()));
+
+        // Stands in for a paginator whose page can be moved between listings.
+        const paginator = { pageIndex: 0, hasNextPage };
+        (sessionNode as any).paginator = {
+            getCurrentPageIndex: () => paginator.pageIndex,
+            canGoNext: () => paginator.hasNextPage,
+            canGoPrevious: () => paginator.pageIndex > 0,
+        };
+
+        return {
+            sessionNode,
+            paginator,
+            getDatasets: vi.spyOn(sessionNode as any, "getDatasets"),
+            removeEntry: vi.spyOn(DatasetFSProvider.instance, "removeEntry").mockReturnValue(true),
+            fireSoon: vi.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation((() => undefined) as any),
+        };
+    }
+
+    const dsListing = (...dsnames: string[]): any[] => [
+        {
+            success: true,
+            apiResponse: { items: dsnames.map((dsname) => ({ dsname, dsorg: "PS", vol: "VOL001" })), returnedRows: dsnames.length },
+        },
+    ];
+
+    /** Lists the session's top-level data sets and returns after `getChildren` has diffed the listing. */
+    async function listPage(harness: SessionHarness, ...dsnames: string[]): Promise<void> {
+        harness.getDatasets.mockResolvedValueOnce(dsListing(...dsnames));
+        harness.sessionNode.dirty = true;
+        await harness.sessionNode.getChildren();
+    }
+
+    const dsNameOf = (uri: vscode.Uri): string => uri.path.split("/").pop();
+
+    const deletedDatasets = (removeEntry: MockInstance): string[] => removeEntry.mock.calls.map(([uri]: any[]) => dsNameOf(uri));
+
+    const createdDatasets = (fireSoon: MockInstance): string[] =>
+        fireSoon.mock.calls
+            .filter(([event]: any[]) => event.type === vscode.FileChangeType.Created)
+            .map(([event]: any[]) => dsNameOf(event.uri));
+
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("fires no change events for the first listing of a filter search", async () => {
+        const harness = setupSession(false);
+        await listPage(harness, "SAMPLE.PS1", "SAMPLE.PS2");
+
+        expect(deletedDatasets(harness.removeEntry)).toEqual([]);
+        expect(createdDatasets(harness.fireSoon)).toEqual([]);
+    });
+
+    it("fires a Created event for a sequential data set created outside of Zowe Explorer", async () => {
+        const harness = setupSession(false);
+        await listPage(harness, "SAMPLE.PS1");
+
+        // SAMPLE.PS2 was created remotely, e.g. by allocating it through ISPF.
+        await listPage(harness, "SAMPLE.PS1", "SAMPLE.PS2");
+
+        expect(deletedDatasets(harness.removeEntry)).toEqual([]);
+        expect(createdDatasets(harness.fireSoon)).toEqual(["SAMPLE.PS2"]);
+    });
+
+    it("removes the file system entry for a data set deleted outside of Zowe Explorer", async () => {
+        const harness = setupSession(false);
+        await listPage(harness, "SAMPLE.PS1", "SAMPLE.PS2");
+
+        // SAMPLE.PS2 was deleted remotely, e.g. by deleting it through ISPF.
+        await listPage(harness, "SAMPLE.PS1");
+
+        expect(deletedDatasets(harness.removeEntry)).toEqual(["SAMPLE.PS2"]);
+        expect(createdDatasets(harness.fireSoon)).toEqual([]);
+    });
+
+    it("addresses a removed data set by the URI its node would have had", async () => {
+        const harness = setupSession(false);
+        await listPage(harness, "SAMPLE.PS1", "SAMPLE.PS2");
+        await listPage(harness, "SAMPLE.PS1");
+
+        expect(harness.removeEntry).toHaveBeenCalledTimes(1);
+        expect((harness.removeEntry.mock.calls[0][0] as vscode.Uri).path).toBe("/sestest/SAMPLE.PS2");
+    });
+
+    it("discards the diff baseline when the search pattern changes", async () => {
+        const harness = setupSession(false);
+        await listPage(harness, "SAMPLE.PS1", "SAMPLE.PS2");
+
+        // A new search pattern lists an unrelated set of data sets; the old ones dropping out of the
+        // listing is not a remote deletion, and the new ones appearing is not a remote creation.
+        harness.sessionNode.pattern = "OTHER.*";
+        await listPage(harness, "OTHER.PS1");
+
+        expect(deletedDatasets(harness.removeEntry)).toEqual([]);
+        expect(createdDatasets(harness.fireSoon)).toEqual([]);
+    });
+});
