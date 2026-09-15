@@ -278,7 +278,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.lastValidTooltip = this.tooltip;
 
         // If search path has changed, invalidate all children
-        if (this.resourceUri.path !== this.fullPath) {
+        const slashAfterProfile = this.resourceUri.path.indexOf("/", 1);
+        const uriPathWithoutProfile = slashAfterProfile === -1 ? "" : this.resourceUri.path.substring(slashAfterProfile);
+        if (uriPathWithoutProfile !== this.fullPath) {
             this.children = [];
         }
 
@@ -286,6 +288,10 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         for (const element of this.children as ZoweUSSNode[]) {
             existingItems[`${element.parentPath}/${element.label.toString()}`] = element;
         }
+        // The tree lists USS files directly rather than through the file system provider, so the
+        // provider never sees this listing and cannot report what appeared since the last one
+        const canReportCreations = this.children.length > 0;
+        const createdUris: vscode.Uri[] = [];
         const responseNodes: IZoweUSSTreeNode[] = [];
         for (const item of response.apiResponse?.items ?? []) {
             // ".", "..", and "..." have already been filtered out
@@ -331,12 +337,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
                     UssFSProvider.instance.createParentDirectories(ussNode.resourceUri);
                     UssFSProvider.instance.createDirectory(ussNode.resourceUri);
+                    createdUris.push(ussNode.resourceUri);
                 }
             } else {
                 // Create an entry for the USS file if it doesn't exist.
                 if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
                     UssFSProvider.instance.createParentDirectories(ussNode.resourceUri);
                     UssFSProvider.instance.createEntry(ussNode.resourceUri, "file");
+                    createdUris.push(ussNode.resourceUri);
                 }
             }
             ussNode.setAttributes({
@@ -356,6 +364,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         for (const node of nodesToRemove) {
             if (node.resourceUri) {
                 UssFSProvider.instance.removeEntry(node.resourceUri);
+            }
+        }
+
+        // Report entries that appeared on the mainframe since the last listing. `removeEntry` above
+        // already reports deletions, so this is what makes the two directions symmetric.
+        if (canReportCreations) {
+            for (const resourceUri of createdUris) {
+                UssFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: resourceUri });
             }
         }
 

@@ -27,7 +27,7 @@ import {
     createInstanceOfProfile,
     createValidIProfile,
 } from "../../../__mocks__/mockCreators/shared";
-import { createUSSNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
+import { createUSSNode, createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import { Constants } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
@@ -2262,5 +2262,119 @@ describe("ZoweUSSNode Unit Tests - Function getUssFiles() with showHidden settin
         expect(globalMocks.showErrorMessage).toHaveBeenCalled();
 
         getDirectValueSpy.mockRestore();
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - getChildren() remote change detection", () => {
+    /**
+     * Builds a directory node, optionally pre-populated with children from an earlier listing, and
+     * captures the file system events its next listing produces.
+     *
+     * @param existingNames Names the node already lists, i.e. the result of an earlier listing
+     */
+    function setupDirectory(existingNames: string[]): {
+        directory: ZoweUSSNode;
+        fireSoon: MockInstance;
+        removeEntry: MockInstance;
+    } {
+        const globalMocks = createGlobalMocks();
+        vi.spyOn(ZoweUSSNode.prototype, "setAttributes").mockImplementation((() => undefined) as any);
+        vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+        vi.spyOn(UssFSProvider.instance, "createParentDirectories").mockImplementation((() => undefined) as any);
+        vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+        vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+
+        const directory = new ZoweUSSNode({
+            label: "a",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: createUSSSessionNode(globalMocks.session, globalMocks.profileOne),
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u/myuser",
+        });
+        directory.children = existingNames.map(
+            (name) =>
+                new ZoweUSSNode({
+                    label: name,
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: directory,
+                    session: globalMocks.session,
+                    profile: globalMocks.profileOne,
+                    parentPath: "/u/myuser/a",
+                })
+        );
+
+        return {
+            directory,
+            fireSoon: vi.spyOn(UssFSProvider.instance, "fireSoon").mockImplementation((() => undefined) as any),
+            removeEntry: vi.spyOn(UssFSProvider.instance, "removeEntry").mockReturnValue(true),
+        };
+    }
+
+    /** Lists the directory and returns the child nodes it reports. */
+    async function listDirectory(directory: ZoweUSSNode, items: { name: string; mode: string }[]): Promise<IZoweUSSTreeNode[]> {
+        vi.spyOn(directory as any, "getUssFiles").mockResolvedValueOnce({ success: true, apiResponse: { items } });
+        directory.dirty = true;
+        return directory.getChildren();
+    }
+
+    /** Resolves a listed child's URI, so assertions do not have to rebuild it from the profile name. */
+    const uriOf = (children: IZoweUSSTreeNode[], label: string): string => children.find((child) => child.label === label).resourceUri.path;
+
+    const dir = (name: string): { name: string; mode: string } => ({ name, mode: "drwxr-xr-x" });
+    const file = (name: string): { name: string; mode: string } => ({ name, mode: "-rw-r--r--" });
+
+    const createdPaths = (fireSoon: MockInstance): string[] =>
+        fireSoon.mock.calls
+            .filter(([event]: any[]) => event.type === vscode.FileChangeType.Created)
+            .map(([event]: any[]) => event.uri.path as string);
+
+    beforeEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("fires a Created event for a directory that appeared since the last listing", async () => {
+        const { directory, fireSoon, removeEntry } = setupDirectory(["existingDir"]);
+
+        const children = await listDirectory(directory, [dir("existingDir"), dir("a1")]);
+
+        expect(createdPaths(fireSoon)).toEqual([uriOf(children, "a1")]);
+        expect(removeEntry).not.toHaveBeenCalled();
+    });
+
+    it("fires a Created event for a file that appeared since the last listing", async () => {
+        const { directory, fireSoon } = setupDirectory(["existingDir"]);
+
+        const children = await listDirectory(directory, [dir("existingDir"), file("newFile.txt")]);
+
+        expect(createdPaths(fireSoon)).toEqual([uriOf(children, "newFile.txt")]);
+    });
+
+    it("fires no Created events for the first listing of a directory", async () => {
+        const { directory, fireSoon } = setupDirectory([]);
+
+        await listDirectory(directory, [dir("a1"), file("newFile.txt")]);
+
+        expect(createdPaths(fireSoon)).toEqual([]);
+    });
+
+    it("removes the file system entry for an entry that disappeared since the last listing", async () => {
+        const { directory, fireSoon, removeEntry } = setupDirectory(["existingDir", "goneDir"]);
+        const goneUri = (directory.children.find((child) => child.label === "goneDir") as ZoweUSSNode).resourceUri.path;
+
+        await listDirectory(directory, [dir("existingDir")]);
+
+        expect(removeEntry).toHaveBeenCalledTimes(1);
+        expect((removeEntry.mock.calls[0][0] as vscode.Uri).path).toBe(goneUri);
+        expect(createdPaths(fireSoon)).toEqual([]);
+    });
+
+    it("fires no events when consecutive listings return the same entries", async () => {
+        const { directory, fireSoon, removeEntry } = setupDirectory(["existingDir"]);
+
+        await listDirectory(directory, [dir("existingDir")]);
+
+        expect(createdPaths(fireSoon)).toEqual([]);
+        expect(removeEntry).not.toHaveBeenCalled();
     });
 });

@@ -2136,6 +2136,175 @@ describe("DatasetFSProvider", () => {
         });
     });
 
+    describe("fetchEntriesForDataset - member change notifications", () => {
+        // `fireSoon` batches events behind a short debounce, so listings must be given time to flush.
+        const DEBOUNCE_FLUSH_MS = 25;
+
+        const uriInfo = (): any => ({
+            isRoot: false,
+            slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
+            profileName: "sestest",
+            profile: testProfile,
+        });
+
+        /** Builds a PDS entry whose member cache is already populated with the given names. */
+        const cachedPds = (...memberNames: string[]): PdsEntry => {
+            const pds = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pds)), testEntries.pds) as PdsEntry;
+            pds.entries = new Map(
+                memberNames.map((name) => {
+                    const member = new DsEntry(name, true);
+                    member.metadata = new DsEntryMetadata({ ...pds.metadata, path: path.posix.join(pds.metadata.path, name) });
+                    return [name, member];
+                })
+            );
+            return pds;
+        };
+
+        /**
+         * Mocks the next `allMembers` response.
+         * @param members Member names to return, or `undefined` to simulate a response carrying no member array
+         */
+        const mockListing = (members?: string[], success = true): Mock => {
+            const allMembers = vi.fn().mockResolvedValue({
+                success,
+                apiResponse: members != null ? { items: members.map((member) => ({ member })) } : {},
+                commandResponse: "",
+            });
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ allMembers } as any);
+            return allMembers;
+        };
+
+        /**
+         * Lists the PDS and returns every event `onDidChangeFile` emitted while doing so. The events are
+         * copied out of the batch as it arrives, since `fireSoon` empties its buffer in place after firing.
+         */
+        const refresh = async (pds: PdsEntry, uri: Uri = testUris.pds): Promise<vscode.FileChangeEvent[]> => {
+            const emitted: vscode.FileChangeEvent[] = [];
+            const subscription = DatasetFSProvider.instance.onDidChangeFile((events) => emitted.push(...events));
+            try {
+                await (DatasetFSProvider.instance as any).fetchEntriesForDataset(pds, uri, uriInfo());
+                await new Promise((resolve) => setTimeout(resolve, DEBOUNCE_FLUSH_MS));
+            } finally {
+                subscription.dispose();
+            }
+            return emitted;
+        };
+
+        const eventsOfType = (events: vscode.FileChangeEvent[], type: vscode.FileChangeType): string[] =>
+            events.filter((event) => event.type === type).map((event) => event.uri.path);
+
+        beforeEach(() => {
+            // Drop anything a previous test left queued so each listing starts from a clean batch.
+            const provider = DatasetFSProvider.instance as any;
+            clearTimeout(provider._fireSoonHandle);
+            provider._fireSoonHandle = undefined;
+            provider._bufferedEvents.length = 0;
+        });
+
+        it("emits Created for a member added since the last listing, and Changed for its PDS", async () => {
+            const pds = cachedPds("MEMBER1", "MEMBER2");
+            mockListing(["MEMBER1", "MEMBER2", "MEMBER3"]);
+
+            const events = await refresh(pds);
+
+            expect(eventsOfType(events, vscode.FileChangeType.Created)).toEqual(["/sestest/USER.DATA.PDS/MEMBER3"]);
+            expect(eventsOfType(events, vscode.FileChangeType.Changed)).toEqual(["/sestest/USER.DATA.PDS"]);
+            expect(eventsOfType(events, vscode.FileChangeType.Deleted)).toEqual([]);
+        });
+
+        it("emits Deleted for a cached member missing from the listing, and Changed for its PDS", async () => {
+            const pds = cachedPds("MEMBER1", "MEMBER2", "MEMBER3");
+            mockListing(["MEMBER1", "MEMBER3"]);
+
+            const events = await refresh(pds);
+
+            expect(eventsOfType(events, vscode.FileChangeType.Deleted)).toEqual(["/sestest/USER.DATA.PDS/MEMBER2"]);
+            expect(eventsOfType(events, vscode.FileChangeType.Changed)).toEqual(["/sestest/USER.DATA.PDS"]);
+            expect(eventsOfType(events, vscode.FileChangeType.Created)).toEqual([]);
+        });
+
+        it("drops members that disappeared remotely from the cache", async () => {
+            const pds = cachedPds("MEMBER1", "MEMBER2", "MEMBER3");
+            mockListing(["MEMBER1", "MEMBER3"]);
+
+            await refresh(pds);
+
+            expect(pds.entries.has("MEMBER2")).toBe(false);
+            expect([...pds.entries.keys()]).toEqual(["MEMBER1", "MEMBER3"]);
+        });
+
+        it("adds members that appeared remotely to the cache", async () => {
+            const pds = cachedPds("MEMBER1");
+            mockListing(["MEMBER1", "MEMBER2"]);
+
+            await refresh(pds);
+
+            expect(pds.entries.has("MEMBER2")).toBe(true);
+            const newMember = pds.entries.get("MEMBER2");
+            expect(FsDatasetsUtils.isMemberEntry(newMember)).toBe(true);
+            expect(newMember.metadata.path).toBe("/USER.DATA.PDS/MEMBER2");
+        });
+
+        it("emits nothing when consecutive listings return the same members", async () => {
+            const pds = cachedPds("MEMBER1", "MEMBER2");
+            mockListing(["MEMBER1", "MEMBER2"]);
+
+            expect(await refresh(pds)).toEqual([]);
+            expect(await refresh(pds)).toEqual([]);
+        });
+
+        it("builds the cache key and parent URI from a member URI that carries query params", () => {
+            const provider = DatasetFSProvider.instance as any;
+            const memberUri = testUris.pdsMember.with({ query: "fetch=true" });
+
+            // Only truthy flags contribute to the request-reuse key, so a plain URI shares no key with a fetch.
+            expect(provider.getQueryKey(memberUri)).toBe("_fetch=true");
+            expect(provider.getQueryKey(testUris.pdsMember)).toBe("");
+            expect(provider.isPdsMemberUri(memberUri)).toBe(true);
+            expect(provider.isPdsMemberUri(testUris.pds)).toBe(false);
+            expect(provider.isPdsMemberUri(testUris.session)).toBe(false);
+
+            // The parent event is addressed to the PDS itself, with the child's query stripped.
+            DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: memberUri });
+            const parentEvent = provider._bufferedEvents.find((event: vscode.FileChangeEvent) => event.uri.path === testUris.pds.path);
+            expect(parentEvent).toMatchObject({ type: vscode.FileChangeType.Changed });
+            expect(parentEvent.uri.scheme).toBe(ZoweScheme.DS);
+            expect(parentEvent.uri.query).toBe("");
+        });
+
+        it("keeps the cache and emits nothing when the listing carries no member array", async () => {
+            const pds = cachedPds("MEMBER1", "MEMBER2");
+            mockListing(undefined, false);
+
+            const events = await refresh(pds);
+
+            expect(events).toEqual([]);
+            expect([...pds.entries.keys()]).toEqual(["MEMBER1", "MEMBER2"]);
+        });
+
+        it("clears the cache and emits one Changed for the PDS when every member was removed", async () => {
+            const pds = cachedPds("MEMBER1", "MEMBER2");
+            mockListing([]);
+
+            const events = await refresh(pds);
+
+            expect(pds.entries.size).toBe(0);
+            expect(eventsOfType(events, vscode.FileChangeType.Deleted)).toEqual([
+                "/sestest/USER.DATA.PDS/MEMBER1",
+                "/sestest/USER.DATA.PDS/MEMBER2",
+            ]);
+            expect(eventsOfType(events, vscode.FileChangeType.Changed)).toEqual(["/sestest/USER.DATA.PDS"]);
+        });
+
+        it("emits nothing for an initial listing, so an empty cache is not reported as mass creation", async () => {
+            const pds = cachedPds();
+            mockListing(["MEMBER1", "MEMBER2"]);
+
+            expect(await refresh(pds)).toEqual([]);
+            expect([...pds.entries.keys()]).toEqual(["MEMBER1", "MEMBER2"]);
+        });
+    });
+
     describe("fetchEntriesForProfile", () => {
         it("calls _handleError in the case of an API error", async () => {
             const dataSetsMatchingPattern = vi.fn().mockRejectedValue(new Error("API error"));
