@@ -14,6 +14,8 @@ exports[`Zosmf API tests > should test that copy data set uses default options 1
     "member": "IEFBR14",
   },
   "responseTimeout": undefined,
+  "tsoAccount": undefined,
+  "tsoProcedure": undefined,
 }
 `;
 
@@ -24,6 +26,8 @@ exports[`Zosmf API tests > should test that copy data set uses enq 1`] = `
     "dsn": "BROADCOM.FROM",
   },
   "responseTimeout": undefined,
+  "tsoAccount": undefined,
+  "tsoProcedure": undefined,
 }
 `;
 
@@ -35,5 +39,7 @@ exports[`Zosmf API tests > should test that copy data set uses enq only 1`] = `
     "member": "IEFBR14",
   },
   "responseTimeout": undefined,
+  "tsoAccount": undefined,
+  "tsoProcedure": undefined,
 }
 `;
