@@ -89,18 +89,22 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @throws vscode.FileSystemError on failures like FileNotFound or profile unavailability.
      */
     private async statImplementation(uri: vscode.Uri): Promise<vscode.FileStat> {
+        ZoweLogger.info(`[TEMP] statImplementation ENTER uri=${uri.toString()}`);
         ZoweLogger.trace(`[DatasetFSProvider] statImplementation called with ${uri.toString()}`);
         this.validatePath(uri);
         let isFetching = false;
 
         const queryParams = new URLSearchParams(uri.query);
         if (queryParams.has("conflict")) {
+            ZoweLogger.info(`[TEMP] statImplementation EXIT early: conflict`);
             return { ...this.lookup(uri, false), permissions: vscode.FilePermission.Readonly };
         } else if (queryParams.has("inDiff")) {
+            ZoweLogger.info(`[TEMP] statImplementation EXIT early: inDiff`);
             return this.lookup(uri, false);
         }
 
         isFetching = queryParams?.has("fetch") && queryParams?.get("fetch") === "true";
+        ZoweLogger.info(`[TEMP] statImplementation isFetching=${isFetching}`);
 
         await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
@@ -116,12 +120,15 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             (isFetching && ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile)) ||
             (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
         ) {
+            ZoweLogger.info(`[TEMP] statImplementation EXIT early: auth check failed`);
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
 
         const entry = isFetching ? await this.remoteLookupForResource(uri) : await this.lookupWithCache(uri);
+        ZoweLogger.info(`[TEMP] statImplementation entry=${entry ? entry.constructor?.name : "null"} isRoot=${uriInfo.isRoot} isDir=${FsAbstractUtils.isDirectoryEntry(entry)}`);
         // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on PS or PDS members only
         if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
+            ZoweLogger.info(`[TEMP] statImplementation EXIT early: isRoot or isDir`);
             return entry;
         }
 
