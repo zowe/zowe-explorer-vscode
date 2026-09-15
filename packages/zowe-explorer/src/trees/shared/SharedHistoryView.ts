@@ -11,13 +11,15 @@
 
 import * as vscode from "vscode";
 import { Definitions } from "../../configuration/Definitions";
-import { WebView, Gui } from "@zowe/zowe-explorer-api";
+import { WebView, Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
 import { ExtensionContext } from "vscode";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { JobTree } from "../job/JobTree";
 import { Constants } from "../../configuration/Constants";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
 import { DatasetTree } from "../dataset/DatasetTree";
+import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
+import { SharedContext } from "./SharedContext";
 import * as fs from "fs";
 
 export class SharedHistoryView extends WebView {
@@ -25,8 +27,20 @@ export class SharedHistoryView extends WebView {
     private cmdProviders: Definitions.IZoweCommandProviders;
     private currentTab: string;
     private currentSelection: { [type: string]: string };
+    /**
+     * The type ("ds" | "uss" | "job") and profile of the session node this view was opened from, if any.
+     * Used to scope the "search" history subset shown for that type to just this profile's group, rather
+     * than every group across every loaded session.
+     */
+    private invokingType: string | undefined;
+    private invokingProfile: imperative.IProfileLoaded | undefined;
 
-    public constructor(context: ExtensionContext, treeProviders: Definitions.IZoweProviders, cmdProviders?: Definitions.IZoweCommandProviders) {
+    public constructor(
+        context: ExtensionContext,
+        treeProviders: Definitions.IZoweProviders,
+        cmdProviders?: Definitions.IZoweCommandProviders,
+        invokingNode?: IZoweTreeNode
+    ) {
         super(Constants.SHARED_HISTORY_PANEL_TITLE, "edit-history", context, {
             onDidReceiveMessage: (message: object) => this.onDidReceiveMessage(message),
             retainContext: true,
@@ -34,6 +48,15 @@ export class SharedHistoryView extends WebView {
         this.treeProviders = treeProviders;
         this.cmdProviders = cmdProviders;
         this.currentSelection = { ds: "search", uss: "search", jobs: "search", cmds: "mvs" };
+        if (invokingNode) {
+            try {
+                const sessionType = SharedContext.getSessionType(invokingNode);
+                this.invokingType = sessionType === "jobs" ? "job" : sessionType;
+                this.invokingProfile = invokingNode.getProfile();
+            } catch (err) {
+                ZoweLogger.debug("[SharedHistoryView.constructor] Unable to determine session type for invoking node.");
+            }
+        }
     }
 
     protected async onDidReceiveMessage(message: any): Promise<void> {
@@ -112,8 +135,9 @@ export class SharedHistoryView extends WebView {
                 encodingHistory: [],
             };
         }
+        const profileForType = type === this.invokingType ? this.invokingProfile : undefined;
         return {
-            search: treeProvider.getSearchHistory(),
+            search: treeProvider.getSearchHistory(profileForType),
             sessions: treeProvider.getSessions(),
             fileHistory: treeProvider.getFileHistory(),
             favorites: treeProvider.getFavorites(),
@@ -150,7 +174,8 @@ export class SharedHistoryView extends WebView {
         };
         const item = await Gui.showInputBox(options);
         const treeProvider = this.getTreeProvider(message.attrs.type);
-        treeProvider.addSearchHistory(item);
+        const profileForType = message.attrs.type === this.invokingType ? this.invokingProfile : undefined;
+        treeProvider.addSearchHistory(item, profileForType);
         await this.refreshView(message);
     }
 
@@ -203,9 +228,14 @@ export class SharedHistoryView extends WebView {
         ZoweLogger.trace("HistoryView.clearAll called.");
         const treeProvider = this.getTreeProvider(message.attrs.type);
         const infoMessage = vscode.l10n.t("Clear all history items for this persistent property?");
+
+        const detail =
+            message.attrs.selection === "search" && ZowePersistentFilters.isGroupingEnabled()
+                ? vscode.l10n.t("History grouping is enabled. Search history will be cleared for all groups, not just the one shown here.")
+                : undefined;
         const yesButton = vscode.l10n.t("Yes");
         const noButton = vscode.l10n.t("No");
-        const choice = await Gui.showMessage(infoMessage, { items: [yesButton, noButton], vsCodeOpts: { modal: true } });
+        const choice = await Gui.showMessage(infoMessage, { items: [yesButton, noButton], vsCodeOpts: { modal: true, detail } });
         if (choice === yesButton) {
             switch (message.attrs.selection) {
                 case "search":

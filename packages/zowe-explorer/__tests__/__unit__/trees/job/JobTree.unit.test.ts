@@ -2018,9 +2018,9 @@ describe("removeSearchHistory", () => {
     it("removes the search item passed in from the current history", () => {
         const tree = new JobTree();
         tree.addSearchHistory("test");
-        expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(1);
+        expect(tree.getSearchHistory().length).toEqual(1);
         tree.removeSearchHistory("test");
-        expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(0);
+        expect(tree.getSearchHistory().length).toEqual(0);
     });
 });
 
@@ -2031,9 +2031,9 @@ describe("resetSearchHistory", () => {
         tree.addSearchHistory("test2");
         tree.addSearchHistory("test3");
         tree.addSearchHistory("test4");
-        expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(4);
+        expect(tree.getSearchHistory().length).toEqual(4);
         tree.resetSearchHistory();
-        expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(0);
+        expect(tree.getSearchHistory().length).toEqual(0);
     });
 });
 
