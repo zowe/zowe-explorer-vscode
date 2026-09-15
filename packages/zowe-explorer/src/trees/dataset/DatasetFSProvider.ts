@@ -89,22 +89,18 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * @throws vscode.FileSystemError on failures like FileNotFound or profile unavailability.
      */
     private async statImplementation(uri: vscode.Uri): Promise<vscode.FileStat> {
-        ZoweLogger.info(`[TEMP] statImplementation ENTER uri=${uri.toString()}`);
         ZoweLogger.trace(`[DatasetFSProvider] statImplementation called with ${uri.toString()}`);
         this.validatePath(uri);
         let isFetching = false;
 
         const queryParams = new URLSearchParams(uri.query);
         if (queryParams.has("conflict")) {
-            ZoweLogger.info(`[TEMP] statImplementation EXIT early: conflict`);
             return { ...this.lookup(uri, false), permissions: vscode.FilePermission.Readonly };
         } else if (queryParams.has("inDiff")) {
-            ZoweLogger.info(`[TEMP] statImplementation EXIT early: inDiff`);
             return this.lookup(uri, false);
         }
 
         isFetching = queryParams?.has("fetch") && queryParams?.get("fetch") === "true";
-        ZoweLogger.info(`[TEMP] statImplementation isFetching=${isFetching}`);
 
         await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
@@ -120,15 +116,12 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             (isFetching && ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile)) ||
             (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
         ) {
-            ZoweLogger.info(`[TEMP] statImplementation EXIT early: auth check failed`);
             throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
         }
 
         const entry = isFetching ? await this.remoteLookupForResource(uri) : await this.lookupWithCache(uri);
-        ZoweLogger.info(`[TEMP] statImplementation entry=${entry ? entry.constructor?.name : "null"} isRoot=${uriInfo.isRoot} isDir=${FsAbstractUtils.isDirectoryEntry(entry)}`);
         // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on PS or PDS members only
         if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
-            ZoweLogger.info(`[TEMP] statImplementation EXIT early: isRoot or isDir`);
             return entry;
         }
 
@@ -163,13 +156,11 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 if (m4date) {
                     // Handle both formats: separate mtime/msec fields vs combined in m4date
                     const newTime = mtime ? dayjs(`${m4date} ${mtime}:${msec || "00"}`).valueOf() : dayjs(m4date).valueOf();
-                    ZoweLogger.info(`[TEMP] statImplementation: m4date=${m4date} existingMtime=${entry.mtime} newMtime=${newTime} changed=${entry.mtime != newTime}`);
                     if (entry.mtime != newTime) {
                         entry.mtime = newTime;
                         entry.wasAccessed = false;
                     }
                 } else {
-                    ZoweLogger.info(`[TEMP] statImplementation: m4date=NONE existingMtime=${entry.mtime} — no mtime update possible`);
                     // The data set has no timestamp attributes available. Invalidate the cache to
                     // force a re-fetch on the next read, but leave `mtime` untouched. Bumping `mtime`
                     // here triggers VS Code's built-in stale-write detection (see
@@ -196,7 +187,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const isMemberRequest = segments.length === 3;
 
         const isVisibleEditor = vscode.window.visibleTextEditors.some((editor) => editor.document.uri.toString() === uri.toString());
-        ZoweLogger.info(`[TEMP] stat() uri=${uri.toString()} isVisibleEditor=${isVisibleEditor} visibleEditorUris=${vscode.window.visibleTextEditors.map((e) => e.document.uri.toString()).join(", ")}`);
 
         if (isMemberRequest) {
             const memberName = segments[2];
@@ -231,15 +221,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             throw vscode.FileSystemError.FileNotFound(uri);
         }
 
-        const keyGen = (u: vscode.Uri): string => "list" + this.getQueryKey(u) + "_" + u.toString().split("/").slice(0, 3).join("/");
-        ZoweLogger.info(`[TEMP] stat() cacheKey=${keyGen(uri.with({ query: "fetch=true" }))} cacheHit=${this.requestCache.has(keyGen(uri.with({ query: "fetch=true" })))}`);
         return this.executeWithReuse<vscode.FileStat>(uri, {
-            keyGenerator: keyGen,
-            checkLocal: () => {
-                const local = isVisibleEditor ? false : !!this.lookup(uri, true);
-                ZoweLogger.info(`[TEMP] stat() checkLocal result=${local} isVisibleEditor=${isVisibleEditor}`);
-                return local;
-            },
+            keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().split("/").slice(0, 3).join("/"),
+            checkLocal: () => (isVisibleEditor ? false : !!this.lookup(uri, true)),
             execute: () => this.statImplementation(uri),
         });
     }

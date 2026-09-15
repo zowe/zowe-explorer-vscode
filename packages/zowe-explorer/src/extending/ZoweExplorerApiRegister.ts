@@ -445,6 +445,13 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
                     return provider.encodingMap[uri.path];
                 }
             },
+            notifyFileChanged: (uri: vscode.Uri): void => {
+                const provider = this.#fsProviders.get(uri.scheme as ZoweScheme);
+                if (provider) {
+                    provider.invalidateCache(uri);
+                    provider.fireSoon({ type: vscode.FileChangeType.Changed, uri });
+                }
+            },
         };
         return this.#fileApi;
     }
