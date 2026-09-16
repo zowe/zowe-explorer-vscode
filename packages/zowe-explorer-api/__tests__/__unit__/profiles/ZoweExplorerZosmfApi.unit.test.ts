@@ -679,7 +679,7 @@ describe("ZosmfMvsApi", () => {
         const listSpy = vi.spyOn(zosfiles.List, "dataSet").mockResolvedValue({ success: true } as any);
         const profileWithTso: imperative.IProfileLoaded = {
             ...loadedProfile,
-            profile: { ...fakeProfile, tsoAccount: "1234", tsoProc: "MYPROC" },
+            profile: { ...fakeProfile, tsoAccount: "1234", tsoProcedure: "MYPROC" },
         };
         const zosmfApi = new ZoweExplorerZosmf.MvsApi(profileWithTso);
         await zosmfApi.dataSet("SOME.FILTER");
@@ -694,7 +694,7 @@ describe("ZosmfMvsApi", () => {
         const createSpy = vi.spyOn(zosfiles.Create, "dataSet").mockResolvedValue({ success: true } as any);
         const profileWithTso: imperative.IProfileLoaded = {
             ...loadedProfile,
-            profile: { ...fakeProfile, tsoAccount: "1234", tsoProc: "MYPROC" },
+            profile: { ...fakeProfile, tsoAccount: "1234", tsoProcedure: "MYPROC" },
         };
         const zosmfApi = new ZoweExplorerZosmf.MvsApi(profileWithTso);
         await zosmfApi.createDataSet(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "SOME.DSNAME");
