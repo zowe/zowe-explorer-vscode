@@ -82,8 +82,10 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         lastItemName?: string;
     };
     private itemsPerPage?: number;
-    private lastListedMemberNames?: Map<number, string[]>;
+    private lastListedMemberNames?: Map<string, string[]>;
     private lastDiffedPattern?: string;
+    // The cursor the most recent page was fetched from, recorded by the paginator's fetch function.
+    private lastFetchedCursor?: string;
 
     /**
      * Creates an instance of ZoweDatasetNode
@@ -413,9 +415,12 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             // captured under the old pattern would report every data set as created and/or deleted.
             this.lastListedMemberNames = undefined;
         }
-        // Each page is compared against what that same page last held.
-        const currentPageIndex = this.paginator?.getCurrentPageIndex() ?? 0;
-        const previousMemberNames = canDiffChildren && this.resourceUri != null ? this.lastListedMemberNames?.get(currentPageIndex) : undefined;
+        // Keyed by the window a listing covered, not just the page it came from: the same page index can
+        // cover a shifted window once its start cursor moves (see `lastFetchedCursor`). A non-paginated
+        // listing covers the whole result set, so it is keyed on its own - callers aren't consistent, and
+        // DatasetActions.focusOnNewDs lists without pagination in between listings that the tree paginates.
+        const listingKey = shouldPaginate ? `${this.paginator?.getCurrentPageIndex() ?? 0}:${this.lastFetchedCursor ?? ""}` : "all";
+        const previousMemberNames = canDiffChildren && this.resourceUri != null ? this.lastListedMemberNames?.get(listingKey) : undefined;
         // Names returned by this listing (member names, or top-level data set names), in API order, plus
         // the URIs of the children this listing introduced.
         const listedMemberNames: string[] = [];
@@ -654,9 +659,14 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 DatasetFSProvider.instance.removeEntry(this.childResourceUri(name));
             }
 
-            const createdNames = ZoweDatasetNode.namesConfirmedMissing(listedMemberNames, new Set(previousMemberNames), pageEndIsVolatile);
+            // Creations get no page-boundary allowance. `newMemberUris` only holds entries the file system
+            // provider had no entry for at all, so reporting one is accurate even if it entered this page
+            // from the next one - the provider really is seeing it for the first time. Applying the
+            // allowance here instead drops a genuine creation whenever it lands on the last position of a
+            // page, which a following page makes ambiguous.
+            const previouslyListed = new Set(previousMemberNames);
             for (const [name, resourceUri] of newMemberUris) {
-                if (createdNames.has(name)) {
+                if (!previouslyListed.has(name)) {
                     DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: resourceUri });
                 }
             }
@@ -664,7 +674,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
 
         if (canDiffChildren && this.resourceUri != null) {
             this.lastListedMemberNames ??= new Map();
-            this.lastListedMemberNames.set(currentPageIndex, listedMemberNames);
+            this.lastListedMemberNames.set(listingKey, listedMemberNames);
             if (SharedContext.isSession(this)) {
                 this.lastDiffedPattern = this.pattern;
             }
@@ -939,6 +949,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     private async listDatasetsInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
+        this.lastFetchedCursor = start;
         let totalItems = this.paginatorData?.totalItems;
         let lastDatasetName = this.paginatorData?.lastItemName;
         const responses: IZosFilesResponse[] = [];
@@ -1097,6 +1108,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
     }
 
     private async listMembersInRange(start?: string, limit?: number): Promise<IFetchResult<IZosFilesResponse, string>> {
+        this.lastFetchedCursor = start;
         let totalItems = this.paginatorData?.totalItems;
         let lastMemberName = this.paginatorData?.lastItemName;
         let allMembers: IZosmfListResponse[] = [];

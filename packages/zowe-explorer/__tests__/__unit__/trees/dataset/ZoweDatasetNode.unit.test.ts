@@ -2915,13 +2915,17 @@ describe("ZoweDatasetNode Unit Tests - getChildren() remote member change detect
             contextOverride: Constants.DS_PDS_CONTEXT,
         });
 
-        // Stands in for a paginator whose page can be moved between listings.
+        // Stands in for a paginator whose page can be moved between listings. The page holds more items
+        // than the node reports in total, so the listings under test are never wrapped in page controls.
         const paginator = { pageIndex: 0, hasNextPage };
         (pds as any).paginator = {
             getCurrentPageIndex: () => paginator.pageIndex,
             canGoNext: () => paginator.hasNextPage,
             canGoPrevious: () => paginator.pageIndex > 0,
+            getMaxItemsPerPage: () => 100,
+            getPageCount: () => 1,
         };
+        (pds as any).paginatorData = { totalItems: 1 };
 
         return {
             pds,
@@ -2936,11 +2940,14 @@ describe("ZoweDatasetNode Unit Tests - getChildren() remote member change detect
         { success: true, apiResponse: { items: members.map((member) => ({ member })), returnedRows: members.length } },
     ];
 
-    /** Lists the members of a page and returns after `getChildren` has diffed it. */
+    /**
+     * Lists the members of a page and returns after `getChildren` has diffed it. Pagination is requested
+     * the way the tree requests it, so the listing is diffed against what the same page last held.
+     */
     async function listPage(harness: PdsHarness, ...members: string[]): Promise<void> {
         harness.getDatasets.mockResolvedValueOnce(listing(...members));
         harness.pds.dirty = true;
-        await harness.pds.getChildren();
+        await harness.pds.getChildren(true);
     }
 
     const memberNameOf = (uri: vscode.Uri): string => uri.path.split("/").pop();
@@ -2948,9 +2955,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() remote member change detect
     const deletedMembers = (removeEntry: MockInstance): string[] => removeEntry.mock.calls.map(([uri]: any[]) => memberNameOf(uri));
 
     const createdMembers = (fireSoon: MockInstance): string[] =>
-        fireSoon.mock.calls
-            .filter(([event]: any[]) => event.type === vscode.FileChangeType.Created)
-            .map(([event]: any[]) => memberNameOf(event.uri));
+        fireSoon.mock.calls.filter(([event]: any[]) => event.type === vscode.FileChangeType.Created).map(([event]: any[]) => memberNameOf(event.uri));
 
     beforeEach(() => {
         vi.resetAllMocks();
@@ -2975,7 +2980,16 @@ describe("ZoweDatasetNode Unit Tests - getChildren() remote member change detect
         expect(createdMembers(harness.fireSoon)).toEqual(["MEMBB"]);
     });
 
-    it("does not report a creation when a deleted member pulls one back from the next page", async () => {
+    it("reports a member created at the end of a page, where a next page exists", async () => {
+        const harness = setupPds(true);
+        await listPage(harness, "MEMA", "MEMB", "MEMC", "MEMD", "MEME");
+        await listPage(harness, "MEMA", "MEMB", "MEMC", "MEMD", "MEMDD");
+
+        expect(createdMembers(harness.fireSoon)).toEqual(["MEMDD"]);
+        expect(deletedMembers(harness.removeEntry)).toEqual([]);
+    });
+
+    it("reports a member that entered the page from the next one, which the provider has not seen before", async () => {
         const harness = setupPds(true);
         await listPage(harness, "MEMA", "MEMB", "MEMC", "MEMD", "MEME");
 
@@ -2983,7 +2997,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() remote member change detect
         await listPage(harness, "MEMA", "MEMB", "MEMD", "MEME", "MEMF");
 
         expect(deletedMembers(harness.removeEntry)).toEqual(["MEMC"]);
-        expect(createdMembers(harness.fireSoon)).toEqual([]);
+        expect(createdMembers(harness.fireSoon)).toEqual(["MEMF"]);
     });
 
     it("reports deletions at the end of the listing when there is no next page", async () => {
@@ -3120,9 +3134,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() remote session-level change
     const deletedDatasets = (removeEntry: MockInstance): string[] => removeEntry.mock.calls.map(([uri]: any[]) => dsNameOf(uri));
 
     const createdDatasets = (fireSoon: MockInstance): string[] =>
-        fireSoon.mock.calls
-            .filter(([event]: any[]) => event.type === vscode.FileChangeType.Created)
-            .map(([event]: any[]) => dsNameOf(event.uri));
+        fireSoon.mock.calls.filter(([event]: any[]) => event.type === vscode.FileChangeType.Created).map(([event]: any[]) => dsNameOf(event.uri));
 
     beforeEach(() => {
         vi.resetAllMocks();
@@ -3145,6 +3157,15 @@ describe("ZoweDatasetNode Unit Tests - getChildren() remote session-level change
 
         expect(deletedDatasets(harness.removeEntry)).toEqual([]);
         expect(createdDatasets(harness.fireSoon)).toEqual(["SAMPLE.PS2"]);
+    });
+
+    it("fires a Created event for a data set created at the end of a page, where a next page exists", async () => {
+        const harness = setupSession(true);
+        await listPage(harness, "SAMPLE.PS1", "SAMPLE.PS2", "SAMPLE.PS3");
+        await listPage(harness, "SAMPLE.PS1", "SAMPLE.PS2", "SAMPLE.PS25");
+
+        expect(createdDatasets(harness.fireSoon)).toEqual(["SAMPLE.PS25"]);
+        expect(deletedDatasets(harness.removeEntry)).toEqual([]);
     });
 
     it("removes the file system entry for a data set deleted outside of Zowe Explorer", async () => {
@@ -3178,5 +3199,115 @@ describe("ZoweDatasetNode Unit Tests - getChildren() remote session-level change
 
         expect(deletedDatasets(harness.removeEntry)).toEqual([]);
         expect(createdDatasets(harness.fireSoon)).toEqual([]);
+    });
+
+    it("does not diff a page against a window that shifted when an earlier page changed", async () => {
+        vi.spyOn(Profiles, "getInstance").mockReturnValue({ loadNamedProfile: vi.fn().mockReturnValue(profileOne) } as any);
+        vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({} as any);
+        vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+        vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+        const removeEntry = vi.spyOn(DatasetFSProvider.instance, "removeEntry").mockReturnValue(true);
+        const fireSoon = vi.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation((() => undefined) as any);
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(5);
+
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+        });
+        sessionNode.pattern = "SAMPLE.A.*";
+        vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(createDatasetTree(sessionNode, createTreeView()));
+
+        const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"];
+        let dsnames = letters.map((letter) => `SAMPLE.A.${letter}`);
+        vi.spyOn(sessionNode, "listDatasets").mockImplementation(async (responses: any[], options: any) => {
+            // Emulates the MVS list API: `start` is an inclusive name cursor, `maxLength` caps the result.
+            let names = [...dsnames].sort();
+            if (options?.start) {
+                names = names.filter((name) => name >= options.start);
+            }
+            if (options?.maxLength != null) {
+                names = names.slice(0, options.maxLength);
+            }
+            responses.push({
+                success: true,
+                apiResponse: { items: names.map((dsname) => ({ dsname, dsorg: "PS", vol: "VOL001" })), returnedRows: names.length },
+                commandResponse: `${names.length} data set(s) were listed successfully`,
+            });
+        });
+
+        const listCurrentPage = async (): Promise<void> => {
+            sessionNode.dirty = true;
+            await sessionNode.getChildren(true);
+        };
+        const deleted = (): string[] => removeEntry.mock.calls.map(([uri]: any[]) => dsNameOf(uri));
+        const created = (): string[] =>
+            fireSoon.mock.calls.filter(([event]: any[]) => event.type === vscode.FileChangeType.Created).map(([event]: any[]) => dsNameOf(event.uri));
+
+        // Page 1 holds A..E, then page 2 holds F..J and becomes the baseline for its window.
+        await listCurrentPage();
+        await (sessionNode as any).paginator.fetchNextPage();
+        await listCurrentPage();
+
+        // SAMPLE.A.A is deleted outside of Zowe Explorer. Returning to page 1 reports it.
+        dsnames = dsnames.filter((name) => name !== "SAMPLE.A.A");
+        await (sessionNode as any).paginator.fetchPreviousPage();
+        await listCurrentPage();
+        expect(deleted()).toEqual(["SAMPLE.A.A"]);
+
+        removeEntry.mockClear();
+        fireSoon.mockClear();
+
+        // Page 1 now ends at SAMPLE.A.F, so page 2 starts one entry later and holds G..K. Nothing was
+        // created or deleted to get there, so the shift itself must not be reported.
+        await (sessionNode as any).paginator.fetchNextPage();
+        await listCurrentPage();
+
+        expect(deleted()).toEqual([]);
+        expect(created()).toEqual([]);
+    });
+
+    it("does not diff a paginated listing against a non-paginated one", async () => {
+        vi.spyOn(Profiles, "getInstance").mockReturnValue({ loadNamedProfile: vi.fn().mockReturnValue(profileOne) } as any);
+        vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({} as any);
+        vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
+        vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+        vi.spyOn(DatasetFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+        const removeEntry = vi.spyOn(DatasetFSProvider.instance, "removeEntry").mockReturnValue(true);
+        vi.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation((() => undefined) as any);
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValue(100);
+
+        const sessionNode = new ZoweDatasetNode({
+            label: "sestest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            session,
+            profile: profileOne,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+        });
+        sessionNode.pattern = "SAMPLE.*";
+        vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(createDatasetTree(sessionNode, createTreeView()));
+
+        const allNames = ["SAMPLE.AAA", "SAMPLE.BBB", "SAMPLE.CCC", "SAMPLE.DDD", "SAMPLE.EEE", "SAMPLE.FFF"];
+        const pagedNames = allNames.slice(0, 2);
+        vi.spyOn(sessionNode, "listDatasets").mockImplementation(async (responses: any[], options: any) => {
+            const names = options?.maxLength != null ? pagedNames : allNames;
+            responses.push({
+                success: true,
+                apiResponse: { items: names.map((dsname) => ({ dsname, dsorg: "PS", vol: "VOL001" })), returnedRows: names.length },
+                commandResponse: `${names.length} data set(s) were listed successfully`,
+            });
+        });
+
+        sessionNode.dirty = true;
+        await sessionNode.getChildren();
+        removeEntry.mockClear();
+
+        sessionNode.dirty = true;
+        await sessionNode.getChildren(true);
+
+        expect(removeEntry).not.toHaveBeenCalled();
     });
 });
