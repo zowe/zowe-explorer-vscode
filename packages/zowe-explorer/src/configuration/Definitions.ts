@@ -34,6 +34,8 @@ export namespace Definitions {
         favorites: string[];
         encodingHistory: string[];
         searchedKeywordHistory: string[];
+        /** The host/group that `search` is scoped to, when history grouping is on; otherwise `undefined`. */
+        groupLabel?: { key: string; source: "host" | "group" };
     };
     export type DataSetSearchOptions = {
         caseSensitive?: boolean;

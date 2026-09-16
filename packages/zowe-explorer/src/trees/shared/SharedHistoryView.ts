@@ -143,6 +143,7 @@ export class SharedHistoryView extends WebView {
             favorites: treeProvider.getFavorites(),
             searchedKeywordHistory: type === "ds" ? ((treeProvider as DatasetTree).getSearchedKeywordHistory?.() ?? []) : [],
             encodingHistory: type === "uss" || type === "ds" ? this.fetchEncodingHistory() : [],
+            groupLabel: profileForType ? treeProvider.getSearchHistoryGroupLabel(profileForType) : undefined,
         };
     }
 

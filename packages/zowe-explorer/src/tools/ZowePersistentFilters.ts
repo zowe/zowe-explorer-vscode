@@ -93,16 +93,26 @@ export class ZowePersistentFilters {
      * different ports and should still share history.
      */
     public static resolveGroupKey(profile?: imperative.IProfileLoaded | imperative.IProfile): string | undefined {
+        return ZowePersistentFilters.resolveGroup(profile)?.key;
+    }
+
+    /**
+     * Same resolution as `resolveGroupKey`, but also reports whether the key came from the profile's
+     * explicit `historyGroup` override or its `host` - callers that display the key to the user (e.g. the
+     * quick-pick separator, the edit-history webview) need this to avoid calling a `historyGroup` override
+     * a "host" when it isn't one.
+     */
+    private static resolveGroup(profile?: imperative.IProfileLoaded | imperative.IProfile): { key: string; source: "host" | "group" } | undefined {
         if (!ZowePersistentFilters.isGroupingEnabled()) {
             return undefined;
         }
         const profAttrs: imperative.IProfile = (profile as imperative.IProfileLoaded)?.profile ?? (profile as imperative.IProfile);
         const historyGroup = profAttrs?.historyGroup as string | undefined;
         if (historyGroup?.trim()) {
-            return historyGroup.trim().toLowerCase();
+            return { key: historyGroup.trim().toLowerCase(), source: "group" };
         }
         const host = profAttrs?.host as string | undefined;
-        return host?.trim() ? host.trim().toLowerCase() : undefined;
+        return host?.trim() ? { key: host.trim().toLowerCase(), source: "host" } : undefined;
     }
 
     /**
@@ -286,26 +296,45 @@ export class ZowePersistentFilters {
     }
 
     /**
+     * The group key/source to show for this profile, but only when the entries returned by
+     * `getSearchHistory` for the same profile actually came from that group - i.e. grouping is enabled and
+     * the group has entries of its own. Returns `undefined` when grouping is disabled, or when grouping is
+     * enabled but the group is still empty so `getSearchHistory` is falling back to the shared list, since
+     * the entries aren't scoped to a group in either case.
+     */
+    public getGroupLabel(profile?: imperative.IProfileLoaded): { key: string; source: "host" | "group" } | undefined {
+        const resolved = ZowePersistentFilters.resolveGroup(profile);
+        const group = resolved ? this.mSearchHistoryByGroup[resolved.key] : undefined;
+        return group?.length ? resolved : undefined;
+    }
+
+    /**
      * Builds the quick-pick separator that sits above the recent search/filter entries.
      *
      * The separator names the group only when the entries below it actually came from that group, making it
      * obvious at a glance that grouping is on. Otherwise - grouping disabled, or grouping enabled but the
      * group is still empty so `getSearchHistory` is falling back to the shared list - the plain
-     * "Recent Filters" separator is used, since the entries are not scoped to a host in either case.
+     * "Recent Filters" separator is used, since the entries are not scoped to a group in either case.
      */
     public getSearchHistorySeparator(profile?: imperative.IProfileLoaded): vscode.QuickPickItem {
-        const groupKey = ZowePersistentFilters.resolveGroupKey(profile);
-        const group = groupKey ? this.mSearchHistoryByGroup[groupKey] : undefined;
-        if (!group?.length) {
+        const group = this.getGroupLabel(profile);
+        if (!group) {
             return Constants.SEPARATORS.RECENT_FILTERS;
         }
         return {
             kind: vscode.QuickPickItemKind.Separator,
-            label: vscode.l10n.t({
-                message: "Recent Filters (grouped by host: {0})",
-                args: [groupKey],
-                comment: ["Host (or group name) that the listed filter history belongs to"],
-            }),
+            label:
+                group.source === "host"
+                    ? vscode.l10n.t({
+                          message: "Recent Filters (grouped by host: {0})",
+                          args: [group.key],
+                          comment: ["Host that the listed filter history belongs to"],
+                      })
+                    : vscode.l10n.t({
+                          message: "Recent Filters (grouped by: {0})",
+                          args: [group.key],
+                          comment: ["Custom history group name that the listed filter history belongs to"],
+                      }),
         };
     }
 
