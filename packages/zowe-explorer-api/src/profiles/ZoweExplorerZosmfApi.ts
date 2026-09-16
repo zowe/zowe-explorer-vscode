@@ -265,7 +265,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.List.dataSet(this.getSession(), filter, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -274,7 +274,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.List.allMembers(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -283,7 +283,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.Download.dataSet(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -292,7 +292,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.Download.allMembers(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -301,7 +301,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.Upload.bufferToDataSet(this.getSession(), buffer, dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -310,7 +310,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.Upload.pathToDataSet(this.getSession(), inputFilePath, dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -323,7 +323,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.Create.dataSet(this.getSession(), dataSetType, dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -332,7 +332,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.Upload.bufferToDataSet(this.getSession(), Buffer.from(""), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -341,7 +341,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.Create.dataSetLike(this.getSession(), dataSetName, likeDataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
             });
         }
 
@@ -371,7 +371,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                 {
                     responseTimeout: this.profile?.profile?.responseTimeout,
                     tsoAccount: this.profile?.profile?.tsoAccount,
-                    tsoProcedure: this.profile?.profile?.tsoProc,
+                    tsoProcedure: this.profile?.profile?.tsoProcedure,
                     ...newOptions,
                 }
             );
@@ -381,7 +381,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.Rename.dataSet(this.getSession(), currentDataSetName, newDataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
             });
         }
 
@@ -389,7 +389,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.Rename.dataSetMember(this.getSession(), dataSetName, oldMemberName, newMemberName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
             });
         }
 
@@ -397,7 +397,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.HMigrate.dataSet(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
             });
         }
 
@@ -405,7 +405,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.HRecall.dataSet(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
             });
         }
 
@@ -414,14 +414,14 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                 return zosfiles.Delete.vsam(this.getSession(), dataSetName, {
                     responseTimeout: this.profile?.profile?.responseTimeout,
                     tsoAccount: this.profile?.profile?.tsoAccount,
-                    tsoProcedure: this.profile?.profile?.tsoProc,
+                    tsoProcedure: this.profile?.profile?.tsoProcedure,
                     ...options,
                 });
             } else {
                 return zosfiles.Delete.dataSet(this.getSession(), dataSetName, {
                     responseTimeout: this.profile?.profile?.responseTimeout,
                     tsoAccount: this.profile?.profile?.tsoAccount,
-                    tsoProcedure: this.profile?.profile?.tsoProc,
+                    tsoProcedure: this.profile?.profile?.tsoProcedure,
                     ...options,
                 });
             }
@@ -431,7 +431,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.List.dataSetsMatchingPattern(this.getSession(), filter, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -446,7 +446,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                     replace,
                     responseTimeout: this.profile?.profile?.responseTimeout,
                     tsoAccount: this.profile?.profile?.tsoAccount,
-                    tsoProcedure: this.profile?.profile?.tsoProc,
+                    tsoProcedure: this.profile?.profile?.tsoProcedure,
                 }
             );
         }
@@ -456,13 +456,13 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                 getOptions: {
                     responseTimeout: this.profile?.profile?.responseTimeout,
                     tsoAccount: this.profile?.profile?.tsoAccount,
-                    tsoProcedure: this.profile?.profile?.tsoProc,
+                    tsoProcedure: this.profile?.profile?.tsoProcedure,
                     ...searchOptions.getOptions,
                 },
                 listOptions: {
                     responseTimeout: this.profile?.profile?.responseTimeout,
                     tsoAccount: this.profile?.profile?.tsoAccount,
-                    tsoProcedure: this.profile?.profile?.tsoProc,
+                    tsoProcedure: this.profile?.profile?.tsoProcedure,
                     ...searchOptions.listOptions,
                 },
             });
@@ -500,7 +500,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.List.resolveAlias(this.getSession(), aliasName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
                 tsoAccount: this.profile?.profile?.tsoAccount,
-                tsoProcedure: this.profile?.profile?.tsoProc,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
             });
         }
     }
