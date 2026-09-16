@@ -446,6 +446,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
                 }
             },
             notifyFileChanged: (uri: vscode.Uri): void => {
+                ZoweLogger.info(`[ZoweExplorerApiRegister] notifyFileChanged called for ${uri.toString()}`);
                 const provider = this.#fsProviders.get(uri.scheme as ZoweScheme);
                 if (provider) {
                     provider.invalidateCache(uri);
