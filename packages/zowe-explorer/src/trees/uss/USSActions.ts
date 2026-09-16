@@ -754,7 +754,7 @@ export class USSActions {
             },
             async () => {
                 const filePath = downloadOptions.generateDirectory
-                    ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
+                    ? path.join(downloadOptions.selectedPath.fsPath, this.validatePathAndRemoveBacktracking(node.fullPath))
                     : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath));
 
                 const options: zosfiles.IDownloadSingleOptions = {
@@ -860,7 +860,7 @@ export class USSActions {
                 };
 
                 const directoryPath = downloadOptions.generateDirectory
-                    ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
+                    ? path.join(downloadOptions.selectedPath.fsPath, this.validatePathAndRemoveBacktracking(node.fullPath))
                     : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath));
 
                 const filterOpts = downloadOptions.dirOptions.chooseFilterOptions ? downloadOptions.dirFilterOptions : {};
@@ -1192,6 +1192,10 @@ export class USSActions {
         }
 
         return undefined;
+    }
+
+    private static validatePathAndRemoveBacktracking(input: string): string {
+        return input.replace(/(?<=[\\/])\.{2}[\\/]/g, "");
     }
 
     /**

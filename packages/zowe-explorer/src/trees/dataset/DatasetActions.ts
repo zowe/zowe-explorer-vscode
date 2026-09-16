@@ -848,6 +848,10 @@ export class DatasetActions {
         return extensionMap;
     }
 
+    private static validatePathAndRemoveBacktracking(input: string): string {
+        return input.replace(/(?<=[\\/])\.{2}[\\/]/g, "");
+    }
+
     /**
      * Downloads all the members of a PDS
      */
@@ -968,8 +972,9 @@ export class DatasetActions {
         const parent = selectedNode.getParent() as IZoweDatasetTreeNode;
         const datasetName = parent.getLabel() as string;
         const memberName = selectedNode.getLabel() as string;
+        const sanitizedMemberName = this.validatePathAndRemoveBacktracking(memberName);
         const fullDatasetName = `${datasetName}(${memberName})`;
-        const fileName = uppercaseNames ? memberName : memberName.toLowerCase();
+        const fileName = uppercaseNames ? sanitizedMemberName : sanitizedMemberName.toLowerCase();
 
         const targetDirectory = generateDirectory
             ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
@@ -1173,7 +1178,7 @@ export class DatasetActions {
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading data set"),
             async () => {
-                const datasetName = node.getLabel() as string;
+                const datasetName = this.validatePathAndRemoveBacktracking(node.getLabel() as string);
 
                 let fileName: string;
                 let targetDirectory: string;
