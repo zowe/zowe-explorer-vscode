@@ -27,7 +27,7 @@ import {
     createInstanceOfProfile,
     createValidIProfile,
 } from "../../../__mocks__/mockCreators/shared";
-import { createUSSNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
+import { createUSSNode, createUSSSessionNode, createUSSTree } from "../../../__mocks__/mockCreators/uss";
 import { Constants } from "../../../../src/configuration/Constants";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
@@ -2283,5 +2283,191 @@ describe("ZoweUSSNode Unit Tests - Function getUssFiles() with showHidden settin
         expect(globalMocks.showErrorMessage).toHaveBeenCalled();
 
         getDirectValueSpy.mockRestore();
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - getChildren() remote change detection", () => {
+    /**
+     * Builds a directory node, optionally listing it once beforehand, and captures the file system events
+     * that its next listing produces. The first listing has to actually happen: a node only diffs a listing
+     * against the previous one once it has recorded that it listed the same path before.
+     *
+     * @param existingNames Names returned by an earlier listing, or none to leave the node never listed
+     */
+    async function setupDirectory(existingNames: string[]): Promise<{
+        directory: ZoweUSSNode;
+        fireSoon: MockInstance;
+        removeEntry: MockInstance;
+    }> {
+        const globalMocks = createGlobalMocks();
+        const { fireSoon, removeEntry } = mockProvider();
+
+        const directory = new ZoweUSSNode({
+            label: "a",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: createUSSSessionNode(globalMocks.session, globalMocks.profileOne),
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u/myuser",
+        });
+
+        if (existingNames.length > 0) {
+            await listDirectory(directory, existingNames.map(dir));
+            fireSoon.mockClear();
+            removeEntry.mockClear();
+        }
+
+        return { directory, fireSoon, removeEntry };
+    }
+
+    /** Stubs out the file system writes that a listing performs, and captures the events it fires. */
+    function mockProvider(): { fireSoon: MockInstance; removeEntry: MockInstance } {
+        vi.spyOn(ZoweUSSNode.prototype, "setAttributes").mockImplementation((() => undefined) as any);
+        vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+        vi.spyOn(UssFSProvider.instance, "createParentDirectories").mockImplementation((() => undefined) as any);
+        vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+        vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+
+        return {
+            fireSoon: vi.spyOn(UssFSProvider.instance, "fireSoon").mockImplementation((() => undefined) as any),
+            removeEntry: vi.spyOn(UssFSProvider.instance, "removeEntry").mockReturnValue(true),
+        };
+    }
+
+    /**
+     * Builds a session node with a filter search path and lists it once, so that the next listing of the
+     * top level of the filter search path is diffed against this one.
+     */
+    async function setupFilteredSession(existingNames: string[]): Promise<{
+        session: ZoweUSSNode;
+        fireSoon: MockInstance;
+        removeEntry: MockInstance;
+    }> {
+        const globalMocks = createGlobalMocks();
+        const { fireSoon, removeEntry } = mockProvider();
+
+        const session = createUSSSessionNode(globalMocks.session, globalMocks.profileOne);
+        await listDirectory(session, existingNames.map(dir));
+        fireSoon.mockClear();
+        removeEntry.mockClear();
+
+        return { session, fireSoon, removeEntry };
+    }
+
+    /** Lists the directory and returns the child nodes it reports. */
+    async function listDirectory(directory: ZoweUSSNode, items: { name: string; mode: string }[]): Promise<IZoweUSSTreeNode[]> {
+        vi.spyOn(directory as any, "getUssFiles").mockResolvedValueOnce({ success: true, apiResponse: { items } });
+        directory.dirty = true;
+        return directory.getChildren();
+    }
+
+    /** Resolves a listed child's URI, so assertions do not have to rebuild it from the profile name. */
+    const uriOf = (children: IZoweUSSTreeNode[], label: string): string => children.find((child) => child.label === label).resourceUri.path;
+
+    const dir = (name: string): { name: string; mode: string } => ({ name, mode: "drwxr-xr-x" });
+    const file = (name: string): { name: string; mode: string } => ({ name, mode: "-rw-r--r--" });
+
+    const createdPaths = (fireSoon: MockInstance): string[] =>
+        fireSoon.mock.calls
+            .filter(([event]: any[]) => event.type === vscode.FileChangeType.Created)
+            .map(([event]: any[]) => event.uri.path as string);
+
+    beforeEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("fires a Created event for a directory that appeared since the last listing", async () => {
+        const { directory, fireSoon, removeEntry } = await setupDirectory(["existingDir"]);
+
+        const children = await listDirectory(directory, [dir("existingDir"), dir("a1")]);
+
+        expect(createdPaths(fireSoon)).toEqual([uriOf(children, "a1")]);
+        expect(removeEntry).not.toHaveBeenCalled();
+    });
+
+    it("fires a Created event for a file that appeared since the last listing", async () => {
+        const { directory, fireSoon } = await setupDirectory(["existingDir"]);
+
+        const children = await listDirectory(directory, [dir("existingDir"), file("newFile.txt")]);
+
+        expect(createdPaths(fireSoon)).toEqual([uriOf(children, "newFile.txt")]);
+    });
+
+    it("fires no Created events for the first listing of a directory", async () => {
+        const { directory, fireSoon } = await setupDirectory([]);
+
+        await listDirectory(directory, [dir("a1"), file("newFile.txt")]);
+
+        expect(createdPaths(fireSoon)).toEqual([]);
+    });
+
+    it("removes the file system entry for an entry that disappeared since the last listing", async () => {
+        const { directory, fireSoon, removeEntry } = await setupDirectory(["existingDir", "goneDir"]);
+        const goneUri = (directory.children.find((child) => child.label === "goneDir") as ZoweUSSNode).resourceUri.path;
+
+        await listDirectory(directory, [dir("existingDir")]);
+
+        expect(removeEntry).toHaveBeenCalledTimes(1);
+        expect((removeEntry.mock.calls[0][0] as vscode.Uri).path).toBe(goneUri);
+        expect(createdPaths(fireSoon)).toEqual([]);
+    });
+
+    it("fires a Created event for an entry that appeared in a directory that was empty", async () => {
+        const { directory, fireSoon } = await setupDirectory([]);
+        await listDirectory(directory, []);
+        fireSoon.mockClear();
+
+        const children = await listDirectory(directory, [file("newFile.txt")]);
+
+        expect(createdPaths(fireSoon)).toEqual([uriOf(children, "newFile.txt")]);
+    });
+
+    it("fires Created events for entries that appeared at the top level of the filter search path", async () => {
+        const { session, fireSoon, removeEntry } = await setupFilteredSession(["existingDir"]);
+
+        const children = await listDirectory(session, [dir("existingDir"), file("newFile.txt"), dir("newDir")]);
+
+        expect(createdPaths(fireSoon)).toEqual([uriOf(children, "newFile.txt"), uriOf(children, "newDir")]);
+        expect(removeEntry).not.toHaveBeenCalled();
+    });
+
+    it("removes the file system entry for an entry that disappeared from the top level of the filter search path", async () => {
+        const { session, fireSoon, removeEntry } = await setupFilteredSession(["existingDir", "goneDir"]);
+        const goneUri = (session.children.find((child) => child.label === "goneDir") as ZoweUSSNode).resourceUri.path;
+
+        await listDirectory(session, [dir("existingDir")]);
+
+        expect(removeEntry).toHaveBeenCalledTimes(1);
+        expect((removeEntry.mock.calls[0][0] as vscode.Uri).path).toBe(goneUri);
+        expect(createdPaths(fireSoon)).toEqual([]);
+    });
+
+    it("keeps the children of the filter search path across listings that report no changes", async () => {
+        const { session, fireSoon, removeEntry } = await setupFilteredSession(["existingDir"]);
+
+        const children = await listDirectory(session, [dir("existingDir")]);
+
+        expect(children.map((child) => child.label)).toEqual(["existingDir"]);
+        expect(createdPaths(fireSoon)).toEqual([]);
+        expect(removeEntry).not.toHaveBeenCalled();
+    });
+
+    it("marks a reused child for a refresh, so re-listing a node also re-lists its descendants", async () => {
+        const { session } = await setupFilteredSession(["existingDir"]);
+        const child = session.children.find((candidate) => candidate.label === "existingDir") as ZoweUSSNode;
+        child.dirty = false;
+
+        await listDirectory(session, [dir("existingDir")]);
+
+        expect(child.dirty).toBe(true);
+    });
+
+    it("fires no events when consecutive listings return the same entries", async () => {
+        const { directory, fireSoon, removeEntry } = await setupDirectory(["existingDir"]);
+
+        await listDirectory(directory, [dir("existingDir")]);
+
+        expect(createdPaths(fireSoon)).toEqual([]);
+        expect(removeEntry).not.toHaveBeenCalled();
     });
 });

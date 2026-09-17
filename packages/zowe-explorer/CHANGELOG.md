@@ -23,9 +23,13 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Replaced repetitive `if (err instanceof Error)` patterns with `handleError` and `errorMessage` utility functions from `@zowe/zowe-explorer-api`. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 - Added new VS Code toggle setting for enabling various features within Zowe Explorer. [#4242](https://github.com/zowe/zowe-explorer-vscode/issues/4242)
 - Added support for comma-separated job prefixes in the **JOBS** tree filter, matching existing data set filter behavior. [#4395](https://github.com/zowe/zowe-explorer-vscode/issues/4395)
+- Added `Created` and `Deleted` file change events for PDS members and USS resources that are added or removed on the mainframe outside of Zowe Explorer. [#4497](https://github.com/zowe/zowe-explorer-vscode/pull/4497)
+- Added a `Changed` event for the parent PDS or USS directory when one of its entries is created or deleted. [#4497](https://github.com/zowe/zowe-explorer-vscode/pull/4497)
 
 ### Bug fixes
 
+- Fixed an issue where the USS tree discarded its cached children on every listing, rebuilding each node on refresh and never clearing files that were removed on the mainframe. [#4497](https://github.com/zowe/zowe-explorer-vscode/pull/4497)
+- Fixed an issue where the data set file system provider kept stale PDS members in its cache after they were deleted on the mainframe. [#4497](https://github.com/zowe/zowe-explorer-vscode/pull/4497)
 - Fixed hover/tooltip inconsistencies in favorited search nodes where search criteria or path was displayed instead of the profile name. [#4011](https://github.com/zowe/zowe-explorer-vscode/issues/4011)
 - Fixed an issue where the tooltip for SSH profiles was incorrectly displaying the auth method or missing the username. [#4417](https://github.com/zowe/zowe-explorer-vscode/pull/4417)
 - Fixed an issue where using "Allocate Like" on a data set caused the tree nodes to disappear until the profile was collapsed and re-expanded. [#4444](https://github.com/zowe/zowe-explorer-vscode/issues/4444)
