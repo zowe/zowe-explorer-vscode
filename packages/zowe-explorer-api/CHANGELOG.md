@@ -6,6 +6,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added `notifyFileChanged` to `IZoweExplorerFileApi` so extenders can notify Zowe Explorer that a file was changed outside of the filesystem provider, causing VS Code to re-read the file. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
 - Added support for the `tsoAccount` and `tsoProc` z/OSMF profile properties, which are now passed as the `X-IBM-Request-Acctnum` and `X-IBM-Request-Proc` z/OSMF headers on data set operations that support them. [#4485] (https://github.com/zowe/zowe-explorer-vscode/pull/4485)
 - Added `encodingMap` to the `BaseProvider` class, exposing the encoding map for extenders that need to query or override the encoding for a given resource URI. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
 - Added `getFileApi` and `IZoweExplorerFileApi` to `Types.IApiRegisterClient`, exposing a `getEncodingForUri` function that extenders can use to retrieve the encoding ZE has determined for a resource URI. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
