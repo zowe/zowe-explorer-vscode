@@ -48,6 +48,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     private readonly EXPECTED_MEMBER_LENGTH = 2; // /DATA.SET/MEMBER
     private readonly MEMBER_URI_SEGMENTS = 3; // /PROFILE/DATA.SET/MEMBER
     private static _instance: DatasetFSProvider;
+    // Tracks PDSes that have already been listed at least once, even if the listing came back empty,
+    // so a later listing can still be diffed against the (empty) cache instead of being treated as the first one.
+    private readonly listedPdsEntries = new WeakSet<PdsEntry>();
     private constructor() {
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, this.onDidChangeFile);
@@ -371,9 +374,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const memberItems = members?.apiResponse?.items;
         // Only diff against a cache that was already populated by an earlier listing, and only when this
         // listing returned a member array - otherwise an initial or incomplete response would report
-        // every member as created or deleted.
-        const canDiffMembers = entry.entries.size > 0 && Array.isArray(memberItems);
+        // every member as created or deleted. A non-empty cache is enough on its own, since the tree can
+        // populate it without this method ever having listed the PDS itself.
+        const canDiffMembers = (entry.entries.size > 0 || this.listedPdsEntries.has(entry)) && Array.isArray(memberItems);
         const staleMemberNames = new Set(entry.entries.keys());
+        if (Array.isArray(memberItems)) {
+            this.listedPdsEntries.add(entry);
+        }
 
         for (const ds of memberItems || []) {
             const fullMemberName = `${ds.member as string}${pdsExtension ?? ""}`;

@@ -2289,10 +2289,7 @@ describe("DatasetFSProvider", () => {
             const events = await refresh(pds);
 
             expect(pds.entries.size).toBe(0);
-            expect(eventsOfType(events, vscode.FileChangeType.Deleted)).toEqual([
-                "/sestest/USER.DATA.PDS/MEMBER1",
-                "/sestest/USER.DATA.PDS/MEMBER2",
-            ]);
+            expect(eventsOfType(events, vscode.FileChangeType.Deleted)).toEqual(["/sestest/USER.DATA.PDS/MEMBER1", "/sestest/USER.DATA.PDS/MEMBER2"]);
             expect(eventsOfType(events, vscode.FileChangeType.Changed)).toEqual(["/sestest/USER.DATA.PDS"]);
         });
 
@@ -2302,6 +2299,18 @@ describe("DatasetFSProvider", () => {
 
             expect(await refresh(pds)).toEqual([]);
             expect([...pds.entries.keys()]).toEqual(["MEMBER1", "MEMBER2"]);
+        });
+
+        it("emits Created for a member that appeared in a PDS that was listed while empty", async () => {
+            const pds = cachedPds();
+            mockListing([]);
+            expect(await refresh(pds)).toEqual([]);
+
+            mockListing(["MEMBER1"]);
+            const events = await refresh(pds);
+
+            expect(eventsOfType(events, vscode.FileChangeType.Created)).toEqual(["/sestest/USER.DATA.PDS/MEMBER1"]);
+            expect(eventsOfType(events, vscode.FileChangeType.Changed)).toEqual(["/sestest/USER.DATA.PDS"]);
         });
     });
 
