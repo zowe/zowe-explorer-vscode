@@ -102,8 +102,8 @@ async function expectUnixCommandApiWithSshSession<T>(
             callback("test");
         }
     );
-    await apiInstance[name as string](sshobj, ...args, true, () => { });
-    await apiInstance[name as string](sshobj, ...args, false, () => { });
+    await apiInstance[name as string](sshobj, ...args, true, () => {});
+    await apiInstance[name as string](sshobj, ...args, false, () => {});
     expect(spy).toHaveBeenCalled();
 }
 async function expectApiWithSession<T>({ name, spy, args, transform }: ITestApi<T>, apiInstance: MainframeInteraction.ICommon): Promise<void> {
@@ -703,7 +703,7 @@ describe("ZosmfMvsApi", () => {
     it("passes tsoAccount and tsoProcedure from the profile to Create.dataSet as tso header options", async () => {
         const expectedAcct = "1234";
         const expectedProcedure = "MYPROC";
-        const expectedDsName = "SOME.DSNAME"
+        const expectedDsName = "SOME.DSNAME";
         const postStringSpy = vi.spyOn(ZosmfRestClient, "postExpectString").mockResolvedValue("OK");
 
         const createSpy = vi.spyOn(zosfiles.Create, "dataSet");
