@@ -19,9 +19,12 @@ import PersistentToolBar from "../PersistentToolBar/PersistentToolBar";
 import PersistentTableData from "./PersistentTableData";
 import PersistentDataGridHeaders from "./PersistentDataGridHeaders";
 import PersistentVSCodeAPI from "../../../PersistentVSCodeAPI";
+import * as l10n from "@vscode/l10n";
+
+type HistoryData = { [property: string]: string[] } & { groupLabel?: { key: string; source: "host" | "group" } };
 
 export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<string> }>): JSXInternal.Element {
-  const [data, setData] = useState<{ [type: string]: { [property: string]: string[] } }>({ ds: {}, uss: {}, jobs: {} });
+  const [data, setData] = useState<{ [type: string]: HistoryData }>({ ds: {}, uss: {}, jobs: {} });
   const [selection, setSelection] = useState<{ [type: string]: string }>({ [type]: "search" });
   const [persistentProp, setPersistentProp] = useState<string[]>([]);
   const [selectedItems, setSelectedItems] = useState({});
@@ -79,6 +82,8 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
     }
   }, [data, selection, type]);
 
+  const groupLabel = selection[type] === "search" ? data[type]?.groupLabel : undefined;
+
   if (type == "cmds") {
     return (
       <DataPanelContext.Provider value={{ type, selection, selectedItems: selectedItemsMemo }}>
@@ -92,6 +97,13 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
     <DataPanelContext.Provider value={{ type, selection, selectedItems: selectedItemsMemo }}>
       <VSCodePanelView id={panelId[type]} style={{ flexDirection: "column", minHeight: "100vh" }}>
         <PersistentToolBar handleChange={handleChange} />
+        {groupLabel && (
+          <p>
+            {groupLabel.source === "host"
+              ? l10n.t("Showing history grouped by host: {0}", groupLabel.key)
+              : l10n.t("Showing history grouped by: {0}", groupLabel.key)}
+          </p>
+        )}
         <VSCodeDataGrid>
           <PersistentDataGridHeaders />
           <PersistentTableData persistentProp={persistentProp} />

@@ -305,6 +305,12 @@
   "zowe.ds.templates": {
     "Zowe Explorer saved data set templates": ""
   },
+  "zowe.settings.historyGroupByHost": {
+    "Group data set, USS, and job filter search history by system instead of sharing one list across all profiles. Each profile's history group is its host, unless overridden by a `historyGroup` property set on the profile. Enabling this hides the unified search history you see when history is shared across all profiles.": ""
+  },
+  "zowe.settings.maxSearchHistory": {
+    "Maximum number of entries kept in filter search history. Applies per history group when `zowe.settings.historyGroupByHost` is enabled, and to the single shared history list otherwise.": ""
+  },
   "zowe.files.logsFolder.path": {
     "Path to Zowe Explorer logs folder": ""
   },
@@ -852,6 +858,7 @@
   "Added the capability for extenders to contribute new profile types to the Zowe schema during extender activation. <a>#2508</a>": "",
   "Added the onResourceChanged function to the ZoweExplorerApiRegister class to allow extenders to subscribe to any changes to Zowe resources (Data Sets, USS files/folders, Jobs, etc.). See the <a>FileSystemProvider wiki page</a> for more information on Zowe resources.": "",
   "Added the option for secure credential storage to be enable in Theia environment.": "",
+  "Added the zowe.settings.historyGroupByHost setting to group filter search history by host instead of sharing one list across all profiles, and the zowe.settings.maxSearchHistory setting to configure the maximum number of entries kept in filter search history. <a>#4477</a>": "",
   "Added two new options to download a single spool file from a Job in plain text or in binary format. <a>#2060</a>": "",
   "Added two new settings, zowe.ds.default.sort and zowe.jobs.default.sort, that allow you to change the default sorting order of datasets and jobs when you open them. <a>#3369</a>": "",
   "Added webview for editing persistent items on Zowe Explorer. <a>#2488</a>": "",
@@ -1542,6 +1549,7 @@
   "Hide Profile": "",
   "Hide profile name from tree view": "",
   "Hide secure field names": "",
+  "History grouping is enabled. Search history will be cleared for all groups, not just the one shown here.": "",
   "Hovering over a data set, USS, or jobs profile now displays detailed connection information.": "",
   "ID": "",
   "If searching more than 50 members, a prompt displays to confirm or cancel.": "",
@@ -1838,6 +1846,8 @@
   "Recalling a sequential data set no longer overwrites its contents.": "",
   "Recent": "",
   "Recent Filters": "",
+  "Recent Filters (grouped by host: {0})": "",
+  "Recent Filters (grouped by: {0})": "",
   "Recent Searches": "",
   "Record Format": "",
   "Record Length": "",
@@ -1995,6 +2005,8 @@
   "Several members may be favorited or unfavorited at once by doing a multi-selection.": "",
   "Show host and basePath values": "",
   "Showing attributes for {0}.": "",
+  "Showing history grouped by host: {0}": "",
+  "Showing history grouped by: {0}": "",
   "Size": "",
   "Smarter data set search filtering": "",
   "Solved issue with a conflicting keybinding for Edit History, changed keybinding to Ctrl+Alt+y for Windows and ⌘ Cmd+⌥ Opt+y for macOS. <a>#2543</a>": "",
