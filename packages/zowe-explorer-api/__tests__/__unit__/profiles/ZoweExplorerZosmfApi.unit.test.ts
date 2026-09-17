@@ -707,7 +707,7 @@ describe("ZosmfMvsApi", () => {
         const expectedProcedure = "MYPROC";
         const expectedDsName = "SOME.DSNAME";
         const postStringSpy = vi.spyOn(ZosmfRestClient, "postExpectString").mockResolvedValue("OK");
-
+        vi.spyOn(JSON, "parse").mockReset();   // todo leaking mocks from earlier tests?
         const createSpy = vi.spyOn(zosfiles.Create, "dataSet");
         createSpy.mockReset(); // todo leaking mocks from earlier tests?
         const profileWithTso: imperative.IProfileLoaded = {
