@@ -85,7 +85,7 @@ importers:
         version: 3.2.7(vitest@3.2.7)
       '@vscode/l10n-dev':
         specifier: ^0.0.35
-        version: 0.0.35
+        version: 0.0.35(supports-color@8.1.1)
       '@vscode/test-electron':
         specifier: ^1.6.2
         version: 1.6.2(supports-color@8.1.1)
@@ -142,7 +142,7 @@ importers:
         version: 2.2.1(mocha@10.8.2)(supports-color@8.1.1)
       mocha-multi-reporters:
         specifier: ^1.5.1
-        version: 1.5.1(mocha@10.8.2)
+        version: 1.5.1(mocha@10.8.2)(supports-color@8.1.1)
       node-loader:
         specifier: ^2.1.0
         version: 2.1.0(webpack@5.105.2)
@@ -198,8 +198,8 @@ importers:
         specifier: ^8.36.0
         version: 8.36.0
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.36.0
-        version: 8.36.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)
+        specifier: ^8.37.0
+        version: 8.37.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)
       '@zowe/zos-jobs-for-zowe-sdk':
         specifier: ^8.36.0
         version: 8.36.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)
@@ -322,8 +322,8 @@ importers:
         specifier: ^8.36.0
         version: 8.36.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.36.0
-        version: 8.36.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)
+        specifier: ^8.37.0
+        version: 8.37.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)
       '@zowe/zos-jobs-for-zowe-sdk':
         specifier: ^8.36.0
         version: 8.36.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)
@@ -371,8 +371,8 @@ importers:
   packages/zowe-explorer-ftp-extension:
     dependencies:
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.36.0
-        version: 8.36.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)
+        specifier: ^8.37.0
+        version: 8.37.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)
       '@zowe/zos-ftp-for-zowe-cli':
         specifier: ^3.0.0
         version: 3.0.0(@zowe/imperative@8.36.0)
@@ -464,8 +464,8 @@ importers:
         specifier: ^1.15.5
         version: 1.15.5
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.36.0
-        version: 8.36.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)
+        specifier: ^8.37.0
+        version: 8.37.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)
       '@zowe/zos-jobs-for-zowe-sdk':
         specifier: ^8.36.0
         version: 8.36.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)
@@ -2328,6 +2328,13 @@ packages:
 
   '@zowe/zos-files-for-zowe-sdk@8.36.0':
     resolution: {integrity: sha512-ksYDaAiumxoZKQ2l1dKZDWKZG0k0fzLEPV2mA6TWzDe60wZYhBj1vwdpt/MUSrYN+jSTyKYNtdkIRY9/vYD84w==}
+    engines: {node: '>=20.9.0'}
+    peerDependencies:
+      '@zowe/core-for-zowe-sdk': ^8.0.0
+      '@zowe/imperative': ^8.0.0
+
+  '@zowe/zos-files-for-zowe-sdk@8.37.0':
+    resolution: {integrity: sha512-QP11F3vrYximAx8PR33mjFxD0kRMzvFpujV/DiIEYCEhNYirM7qn/1fhE/HLT6UuAhuaz1k6iwddTKhtWiB/Rg==}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
@@ -8976,7 +8983,7 @@ snapshots:
 
   '@vscode/codicons@0.0.36': {}
 
-  '@vscode/l10n-dev@0.0.35':
+  '@vscode/l10n-dev@0.0.35(supports-color@8.1.1)':
     dependencies:
       '@azure-rest/ai-translation-text': 1.0.0-beta.1
       debug: 4.3.4(supports-color@8.1.1)
@@ -9571,6 +9578,13 @@ snapshots:
       '@zowe/imperative': 8.36.0
 
   '@zowe/zos-files-for-zowe-sdk@8.36.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)':
+    dependencies:
+      '@zowe/core-for-zowe-sdk': 8.36.0(@zowe/imperative@8.36.0)
+      '@zowe/imperative': 8.36.0
+      lodash: 4.18.1
+      minimatch: 10.2.6
+
+  '@zowe/zos-files-for-zowe-sdk@8.37.0(@zowe/core-for-zowe-sdk@8.36.0(@zowe/imperative@8.36.0))(@zowe/imperative@8.36.0)':
     dependencies:
       '@zowe/core-for-zowe-sdk': 8.36.0(@zowe/imperative@8.36.0)
       '@zowe/imperative': 8.36.0
@@ -12838,7 +12852,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  mocha-multi-reporters@1.5.1(mocha@10.8.2):
+  mocha-multi-reporters@1.5.1(mocha@10.8.2)(supports-color@8.1.1):
     dependencies:
       debug: 4.3.4(supports-color@8.1.1)
       lodash: 4.18.1
