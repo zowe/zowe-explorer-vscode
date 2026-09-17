@@ -179,7 +179,7 @@ export class AuthHandler {
         mutex.release();
         if (refreshResources) {
             // TODO: Log errors using ZoweLogger once available in ZE API
-            // refresh any open, unsaved editor tabs that use this profile
+            // refresh any open, saved editor tabs that use this profile
             FileManagement.reloadTabsForProfile(profileName)
                 // eslint-disable-next-line no-console
                 .catch((err) => console.error(errorMessage(err)));
