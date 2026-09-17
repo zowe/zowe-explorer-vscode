@@ -9,6 +9,7 @@
  *
  */
 
+import * as vscode from "vscode";
 import { PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import { ZoweLocalStorage } from "../../../src/tools/ZoweLocalStorage";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
@@ -127,6 +128,24 @@ describe("PersistentFilters Unit Test", () => {
             pf["mSearchHistory"] = ["preexisting"];
 
             expect(pf.getSearchHistory({ profile: { host: "hostA" } } as any)).toEqual(["preexisting"]);
+            settingsSpy.mockRestore();
+        });
+
+        it("should label the separator with the host when grouping by host", () => {
+            const settingsSpy = vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string, defaultValue?: any) => {
+                if (key === Constants.SETTINGS_HISTORY_GROUP_BY_HOST) {
+                    return true;
+                }
+                return defaultValue;
+            });
+            const pf: ZowePersistentFilters = new ZowePersistentFilters(PersistenceSchemaEnum.USS, 5, 5);
+            const profileA = { profile: { host: "hostA" } } as any;
+            pf.addSearchHistory("fromHostA", profileA);
+
+            expect(pf.getSearchHistorySeparator(profileA)).toEqual({
+                kind: vscode.QuickPickItemKind.Separator,
+                label: "Recent Filters (grouped by host: hosta)",
+            });
             settingsSpy.mockRestore();
         });
     });
