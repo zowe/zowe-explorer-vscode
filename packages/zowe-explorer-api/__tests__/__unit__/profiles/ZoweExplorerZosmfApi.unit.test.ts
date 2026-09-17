@@ -727,6 +727,7 @@ describe("ZosmfMvsApi", () => {
             expect.anything(),
             expect.stringContaining(expectedDsName),
             expect.arrayContaining([{ "X-IBM-Request-Acctnum": expectedAcct }, { "X-IBM-Request-Proc": expectedProcedure }]),
+            expect.anything(),
         );
     });
 
