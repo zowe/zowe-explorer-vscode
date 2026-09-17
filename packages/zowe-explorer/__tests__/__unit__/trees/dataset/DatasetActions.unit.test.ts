@@ -7092,7 +7092,7 @@ describe("DatasetActions - downloading functions", () => {
             expect(result.downloadedPath).toMatch(/member1\.txt$/);
         });
 
-        it("should handle member with preserve case and generate directory options 1", async () => {
+        it("should handle member with preserve case and generate directory options - typical DS & member name", async () => {
             const optionsWithCase = {
                 ...defaultDownloadOptions,
                 uppercaseNames: true,
@@ -7122,7 +7122,7 @@ describe("DatasetActions - downloading functions", () => {
             expect(result.downloadedPath).toMatch(/Member1\.txt$/);
         });
 
-        it("should handle member with preserve case and generate directory options 1", async () => {
+        it("should handle member with preserve case and generate directory options - member name with dot-dot", async () => {
             const optionsWithCase = {
                 ...defaultDownloadOptions,
                 uppercaseNames: true,

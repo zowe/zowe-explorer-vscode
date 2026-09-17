@@ -2687,7 +2687,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             );
         });
 
-        it("should download a USS file with directory structure generation 1", async () => {
+        it("should download a USS file with directory structure generation - absolute path", async () => {
             const mockNode = createMockNode();
             const mockDownloadOptions = {
                 selectedPath: vscode.Uri.file("/test/download/path"),
@@ -2716,7 +2716,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             );
         });
 
-        it("should download a USS file with directory structure generation 2", async () => {
+        it("should download a USS file with directory structure generation - backtracking in path segment", async () => {
             const mockNode = createMockNode();
             mockNode.fullPath = "/u/test/../file.txt";
             const mockDownloadOptions = {
