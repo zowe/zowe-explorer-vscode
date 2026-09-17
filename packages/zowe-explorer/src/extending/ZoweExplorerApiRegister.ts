@@ -426,6 +426,20 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
     }
 
     /**
+     * Invalidates the cached entry for the given URI and fires a `FileChangeType.Changed`
+     * event so VS Code re-reads the file from the provider.
+     * @param uri the URI of the resource that changed
+     */
+    public static doNotifyFileChanged(uri: vscode.Uri): void {
+        ZoweLogger.info(`[ZoweExplorerApiRegister] notifyFileChanged called for ${uri.toString()}`);
+        const provider = ZoweExplorerApiRegister.getInstance().#fsProviders.get(uri.scheme as ZoweScheme);
+        if (provider) {
+            provider.invalidateCache(uri);
+            provider.fireSoon({ type: vscode.FileChangeType.Changed, uri });
+        }
+    }
+
+    /**
      * Gets the helper API for mainframe file-system and cache queries.
      * @returns the Zowe Explorer file API instance
      */
@@ -445,14 +459,7 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
                     return provider.encodingMap[uri.path];
                 }
             },
-            notifyFileChanged: (uri: vscode.Uri): void => {
-                ZoweLogger.info(`[ZoweExplorerApiRegister] notifyFileChanged called for ${uri.toString()}`);
-                const provider = this.#fsProviders.get(uri.scheme as ZoweScheme);
-                if (provider) {
-                    provider.invalidateCache(uri);
-                    provider.fireSoon({ type: vscode.FileChangeType.Changed, uri });
-                }
-            },
+            notifyFileChanged: (uri: vscode.Uri): void => ZoweExplorerApiRegister.doNotifyFileChanged(uri),
         };
         return this.#fileApi;
     }
