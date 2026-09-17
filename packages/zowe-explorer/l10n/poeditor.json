@@ -1287,7 +1287,7 @@
   "Fixed an issue where creating a new file in a Zowe Explorer virtual workspace would silently fail, causing write operations to fail on that file as a result. <a>#4426</a>": "",
   "Fixed an issue where data set migration status was incorrectly handled when the migr attribute was not present in the API response. <a>#3471</a>": "",
   "Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. <a>#3294</a>": "",
-  "Fixed an issue where data sets and USS files might honor illegal characters in their respective names. <a>#4501</a>": "",
+  "Fixed an issue where data sets and USS files honored illegal characters in their respective names. <a>#4501</a>": "",
   "Fixed an issue where data sets were not requested with attributes if the profile type's API did not implement the dataSetsMatchingPattern function. <a>#3578</a>": "",
   "Fixed an issue where deleting an open PDS that is empty resulted in an error. <a>#3908</a>": "",
   "Fixed an issue where dragging and dropping a USS file caused an unhandled error while finalizing the drop operation. <a>#3613</a>": "",
