@@ -677,7 +677,7 @@ describe("ZosmfMvsApi", () => {
 
     it("passes tsoAccount and tsoProcedure from the profile to List.dataSet as tso header options", async () => {
         const listSpy = vi.spyOn(zosfiles.List, "dataSet");
-        listSpy.mockReset(); // todo leaking mocks from earlier tests? 
+        listSpy.mockReset(); // todo leaking mocks from earlier tests?
         const getJSONSpy = vi.spyOn(ZosmfRestClient, "getExpectJSON").mockResolvedValue({ items: [{ dsname: "SOME.FILTER.RESULT" }] });
         const expectedAcct = "1234";
         const expectedProcedure = "MYPROC";
@@ -695,9 +695,11 @@ describe("ZosmfMvsApi", () => {
         );
 
         // ensure that the tso settings make it all the way through as headers
-        expect(getJSONSpy).toHaveBeenCalledWith(expect.anything(), expect.anything(), [
-            expect.objectContaining({ "X-IBM-Request-Acctnum": expectedAcct, "X-IBM-Request-Proc": expectedProcedure }),
-        ]);
+        expect(getJSONSpy).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.anything(),
+            expect.arrayContaining([{ "X-IBM-Request-Acctnum": expectedAcct }, { "X-IBM-Request-Proc": expectedProcedure }])
+        );
     });
 
     it("passes tsoAccount and tsoProcedure from the profile to Create.dataSet as tso header options", async () => {
@@ -707,7 +709,7 @@ describe("ZosmfMvsApi", () => {
         const postStringSpy = vi.spyOn(ZosmfRestClient, "postExpectString").mockResolvedValue("OK");
 
         const createSpy = vi.spyOn(zosfiles.Create, "dataSet");
-        createSpy.mockReset(); // todo leaking mocks from earlier tests? 
+        createSpy.mockReset(); // todo leaking mocks from earlier tests?
         const profileWithTso: imperative.IProfileLoaded = {
             ...loadedProfile,
             profile: { ...fakeProfile, tsoAccount: expectedAcct, tsoProcedure: expectedProcedure },
@@ -721,9 +723,11 @@ describe("ZosmfMvsApi", () => {
             expect.objectContaining({ tsoAccount: expectedAcct, tsoProcedure: expectedProcedure })
         );
 
-        expect(postStringSpy).toHaveBeenCalledWith(expect.anything(), expect.stringContaining(expectedDsName), [
-            expect.objectContaining({ "X-IBM-Request-Acctnum": expectedAcct, "X-IBM-Request-Proc": expectedProcedure }),
-        ]);
+        expect(postStringSpy).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.stringContaining(expectedDsName),
+            expect.arrayContaining([{ "X-IBM-Request-Acctnum": expectedAcct }, { "X-IBM-Request-Proc": expectedProcedure }]),
+        );
     });
 
     describe("deleteDataSet with undefined options", () => {
