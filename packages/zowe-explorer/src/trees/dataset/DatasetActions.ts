@@ -468,9 +468,9 @@ export class DatasetActions {
 
         const theFilter = datasetProvider.createFilterString(newDSName, currSession);
         currSession.pattern = theFilter.toUpperCase();
-        datasetProvider.refresh();
+        currSession.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         currSession.dirty = true;
-        datasetProvider.refreshElement(currSession);
+        datasetProvider.refresh();
         const newNode = (await currSession.getChildren()).find((child) => child.label.toString() === newDSName.toUpperCase());
         await datasetProvider.getTreeView().reveal(currSession, { select: true, focus: true });
         datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
