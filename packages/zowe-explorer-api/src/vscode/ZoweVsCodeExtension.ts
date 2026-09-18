@@ -187,7 +187,11 @@ export class ZoweVsCodeExtension {
         const serviceProfile = await this.getServiceProfile(opts);
         const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
         if (baseProfile == null) {
-            Gui.errorMessage(`Login failed: No base profile found to store SSO token for profile "${serviceProfile.name}"`);
+            Gui.errorMessage(
+                `Login failed: No base or parent profile found to store SSO token for profile "${serviceProfile.name}". ` +
+                    "To fix this, either convert this profile to a nested profile under a parent profile, " +
+                    "or add a default base profile to your team configuration."
+            );
             return false;
         }
         const primaryProfile = opts.preferBaseToken ? baseProfile : serviceProfile;
@@ -349,7 +353,11 @@ export class ZoweVsCodeExtension {
         const serviceProfile = await this.getServiceProfile(opts);
         const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
         if (!baseProfile) {
-            Gui.errorMessage(`Logout failed: No base profile found to remove SSO token for profile "${serviceProfile.name}"`);
+            Gui.errorMessage(
+                `Logout failed: No base or parent profile found to remove SSO token for profile "${serviceProfile.name}". ` +
+                    "To fix this, either convert this profile to a nested profile under a parent profile, " +
+                    "or add a default base profile to your team configuration."
+            );
             return false;
         }
         const primaryProfile = opts.preferBaseToken ? baseProfile : serviceProfile;
