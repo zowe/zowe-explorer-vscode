@@ -120,7 +120,10 @@ export class ProfilesUtils {
             ProfilesUtils.PROFILE_SECURITY = credentialManager ?? Constants.ZOWE_CLI_SCM;
             ZoweLogger.info(vscode.l10n.t(`Zowe Explorer profiles are being set as secured.`));
         }
-        if (currentProfileSecurity !== ProfilesUtils.PROFILE_SECURITY) {
+        // `PROFILE_SECURITY` is `false` when profiles are unsecured, which is an internal marker rather than a
+        // credential manager name. `recordCredMgrInConfig` only accepts known credential manager display names and
+        // throws for anything else, so skip it when there is no credential manager to record.
+        if (currentProfileSecurity !== ProfilesUtils.PROFILE_SECURITY && typeof ProfilesUtils.PROFILE_SECURITY === "string") {
             imperative.CredentialManagerOverride.recordCredMgrInConfig(ProfilesUtils.PROFILE_SECURITY);
         }
     }
@@ -201,7 +204,10 @@ export class ProfilesUtils {
     public static checkDefaultCredentialManager(): boolean {
         try {
             ProfilesCache.requireKeyring();
-        } catch (_error) {
+        } catch (error) {
+            // Log the underlying error so the actual cause (missing prebuild, dlopen failure,
+            // unavailable platform API, ...) is recoverable from the logs instead of being discarded.
+            ZoweLogger.error(`Failed to load the default Zowe credentials manager: ${error instanceof Error ? error.stack : String(error)}`);
             ZoweLogger.info(
                 vscode.l10n.t(
                     "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions."
