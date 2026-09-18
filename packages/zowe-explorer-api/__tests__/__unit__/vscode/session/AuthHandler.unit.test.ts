@@ -85,6 +85,80 @@ describe("AuthHandler", () => {
         });
     });
 
+    describe("waitForAuthFlow", () => {
+        beforeEach(() => {
+            (AuthHandler as any).authCancelledProfiles.clear();
+            (AuthHandler as any).authFlows.clear();
+            (AuthHandler as any).profileLocks.clear();
+        });
+
+        it("returns immediately if the profile is not locked and there is no active auth flow", async () => {
+            const waitForUnlockSpy = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
+
+            await expect(AuthHandler.waitForAuthFlow(TEST_PROFILE_NAME)).resolves.toBeUndefined();
+
+            expect(waitForUnlockSpy).toHaveBeenCalledTimes(1);
+            expect(waitForUnlockSpy).toHaveBeenCalledWith(TEST_PROFILE_NAME);
+        });
+
+        it("throws AuthCancelledError if authentication was cancelled while waiting", async () => {
+            vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
+            AuthHandler.setAuthCancelled(TEST_PROFILE_NAME, true);
+
+            await expect(AuthHandler.waitForAuthFlow(TEST_PROFILE_NAME)).rejects.toMatchObject({
+                profileName: TEST_PROFILE_NAME,
+                message: "Authentication was cancelled by the user",
+            });
+        });
+
+        it("awaits the active auth flow before returning", async () => {
+            const waitForUnlockSpy = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
+            let resolveFlow: (value: boolean) => void;
+            const flow = new Promise<boolean>((resolve) => {
+                resolveFlow = resolve;
+            });
+            (AuthHandler as any).authFlows.set(TEST_PROFILE_NAME, flow);
+
+            const waitPromise = AuthHandler.waitForAuthFlow(TEST_PROFILE_NAME);
+
+            // Give the pending flow a chance to be awaited before resolving it.
+            await Promise.resolve();
+            await Promise.resolve();
+            expect(waitForUnlockSpy).toHaveBeenCalledTimes(1);
+
+            // Simulate getOrCreateAuthFlow's cleanup once the flow settles.
+            (AuthHandler as any).authFlows.delete(TEST_PROFILE_NAME);
+            resolveFlow(true);
+
+            await expect(waitPromise).resolves.toBeUndefined();
+            expect(waitForUnlockSpy).toHaveBeenCalledTimes(2);
+        });
+
+        it("keeps waiting on unlock while the profile remains locked with no active flow", async () => {
+            const waitForUnlockSpy = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
+            const isProfileLockedSpy = vi
+                .spyOn(AuthHandler, "isProfileLocked")
+                .mockReturnValueOnce(true)
+                .mockReturnValueOnce(true)
+                .mockReturnValueOnce(false);
+
+            await expect(AuthHandler.waitForAuthFlow(TEST_PROFILE_NAME)).resolves.toBeUndefined();
+
+            expect(waitForUnlockSpy).toHaveBeenCalledTimes(3);
+            expect(isProfileLockedSpy).toHaveBeenCalledTimes(3);
+        });
+
+        it("stops after maxIterations attempts without throwing if the profile is still locked", async () => {
+            const waitForUnlockSpy = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
+            const isProfileLockedSpy = vi.spyOn(AuthHandler, "isProfileLocked").mockReturnValueOnce(true).mockReturnValueOnce(true);
+
+            await expect(AuthHandler.waitForAuthFlow(TEST_PROFILE_NAME, 2)).resolves.toBeUndefined();
+
+            expect(waitForUnlockSpy).toHaveBeenCalledTimes(2);
+            expect(isProfileLockedSpy).toHaveBeenCalledTimes(2);
+        });
+    });
+
     describe("unlockAllProfiles", () => {
         it("unlocks all profiles in the AuthHandler.profileLocks map", () => {
             const mutexAuthPrompt = new Mutex();
@@ -387,11 +461,11 @@ describe("AuthHandler", () => {
         });
 
         it("refreshes resources if refreshResources parameter is true", async () => {
-            const reloadActiveEditorMock = vi.spyOn(FileManagement, "reloadActiveEditorForProfile").mockResolvedValueOnce(undefined);
+            const reloadTabsMock = vi.spyOn(FileManagement, "reloadTabsForProfile").mockResolvedValueOnce(undefined);
             const reloadWorkspaceMock = vi.spyOn(FileManagement, "reloadWorkspacesForProfile").mockResolvedValueOnce(undefined);
             await AuthHandler.lockProfile(TEST_PROFILE_NAME);
             AuthHandler.unlockProfile(TEST_PROFILE_NAME, true);
-            expect(reloadActiveEditorMock).toHaveBeenCalledWith(TEST_PROFILE_NAME);
+            expect(reloadTabsMock).toHaveBeenCalledWith(TEST_PROFILE_NAME);
             expect(reloadWorkspaceMock).toHaveBeenCalledWith(TEST_PROFILE_NAME);
         });
     });
@@ -430,7 +504,7 @@ describe("AuthHandler", () => {
             expect(lockProfileMock).toHaveBeenCalledTimes(1);
 
             resolveFlow?.(true);
-            await expect(flowOne).resolves.toBeUndefined();
+            await expect(flowOne).resolves.toBe(true);
             expect(AuthHandler.getActiveAuthFlow(TEST_PROFILE_NAME)).toBeUndefined();
             lockProfileMock.mockRestore();
         });
@@ -448,10 +522,10 @@ describe("AuthHandler", () => {
         it("starts a new flow after the previous one resolves", async () => {
             const lockProfileMock = vi.spyOn(AuthHandler, "lockProfile").mockClear().mockResolvedValueOnce(true).mockResolvedValueOnce(true);
 
-            await expect(AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts)).resolves.toBeUndefined();
+            await expect(AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts)).resolves.toBe(true);
             expect(AuthHandler.getActiveAuthFlow(TEST_PROFILE_NAME)).toBeUndefined();
 
-            await expect(AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts)).resolves.toBeUndefined();
+            await expect(AuthHandler.getOrCreateAuthFlow(TEST_PROFILE_NAME, authOpts)).resolves.toBe(true);
             expect(lockProfileMock).toHaveBeenCalledTimes(2);
             lockProfileMock.mockRestore();
         });

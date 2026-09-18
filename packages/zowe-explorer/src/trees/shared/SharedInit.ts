@@ -627,10 +627,7 @@ export class SharedInit {
             const uriInfo: UriFsInfo = uriMap[folder.uri.path];
             const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
             try {
-                if (
-                    ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
-                    (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
-                ) {
+                if (ProfilesUtils.hasNoCredentials(session.ISession, uriInfo.profile)) {
                     continue;
                 }
                 readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri));

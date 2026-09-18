@@ -9,9 +9,10 @@
  *
  */
 
-import { FileSystemError, FileType, Uri, window, workspace } from "vscode";
+import { FileSystemError, FileType, TabInputText, Uri, window, workspace } from "vscode";
 import { FileManagement } from "../../../src/utils/FileManagement";
 import { IFileSystemEntry, ZoweScheme } from "../../../src";
+import { MockedProperty } from "../../../__mocks__/mockUtils";
 
 describe("permStringToOctal", () => {
     it("converts drwxrwxrwx to 777", () => {
@@ -107,5 +108,108 @@ describe("reloadWorkspacesForProfile", () => {
         expect(statMock).toHaveBeenCalledWith(folderUri.with({ query: "fetch=true" }));
         expect(consoleErrorMock).toHaveBeenCalledWith("reloadWorkspacesForProfile:", "file not found");
         workspaceFoldersMock.mockRestore();
+    });
+});
+
+describe("reloadTabsForProfile", () => {
+    function buildFakeFsEntry(path: string): IFileSystemEntry {
+        return {
+            name: "aFile.txt",
+            wasAccessed: true,
+            type: FileType.File,
+            metadata: {
+                path,
+                profile: {
+                    name: "sestest",
+                    message: "",
+                    type: "zosmf",
+                    failNotFound: true,
+                },
+            },
+            ctime: Date.now() - 10,
+            mtime: Date.now(),
+            size: 123,
+        };
+    }
+
+    it("reloads a non-dirty tab that belongs to the given profile", async () => {
+        const fileUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFile.txt" });
+        const tab = { input: new TabInputText(fileUri), isDirty: false };
+        const tabGroupsMock = new MockedProperty(window.tabGroups, "all", undefined, [{ tabs: [tab] }]);
+
+        const fakeFsEntry = buildFakeFsEntry("/sestest/aFile.txt");
+        const statMock = vi.spyOn(workspace.fs, "stat").mockResolvedValueOnce(fakeFsEntry);
+        const readFileMock = vi.spyOn(workspace.fs, "readFile").mockImplementationOnce((): Promise<Uint8Array> => {
+            // wasAccessed flag should be false after reassigning in reloadTabsForProfile
+            expect(fakeFsEntry.wasAccessed).toBe(false);
+            return Promise.resolve(new Uint8Array([1, 2, 3]));
+        });
+
+        await FileManagement.reloadTabsForProfile("sestest");
+
+        expect(statMock).toHaveBeenCalledWith(fileUri);
+        expect(readFileMock).toHaveBeenCalledWith(fileUri);
+        tabGroupsMock[Symbol.dispose]();
+    });
+
+    it("skips dirty tabs", async () => {
+        const fileUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFile.txt" });
+        const tab = { input: new TabInputText(fileUri), isDirty: true };
+        const tabGroupsMock = new MockedProperty(window.tabGroups, "all", undefined, [{ tabs: [tab] }]);
+        const statMock = vi.spyOn(workspace.fs, "stat");
+
+        await FileManagement.reloadTabsForProfile("sestest");
+
+        expect(statMock).not.toHaveBeenCalled();
+        tabGroupsMock[Symbol.dispose]();
+    });
+
+    it("skips tabs that belong to a different profile", async () => {
+        const fileUri = Uri.from({ scheme: ZoweScheme.USS, path: "/otherprofile/aFile.txt" });
+        const tab = { input: new TabInputText(fileUri), isDirty: false };
+        const tabGroupsMock = new MockedProperty(window.tabGroups, "all", undefined, [{ tabs: [tab] }]);
+        const statMock = vi.spyOn(workspace.fs, "stat");
+
+        await FileManagement.reloadTabsForProfile("sestest");
+
+        expect(statMock).not.toHaveBeenCalled();
+        tabGroupsMock[Symbol.dispose]();
+    });
+
+    it("skips tabs with a non-Zowe scheme", async () => {
+        const fileUri = Uri.from({ scheme: "file", path: "/sestest/aFile.txt" });
+        const tab = { input: new TabInputText(fileUri), isDirty: false };
+        const tabGroupsMock = new MockedProperty(window.tabGroups, "all", undefined, [{ tabs: [tab] }]);
+        const statMock = vi.spyOn(workspace.fs, "stat");
+
+        await FileManagement.reloadTabsForProfile("sestest");
+
+        expect(statMock).not.toHaveBeenCalled();
+        tabGroupsMock[Symbol.dispose]();
+    });
+
+    it("skips tabs whose input is not a text tab", async () => {
+        const tab = { input: { notebookType: "jupyter-notebook" }, isDirty: false };
+        const tabGroupsMock = new MockedProperty(window.tabGroups, "all", undefined, [{ tabs: [tab] }]);
+        const statMock = vi.spyOn(workspace.fs, "stat");
+
+        await FileManagement.reloadTabsForProfile("sestest");
+
+        expect(statMock).not.toHaveBeenCalled();
+        tabGroupsMock[Symbol.dispose]();
+    });
+
+    it("continues without throwing if stat or readFile fails for a tab", async () => {
+        const fileUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/aFile.txt" });
+        const tab = { input: new TabInputText(fileUri), isDirty: false };
+        const tabGroupsMock = new MockedProperty(window.tabGroups, "all", undefined, [{ tabs: [tab] }]);
+        const statMock = vi.spyOn(workspace.fs, "stat").mockRejectedValueOnce(new Error("could not stat file"));
+        const readFileMock = vi.spyOn(workspace.fs, "readFile");
+
+        await expect(FileManagement.reloadTabsForProfile("sestest")).resolves.not.toThrow();
+
+        expect(statMock).toHaveBeenCalledWith(fileUri);
+        expect(readFileMock).not.toHaveBeenCalled();
+        tabGroupsMock[Symbol.dispose]();
     });
 });

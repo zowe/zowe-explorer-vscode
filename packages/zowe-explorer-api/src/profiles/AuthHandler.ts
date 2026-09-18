@@ -185,6 +185,10 @@ export class AuthHandler {
         return getAuthHandlerImpl().waitForUnlock(profile);
     }
 
+    public static async waitForAuthFlow(profile: ProfileLike, maxIterations: number = 3): Promise<void> {
+        return getAuthHandlerImpl().waitForAuthFlow(profile, maxIterations);
+    }
+
     public static unlockAllProfiles(): void {
         return getAuthHandlerImpl().unlockAllProfiles();
     }
@@ -193,11 +197,11 @@ export class AuthHandler {
         return getAuthHandlerImpl().isProfileLocked(profile);
     }
 
-    public static getActiveAuthFlow(profile: ProfileLike): Promise<void> | undefined {
+    public static getActiveAuthFlow(profile: ProfileLike): Promise<boolean> | undefined {
         return getAuthHandlerImpl().getActiveAuthFlow(profile);
     }
 
-    public static getOrCreateAuthFlow(profile: ProfileLike, authOpts: AuthPromptParams): Promise<void> {
+    public static getOrCreateAuthFlow(profile: ProfileLike, authOpts: AuthPromptParams): Promise<boolean> {
         return getAuthHandlerImpl().getOrCreateAuthFlow(profile, authOpts);
     }
 }
