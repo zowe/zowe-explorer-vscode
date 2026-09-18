@@ -20,6 +20,7 @@ import * as crypto from "crypto";
 import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
+import * as secretsSdkModule from "@zowe/secrets-for-zowe-sdk";
 
 vi.mock("crypto", async () => ({
     ...(await vi.importActual<typeof import("crypto")>("crypto")),
@@ -316,6 +317,20 @@ describe("ProfilesCache", () => {
         const keyring = ProfilesCache.requireKeyring();
         expect(keyring).toBeDefined();
         expect(Object.keys(keyring).length).toBe(6);
+    });
+
+    it("requireKeyring throws if the Secrets SDK does not export a keyring", () => {
+        // Bundlers keep a module that threw while loading in their require cache with empty exports, so a later
+        // require resolves to `undefined` instead of re-throwing. Callers detect an unavailable credential manager by
+        // catching, so a nullish keyring has to surface as an error rather than be returned.
+        const secretsSdk = secretsSdkModule as { keyring?: unknown };
+        const realKeyring = secretsSdk.keyring;
+        delete secretsSdk.keyring;
+        try {
+            expect(() => ProfilesCache.requireKeyring()).toThrow(/did not export a keyring/);
+        } finally {
+            secretsSdk.keyring = realKeyring;
+        }
     });
 
     it("addToConfigArray should set the profileTypeConfigurations array (deprecated value test)", () => {
