@@ -18,6 +18,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Enhanced data set member download to allow multiple members - including across unique partitioned data sets - to be selected and downloaded in the same action. [#4274](https://github.com/zowe/zowe-explorer-vscode/issues/4274)
 - Replaced the comparison of checksums of the backend SSH server `zowex` with comparing version numbers when checking if the remote server version is outdated. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
 - Added a new "Export Redacted Configuration Files" command to export team configuration files with sensitive values redacted, for sharing with others when troubleshooting. [#4432](https://github.com/zowe/zowe-explorer-vscode/pull/4432)
 - Added functionality to automatically detect the backend SSH server on the user's `$PATH` on USS, and use it by default if no serverPath exists in your configuration. Also updated the plug-in to avoid deploying the SSH server binary to directories to which the user does not have write access. [#4367](https://github.com/zowe/zowe-explorer-vscode/pull/4367)
@@ -74,12 +75,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where renaming a sequential data set with an extension suffix like `.jcl` would fail. [#4326](https://github.com/zowe/zowe-explorer-vscode/pull/4326)
 - Fixed an issue where member filtering on data sets with qualifier parts with fewer than three characters were ignoring the member filter and returning all members. [#4275](https://github.com/zowe/zowe-explorer-vscode/issues/4275)
 - Fixed an issue where opening a highlighted PDS name present within the job spool files using the **Open selected data set** option showed an unnecessary warning message even when the PDS was successfully filtered and displayed in the tree. [#4230](https://github.com/zowe/zowe-explorer-vscode/issues/4230)
-
-## `3.5.0`
-
-### New features and enhancements
-
-- Enhanced data set member download to allow multiple members - including across unique partitioned data sets - to be selected and downloaded in the same action. [#4274](https://github.com/zowe/zowe-explorer-vscode/issues/4274)
 
 ## `3.5.0`
 
