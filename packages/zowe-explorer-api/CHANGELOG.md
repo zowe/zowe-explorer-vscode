@@ -6,16 +6,23 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Added support for the `tsoAccount` and `tsoProc` z/OSMF profile properties, which are now passed as the `X-IBM-Request-Acctnum` and `X-IBM-Request-Proc` z/OSMF headers on data set operations that support them. [#4485] (https://github.com/zowe/zowe-explorer-vscode/pull/4485)
-- Added `encodingMap` to the `BaseProvider` class, exposing the encoding map for extenders that need to query or override the encoding for a given resource URI. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
-- Added `getFileApi` and `IZoweExplorerFileApi` to `Types.IApiRegisterClient`, exposing a `getEncodingForUri` function that extenders can use to retrieve the encoding ZE has determined for a resource URI. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
-- Added support for resolving data set aliases when using SSH profiles in the `SshMvsApi` class. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
+- Added support for the `tsoAccount` and `tsoProcedure` z/OSMF profile properties, which are now passed as the `X-IBM-Request-Acctnum` and `X-IBM-Request-Proc` z/OSMF headers on data set operations that support them. [#4485] (https://github.com/zowe/zowe-explorer-vscode/pull/4485)
 - Added optional `ssoLogin` and `ssoLogout` functions to the `IApiExplorerExtender` interface to expose SSO login and logout capabilities to Zowe Explorer extenders. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
-- Added an optional `resolveAlias` function to the `MainframeInteraction.IMvs` interface, initially only implemented by the `ZoweExplorerZosmf` class. [#4438](https://github.com/zowe/zowe-explorer-vscode/pull/4438)
+
+### Bug fixes
+
+## `3.6.0`
+
+### New features and enhancements
+
 - Added `handleError` and `errorMessage` utility functions to eliminate repetitive `if (err instanceof Error)` patterns across the codebase. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
 - Added a function `isEnabledInSettings` to the `FeatureFlags` class, which checks VS Code settings to see if a given Zowe Explorer feature ID is enabled. [#4242](https://github.com/zowe/zowe-explorer-vscode/issues/4242)
 - Added a function `trimExtension` in the `FsDatasetsUtils` class for stripping extension suffix off of a data set name. [#4326](https://github.com/zowe/zowe-explorer-vscode/pull/4326)
 - Added a `trackRows` method to the `Table.View` class for registering rows that were delivered to the webview outside of the standard update flow. [#4416](https://github.com/zowe/zowe-explorer-vscode/pull/4416)
+- Added an optional `resolveAlias` function to the `MainframeInteraction.IMvs` interface, initially only implemented by the `ZoweExplorerZosmf` class. [#4438](https://github.com/zowe/zowe-explorer-vscode/pull/4438)
+- Added `encodingMap` to the `BaseProvider` class, exposing the encoding map for extenders that need to query or override the encoding for a given resource URI. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
+- Added `getFileApi` and `IZoweExplorerFileApi` to `Types.IApiRegisterClient`, exposing a `getEncodingForUri` function that extenders can use to retrieve the encoding ZE has determined for a resource URI. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
+- Added support for resolving data set aliases when using SSH profiles in the `SshMvsApi` class. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
 
 ### Bug fixes
 
