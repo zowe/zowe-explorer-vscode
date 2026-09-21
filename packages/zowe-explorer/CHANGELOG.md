@@ -27,6 +27,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where a data set or USS file would fail to open with a "The editor could not be opened due to an unexpected error" message after re-authenticating with valid credentials. [#4495](https://github.com/zowe/zowe-explorer-vscode/pull/4495)
+- Fixed an issue where open editor tabs showed an error when launching VS Code if the profile's token value was missing or expired. [#4059](https://github.com/zowe/zowe-explorer-vscode/issues/4059)
 - Fixed hover/tooltip inconsistencies in favorited search nodes where search criteria or path was displayed instead of the profile name. [#4011](https://github.com/zowe/zowe-explorer-vscode/issues/4011)
 - Fixed an issue where the tooltip for SSH profiles was incorrectly displaying the auth method or missing the username. [#4417](https://github.com/zowe/zowe-explorer-vscode/pull/4417)
 - Fixed an issue where using "Allocate Like" on a data set caused the tree nodes to disappear until the profile was collapsed and re-expanded. [#4444](https://github.com/zowe/zowe-explorer-vscode/issues/4444)
