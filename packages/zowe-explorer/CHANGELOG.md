@@ -6,23 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added a `getFileApi` method to `ZoweExplorerApiRegister` that returns a file API for querying mainframe file system state. The initial API includes `getEncodingForUri`, which returns the encoding ZE has determined for a given resource URI, checking auto-detected encodings (such as USS file-tag detection) before falling back to explicitly user-selected encodings. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
-- Renamed the `"Uninstall zowex server on host..."` command to `""Uninstall SSH server on host..."`. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
-- Renamed the `"Restart zowex server on host..."` command to `""Restart SSH server on host..."`. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
-- Added support for resolving data set aliases when using SSH profiles. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
 - Added `ssoLogin` and `ssoLogout` methods to the API returned by `getExplorerExtenderApi()`, allowing extenders to perform SSO login and logout for a profile by name or loaded profile. The `Profiles.ssoLogout` function can now be called without a tree node and returns a boolean indicating success. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
-- Added a dialog to clarify that connecting to the mainframe with an SSH profile can result in deploying the SSH server if it is not present. The warning can be prevented by pressing the `"Connect, don't ask me again"` button or by setting the VS Code setting `zowe.confirmSshServerDeploy` to `false`. [#4445](https://github.com/zowe/zowe-explorer-vscode/pull/4445)
-- Added a dialog when there does not appear to be enough disk space on z/OS UNIX to deploy the SSH server, which can be bypassed by clicking the `"Deploy"` button on the dialog. [#4445](https://github.com/zowe/zowe-explorer-vscode/pull/4445)
-- Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. Currently only supported when connecting via z/OSMF. [#4438](https://github.com/zowe/zowe-explorer-vscode/pull/4438)
-- Breaking: Removed the setting `zowe.zowex.serverAutoUpdate`, which was a global setting used to control whether the backend SSH server `zowex` would be automatically updated when it was outdated. To prevent such updates going forward, specify `"autoUpdate": false` in each desired `ssh` profile. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
-- Replaced the comparison of checksums of the backend SSH server `zowex` with comparing version numbers when checking if the remote server version is outdated. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
-- Renamed the `Connect to zowex server on host...` command to `Deploy SSH server on host and connect...`. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
-- Added an error message in the case that Zowe Explorer needs to deploy the backend SSH server `zowex`, but the user does not have write access to the specified directory when issuing the `Deploy SSH server on host and connect...` command or when validating `ssh` profiles. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
-- Added a new "Export Redacted Configuration Files" command to export team configuration files with sensitive values redacted, for sharing with others when troubleshooting. [#4432](https://github.com/zowe/zowe-explorer-vscode/pull/4432)
-- Added functionality to automatically detect the backend SSH server on the user's `$PATH` on USS, and use it by default if no serverPath exists in your configuration. Also updated the plug-in to avoid deploying the SSH server binary to directories to which the user does not have write access. [#4367](https://github.com/zowe/zowe-explorer-vscode/pull/4367)
-- Replaced repetitive `if (err instanceof Error)` patterns with `handleError` and `errorMessage` utility functions from `@zowe/zowe-explorer-api`. [#4207](https://github.com/zowe/zowe-explorer-vscode/issues/4207)
-- Added new VS Code toggle setting for enabling various features within Zowe Explorer. [#4242](https://github.com/zowe/zowe-explorer-vscode/issues/4242)
-- Added support for comma-separated job prefixes in the **JOBS** tree filter, matching existing data set filter behavior. [#4395](https://github.com/zowe/zowe-explorer-vscode/issues/4395)
 
 ### Bug fixes
 
@@ -31,7 +15,23 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed hover/tooltip inconsistencies in favorited search nodes where search criteria or path was displayed instead of the profile name. [#4011](https://github.com/zowe/zowe-explorer-vscode/issues/4011)
 - Fixed an issue where the tooltip for SSH profiles was incorrectly displaying the auth method or missing the username. [#4417](https://github.com/zowe/zowe-explorer-vscode/pull/4417)
 - Fixed an issue where using "Allocate Like" on a data set caused the tree nodes to disappear until the profile was collapsed and re-expanded. [#4444](https://github.com/zowe/zowe-explorer-vscode/issues/4444)
-- Fixed an issue where a data set that was already cached locally would not be re-fetched from the mainframe when explicitly requested (`fetch=true`), causing stale data to be returned. [#4476](https://github.com/zowe/zowe-explorer-vscode/pull/4476)
+
+## `3.6.0`
+
+### New features and enhancements
+
+- Enhanced data set member download to allow multiple members - including across unique partitioned data sets - to be selected and downloaded in the same action. [#4274](https://github.com/zowe/zowe-explorer-vscode/issues/4274)
+- Replaced the comparison of checksums of the backend SSH server `zowex` with comparing version numbers when checking if the remote server version is outdated. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
+- Added a new "Export Redacted Configuration Files" command to export team configuration files with sensitive values redacted, for sharing with others when troubleshooting. [#4432](https://github.com/zowe/zowe-explorer-vscode/pull/4432)
+- Added functionality to automatically detect the backend SSH server on the user's `$PATH` on USS, and use it by default if no serverPath exists in your configuration. Also updated the plug-in to avoid deploying the SSH server binary to directories to which the user does not have write access. [#4367](https://github.com/zowe/zowe-explorer-vscode/pull/4367)
+- Added new VS Code toggle setting for enabling various features within Zowe Explorer. [#4242](https://github.com/zowe/zowe-explorer-vscode/issues/4242)
+- Added support for comma-separated job prefixes in the **JOBS** tree filter, matching existing data set filter behavior. [#4395](https://github.com/zowe/zowe-explorer-vscode/issues/4395)
+- Added support for Zowe Remote SSH capabilities. [#4466](https://github.com/zowe/zowe-explorer-vscode/pull/4466)
+- Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. [#4438](https://github.com/zowe/zowe-explorer-vscode/pull/4438) & [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
+- Added a `getFileApi` method to `ZoweExplorerApiRegister` that returns a file API for querying mainframe file system state. The initial API includes `getEncodingForUri`, which returns the encoding ZE has determined for a given resource URI, checking auto-detected encodings (such as USS file-tag detection) before falling back to explicitly user-selected encodings. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
+
+### Bug fixes
+
 - Fixed an issue where opening a PDS member from the table view would fail with a file not found error, if the PDS had not been expanded in the tree. [#4415](https://github.com/zowe/zowe-explorer-vscode/issues/4415)
 - Fixed an issue where recalling a sequential data set caused its contents to be overwritten, resulting in data loss. Now, when a data set is recalled, its contents are no longer modified. [#4412](https://github.com/zowe/zowe-explorer-vscode/issues/4412)
 - Fixed an issue where expanding a profile in the Favorites section uploaded empty contents to each favorited USS file, which failed for users without write access and truncated the file for users with write access. [#4450](https://github.com/zowe/zowe-explorer-vscode/issues/4450)
@@ -52,6 +52,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated `js-yaml` and `nanoid` dependencies for technical currency. [#4447](https://github.com/zowe/zowe-explorer-vscode/pull/4447)
 - Fixed an issue where the selected profile name changed after the first Unix command was executed. [#4446](https://github.com/zowe/zowe-explorer-vscode/issues/4446)
 - Fixed an issue where the pound sign in a resource URI caused the data sets table view to strip off part of the resource path, causing table actions to fail. Now, supported characters are preserved in URIs when passed to the data sets table. [#4467](https://github.com/zowe/zowe-explorer-vscode/issues/4467)
+- Fixed an issue where a data set that was already cached locally would not be re-fetched from the mainframe when explicitly requested (`fetch=true`), causing stale data to be returned. [#4476](https://github.com/zowe/zowe-explorer-vscode/pull/4476)
 - Updated `sanitize-html` dependency for technical currency. [#4478](https://github.com/zowe/zowe-explorer-vscode/pull/4478)
 
 ## `3.5.1`
@@ -76,12 +77,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where renaming a sequential data set with an extension suffix like `.jcl` would fail. [#4326](https://github.com/zowe/zowe-explorer-vscode/pull/4326)
 - Fixed an issue where member filtering on data sets with qualifier parts with fewer than three characters were ignoring the member filter and returning all members. [#4275](https://github.com/zowe/zowe-explorer-vscode/issues/4275)
 - Fixed an issue where opening a highlighted PDS name present within the job spool files using the **Open selected data set** option showed an unnecessary warning message even when the PDS was successfully filtered and displayed in the tree. [#4230](https://github.com/zowe/zowe-explorer-vscode/issues/4230)
-
-## `3.5.0`
-
-### New features and enhancements
-
-- Enhanced data set member download to allow multiple members - including across unique partitioned data sets - to be selected and downloaded in the same action. [#4274](https://github.com/zowe/zowe-explorer-vscode/issues/4274)
 
 ## `3.5.0`
 
