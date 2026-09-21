@@ -61,5 +61,18 @@ overrides:
   "qs": "^6.16.0"
   "fflate": "^0.8.3"
   "smol-toml": "^1.7.1"
+
+  # "@zowe/core-for-zowe-sdk": "file:../zowe-cli/packages/core"
+  # "@zowe/imperative": "file:../zowe-cli/packages/imperative"
+  # "@zowe/zos-console-for-zowe-sdk": "file:../zowe-cli/packages/zosconsole"
+  # "@zowe/zos-files-for-zowe-sdk": "file:../zowe-cli/packages/zosfiles"
+  # "@zowe/zos-jobs-for-zowe-sdk": "file:../zowe-cli/packages/zosjobs"
+  # "@zowe/zos-tso-for-zowe-sdk": "file:../zowe-cli/packages/zostso"
+  # "@zowe/zos-uss-for-zowe-sdk": "file:../zowe-cli/packages/zosuss"
+  # "@zowe/zosmf-for-zowe-sdk": "file:../zowe-cli/packages/zosmf"
+
+# Uncomment the above  use local versions of CLI SDK packages
+# replace ../zowe-cli if the path to your CLI repo is different
+
 # Previously set using `pnpm config set network-timeout`
 fetchTimeout: 60000

@@ -69,7 +69,6 @@
     "test:parallel": "pnpm -r --parallel --color test",
     "package": "pnpm run -r --sequential package",
     "preinstall": "npx only-allow pnpm",
-    "update-sdks": "pnpm -r update \"@zowe/*@zowe-v3-lts\" \"!@zowe/zowe-explorer-api\" \"!@zowe/zos-ftp-for-zowe-cli\" \"!@zowe/zowex-for-zowe-sdk\"",
-    "link-sdks": "node ./scripts/linkSdks.js"
+    "update-sdks": "pnpm -r update \"@zowe/*@zowe-v3-lts\" \"!@zowe/zowe-explorer-api\" \"!@zowe/zos-ftp-for-zowe-cli\" \"!@zowe/zowex-for-zowe-sdk\""
   }
 }
