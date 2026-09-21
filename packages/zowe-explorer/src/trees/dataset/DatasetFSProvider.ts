@@ -34,6 +34,8 @@ import {
     DsType,
     ConflictViewSelection,
     MainframeInteraction,
+    AuthCancelledError,
+    errorMessage,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse, IZosmfListResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { Profiles } from "../../configuration/Profiles";
@@ -114,9 +116,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const session = commonApi.getSession(uriInfo.profile);
         if (
             (isFetching && ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile)) ||
-            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
+            ProfilesUtils.isMissingToken(session.ISession, uriInfo.profile)
         ) {
-            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+            await AuthUtils.promptForMissingCredentials(uriInfo.profile);
         }
 
         const entry = isFetching ? await this.remoteLookupForResource(uri) : await this.lookupWithCache(uri);
@@ -133,14 +135,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         // Wait for any ongoing authentication process to complete
         AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-            ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
-            return entry;
-        }
+        await AuthHandler.waitForAuthFlow(uriInfo.profile);
 
         await AuthUtils.retryRequest(uriInfo.profile, async () => {
             resp = await ZoweExplorerApiRegister.getMvsApi(uriInfo.profile).dataSet(path.posix.basename(dsPath), {
@@ -233,14 +228,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         // Wait for any ongoing authentication process to complete
         AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-            ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
-            return profileEntry;
-        }
+        await AuthHandler.waitForAuthFlow(uriInfo.profile);
 
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
         const datasetResponses: IZosFilesResponse[] = [];
@@ -312,15 +300,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
         // Wait for any ongoing authentication process to complete
         AuthUtils.ensureAuthNotCancelled(profile);
-
-        await AuthHandler.waitForUnlock(entry.metadata.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-            ZoweLogger.warn(`[DatasetFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
-            return;
-        }
+        await AuthHandler.waitForAuthFlow(profile);
 
         await AuthUtils.retryRequest(uriInfo.profile, async () => {
             const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
@@ -375,11 +355,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         });
         const session = commonApi.getSession(uriInfo.profile);
 
-        if (
-            ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
-            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
-        ) {
-            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+        if (ProfilesUtils.hasNoCredentials(session.ISession, uriInfo.profile)) {
+            await AuthUtils.promptForMissingCredentials(uriInfo.profile);
         }
 
         await AuthUtils.retryRequest(uriInfo.profile, async () => {
@@ -399,21 +376,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                 .split("/")
                 .filter(Boolean);
             pdsMember = uriPath.length === this.EXPECTED_MEMBER_LENGTH;
-
-            // Wait for any ongoing authentication process to complete
-            AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
-
-            await AuthHandler.waitForUnlock(uriInfo.profile);
-
-            // Check if the profile is locked (indicating an auth error is being handled)
-            // If it's locked, we should wait and not make additional requests
-            if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-                ZoweLogger.warn(`[DatasetFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
-                if (entryExists) {
-                    return;
-                }
-                throw vscode.FileSystemError.FileNotFound(uri);
-            }
 
             if (!entryExists || forceFetch) {
                 const mvsApi = ZoweExplorerApiRegister.getMvsApi(uriInfo.profile);
@@ -543,13 +505,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         try {
             dsEntry = shouldFetch ? await this.remoteLookupForResource(uri) : this._lookupAsDirectory(uri, false);
         } catch (err) {
-            if (!(err instanceof vscode.FileSystemError)) {
+            // Only a local cache miss falls back to the network. Any other failure - an unavailable
+            // profile or a cancelled authentication prompt - has to surface to the caller, otherwise
+            // VS Code reports a data set that exists on the remote system as a missing file.
+            if (shouldFetch || !(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
                 throw err;
             }
-            // If the local lookup fails (e.g. it wasn't cached yet), fallback to network
-            if (err.code === "FileNotFound" && !shouldFetch) {
-                dsEntry = await this.remoteLookupForResource(uri);
-            }
+            dsEntry = await this.remoteLookupForResource(uri);
         }
 
         this.validatePath(uri);
@@ -623,7 +585,6 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     ): Promise<FileEntry | null> {
         ZoweLogger.trace(`[DatasetFSProvider] fetchDatasetAtUri called with ${uri.toString()}`);
         let dsEntry = this._lookupAsFile(uri, { silent: true }) as DsEntry | undefined;
-        const bufBuilder = new BufferBuilder();
         const metadata = dsEntry?.metadata ?? this._getInfoFromUri(uri);
         const profile = Profiles.getInstance().loadNamedProfile(metadata.profile.name);
         const profileEncoding = dsEntry?.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
@@ -631,20 +592,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         try {
             // Wait for any ongoing authentication process to complete
             AuthUtils.ensureAuthNotCancelled(profile);
-
-            await AuthHandler.waitForUnlock(metadata.profile);
-
-            // Check if the profile is locked (indicating an auth error is being handled)
-            // If it's locked, we should wait and not make additional requests
-            if (AuthHandler.isProfileLocked(metadata.profile)) {
-                ZoweLogger.warn(`[DatasetFSProvider] Profile ${metadata.profile.name} is locked, waiting for authentication`);
-                return null;
-            }
+            await AuthHandler.waitForAuthFlow(profile);
 
             let resp;
 
             await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
             await AuthUtils.retryRequest(metadata.profile, async () => {
+                const bufBuilder = new BufferBuilder();
                 const isRecordEncoding = dsEntry?.encoding?.kind === "other" && dsEntry?.encoding.codepage?.toLowerCase() === "record";
                 resp = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(metadata.dsName, {
                     binary: dsEntry?.encoding?.kind === "binary",
@@ -700,6 +654,14 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
             return dsEntry;
         } catch (error) {
+            if (
+                error instanceof AuthCancelledError ||
+                (error instanceof vscode.FileSystemError && error.code === "Unavailable") ||
+                AuthUtils.isAuthError(error)
+            ) {
+                throw error;
+            }
+            ZoweLogger.error(`[DatasetFSProvider] fetchDatasetAtUri failed for ${uri.toString()}: ${errorMessage(error)}`);
             return null;
         }
     }
@@ -722,11 +684,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             registeredTypes: apiRegister.registeredApiTypes(),
         });
         const session = commonApi.getSession(uriInfo.profile);
-        if (
-            ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
-            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
-        ) {
-            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+        if (ProfilesUtils.hasNoCredentials(session.ISession, uriInfo.profile)) {
+            await AuthUtils.promptForMissingCredentials(uriInfo.profile);
         }
 
         try {
