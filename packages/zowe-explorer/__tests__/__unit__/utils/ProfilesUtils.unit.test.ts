@@ -1599,6 +1599,39 @@ describe("ProfilesUtils unit tests", () => {
             expect(executeCommandMock).toHaveBeenCalledWith("zowe.setupRemoteWorkspaceFolders", "test");
         });
     });
+    describe("Profiles unit tests - function isMissingToken", () => {
+        const tokenProfile = (tokenValue?: string) =>
+            ({ name: "profile123", type: "zosmf", message: "", failNotFound: false, profile: { tokenValue } }) as any;
+
+        it("returns true when the session uses token auth without a token value", () => {
+            expect(ProfilesUtils.isMissingToken({ type: "token" } as any, tokenProfile())).toBe(true);
+        });
+
+        it("returns false when the profile has a token value", () => {
+            expect(ProfilesUtils.isMissingToken({ type: "token" } as any, tokenProfile("aToken"))).toBe(false);
+        });
+
+        it("returns false when the session does not use token auth", () => {
+            expect(ProfilesUtils.isMissingToken({ type: "basic" } as any, tokenProfile())).toBe(false);
+        });
+    });
+
+    describe("Profiles unit tests - function hasNoCredentials", () => {
+        const profile = { name: "profile123", type: "zosmf", message: "", failNotFound: false, profile: {} } as any;
+
+        it("returns true when the profile has no auth type", () => {
+            expect(ProfilesUtils.hasNoCredentials({ type: "none" } as any, profile)).toBe(true);
+        });
+
+        it("returns true when the profile uses token auth but has no token", () => {
+            expect(ProfilesUtils.hasNoCredentials({ type: "token" } as any, profile)).toBe(true);
+        });
+
+        it("returns false when the profile can authenticate", () => {
+            expect(ProfilesUtils.hasNoCredentials({ type: "basic" } as any, profile)).toBe(false);
+        });
+    });
+
     describe("Profiles unit tests - function hasNoAuthType", () => {
         it("should determine if an ssh profile has an auth type", () => {
             const session = {
