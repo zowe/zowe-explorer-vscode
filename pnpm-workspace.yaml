@@ -71,7 +71,7 @@ overrides:
   # "@zowe/zos-uss-for-zowe-sdk": "file:../zowe-cli/packages/zosuss"
   # "@zowe/zosmf-for-zowe-sdk": "file:../zowe-cli/packages/zosmf"
 
-# Uncomment the above  use local versions of CLI SDK packages
+# Uncomment the above to use local versions of CLI SDK packages
 # replace ../zowe-cli if the path to your CLI repo is different
 
 # Previously set using `pnpm config set network-timeout`
