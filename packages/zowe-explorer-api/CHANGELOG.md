@@ -6,7 +6,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Added support for the `tsoAccount` and `tsoProc` z/OSMF profile properties, which are now passed as the `X-IBM-Request-Acctnum` and `X-IBM-Request-Proc` z/OSMF headers on data set operations that support them. [#4485] (https://github.com/zowe/zowe-explorer-vscode/pull/4485)
+- Added support for the `tsoAccount` and `tsoProcedure` z/OSMF profile properties, which are now passed as the `X-IBM-Request-Acctnum` and `X-IBM-Request-Proc` z/OSMF headers on data set operations that support them. [#4485] (https://github.com/zowe/zowe-explorer-vscode/pull/4485)
 - Added optional `ssoLogin` and `ssoLogout` functions to the `IApiExplorerExtender` interface to expose SSO login and logout capabilities to Zowe Explorer extenders. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 
 ### Bug fixes
