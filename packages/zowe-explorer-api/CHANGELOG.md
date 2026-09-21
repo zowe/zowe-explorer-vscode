@@ -26,6 +26,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed an issue where `ProfilesCache.requireKeyring` could return `undefined` instead of throwing when the Secrets SDK failed to load, causing callers to treat an unavailable credential manager as available. [#4360](https://github.com/zowe/zowe-explorer-vscode/issues/4360)
 - Added `AuthHandler.waitForAuthFlow` and `FileManagement.reloadTabsForProfile` functions to fix authentication race conditions and to recover open editor tabs after a profile's credentials are refreshed. [#4495](https://github.com/zowe/zowe-explorer-vscode/pull/4495)
 - Fixed an issue where the `AuthHandler.getOrCreateAuthFlow` function discarded the result of a profile's authentication attempt. Now, the function resolves with a boolean value to clarify whether authentication succeeded. [#4495](https://github.com/zowe/zowe-explorer-vscode/pull/4495)
 - Fixed an issue where the `promptUserPass` function would incorrectly reject an empty username when its `rePrompt` parameter was false. [#4378](https://github.com/zowe/zowe-explorer-vscode/pull/4378)
