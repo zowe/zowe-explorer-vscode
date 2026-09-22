@@ -262,8 +262,8 @@ importers:
         specifier: ^9.12.3
         version: 9.12.3
       adm-zip:
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.6.1
+        version: 0.6.1
       chalk:
         specifier: ^2.4.2
         version: 2.4.2
@@ -455,7 +455,7 @@ importers:
         version: link:../zowe-explorer-api
       '@zowe/zowex-for-zowe-sdk':
         specifier: ^1.0.1
-        version: 1.0.1(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)
+        version: 1.0.1(@zowe/imperative@8.37.0)(@zowe/zos-uss-for-zowe-sdk@8.37.0(@zowe/imperative@8.37.0))(rxjs@7.8.2)
       ssh2:
         specifier: ^1.17.0
         version: 1.17.0
@@ -2411,8 +2411,8 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  adm-zip@0.6.0:
-    resolution: {integrity: sha512-XleryMhbuksdKtofnWZ9Sk+4CUTbms4Mb/EU32SZwToAyZ5RgVos/ki8n+yr0LWHOGKuakbXTuuYNHLQjhddgg==}
+  adm-zip@0.6.1:
+    resolution: {integrity: sha512-Xwrja8nx9e5o2N1my4DsKCeKpdrnACyr1wtbPxBDgGzKzKyE9kRtBFA8mWldI+RVlD7CBZNWY/wQ2+ydwOR6kQ==}
     engines: {node: '>=14.0'}
 
   ag-charts-types@12.0.0:
@@ -5776,8 +5776,8 @@ packages:
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
 
-  react-is@19.2.8:
-    resolution: {integrity: sha512-s5un28nYxKJw5gvUHyW5PCC28CvBqLu9r3cWgzHT4Vo/5fqqkFcdRYsGcKf50WMPpjjFZS5d76fn3YCo2njKwQ==}
+  react-is@19.3.0:
+    resolution: {integrity: sha512-UpMYezM4v5/18F28aC66AEsjXIgE02kyEMH6yLdgLXu/UTfa1Ntwck/nNLrbqJsEXW7gPb0coNO9FQse9WTovA==}
 
   react-transition-state@2.1.1:
     resolution: {integrity: sha512-kQx5g1FVu9knoz1T1WkapjUgFz08qQ/g1OmuWGi3/AoEFfS0kStxrPlZx81urjCXdz2d+1DqLpU6TyLW/Ro04Q==}
@@ -9604,7 +9604,7 @@ snapshots:
       '@zowe/core-for-zowe-sdk': 8.37.0(@zowe/imperative@8.37.0)
       '@zowe/imperative': 8.37.0
 
-  '@zowe/zowex-for-zowe-sdk@1.0.1(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)':
+  '@zowe/zowex-for-zowe-sdk@1.0.1(@zowe/imperative@8.37.0)(@zowe/zos-uss-for-zowe-sdk@8.37.0(@zowe/imperative@8.37.0))(rxjs@7.8.2)':
     dependencies:
       '@zowe/imperative': 8.37.0
       '@zowe/zos-uss-for-zowe-sdk': 8.37.0(@zowe/imperative@8.37.0)
@@ -9647,7 +9647,7 @@ snapshots:
 
   acorn@8.16.0: {}
 
-  adm-zip@0.6.0: {}
+  adm-zip@0.6.1: {}
 
   ag-charts-types@12.0.0: {}
 
@@ -13365,7 +13365,7 @@ snapshots:
       '@jest/schemas': 30.4.1
       ansi-styles: 5.2.0
       react-is-18: react-is@18.3.1
-      react-is-19: react-is@19.2.8
+      react-is-19: react-is@19.3.0
 
   pretty-ms@7.0.1:
     dependencies:
@@ -13480,7 +13480,7 @@ snapshots:
 
   react-is@18.3.1: {}
 
-  react-is@19.2.8: {}
+  react-is@19.3.0: {}
 
   react-transition-state@2.1.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
