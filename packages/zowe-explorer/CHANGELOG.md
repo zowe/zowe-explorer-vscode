@@ -11,6 +11,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Renamed the `"Uninstall zowex server on host..."` command to `""Uninstall SSH server on host..."`. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
 - Renamed the `"Restart zowex server on host..."` command to `""Restart SSH server on host..."`. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
 - Added support for resolving data set aliases when using SSH profiles. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
+- Added the `zowe.settings.historyGroupByHost` setting to group filter search history by host instead of sharing one list across all profiles, and the `zowe.settings.maxSearchHistory` setting to configure the maximum number of entries kept in filter search history. [#4477](https://github.com/zowe/zowe-explorer-vscode/pull/4477)
 - Added `ssoLogin` and `ssoLogout` methods to the API returned by `getExplorerExtenderApi()`, allowing extenders to perform SSO login and logout for a profile by name or loaded profile. The `Profiles.ssoLogout` function can now be called without a tree node and returns a boolean indicating success. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 
 ### Bug fixes

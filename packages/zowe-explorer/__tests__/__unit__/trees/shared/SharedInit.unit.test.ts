@@ -95,7 +95,7 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.editHistory",
-                mock: [{ spy: vi.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders] }],
+                mock: [{ spy: vi.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders, test.value] }],
             },
             {
                 name: "zowe.displayReleaseNotes",
