@@ -6,8 +6,11 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added the `notifyFileChanged` method to `IZoweExplorerFileApi` (the file API returned by `getFileApi()`) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
+
 ### Bug fixes
 
+- Fixed an issue where sequential data sets open in the text editor were not refreshing after a remote save, because the cache bypass that forces a network check when a file is open in the editor was only applied to PDS members and not sequential data sets in `stat()`, the filesystem provider method VS Code calls to detect file changes. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
 - Fixed an issue where a data set or USS file would fail to open with a "The editor could not be opened due to an unexpected error" message after re-authenticating with valid credentials. [#4495](https://github.com/zowe/zowe-explorer-vscode/pull/4495)
 - Fixed an issue where open editor tabs showed an error when launching VS Code if the profile's token value was missing or expired. [#4059](https://github.com/zowe/zowe-explorer-vscode/issues/4059)
 - Fixed hover/tooltip inconsistencies in favorited search nodes where search criteria or path was displayed instead of the profile name. [#4011](https://github.com/zowe/zowe-explorer-vscode/issues/4011)
