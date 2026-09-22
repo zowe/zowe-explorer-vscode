@@ -102,8 +102,8 @@ async function expectUnixCommandApiWithSshSession<T>(
             callback("test");
         }
     );
-    await apiInstance[name as string](sshobj, ...args, true, () => { });
-    await apiInstance[name as string](sshobj, ...args, false, () => { });
+    await apiInstance[name as string](sshobj, ...args, true, () => {});
+    await apiInstance[name as string](sshobj, ...args, false, () => {});
     expect(spy).toHaveBeenCalled();
 }
 async function expectApiWithSession<T>({ name, spy, args, transform }: ITestApi<T>, apiInstance: MainframeInteraction.ICommon): Promise<void> {
@@ -707,7 +707,7 @@ describe("ZosmfMvsApi", () => {
         const expectedProcedure = "MYPROC";
         const expectedDsName = "SOME.DSNAME";
         const postStringSpy = vi.spyOn(ZosmfRestClient, "postExpectString").mockResolvedValue("OK");
-        vi.spyOn(JSON, "parse").mockReset();   // todo leaking mocks from earlier tests?
+        vi.spyOn(JSON, "parse").mockReset(); // todo leaking mocks from earlier tests?
         const createSpy = vi.spyOn(zosfiles.Create, "dataSet");
         createSpy.mockReset(); // todo leaking mocks from earlier tests?
         const profileWithTso: imperative.IProfileLoaded = {
@@ -727,7 +727,7 @@ describe("ZosmfMvsApi", () => {
             expect.anything(),
             expect.stringContaining(expectedDsName),
             expect.arrayContaining([{ "X-IBM-Request-Acctnum": expectedAcct }, { "X-IBM-Request-Proc": expectedProcedure }]),
-            expect.anything(),
+            expect.anything()
         );
     });
 
