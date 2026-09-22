@@ -11,8 +11,10 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
+import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import { imperative } from "@zowe/zowe-explorer-api";
+import { RUSSH_BINARY_SHA256 } from "@zowe/zowex-for-zowe-sdk";
 import { handleNativeSshSettings } from "../src/NativeSshHelper";
 
 // Mock native fs operations (named imports are not configurable for spyOn under ESM).
@@ -25,6 +27,26 @@ vi.mock("node:fs", async (importActual) => {
         writeFileSync: vi.fn(),
     };
 });
+
+// Mock the SHA256 verification (named imports are not configurable for spyOn under ESM)
+// so tests can force a checksum match/mismatch without needing a real binary preimage.
+vi.mock("node:crypto", async (importActual) => {
+    const actual = await importActual();
+    return {
+        ...(actual as typeof import("node:crypto")),
+        createHash: vi.fn((...args: Parameters<typeof import("node:crypto").createHash>) =>
+            (actual as typeof import("node:crypto")).createHash(...args)
+        ),
+    };
+});
+
+// Forces the checksum verification to pass for whatever buffer is hashed next.
+function mockChecksumMatch(expectedSha256: string): void {
+    vi.spyOn(crypto, "createHash").mockReturnValue({
+        update: vi.fn().mockReturnThis(),
+        digest: vi.fn(() => expectedSha256),
+    } as unknown as crypto.Hash);
+}
 
 // Mock global fetch used to download the native binary.
 const fetchMock = vi.fn();
@@ -96,6 +118,7 @@ describe("NativeSshHelper", () => {
         it("should download and write the native binary when missing (darwin-arm64)", async () => {
             setPlatform("darwin", "arm64");
             vi.spyOn(fs, "existsSync").mockReturnValue(false);
+            mockChecksumMatch(RUSSH_BINARY_SHA256["darwin-arm64"]);
             const writeSpy = vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined as never);
             const mkdirSpy = vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined as never);
             const infoSpy = vi.fn();
@@ -110,6 +133,23 @@ describe("NativeSshHelper", () => {
             expect(mkdirSpy).toHaveBeenCalled();
             expect(writeSpy).toHaveBeenCalled();
             expect(infoSpy).toHaveBeenCalled();
+        });
+
+        it("should reject and not write the file when the downloaded checksum does not match", async () => {
+            setPlatform("darwin", "arm64");
+            vi.spyOn(fs, "existsSync").mockReturnValue(false);
+            const writeSpy = vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined as never);
+            const errorSpy = vi.spyOn(vscode.window, "showErrorMessage").mockReturnValue(undefined);
+            // Real crypto with the default (all-zero-byte) fixture will not match the real
+            // darwin-arm64 checksum, so this exercises the mismatch path without mocking crypto.
+
+            handleNativeSshSettings(fakeContext);
+            await flush();
+
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+            expect(writeSpy).not.toHaveBeenCalled();
+            expect(errorSpy).toHaveBeenCalledTimes(1);
+            expect(String(errorSpy.mock.calls[0][0])).toContain("SHA256 mismatch");
         });
 
         it("should show an error when the download response is not ok", async () => {

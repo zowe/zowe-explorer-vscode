@@ -454,8 +454,8 @@ importers:
         specifier: workspace:*
         version: link:../zowe-explorer-api
       '@zowe/zowex-for-zowe-sdk':
-        specifier: ^1.0.0
-        version: 1.0.0(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)
+        specifier: ^1.0.1
+        version: 1.0.1(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)
       ssh2:
         specifier: ^1.17.0
         version: 1.17.0
@@ -2369,8 +2369,8 @@ packages:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zowex-for-zowe-sdk@1.0.0':
-    resolution: {integrity: sha512-eNlVElTmOZUJmaf4UzIRbnBzLF4MvMWhW98YZG86B7ubH461NgAseuZBCohK6rGKJuuRKmEmg+CKAweQN91kpA==}
+  '@zowe/zowex-for-zowe-sdk@1.0.1':
+    resolution: {integrity: sha512-1Bd+r7IO+Fqtyzifzn12W9gsYZrqSkzsC/MrdlFA1VwDMUuClDKnt1koFu4xRVMwD9KgZpg2HqTBJb1s3i6oWw==}
     peerDependencies:
       '@zowe/imperative': ^8.11.0
       '@zowe/zos-uss-for-zowe-sdk': ^8.11.0
@@ -9602,7 +9602,7 @@ snapshots:
       '@zowe/core-for-zowe-sdk': 8.35.0(@zowe/imperative@8.35.0)
       '@zowe/imperative': 8.35.0
 
-  '@zowe/zowex-for-zowe-sdk@1.0.0(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)':
+  '@zowe/zowex-for-zowe-sdk@1.0.1(@zowe/imperative@8.35.0)(@zowe/zos-uss-for-zowe-sdk@8.32.0(@zowe/imperative@8.35.0))(rxjs@7.8.2)':
     dependencies:
       '@zowe/imperative': 8.35.0
       '@zowe/zos-uss-for-zowe-sdk': 8.32.0(@zowe/imperative@8.35.0)
