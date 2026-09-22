@@ -62,6 +62,7 @@
   "**Write access check.** If you do not have write access to the deploy directory, Zowe Explorer warns you instead of deploying.": "**Write access check.** If you do not have write access to the deploy directory, Zowe Explorer warns you instead of deploying.",
   "**Zowe Explorer: Restart SSH server on host...** restarts a server that is not responding.": "**Zowe Explorer: Restart SSH server on host...** restarts a server that is not responding.",
   "**Zowe Explorer: Uninstall SSH server from host...** removes the server from the host.": "**Zowe Explorer: Uninstall SSH server from host...** removes the server from the host.",
+  "---": "---",
   "/u/username/directory": "/u/username/directory",
   "1 member": "1 member",
   "1/1 member": "1/1 member",
@@ -128,8 +129,6 @@
   "Added a Release Notes page which opens when VS Code is launched or from the command palette Display Release Notes. The zowe.settings.displayReleaseNotes setting can be changed to set when the release notes display. <a>#3621</a>": "Added a Release Notes page which opens when VS Code is launched or from the command palette Display Release Notes. The zowe.settings.displayReleaseNotes setting can be changed to set when the release notes display. <a>#3621</a>",
   "Added a button to filter the USS tree by the parent path of the current filter. <a>#1783</a>.": "Added a button to filter the USS tree by the parent path of the current filter. <a>#1783</a>.",
   "Added a confirmation dialog when the encoding is changed for an unsaved data set or USS file. <a>#2911</a>": "Added a confirmation dialog when the encoding is changed for an unsaved data set or USS file. <a>#2911</a>",
-  "Added a dialog to clarify that connecting to the mainframe with an SSH profile can result in deploying the SSH server if it is not present. The warning can be prevented by pressing the \"Connect, don't ask me again\" button or by setting the VS Code setting zowe.confirmSshServerDeploy to false. <a>#4445</a>": "Added a dialog to clarify that connecting to the mainframe with an SSH profile can result in deploying the SSH server if it is not present. The warning can be prevented by pressing the \"Connect, don't ask me again\" button or by setting the VS Code setting zowe.confirmSshServerDeploy to false. <a>#4445</a>",
-  "Added a dialog when there does not appear to be enough disk space on z/OS UNIX to deploy the SSH server, which can be bypassed by clicking the \"Deploy\" button on the dialog. <a>#4445</a>": "Added a dialog when there does not appear to be enough disk space on z/OS UNIX to deploy the SSH server, which can be bypassed by clicking the \"Deploy\" button on the dialog. <a>#4445</a>",
   "Added a getFileApi method to ZoweExplorerApiRegister that returns a file API for querying mainframe file system state. The initial API includes getEncodingForUri, which returns the encoding ZE has determined for a given resource URI, checking auto-detected encodings (such as USS file-tag detection) before falling back to explicitly user-selected encodings. <a>#4474</a>": "Added a getFileApi method to ZoweExplorerApiRegister that returns a file API for querying mainframe file system state. The initial API includes getEncodingForUri, which returns the encoding ZE has determined for a given resource URI, checking auto-detected encodings (such as USS file-tag detection) before falling back to explicitly user-selected encodings. <a>#4474</a>",
   "Added a new \"Export Redacted Configuration Files\" command to export team configuration files with sensitive values redacted, for sharing with others when troubleshooting. <a>#4432</a>": "Added a new \"Export Redacted Configuration Files\" command to export team configuration files with sensitive values redacted, for sharing with others when troubleshooting. <a>#4432</a>",
   "Added a new \"Override with Environment Variables\" setting. When selected, Zowe Explorer prioritizes values from environment variables for properties when loading the user's team configuration. <a>#3591</a>": "Added a new \"Override with Environment Variables\" setting. When selected, Zowe Explorer prioritizes values from environment variables for properties when loading the user's team configuration. <a>#3591</a>",
@@ -146,7 +145,6 @@
   "Added a zowe.settings.socketConnectTimeout setting to provide users with the ability to specify a connection timeout for REST requests. <a>#3379</a>": "Added a zowe.settings.socketConnectTimeout setting to provide users with the ability to specify a connection timeout for REST requests. <a>#3379</a>",
   "Added ability to filter jobs by status. Improved Job filtering User experience. <a>#1925</a>": "Added ability to filter jobs by status. Improved Job filtering User experience. <a>#1925</a>",
   "Added ability to install extension from VS Code marketplace if custom credential manager extension is missing after defining it on imperative.json. <a>#2381</a>": "Added ability to install extension from VS Code marketplace if custom credential manager extension is missing after defining it on imperative.json. <a>#2381</a>",
-  "Added an error message in the case that Zowe Explorer needs to deploy the backend SSH server zowex, but the user does not have write access to the specified directory when issuing the Deploy SSH server on host and connect... command or when validating ssh profiles. <a>#4436</a>": "Added an error message in the case that Zowe Explorer needs to deploy the backend SSH server zowex, but the user does not have write access to the specified directory when issuing the Deploy SSH server on host and connect... command or when validating ssh profiles. <a>#4436</a>",
   "Added an new VS Code command palette option Zowe Explorer: Update Profile Configuration Schema, allowing users to manually trigger an update to global and project level configuration schema files with registered Zowe Explorer extender types. <a>#1642</a>": "Added an new VS Code command palette option Zowe Explorer: Update Profile Configuration Schema, allowing users to manually trigger an update to global and project level configuration schema files with registered Zowe Explorer extender types. <a>#1642</a>",
   "Added an output channel, Zowe Explorer, for logging within VS Code's Output view. The log level is set by the new Zowe Explorer setting, zowe.logger.": "Added an output channel, Zowe Explorer, for logging within VS Code's Output view. The log level is set by the new Zowe Explorer setting, zowe.logger.",
   "Added back local storage for Zowe Explorer persistent items": "Added back local storage for Zowe Explorer persistent items",
@@ -197,6 +195,7 @@
   "Added support for CLI home directory environment variable in Team Config file watcher, and support watching Team Config files named zowe.config.json and zowe.config.user.json at both locations. <a>#1913</a>": "Added support for CLI home directory environment variable in Team Config file watcher, and support watching Team Config files named zowe.config.json and zowe.config.user.json at both locations. <a>#1913</a>",
   "Added support for Local Storage settings for persistent settings in Zowe Explorer <a>#2208</a>": "Added support for Local Storage settings for persistent settings in Zowe Explorer <a>#2208</a>",
   "Added support for TTY-dependent scripts when using integrated terminals. <a>#3640</a>": "Added support for TTY-dependent scripts when using integrated terminals. <a>#3640</a>",
+  "Added support for Zowe Remote SSH capabilities. <a>#4466</a>": "Added support for Zowe Remote SSH capabilities. <a>#4466</a>",
   "Added support for adding VSAM datasets to favorites. <a>#4103</a>": "Added support for adding VSAM datasets to favorites. <a>#4103</a>",
   "Added support for adding a Zowe profile across all trees <a>#2603</a>": "Added support for adding a Zowe profile across all trees <a>#2603</a>",
   "Added support for asynchronous operations when using integrated terminals. <a>#3640</a>": "Added support for asynchronous operations when using integrated terminals. <a>#3640</a>",
@@ -222,7 +221,7 @@
   "Added support for logging in to multiple API ML instances per team config file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team config file. <a>#2264</a>",
   "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>",
   "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>": "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>",
-  "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. Currently only supported when connecting via z/OSMF. <a>#4438</a>": "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. Currently only supported when connecting via z/OSMF. <a>#4438</a>",
+  "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. <a>#4438</a> & <a>#4489</a>": "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. <a>#4438</a> & <a>#4489</a>",
   "Added support for resolving data set aliases when using SSH profiles. <a>#4489</a>": "Added support for resolving data set aliases when using SSH profiles. <a>#4489</a>",
   "Added support to delete VSAM data sets via right-click action.": "Added support to delete VSAM data sets via right-click action.",
   "Added support to delete VSAM data sets. <a>#3824</a>": "Added support to delete VSAM data sets. <a>#3824</a>",
@@ -236,8 +235,10 @@
   "Added the ability to switch between basic authentication and token-based authentication. <a>#2944</a>": "Added the ability to switch between basic authentication and token-based authentication. <a>#2944</a>",
   "Added the addFileSystemEvent function to the ZoweExplorerApiRegister class to allow extenders to register their FileSystemProvider \"onDidChangeFile\" events. See the <a>FileSystemProvider wiki page</a> for more information on the FileSystemProvider.": "Added the addFileSystemEvent function to the ZoweExplorerApiRegister class to allow extenders to register their FileSystemProvider \"onDidChangeFile\" events. See the <a>FileSystemProvider wiki page</a> for more information on the FileSystemProvider.",
   "Added the capability for extenders to contribute new profile types to the Zowe schema during extender activation. <a>#2508</a>": "Added the capability for extenders to contribute new profile types to the Zowe schema during extender activation. <a>#2508</a>",
+  "Added the notifyFileChanged method to IZoweExplorerFileApi (the file API returned by getFileApi()) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. <a>#4481</a>": "Added the notifyFileChanged method to IZoweExplorerFileApi (the file API returned by getFileApi()) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. <a>#4481</a>",
   "Added the onResourceChanged function to the ZoweExplorerApiRegister class to allow extenders to subscribe to any changes to Zowe resources (Data Sets, USS files/folders, Jobs, etc.). See the <a>FileSystemProvider wiki page</a> for more information on Zowe resources.": "Added the onResourceChanged function to the ZoweExplorerApiRegister class to allow extenders to subscribe to any changes to Zowe resources (Data Sets, USS files/folders, Jobs, etc.). See the <a>FileSystemProvider wiki page</a> for more information on Zowe resources.",
   "Added the option for secure credential storage to be enable in Theia environment.": "Added the option for secure credential storage to be enable in Theia environment.",
+  "Added the zowe.settings.historyGroupByHost setting to group filter search history by host instead of sharing one list across all profiles, and the zowe.settings.maxSearchHistory setting to configure the maximum number of entries kept in filter search history. <a>#4477</a>": "Added the zowe.settings.historyGroupByHost setting to group filter search history by host instead of sharing one list across all profiles, and the zowe.settings.maxSearchHistory setting to configure the maximum number of entries kept in filter search history. <a>#4477</a>",
   "Added two new options to download a single spool file from a Job in plain text or in binary format. <a>#2060</a>": "Added two new options to download a single spool file from a Job in plain text or in binary format. <a>#2060</a>",
   "Added two new settings, zowe.ds.default.sort and zowe.jobs.default.sort, that allow you to change the default sorting order of datasets and jobs when you open them. <a>#3369</a>": "Added two new settings, zowe.ds.default.sort and zowe.jobs.default.sort, that allow you to change the default sorting order of datasets and jobs when you open them. <a>#3369</a>",
   "Added webview for editing persistent items on Zowe Explorer. <a>#2488</a>": "Added webview for editing persistent items on Zowe Explorer. <a>#2488</a>",
@@ -305,7 +306,6 @@
   "Back": "Back",
   "Basic Authentication": "Basic Authentication",
   "Binary": "Binary",
-  "Breaking: Removed the setting zowe.zowex.serverAutoUpdate, which was a global setting used to control whether the backend SSH server zowex would be automatically updated when it was outdated. To prevent such updates going forward, specify \"autoUpdate\": false in each desired ssh profile. <a>#4436</a>": "Breaking: Removed the setting zowe.zowex.serverAutoUpdate, which was a global setting used to control whether the backend SSH server zowex would be automatically updated when it was outdated. To prevent such updates going forward, specify \"autoUpdate\": false in each desired ssh profile. <a>#4436</a>",
   "Browse": "Browse",
   "Browse for Export Folder...": "Browse for Export Folder...",
   "Bug fixes": "Bug fixes",
@@ -1011,6 +1011,7 @@
   "Fixed an issue where a 401 error could occur when opening PDS members after updating credentials within the same user session. <a>#3150</a>": "Fixed an issue where a 401 error could occur when opening PDS members after updating credentials within the same user session. <a>#3150</a>",
   "Fixed an issue where a PDS member URI with the conflict query parameter was not returned as read-only by DatasetFSProvider.stat, causing the \"remote\" side of the conflict diff editor to be editable. <a>#4440</a>": "Fixed an issue where a PDS member URI with the conflict query parameter was not returned as read-only by DatasetFSProvider.stat, causing the \"remote\" side of the conflict diff editor to be editable. <a>#4440</a>",
   "Fixed an issue where a TypeError occurred when applying VS Code proxy settings to an invalid session. <a>#3425</a>": "Fixed an issue where a TypeError occurred when applying VS Code proxy settings to an invalid session. <a>#3425</a>",
+  "Fixed an issue where a data set or USS file would fail to open with a \"The editor could not be opened due to an unexpected error\" message after re-authenticating with valid credentials. <a>#4495</a>": "Fixed an issue where a data set or USS file would fail to open with a \"The editor could not be opened due to an unexpected error\" message after re-authenticating with valid credentials. <a>#4495</a>",
   "Fixed an issue where a data set that was already cached locally would not be re-fetched from the mainframe when explicitly requested (fetch=true), causing stale data to be returned. <a>#4476</a>": "Fixed an issue where a data set that was already cached locally would not be re-fetched from the mainframe when explicitly requested (fetch=true), causing stale data to be returned. <a>#4476</a>",
   "Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. <a>#3294</a>": "Fixed an issue where a migrated data set is unusable after it is recalled through Zowe Explorer. <a>#3294</a>",
   "Fixed an issue where a newly-created data set member might be opened without an extension. <a>#3555</a>": "Fixed an issue where a newly-created data set member might be opened without an extension. <a>#3555</a>",
@@ -1062,6 +1063,7 @@
   "Fixed an issue where moving a PDS member into the \"No members found\" placeholder of an empty PDS deleted the member without transferring its data. <a>#3950</a>": "Fixed an issue where moving a PDS member into the \"No members found\" placeholder of an empty PDS deleted the member without transferring its data. <a>#3950</a>",
   "Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. <a>#3590</a>": "Fixed an issue where multiple directories with the same name could not be favorited in the USS tree. <a>#3590</a>",
   "Fixed an issue where navigating to an invalid or inaccessible path under one USS profile caused file and folder nodes under all profiles to disappear or show outdated results. <a>#4288</a>": "Fixed an issue where navigating to an invalid or inaccessible path under one USS profile caused file and folder nodes under all profiles to disappear or show outdated results. <a>#4288</a>",
+  "Fixed an issue where open editor tabs showed an error when launching VS Code if the profile's token value was missing or expired. <a>#4059</a>": "Fixed an issue where open editor tabs showed an error when launching VS Code if the profile's token value was missing or expired. <a>#4059</a>",
   "Fixed an issue where opening a PDS member after renaming an expanded PDS resulted in an error. <a>#3314</a>": "Fixed an issue where opening a PDS member after renaming an expanded PDS resulted in an error. <a>#3314</a>",
   "Fixed an issue where opening a PDS member from the table view would fail with a file not found error, if the PDS had not been expanded in the tree. <a>#4415</a>": "Fixed an issue where opening a PDS member from the table view would fail with a file not found error, if the PDS had not been expanded in the tree. <a>#4415</a>",
   "Fixed an issue where opening a PDS member with a recognized file extension (such as JCL) from the data sets table would fail. <a>#4416</a>": "Fixed an issue where opening a PDS member with a recognized file extension (such as JCL) from the data sets table would fail. <a>#4416</a>",
@@ -1087,6 +1089,7 @@
   "Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.<a>#4023</a>": "Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.<a>#4023</a>",
   "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>": "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>",
   "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>": "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>",
+  "Fixed an issue where sequential data sets open in the text editor were not refreshing after a remote save, because the cache bypass that forces a network check when a file is open in the editor was only applied to PDS members and not sequential data sets in stat(), the filesystem provider method VS Code calls to detect file changes. <a>#4481</a>": "Fixed an issue where sequential data sets open in the text editor were not refreshing after a remote save, because the cache bypass that forces a network check when a file is open in the editor was only applied to PDS members and not sequential data sets in stat(), the filesystem provider method VS Code calls to detect file changes. <a>#4481</a>",
   "Fixed an issue where ssh type profiles were throwing errors when making file system calls. <a>#3891</a>": "Fixed an issue where ssh type profiles were throwing errors when making file system calls. <a>#3891</a>",
   "Fixed an issue where submitting a job from a favorited PDS member would fail. <a>#4282</a>": "Fixed an issue where submitting a job from a favorited PDS member would fail. <a>#4282</a>",
   "Fixed an issue where switching to a custom credential manager did not update the imperative.json file. <a>#3705</a>": "Fixed an issue where switching to a custom credential manager did not update the imperative.json file. <a>#3705</a>",
@@ -1303,6 +1306,7 @@
   "Hide Profile": "Hide Profile",
   "Hide profile name from tree view": "Hide profile name from tree view",
   "Hide secure field names": "Hide secure field names",
+  "History grouping is enabled. Search history will be cleared for all groups, not just the one shown here.": "History grouping is enabled. Search history will be cleared for all groups, not just the one shown here.",
   "Hovering over a data set, USS, or jobs profile now displays detailed connection information.": "Hovering over a data set, USS, or jobs profile now displays detailed connection information.",
   "ID": "ID",
   "If searching more than 50 members, a prompt displays to confirm or cancel.": "If searching more than 50 members, a prompt displays to confirm or cancel.",
@@ -1865,6 +1869,18 @@
   "Recalling a sequential data set no longer overwrites its contents.": "Recalling a sequential data set no longer overwrites its contents.",
   "Recent": "Recent",
   "Recent Filters": "Recent Filters",
+  "Recent Filters (grouped by host: {0})/Host that the listed filter history belongs to": {
+    "message": "Recent Filters (grouped by host: {0})",
+    "comment": [
+      "Host that the listed filter history belongs to"
+    ]
+  },
+  "Recent Filters (grouped by: {0})/Custom history group name that the listed filter history belongs to": {
+    "message": "Recent Filters (grouped by: {0})",
+    "comment": [
+      "Custom history group name that the listed filter history belongs to"
+    ]
+  },
   "Recent Searches": "Recent Searches",
   "Record Format": "Record Format",
   "Record Length": "Record Length",
@@ -1908,7 +1924,6 @@
   "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>": "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>",
   "Renamed the \"Restart zowex server on host...\" command to \"\"Restart SSH server on host...\". <a>#4489</a>": "Renamed the \"Restart zowex server on host...\" command to \"\"Restart SSH server on host...\". <a>#4489</a>",
   "Renamed the \"Uninstall zowex server on host...\" command to \"\"Uninstall SSH server on host...\". <a>#4489</a>": "Renamed the \"Uninstall zowex server on host...\" command to \"\"Uninstall SSH server on host...\". <a>#4489</a>",
-  "Renamed the Connect to zowex server on host... command to Deploy SSH server on host and connect.... <a>#4436</a>": "Renamed the Connect to zowex server on host... command to Deploy SSH server on host and connect.... <a>#4436</a>",
   "Renaming data set {0}/Old data set name": {
     "message": "Renaming data set {0}",
     "comment": [
@@ -1924,7 +1939,6 @@
   "Replaced an import of ILocalStorageAccess from \"@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess\" to \"@zowe/zowe-explorer-api\". <a>#3606</a>": "Replaced an import of ILocalStorageAccess from \"@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess\" to \"@zowe/zowe-explorer-api\". <a>#3606</a>",
   "Replaced keytar dependency with keyring module from <a>@zowe/secrets-for-zowe-sdk</a>. <a>#2358</a> <a>#2348</a>": "Replaced keytar dependency with keyring module from <a>@zowe/secrets-for-zowe-sdk</a>. <a>#2358</a> <a>#2348</a>",
   "Replaced lodash dependency with es-toolkit to reduce webview bundle size and add technical currency. <a>#3060</a>": "Replaced lodash dependency with es-toolkit to reduce webview bundle size and add technical currency. <a>#3060</a>",
-  "Replaced repetitive if (err instanceof Error) patterns with handleError and errorMessage utility functions from @zowe/zowe-explorer-api. <a>#4207</a>": "Replaced repetitive if (err instanceof Error) patterns with handleError and errorMessage utility functions from @zowe/zowe-explorer-api. <a>#4207</a>",
   "Replaced the comparison of checksums of the backend SSH server zowex with comparing version numbers when checking if the remote server version is outdated. <a>#4436</a>": "Replaced the comparison of checksums of the backend SSH server zowex with comparing version numbers when checking if the remote server version is outdated. <a>#4436</a>",
   "Replaced ts-loader dependency with esbuild-loader to improve build speed for developers. <a>#2909</a>": "Replaced ts-loader dependency with esbuild-loader to improve build speed for developers. <a>#2909</a>",
   "Replaced ts-loader with esbuild-loader to improve build speed for developers. <a>#2909</a>": "Replaced ts-loader with esbuild-loader to improve build speed for developers. <a>#2909</a>",
@@ -2092,6 +2106,8 @@
       "Label"
     ]
   },
+  "Showing history grouped by host: {0}": "Showing history grouped by host: {0}",
+  "Showing history grouped by: {0}": "Showing history grouped by: {0}",
   "Size": "Size",
   "Smarter data set search filtering": "Smarter data set search filtering",
   "Solved issue with a conflicting keybinding for Edit History, changed keybinding to Ctrl+Alt+y for Windows and ⌘ Cmd+⌥ Opt+y for macOS. <a>#2543</a>": "Solved issue with a conflicting keybinding for Edit History, changed keybinding to Ctrl+Alt+y for Windows and ⌘ Cmd+⌥ Opt+y for macOS. <a>#2543</a>",

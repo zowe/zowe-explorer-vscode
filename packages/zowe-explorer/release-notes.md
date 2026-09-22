@@ -160,6 +160,8 @@ Localization is tied to the VS Code localization setting. If there are no locali
 
 If you wish to make localization contributions to these or generally across the rest of Zowe Explorer, please reach out in the usual places.
 
+---
+
 ## `3.4.0`
 
 ### VS Code engine support change
@@ -195,6 +197,8 @@ Added support for `encoding` profile property when retrieving JCL with z/OSMF. F
 #### Submit job with encoding
 
 Added support for `jobEncoding` profile property when submitting jobs to z/OSMF. For example, include `"jobEncoding": "IBM-1147"` in the z/OSMF profile to submit jobs with "IBM-1147" encoding.
+
+---
 
 ## `3.3.0`
 
@@ -241,6 +245,8 @@ Active jobs in the filtered profile automatically refresh at the specified inter
 ![3.3-active-jobs-polling-2](./resources/release-notes/3.3-active-jobs-polling-2.png)
 
 When all jobs have completed, polling automatically stops. Alternatively, to stop polling, right-click the profile again and select **Stop Polling Active Jobs**.
+
+---
 
 ## `3.2.0`
 
@@ -292,6 +298,8 @@ The **USS** tree can now be filtered by any selected directory. Right-click a di
 Hovering over a data set, USS, or jobs profile now displays detailed connection information.
 
 ![3.2-hover-1](./resources/release-notes/3.2-hover-1.png)
+
+---
 
 ## `3.1.0`
 
@@ -351,5 +359,7 @@ Add data sets, USS profiles, or USS directories to a VS Code workspace to group 
 ### Edit history
 
 Edit history allows viewing, deleting, or adding a profile's search/filter history for data sets, USS, and jobs. Right-click a profile and select **Edit History**.
+
+---
 
 ## `` <!-- KEEP THIS HERE AS IT MARKS END OF FILE -->
