@@ -205,8 +205,8 @@ export class SharedInit {
 
         // Webview for editing persistent items on Zowe Explorer
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.editHistory", () => {
-                return new SharedHistoryView(context, providers, commandProviders);
+            vscode.commands.registerCommand("zowe.editHistory", (node?: IZoweTreeNode) => {
+                return new SharedHistoryView(context, providers, commandProviders, node);
             })
         );
 
