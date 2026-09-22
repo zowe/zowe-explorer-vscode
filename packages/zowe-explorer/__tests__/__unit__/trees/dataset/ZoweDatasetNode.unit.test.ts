@@ -2557,7 +2557,7 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
         expect(listDatasetsMock.mock.calls[1][1]).toStrictEqual({ attributes: true, start: undefined, maxLength: 2 });
     });
 
-    it("returns an empty list of items to paginator when an error is encountered", async () => {
+    it("propagates the error to the caller instead of returning an empty list, so a mid-listing failure (e.g. an auth error) is not mistaken for a genuine empty page", async () => {
         const sessionNode = new ZoweDatasetNode({
             label: "sestest",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
@@ -2568,8 +2568,7 @@ describe("ZoweDatasetNode Unit Tests - listDatasetsInRange()", () => {
         vi.spyOn(sessionNode, "listDatasets").mockImplementationOnce(async () => {
             throw new Error("Simulated error");
         });
-        const result = await (sessionNode as any).listDatasetsInRange(undefined, 2);
-        expect(result).toStrictEqual({ items: [] });
+        await expect((sessionNode as any).listDatasetsInRange(undefined, 2)).rejects.toThrow("Simulated error");
     });
 
     it("uses cached data to fetch next page", async () => {
@@ -2694,7 +2693,7 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         expect(listMembersMock.mock.calls[1][1]).toStrictEqual({ attributes: true, start: undefined, maxLength: 2 });
     });
 
-    it("returns an empty list of items to paginator when an error is encountered", async () => {
+    it("propagates a non-404 error to the caller instead of returning an empty list, so a mid-listing failure (e.g. an auth error) is not mistaken for a genuine empty page", async () => {
         const pdsNode = new ZoweDatasetNode({
             label: "PDS.ERROR",
             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
@@ -2703,8 +2702,7 @@ describe("ZoweDatasetNode Unit Tests - listMembersInRange()", () => {
         vi.spyOn(pdsNode, "listMembers").mockImplementationOnce(async () => {
             throw new Error("Simulated error");
         });
-        const result = await (pdsNode as any).listMembersInRange(undefined, 2);
-        expect(result).toStrictEqual({ items: [] });
+        await expect((pdsNode as any).listMembersInRange(undefined, 2)).rejects.toThrow("Simulated error");
     });
 
     it("uses cached data to fetch next page - start param defined", async () => {

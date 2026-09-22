@@ -53,6 +53,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     // Tracks PDSes that have already been listed at least once, even if the listing came back empty,
     // so a later listing can still be diffed against the (empty) cache instead of being treated as the first one.
     private readonly listedPdsEntries = new WeakSet<PdsEntry>();
+    // Tracks PDSes whose entry cache was seeded by a single ad hoc member lookup (e.g. reading a
+    // member whose editor was reopened by VS Code before the PDS was ever listed)
+    private readonly lazySeededPdsEntries = new WeakSet<PdsEntry>();
     private constructor() {
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, this.onDidChangeFile);
@@ -355,8 +358,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // Only diff against a cache that was already populated by an earlier listing, and only when this
         // listing returned a member array - otherwise an initial or incomplete response would report
         // every member as created or deleted. A non-empty cache is enough on its own, since the tree can
-        // populate it without this method ever having listed the PDS itself.
-        const canDiffMembers = (entry.entries.size > 0 || this.listedPdsEntries.has(entry)) && Array.isArray(memberItems);
+        // populate it without this method ever having listed the PDS itself
+        const canDiffMembers =
+            ((entry.entries.size > 0 && !this.lazySeededPdsEntries.has(entry)) || this.listedPdsEntries.has(entry)) && Array.isArray(memberItems);
         const staleMemberNames = new Set(entry.entries.keys());
         if (Array.isArray(memberItems)) {
             this.listedPdsEntries.add(entry);
@@ -506,6 +510,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const dsname = uriPath[Number(pdsMember)];
             const ds = new DsEntry(dsname, pdsMember);
             ds.metadata = new DsEntryMetadata({ path: path.posix.join(parentDir.metadata.path, dsname), profile: parentDir.metadata.profile });
+            if (pdsMember && FsDatasetsUtils.isPdsEntry(parentDir) && parentDir.entries.size === 0 && !this.listedPdsEntries.has(parentDir)) {
+                this.lazySeededPdsEntries.add(parentDir);
+            }
             parentDir.entries.set(dsname, ds);
             entry = parentDir.entries.get(dsname) as DsEntry;
         }
@@ -699,6 +706,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         path: path.posix.join(parentDir.metadata.path, dsname),
                         profile: parentDir.metadata.profile,
                     });
+                    if (pdsMember && FsDatasetsUtils.isPdsEntry(parentDir) && parentDir.entries.size === 0 && !this.listedPdsEntries.has(parentDir)) {
+                        this.lazySeededPdsEntries.add(parentDir);
+                    }
                     parentDir.entries.set(dsname, ds);
                     dsEntry = parentDir.entries.get(dsname) as DsEntry;
                 }

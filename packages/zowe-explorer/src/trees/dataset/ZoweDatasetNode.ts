@@ -956,58 +956,51 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const profile = Profiles.getInstance()?.loadNamedProfile(this.getProfile().name);
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
 
-        try {
-            if (this.dirty || totalItems == null || lastDatasetName == null) {
-                // Rebuild cache to handle future page changes
-                // If getCount() is present
-                if (mvsApi.getCount) {
-                    const dsPatterns = [
-                        ...new Set(
-                            this.pattern
-                                .toUpperCase()
-                                .split(",")
-                                .map((p) => p.trim())
-                        ),
-                    ];
-                    const getCountResponse: IDataSetCount = await mvsApi.getCount(dsPatterns);
-                    this.paginatorData = {
-                        totalItems: getCountResponse.count,
-                        lastItemName: getCountResponse.lastItem,
-                    };
-                } else {
-                    //if getCount() not present for zosmf and extender profiles
-                    const basicResponses: IZosFilesResponse[] = [];
-                    await this.listDatasets(basicResponses, { attributes: false });
+        // Let a failure (e.g. an auth error) propagate to the Paginator and up to getDatasets, which
+        // already handles it (AuthUtils.errorHandling + syncSessionNode) and gives up on this listing
+        // entirely. Swallowing it here into `{ items: [] }` would look like a genuine empty page to
+        // getChildren, poisoning its member-diffing cache with a false "zero members" baseline that
+        // makes every real member look newly created once the listing actually succeeds.
+        if (this.dirty || totalItems == null || lastDatasetName == null) {
+            // Rebuild cache to handle future page changes
+            // If getCount() is present
+            if (mvsApi.getCount) {
+                const dsPatterns = [
+                    ...new Set(
+                        this.pattern
+                            .toUpperCase()
+                            .split(",")
+                            .map((p) => p.trim())
+                    ),
+                ];
+                const getCountResponse: IDataSetCount = await mvsApi.getCount(dsPatterns);
+                this.paginatorData = {
+                    totalItems: getCountResponse.count,
+                    lastItemName: getCountResponse.lastItem,
+                };
+            } else {
+                //if getCount() not present for zosmf and extender profiles
+                const basicResponses: IZosFilesResponse[] = [];
+                await this.listDatasets(basicResponses, { attributes: false });
 
-                    const allDatasets = basicResponses
-                        .filter((r) => r.success)
-                        .reduce((arr: Set<string>, r) => {
-                            const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
-                            responseItems?.forEach((item) => arr.add(item.dsname));
-                            return arr;
-                        }, new Set<string>());
+                const allDatasets = basicResponses
+                    .filter((r) => r.success)
+                    .reduce((arr: Set<string>, r) => {
+                        const responseItems: IZosmfListResponse[] = Array.isArray(r.apiResponse) ? r.apiResponse : r.apiResponse?.items;
+                        responseItems?.forEach((item) => arr.add(item.dsname));
+                        return arr;
+                    }, new Set<string>());
 
-                    this.paginatorData = {
-                        totalItems: allDatasets.size,
-                        lastItemName: Array.from(allDatasets).pop(),
-                    };
-                }
-
-                totalItems = this.paginatorData.totalItems;
-                lastDatasetName = this.paginatorData.lastItemName;
+                this.paginatorData = {
+                    totalItems: allDatasets.size,
+                    lastItemName: Array.from(allDatasets).pop(),
+                };
             }
-            await this.listDatasets(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
-        } catch (err) {
-            const updated = await AuthUtils.errorHandling(err, {
-                apiType: ZoweExplorerApiType.Mvs,
-                profile: this.getProfile(),
-                scenario: vscode.l10n.t("Retrieving response from MVS list API"),
-            });
-            AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
-            return {
-                items: [],
-            };
+
+            totalItems = this.paginatorData.totalItems;
+            lastDatasetName = this.paginatorData.lastItemName;
         }
+        await this.listDatasets(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
 
         const successfulResponses = responses
             .filter((response) => response.success)
@@ -1140,17 +1133,16 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             await this.listMembers(responses, { attributes: true, start, maxLength: start ? limit + 1 : limit });
         } catch (err) {
             if (err instanceof imperative.ImperativeError && Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
+                // A 404 means the PDS genuinely has no members - a real empty result, not a failure.
                 return { items: [] };
             }
-            const updated = await AuthUtils.errorHandling(err, {
-                apiType: ZoweExplorerApiType.Mvs,
-                profile: this.getProfile(),
-                scenario: vscode.l10n.t("Retrieving response from MVS list API"),
-            });
-            AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
-            return {
-                items: [],
-            };
+            // Any other failure (e.g. an auth error) must propagate to the Paginator and up to
+            // getDatasets, which already handles it (AuthUtils.errorHandling + syncSessionNode) and
+            // gives up on this listing entirely. Swallowing it here into `{ items: [] }` would look like
+            // a genuine empty page to getChildren, poisoning its member-diffing cache with a false
+            // "zero members" baseline that makes every real member look newly created once the listing
+            // actually succeeds.
+            throw err;
         }
 
         const successfulResponses = responses
