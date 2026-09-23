@@ -11,6 +11,7 @@
 
 import * as imperative from "@zowe/imperative";
 import type { IRegisterClient } from "../extend/IRegisterClient";
+import { AuthHandler } from "./AuthHandler";
 import { FileManagement } from "../utils/FileManagement";
 import { errorMessage } from "../utils/ErrorUtils";
 import { Validation } from "./Validation";
@@ -588,5 +589,25 @@ export class ProfilesCache {
                 profile.profile.password = process.env[passwordEnvVar];
             }
         }
+    }
+    /**
+     * Detect if sessions created from the specified profile will connect to APIML.
+     * see {@link AbstractSession.isUsingApiml}
+     * @param profile
+     * @returns
+     */
+    public isUsingApiml(profile: string | imperative.IProfileLoaded): boolean {
+        const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
+        return AuthHandler.getSessFromProfile(profileLoaded).isUsingApiml();
+    }
+    /**
+     * Detect if sessions created from the specified profile connect to APIML, and report the reason for that decision.
+     * see {@link AbstractSession.getApimlDecision}
+     * @param profile
+     * @returns
+     */
+    public getApimlDecision(profile: string | imperative.IProfileLoaded): imperative.IApimlDecision {
+        const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
+        return AuthHandler.getSessFromProfile(profileLoaded).getApimlDecision();
     }
 }
