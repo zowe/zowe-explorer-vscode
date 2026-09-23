@@ -48,13 +48,17 @@ async function ensureNativeBinary(context: vscode.ExtensionContext): Promise<voi
     const prebuildsDir = path.join(context.extensionPath, "prebuilds");
     const destPath = path.join(prebuildsDir, filename);
 
-    if (fs.existsSync(destPath)) {
-        return;
-    }
-
     const expectedSha256 = RUSSH_BINARY_SHA256[triple];
     if (!expectedSha256) {
         throw new Error(`No SHA256 checksum registered for native SSH binary target ${triple}.`);
+    }
+
+    if (fs.existsSync(destPath)) {
+        const existingSha256 = crypto.createHash("sha256").update(fs.readFileSync(destPath)).digest("hex");
+        if (existingSha256 === expectedSha256) {
+            imperative.Logger.getAppLogger().info("Existing native SSH binary at %s matches expected checksum; skipping download.", destPath);
+            return;
+        }
     }
 
     await vscode.window.withProgress(

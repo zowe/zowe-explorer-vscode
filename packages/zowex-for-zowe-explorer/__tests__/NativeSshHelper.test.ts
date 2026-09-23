@@ -23,6 +23,7 @@ vi.mock("node:fs", async (importActual) => {
     return {
         ...(actual as typeof import("node:fs")),
         existsSync: vi.fn(() => false),
+        readFileSync: vi.fn(() => Buffer.alloc(0)),
         mkdirSync: vi.fn(),
         writeFileSync: vi.fn(),
     };
@@ -107,12 +108,48 @@ describe("NativeSshHelper", () => {
             fetchMock.mockResolvedValue({ ok: true, status: 200, arrayBuffer: () => Promise.resolve(new ArrayBuffer(4)) });
         });
 
-        it("should skip the download when the binary already exists on disk", async () => {
+        it("should skip the download and log when the binary already exists on disk and matches the checksum", async () => {
+            setPlatform("darwin", "arm64");
             vi.spyOn(fs, "existsSync").mockReturnValue(true);
+            vi.spyOn(fs, "readFileSync").mockReturnValue(Buffer.alloc(0));
+            mockChecksumMatch(RUSSH_BINARY_SHA256["darwin-arm64"]);
+            const infoSpy = vi.fn();
+            vi.spyOn(imperative.Logger, "getAppLogger").mockReturnValue({ info: infoSpy, error: vi.fn() } as any);
 
             handleNativeSshSettings(fakeContext);
             await flush();
+
             expect(fetchMock).not.toHaveBeenCalled();
+            expect(infoSpy).toHaveBeenCalledWith(
+                expect.stringContaining("matches expected checksum"),
+                expect.stringContaining("russh.darwin-arm64.node")
+            );
+        });
+
+        it("should redownload and overwrite the binary when the existing file's checksum does not match", async () => {
+            setPlatform("darwin", "arm64");
+            vi.spyOn(fs, "existsSync").mockReturnValue(true);
+            vi.spyOn(fs, "readFileSync").mockReturnValue(Buffer.from("stale-binary"));
+            const writeSpy = vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined as never);
+            const mkdirSpy = vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined as never);
+            // First hash call (existing on-disk file) reports a mismatch; the second hash call
+            // (freshly downloaded buffer) reports a match so the write actually happens.
+            vi.spyOn(crypto, "createHash")
+                .mockReturnValueOnce({
+                    update: vi.fn().mockReturnThis(),
+                    digest: vi.fn(() => "stale-checksum-that-does-not-match"),
+                } as unknown as crypto.Hash)
+                .mockReturnValueOnce({
+                    update: vi.fn().mockReturnThis(),
+                    digest: vi.fn(() => RUSSH_BINARY_SHA256["darwin-arm64"]),
+                } as unknown as crypto.Hash);
+
+            handleNativeSshSettings(fakeContext);
+            await flush();
+
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+            expect(mkdirSpy).toHaveBeenCalled();
+            expect(writeSpy).toHaveBeenCalled();
         });
 
         it("should download and write the native binary when missing (darwin-arm64)", async () => {
