@@ -2206,18 +2206,18 @@ describe("USSTree Unit Tests - Function editSession", () => {
     describe("removeSearchHistory", () => {
         it("removes the search item passed in from the current history", async () => {
             const globalMocks = createGlobalMocks();
-            expect(globalMocks.testTree["mPersistence"]["mSearchHistory"].length).toEqual(1);
+            expect(globalMocks.testTree.getSearchHistory().length).toEqual(1);
             globalMocks.testTree.removeSearchHistory("/u/myuser");
-            expect(globalMocks.testTree["mPersistence"]["mSearchHistory"].length).toEqual(0);
+            expect(globalMocks.testTree.getSearchHistory().length).toEqual(0);
         });
     });
 
     describe("resetSearchHistory", () => {
         it("clears the entire search history", async () => {
             const globalMocks = createGlobalMocks();
-            expect(globalMocks.testTree["mPersistence"]["mSearchHistory"].length).toEqual(1);
+            expect(globalMocks.testTree.getSearchHistory().length).toEqual(1);
             globalMocks.testTree.resetSearchHistory();
-            expect(globalMocks.testTree["mPersistence"]["mSearchHistory"].length).toEqual(0);
+            expect(globalMocks.testTree.getSearchHistory().length).toEqual(0);
         });
     });
 
