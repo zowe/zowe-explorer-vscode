@@ -280,6 +280,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
 
         let jwtCheckResult: JwtCheckResult;
         const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
+        // todo need allowed login method here?
         if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER) {
             jwtCheckResult = await ZoweTreeProvider.checkJwtForProfile(profileName);
         } else {

@@ -48,11 +48,7 @@ export class ProfileManagement {
             );
             allowedLoginMethod = imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
         }
-        let sessTypeFromProf = AuthHandler.sessTypeFromSession(AuthHandler.getSessFromProfile(profile));
-        // allowedLoginType overrides 
-        if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC) {
-            sessTypeFromProf = imperative.SessConstants.AUTH_TYPE_BASIC;
-        }
+        const sessTypeFromProf = AuthHandler.sessTypeFromSession(AuthHandler.getSessFromProfile(profile));
         const selected: vscode.QuickPickItem = await this.setupProfileManagementQp(sessTypeFromProf, node, allowedLoginMethod);
         await this.handleAuthSelection(selected, node, profile);
     }
@@ -73,10 +69,17 @@ export class ProfileManagement {
             description: vscode.l10n.t("Add username and password for basic authentication"),
         },
     };
+
     public static readonly basicAuthUpdateQpItems: Record<string, vscode.QuickPickItem> = {
         [ProfileManagement.AuthQpLabels.update]: {
             label: `$(refresh) ${vscode.l10n.t("Update Credentials")}`,
             description: vscode.l10n.t("Update stored username and password"),
+        },
+    };
+    public static readonly certUpdateQpItems: Record<string, vscode.QuickPickItem> = {
+        [ProfileManagement.AuthQpLabels.add]: {
+            label: `$(plus) ${vscode.l10n.t("Update Certificate")}`,
+            description: vscode.l10n.t("Set the path to your authentication certificate"),
         },
     };
     public static readonly disableProfileValildationQpItem: Record<string, vscode.QuickPickItem> = {
@@ -130,11 +133,31 @@ export class ProfileManagement {
         const profile = node.getProfile();
         const qp = Gui.createQuickPick();
         let quickPickOptions: vscode.QuickPickItem[];
+
+        // allowedLoginType will override the inference of which auth type to use that we made
+        // based on the profile
+        if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC) {
+            managementType = imperative.SessConstants.AUTH_TYPE_BASIC;
+        } else if (
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM ||
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM
+        ) {
+            managementType = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
+        }
         const placeholders = this.getQpPlaceholders(profile);
         switch (managementType) {
             case imperative.SessConstants.AUTH_TYPE_BASIC: {
-                quickPickOptions = this.basicAuthQp(node);
-                // only allow switching if allowedLoginMethod is not set 
+                quickPickOptions = Object.values(this.basicAuthUpdateQpItems);
+                // for any managementType: only allow switching if allowedLoginMethod is not set or set to "prompt",
+                // because allowedLoginType restricts the type of auth allowed down to one.
+                if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
+                    quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
+                }
+                qp.placeholder = placeholders.basicAuth;
+                break;
+            }
+            case imperative.SessConstants.AUTH_TYPE_CERT_PEM: {
+                quickPickOptions = Object.values(this.certUpdateQpItems);
                 if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
                     quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
                 }
@@ -144,7 +167,11 @@ export class ProfileManagement {
             // bearer and token trigger the same flow
             case imperative.SessConstants.AUTH_TYPE_BEARER:
             case imperative.SessConstants.AUTH_TYPE_TOKEN: {
-                quickPickOptions = this.tokenAuthQp(node);
+                quickPickOptions = Object.values(this.tokenAuthLoginQpItem);
+                if (profile.profile.tokenValue) {
+                    quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
+                }
+
                 if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
                     quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
                 }
@@ -152,11 +179,18 @@ export class ProfileManagement {
                 break;
             }
             default: {
-                quickPickOptions = this.chooseAuthQp(node);
+                quickPickOptions = Object.values(this.basicAuthAddQpItems);
+                try {
+                    ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
+                    quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
+                } catch {
+                    ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication, will not provide option.`);
+                }
                 qp.placeholder = placeholders.chooseAuth;
                 break;
             }
         }
+        this.addFinalQpOptions(node, quickPickOptions);
         let selectedItem = quickPickOptions[0];
         qp.items = quickPickOptions;
         qp.activeItems = [selectedItem];
@@ -167,6 +201,7 @@ export class ProfileManagement {
     }
     private static async handleAuthSelection(selected: vscode.QuickPickItem, node: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
         switch (selected) {
+            // todo add case for cert
             case this.basicAuthAddQpItems[this.AuthQpLabels.add]: {
                 await ProfilesUtils.promptCredentials(node);
                 break;
@@ -234,31 +269,6 @@ export class ProfileManagement {
         };
     }
 
-    private static basicAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
-        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthUpdateQpItems);
-
-        return this.addFinalQpOptions(node, quickPickOptions);
-    }
-    private static tokenAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
-        const profile = node.getProfile();
-        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.tokenAuthLoginQpItem);
-        if (profile.profile.tokenValue) {
-            quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
-        }
-
-        return this.addFinalQpOptions(node, quickPickOptions);
-    }
-    private static chooseAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
-        const profile = node.getProfile();
-        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthAddQpItems);
-        try {
-            ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
-            quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
-        } catch {
-            ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication, will not provide option.`);
-        }
-        return this.addFinalQpOptions(node, quickPickOptions);
-    }
     private static addFinalQpOptions(node: IZoweTreeNode, quickPickOptions: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
         quickPickOptions.push(this.editProfileQpItems[this.AuthQpLabels.edit]);
         quickPickOptions.push(this.hideProfileQpItems[this.AuthQpLabels.hide]);

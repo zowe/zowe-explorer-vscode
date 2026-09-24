@@ -918,6 +918,7 @@ export class Profiles extends ProfilesCache {
         }
         try {
             let loginOk = false;
+            // todo allowedLoginMethod here
             if (loginTokenType && !loginTokenType.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)) {
                 loginOk = await ZoweVsCodeExtension.directConnectLogin(serviceProfile, zeInstance, node);
             } else {
