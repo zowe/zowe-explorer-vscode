@@ -9,9 +9,11 @@
  *
  */
 
+import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { imperative } from "@zowe/zowe-explorer-api";
+import { RUSSH_BINARY_SHA256 } from "@zowe/zowex-for-zowe-sdk";
 import * as vscode from "vscode";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -46,8 +48,17 @@ async function ensureNativeBinary(context: vscode.ExtensionContext): Promise<voi
     const prebuildsDir = path.join(context.extensionPath, "prebuilds");
     const destPath = path.join(prebuildsDir, filename);
 
+    const expectedSha256 = RUSSH_BINARY_SHA256[triple];
+    if (!expectedSha256) {
+        throw new Error(`No SHA256 checksum registered for native SSH binary target ${triple}.`);
+    }
+
     if (fs.existsSync(destPath)) {
-        return;
+        const existingSha256 = crypto.createHash("sha256").update(fs.readFileSync(destPath)).digest("hex");
+        if (existingSha256 === expectedSha256) {
+            imperative.Logger.getAppLogger().info("Existing native SSH binary at %s matches expected checksum; skipping download.", destPath);
+            return;
+        }
     }
 
     await vscode.window.withProgress(
@@ -70,8 +81,14 @@ async function ensureNativeBinary(context: vscode.ExtensionContext): Promise<voi
                 throw new Error(`HTTP ${response.status}`);
             }
 
+            const buffer = Buffer.from(await response.arrayBuffer());
+            const actualSha256 = crypto.createHash("sha256").update(buffer).digest("hex");
+            if (actualSha256 !== expectedSha256) {
+                throw new Error(`SHA256 mismatch for ${filename}: expected ${expectedSha256}, but got ${actualSha256}.`);
+            }
+
             fs.mkdirSync(prebuildsDir, { recursive: true });
-            fs.writeFileSync(destPath, Buffer.from(await response.arrayBuffer()));
+            fs.writeFileSync(destPath, buffer);
             imperative.Logger.getAppLogger().info("Downloaded native SSH binary to %s", destPath);
         }
     );

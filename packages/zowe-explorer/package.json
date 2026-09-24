@@ -2,7 +2,7 @@
   "name": "vscode-extension-for-zowe",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "3.6.0-SNAPSHOT",
+  "version": "3.7.0-SNAPSHOT",
   "publisher": "Zowe",
   "author": "Zowe",
   "license": "EPL-2.0",
@@ -2020,6 +2020,20 @@
           "scope": "application",
           "deprecationMessage": "%zowe.history.deprecationMsg%"
         },
+        "zowe.settings.historyGroupByHost": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "%zowe.settings.historyGroupByHost%",
+          "scope": "window"
+        },
+        "zowe.settings.maxSearchHistory": {
+          "type": "integer",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 100,
+          "markdownDescription": "%zowe.settings.maxSearchHistory%",
+          "scope": "window"
+        },
         "zowe.files.logsFolder.path": {
           "type": "string",
           "default": "",
@@ -2414,7 +2428,7 @@
     "@wdio/mocha-framework": "^9.27.2",
     "@wdio/spec-reporter": "^9.27.2",
     "@wdio/types": "^9.12.3",
-    "adm-zip": "^0.6.0",
+    "adm-zip": "^0.6.1",
     "chalk": "^2.4.2",
     "eslint-plugin-zowe-explorer": "workspace:*",
     "expect-webdriverio": "^5.6.7",
@@ -2431,11 +2445,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.35.0",
-    "@zowe/secrets-for-zowe-sdk": "^8.32.0",
+    "@zowe/core-for-zowe-sdk": "^8.37.0",
+    "@zowe/secrets-for-zowe-sdk": "^8.37.0",
     "@zowe/zos-files-for-zowe-sdk": "^8.37.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.32.0",
-    "@zowe/zosmf-for-zowe-sdk": "^8.35.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.37.0",
+    "@zowe/zosmf-for-zowe-sdk": "^8.37.0",
     "@zowe/zowe-explorer-api": "workspace:*",
     "dayjs": "^1.11.11",
     "isbinaryfile": "4.0.4",

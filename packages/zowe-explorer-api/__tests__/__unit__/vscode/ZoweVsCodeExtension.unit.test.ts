@@ -194,7 +194,7 @@ describe("ZoweVsCodeExtension", () => {
             await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" });
             expect(fetchBaseProfileSpy).toHaveBeenCalledTimes(1);
             expect(updateBaseProfileFileLoginSpy).not.toHaveBeenCalled();
-            expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Login failed: No base profile found"));
+            expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Login failed: No base or parent profile found"));
         });
         it("should not logout if the base profile cannot be fetched", async () => {
             const errorMessageSpy = vi.spyOn(Gui, "errorMessage");
@@ -203,7 +203,7 @@ describe("ZoweVsCodeExtension", () => {
             await ZoweVsCodeExtension.ssoLogout({ serviceProfile: "service" });
             expect(fetchBaseProfileSpy).toHaveBeenCalledTimes(1);
             expect(updateBaseProfileFileLoginSpy).not.toHaveBeenCalled();
-            expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Logout failed: No base profile found"));
+            expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Logout failed: No base or parent profile found"));
         });
 
         describe("user and password chosen", () => {
@@ -611,7 +611,7 @@ describe("ZoweVsCodeExtension", () => {
             });
 
             expect(testSpy).not.toHaveBeenCalled();
-            expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("No base profile found"));
+            expect(errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("No base or parent profile found"));
             expect(didLogin).toBe(false);
             await expect(fetchBaseProfileSpy.mock.results[0].value).resolves.toBeUndefined();
         });

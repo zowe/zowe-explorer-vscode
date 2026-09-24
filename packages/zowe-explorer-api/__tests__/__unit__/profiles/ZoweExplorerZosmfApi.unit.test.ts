@@ -11,7 +11,7 @@
 
 import { MockInstance } from "vitest";
 
-import { Login, Logout } from "@zowe/core-for-zowe-sdk";
+import { Login, Logout, ZosmfRestClient } from "@zowe/core-for-zowe-sdk";
 import * as imperative from "@zowe/imperative";
 import * as zosconsole from "@zowe/zos-console-for-zowe-sdk";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
@@ -675,34 +675,59 @@ describe("ZosmfMvsApi", () => {
         expect(copySpy).toHaveBeenCalled();
     });
 
-    it("passes tsoAccount and tsoProc from the profile to List.dataSet as tso header options", async () => {
-        const listSpy = vi.spyOn(zosfiles.List, "dataSet").mockResolvedValue({ success: true } as any);
+    it("passes tsoAccount and tsoProcedure from the profile to List.dataSet as tso header options", async () => {
+        const listSpy = vi.spyOn(zosfiles.List, "dataSet");
+        listSpy.mockReset(); // todo leaking mocks from earlier tests?
+        const getJSONSpy = vi.spyOn(ZosmfRestClient, "getExpectJSON").mockResolvedValue({ items: [{ dsname: "SOME.FILTER.RESULT" }] });
+        const expectedAcct = "1234";
+        const expectedProcedure = "MYPROC";
+
         const profileWithTso: imperative.IProfileLoaded = {
             ...loadedProfile,
-            profile: { ...fakeProfile, tsoAccount: "1234", tsoProc: "MYPROC" },
+            profile: { ...fakeProfile, tsoAccount: expectedAcct, tsoProcedure: expectedProcedure },
         };
         const zosmfApi = new ZoweExplorerZosmf.MvsApi(profileWithTso);
         await zosmfApi.dataSet("SOME.FILTER");
         expect(listSpy).toHaveBeenCalledWith(
             expect.any(Object),
             "SOME.FILTER",
-            expect.objectContaining({ tsoAccount: "1234", tsoProcedure: "MYPROC" })
+            expect.objectContaining({ tsoAccount: expectedAcct, tsoProcedure: expectedProcedure })
+        );
+
+        // ensure that the tso settings make it all the way through as headers
+        expect(getJSONSpy).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.anything(),
+            expect.arrayContaining([{ "X-IBM-Request-Acctnum": expectedAcct }, { "X-IBM-Request-Proc": expectedProcedure }])
         );
     });
 
-    it("passes tsoAccount and tsoProc from the profile to Create.dataSet as tso header options", async () => {
-        const createSpy = vi.spyOn(zosfiles.Create, "dataSet").mockResolvedValue({ success: true } as any);
+    it("passes tsoAccount and tsoProcedure from the profile to Create.dataSet as tso header options", async () => {
+        const expectedAcct = "1234";
+        const expectedProcedure = "MYPROC";
+        const expectedDsName = "SOME.DSNAME";
+        const postStringSpy = vi.spyOn(ZosmfRestClient, "postExpectString").mockResolvedValue("OK");
+        vi.spyOn(JSON, "parse").mockReset(); // todo leaking mocks from earlier tests?
+        const createSpy = vi.spyOn(zosfiles.Create, "dataSet");
+        createSpy.mockReset(); // todo leaking mocks from earlier tests?
         const profileWithTso: imperative.IProfileLoaded = {
             ...loadedProfile,
-            profile: { ...fakeProfile, tsoAccount: "1234", tsoProc: "MYPROC" },
+            profile: { ...fakeProfile, tsoAccount: expectedAcct, tsoProcedure: expectedProcedure },
         };
         const zosmfApi = new ZoweExplorerZosmf.MvsApi(profileWithTso);
-        await zosmfApi.createDataSet(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, "SOME.DSNAME");
+        await zosmfApi.createDataSet(zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL, expectedDsName);
         expect(createSpy).toHaveBeenCalledWith(
             expect.any(Object),
             zosfiles.CreateDataSetTypeEnum.DATA_SET_SEQUENTIAL,
-            "SOME.DSNAME",
-            expect.objectContaining({ tsoAccount: "1234", tsoProcedure: "MYPROC" })
+            expectedDsName,
+            expect.objectContaining({ tsoAccount: expectedAcct, tsoProcedure: expectedProcedure })
+        );
+
+        expect(postStringSpy).toHaveBeenCalledWith(
+            expect.anything(),
+            expect.stringContaining(expectedDsName),
+            expect.arrayContaining([{ "X-IBM-Request-Acctnum": expectedAcct }, { "X-IBM-Request-Proc": expectedProcedure }]),
+            expect.anything()
         );
     });
 
