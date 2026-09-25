@@ -41,6 +41,13 @@ import dayjs = require("dayjs");
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
 
+    private readonly PROFILE_URI_SEGMENTS = 1; // /PROFILE
+    /**
+     * Directories whose contents this provider has listed at least once, which is what makes their cached
+     * entries usable as a baseline for diffing a later listing. Tracked alongside `entries.size` so that a
+     * directory that was empty when it was listed still reports the entries that appear in it later.
+     */
+    private readonly listedDirectories = new WeakSet<UssDirectory>();
     private static _instance: UssFSProvider;
     private constructor() {
         super();
@@ -59,6 +66,43 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         return UssFSProvider._instance;
+    }
+
+    /**
+     * Fires the given file change events, adding a `Changed` event for the parent directory whenever
+     * one of its entries is created or deleted. VS Code does not derive parent events from child ones,
+     * so a watcher on a directory would otherwise see nothing when its contents change.
+     *
+     * @param events The file change events to fire
+     */
+    public fireSoon(...events: vscode.FileChangeEvent[]): void {
+        // Consolidate existing events
+        const queuedParents = new Set(
+            [...this._bufferedEvents, ...events].filter((event) => event.type === vscode.FileChangeType.Changed).map((event) => event.uri.path)
+        );
+        const parentEvents: vscode.FileChangeEvent[] = [];
+
+        for (const event of events) {
+            if (event.type === vscode.FileChangeType.Changed || !this.hasParentDirectory(event.uri)) {
+                continue;
+            }
+            const parentUri = event.uri.with({ path: path.posix.join(event.uri.path, ".."), query: "" });
+            if (queuedParents.has(parentUri.path)) {
+                continue;
+            }
+            queuedParents.add(parentUri.path);
+            parentEvents.push({ type: vscode.FileChangeType.Changed, uri: parentUri });
+        }
+
+        super.fireSoon(...events, ...parentEvents);
+    }
+
+    /**
+     * @param uri A URI within this provider
+     * @returns Whether the URI has a parent directory in the file system, i.e. it is not a profile root
+     */
+    private hasParentDirectory(uri: vscode.Uri): boolean {
+        return uri.path.split("/").filter(Boolean).length > this.PROFILE_URI_SEGMENTS;
     }
 
     protected async lookupWithCache(uri: vscode.Uri): Promise<UssDirectory | UssFile | IFileSystemEntry> {
@@ -366,8 +410,18 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         const fileList = entryExists ? await this.listFiles(entry.metadata.profile, uri) : resp;
-        for (const item of fileList.apiResponse?.items ?? []) {
+        const listedItems = fileList.apiResponse?.items;
+        // Only diff against a cache that an earlier listing populated. A non-empty cache is enough on its own,
+        // since the tree can populate it without the provider ever listing the directory itself.
+        const canDiffEntries = (entry.entries.size > 0 || this.listedDirectories.has(entry)) && Array.isArray(listedItems);
+        const staleEntryNames = new Set(entry.entries.keys());
+        if (Array.isArray(listedItems)) {
+            this.listedDirectories.add(entry);
+        }
+
+        for (const item of listedItems ?? []) {
             const itemName = item.name as string;
+            staleEntryNames.delete(itemName);
 
             const isDirectory = item.mode?.startsWith("d") ?? false;
             const newEntryType = isDirectory ? vscode.FileType.Directory : vscode.FileType.File;
@@ -396,6 +450,23 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
 
             entry.entries.set(itemName, newEntry);
+
+            if (canDiffEntries) {
+                this.fireSoon({
+                    type: vscode.FileChangeType.Created,
+                    uri: uri.with({ path: path.posix.join(uri.path, itemName), query: "" }),
+                });
+            }
+        }
+
+        if (canDiffEntries) {
+            for (const staleEntryName of staleEntryNames) {
+                entry.entries.delete(staleEntryName);
+                this.fireSoon({
+                    type: vscode.FileChangeType.Deleted,
+                    uri: uri.with({ path: path.posix.join(uri.path, staleEntryName), query: "" }),
+                });
+            }
         }
 
         return entry;
