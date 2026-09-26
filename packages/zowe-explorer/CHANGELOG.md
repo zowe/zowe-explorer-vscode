@@ -18,6 +18,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where the error message shown when saving a data set with lines exceeding the logical record length was too vague to identify the problem. [#4076](https://github.com/zowe/zowe-explorer-vscode/issues/4076)
 - Fixed an issue where data sets and USS files honored illegal characters in their respective names. [#4501](https://github.com/zowe/zowe-explorer-vscode/pull/4501)
 - Fixed an issue where sequential data sets open in the text editor were not refreshing after a remote save, because the cache bypass that forces a network check when a file is open in the editor was only applied to PDS members and not sequential data sets in `stat()`, the filesystem provider method VS Code calls to detect file changes. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
 - Fixed an issue where a data set or USS file would fail to open with a "The editor could not be opened due to an unexpected error" message after re-authenticating with valid credentials. [#4495](https://github.com/zowe/zowe-explorer-vscode/pull/4495)
