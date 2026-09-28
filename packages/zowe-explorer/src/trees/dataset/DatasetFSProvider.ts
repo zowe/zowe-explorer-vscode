@@ -48,7 +48,14 @@ import { ProfilesUtils } from "../../utils/ProfilesUtils";
 
 export class DatasetFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     private readonly EXPECTED_MEMBER_LENGTH = 2; // /DATA.SET/MEMBER
+    private readonly MEMBER_URI_SEGMENTS = 3; // /PROFILE/DATA.SET/MEMBER
     private static _instance: DatasetFSProvider;
+    // Tracks PDSes that have already been listed at least once, even if the listing came back empty,
+    // so a later listing can still be diffed against the (empty) cache instead of being treated as the first one.
+    private readonly listedPdsEntries = new WeakSet<PdsEntry>();
+    // Tracks PDSes whose entry cache was seeded by a single ad hoc member lookup (e.g. reading a
+    // member whose editor was reopened by VS Code before the PDS was ever listed)
+    private readonly lazySeededPdsEntries = new WeakSet<PdsEntry>();
     private constructor() {
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, this.onDidChangeFile);
@@ -71,6 +78,44 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public watch(_uri: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
         // ignore, fires for all changes...
         return new vscode.Disposable(() => {});
+    }
+
+    /**
+     * Fires the given file change events, adding a `Changed` event for the parent PDS whenever one of
+     * its members is created or deleted. VS Code does not derive parent events from child ones, so a
+     * watcher on a PDS would otherwise see nothing when its member list changes.
+     *
+     * @param events The file change events to fire
+     */
+    public fireSoon(...events: vscode.FileChangeEvent[]): void {
+        // Parents already reported as changed, whether queued by an earlier call or included in this
+        // one, so a listing that adds or removes several members only reports its PDS once.
+        const queuedParents = new Set(
+            [...this._bufferedEvents, ...events].filter((event) => event.type === vscode.FileChangeType.Changed).map((event) => event.uri.path)
+        );
+        const parentEvents: vscode.FileChangeEvent[] = [];
+
+        for (const event of events) {
+            if (event.type === vscode.FileChangeType.Changed || !this.isPdsMemberUri(event.uri)) {
+                continue;
+            }
+            const parentUri = event.uri.with({ path: path.posix.join(event.uri.path, ".."), query: "" });
+            if (queuedParents.has(parentUri.path)) {
+                continue;
+            }
+            queuedParents.add(parentUri.path);
+            parentEvents.push({ type: vscode.FileChangeType.Changed, uri: parentUri });
+        }
+
+        super.fireSoon(...events, ...parentEvents);
+    }
+
+    /**
+     * @param uri A URI within this provider
+     * @returns Whether the URI points at a PDS member, i.e. `/{profile}/{DATA.SET}/{MEMBER}`
+     */
+    private isPdsMemberUri(uri: vscode.Uri): boolean {
+        return uri.path.split("/").filter(Boolean).length === this.MEMBER_URI_SEGMENTS;
     }
 
     protected async lookupWithCache(uri: vscode.Uri): Promise<DirEntry | DsEntry | IFileSystemEntry> {
@@ -309,10 +354,25 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         const pdsExtension = DatasetUtils.getExtension(entry.name);
 
-        for (const ds of members?.apiResponse?.items || []) {
+        const memberItems = members?.apiResponse?.items;
+        // Only diff against a cache that was already populated by an earlier listing, and only when this
+        // listing returned a member array - otherwise an initial or incomplete response would report
+        // every member as created or deleted. A non-empty cache is enough on its own, since the tree can
+        // populate it without this method ever having listed the PDS itself
+        const canDiffMembers =
+            ((entry.entries.size > 0 && !this.lazySeededPdsEntries.has(entry)) || this.listedPdsEntries.has(entry)) && Array.isArray(memberItems);
+        const staleMemberNames = new Set(entry.entries.keys());
+        if (Array.isArray(memberItems)) {
+            this.listedPdsEntries.add(entry);
+        }
+
+        for (const ds of memberItems || []) {
             const fullMemberName = `${ds.member as string}${pdsExtension ?? ""}`;
+            staleMemberNames.delete(fullMemberName);
+
             let tempEntry = entry.entries.get(fullMemberName);
-            if (tempEntry == null) {
+            const isNewMember = tempEntry == null;
+            if (isNewMember) {
                 tempEntry = new DsEntry(fullMemberName, true);
                 tempEntry.metadata = new DsEntryMetadata({ ...entry.metadata, path: path.posix.join(entry.metadata.path, fullMemberName) });
             }
@@ -335,6 +395,23 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             }
 
             entry.entries.set(fullMemberName, tempEntry);
+
+            if (isNewMember && canDiffMembers) {
+                this.fireSoon({
+                    type: vscode.FileChangeType.Created,
+                    uri: uri.with({ path: path.posix.join(uri.path, fullMemberName), query: "" }),
+                });
+            }
+        }
+
+        if (canDiffMembers) {
+            for (const staleMemberName of staleMemberNames) {
+                entry.entries.delete(staleMemberName);
+                this.fireSoon({
+                    type: vscode.FileChangeType.Deleted,
+                    uri: uri.with({ path: path.posix.join(uri.path, staleMemberName), query: "" }),
+                });
+            }
         }
     }
 
@@ -433,6 +510,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             const dsname = uriPath[Number(pdsMember)];
             const ds = new DsEntry(dsname, pdsMember);
             ds.metadata = new DsEntryMetadata({ path: path.posix.join(parentDir.metadata.path, dsname), profile: parentDir.metadata.profile });
+            if (pdsMember && FsDatasetsUtils.isPdsEntry(parentDir) && parentDir.entries.size === 0 && !this.listedPdsEntries.has(parentDir)) {
+                this.lazySeededPdsEntries.add(parentDir);
+            }
             parentDir.entries.set(dsname, ds);
             entry = parentDir.entries.get(dsname) as DsEntry;
         }
@@ -626,6 +706,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                         path: path.posix.join(parentDir.metadata.path, dsname),
                         profile: parentDir.metadata.profile,
                     });
+                    if (pdsMember && FsDatasetsUtils.isPdsEntry(parentDir) && parentDir.entries.size === 0 && !this.listedPdsEntries.has(parentDir)) {
+                        this.lazySeededPdsEntries.add(parentDir);
+                    }
                     parentDir.entries.set(dsname, ds);
                     dsEntry = parentDir.entries.get(dsname) as DsEntry;
                 }

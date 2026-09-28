@@ -65,6 +65,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
     private etag?: string;
     public lastValidPath?: string;
     public lastValidTooltip?: string | vscode.MarkdownString;
+    private lastListedPath?: string;
 
     /**
      * Creates an instance of ZoweUSSNode
@@ -281,8 +282,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         this.lastValidPath = this.fullPath;
         this.lastValidTooltip = this.tooltip;
 
-        // If search path has changed, invalidate all children
-        if (this.resourceUri.path !== this.fullPath) {
+        // If the path has changed since the last listing, invalidate all children. `resourceUri` cannot be
+        // used for this comparison: a session node's URI is only the profile root, so it never matches the
+        // filter search path its children are listed from, which would discard the children on every refresh.
+        const isFirstListing = this.lastListedPath !== this.fullPath;
+        if (isFirstListing) {
             this.children = [];
         }
 
@@ -290,6 +294,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         for (const element of this.children as ZoweUSSNode[]) {
             existingItems[`${element.parentPath}/${element.label.toString()}`] = element;
         }
+        // The tree lists USS files directly rather than through the file system provider, so the
+        // provider never sees this listing and cannot report what appeared since the last one.
+        // Nothing is reported for a first listing, as everything in it would look newly created.
+        const canReportCreations = !isFirstListing;
+        const createdUris: vscode.Uri[] = [];
         const responseNodes: IZoweUSSTreeNode[] = [];
         for (const item of response.apiResponse?.items ?? []) {
             // ".", "..", and "..." have already been filtered out
@@ -314,6 +323,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     perms: item.mode,
                     owner: item.user,
                 });
+                // Re-listing this node means its descendants are out of date too
+                ussNode.dirty = true;
                 responseNodes.push(ussNode);
                 ussNode.onUpdateEmitter.fire(ussNode);
                 continue;
@@ -335,12 +346,14 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
                     UssFSProvider.instance.createParentDirectories(ussNode.resourceUri);
                     UssFSProvider.instance.createDirectory(ussNode.resourceUri);
+                    createdUris.push(ussNode.resourceUri);
                 }
             } else {
                 // Create an entry for the USS file if it doesn't exist.
                 if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
                     UssFSProvider.instance.createParentDirectories(ussNode.resourceUri);
                     UssFSProvider.instance.createEntry(ussNode.resourceUri, "file");
+                    createdUris.push(ussNode.resourceUri);
                 }
             }
             ussNode.setAttributes({
@@ -363,10 +376,19 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
         }
 
+        // Report entries that appeared on the mainframe since the last listing. `removeEntry` above
+        // already reports deletions, so this is what makes the two directions symmetric.
+        if (canReportCreations) {
+            for (const resourceUri of createdUris) {
+                UssFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: resourceUri });
+            }
+        }
+
         this.children = this.children
             .concat(nodesToAdd)
             .filter((c) => !nodesToRemove.includes(c))
             .sort((a, b) => (a.label as string).localeCompare(b.label as string));
+        this.lastListedPath = this.fullPath;
         this.dirty = false;
         return this.children;
     }
