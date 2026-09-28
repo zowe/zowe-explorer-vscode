@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { AuthHandler, Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
+import { AuthHandler, Gui, IZoweTreeNode, ZoweVsCodeExtension, imperative } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { Profiles } from "../configuration/Profiles";
 import { ZoweLogger } from "../tools/ZoweLogger";
@@ -43,8 +43,8 @@ export class ProfileManagement {
         let allowedLoginMethod = profile.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
         if (imperative.SessConstants.ALL_ALLOWED_LOGIN_METHODS.indexOf(allowedLoginMethod) < 0) {
             ZoweLogger.debug(
-                `Unknown allowed login method value ${allowedLoginMethod}.` +
-                ` Falling back to ${imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT}`
+                `Unknown allowed login method value '${allowedLoginMethod}'.` +
+                ` Falling back to '${imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT}'`
             );
             allowedLoginMethod = imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
         }
@@ -62,6 +62,7 @@ export class ProfileManagement {
         login: "obtain-token",
         logout: "invalidate-token",
         update: "update-credentials",
+        updateCert: "update-cert",
     };
     public static readonly basicAuthAddQpItems: Record<string, vscode.QuickPickItem> = {
         [ProfileManagement.AuthQpLabels.add]: {
@@ -77,7 +78,7 @@ export class ProfileManagement {
         },
     };
     public static readonly certUpdateQpItems: Record<string, vscode.QuickPickItem> = {
-        [ProfileManagement.AuthQpLabels.add]: {
+        [ProfileManagement.AuthQpLabels.updateCert]: {
             label: `$(plus) ${vscode.l10n.t("Update Certificate")}`,
             description: vscode.l10n.t("Set the path to your authentication certificate"),
         },
@@ -199,9 +200,9 @@ export class ProfileManagement {
         qp.hide();
         return selectedItem;
     }
-    private static async handleAuthSelection(selected: vscode.QuickPickItem, node: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
+    private static async handleAuthSelection(selected: vscode.QuickPickItem,
+        node: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
         switch (selected) {
-            // todo add case for cert
             case this.basicAuthAddQpItems[this.AuthQpLabels.add]: {
                 await ProfilesUtils.promptCredentials(node);
                 break;
@@ -224,6 +225,22 @@ export class ProfileManagement {
             }
             case this.basicAuthUpdateQpItems[this.AuthQpLabels.update]: {
                 await ProfilesUtils.promptCredentials(node);
+                break;
+            }
+            case this.certUpdateQpItems[this.AuthQpLabels.updateCert]: {
+
+                const response: { cert: string; certKey: string } = await vscode.commands.executeCommand("zowe.certificateWizard", {
+                    cert: profile?.profile?.certFile,
+                    certKey: profile?.profile?.certKeyFile,
+                    dialogOpts: { canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
+                });
+                let profileToSave = await ZoweVsCodeExtension.profilesCache.fetchBaseProfile(profile.name) ?? profile;
+                profileToSave = profile.name.startsWith(profileToSave.name + ".") ? { ...profileToSave, type: null } : profileToSave;
+                const profileInfo = await ZoweVsCodeExtension.profilesCache.getProfileInfo();
+                const updateSettings = { profileName: profileToSave.name, profileType: profileToSave.type };
+                await profileInfo.updateProperty({ ...updateSettings, property: 'certFile', value: response.cert });
+                await profileInfo.updateProperty({ ...updateSettings, property: 'certKeyFile', value: response.certKey });
+                ZoweLogger.debug(`Updated profile ${profileToSave.name} (type: ${profileToSave.type}) with certificate auth details`);
                 break;
             }
             case this.hideProfileQpItems[this.AuthQpLabels.hide]: {
