@@ -18,7 +18,7 @@ overrides:
   deepmerge-ts: ^8.0.0
   diff@5: ^5.2.2
   diff@>5: ^8.0.3
-  fast-uri: 3.1.7
+  fast-uri: ^3.1.7
   fast-xml-builder: ^1.1.7
   fast-xml-parser: ^5.7.0
   fastify: ^5.12.1
@@ -42,7 +42,7 @@ overrides:
   tinyclip: ^0.1.15
   tmp: ^0.2.7
   underscore: ^1.13.8
-  undici@6: ^6.28.0
+  undici@6: ^6.28.1
   uuid@<11: ^11.1.1
   ws: ^8.21.0
   sanitize-html: ^2.17.7
@@ -50,7 +50,6 @@ overrides:
   qs: ^6.16.0
   fflate: ^0.8.3
   smol-toml: ^1.7.1
-  undici: 6.28.1
 
 importers:
 
