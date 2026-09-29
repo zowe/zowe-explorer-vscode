@@ -10,7 +10,7 @@
  */
 
 import * as vscode from "vscode";
-import { AuthHandler, Gui, IZoweTreeNode, ZoweVsCodeExtension, imperative } from "@zowe/zowe-explorer-api";
+import { AuthHandler, Gui, IZoweTreeNode, imperative } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { Profiles } from "../configuration/Profiles";
 import { ZoweLogger } from "../tools/ZoweLogger";
@@ -234,9 +234,9 @@ export class ProfileManagement {
                     certKey: profile?.profile?.certKeyFile,
                     dialogOpts: { canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
                 });
-                let profileToSave = await ZoweVsCodeExtension.profilesCache.fetchBaseProfile(profile.name) ?? profile;
+                let profileToSave = await Profiles.getInstance().fetchBaseProfile(profile.name) ?? profile;
                 profileToSave = profile.name.startsWith(profileToSave.name + ".") ? { ...profileToSave, type: null } : profileToSave;
-                const profileInfo = await ZoweVsCodeExtension.profilesCache.getProfileInfo();
+                const profileInfo = await Profiles.getInstance().getProfileInfo();
                 const updateSettings = { profileName: profileToSave.name, profileType: profileToSave.type };
                 await profileInfo.updateProperty({ ...updateSettings, property: 'certFile', value: response.cert });
                 await profileInfo.updateProperty({ ...updateSettings, property: 'certKeyFile', value: response.certKey });
