@@ -41,6 +41,7 @@ export class ProfileManagement {
     public static async manageProfile(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
         let allowedLoginMethod = profile.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+
         if (imperative.SessConstants.ALL_ALLOWED_LOGIN_METHODS.indexOf(allowedLoginMethod) < 0) {
             ZoweLogger.debug(
                 `Unknown allowed login method value '${allowedLoginMethod}'.` +
@@ -130,8 +131,8 @@ export class ProfileManagement {
         node: IZoweTreeNode,
         allowedLoginMethod: string
     ): Promise<vscode.QuickPickItem> {
-        ZoweLogger.debug(`Building profile management quickpick with managementType=${managementType}, allowedLoginMethod=${allowedLoginMethod}`);
         const profile = node.getProfile();
+        ZoweLogger.debug(`Building profile management quickpick for profile ${profile.name} with managementType=${managementType}, allowedLoginMethod=${allowedLoginMethod}`);
         const qp = Gui.createQuickPick();
         let quickPickOptions: vscode.QuickPickItem[];
 
@@ -200,8 +201,7 @@ export class ProfileManagement {
         qp.hide();
         return selectedItem;
     }
-    private static async handleAuthSelection(selected: vscode.QuickPickItem,
-        node: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
+    private static async handleAuthSelection(selected: vscode.QuickPickItem, node: IZoweTreeNode, profile: imperative.IProfileLoaded): Promise<void> {
         switch (selected) {
             case this.basicAuthAddQpItems[this.AuthQpLabels.add]: {
                 await ProfilesUtils.promptCredentials(node);
@@ -228,18 +228,17 @@ export class ProfileManagement {
                 break;
             }
             case this.certUpdateQpItems[this.AuthQpLabels.updateCert]: {
-
                 const response: { cert: string; certKey: string } = await vscode.commands.executeCommand("zowe.certificateWizard", {
                     cert: profile?.profile?.certFile,
                     certKey: profile?.profile?.certKeyFile,
                     dialogOpts: { canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
                 });
-                let profileToSave = await Profiles.getInstance().fetchBaseProfile(profile.name) ?? profile;
+                let profileToSave = (await Profiles.getInstance().fetchBaseProfile(profile.name)) ?? profile;
                 profileToSave = profile.name.startsWith(profileToSave.name + ".") ? { ...profileToSave, type: null } : profileToSave;
                 const profileInfo = await Profiles.getInstance().getProfileInfo();
                 const updateSettings = { profileName: profileToSave.name, profileType: profileToSave.type };
-                await profileInfo.updateProperty({ ...updateSettings, property: 'certFile', value: response.cert });
-                await profileInfo.updateProperty({ ...updateSettings, property: 'certKeyFile', value: response.certKey });
+                await profileInfo.updateProperty({ ...updateSettings, property: "certFile", value: response.cert });
+                await profileInfo.updateProperty({ ...updateSettings, property: "certKeyFile", value: response.certKey });
                 ZoweLogger.debug(`Updated profile ${profileToSave.name} (type: ${profileToSave.type}) with certificate auth details`);
                 break;
             }

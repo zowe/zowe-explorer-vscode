@@ -125,7 +125,8 @@ describe("ProfileManagement unit tests", () => {
         });
 
         function createBlockMocks(globalMocks): any {
-            globalMocks.logMsg = `Profile ${globalMocks.mockBasicAuthProfile.name as string} is using basic authentication.`;
+            globalMocks.logMsg = `Building profile management quickpick for profile ${globalMocks.mockBasicAuthProfile.name as string}` +
+                ` with managementType=basic, allowedLoginMethod=prompt`;
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
             globalMocks.mockDsSessionNode.getProfile = vi.fn().mockReturnValue(globalMocks.mockBasicAuthProfile);
             return globalMocks;
@@ -179,7 +180,8 @@ describe("ProfileManagement unit tests", () => {
             vi.restoreAllMocks();
         });
         function createBlockMocks(globalMocks): any {
-            globalMocks.logMsg = `Profile ${globalMocks.mockTokenAuthProfile.name as string} is using token authentication.`;
+            globalMocks.logMsg = `Building profile management quickpick for profile ${globalMocks.mockTokenAuthProfile.name as string}` +
+                ` with managementType=token, allowedLoginMethod=prompt`;
             globalMocks.mockUnixSessionNode = unixMock.createUSSSessionNode(globalMocks.mockSession, globalMocks.mockBasicAuthProfile) as any;
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
             globalMocks.mockDsSessionNode.getProfile = vi.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
@@ -241,7 +243,8 @@ describe("ProfileManagement unit tests", () => {
     });
     describe("unit tests around no auth declared selections", () => {
         function createBlockMocks(globalMocks): any {
-            globalMocks.logMsg = `Profile ${globalMocks.mockNoAuthProfile.name as string} authentication method is unknown.`;
+            globalMocks.logMsg = `Building profile management quickpick for profile ${globalMocks.mockNoAuthProfile.name as string} ` +
+                `with managementType=none, allowedLoginMethod=prompt`;
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "none" } } as any);
             globalMocks.mockDsSessionNode.getProfile = vi.fn().mockReturnValue(globalMocks.mockNoAuthProfile);
             return globalMocks;
@@ -278,6 +281,7 @@ describe("ProfileManagement unit tests", () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockEnableValidationChosen);
             mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[0]);
+
             await ProfileManagement.manageProfile(mocks.mockTreeProviders.ds.mSessionNodes[1]);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg.replace("sestest", "zosmf2"));
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.enableValidation", mocks.mockTreeProviders.ds.mSessionNodes[1]);

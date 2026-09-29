@@ -115,4 +115,12 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
             return "unverified";
         }
     }
+
+    /**
+     * The FTP plugin does not support cert-pem authentication.
+     * @returns False
+     */
+    public supportsCertAuth(): boolean {
+        return false;
+    }
 }

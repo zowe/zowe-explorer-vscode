@@ -37,7 +37,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         }
 
         private session: imperative.Session;
-        public constructor(public profile?: imperative.IProfileLoaded) {}
+        public constructor(public profile?: imperative.IProfileLoaded) { }
 
         public getProfileTypeName(): string {
             return CommonApi.getProfileTypeName();
@@ -107,6 +107,13 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
 
         public logout(session: imperative.Session): Promise<void> {
             return Logout.apimlLogout(session);
+        }
+        /**
+         * z/OSMF supports cert-pem authentication.
+         * @returns True
+         */
+        public supportsCertAuth(): boolean {
+            return true;
         }
     }
 

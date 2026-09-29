@@ -80,6 +80,13 @@ export namespace MainframeInteraction {
          * @returns {string} the token type name as defined by a CLI plugin that implements the profile.
          */
         getTokenTypeName?(): string;
+
+        /**
+         *
+         *
+         * If unimplemented, certificate authentication will be assumed to be unsupported.
+         */
+        supportsCertAuth(): boolean;
     }
 
     /**

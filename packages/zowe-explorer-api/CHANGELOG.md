@@ -4,6 +4,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ## TBD Release
 
+- Added the `supportsCertAuth` method to the `MainframeInteraction.ICommon` interface so that extenders can indicate if their API supports certificate authentication. [#TODO](todo)
+
 ### New features and enhancements
 
 - Added the `notifyFileChanged` method to `IZoweExplorerFileApi` (the file API returned by `getFileApi()`) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
