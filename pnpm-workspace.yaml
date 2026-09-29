@@ -29,7 +29,7 @@ overrides:
   "deepmerge-ts": "^8.0.0"
   "diff@5": "^5.2.2"
   "diff@>5": "^8.0.3"
-  "fast-uri": "^3.1.6"
+  "fast-uri": "3.1.7"
   "fast-xml-builder": "^1.1.7"
   "fast-xml-parser": "^5.7.0"
   "fastify": "^5.12.1"
@@ -61,5 +61,6 @@ overrides:
   "qs": "^6.16.0"
   "fflate": "^0.8.3"
   "smol-toml": "^1.7.1"
+  "undici": "6.28.1"
 # Previously set using `pnpm config set network-timeout`
 fetchTimeout: 60000
