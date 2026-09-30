@@ -7114,7 +7114,7 @@ describe("DatasetActions - downloading functions", () => {
             expect(result.downloadedPath).toMatch(/member1\.txt$/);
         });
 
-        it("should handle member with preserve case and generate directory options", async () => {
+        it("should handle member with preserve case and generate directory options - typical DS & member name", async () => {
             const optionsWithCase = {
                 ...defaultDownloadOptions,
                 uppercaseNames: true,
@@ -7142,6 +7142,36 @@ describe("DatasetActions - downloading functions", () => {
                 })
             );
             expect(result.downloadedPath).toMatch(/Member1\.txt$/);
+        });
+
+        it("should handle member with preserve case and generate directory options - member name with dot-dot", async () => {
+            const optionsWithCase = {
+                ...defaultDownloadOptions,
+                uppercaseNames: true,
+                generateDirectory: true,
+                overwrite: true,
+            };
+            const { memberNode } = createMemberNodes("TEST.PDS", "Memb\\..\\er1");
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { etag: "123" },
+            });
+
+            const result = await (DatasetActions as any).downloadSingleMember(memberNode, optionsWithCase, "txt");
+
+            expect(getContentsSpy).toHaveBeenCalledWith(
+                "TEST.PDS(Memb\\..\\er1)",
+                expect.objectContaining({
+                    file: expect.stringMatching(/Memb\\er1\.txt$/),
+                    binary: false,
+                    encoding: undefined,
+                    overwrite: true,
+                    responseTimeout: 30000,
+                })
+            );
+            expect(result.downloadedPath).toMatch(/Memb\\er1\.txt$/);
         });
 
         it("should handle record codepage by setting record option", async () => {
@@ -7991,7 +8021,7 @@ describe("DatasetActions - downloading functions", () => {
             );
         });
 
-        it("should successfully download a sequential dataset with directory generation enabled", async () => {
+        it("should successfully download a sequential dataset with directory generation enabled 1", async () => {
             const dsNode = new ZoweDatasetNode({
                 label: "TEST.DATASET.SEQ",
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -8028,6 +8058,51 @@ describe("DatasetActions - downloading functions", () => {
                 expect.objectContaining({
                     file: expect.stringMatching(/test[/\\]dataset[/\\]seq\.txt$/),
                     binary: false,
+                    encoding: undefined,
+                    overwrite: true,
+                    responseTimeout: 30000,
+                })
+            );
+        });
+
+        it("should successfully download a sequential dataset with directory generation enabled 2", async () => {
+            const dsNode = new ZoweDatasetNode({
+                label: "TEST.DATA\\..\\SET.SEQ",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+
+            const optionsWithDirectory = {
+                overwrite: true,
+                generateDirectory: true,
+                uppercaseNames: false,
+                chooseEncoding: false,
+                overrideExtension: false,
+                encoding: undefined,
+                selectedPath: vscode.Uri.file("/test/path"),
+            };
+            mockGetDataSetDownloadOptions.mock.mockResolvedValue(optionsWithDirectory);
+
+            dsNode.getLabel = vi.fn().mockReturnValue("TEST.DATA\\..\\SET.SEQ");
+            dsNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue(undefined);
+            mockGetExtension.mock.mockReturnValue("txt");
+
+            await DatasetActions.downloadDataSet(dsNode);
+
+            expect(mockGetDataSetDownloadOptions.mock).toHaveBeenCalled();
+            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalledWith("Downloading data set", expect.any(Function), "Data set", dsNode);
+
+            const downloadFn = mockExecuteDownloadWithProgress.mock.mock.calls[0][1];
+            await downloadFn();
+            expect(getContentsSpy).toHaveBeenCalledWith(
+                "TEST.DATA\\SET.SEQ",
+                expect.objectContaining({
+                    file: expect.stringMatching(/test[/\\]data\\set[/\\]seq\.txt$/),
+                    binary: false,
+                    record: false,
                     encoding: undefined,
                     overwrite: true,
                     responseTimeout: 30000,

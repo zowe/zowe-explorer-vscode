@@ -360,5 +360,31 @@ describe("ZoweExplorerApiRegister unit testing", () => {
             expect(register.getFileApi().getEncodingForUri(uri)).toBe(expected);
             delete JobFSProvider.instance.encodingMap[uri.path];
         });
+
+        it("notifyFileChanged delegates to doNotifyFileChanged", () => {
+            const register = ZoweExplorerApiRegister.getInstance();
+            const uri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/DATA.SET" });
+            const doNotifySpy = vi.spyOn(ZoweExplorerApiRegister, "doNotifyFileChanged").mockImplementation(() => {});
+            register.getFileApi().notifyFileChanged(uri);
+            expect(doNotifySpy).toHaveBeenCalledWith(uri);
+        });
+
+        describe("doNotifyFileChanged", () => {
+            it("invalidates the cache and fires a Changed event for a known scheme", () => {
+                const uri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/profile/DATA.SET" });
+                const invalidateSpy = vi.spyOn(DatasetFSProvider.instance, "invalidateCache").mockImplementation(() => {});
+                const fireSoonSpy = vi.spyOn(DatasetFSProvider.instance, "fireSoon").mockImplementation(() => {});
+                ZoweExplorerApiRegister.doNotifyFileChanged(uri);
+                expect(invalidateSpy).toHaveBeenCalledWith(uri);
+                expect(fireSoonSpy).toHaveBeenCalledWith({ type: vscode.FileChangeType.Changed, uri });
+            });
+
+            it("does nothing for an unknown scheme", () => {
+                const uri = vscode.Uri.from({ scheme: "unknown", path: "/some/path" });
+                const invalidateSpy = vi.spyOn(DatasetFSProvider.instance, "invalidateCache").mockImplementation(() => {});
+                ZoweExplorerApiRegister.doNotifyFileChanged(uri);
+                expect(invalidateSpy).not.toHaveBeenCalled();
+            });
+        });
     });
 });
