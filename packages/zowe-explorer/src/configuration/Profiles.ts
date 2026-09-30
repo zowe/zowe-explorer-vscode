@@ -296,9 +296,8 @@ export class Profiles extends ProfilesCache {
         if (configFileIndex === -1) {
             toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")}`);
         } else {
-            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
-                layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
-            }`;
+            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
+                }`;
         }
 
         const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
@@ -896,6 +895,7 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.ssoLogin called.");
         let loginTokenType: string;
         let serviceProfile: imperative.IProfileLoaded;
+        const allowedLoginMethod: string = this.getAllowedLoginMethod(serviceProfile);
         if (node) {
             serviceProfile = node.getProfile();
         } else {
@@ -918,8 +918,10 @@ export class Profiles extends ProfilesCache {
         }
         try {
             let loginOk = false;
-            // todo allowedLoginMethod here
-            if (loginTokenType && !loginTokenType.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)) {
+            if (
+                (loginTokenType && allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC) ||
+                !loginTokenType.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)
+            ) {
                 loginOk = await ZoweVsCodeExtension.directConnectLogin(serviceProfile, zeInstance, node);
             } else {
                 loginOk = await ZoweVsCodeExtension.ssoLogin({

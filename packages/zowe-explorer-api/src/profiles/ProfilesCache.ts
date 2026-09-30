@@ -610,4 +610,22 @@ export class ProfilesCache {
         const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
         return AuthHandler.getSessFromProfile(profileLoaded).getApimlDecision();
     }
+
+    /**
+     * Get the allowedLoginMethod field from the profile, defaulting to "prompt" if there is no value
+     * or if the value is invalid.
+     * @param profile - the loaded profile to check
+     * @returns the specified allowedLoginMethod field on the profile, or "prompt"
+     */
+    public getAllowedLoginMethod(profile: string | imperative.IProfileLoaded): string {
+        const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
+        let method: string = profileLoaded.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+        if (imperative.SessConstants.ALL_ALLOWED_LOGIN_METHODS.indexOf(method) < 0) {
+            this.log.debug(
+                `Unknown allowed login method value '${method}'.` + ` Falling back to '${imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT}'`
+            );
+            method = imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+        }
+        return method;
+    }
 }

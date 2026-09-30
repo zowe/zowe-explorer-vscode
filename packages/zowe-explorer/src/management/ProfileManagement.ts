@@ -40,15 +40,7 @@ export class ProfileManagement {
     }
     public static async manageProfile(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
-        let allowedLoginMethod = profile.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
-
-        if (imperative.SessConstants.ALL_ALLOWED_LOGIN_METHODS.indexOf(allowedLoginMethod) < 0) {
-            ZoweLogger.debug(
-                `Unknown allowed login method value '${allowedLoginMethod}'.` +
-                ` Falling back to '${imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT}'`
-            );
-            allowedLoginMethod = imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
-        }
+        const allowedLoginMethod = Profiles.getInstance().getAllowedLoginMethod(profile);
         const sessTypeFromProf = AuthHandler.sessTypeFromSession(AuthHandler.getSessFromProfile(profile));
         const selected: vscode.QuickPickItem = await this.setupProfileManagementQp(sessTypeFromProf, node, allowedLoginMethod);
         await this.handleAuthSelection(selected, node, profile);
@@ -132,16 +124,46 @@ export class ProfileManagement {
         allowedLoginMethod: string
     ): Promise<vscode.QuickPickItem> {
         const profile = node.getProfile();
-        ZoweLogger.debug(`Building profile management quickpick for profile ${profile.name} with managementType=${managementType}, allowedLoginMethod=${allowedLoginMethod}`);
+        ZoweLogger.debug(
+            `Building profile management quickpick for profile ${profile.name} with managementType=${managementType},` +
+                ` allowedLoginMethod=${allowedLoginMethod}`
+        );
         const qp = Gui.createQuickPick();
         let quickPickOptions: vscode.QuickPickItem[];
-
+        const profileCommonApi = ZoweExplorerApiRegister.getInstance().getCommonApi(profile);
+        let loginTokenType: string;
+        let supportsCertAuth: boolean = false;
+        try {
+            loginTokenType = profileCommonApi.getTokenTypeName();
+        } catch (error) {
+            ZoweLogger.warn(error);
+            Gui.showMessage(
+                vscode.l10n.t({
+                    message: `Error getting supported tokenType value for profile {0}`,
+                    args: [profile.name],
+                    comment: [`Service profile name`],
+                })
+            );
+        }
+        try {
+            supportsCertAuth = profileCommonApi.supportsCertAuth();
+        } catch (error) {
+            ZoweLogger.warn(error);
+            Gui.showMessage(
+                vscode.l10n.t({
+                    message: `Error getting supported tokenType value for profile {0}`,
+                    args: [profile.name],
+                    comment: [`Service profile name`],
+                })
+            );
+        }
         // allowedLoginType will override the inference of which auth type to use that we made
-        // based on the profile
-        if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC) {
+        // based on the profile. but profile types that don't support tokens can't login with APIML,
+        // nor certificate auth.
+        if (loginTokenType && allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC) {
             managementType = imperative.SessConstants.AUTH_TYPE_BASIC;
         } else if (
-            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM ||
+            (loginTokenType && supportsCertAuth && allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM) ||
             allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM
         ) {
             managementType = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
