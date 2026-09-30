@@ -164,6 +164,7 @@ export class Profiles extends ProfilesCache {
         let usingBasicAuth: boolean = false;
         let usingCertAuth: boolean = false;
         let usingTokenAuth: boolean = false;
+        const allowedLoginMethod: string = this.getAllowedLoginMethod(theProfile);
 
         let iSessFromProf: imperative.ISession;
         const usingPrivateKey = theProfile.type === "ssh" && theProfile.profile.privateKey;
@@ -187,12 +188,27 @@ export class Profiles extends ProfilesCache {
                 break;
         }
 
+
         let tokenType: string;
         try {
             tokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile).getTokenTypeName();
         } catch {
             // Ignore error
         }
+
+        if (tokenType) {
+            if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC
+                || allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM) {
+                usingTokenAuth = true;
+            }
+        }
+
+        ZoweLogger.debug(
+            `checkCurrentProfile(): profile ${theProfile.name} (type ${theProfile.type}),` +
+            `session type from profile=${iSessFromProf.type}, tokenType=${tokenType}` +
+            ` allowedLoginMethod=${allowedLoginMethod}`
+        );
+
 
         if (usingTokenAuth || ((await this.profileHasSecureToken(theProfile)) && tokenType)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
@@ -683,6 +699,7 @@ export class Profiles extends ProfilesCache {
 
     public async promptCredentials(profile: string | imperative.IProfileLoaded, rePrompt?: boolean): Promise<string[]> {
         ZoweLogger.trace("Profiles.promptCredentials called.");
+
         const isProfileString = typeof profile === "string";
         const profilename = isProfileString ? profile : profile.name;
         const userInputBoxOptions: vscode.InputBoxOptions = {
@@ -895,12 +912,12 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.ssoLogin called.");
         let loginTokenType: string;
         let serviceProfile: imperative.IProfileLoaded;
-        const allowedLoginMethod: string = this.getAllowedLoginMethod(serviceProfile);
         if (node) {
             serviceProfile = node.getProfile();
         } else {
             serviceProfile = this.loadNamedProfile(label.trim());
         }
+        const allowedLoginMethod: string = this.getAllowedLoginMethod(serviceProfile);
 
         const zeInstance = ZoweExplorerApiRegister.getInstance();
         try {

@@ -26,7 +26,7 @@ import { SshClientCache } from "../SshClientCache";
 import { SshErrorHandler } from "../SshErrorHandler";
 
 export class SshCommonApi implements MainframeInteraction.ICommon {
-    public constructor(public profile?: imperative.IProfileLoaded) {}
+    public constructor(public profile?: imperative.IProfileLoaded) { }
 
     public getProfileTypeName(): string {
         return ZosUssProfile.type;
@@ -59,7 +59,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                     const cancelButton = vscode.l10n.t("Cancel");
                     const message = vscode.l10n.t(
                         "Connecting with an SSH profile may deploy the SSH server to z/OS UNIX to " +
-                            "enable you to perform actions on the mainframe. Would you like to proceed with connecting?"
+                        "enable you to perform actions on the mainframe. Would you like to proceed with connecting?"
                     );
                     const selection = await Gui.showMessage(message, { items: [cancelButton, connectButton, connectDontAskButton] });
                     if (selection === connectButton) {
@@ -146,13 +146,6 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
         return ZSshUtils.buildSession((profile ?? this.profile)?.profile!);
     }
 
-    /**
-     * ZRS does not support cert-pem authentication.
-     * @returns False
-     */
-    public supportsCertAuth(): boolean {
-        return false;
-    }
     /**
      * Handles private key authentication failure by prompting for password with retry logic
      * @param profile The profile that failed private key authentication
