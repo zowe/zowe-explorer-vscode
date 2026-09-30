@@ -188,7 +188,6 @@ export class Profiles extends ProfilesCache {
                 break;
         }
 
-
         let tokenType: string;
         try {
             tokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile).getTokenTypeName();
@@ -197,18 +196,19 @@ export class Profiles extends ProfilesCache {
         }
 
         if (tokenType) {
-            if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC
-                || allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM) {
+            if (
+                allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC ||
+                allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM
+            ) {
                 usingTokenAuth = true;
             }
         }
 
         ZoweLogger.debug(
             `checkCurrentProfile(): profile ${theProfile.name} (type ${theProfile.type}),` +
-            `session type from profile=${iSessFromProf.type}, tokenType=${tokenType}` +
-            ` allowedLoginMethod=${allowedLoginMethod}`
+                `session type from profile=${iSessFromProf.type}, tokenType=${tokenType}` +
+                ` allowedLoginMethod=${allowedLoginMethod}`
         );
-
 
         if (usingTokenAuth || ((await this.profileHasSecureToken(theProfile)) && tokenType)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
@@ -312,8 +312,9 @@ export class Profiles extends ProfilesCache {
         if (configFileIndex === -1) {
             toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")}`);
         } else {
-            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
-                }`;
+            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
+                layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
+            }`;
         }
 
         const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
@@ -936,8 +937,9 @@ export class Profiles extends ProfilesCache {
         try {
             let loginOk = false;
             if (
-                (loginTokenType && allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC) ||
-                !loginTokenType.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)
+                loginTokenType &&
+                (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC ||
+                    !loginTokenType.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML))
             ) {
                 loginOk = await ZoweVsCodeExtension.directConnectLogin(serviceProfile, zeInstance, node);
             } else {

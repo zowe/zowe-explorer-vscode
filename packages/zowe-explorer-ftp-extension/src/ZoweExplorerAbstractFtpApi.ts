@@ -24,7 +24,7 @@ export interface ConnectionType {
 export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
     private session?: FtpSession;
 
-    public constructor(public profile?: imperative.IProfileLoaded) { }
+    public constructor(public profile?: imperative.IProfileLoaded) {}
 
     public static getProfileTypeName(): string {
         return "zftp";
@@ -115,5 +115,4 @@ export abstract class AbstractFtpApi implements MainframeInteraction.ICommon {
             return "unverified";
         }
     }
-
 }

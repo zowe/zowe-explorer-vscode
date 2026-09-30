@@ -83,10 +83,10 @@ export namespace MainframeInteraction {
 
         /**
          * Returns true if tge service supports cert-pem authentication.
-         * If unimplemented, certificate authentication will be assumed to be unsupported, equivalent 
+         * If unimplemented, certificate authentication will be assumed to be unsupported, equivalent
          * to returning false.
          */
-        supportsCertAuth(): boolean;
+        supportsCertAuth?(): boolean;
     }
 
     /**
