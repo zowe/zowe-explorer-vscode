@@ -12,7 +12,7 @@
 import { Gui, imperative, ZoweExplorerApiType, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
-import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { SessionContext, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { SshClientCache } from "../src/SshClientCache";
 import { deployWithProgress } from "../src/ServerDeployment";
 import { ConfigUtils } from "../src/ConfigUtils";
@@ -81,6 +81,10 @@ vi.mock("@zowe/zowe-explorer-api", () => {
 
 vi.mock("@zowe/zowex-for-zowe-sdk", () => {
     return {
+        SessionContext: class {
+            public constructor(public readonly session: unknown) {}
+            public [Symbol.dispose](): void {}
+        },
         ZSshClient: {
             create: vi.fn(),
         },
@@ -304,6 +308,22 @@ describe("SshClientCache", () => {
 
             expect(deployWithProgress).toHaveBeenCalledWith(expect.anything(), "/mock/server/path");
             expect(ZSshClient.create).toHaveBeenCalledTimes(2);
+        });
+
+        it("shares one utility connection scope across detection, permission check, and deployment", async () => {
+            vi.mocked(ZSshClient.create)
+                .mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }))
+                .mockResolvedValueOnce({ dispose: vi.fn() } as any);
+            const detectSpy = vi.spyOn(cache, "detectServerOnPath").mockResolvedValue(undefined);
+            const disposeSpy = vi.spyOn(SessionContext.prototype, Symbol.dispose);
+
+            await cache.connect(mockProfile);
+
+            const context = detectSpy.mock.calls[0][0];
+            expect(context).toBeInstanceOf(SessionContext);
+            expect(ZSshUtils.lacksWriteAccess).toHaveBeenCalledWith(context, "/mock/server/path");
+            expect(deployWithProgress).toHaveBeenCalledWith(context, "/mock/server/path");
+            expect(disposeSpy).toHaveBeenCalledTimes(1);
         });
 
         it("should throw an error if the current one is missing (ENOTFOUND) but the user does not have write permission", async () => {
