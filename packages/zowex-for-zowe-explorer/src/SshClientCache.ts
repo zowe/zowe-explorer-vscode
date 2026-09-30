@@ -153,7 +153,7 @@ export class SshClientCache extends vscode.Disposable {
                 `$(sync~spin) ${opts.restart ? "Restarting" : "Starting"} Zowe Remote SSH server for profile "${profile.name as string}"...`
             );
             const session = ZSshUtils.buildSession(profile.profile!);
-            using sessionContext = new SessionContext(session);
+            using sessionHandle = new SessionContext(session);
 
             let serverPath = ConfigUtils.getServerPath(profile.profile) ?? ZSshClient.DEFAULT_SERVER_PATH;
 
@@ -208,7 +208,7 @@ export class SshClientCache extends vscode.Disposable {
                 }
                 if (serverShouldDeploy) {
                     if (serverNotFound) {
-                        const onEnvPathServer = await this.detectServerOnPath(sessionContext);
+                        const onEnvPathServer = await this.detectServerOnPath(sessionHandle);
                         if (onEnvPathServer) {
                             try {
                                 serverPath = onEnvPathServer;
@@ -225,7 +225,7 @@ export class SshClientCache extends vscode.Disposable {
                     }
 
                     if (serverShouldDeploy) {
-                        if (await ZSshUtils.lacksWriteAccess(sessionContext, serverPath)) {
+                        if (await ZSshUtils.lacksWriteAccess(sessionHandle, serverPath)) {
                             if (serverNotFound) {
                                 // the user has no usable instance of the SSH server so we should notify them
                                 const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, serverPath);
@@ -240,7 +240,7 @@ export class SshClientCache extends vscode.Disposable {
                             }
                         } else {
                             // The user appears to have write access
-                            await deployWithProgress(sessionContext, serverPath);
+                            await deployWithProgress(sessionHandle, serverPath);
                             newClient?.dispose();
                             newClient = await this.buildClient(session, clientId, {
                                 serverPath,
