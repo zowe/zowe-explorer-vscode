@@ -226,17 +226,17 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         }
     }
 
-    //TODO: This is short term duplication - later hook into canges made in https://github.com/zowe/zowe-cli/pull/2813
+    //TODO: This is short term duplication - later hook into changes made in https://github.com/zowe/zowe-cli/pull/2813
     private attachHostKeyVerifier(session: zosuss.SshSession): void {
         session.hostKeyVerifier = async (info): Promise<boolean> => {
-            const hostname = session.ISshSession.hostname;
+            const hostname = session.ISshSession.hostname ?? "";
             if (info.changed) {
                 // Refuse rather than offering to overwrite, like the ssh client and the Zowe CLI.
                 const msg = vscode.l10n.t(
                     "Host key verification failed for {0}. The server's host key does not match the host key saved in the ssh profile, " +
                         "so no credentials were sent. Expected {1} but the server presented {2}. " +
                         "If you trust the new key, remove 'hostKey' from the ssh profile and reconnect.",
-                    hostname ?? "",
+                    hostname,
                     info.pinnedFingerprint ?? vscode.l10n.t("(unknown)"),
                     info.fingerprint
                 );
@@ -247,12 +247,12 @@ export class UnixCommandHandler extends ZoweCommandProvider {
 
             const trust = vscode.l10n.t("Trust and continue");
             const choice = await Gui.showQuickPick([trust, vscode.l10n.t("Cancel")], {
-                title: vscode.l10n.t("The authenticity of host '{0}' can't be established", hostname ?? ""),
+                title: vscode.l10n.t("The authenticity of host '{0}' can't be established", hostname),
                 placeHolder: vscode.l10n.t("Host key fingerprint is {0}", info.fingerprint),
                 ignoreFocusOut: true,
             });
             if (choice !== trust) {
-                ZoweLogger.warn(vscode.l10n.t("Host key for {0} was not trusted, so the connection was cancelled.", hostname ?? ""));
+                ZoweLogger.warn(vscode.l10n.t("Host key for {0} was not trusted, so the connection was cancelled.", hostname));
                 return false;
             }
 
@@ -317,10 +317,13 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         }
         try {
             return (await zosuss.Shell.isConnectionValid(this.sshSession)) ? "active" : "inactive";
-        } catch (err) {
+        } catch (err: any) {
             // A rejected host key is reported as an error rather than an invalid connection.
-            ZoweLogger.error(err);
-            return "inactive";
+            if (err?.message?.includes("Host key verification failed")) {
+                ZoweLogger.error(err);
+                return "inactive";
+            }
+            throw err;
         }
     }
 

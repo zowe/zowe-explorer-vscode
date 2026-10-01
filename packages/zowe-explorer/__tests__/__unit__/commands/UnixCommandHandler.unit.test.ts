@@ -825,6 +825,19 @@ describe("UnixCommand Actions Unit Testing", () => {
             expect(result).toBe("inactive");
         });
 
+        it("should rethrow the error when Shell.isConnectionValid rejects with other errors", async () => {
+            const actions = getUnixActions();
+            const sampleSshSession = { ISshSession: { hostname: "host.com", privateKey: "someKey" } };
+            const sampleSshProfile = { profile: { host: "host.com" }, type: "ssh" };
+
+            actions.sshSession = sampleSshSession as any;
+            actions.sshProfile = sampleSshProfile as any;
+
+            (Shell.isConnectionValid as Mock).mockRejectedValue(new Error("Connection timeout"));
+
+            await expect((actions as any).validateSshConnection(sampleSshProfile, "ssh")).rejects.toThrow("Connection timeout");
+        });
+
         it("should return 'unverified' when profile type is not ssh", async () => {
             const actions = getUnixActions();
             const sampleSshSession = { ISshSession: { hostname: "host.com" } };
