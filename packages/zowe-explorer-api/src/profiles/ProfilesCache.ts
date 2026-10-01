@@ -11,7 +11,7 @@
 
 import * as imperative from "@zowe/imperative";
 import type { IRegisterClient } from "../extend/IRegisterClient";
-import { AuthHandler } from "./AuthHandler";
+import { AuthHandler, ProfileLike } from "./AuthHandler";
 import { FileManagement } from "../utils/FileManagement";
 import { errorMessage } from "../utils/ErrorUtils";
 import { Validation } from "./Validation";
@@ -596,7 +596,7 @@ export class ProfilesCache {
      * @param profile
      * @returns
      */
-    public isUsingApiml(profile: string | imperative.IProfileLoaded): boolean {
+    public isUsingApiml(profile: ProfileLike): boolean {
         const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
         return AuthHandler.getSessFromProfile(profileLoaded).isUsingApiml();
     }
@@ -606,7 +606,7 @@ export class ProfilesCache {
      * @param profile
      * @returns
      */
-    public getApimlDecision(profile: string | imperative.IProfileLoaded): imperative.IApimlDecision {
+    public getApimlDecision(profile: ProfileLike): imperative.IApimlDecision {
         const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
         return AuthHandler.getSessFromProfile(profileLoaded).getApimlDecision();
     }
@@ -617,7 +617,7 @@ export class ProfilesCache {
      * @param profile - the loaded profile to check
      * @returns the specified allowedLoginMethod field on the profile, or "prompt"
      */
-    public getAllowedLoginMethod(profile: string | imperative.IProfileLoaded): string {
+    public getAllowedLoginMethod(profile: ProfileLike): string {
         const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
         let method: string = profileLoaded.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
         if (imperative.SessConstants.ALL_ALLOWED_LOGIN_METHODS.indexOf(method) < 0) {
