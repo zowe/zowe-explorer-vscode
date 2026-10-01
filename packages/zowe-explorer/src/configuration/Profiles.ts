@@ -884,7 +884,7 @@ export class Profiles extends ProfilesCache {
             } catch (error) {
                 ZoweLogger.info(
                     vscode.l10n.t({
-                        message: `Profile validation failed for { 0}.`,
+                        message: `Profile validation failed for {0}.`,
                         args: [theProfile.name],
                         comment: [`The profile name`],
                     })
