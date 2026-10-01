@@ -82,7 +82,7 @@ export namespace MainframeInteraction {
         getTokenTypeName?(): string;
 
         /**
-         * Returns true if tge service supports cert-pem authentication.
+         * Returns true if the service supports cert-pem authentication.
          * If unimplemented, certificate authentication will be assumed to be unsupported, equivalent
          * to returning false.
          */
