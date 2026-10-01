@@ -962,7 +962,7 @@ export class Profiles extends ProfilesCache {
             return loginOk;
         } catch (err) {
             const message = vscode.l10n.t({
-                message: `Unable to log in with { 0}. { 1 } `,
+                message: `Unable to log in with {0}. {1} `,
                 args: [serviceProfile.name, err?.message],
                 comment: [`Service profile name`, `Error message`],
             });
