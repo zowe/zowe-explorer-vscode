@@ -166,7 +166,7 @@ export class Profiles extends ProfilesCache {
         let usingTokenAuth: boolean = false;
         const allowedLoginMethod: string = this.getAllowedLoginMethod(theProfile);
 
-        let profileSession: Session;
+        let profileSession: imperative.Session;
         let iSessFromProf: imperative.ISession;
         const usingPrivateKey = theProfile.type === "ssh" && theProfile.profile.privateKey;
         try {
