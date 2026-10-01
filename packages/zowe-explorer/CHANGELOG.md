@@ -18,6 +18,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where a single failed load of the credential manager caused ZE to report an erroneous/misleading error message and error cause for the rest of the user session. The `Failed to initialize secure credential manager` message was associated to the reason/cause `Keytar was not properly loaded due to an unknown cause`, which kept the failed module with empty exports. Later checks incorrectly reported the credential manager as available. The real load error is now logged, and Zowe Explorer consistently falls back to unsecured profiles instead. [#4360](https://github.com/zowe/zowe-explorer-vscode/issues/4360)
+- Fixed an issue where falling back to unsecured profiles could fail activation with the message `The credential manager name 'false' is an unknown credential manager`. [#4360](https://github.com/zowe/zowe-explorer-vscode/issues/4360)
 - Fixed an issue where the error message shown when saving a data set with lines exceeding the logical record length was too vague to identify the problem. [#4076](https://github.com/zowe/zowe-explorer-vscode/issues/4076)
 - Fixed an issue where data sets and USS files honored illegal characters in their respective names. [#4501](https://github.com/zowe/zowe-explorer-vscode/pull/4501)
 - Fixed an issue where sequential data sets open in the text editor were not refreshing after a remote save, because the cache bypass that forces a network check when a file is open in the editor was only applied to PDS members and not sequential data sets in `stat()`, the filesystem provider method VS Code calls to detect file changes. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
