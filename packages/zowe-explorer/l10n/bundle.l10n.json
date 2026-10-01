@@ -392,6 +392,7 @@
   "Clear all history items for this persistent property?": "Clear all history items for this persistent property?",
   "Clear filter for PDS": "Clear filter for PDS",
   "Clear filter for profile": "Clear filter for profile",
+  "Click \"Troubleshoot\", then \"Full error summary\" for more detailed information.": "Click \"Troubleshoot\", then \"Full error summary\" for more detailed information.",
   "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:": "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:",
   "Click on a filter to change its value": "Click on a filter to change its value",
   "Column settings": "Column settings",
@@ -1115,6 +1116,7 @@
   "Fixed an issue where the data set sort persistence was overriding the selected sort direction. <a>#4048</a>": "Fixed an issue where the data set sort persistence was overriding the selected sort direction. <a>#4048</a>",
   "Fixed an issue where the editor tab remained open after deleting a sequential data set. The editor now automatically closes when the data set is deleted. <a>#4050</a>": "Fixed an issue where the editor tab remained open after deleting a sequential data set. The editor now automatically closes when the data set is deleted. <a>#4050</a>",
   "Fixed an issue where the encoding of a USS file was not automatically detected when opened for the first time. <a>#3253</a>": "Fixed an issue where the encoding of a USS file was not automatically detected when opened for the first time. <a>#3253</a>",
+  "Fixed an issue where the error message shown when saving a data set with lines exceeding the logical record length was too vague to identify the problem. <a>#4076</a>": "Fixed an issue where the error message shown when saving a data set with lines exceeding the logical record length was too vague to identify the problem. <a>#4076</a>",
   "Fixed an issue where the filesystem continued to use a profile with invalid credentials to fetch resources. Now, after an authentication error occurs for a profile, it cannot be used again in the filesystem until the authentication error is resolved. <a>#3329</a>": "Fixed an issue where the filesystem continued to use a profile with invalid credentials to fetch resources. Now, after an authentication error occurs for a profile, it cannot be used again in the filesystem until the authentication error is resolved. <a>#3329</a>",
   "Fixed an issue where the first change to a Zowe team configuration did not accurately refresh the data set, USS and job trees. <a>#3524</a>": "Fixed an issue where the first change to a Zowe team configuration did not accurately refresh the data set, USS and job trees. <a>#3524</a>",
   "Fixed an issue where the job spool pagination code lens was appearing even though the extender did not support pagination. <a>#3714</a>": "Fixed an issue where the job spool pagination code lens was appearing even though the extender did not support pagination. <a>#3714</a>",
@@ -1484,6 +1486,7 @@
   "Last Modified By": "Last Modified By",
   "Last refreshed:": "Last refreshed:",
   "Let the API infer encoding from individual USS file tags": "Let the API infer encoding from individual USS file tags",
+  "Line(s) in this file exceed the logical record length of this data set.": "Line(s) in this file exceed the logical record length of this data set.",
   "Loading changelog...": "Loading changelog...",
   "Loading profile: {0} for USS favorites/Profile name": {
     "message": "Loading profile: {0} for USS favorites",
@@ -2240,7 +2243,6 @@
     ]
   },
   "This release adds several checks before anything is written to the host:": "This release adds several checks before anything is written to the host:",
-  "This upload operation may result in data loss.": "This upload operation may result in data loss.",
   "This will remove all favorited USS items for profile {0}. Continue?/Profile name": {
     "message": "This will remove all favorited USS items for profile {0}. Continue?",
     "comment": [
