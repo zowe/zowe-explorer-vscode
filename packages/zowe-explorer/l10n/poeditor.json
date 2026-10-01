@@ -1675,7 +1675,7 @@
   "Migrated to new package manager PNPM from Yarn.": "",
   "Migrated to webpack V5 <a>#2214</a>": "",
   "Migrated to webpack v5 <a>#2214</a>": "",
-  "Migrated webviews from the deprecated Webview UI Toolkit to VS Code Elements. <a>#XXXX</a>": "",
+  "Migrated webviews from the deprecated Webview UI Toolkit to VS Code Elements. <a>#3443</a>": "",
   "Migration of data set {0} requested.": "",
   "Minimized activation function for Zowe Explorer to load only necessary items on activation. <a>#1985</a>": "",
   "Modification Level": "",
