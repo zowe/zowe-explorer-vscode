@@ -242,7 +242,10 @@ export class SharedActions {
 
     public static resetValidationSettings(node: Types.IZoweNodeType, setting: boolean): Types.IZoweNodeType {
         ZoweLogger.trace("shared.actions.resetValidationSettings called.");
-        if (setting) {
+        const profileName = node.getProfile()?.name ?? node.getLabel().toString();
+        const explicitSetting = Profiles.getInstance().getExplicitValidationSetting(profileName);
+        const effectiveSetting = explicitSetting ?? setting;
+        if (effectiveSetting) {
             Profiles.getInstance().enableValidationContext(node);
             // Ensure validation status is also reset
             node.contextValue = node.contextValue.replace(/(_Active)/g, "").replace(/(_Inactive)/g, "");
