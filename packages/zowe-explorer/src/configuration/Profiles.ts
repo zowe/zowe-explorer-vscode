@@ -203,8 +203,8 @@ export class Profiles extends ProfilesCache {
 
         ZoweLogger.debug(
             `checkCurrentProfile(): profile ${theProfile.name} (type ${theProfile.type}), ` +
-            `session type from profile=${iSessFromProf.type}, tokenType = ${tokenType} ` +
-            ` allowedLoginMethod = ${allowedLoginMethod} `
+                `session type from profile=${iSessFromProf.type}, tokenType = ${tokenType} ` +
+                ` allowedLoginMethod = ${allowedLoginMethod} `
         );
 
         if (usingTokenAuth || ((await this.profileHasSecureToken(theProfile)) && tokenType)) {
@@ -257,7 +257,7 @@ export class Profiles extends ProfilesCache {
                 ZoweLogger.error(`Profile ${theProfile.name} has an invalid SSL certificate`);
                 Gui.errorMessage(
                     vscode.l10n.t({
-                        message: `Profile { 0 } has an invalid SSL certificate.`,
+                        message: `Profile {0} has an invalid SSL certificate.`,
                         args: [theProfile.name],
                         comment: ["Profile name"],
                     })
@@ -309,8 +309,9 @@ export class Profiles extends ProfilesCache {
         if (configFileIndex === -1) {
             toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")} `);
         } else {
-            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
-                } `;
+            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
+                layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
+            } `;
         }
 
         const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
@@ -592,7 +593,7 @@ export class Profiles extends ProfilesCache {
         } else if (chosenProfile) {
             ZoweLogger.info(
                 vscode.l10n.t({
-                    message: `The profile { 0 } has been added to the { 1 } tree.`,
+                    message: `The profile {0} has been added to the {1} tree.`,
                     args: [chosenProfile, treeType],
                     comment: ["chosen profile", "tree type"],
                 })
@@ -763,7 +764,7 @@ export class Profiles extends ProfilesCache {
         }
 
         const quickPickList: vscode.QuickPickOptions = {
-            placeHolder: vscode.l10n.t(`Select the profile you want to delete `),
+            placeHolder: vscode.l10n.t(`Select the profile you want to delete`),
             ignoreFocusOut: true,
             canPickMany: false,
         };
@@ -810,7 +811,7 @@ export class Profiles extends ProfilesCache {
             {
                 location: vscode.ProgressLocation.Notification,
                 title: vscode.l10n.t({
-                    message: `Validating { 0 } Profile.`,
+                    message: `Validating {0} Profile.`,
                     args: [theProfile.name],
                     comment: [`The profile name`],
                 }),
@@ -821,7 +822,7 @@ export class Profiles extends ProfilesCache {
                     // will be returned as undefined
                     Gui.showMessage(
                         vscode.l10n.t({
-                            message: `Validating { 0 } was cancelled.`,
+                            message: `Validating {0} was cancelled.`,
                             args: [theProfile.name],
                             comment: [`The profile name`],
                         })
@@ -923,7 +924,7 @@ export class Profiles extends ProfilesCache {
             ZoweLogger.warn(error);
             Gui.showMessage(
                 vscode.l10n.t({
-                    message: `Error getting supported tokenType value for profile { 0}`,
+                    message: `Error getting supported tokenType value for profile {0}`,
                     args: [serviceProfile.name],
                     comment: [`Service profile name`],
                 })

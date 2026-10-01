@@ -126,7 +126,7 @@ export class ProfileManagement {
         const profile = node.getProfile();
         ZoweLogger.debug(
             `Building profile management quickpick for profile ${profile.name} with managementType=${managementType},` +
-            ` allowedLoginMethod=${allowedLoginMethod}`
+                ` allowedLoginMethod=${allowedLoginMethod}`
         );
         const qp = Gui.createQuickPick();
         let quickPickOptions: vscode.QuickPickItem[];
@@ -163,8 +163,10 @@ export class ProfileManagement {
         // allowedLoginType will override the inference of which auth type to use that we made
         // based on the profile. but profile types that don't support tokens can't login with APIML,
         // nor certificate auth.
-        if ((loginTokenType && allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC)
-            || allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC) {
+        if (
+            (loginTokenType && allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC) ||
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC
+        ) {
             managementType = imperative.SessConstants.AUTH_TYPE_BASIC;
         } else if (
             (loginTokenType && supportsCertAuth && allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM) ||

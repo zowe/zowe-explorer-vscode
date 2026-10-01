@@ -220,11 +220,11 @@ function createGlobalMocks(): { [key: string]: any } {
         configurable: true,
     });
     Object.defineProperty(vscode.workspace, "openTextDocument", {
-        value: () => { },
+        value: () => {},
         configurable: true,
     });
     Object.defineProperty(vscode.window, "showTextDocument", {
-        value: () => { },
+        value: () => {},
         configurable: true,
     });
 
@@ -2873,7 +2873,7 @@ describe("Profiles Unit Tests - Function getAllowedLoginMethod", () => {
             failNotFound: false,
             type: "zosmf",
         });
-        // todo need to adjust imperative mocks 
+        // todo need to adjust imperative mocks
         // expect(method).toBe(imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT);
     });
 });
