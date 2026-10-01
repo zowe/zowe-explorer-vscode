@@ -775,6 +775,19 @@ describe("UnixCommand Actions Unit Testing", () => {
             expect(trusted).toBe(true);
             expect(Gui.warningMessage).toHaveBeenCalledWith(expect.stringContaining("Could not save the host key"));
         });
+
+        it("should fail gracefully and log warnings if getProfileInfo throws inside saveHostKey", async () => {
+            const { session } = setup();
+            const actions = getUnixActions();
+            actions.sshProfile = sshProfile as any;
+            (actions.profileInstance as any).getProfileInfo = vi.fn().mockRejectedValue(new Error("Database offline"));
+            vi.spyOn(Gui, "showQuickPick").mockResolvedValue("Trust and continue" as any);
+
+            const trusted = await session.hostKeyVerifier(keyInfo);
+
+            expect(trusted).toBe(true);
+            expect(Gui.warningMessage).toHaveBeenCalledWith(expect.stringContaining("Could not save the host key"));
+        });
     });
 
     describe("validateSshConnection (private method)", () => {
@@ -918,6 +931,72 @@ describe("UnixCommand Actions Unit Testing", () => {
             expect(result).toBe("active");
             expect(sampleSshSession.ISshSession.user).toBe("newUser");
             expect(Shell.isConnectionValid).toHaveBeenCalledWith(sampleSshSession);
+        });
+    });
+
+    describe("getSshCmdArgs and issueUnixCommand integrations", () => {
+        it("should pass the profile hostKey to the session configuration and call attachHostKeyVerifier", async () => {
+            const actions = getUnixActions();
+            const spyAttach = vi.spyOn(actions as any, "attachHostKeyVerifier");
+            const profileWithHostKey = {
+                name: "ssh-profile",
+                type: "ssh",
+                profile: {
+                    host: "pinnedhost.com",
+                    port: 22,
+                    user: "pinneduser",
+                    hostKey: "my-pinned-key",
+                },
+                message: "",
+                failNotFound: false,
+            };
+
+            vi.spyOn(actions.profileInstance, "fetchAllProfilesByType").mockResolvedValue([profileWithHostKey]);
+            vi.spyOn(actions, "selectServiceProfile").mockResolvedValue(profileWithHostKey);
+            vi.spyOn(actions.profileInstance, "profileValidationHelper").mockResolvedValue("active");
+
+            showQuickPick.mockResolvedValue("ssh-profile");
+            showInputBox.mockResolvedValue("/u/path");
+
+            let createdSessCfg: any = null;
+            SshSession.createSshSessCfgFromArgs = vi.fn((args: any) => {
+                createdSessCfg = args;
+                return { hostKey: args.hostKey };
+            });
+
+            const originalGetInstance = ZoweExplorerApiRegister.getInstance;
+            Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
+                value: vi.fn(() => ({
+                    getCommandApi: vi.fn(() => ({
+                        sshProfileRequired: vi.fn().mockReturnValue(true),
+                        issueUnixCommand: vi.fn().mockReturnValue(Promise.resolve("")),
+                    })),
+                })),
+                configurable: true,
+            });
+
+            // Re-mock getCommandApi directly on the register mock
+            Object.defineProperty(ZoweExplorerApiRegister, "getCommandApi", {
+                value: vi.fn(() => ({
+                    sshProfileRequired: vi.fn().mockReturnValue(true),
+                    issueUnixCommand: vi.fn().mockReturnValue(Promise.resolve("")),
+                })),
+                configurable: true,
+            });
+
+            // Set nodeProfile so that selection steps are bypassed if appropriate, or ensure it uses a node mock
+            (actions as any).nodeProfile = profileOne;
+
+            await actions.issueUnixCommand();
+
+            Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
+                value: originalGetInstance,
+                configurable: true,
+            });
+
+            expect(spyAttach).toHaveBeenCalled();
+            expect(createdSessCfg).not.toBeNull();
+            expect(createdSessCfg.hostKey).toBe("my-pinned-key");
         });
     });
 });
