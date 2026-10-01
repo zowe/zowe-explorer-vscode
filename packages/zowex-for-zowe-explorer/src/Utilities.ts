@@ -11,7 +11,7 @@
 
 import { Gui, imperative, ZoweExplorerApiType, type IApiExplorerExtender } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { SessionContext, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils } from "./ConfigUtils";
 import { VscePromptApi } from "./VscePromptApi";
 import { SshClientCache } from "./SshClientCache";
@@ -44,9 +44,10 @@ export class Utilities {
         }
         let configuredServerPath = ConfigUtils.getServerPath(profile.profile);
         const sshSession = ZSshUtils.buildSession(profile.profile);
+        using sessionHandle = new SessionContext(sshSession);
         let onEnvPathServer: string | undefined = undefined;
         if (configuredServerPath == null) {
-            onEnvPathServer = await SshClientCache.inst.detectServerOnPath(sshSession);
+            onEnvPathServer = await SshClientCache.inst.detectServerOnPath(sessionHandle);
             configuredServerPath = onEnvPathServer ?? ZSshClient.DEFAULT_SERVER_PATH;
         }
 
@@ -57,8 +58,8 @@ export class Utilities {
             return;
         }
         let deployStatus = false;
-        if (!(await ZSshUtils.lacksWriteAccess(sshSession, deployDirectory))) {
-            deployStatus = await deployWithProgress(sshSession, deployDirectory);
+        if (!(await ZSshUtils.lacksWriteAccess(sessionHandle, deployDirectory))) {
+            deployStatus = await deployWithProgress(sessionHandle, deployDirectory);
             if (!deployStatus) {
                 return;
             }
