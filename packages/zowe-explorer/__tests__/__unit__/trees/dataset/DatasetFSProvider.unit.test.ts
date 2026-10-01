@@ -1226,8 +1226,9 @@ describe("DatasetFSProvider", () => {
             const createOptions = { create: false, overwrite: true };
             let handleErrorMock: any;
             const expectInvalidLines = (msg: string, multiple?: boolean) => {
-                expect(msg).toContain("This upload operation may result in data loss.");
+                expect(msg).toContain("Line(s) in this file exceed the logical record length of this data set.");
                 expect(msg).toContain("Please review the following lines:");
+                expect(msg).toContain('Click "Troubleshoot", then "Full error summary" for more detailed information.');
                 if (multiple) {
                     expect(msg).toContain("1, 3-10");
                     const stack = (handleErrorMock.mock.calls[0][0] as Error).stack;
