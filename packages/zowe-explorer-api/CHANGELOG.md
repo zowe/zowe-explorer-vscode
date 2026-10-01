@@ -16,7 +16,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
-- Fixed an issue where `ProfilesCache.requireKeyring` could return `undefined` instead of throwing when the Secrets SDK failed to load, causing callers to treat an unavailable credential manager as available. [#4360](https://github.com/zowe/zowe-explorer-vscode/issues/4360)
+- Fixed an issue where the `ProfilesCache.requireKeyring` function could return an erroneous `undefined` error instead of reporting when the Secrets SDK failed to load, causing callers to treat an unavailable credential manager as available. [#4360](https://github.com/zowe/zowe-explorer-vscode/issues/4360)
 
 ## `3.6.0`
 
