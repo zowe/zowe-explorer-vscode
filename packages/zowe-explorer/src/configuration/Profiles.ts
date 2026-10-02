@@ -200,6 +200,9 @@ export class Profiles extends ProfilesCache {
         if (tokenType && profileSession.isUsingApiml()) {
             usingTokenAuth = true;
         }
+        if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM) {
+            usingCertAuth = true;
+        }
 
         ZoweLogger.debug(
             `checkCurrentProfile(): profile ${theProfile.name} (type ${theProfile.type}), ` +
@@ -253,6 +256,8 @@ export class Profiles extends ProfilesCache {
                 return { ...profileStatus, status: "inactive" };
             }
         } else if (!usingTokenAuth && !usingBasicAuth && usingCertAuth) {
+            // todo prompt user for certificate with
+
             if (theProfile.profile.certAccount == null && !this.isCertFileValid(theProfile.profile.certFile)) {
                 ZoweLogger.error(`Profile ${theProfile.name} has an invalid SSL certificate`);
                 Gui.errorMessage(

@@ -259,8 +259,16 @@ export class ZoweVsCodeExtension {
             imperative.AuthOrder.putNewAuthsFirstInSess(updSession.ISession, [imperative.SessConstants.AUTH_TYPE_BASIC], { onlyTheseAuths: true });
         } else if (response === qpItems[1]) {
             try {
-                // todo only prompt if cert file and key file are not set ?  save to base profile if set ?
-                await ZoweVsCodeExtension.promptCertificate({ profile: serviceProfile, session: updSession.ISession, rePrompt: true });
+                const certResponse = await cache.promptCertificate({ profile: serviceProfile, rePrompt: true });
+                if (certResponse) {
+                    updSession.ISession.cert = certResponse.cert;
+                    updSession.ISession.certKey = certResponse.certKey;
+                } else {
+                    imperative.Logger.getAppLogger().warn(
+                        `promptCertificate returned no response. The certificate will not be updated on the session.`
+                    );
+                    return false;
+                }
             } catch (err) {
                 return false;
             }
@@ -629,16 +637,6 @@ export class ZoweVsCodeExtension {
         options.session.user = newUser.trim();
         options.session.password = newPass.trim();
         return [options.session.user, options.session.password];
-    }
-
-    private static async promptCertificate(options: PromptCredentialsOptions.CertificateOptions): Promise<void> {
-        const response: { cert: string; certKey: string } = await vscode.commands.executeCommand("zowe.certificateWizard", {
-            cert: options.profile.profile.certFile,
-            certKey: options.profile.profile.certKeyFile,
-            dialogOpts: { ...(options.openDialogOptions ?? {}), canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
-        });
-        options.session.cert = response.cert;
-        options.session.certKey = response.certKey;
     }
 
     private static async checkExistingConfig(filePath: string): Promise<string | false> {

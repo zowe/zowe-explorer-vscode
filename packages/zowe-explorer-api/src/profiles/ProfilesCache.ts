@@ -10,6 +10,8 @@
  */
 
 import * as imperative from "@zowe/imperative";
+
+import * as vscode from "vscode";
 import type { IRegisterClient } from "../extend/IRegisterClient";
 import { AuthHandler, ProfileLike } from "./AuthHandler";
 import { FileManagement } from "../utils/FileManagement";
@@ -24,6 +26,17 @@ import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
 
+export interface CertPromptResponse {
+    cert: string;
+    certKey: string;
+}
+export interface CertificatePromptOptions {
+    openDialogOptions?: vscode.OpenDialogOptions;
+    profile?: imperative.IProfileLoaded;
+    rePrompt?: boolean;
+    userInputBoxOptions?: vscode.InputBoxOptions;
+    passwordInputBoxOptions?: vscode.InputBoxOptions;
+}
 export class ProfilesCache {
     private profileInfo: imperative.ProfileInfo;
 
@@ -627,5 +640,38 @@ export class ProfilesCache {
             method = imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
         }
         return method;
+    }
+
+    /**
+     * Prompt the user for a certificate to use for cert-pem auth.
+     * TODO describe behavior of saving the certificate
+     * @param options
+     */
+    public async promptCertificate(options: CertificatePromptOptions): Promise<CertPromptResponse | undefined> {
+        if (!options.profile) {
+            imperative.Logger.getAppLogger().error(`Attempted to prompt for an authentication certificate without specifying a profile`);
+            return undefined;
+        }
+        const response: CertPromptResponse = await vscode.commands.executeCommand("zowe.certificateWizard", {
+            cert: options.profile.profile?.certFile,
+            certKey: options.profile.profile?.certKeyFile,
+            dialogOpts: { ...(options.openDialogOptions ?? {}), canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
+        });
+
+        // only save if not apiml ?
+        let profileToSave = options.profile;
+        const allowedLoginMethod = options.profile.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+        if (allowedLoginMethod !== imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM) {
+            // if this is not direct cert-pem authentication, save to the base profile.
+            profileToSave = (await this.fetchBaseProfile(options.profile?.name)) || options.profile;
+            profileToSave = options.profile.name?.startsWith(profileToSave.name + ".") ? { ...profileToSave, type: null } : profileToSave;
+        }
+
+        const profileInfo = await this.getProfileInfo();
+        const updateSettings = { profileName: profileToSave.name, profileType: profileToSave.type };
+        await profileInfo.updateProperty({ ...updateSettings, property: "certFile", value: response.cert });
+        await profileInfo.updateProperty({ ...updateSettings, property: "certKeyFile", value: response.certKey });
+        imperative.Logger.getAppLogger().debug(`Updated profile ${profileToSave.name} (type: ${profileToSave.type}) with certificate auth details`);
+        return response;
     }
 }

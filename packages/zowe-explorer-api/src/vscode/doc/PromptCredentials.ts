@@ -31,9 +31,4 @@ export namespace PromptCredentialsOptions {
     export interface UserPassOptions extends CommonOptions {
         session: imperative.ISession;
     }
-
-    export interface CertificateOptions extends UserPassOptions {
-        openDialogOptions?: OpenDialogOptions;
-        profile?: imperative.IProfileLoaded;
-    }
 }

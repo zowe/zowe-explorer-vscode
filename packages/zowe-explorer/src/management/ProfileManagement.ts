@@ -256,18 +256,11 @@ export class ProfileManagement {
                 break;
             }
             case this.certUpdateQpItems[this.AuthQpLabels.updateCert]: {
-                const response: { cert: string; certKey: string } = await vscode.commands.executeCommand("zowe.certificateWizard", {
-                    cert: profile?.profile?.certFile,
-                    certKey: profile?.profile?.certKeyFile,
-                    dialogOpts: { canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
+                await Profiles.getInstance().promptCertificate({
+                    profile,
+                    openDialogOptions: { canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
                 });
-                let profileToSave = (await Profiles.getInstance().fetchBaseProfile(profile.name)) ?? profile;
-                profileToSave = profile.name.startsWith(profileToSave.name + ".") ? { ...profileToSave, type: null } : profileToSave;
-                const profileInfo = await Profiles.getInstance().getProfileInfo();
-                const updateSettings = { profileName: profileToSave.name, profileType: profileToSave.type };
-                await profileInfo.updateProperty({ ...updateSettings, property: "certFile", value: response.cert });
-                await profileInfo.updateProperty({ ...updateSettings, property: "certKeyFile", value: response.certKey });
-                ZoweLogger.debug(`Updated profile ${profileToSave.name} (type: ${profileToSave.type}) with certificate auth details`);
+
                 break;
             }
             case this.hideProfileQpItems[this.AuthQpLabels.hide]: {
