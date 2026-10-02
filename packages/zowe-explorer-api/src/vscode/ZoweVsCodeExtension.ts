@@ -186,6 +186,10 @@ export class ZoweVsCodeExtension {
         const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const serviceProfile = await this.getServiceProfile(opts);
         const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
+        const allowedLoginMethod: string = cache.getAllowedLoginMethod(serviceProfile);
+        imperative.Logger.getAppLogger().debug(
+            `ssoLogin called for profile ${serviceProfile.name} (type: ${serviceProfile.type}), allowedLoginMethod=${allowedLoginMethod}`
+        );
         if (baseProfile == null) {
             Gui.errorMessage(
                 `Login failed: No base or parent profile found to store SSO token for profile "${serviceProfile.name}". ` +
@@ -196,9 +200,15 @@ export class ZoweVsCodeExtension {
         }
         const primaryProfile = opts.preferBaseToken ? baseProfile : serviceProfile;
         const secondaryProfile = opts.preferBaseToken ? serviceProfile : baseProfile;
-        const tokenType =
-            primaryProfile.profile.tokenType ??
-            secondaryProfile.profile.tokenType ??
+        let tokenType: string | undefined =
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC ||
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM
+                ? imperative.SessConstants.TOKEN_TYPE_APIML
+                : undefined;
+
+        tokenType =
+            (tokenType || primaryProfile?.profile?.tokenType) ??
+            secondaryProfile?.profile?.tokenType ??
             opts.defaultTokenType ??
             imperative.SessConstants.TOKEN_TYPE_APIML;
         const updSession = new imperative.Session({
@@ -213,14 +223,28 @@ export class ZoweVsCodeExtension {
         // record that this request is to get a token
         imperative.AuthOrder.makingRequestForToken(updSession.ISession);
 
+        // todo here use allowed login method
         const qpItems: vscode.QuickPickItem[] = [
             { label: "$(account) User and Password", description: "Log in with basic authentication" },
             { label: "$(note) Certificate", description: "Log in with PEM format certificate file" },
         ];
-        const response = await Gui.showQuickPick(qpItems, {
-            placeHolder: "Select an authentication method for obtaining token",
-            title: `[${baseProfile.name}] Log in to Authentication Service`,
-        });
+        let response: vscode.QuickPickItem | undefined = undefined;
+        if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
+            response = await Gui.showQuickPick(qpItems, {
+                placeHolder: "Select an authentication method for obtaining token",
+                title: `[${baseProfile.name}] Log in to Authentication Service`,
+            });
+        } else if (
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM ||
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM
+        ) {
+            // use certificate auth
+            response = qpItems[1];
+        } else {
+            // assume basic auth
+            response = qpItems[0];
+        }
+
         if (response === qpItems[0]) {
             const creds = await ZoweVsCodeExtension.promptUserPass({ session: updSession.ISession, rePrompt: true });
             if (!creds) {
@@ -235,7 +259,16 @@ export class ZoweVsCodeExtension {
             imperative.AuthOrder.putNewAuthsFirstInSess(updSession.ISession, [imperative.SessConstants.AUTH_TYPE_BASIC], { onlyTheseAuths: true });
         } else if (response === qpItems[1]) {
             try {
-                await ZoweVsCodeExtension.promptCertificate({ profile: serviceProfile, session: updSession.ISession, rePrompt: true });
+                const certResponse = await cache.promptCertificate({ profile: serviceProfile, rePrompt: true });
+                if (certResponse) {
+                    updSession.ISession.cert = certResponse.cert;
+                    updSession.ISession.certKey = certResponse.certKey;
+                } else {
+                    imperative.Logger.getAppLogger().warn(
+                        `promptCertificate returned no response. The certificate will not be updated on the session.`
+                    );
+                    return false;
+                }
             } catch (err) {
                 return false;
             }
@@ -604,16 +637,6 @@ export class ZoweVsCodeExtension {
         options.session.user = newUser.trim();
         options.session.password = newPass.trim();
         return [options.session.user, options.session.password];
-    }
-
-    private static async promptCertificate(options: PromptCredentialsOptions.CertificateOptions): Promise<void> {
-        const response: { cert: string; certKey: string } = await vscode.commands.executeCommand("zowe.certificateWizard", {
-            cert: options.profile.profile.certFile,
-            certKey: options.profile.profile.certKeyFile,
-            dialogOpts: { ...(options.openDialogOptions ?? {}), canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
-        });
-        options.session.cert = response.cert;
-        options.session.certKey = response.certKey;
     }
 
     private static async checkExistingConfig(filePath: string): Promise<string | false> {

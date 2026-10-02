@@ -225,6 +225,7 @@
   "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>": "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>",
   "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. <a>#4438</a> & <a>#4489</a>": "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. <a>#4438</a> & <a>#4489</a>",
   "Added support for resolving data set aliases when using SSH profiles. <a>#4489</a>": "Added support for resolving data set aliases when using SSH profiles. <a>#4489</a>",
+  "Added support for the allowedLoginMethod property. This property can be used to restrict authentication methods down to one allowed. If a profile has no value for allowedLoginMethod, or if the value is \"prompt\", there is no change in behavior compared to previous Zowe Explorer versions. <a>#4531</a>": "Added support for the allowedLoginMethod property. This property can be used to restrict authentication methods down to one allowed. If a profile has no value for allowedLoginMethod, or if the value is \"prompt\", there is no change in behavior compared to previous Zowe Explorer versions. <a>#4531</a>",
   "Added support to delete VSAM data sets via right-click action.": "Added support to delete VSAM data sets via right-click action.",
   "Added support to delete VSAM data sets. <a>#3824</a>": "Added support to delete VSAM data sets. <a>#3824</a>",
   "Added support to view the Encoding history for MVS and Dataset in the History View. <a>#2776</a>": "Added support to view the Encoding history for MVS and Dataset in the History View. <a>#2776</a>",
@@ -668,6 +669,12 @@
   },
   "Error Details": "Error Details",
   "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.": "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.",
+  "Error checking supportsCertAuth for profile {0}/Service profile name": {
+    "message": "Error checking supportsCertAuth for profile {0}",
+    "comment": [
+      "Service profile name"
+    ]
+  },
   "Error creating data set favorite node: {0} for profile {1}./LabelProfile name": {
     "message": "Error creating data set favorite node: {0} for profile {1}.",
     "comment": [
@@ -2101,6 +2108,7 @@
     ]
   },
   "Set a filter...": "Set a filter...",
+  "Set the path to your authentication certificate": "Set the path to your authentication certificate",
   "Set up <a>POEditor project</a> for contributing translations and cleaned up redundant localization strings. <a>#546</a>": "Set up <a>POEditor project</a> for contributing translations and cleaned up redundant localization strings. <a>#546</a>",
   "Setting to hide hidden USS files": "Setting to hide hidden USS files",
   "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.",
@@ -2337,6 +2345,7 @@
   "Unpin": "Unpin",
   "Unpin selected rows": "Unpin selected rows",
   "Update": "Update",
+  "Update Certificate": "Update Certificate",
   "Update Credentials": "Update Credentials",
   "Update Global and Project level schemas": "Update Global and Project level schemas",
   "Update Global schema only": "Update Global schema only",

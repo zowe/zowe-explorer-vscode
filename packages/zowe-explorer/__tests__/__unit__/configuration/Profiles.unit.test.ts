@@ -198,6 +198,10 @@ function createGlobalMocks(): { [key: string]: any } {
         value: [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }],
         configurable: true,
     });
+    Object.defineProperty(newMocks.mockProfileInstance, "getAllowedLoginMethod", {
+        value: vi.fn().mockReturnValue("prompt"),
+        configurable: true,
+    });
     Object.defineProperty(newMocks.mockProfileInstance, "getProfileInfo", {
         value: vi.fn(() => {
             return createInstanceOfProfileInfo();
@@ -2851,5 +2855,25 @@ describe("Profiles unit tests - function showProfilesInactiveMsg", () => {
         expect(errorMsgSpy).toHaveBeenCalledWith(
             "Profile profName is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct."
         );
+    });
+});
+
+describe("Profiles Unit Tests - Function getAllowedLoginMethod", () => {
+    beforeEach(() => {
+        // todo fix Profiles test setup to not use Object.defineProperty
+        vi.resetAllMocks();
+        vi.clearAllMocks();
+        vi.restoreAllMocks();
+    });
+
+    it("should default to prompt if the profile has no value for allowedLoginMethod", () => {
+        const method = Profiles.getInstance().getAllowedLoginMethod({
+            profile: { allowedLoginMethod: undefined },
+            message: "",
+            failNotFound: false,
+            type: "zosmf",
+        });
+        // todo need to adjust imperative mocks
+        // expect(method).toBe(imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT);
     });
 });

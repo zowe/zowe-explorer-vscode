@@ -108,6 +108,13 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public logout(session: imperative.Session): Promise<void> {
             return Logout.apimlLogout(session);
         }
+        /**
+         * z/OSMF supports cert-pem authentication.
+         * @returns True
+         */
+        public supportsCertAuth(): boolean {
+            return true;
+        }
     }
 
     /**

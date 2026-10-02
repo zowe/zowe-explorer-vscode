@@ -15,8 +15,10 @@ import { ZoweLogger } from "../tools/ZoweLogger";
 import * as fs from "fs";
 
 export type CertWizardOpts = {
+    title?: string;
     cert?: string;
     certKey?: string;
+    profileName: string;
     dialogOpts?: vscode.OpenDialogOptions;
 };
 

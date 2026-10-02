@@ -10,7 +10,10 @@
  */
 
 import * as imperative from "@zowe/imperative";
+
+import * as vscode from "vscode";
 import type { IRegisterClient } from "../extend/IRegisterClient";
+import { AuthHandler, ProfileLike } from "./AuthHandler";
 import { FileManagement } from "../utils/FileManagement";
 import { errorMessage } from "../utils/ErrorUtils";
 import { Validation } from "./Validation";
@@ -23,6 +26,21 @@ import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
 
+export interface CertPromptResponse {
+    cert: string;
+    certKey: string;
+}
+export interface CertificatePromptOptions {
+    /**
+     * Shown at the top of the wizard. Defaults to "Log in to authentication service."
+     */
+    title?: string;
+    openDialogOptions?: vscode.OpenDialogOptions;
+    profile?: imperative.IProfileLoaded;
+    rePrompt?: boolean;
+    userInputBoxOptions?: vscode.InputBoxOptions;
+    passwordInputBoxOptions?: vscode.InputBoxOptions;
+}
 export class ProfilesCache {
     private profileInfo: imperative.ProfileInfo;
 
@@ -588,5 +606,77 @@ export class ProfilesCache {
                 profile.profile.password = process.env[passwordEnvVar];
             }
         }
+    }
+    /**
+     * Detect if sessions created from the specified profile will connect to APIML.
+     * see {@link AbstractSession.isUsingApiml}
+     * @param profile
+     * @returns
+     */
+    public isUsingApiml(profile: ProfileLike): boolean {
+        const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
+        return AuthHandler.getSessFromProfile(profileLoaded).isUsingApiml();
+    }
+    /**
+     * Detect if sessions created from the specified profile connect to APIML, and report the reason for that decision.
+     * see {@link AbstractSession.getApimlDecision}
+     * @param profile
+     * @returns
+     */
+    public getApimlDecision(profile: ProfileLike): imperative.IApimlDecision {
+        const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
+        return AuthHandler.getSessFromProfile(profileLoaded).getApimlDecision();
+    }
+
+    /**
+     * Get the allowedLoginMethod field from the profile, defaulting to "prompt" if there is no value
+     * or if the value is invalid.
+     * @param profile - the loaded profile to check
+     * @returns the specified allowedLoginMethod field on the profile, or "prompt"
+     */
+    public getAllowedLoginMethod(profile: ProfileLike): string {
+        const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
+        let method: string = profileLoaded.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+        if (imperative.SessConstants.ALL_ALLOWED_LOGIN_METHODS.indexOf(method) < 0) {
+            this.log.debug(
+                `Unknown allowed login method value '${method}'.` + ` Falling back to '${imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT}'`
+            );
+            method = imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+        }
+        return method;
+    }
+
+    /**
+     * Prompt the user for a certificate to use for cert-pem auth.
+     * TODO describe behavior of saving the certificate
+     * @param options
+     */
+    public async promptCertificate(options: CertificatePromptOptions): Promise<CertPromptResponse | undefined> {
+        if (!options.profile) {
+            imperative.Logger.getAppLogger().error(`Attempted to prompt for an authentication certificate without specifying a profile`);
+            return undefined;
+        }
+        const response: CertPromptResponse = await vscode.commands.executeCommand("zowe.certificateWizard", {
+            cert: options.profile.profile?.certFile,
+            certKey: options.profile.profile?.certKeyFile,
+            profileName: options.profile.name,
+            dialogOpts: { ...(options.openDialogOptions ?? {}), canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
+        });
+
+        // todo : only save if the user pressed save
+        let profileToSave = options.profile;
+        const allowedLoginMethod = options.profile.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+        if (allowedLoginMethod !== imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM) {
+            // if this is not direct cert-pem authentication, save to the base profile.
+            profileToSave = (await this.fetchBaseProfile(options.profile?.name)) || options.profile;
+            profileToSave = options.profile.name?.startsWith(profileToSave.name + ".") ? { ...profileToSave, type: null } : profileToSave;
+        }
+
+        const profileInfo = await this.getProfileInfo();
+        const updateSettings = { profileName: profileToSave.name, profileType: profileToSave.type };
+        await profileInfo.updateProperty({ ...updateSettings, property: "certFile", value: response.cert });
+        await profileInfo.updateProperty({ ...updateSettings, property: "certKeyFile", value: response.certKey });
+        imperative.Logger.getAppLogger().debug(`Updated profile ${profileToSave.name} (type: ${profileToSave.type}) with certificate auth details`);
+        return response;
     }
 }
