@@ -126,25 +126,13 @@ export class ProfileManagement {
         const profile = node.getProfile();
         ZoweLogger.debug(
             `Building profile management quickpick for profile ${profile.name} with managementType=${managementType},` +
-                ` allowedLoginMethod=${allowedLoginMethod}`
+            ` allowedLoginMethod=${allowedLoginMethod}`
         );
         const qp = Gui.createQuickPick();
         let quickPickOptions: vscode.QuickPickItem[];
         const profileCommonApi = ZoweExplorerApiRegister.getInstance().getCommonApi(profile);
-        let loginTokenType: string;
         let supportsCertAuth: boolean = false;
-        try {
-            loginTokenType = profileCommonApi.getTokenTypeName();
-        } catch (error) {
-            ZoweLogger.warn(error);
-            Gui.showMessage(
-                vscode.l10n.t({
-                    message: `Error getting supported tokenType value for profile {0}`,
-                    args: [profile.name],
-                    comment: [`Service profile name`],
-                })
-            );
-        }
+
         if (profileCommonApi.supportsCertAuth != null) {
             try {
                 supportsCertAuth = profileCommonApi.supportsCertAuth();
@@ -160,65 +148,50 @@ export class ProfileManagement {
             }
         }
 
-        // allowedLoginType will override the inference of which auth type to use that we made
-        // based on the profile. but profile types that don't support tokens can't login with APIML,
-        // nor certificate auth.
-        if (
-            (loginTokenType && allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC) ||
-            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC
-        ) {
-            managementType = imperative.SessConstants.AUTH_TYPE_BASIC;
-        } else if (
-            (loginTokenType && supportsCertAuth && allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM) ||
-            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM
-        ) {
-            managementType = imperative.SessConstants.AUTH_TYPE_CERT_PEM;
-        }
         const placeholders = this.getQpPlaceholders(profile);
-        switch (managementType) {
-            case imperative.SessConstants.AUTH_TYPE_BASIC: {
+        if (
+            supportsCertAuth &&
+            (managementType === imperative.SessConstants.AUTH_TYPE_CERT_PEM ||
+                allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM)
+        ) {
+            quickPickOptions = Object.values(this.certUpdateQpItems);
+            qp.placeholder = placeholders.certAuth;
+        } else if (managementType === imperative.SessConstants.AUTH_TYPE_BASIC) {
+            if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC) {
                 quickPickOptions = Object.values(this.basicAuthUpdateQpItems);
+            } else {
                 // for any managementType: only allow switching if allowedLoginMethod is not set or set to "prompt",
                 // because allowedLoginType restricts the type of auth allowed down to one.
                 if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
                     quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
                 }
-                qp.placeholder = placeholders.basicAuth;
-                break;
             }
-            case imperative.SessConstants.AUTH_TYPE_CERT_PEM: {
-                quickPickOptions = Object.values(this.certUpdateQpItems);
-                if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
-                    quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
-                }
-                qp.placeholder = placeholders.basicAuth;
-                break;
+            qp.placeholder = placeholders.basicAuth;
+        }
+        // APIML cert pem, bearer and token trigger the same flow - log in to authentication service
+        else if (
+            (supportsCertAuth && allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM) ||
+            managementType === imperative.SessConstants.AUTH_TYPE_BEARER ||
+            managementType === imperative.SessConstants.AUTH_TYPE_TOKEN
+        ) {
+            quickPickOptions = Object.values(this.tokenAuthLoginQpItem);
+            if (profile.profile.tokenValue) {
+                quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
             }
-            // bearer and token trigger the same flow
-            case imperative.SessConstants.AUTH_TYPE_BEARER:
-            case imperative.SessConstants.AUTH_TYPE_TOKEN: {
-                quickPickOptions = Object.values(this.tokenAuthLoginQpItem);
-                if (profile.profile.tokenValue) {
-                    quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
-                }
 
-                if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
-                    quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
-                }
-                qp.placeholder = placeholders.tokenAuth;
-                break;
+            if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
+                quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
             }
-            default: {
-                quickPickOptions = Object.values(this.basicAuthAddQpItems);
-                try {
-                    ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
-                    quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
-                } catch {
-                    ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication, will not provide option.`);
-                }
-                qp.placeholder = placeholders.chooseAuth;
-                break;
+            qp.placeholder = placeholders.tokenAuth;
+        } else {
+            quickPickOptions = Object.values(this.basicAuthAddQpItems);
+            try {
+                ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
+                quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
+            } catch {
+                ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication, will not provide option.`);
             }
+            qp.placeholder = placeholders.chooseAuth;
         }
         this.addFinalQpOptions(node, quickPickOptions);
         let selectedItem = quickPickOptions[0];
@@ -257,6 +230,7 @@ export class ProfileManagement {
             }
             case this.certUpdateQpItems[this.AuthQpLabels.updateCert]: {
                 await Profiles.getInstance().promptCertificate({
+                    title: vscode.l10n.t("Update Certificate"),
                     profile,
                     openDialogOptions: { canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
                 });
@@ -286,7 +260,12 @@ export class ProfileManagement {
         }
     }
 
-    private static getQpPlaceholders(profile: imperative.IProfileLoaded): { basicAuth: string; tokenAuth: string; chooseAuth: string } {
+    private static getQpPlaceholders(profile: imperative.IProfileLoaded): {
+        basicAuth: string;
+        tokenAuth: string;
+        certAuth: string;
+        chooseAuth: string;
+    } {
         return {
             basicAuth: vscode.l10n.t({
                 message: "Profile {0} is using basic authentication. Choose a profile action.",
@@ -295,6 +274,11 @@ export class ProfileManagement {
             }),
             tokenAuth: vscode.l10n.t({
                 message: "Profile {0} is using token authentication. Choose a profile action.",
+                args: [profile.name],
+                comment: ["Profile name"],
+            }),
+            certAuth: vscode.l10n.t({
+                message: "Profile {0} is using cert-pem authentication. Choose a profile action.",
                 args: [profile.name],
                 comment: ["Profile name"],
             }),

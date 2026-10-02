@@ -31,6 +31,10 @@ export interface CertPromptResponse {
     certKey: string;
 }
 export interface CertificatePromptOptions {
+    /**
+     * Shown at the top of the wizard. Defaults to "Log in to authentication service."
+     */
+    title?: string;
     openDialogOptions?: vscode.OpenDialogOptions;
     profile?: imperative.IProfileLoaded;
     rePrompt?: boolean;
@@ -655,10 +659,11 @@ export class ProfilesCache {
         const response: CertPromptResponse = await vscode.commands.executeCommand("zowe.certificateWizard", {
             cert: options.profile.profile?.certFile,
             certKey: options.profile.profile?.certKeyFile,
+            profileName: options.profile.name,
             dialogOpts: { ...(options.openDialogOptions ?? {}), canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
         });
 
-        // only save if not apiml ?
+        // todo : only save if the user pressed save
         let profileToSave = options.profile;
         const allowedLoginMethod = options.profile.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
         if (allowedLoginMethod !== imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM) {

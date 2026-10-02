@@ -8,6 +8,9 @@ const vscodeApi = acquireVsCodeApi();
 export function App() {
   const [certPath, setCertPath] = useState("");
   const [certKeyPath, setCertKeyPath] = useState("");
+  const [title, setTitle] = useState(l10n.t("Log in to Authentication Service"));
+  const [profileName, setProfileName] = useState("");
+
   const [localizationState, setLocalizationState] = useState(null);
 
   useEffect(() => {
@@ -27,6 +30,12 @@ export function App() {
         return;
       }
 
+      if (event.data.opts.title) {
+        setTitle(event.data.opts.title);
+      }
+      if (event.data.opts.profileName) {
+        setProfileName(l10n.t(`Profile: {0}`, event.data.opts.profileName));
+      }
       if (event.data.opts.cert) {
         setCertPath(event.data.opts.cert);
       }
@@ -43,10 +52,11 @@ export function App() {
   return (
     <div style={{ minWidth: "25em" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1>{l10n.t("Log in to Authentication Service")}</h1>
+        <h1>{title}</h1>
       </div>
       <VSCodeDivider />
       <div style={{ marginTop: "1em" }}>
+        <h4>{profileName}</h4>
         <VSCodeDataGrid style={{ marginTop: "1em" }} gridTemplateColumns="9em 1fr auto">
           <h3>{l10n.t("Select a certificate and certificate key in PEM format:")}</h3>
           <VSCodeDataGridRow rowType="header">
