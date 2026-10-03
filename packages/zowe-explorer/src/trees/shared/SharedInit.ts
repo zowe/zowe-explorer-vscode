@@ -641,7 +641,7 @@ export class SharedInit {
                 deserializeWebviewPanel(panel) {
                     if (panel.title.startsWith(Constants.RELEASE_NOTES_PANEL_TITLE) || panel.title.startsWith(Constants.SHARED_HISTORY_PANEL_TITLE)) {
                         panel.dispose();
-                    } else if (panel.title === vscode.l10n.t("Config Editor")) {
+                    } else if (panel.title === vscode.l10n.t("Config Editor") || panel.title.startsWith(vscode.l10n.t("Config Editor"))) {
                         // For ConfigEditor, dispose the restored panel and create a new one
                         // to ensure proper initialization and state management
                         panel.dispose();

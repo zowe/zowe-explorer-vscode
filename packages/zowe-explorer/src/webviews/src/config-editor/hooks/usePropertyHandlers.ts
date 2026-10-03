@@ -12,7 +12,7 @@
 import { useCallback } from "react";
 import { useConfigContext } from "../context/ConfigContext";
 import { useUtilityHelpers } from "./useUtilityHelpers";
-import { extractProfileKeyFromPath, getRenamedProfileKeyWithNested, parseValueByType } from "../utils";
+import { extractProfileKeyFromPath, getRenamedProfileKeyWithNested, parseValueByType, getNestedProperty, stringifyValueByType } from "../utils";
 import { getPropertyTypeForAddProfile } from "../utils/propertyUtils";
 import { getProfileType } from "../utils/profileUtils";
 import { isProfileDefault } from "../utils/profileHelpers";
@@ -109,13 +109,25 @@ export function usePropertyHandlers(params: PropertyHandlersParams) {
 
             const displayKey = path[path.length - 1];
             const currentSecure = utilityHelpers.isPropertySecure(key, displayKey, path, undefined);
-            setPendingChanges((prev) => ({
-                ...prev,
-                [configPath]: {
-                    ...prev[configPath],
-                    [key]: { value, path, profile: profileKey, secure: currentSecure },
-                },
-            }));
+            const originalValue = getNestedProperty(configurations[selectedTab!].properties, path);
+            const isBackToOriginal = stringifyValueByType(value) === stringifyValueByType((originalValue !== undefined && originalValue !== null ? originalValue : "") as any);
+
+            setPendingChanges((prev) => {
+                const nextConfigChanges = { ...prev[configPath] };
+                if (isBackToOriginal) {
+                    delete nextConfigChanges[key];
+                } else {
+                    nextConfigChanges[key] = { value, path, profile: profileKey, secure: currentSecure };
+                }
+
+                const nextPendingChanges = { ...prev };
+                if (Object.keys(nextConfigChanges).length === 0) {
+                    delete nextPendingChanges[configPath];
+                } else {
+                    nextPendingChanges[configPath] = nextConfigChanges;
+                }
+                return nextPendingChanges;
+            });
 
             if (deletions[configPath]?.includes(key)) {
                 setDeletions((prev) => ({
@@ -147,13 +159,25 @@ export function usePropertyHandlers(params: PropertyHandlersParams) {
             setPendingPropertyDeletion(null);
             const configPath = configurations[selectedTab!]!.configPath;
             const path = flattenedDefaults[key]?.path ?? key.split(".");
-            setPendingDefaults((prev) => ({
-                ...prev,
-                [configPath]: {
-                    ...prev[configPath],
-                    [key]: { value, path },
-                },
-            }));
+            const originalValue = getNestedProperty(configurations[selectedTab!].properties, path);
+            const isBackToOriginal = stringifyValueByType(value) === stringifyValueByType((originalValue !== undefined && originalValue !== null ? originalValue : "") as any);
+
+            setPendingDefaults((prev) => {
+                const nextConfigDefaults = { ...prev[configPath] };
+                if (isBackToOriginal) {
+                    delete nextConfigDefaults[key];
+                } else {
+                    nextConfigDefaults[key] = { value, path };
+                }
+
+                const nextPendingDefaults = { ...prev };
+                if (Object.keys(nextConfigDefaults).length === 0) {
+                    delete nextPendingDefaults[configPath];
+                } else {
+                    nextPendingDefaults[configPath] = nextConfigDefaults;
+                }
+                return nextPendingDefaults;
+            });
 
             if (defaultsDeletions[configPath]?.includes(key)) {
                 setDefaultsDeletions((prev) => ({

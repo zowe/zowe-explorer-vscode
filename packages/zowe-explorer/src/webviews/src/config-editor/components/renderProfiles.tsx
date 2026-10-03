@@ -28,6 +28,7 @@ interface RenderProfilesProps {
   // Handler functions
   handleProfileSelection: (profileKey: string) => void;
   handleDeleteProfile: (profileKey: string) => void;
+  confirmDeleteProfile?: (profileKey: string) => void;
   handleSetAsDefault: (profileKey: string) => void;
   handleRenameProfile: (originalKey: string, newKey: string, isDragDrop?: boolean) => boolean;
   onViewModeToggle?: () => void;
@@ -37,6 +38,7 @@ export const RenderProfiles = ({
   profilesObj,
   handleProfileSelection,
   handleDeleteProfile,
+  confirmDeleteProfile,
   handleSetAsDefault,
   handleRenameProfile,
   onViewModeToggle,
@@ -274,7 +276,7 @@ export const RenderProfiles = ({
           vscodeApi={vscodeApi}
           onProfileSelect={handleProfileSelection}
           onProfileMenuToggle={setProfileMenuOpen}
-          onDeleteProfile={handleDeleteProfile}
+          onDeleteProfile={confirmDeleteProfile || handleDeleteProfile}
           onSetAsDefault={handleSetAsDefault}
           isProfileDefault={isProfileDefault}
           getProfileType={(profileKey: string) => getProfileType(profileKey, selectedTab, configurations, pendingChanges, renames)}

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import * as l10n from "@vscode/l10n";
+import { VscodeToolbarButton } from "@vscode-elements/react-elements";
 
 interface SortDropdownProps<T extends string = string> {
   options: T[];
@@ -10,6 +11,7 @@ interface SortDropdownProps<T extends string = string> {
   getDescription?: (option: T) => string | undefined;
   className?: string;
   icon?: string;
+  getIcon?: (option: T) => string;
 }
 
 export function SortDropdown<T extends string = string>({
@@ -20,6 +22,7 @@ export function SortDropdown<T extends string = string>({
   getDescription,
   className = "",
   icon = "codicon-sort-precedence",
+  getIcon,
 }: SortDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [alignLeft, setAlignLeft] = useState(false);
@@ -59,10 +62,10 @@ export function SortDropdown<T extends string = string>({
 
   return (
     <div className={`sort-dropdown ${className}`} ref={dropdownRef}>
-      <button
+      <VscodeToolbarButton
         className="sort-dropdown-trigger"
         onClick={() => setIsOpen(!isOpen)}
-        onKeyDown={(e) => {
+        onKeyDown={(e: any) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             setIsOpen(!isOpen);
@@ -72,8 +75,8 @@ export function SortDropdown<T extends string = string>({
         aria-haspopup="listbox"
         title={l10n.t("Change sort order. Current: {0}", getDisplayName(selectedOption))}
       >
-        <span className={`codicon ${icon}`}></span>
-      </button>
+        <span className={`codicon ${getIcon ? getIcon(selectedOption) : icon}`}></span>
+      </VscodeToolbarButton>
       {isOpen && (
         <div
           className={`sort-dropdown-list ${alignLeft ? "align-left" : ""} ${getDescription ? "sort-dropdown-list--described" : ""}`}
@@ -82,6 +85,7 @@ export function SortDropdown<T extends string = string>({
         >
           {options.map((option) => {
             const description = getDescription?.(option);
+            const optIcon = getIcon?.(option);
             return (
               <div
                 key={option}
@@ -90,8 +94,11 @@ export function SortDropdown<T extends string = string>({
                 role="option"
                 aria-selected={option === selectedOption}
               >
-                <div className="sort-dropdown-item-label">{getDisplayName(option)}</div>
-                {description && <div className="sort-dropdown-item-description">{description}</div>}
+                {optIcon && <span className={`codicon ${optIcon} sort-dropdown-item-icon`}></span>}
+                <div className="sort-dropdown-item-content">
+                  <div className="sort-dropdown-item-label">{getDisplayName(option)}</div>
+                  {description && <div className="sort-dropdown-item-description">{description}</div>}
+                </div>
               </div>
             );
           })}

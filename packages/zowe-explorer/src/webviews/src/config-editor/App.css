@@ -31,6 +31,7 @@ vscode-single-select.config-input {
 
 vscode-single-select.config-input {
     --vscode-settings-dropdownBorder: transparent;
+    min-width: 120px;
 }
 
 vscode-textfield.config-input {
@@ -164,9 +165,18 @@ body.vscode-high-contrast-light {
     justify-content: center;
     align-items: center;
     gap: 8px;
-    padding: 12px 16px;
-    background: var(--ce-card-background, var(--vscode-editor-background));
+    padding: 12px 16px 16px 16px;
+    background: var(--vscode-editor-background);
     flex-shrink: 0;
+    border-top: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border));
+    margin-top: 16px;
+    margin-left: -12px;
+    margin-right: -12px;
+    margin-bottom: 0;
+}
+
+body.modal-open .footer {
+    background: transparent;
 }
 
 .footer button {
@@ -318,7 +328,7 @@ div:has(> .vscode-panel) {
 .panels {
     border-top: none;
     background-color: var(--vscode-editor-background);
-    padding: 12px;
+    padding: 12px 12px 0 12px;
     border-radius: 0 0 var(--ce-radius-md) var(--ce-radius-md);
     overflow: auto;
     display: flex;
@@ -333,20 +343,23 @@ div:has(> .vscode-panel) {
 
 .panel {
     display: none;
-    overflow: auto;
+    overflow: visible;
 }
 
 .panel.active {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 .panel-content {
     display: flex;
     gap: 0;
     align-items: stretch;
-    overflow: auto;
+    overflow: visible;
     flex: 1;
+    min-height: 0;
 }
 
 .config-section {
@@ -376,7 +389,8 @@ div:has(> .vscode-panel) {
 .config-section.profile-details-section {
     flex: 1;
     min-width: 200px;
-    overflow: visible;
+    overflow-y: auto;
+    overflow-x: hidden;
     transition: flex 0.1s ease;
     display: flex;
     flex-direction: column;
@@ -388,12 +402,18 @@ div:has(> .vscode-panel) {
     max-width: 400px;
     width: 100%;
     margin: 0;
-    padding: 8px 16px;
+    padding: 10px 16px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
 }
 
 .profile-details-content {
     flex: 1;
-    overflow: visible;
+    overflow-y: auto;
+    overflow-x: hidden;
     min-height: 0;
     display: flex;
     flex-direction: column;
@@ -432,24 +452,62 @@ div:has(> .vscode-panel) {
     box-sizing: border-box;
 }
 
-.profiles-card,
 .defaults-section.section-card {
-    padding: 4px 12px 10px;
+    padding: 6px 10px 10px;
     /* Never crush below content height (see the .defaults-section rule above for why this matters). */
     flex-shrink: 0;
+}
+
+.profiles-card {
+    padding: 6px 10px 10px;
+    flex-shrink: 0;
+}
+
+@media (min-width: 901px) {
+    .config-section.profiles-section {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .profiles-card:has(> .profile-list-container) {
+        flex: 1 1 auto;
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .config-section.profiles-section .profiles-card:has(> .profile-list-container) .profile-list-container {
+        margin-top: 0;
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .config-section.profiles-section [data-testid="profile-list"] {
+        max-height: none !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+    }
 }
 
 /* Collapsed sections have no content below the header, so the card is just the header bar. */
 .profiles-card:not(:has(> .profile-list-container)),
 .defaults-section.section-card:not(:has(> .defaults-content)) {
-    padding-bottom: 4px;
+    padding-bottom: 6px;
+}
+
+.profiles-card:not(:has(> .profile-list-container)) > .profile-heading-container,
+.defaults-section.section-card:not(:has(> .defaults-content)) > .defaults-heading-container {
+    margin-bottom: -6px;
 }
 
 /* Negative margins let the header span the full card width despite the card's padding. */
 .section-card > .profile-heading-container,
 .section-card > .defaults-heading-container {
-    margin: 0 -12px;
-    padding: 0 12px;
+    margin: -6px -10px 6px -10px;
+    padding: 6px 10px;
 }
 
 /* Only rule off the header when there is content below it to separate. */
@@ -462,14 +520,14 @@ div:has(> .vscode-panel) {
 /* Negative margin cancels the header's padding so the hover highlight spans the whole row. */
 .section-card > .profile-heading-container > .profiles-toggle-button,
 .section-card > .defaults-heading-container > .defaults-toggle-button {
-    margin-left: -12px;
-    padding: 6px 12px;
+    margin-left: -10px;
+    padding: 4px 10px;
     align-self: stretch;
     border-radius: var(--ce-radius-md);
 }
 
 .section-card > .defaults-heading-container > .defaults-toggle-button {
-    margin-right: -12px;
+    margin-right: -10px;
     flex: 1;
 }
 
@@ -516,7 +574,7 @@ div:has(> .vscode-panel) {
 }
 
 .defaults-content {
-    margin-top: 8px;
+    margin-top: 12px;
     overflow: visible;
     flex: 1;
     min-height: 0;
@@ -614,11 +672,11 @@ div:has(> .vscode-panel) {
 }
 
 .config-item {
-    margin: 6px 0;
+    margin: 7px 0;
 }
 
 .config-item.parent {
-    margin-top: 10px;
+    margin-top: 12px;
 }
 
 .config-label {
@@ -1082,6 +1140,19 @@ ul {
     align-items: center;
 }
 
+/* Custom screen-cut (scissors) icon override since bundled codicons (0.0.36) doesn't include it */
+.codicon-screen-cut::before {
+    content: "" !important;
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: currentColor;
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M12.44 11.23a3.1 3.1 0 0 0-4.32-.42l-1.93-1.63L8.12 7.6a3.1 3.1 0 0 0 4.32-.42 3.14 3.14 0 0 0 0-4.37 3.1 3.1 0 0 0-4.32 0l-1.32 1.34-1.32-1.34a3.1 3.1 0 0 0-4.32 0 3.14 3.14 0 0 0 0 4.37 3.1 3.1 0 0 0 4.32.42l1.93 1.63-1.93 1.58a3.1 3.1 0 0 0-4.32-.42 3.14 3.14 0 0 0 0 4.37 3.1 3.1 0 0 0 4.32 0l1.32-1.34 1.32 1.34a3.1 3.1 0 0 0 4.32 0 3.14 3.14 0 0 0 0-4.37Zm-1.07-5.12a1.59 1.59 0 1 1-2.25 0 1.59 1.59 0 0 1 2.25 0ZM4.63 4.54a1.59 1.59 0 1 1-2.25 0 1.59 1.59 0 0 1 2.25 0ZM3.56 12.35a1.59 1.59 0 1 1 0-2.25 1.59 1.59 0 0 1 0 2.25Zm7.81 0a1.59 1.59 0 1 1 0-2.25 1.59 1.59 0 0 1 0 2.25Z"/></svg>')
+        no-repeat 50% 50%;
+    mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M12.44 11.23a3.1 3.1 0 0 0-4.32-.42l-1.93-1.63L8.12 7.6a3.1 3.1 0 0 0 4.32-.42 3.14 3.14 0 0 0 0-4.37 3.1 3.1 0 0 0-4.32 0l-1.32 1.34-1.32-1.34a3.1 3.1 0 0 0-4.32 0 3.14 3.14 0 0 0 0 4.37 3.1 3.1 0 0 0 4.32.42l1.93 1.63-1.93 1.58a3.1 3.1 0 0 0-4.32-.42 3.14 3.14 0 0 0 0 4.37 3.1 3.1 0 0 0 4.32 0l1.32-1.34 1.32 1.34a3.1 3.1 0 0 0 4.32 0 3.14 3.14 0 0 0 0-4.37Zm-1.07-5.12a1.59 1.59 0 1 1-2.25 0 1.59 1.59 0 0 1 2.25 0ZM4.63 4.54a1.59 1.59 0 1 1-2.25 0 1.59 1.59 0 0 1 2.25 0ZM3.56 12.35a1.59 1.59 0 1 1 0-2.25 1.59 1.59 0 0 1 0 2.25Zm7.81 0a1.59 1.59 0 1 1 0-2.25 1.59 1.59 0 0 1 0 2.25Z"/></svg>')
+        no-repeat 50% 50%;
+}
+
 .config-editor-modal-overlay {
     position: fixed;
     inset: 0;
@@ -1360,7 +1431,7 @@ vscode-toolbar-button .codicon {
         flex-direction: column;
         gap: 1rem;
         min-height: 0;
-        flex: 1 1 auto;
+        flex: 0 0 auto;
     }
 
     .config-section.profiles-section {
@@ -1385,29 +1456,48 @@ vscode-toolbar-button .codicon {
         min-width: 100%;
         max-width: 100%;
         order: 2;
+        height: auto;
+    }
+
+    .profiles-card,
+    .defaults-section.section-card {
+        padding: 8px 16px 16px 16px;
+    }
+
+    .profiles-card:not(:has(> .profile-list-container)),
+    .defaults-section.section-card:not(:has(> .defaults-content)) {
+        padding-bottom: 8px;
+    }
+
+    .profiles-card:not(:has(> .profile-list-container)) > .profile-heading-container,
+    .defaults-section.section-card:not(:has(> .defaults-content)) > .defaults-heading-container {
+        margin-bottom: -8px;
+    }
+
+    .section-card > .profile-heading-container,
+    .section-card > .defaults-heading-container {
+        margin: -8px -16px 12px -16px;
+        padding: 8px 16px;
     }
 
     .config-section.defaults-section {
-        /* Same reasoning as the base rule: never shrink below the rows' own content height. */
-        flex: 0 0 auto;
-        min-width: 0;
-        overflow: visible;
-        margin-top: 16px;
+        display: none !important;
     }
 
     .config-section.profile-details-section > div {
         max-width: none;
         width: 100%;
-        padding: 0;
+        padding: 16px;
+        box-sizing: border-box;
     }
 
     .footer {
         justify-content: center;
-        width: 100%;
-        margin-left: 0;
-        margin-right: 0;
-        left: 0;
-        right: 0;
+        width: calc(100% + 24px);
+        margin-left: -12px;
+        margin-right: -12px;
+        margin-bottom: 0;
+        margin-top: 24px;
     }
 
     .defaults-toggle-button,
@@ -1439,6 +1529,31 @@ vscode-toolbar-button .codicon {
 @media (max-width: 600px) {
     .panel-content {
         gap: 0.5rem;
+    }
+
+    .profiles-card,
+    .defaults-section.section-card {
+        padding: 8px 12px 12px 12px;
+    }
+
+    .profiles-card:not(:has(> .profile-list-container)),
+    .defaults-section.section-card:not(:has(> .defaults-content)) {
+        padding-bottom: 8px;
+    }
+
+    .profiles-card:not(:has(> .profile-list-container)) > .profile-heading-container,
+    .defaults-section.section-card:not(:has(> .defaults-content)) > .defaults-heading-container {
+        margin-bottom: -8px;
+    }
+
+    .section-card > .profile-heading-container,
+    .section-card > .defaults-heading-container {
+        margin: -8px -12px 10px -12px;
+        padding: 8px 12px;
+    }
+
+    .config-section.profile-details-section > div {
+        padding: 12px;
     }
 
     .config-item-container {
@@ -1485,6 +1600,31 @@ vscode-toolbar-button .codicon {
 @media (max-width: 400px) {
     .panel-content {
         gap: 0.25rem;
+    }
+
+    .profiles-card,
+    .defaults-section.section-card {
+        padding: 6px 8px 8px 8px;
+    }
+
+    .profiles-card:not(:has(> .profile-list-container)),
+    .defaults-section.section-card:not(:has(> .defaults-content)) {
+        padding-bottom: 6px;
+    }
+
+    .profiles-card:not(:has(> .profile-list-container)) > .profile-heading-container,
+    .defaults-section.section-card:not(:has(> .defaults-content)) > .defaults-heading-container {
+        margin-bottom: -6px;
+    }
+
+    .section-card > .profile-heading-container,
+    .section-card > .defaults-heading-container {
+        margin: -6px -8px 8px -8px;
+        padding: 6px 8px;
+    }
+
+    .config-section.profile-details-section > div {
+        padding: 8px;
     }
 
     .config-item-container {
@@ -2672,33 +2812,12 @@ vscode-single-select.wizard-select {
 }
 
 .sort-dropdown-trigger {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: transparent;
-    border: none;
-    border-radius: var(--ce-radius-md);
-    /* --vscode-foreground, not --vscode-editor-foreground: matches the toolbar-button icons
-       beside it (Panels.tsx), which themes can color differently. */
-    color: var(--vscode-foreground);
-    cursor: pointer;
-    padding: 0;
-    min-width: 28px;
-    min-height: 28px;
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
-    transition: background-color 0.2s ease;
 }
 
-.sort-dropdown-trigger:hover {
-    background-color: var(--vscode-button-secondaryHoverBackground);
-}
-
-.sort-dropdown-trigger:focus {
-    outline: 1px solid var(--vscode-focusBorder);
-    outline-offset: -1px;
-}
+/* Native custom elements have their own native focus behavior, so we don't need sort-dropdown-trigger custom hover/focus overrides anymore */
 
 .sort-dropdown-list {
     position: absolute;
@@ -2721,11 +2840,26 @@ vscode-single-select.wizard-select {
 }
 
 .sort-dropdown-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
     padding: 7px 10px;
     cursor: pointer;
     font-size: 14px;
     color: var(--vscode-dropdown-foreground);
     transition: background-color 0.2s ease;
+}
+
+.sort-dropdown-item-icon {
+    flex-shrink: 0;
+    font-size: 14px;
+    margin-top: 2px;
+}
+
+.sort-dropdown-item-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .sort-dropdown-item:hover {
@@ -2792,17 +2926,25 @@ body.vscode-light .profile-tree-item.selected:not(.drag-over) {
 /* High contrast themes don't guarantee --vscode-button-background / --vscode-tab-border are visible
    against their surroundings, so these affordances re-anchor to the dedicated HC tokens. */
 body.vscode-high-contrast .profile-list-item.selected,
-body.vscode-high-contrast .profile-tree-item.selected:not(.drag-over),
+body.vscode-high-contrast .profile-tree-item.selected:not(.drag-over) {
+    border: 2px solid var(--vscode-contrastActiveBorder, var(--vscode-focusBorder)) !important;
+    background-color: var(--vscode-list-activeSelectionBackground, rgba(255, 255, 255, 0.1)) !important;
+}
+
 body.vscode-high-contrast-light .profile-list-item.selected,
 body.vscode-high-contrast-light .profile-tree-item.selected:not(.drag-over) {
-    border: 2px solid var(--vscode-contrastActiveBorder, var(--vscode-focusBorder)) !important;
+    border: 3px solid var(--vscode-contrastActiveBorder, #000000) !important;
+    background-color: var(--vscode-list-activeSelectionBackground, rgba(0, 0, 0, 0.05)) !important;
 }
 
 body.vscode-high-contrast .profile-list-item:not(.selected),
-body.vscode-high-contrast .profile-tree-item:not(.selected):not(.drag-over),
+body.vscode-high-contrast .profile-tree-item:not(.selected):not(.drag-over) {
+    border: 2px solid var(--vscode-contrastBorder, transparent) !important;
+}
+
 body.vscode-high-contrast-light .profile-list-item:not(.selected),
 body.vscode-high-contrast-light .profile-tree-item:not(.selected):not(.drag-over) {
-    border: 2px solid var(--vscode-contrastBorder, transparent) !important;
+    border: 1px dashed var(--vscode-contrastBorder, #000000) !important;
 }
 
 body.vscode-high-contrast .tab,
@@ -2856,12 +2998,88 @@ body.vscode-high-contrast-light vscode-single-select:focus {
     outline-offset: -1px;
 }
 
+/* Ensure dashed/solid focus and hover outlines on custom interactive buttons that don't have native high-contrast focus/hover outlines */
+body.vscode-high-contrast .ce-icon-button:hover,
 body.vscode-high-contrast .ce-icon-button:focus,
+body.vscode-high-contrast .ce-icon-button:focus-visible,
+body.vscode-high-contrast .action-button:hover,
 body.vscode-high-contrast .action-button:focus,
+body.vscode-high-contrast .action-button:focus-visible,
+body.vscode-high-contrast .profile-action-button:hover,
 body.vscode-high-contrast .profile-action-button:focus,
+body.vscode-high-contrast .profile-action-button:focus-visible,
+body.vscode-high-contrast-light .ce-icon-button:hover,
 body.vscode-high-contrast-light .ce-icon-button:focus,
+body.vscode-high-contrast-light .ce-icon-button:focus-visible,
+body.vscode-high-contrast-light .action-button:hover,
 body.vscode-high-contrast-light .action-button:focus,
-body.vscode-high-contrast-light .profile-action-button:focus {
-    outline: 1px solid var(--vscode-contrastActiveBorder, var(--vscode-focusBorder));
-    outline-offset: -1px;
+body.vscode-high-contrast-light .action-button:focus-visible,
+body.vscode-high-contrast-light .profile-action-button:hover,
+body.vscode-high-contrast-light .profile-action-button:focus,
+body.vscode-high-contrast-light .profile-action-button:focus-visible {
+    outline: 2px dashed var(--vscode-contrastActiveBorder, var(--vscode-focusBorder)) !important;
+    outline-offset: 1px !important;
+}
+
+/* Ensure favorite star icons are fully visible in High Contrast themes, with interactive hover feedback */
+body.vscode-high-contrast .profile-star-button .codicon-star-empty,
+body.vscode-high-contrast .profile-tree-default-star--inactive,
+body.vscode-high-contrast-light .profile-star-button .codicon-star-empty,
+body.vscode-high-contrast-light .profile-tree-default-star--inactive {
+    color: var(--vscode-contrastBorder, #808080) !important;
+}
+
+body.vscode-high-contrast .profile-star-button .codicon-star-full,
+body.vscode-high-contrast .profile-tree-default-star--active,
+body.vscode-high-contrast-light .profile-star-button .codicon-star-full,
+body.vscode-high-contrast-light .profile-tree-default-star--active {
+    color: var(--vscode-contrastActiveBorder, #ffffff) !important;
+}
+
+body.vscode-high-contrast .profile-star-button:hover .codicon-star-empty,
+body.vscode-high-contrast .profile-tree-icon-button:hover .profile-tree-default-star--inactive,
+body.vscode-high-contrast-light .profile-star-button:hover .codicon-star-empty,
+body.vscode-high-contrast-light .profile-tree-icon-button:hover .profile-tree-default-star--inactive {
+    color: var(--vscode-contrastActiveBorder, #ffffff) !important;
+}
+
+body.vscode-high-contrast .profile-star-button:hover .codicon-star-full,
+body.vscode-high-contrast .profile-tree-icon-button:hover .profile-tree-default-star--active,
+body.vscode-high-contrast-light .profile-star-button:hover .codicon-star-full,
+body.vscode-high-contrast-light .profile-tree-icon-button:hover .profile-tree-default-star--active {
+    color: var(--vscode-contrastBorder, #808080) !important;
+}
+
+/* Prevent gray/custom background highlights from conflicting with native High Contrast borders on hover */
+body.vscode-high-contrast .profile-list-item:hover,
+body.vscode-high-contrast .profile-tree-item:hover,
+body.vscode-high-contrast-light .profile-list-item:hover,
+body.vscode-high-contrast-light .profile-tree-item:hover,
+body.vscode-high-contrast .ce-icon-button:hover,
+body.vscode-high-contrast .action-button:hover,
+body.vscode-high-contrast .profile-action-button:hover,
+body.vscode-high-contrast-light .ce-icon-button:hover,
+body.vscode-high-contrast-light .action-button:hover,
+body.vscode-high-contrast-light .profile-action-button:hover,
+body.vscode-high-contrast .profile-star-button:hover,
+body.vscode-high-contrast-light .profile-star-button:hover {
+    background-color: transparent !important;
+    background: none !important;
+}
+
+/* Prevent disabled buttons and elements from being hoverable or focusable (no pointer events) */
+.ce-icon-button:disabled,
+.profile-action-button:disabled,
+.action-button:disabled,
+vscode-toolbar-button[aria-disabled="true"],
+vscode-button[disabled],
+button:disabled {
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+}
+
+.tab-context-menu-item.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
 }

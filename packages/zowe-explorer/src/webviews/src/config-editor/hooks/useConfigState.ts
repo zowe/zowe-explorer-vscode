@@ -54,6 +54,20 @@ export function useConfigState(vscodeApi: ConfigEditorWebviewApi) {
     const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
     const [renameProfileModalOpen, setRenameProfileModalOpen] = useState(false);
     const [configParseErrors, setConfigParseErrors] = useState<ConfigParseError[]>([]);
+    const [profileClipboard, setProfileClipboard] = useState<{
+        type: "copy" | "cut";
+        sourceKey: string;
+        configPath: string;
+        profiles: {
+            [key: string]: {
+                profileKey: string;
+                type: string | null;
+                properties: Record<string, any>;
+                secure: string[];
+                customFields: Record<string, any>;
+            };
+        };
+    } | null>(null);
 
     const configurationsRef = useRef<Configuration[]>([]);
     const pendingChangesRef = useRef<{ [configPath: string]: { [key: string]: PendingChange } }>({});
@@ -246,6 +260,8 @@ export function useConfigState(vscodeApi: ConfigEditorWebviewApi) {
         setProfileSortOrderWithStorage,
         setDefaultsCollapsedWithStorage,
         setProfilesCollapsedWithStorage,
+        profileClipboard,
+        setProfileClipboard,
         CONFIG_EDITOR_SETTINGS_KEY,
         vscodeApi,
     };

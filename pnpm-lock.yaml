@@ -2352,6 +2352,8 @@ packages:
 
   '@zowe/zos-ftp-for-zowe-cli@3.0.0':
     resolution: {integrity: sha512-lNt4t4VJMvnnjQXXusw5N5w5nVysbKZVSD+c7wvj/RJt6ceSV2aMH7QPeiyvTE0FEFErCkjCRl2AxeVtBkn82Q==}
+    peerDependencies:
+      '@zowe/imperative': ^8.0.0
 
   '@zowe/zos-jobs-for-zowe-sdk@8.32.0':
     resolution: {integrity: sha512-N8aj0dyaFH/E37ev+awzDPNtDMq5A2gK1eAfDdKEYZUyJeeaTuM5iN/p9R6dTRR2wbjh/QpjSmVUDAEjq9ATAw==}
@@ -2369,6 +2371,9 @@ packages:
 
   '@zowe/zos-uss-for-zowe-sdk@8.32.0':
     resolution: {integrity: sha512-sAw560txs0NTlwKm2/97IFb23HIrJxpCz4daLxgMBIfsoUPLzWEBhIVFJm3Djold0gWe1oB/LJr4pbrCZmuHSg==}
+    engines: {node: '>=20.9.0'}
+    peerDependencies:
+      '@zowe/imperative': ^8.0.0
 
   '@zowe/zosmf-for-zowe-sdk@8.35.0':
     resolution: {integrity: sha512-L3gIQ11fqR+rZ7rEF8OtgLqgSpKRVP/3Y/+KHGvs3V/bS2hdFJs2qzvv6kE32FpJzQqh6oFVl6RT2bLcBIwM1Q==}

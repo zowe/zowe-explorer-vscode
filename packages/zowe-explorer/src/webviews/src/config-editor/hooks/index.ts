@@ -19,3 +19,4 @@ export * from "./useProfileUtils";
 export * from "./useHandlerContext";
 export * from "./useWizardState";
 export * from "./useAnchoredTooltip";
+export * from "./useElementWidth";

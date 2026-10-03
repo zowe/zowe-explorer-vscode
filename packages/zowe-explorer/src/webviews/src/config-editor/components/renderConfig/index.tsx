@@ -9,8 +9,9 @@
  *
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as l10n from "@vscode/l10n";
+import { VscodeToolbarButton } from "@vscode-elements/react-elements";
 import { SortDropdown } from "../SortDropdown";
 import { extractProfileKeyFromPath, getSortOrderDisplayName, PropertySortOrder } from "../../utils";
 import { isPropertyPendingDeletion as isPropertyPendingDeletionFn } from "../../utils/propertyUtils";
@@ -22,6 +23,128 @@ import { ComplexValueProperty } from "./ComplexValueProperty";
 import { SecureArrayProperty } from "./SecureArrayProperty";
 import { MergedPropertyRow } from "./MergedPropertyRow";
 import { EditablePropertyRow } from "./EditablePropertyRow";
+import { useElementWidth } from "../../hooks/useElementWidth";
+
+interface PropertiesOverflowMenuProps {
+  currentPath: string[];
+  openAddProfileModalAtPath: (path: string[]) => void;
+  showMergedProperties?: MergedPropertiesVisibility;
+  onShowMergedPropertiesChange?: (val: MergedPropertiesVisibility) => void;
+  propertySortOrder: PropertySortOrder;
+  onPropertySortOrderChange: (val: PropertySortOrder) => void;
+  hasMergedProperties: boolean;
+}
+
+export function PropertiesOverflowMenu({
+  currentPath,
+  openAddProfileModalAtPath,
+  showMergedProperties,
+  onShowMergedPropertiesChange,
+  propertySortOrder,
+  onPropertySortOrderChange,
+  hasMergedProperties,
+}: PropertiesOverflowMenuProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <div className="sort-dropdown" ref={dropdownRef}>
+      <VscodeToolbarButton
+        className="sort-dropdown-trigger"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+        title={l10n.t("More Actions")}
+      >
+        <span className="codicon codicon-more"></span>
+      </VscodeToolbarButton>
+      {isOpen && (
+        <div className="sort-dropdown-list align-left" role="menu" style={{ minWidth: "190px" }}>
+          <div
+            className="sort-dropdown-item"
+            role="menuitem"
+            onClick={() => {
+              openAddProfileModalAtPath(currentPath);
+              setIsOpen(false);
+            }}
+          >
+            <span className="codicon codicon-add sort-dropdown-item-icon"></span>
+            <div className="sort-dropdown-item-content">
+              <div className="sort-dropdown-item-label">{l10n.t("Create Property")}</div>
+            </div>
+          </div>
+          {hasMergedProperties && onShowMergedPropertiesChange && (
+            <>
+              <div className="header-overflow-divider" style={{ height: "1px", backgroundColor: "var(--vscode-dropdown-border)", margin: "4px 0" }}></div>
+              <div style={{ padding: "4px 10px", fontSize: "11px", fontWeight: "bold", color: "var(--vscode-descriptionForeground)", opacity: 0.8 }}>
+                {l10n.t("Merged Properties")}
+              </div>
+              {(["show", "hide", "unfiltered"] as const).map((opt) => {
+                const displayNames = {
+                  show: l10n.t("Show merged"),
+                  hide: l10n.t("Hide merged"),
+                  unfiltered: l10n.t("Show merged unfiltered"),
+                };
+                return (
+                  <div
+                    key={opt}
+                    className={`sort-dropdown-item ${opt === showMergedProperties ? "selected" : ""}`}
+                    role="menuitemradio"
+                    aria-checked={opt === showMergedProperties}
+                    onClick={() => {
+                      onShowMergedPropertiesChange(opt);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <span className={`codicon ${opt === showMergedProperties ? "codicon-check" : "codicon-blank"} sort-dropdown-item-icon`}></span>
+                    <div className="sort-dropdown-item-content">
+                      <div className="sort-dropdown-item-label">{displayNames[opt]}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
+          <div className="header-overflow-divider" style={{ height: "1px", backgroundColor: "var(--vscode-dropdown-border)", margin: "4px 0" }}></div>
+          <div style={{ padding: "4px 10px", fontSize: "11px", fontWeight: "bold", color: "var(--vscode-descriptionForeground)", opacity: 0.8 }}>
+            {l10n.t("Sort Order")}
+          </div>
+          {(["alphabetical", "merged-first", "non-merged-first"] as const).map((opt) => {
+            return (
+              <div
+                key={opt}
+                className={`sort-dropdown-item ${opt === propertySortOrder ? "selected" : ""}`}
+                role="menuitemradio"
+                aria-checked={opt === propertySortOrder}
+                onClick={() => {
+                  onPropertySortOrderChange(opt);
+                  setIsOpen(false);
+                }}
+              >
+                <span className={`codicon ${opt === propertySortOrder ? "codicon-check" : "codicon-blank"} sort-dropdown-item-icon`}></span>
+                <div className="sort-dropdown-item-content">
+                  <div className="sort-dropdown-item-label">{getSortOrderDisplayName(opt)}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const SORT_ORDER_OPTIONS: PropertySortOrder[] = ["alphabetical", "merged-first", "non-merged-first"];
 const MERGED_PROPERTIES_OPTIONS: MergedPropertiesVisibility[] = ["hide", "show", "unfiltered"];
@@ -49,6 +172,19 @@ function getMergedPropertiesDescription(option: MergedPropertiesVisibility): str
       return l10n.t("Show every inherited property, including ones that are not on the schema for this profile type.");
     default:
       return undefined;
+  }
+}
+
+function getMergedPropertiesIcon(option: MergedPropertiesVisibility): string {
+  switch (option) {
+    case "hide":
+      return "codicon-eye-closed";
+    case "show":
+      return "codicon-eye";
+    case "unfiltered":
+      return "codicon-preview";
+    default:
+      return "codicon-eye";
   }
 }
 
@@ -166,6 +302,8 @@ function ConfigEntry({
   const currentPath = [...path, key];
   const fullKey = currentPath.join(".");
   const displayKey = key.split(".").pop();
+  const [headerRef, headerWidth] = useElementWidth();
+  const isNarrow = headerWidth > 0 && headerWidth < 280;
 
   const isInDeletions = isPropertyPendingDeletionFn({ propertyKey: key, path, configPath, deletions, renames });
 
@@ -251,62 +389,83 @@ function ConfigEntry({
   }
 
   if (isParent) {
+    const isPropertiesHeader = displayKey?.toLocaleLowerCase() === "properties";
     return (
       <div key={fullKey} className="config-item parent">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          {displayKey?.toLocaleLowerCase() === "properties" ? (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }} ref={headerRef}>
+          {isPropertiesHeader ? (
             <>
               <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`} style={{ margin: 0, fontSize: "16px" }}>
                 Profile Properties
               </h3>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <SortDropdown<MergedPropertiesVisibility>
-                  options={MERGED_PROPERTIES_OPTIONS}
-                  selectedOption={showMergedProperties}
-                  onOptionChange={setShowMergedPropertiesWithStorage}
-                  getDisplayName={getMergedPropertiesDisplayName}
-                  getDescription={getMergedPropertiesDescription}
-                  icon="codicon-eye"
+              {isNarrow ? (
+                <PropertiesOverflowMenu
+                  currentPath={currentPath}
+                  openAddProfileModalAtPath={openAddProfileModalAtPath}
+                  showMergedProperties={showMergedProperties}
+                  onShowMergedPropertiesChange={setShowMergedPropertiesWithStorage}
+                  propertySortOrder={propertySortOrder || "alphabetical"}
+                  onPropertySortOrderChange={setPropertySortOrderWithStorage}
+                  hasMergedProperties={true}
                 />
-                <SortDropdown<PropertySortOrder>
-                  options={SORT_ORDER_OPTIONS}
-                  selectedOption={propertySortOrder || "alphabetical"}
-                  onOptionChange={setPropertySortOrderWithStorage}
-                  getDisplayName={getSortOrderDisplayName}
-                />
-                <button
-                  className="ce-icon-button"
-                  title={l10n.t('Create new property for "{0}"', extractProfileKeyFromPath(currentPath))}
-                  onClick={() => openAddProfileModalAtPath(currentPath)}
-                  id="add-profile-property-button"
-                >
-                  <span className="codicon codicon-add"></span>
-                </button>
-              </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <SortDropdown<MergedPropertiesVisibility>
+                    options={MERGED_PROPERTIES_OPTIONS}
+                    selectedOption={showMergedProperties}
+                    onOptionChange={setShowMergedPropertiesWithStorage}
+                    getDisplayName={getMergedPropertiesDisplayName}
+                    getDescription={getMergedPropertiesDescription}
+                    getIcon={getMergedPropertiesIcon}
+                  />
+                  <SortDropdown<PropertySortOrder>
+                    options={SORT_ORDER_OPTIONS}
+                    selectedOption={propertySortOrder || "alphabetical"}
+                    onOptionChange={setPropertySortOrderWithStorage}
+                    getDisplayName={getSortOrderDisplayName}
+                  />
+                  <VscodeToolbarButton
+                    title={l10n.t('Create new property for "{0}"', extractProfileKeyFromPath(currentPath))}
+                    onClick={() => openAddProfileModalAtPath(currentPath)}
+                    id="add-profile-property-button"
+                  >
+                    <span className="codicon codicon-add"></span>
+                  </VscodeToolbarButton>
+                </div>
+              )}
             </>
           ) : (
             <>
               <h3 className={`header-level-${path.length > 3 ? 3 : path.length}`}>{displayKey}</h3>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <SortDropdown<PropertySortOrder>
-                  options={SORT_ORDER_OPTIONS}
-                  selectedOption={propertySortOrder || "alphabetical"}
-                  onOptionChange={setPropertySortOrderWithStorage}
-                  getDisplayName={getSortOrderDisplayName}
+              {isNarrow ? (
+                <PropertiesOverflowMenu
+                  currentPath={currentPath}
+                  openAddProfileModalAtPath={openAddProfileModalAtPath}
+                  propertySortOrder={propertySortOrder || "alphabetical"}
+                  onPropertySortOrderChange={setPropertySortOrderWithStorage}
+                  hasMergedProperties={false}
                 />
-                <button
-                  className="ce-icon-button"
-                  title={l10n.t('Create new property for "{0}"', extractProfileKeyFromPath(currentPath))}
-                  onClick={() => openAddProfileModalAtPath(currentPath)}
-                  id="add-profile-property-button"
-                >
-                  <span className="codicon codicon-add"></span>
-                </button>
-              </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <SortDropdown<PropertySortOrder>
+                    options={SORT_ORDER_OPTIONS}
+                    selectedOption={propertySortOrder || "alphabetical"}
+                    onOptionChange={setPropertySortOrderWithStorage}
+                    getDisplayName={getSortOrderDisplayName}
+                  />
+                  <VscodeToolbarButton
+                    title={l10n.t('Create new property for "{0}"', extractProfileKeyFromPath(currentPath))}
+                    onClick={() => openAddProfileModalAtPath(currentPath)}
+                    id="add-profile-property-button"
+                  >
+                    <span className="codicon codicon-add"></span>
+                  </VscodeToolbarButton>
+                </div>
+              )}
             </>
           )}
         </div>
-        <div style={{ paddingLeft: displayKey?.toLocaleLowerCase() === "properties" ? "16px" : "0px" }}>
+        <div style={{ paddingLeft: isPropertiesHeader ? "16px" : "0px" }}>
           <ConfigEntries ctx={ctx} obj={entryValue} path={currentPath} mergedProps={mergedProps} />
         </div>
       </div>

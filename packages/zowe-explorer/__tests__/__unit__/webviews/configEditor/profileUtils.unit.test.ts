@@ -844,6 +844,28 @@ describe("profileUtils", () => {
             const result = mergePendingChangesForProfile({ baseObj, path, configPath, pendingChanges, renames: {} });
             expect(result.nested?.level?.key).toBe("v");
         });
+        it("does NOT merge pending changes of child profiles into parent profile", () => {
+            const baseObj = { type: "zowe", properties: { port: 8080 } };
+            const path = ["profiles", "parent"];
+            const pendingChanges = {
+                [configPath]: {
+                    "profiles.parent.profiles.child.properties.port": { value: 22, path: [], profile: "parent.child" },
+                },
+            };
+            const result = mergePendingChangesForProfile({ baseObj, path, configPath, pendingChanges, renames: {} });
+            expect(result.properties).toEqual({ port: 8080 });
+        });
+        it("does NOT merge pending changes of parent profiles as local properties of child profile", () => {
+            const baseObj = { type: "zowe", properties: {} };
+            const path = ["profiles", "parent", "profiles", "child"];
+            const pendingChanges = {
+                [configPath]: {
+                    "profiles.parent.properties.port": { value: 22, path: [], profile: "parent" },
+                },
+            };
+            const result = mergePendingChangesForProfile({ baseObj, path, configPath, pendingChanges, renames: {} });
+            expect(result.properties).toEqual({});
+        });
     });
 
     describe("canPropertyBeSecure", () => {

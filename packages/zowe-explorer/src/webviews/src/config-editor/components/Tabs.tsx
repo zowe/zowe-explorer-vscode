@@ -141,6 +141,15 @@ export function Tabs({
                 id={`global:${config.global},user:${config.user}`}
                 onClick={() => onTabChange(index)}
                 onContextMenu={(e) => handleTabRightClick(e, index)}
+                tabIndex={0}
+                role="tab"
+                aria-selected={selectedTab === index}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onTabChange(index);
+                  }
+                }}
               >
                 <span className="tab-label tab-label-row" title={config.configPath}>
                   <span className={`codicon codicon-size-14 ${getConfigIcon(config)}`}></span>

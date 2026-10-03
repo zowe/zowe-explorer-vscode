@@ -30,7 +30,8 @@ export function usePanelResizer({
                 const panelWidth = activePanel.getBoundingClientRect().width;
                 const profilesWidth = (panelWidth * profilesWidthPercent) / 100;
                 const minProfilesWidth = 200;
-                const maxProfilesWidth = panelWidth * 0.7;
+                const minDetailsWidth = 300;
+                const maxProfilesWidth = Math.max(minProfilesWidth, panelWidth - minDetailsWidth);
 
                 const constrainedWidth = Math.max(minProfilesWidth, Math.min(maxProfilesWidth, profilesWidth));
 
@@ -77,9 +78,10 @@ export function usePanelResizer({
             const dividerWidth = 22; // 22px for divider width and margins
             const availableWidth = panelWidth - dividerWidth;
 
-            // Apply minimum and maximum constraints for profiles section only
+            // Apply minimum and maximum constraints for both profiles and details sections
             const minProfilesWidth = 200;
-            const maxProfilesWidth = availableWidth * 0.7; // 70% of available width
+            const minDetailsWidth = 300;
+            const maxProfilesWidth = Math.max(minProfilesWidth, availableWidth - minDetailsWidth);
 
             // Calculate desired width for profiles section based on mouse position
             const desiredProfilesWidth = mouseX;

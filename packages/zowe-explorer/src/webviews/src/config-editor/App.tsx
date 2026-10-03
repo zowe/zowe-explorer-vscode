@@ -175,6 +175,14 @@ function AppContent() {
   const { formatPendingChanges, hasPendingChanges } = useProfileUtils();
   const { setWizardModalOpen, wizardModalOpen, setWizardProfileNameValidation, validationRequestSeqRef } = useWizardContext();
 
+  const pendingChangesExist = hasPendingChanges();
+  useEffect(() => {
+    vscodeApi.postMessage({
+      command: "UNSAVED_CHANGES_STATUS",
+      hasPendingChanges: pendingChangesExist,
+    });
+  }, [pendingChangesExist, vscodeApi]);
+
   // Keep tutorialSeenRef in sync so other callbacks can read it without stale closures.
   useEffect(() => {
     tutorialSeenRef.current = tutorialSeen;
@@ -184,6 +192,17 @@ function AppContent() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      const isInputActive =
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.tagName === "VSCODE-TEXTFIELD" ||
+          activeElement.tagName === "VSCODE-SINGLE-SELECT" ||
+          (activeElement as HTMLElement).isContentEditable);
+      if (isInputActive) {
+        return;
+      }
       if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "z") {
         return;
       }
@@ -246,9 +265,9 @@ function AppContent() {
 
   useEffect(() => {
     const isModalOpen =
-      newProfileModalOpen || saveModalOpen || newLayerModalOpen || wizardModalOpen || renameProfileModalOpen || configParseErrors.length > 0;
+      newProfileModalOpen || saveModalOpen || newLayerModalOpen || wizardModalOpen || renameProfileModalOpen || configParseErrors.length > 0 || addConfigModalOpen;
     document.body.classList.toggle("modal-open", isModalOpen);
-  }, [newProfileModalOpen, saveModalOpen, newLayerModalOpen, wizardModalOpen, renameProfileModalOpen, configParseErrors.length]);
+  }, [newProfileModalOpen, saveModalOpen, newLayerModalOpen, wizardModalOpen, renameProfileModalOpen, configParseErrors.length, addConfigModalOpen]);
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -488,6 +507,7 @@ function AppContent() {
             profilesObj={profilesObj}
             handleProfileSelection={handleProfileSelection}
             handleDeleteProfile={handleDeleteProfile}
+            confirmDeleteProfile={confirmDeleteProfile}
             handleSetAsDefault={handleSetAsDefault}
             handleRenameProfile={handleRenameProfile}
           />

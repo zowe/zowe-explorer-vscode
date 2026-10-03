@@ -285,7 +285,17 @@ export const RenderProfileDetails = ({
                 : {};
 
             return (
-              <div key={`${selectedProfileKey}-${propertySortOrder}-${sortOrderVersion}`}>
+              <div
+                key={`${selectedProfileKey}-${propertySortOrder}-${sortOrderVersion}`}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: "1 1 auto",
+                  minHeight: 0,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                }}
+              >
                 <RenderConfig
                   obj={effectiveProfile}
                   path={effectivePath}

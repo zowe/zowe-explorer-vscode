@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import * as l10n from "@vscode/l10n";
+import { getOriginalProfileKeyWithNested, mergePendingChangesForProfile, isPropertySecure } from "../utils/profileUtils";
+import { useConfigContext } from "../context/ConfigContext";
 import { ProfileSearchFilter } from "./ProfileSearchFilter";
 import { ProfileTree } from "./ProfileTree";
 import { useIsLightTheme } from "../hooks/useIsLightTheme";
@@ -45,6 +47,7 @@ export function ProfileList({
   selectedProfileKey,
   pendingProfiles,
   onProfileSelect,
+  onDeleteProfile,
   onSetAsDefault,
   isProfileDefault,
   getProfileType,
@@ -72,6 +75,406 @@ export function ProfileList({
   const [lastSelectedProfileKey, setLastSelectedProfileKey] = useState<string | null>(null);
   const scrollContainerRef = useScrollToSelected(selectedProfileKey);
   const isLightTheme = useIsLightTheme();
+
+  const findOriginalKey = useMemo(() => {
+    return (currentKey: string): string => {
+      if (!configurations || selectedTab === null || selectedTab === undefined || !renames) {
+        return currentKey;
+      }
+
+      const configPath = configurations[selectedTab]?.configPath;
+      if (!configPath || !renames[configPath]) {
+        return currentKey;
+      }
+
+      return getOriginalProfileKeyWithNested(currentKey, configPath, renames);
+    };
+  }, [configurations, selectedTab, renames]);
+
+  const {
+    profileClipboard,
+    setProfileClipboard,
+    setPendingChanges,
+    pendingChanges,
+    configurations: ctxConfigurations,
+    selectedTab: ctxSelectedTab,
+    renames: ctxRenames,
+  } = useConfigContext();
+
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; profileKey: string } | null>(null);
+
+  const copyProfile = (profileKey: string, isCut: boolean) => {
+    const currentTab = ctxSelectedTab !== null && ctxSelectedTab !== undefined ? ctxSelectedTab : selectedTab;
+    const currentConfigs = ctxConfigurations || configurations;
+    const currentRenames = ctxRenames || renames;
+    const config = currentConfigs && currentTab !== null && currentTab !== undefined ? currentConfigs[currentTab] : null;
+    if (!config) {
+      return;
+    }
+    const configPath = config.configPath;
+    const profilesObj = config.properties?.profiles || {};
+    const relatedProfileKeys = sortedProfileKeys.filter((k) => k === profileKey || k.startsWith(profileKey + "."));
+    const getProfileJsonPath = (pk: string): string[] => {
+      const parts = pk.split(".");
+      const pathArr: string[] = ["profiles"];
+      for (let i = 0; i < parts.length; i++) {
+        pathArr.push(parts[i]);
+        if (i < parts.length - 1) {
+          pathArr.push("profiles");
+        }
+      }
+      return pathArr;
+    };
+    const profilesData: { [k: string]: any } = {};
+    for (const pKey of relatedProfileKeys) {
+      const pType = getProfileType(pKey);
+      const baseProperties = profilesObj[pKey]?.properties || {};
+      const mergedProperties = mergePendingChangesForProfile({
+        baseObj: baseProperties,
+        path: ["profiles", ...pKey.split("."), "properties"],
+        configPath,
+        pendingChanges,
+        renames: currentRenames || {},
+      });
+      const oldProfilePath = getProfileJsonPath(pKey);
+      const secureArray: string[] = [];
+      Object.keys(mergedProperties).forEach((propKey) => {
+        const isSecure = isPropertySecure({
+          fullKey: [...oldProfilePath, "properties", propKey].join("."),
+          displayKey: propKey,
+          path: [...oldProfilePath, "properties", propKey],
+          selectedTab: currentTab,
+          configurations: currentConfigs,
+          pendingChanges,
+          renames: currentRenames,
+        });
+        if (isSecure) {
+          secureArray.push(propKey);
+        }
+      });
+      const customFields: Record<string, any> = {};
+      const baseProfile = profilesObj[pKey] || {};
+      Object.keys(baseProfile).forEach((bk) => {
+        if (bk !== "properties" && bk !== "profiles" && bk !== "type" && bk !== "secure") {
+          customFields[bk] = baseProfile[bk];
+        }
+      });
+      profilesData[pKey] = {
+        profileKey: pKey,
+        type: pType,
+        properties: mergedProperties,
+        secure: secureArray,
+        customFields,
+      };
+    }
+    setProfileClipboard({
+      type: isCut ? "cut" : "copy",
+      sourceKey: profileKey,
+      configPath,
+      profiles: profilesData,
+    });
+  };
+
+  const duplicateProfile = (profileKey: string) => {
+    const currentTab = ctxSelectedTab !== null && ctxSelectedTab !== undefined ? ctxSelectedTab : selectedTab;
+    const currentConfigs = ctxConfigurations || configurations;
+    const currentRenames = ctxRenames || renames;
+    const config = currentConfigs && currentTab !== null && currentTab !== undefined ? currentConfigs[currentTab] : null;
+    if (!config) {
+      return;
+    }
+    const configPath = config.configPath;
+    const profilesObj = config.properties?.profiles || {};
+    const relatedProfileKeys = sortedProfileKeys.filter((k) => k === profileKey || k.startsWith(profileKey + "."));
+    const getProfileJsonPath = (pk: string): string[] => {
+      const parts = pk.split(".");
+      const pathArr: string[] = ["profiles"];
+      for (let i = 0; i < parts.length; i++) {
+        pathArr.push(parts[i]);
+        if (i < parts.length - 1) {
+          pathArr.push("profiles");
+        }
+      }
+      return pathArr;
+    };
+    const profilesData: { [k: string]: any } = {};
+    for (const pKey of relatedProfileKeys) {
+      const pType = getProfileType(pKey);
+      const baseProperties = profilesObj[pKey]?.properties || {};
+      const mergedProperties = mergePendingChangesForProfile({
+        baseObj: baseProperties,
+        path: ["profiles", ...pKey.split("."), "properties"],
+        configPath,
+        pendingChanges,
+        renames: currentRenames || {},
+      });
+      const oldProfilePath = getProfileJsonPath(pKey);
+      const secureArray: string[] = [];
+      Object.keys(mergedProperties).forEach((propKey) => {
+        const isSecure = isPropertySecure({
+          fullKey: [...oldProfilePath, "properties", propKey].join("."),
+          displayKey: propKey,
+          path: [...oldProfilePath, "properties", propKey],
+          selectedTab: currentTab,
+          configurations: currentConfigs,
+          pendingChanges,
+          renames: currentRenames,
+        });
+        if (isSecure) {
+          secureArray.push(propKey);
+        }
+      });
+      const customFields: Record<string, any> = {};
+      const baseProfile = profilesObj[pKey] || {};
+      Object.keys(baseProfile).forEach((bk) => {
+        if (bk !== "properties" && bk !== "profiles" && bk !== "type" && bk !== "secure") {
+          customFields[bk] = baseProfile[bk];
+        }
+      });
+      profilesData[pKey] = {
+        profileKey: pKey,
+        type: pType,
+        properties: mergedProperties,
+        secure: secureArray,
+        customFields,
+      };
+    }
+    let parentKey: string | null = null;
+    if (profileKey.includes(".")) {
+      parentKey = profileKey.substring(0, profileKey.lastIndexOf("."));
+    }
+    const leafName = profileKey.split(".").pop() || profileKey;
+    const proposedLeafName = leafName + "_copy";
+    const proposedKey = parentKey ? `${parentKey}.${proposedLeafName}` : proposedLeafName;
+    const allCurrentProfileKeys = [...sortedProfileKeys, ...Object.keys(pendingProfiles)];
+    if (currentRenames && currentRenames[configPath]) {
+      allCurrentProfileKeys.push(...Object.values(currentRenames[configPath]));
+    }
+    let destKey = proposedKey;
+    if (allCurrentProfileKeys.includes(proposedKey)) {
+      let counter = 1;
+      let uniqueNewProfileKey = `${proposedKey}_1`;
+      while (allCurrentProfileKeys.includes(uniqueNewProfileKey)) {
+        counter++;
+        uniqueNewProfileKey = `${proposedKey}_${counter}`;
+      }
+      destKey = uniqueNewProfileKey;
+    }
+    const newChanges: { [k: string]: any } = {};
+    Object.entries(profilesData).forEach(([pKey, pData]) => {
+      const suffix = pKey.substring(profileKey.length);
+      const newPKey = destKey + suffix;
+      const newProfilePath = getProfileJsonPath(newPKey);
+      if (pData.type) {
+        const typeKey = [...newProfilePath, "type"].join(".");
+        newChanges[typeKey] = {
+          value: pData.type,
+          path: ["type"],
+          profile: newPKey,
+        };
+      }
+      Object.entries(pData.properties).forEach(([propKey, propValue]) => {
+        const propertyKey = [...newProfilePath, "properties", propKey].join(".");
+        const isSecure = pData.secure.includes(propKey);
+        newChanges[propertyKey] = {
+          value: propValue,
+          path: [propKey],
+          profile: newPKey,
+          secure: isSecure,
+        };
+      });
+      if (pData.secure && pData.secure.length > 0) {
+        const secureKey = [...newProfilePath, "secure"].join(".");
+        newChanges[secureKey] = {
+          value: pData.secure,
+          path: ["secure"],
+          profile: newPKey,
+        };
+      }
+      Object.entries(pData.customFields).forEach(([bk, bkValue]) => {
+        const bkKey = [...newProfilePath, bk].join(".");
+        newChanges[bkKey] = {
+          value: bkValue,
+          path: [bk],
+          profile: newPKey,
+        };
+      });
+    });
+    setPendingChanges((prev: any) => ({
+      ...prev,
+      [configPath]: {
+        ...prev[configPath],
+        ...newChanges,
+      },
+    }));
+    onProfileSelect(destKey);
+  };
+
+  const pasteProfile = (targetProfileKey: string | null) => {
+    if (!profileClipboard) {
+      return;
+    }
+    const currentTab = ctxSelectedTab !== null && ctxSelectedTab !== undefined ? ctxSelectedTab : selectedTab;
+    const currentConfigs = ctxConfigurations || configurations;
+    const currentRenames = ctxRenames || renames;
+    const config = currentConfigs && currentTab !== null && currentTab !== undefined ? currentConfigs[currentTab] : null;
+    if (!config) {
+      return;
+    }
+    const configPath = config.configPath;
+    const leafName = profileClipboard.sourceKey.split(".").pop() || profileClipboard.sourceKey;
+    const proposedKey = targetProfileKey ? `${targetProfileKey}.${leafName}` : leafName;
+    const allCurrentProfileKeys = [...sortedProfileKeys, ...Object.keys(pendingProfiles)];
+    if (currentRenames && currentRenames[configPath]) {
+      allCurrentProfileKeys.push(...Object.values(currentRenames[configPath]));
+    }
+    let destKey = proposedKey;
+    if (allCurrentProfileKeys.includes(proposedKey)) {
+      let counter = 1;
+      let uniqueNewProfileKey = `${proposedKey}_1`;
+      while (allCurrentProfileKeys.includes(uniqueNewProfileKey)) {
+        counter++;
+        uniqueNewProfileKey = `${proposedKey}_${counter}`;
+      }
+      destKey = uniqueNewProfileKey;
+    }
+    if (profileClipboard.type === "cut") {
+      if (onProfileRename) {
+        const originalKey = findOriginalKey(profileClipboard.sourceKey);
+        onProfileRename(originalKey, destKey, true);
+        setProfileClipboard(null);
+      }
+    } else {
+      const newChanges: { [k: string]: any } = {};
+      const getProfileJsonPath = (pk: string): string[] => {
+        const parts = pk.split(".");
+        const pathArr: string[] = ["profiles"];
+        for (let i = 0; i < parts.length; i++) {
+          pathArr.push(parts[i]);
+          if (i < parts.length - 1) {
+            pathArr.push("profiles");
+          }
+        }
+        return pathArr;
+      };
+      Object.entries(profileClipboard.profiles).forEach(([pKey, pData]) => {
+        const suffix = pKey.substring(profileClipboard.sourceKey.length);
+        const newPKey = destKey + suffix;
+        const newProfilePath = getProfileJsonPath(newPKey);
+        if (pData.type) {
+          const typeKey = [...newProfilePath, "type"].join(".");
+          newChanges[typeKey] = {
+            value: pData.type,
+            path: ["type"],
+            profile: newPKey,
+          };
+        }
+        Object.entries(pData.properties).forEach(([propKey, propValue]) => {
+          const propertyKey = [...newProfilePath, "properties", propKey].join(".");
+          const isSecure = pData.secure.includes(propKey);
+          newChanges[propertyKey] = {
+            value: propValue,
+            path: [propKey],
+            profile: newPKey,
+            secure: isSecure,
+          };
+        });
+        if (pData.secure && pData.secure.length > 0) {
+          const secureKey = [...newProfilePath, "secure"].join(".");
+          newChanges[secureKey] = {
+            value: pData.secure,
+            path: ["secure"],
+            profile: newPKey,
+          };
+        }
+        Object.entries(pData.customFields).forEach(([bk, bkValue]) => {
+          const bkKey = [...newProfilePath, bk].join(".");
+          newChanges[bkKey] = {
+            value: bkValue,
+            path: [bk],
+            profile: newPKey,
+          };
+        });
+      });
+      setPendingChanges((prev: any) => ({
+        ...prev,
+        [configPath]: {
+          ...prev[configPath],
+          ...newChanges,
+        },
+      }));
+      onProfileSelect(destKey);
+    }
+  };
+
+  useEffect(() => {
+    const handleClick = () => {
+      setContextMenu(null);
+    };
+    if (contextMenu) {
+      document.addEventListener("click", handleClick);
+      return () => {
+        document.removeEventListener("click", handleClick);
+      };
+    }
+  }, [contextMenu]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      const isInputActive =
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.tagName === "VSCODE-TEXTFIELD" ||
+          activeElement.tagName === "VSCODE-SINGLE-SELECT" ||
+          (activeElement as HTMLElement).isContentEditable);
+      if (isInputActive) {
+        return;
+      }
+      const isModKey = e.ctrlKey || e.metaKey;
+      if (!isModKey) {
+        return;
+      }
+      const key = e.key.toLowerCase();
+      if (key !== "c" && key !== "x" && key !== "v") {
+        return;
+      }
+      if (key === "c") {
+        if (selectedProfileKey) {
+          copyProfile(selectedProfileKey, false);
+        }
+      } else if (key === "x") {
+        if (selectedProfileKey) {
+          copyProfile(selectedProfileKey, true);
+        }
+      } else if (key === "v") {
+        pasteProfile(selectedProfileKey);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    selectedProfileKey,
+    sortedProfileKeys,
+    pendingProfiles,
+    getProfileType,
+    onProfileRename,
+    onProfileSelect,
+    profileClipboard,
+    setProfileClipboard,
+    setPendingChanges,
+    pendingChanges,
+    ctxConfigurations,
+    configurations,
+    ctxSelectedTab,
+    selectedTab,
+    ctxRenames,
+    renames,
+    findOriginalKey,
+  ]);
 
   // Handle profile sort order change with auto-switch to flat view for type sorting
   const handleProfileSortOrderChange = (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults") => {
@@ -244,6 +647,7 @@ export function ProfileList({
             selectedProfileKey={selectedProfileKey}
             pendingProfiles={pendingProfiles}
             onProfileSelect={onProfileSelect}
+            onDeleteProfile={onDeleteProfile}
             isProfileDefault={isProfileDefault}
             getProfileType={getProfileType}
             hasPendingSecureChanges={hasPendingSecureChanges}
@@ -268,10 +672,15 @@ export function ProfileList({
               hasPendingSecureChanges(profileKey) ||
               hasPendingRename(profileKey) ||
               hasPendingDefaultChange(profileKey);
+            const isCut = !!(
+              profileClipboard &&
+              profileClipboard.type === "cut" &&
+              (profileKey === profileClipboard.sourceKey || profileKey.startsWith(profileClipboard.sourceKey + "."))
+            );
             return (
               <div
                 key={profileKey}
-                className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""}`}
+                className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""} ${isCut ? "is-cut" : ""}`}
                 style={{
                   cursor: "pointer",
                   margin: "2px 0",
@@ -284,6 +693,39 @@ export function ProfileList({
                   gap: "6px",
                   fontSize: "0.9em",
                   minHeight: "28px",
+                  opacity: isCut ? 0.5 : 1,
+                  transition: "opacity 0.2s ease",
+                }}
+                tabIndex={0}
+                role="option"
+                aria-selected={selectedProfileKey === profileKey}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    if (selectedProfileKey === profileKey) {
+                      onProfileSelect("");
+                    } else {
+                      onProfileSelect(profileKey);
+                    }
+                  }
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onProfileSelect(profileKey);
+                  const menuWidth = 150;
+                  const menuHeight = 160;
+                  const viewportWidth = window.innerWidth;
+                  const viewportHeight = window.innerHeight;
+                  let x = e.clientX;
+                  let y = e.clientY;
+                  if (x + menuWidth > viewportWidth) {
+                    x = viewportWidth - menuWidth - 10;
+                  }
+                  if (y + menuHeight > viewportHeight) {
+                    y = viewportHeight - menuHeight - 10;
+                  }
+                  setContextMenu({ x, y, profileKey });
                 }}
                 onClick={() => {
                   if (selectedProfileKey === profileKey) {
@@ -354,6 +796,64 @@ export function ProfileList({
           })
         )}
       </div>
+      {contextMenu && (
+        <div className="tab-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }} onClick={(e) => e.stopPropagation()}>
+          <div
+            className="tab-context-menu-item"
+            onClick={() => {
+              copyProfile(contextMenu.profileKey, false);
+              setContextMenu(null);
+            }}
+          >
+            <span className="codicon codicon-copy codicon-tab-menu-icon"></span>
+            <span>{l10n.t("Copy")}</span>
+          </div>
+          <div
+            className="tab-context-menu-item"
+            onClick={() => {
+              copyProfile(contextMenu.profileKey, true);
+              setContextMenu(null);
+            }}
+          >
+            <span className="codicon codicon-copy codicon-tab-menu-icon"></span>
+            <span>{l10n.t("Cut")}</span>
+          </div>
+          <div
+            className={`tab-context-menu-item ${!profileClipboard ? "disabled" : ""}`}
+            onClick={() => {
+              if (profileClipboard) {
+                pasteProfile(contextMenu.profileKey);
+              }
+              setContextMenu(null);
+            }}
+          >
+            <span className="codicon codicon-clippy codicon-tab-menu-icon"></span>
+            <span>{l10n.t("Paste")}</span>
+          </div>
+          <div
+            className="tab-context-menu-item"
+            onClick={() => {
+              duplicateProfile(contextMenu.profileKey);
+              setContextMenu(null);
+            }}
+          >
+            <span className="codicon codicon-files codicon-tab-menu-icon"></span>
+            <span>{l10n.t("Duplicate")}</span>
+          </div>
+          {onDeleteProfile && (
+            <div
+              className="tab-context-menu-item"
+              onClick={() => {
+                onDeleteProfile(contextMenu.profileKey);
+                setContextMenu(null);
+              }}
+            >
+              <span className="codicon codicon-trash codicon-tab-menu-icon"></span>
+              <span>{l10n.t("Delete")}</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

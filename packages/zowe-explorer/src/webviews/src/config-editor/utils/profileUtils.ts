@@ -56,25 +56,6 @@ export function mergePendingChangesForProfile(params: MergePendingChangesParams)
             if (entryProfileKey === originalOfCurrentKey) {
                 return true;
             }
-
-            const entryParts = entryProfileKey.split(".");
-            const currentParts = currentProfileKey.split(".");
-
-            if (entryParts.length < currentParts.length) {
-                const currentParentKey = currentParts.slice(0, entryParts.length).join(".");
-                const renamedEntryKey = getRenamedProfileKeyWithNested(entryProfileKey, configPath, renames);
-                if (renamedEntryKey === currentParentKey) {
-                    return true;
-                }
-            }
-
-            if (currentParts.length < entryParts.length) {
-                const entryParentKey = entryParts.slice(0, currentParts.length).join(".");
-                const renamedEntryParentKey = getRenamedProfileKeyWithNested(entryParentKey, configPath, renames);
-                if (renamedEntryParentKey === currentProfileKey) {
-                    return true;
-                }
-            }
         }
 
         return false;
