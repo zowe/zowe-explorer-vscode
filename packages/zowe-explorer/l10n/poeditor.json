@@ -36,7 +36,7 @@
     "Update Profile Configuration Schema": ""
   },
   "zowe.editHistory": {
-    "Edit History": ""
+    "Manage Saved Data": ""
   },
   "zowe.ds.explorer": {
     "Data Sets": ""
@@ -588,7 +588,7 @@
     "Copy External Link": ""
   },
   "zowe.history.deprecationMsg": {
-    "Changes made here will not be reflected in Zowe Explorer, use right-click Edit History option to access information from local storage.": ""
+    "Changes made here will not be reflected in Zowe Explorer, use right-click Manage Saved Data option to access information from local storage.": ""
   },
   "zowe.settings.overrideWithEnvironmentVariables": {
     "Indicates if environment variables should override values stored in Zowe configuration profiles on disk.": ""
@@ -1664,6 +1664,7 @@
   "Logout from authentication service was successful for {0}.": "",
   "MVS data set enhancements": "",
   "Manage Persistent Properties": "",
+  "Manage Saved Data": "",
   "Many issues have been addressed to allow screen readers to better navigate and use Zowe Explorer features.": "",
   "Member '{0}' not found in PDS '{1}'": "",
   "Member Name": "",
@@ -1897,6 +1898,7 @@
   "Renamed 'Display in Tree' to 'Locate in Tree' in table views to improve clarity. <a>#3771</a>": "",
   "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>": "",
   "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>": "",
+  "Renamed the \"Edit History\" command to \"Manage Saved Data\". <a>#3804</a>": "",
   "Renamed the \"Restart zowex server on host...\" command to \"\"Restart SSH server on host...\". <a>#4489</a>": "",
   "Renamed the \"Uninstall zowex server on host...\" command to \"\"Uninstall SSH server on host...\". <a>#4489</a>": "",
   "Renaming data set {0}": "",
