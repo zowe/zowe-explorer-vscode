@@ -2687,7 +2687,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             );
         });
 
-        it("should download a USS file with directory structure generation", async () => {
+        it("should download a USS file with directory structure generation - absolute path", async () => {
             const mockNode = createMockNode();
             const mockDownloadOptions = {
                 selectedPath: vscode.Uri.file("/test/download/path"),
@@ -2705,6 +2705,36 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             expect(globalMocks.ussApi.getContents).toHaveBeenCalledWith(
                 "/u/test/file.txt",
+                expect.objectContaining({
+                    file: expect.stringMatching(/u.test.file\.txt$/),
+                })
+            );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
+                { success: true, commandResponse: "", apiResponse: {} },
+                "USS file",
+                expect.stringMatching(/u.test.file\.txt$/)
+            );
+        });
+
+        it("should download a USS file with directory structure generation - backtracking in path segment", async () => {
+            const mockNode = createMockNode();
+            mockNode.fullPath = "/u/test/../file.txt";
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: true,
+                encoding: undefined,
+            };
+
+            vi.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback();
+            });
+
+            await USSActions.downloadUssFile(mockNode);
+
+            expect(globalMocks.ussApi.getContents).toHaveBeenCalledWith(
+                "/u/test/../file.txt",
                 expect.objectContaining({
                     file: expect.stringMatching(/u.test.file\.txt$/),
                 })
@@ -2805,7 +2835,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             );
         });
 
-        it("should download a USS directory with directory structure generation", async () => {
+        it("should download a USS directory with directory structure generation 1", async () => {
             const mockNode = createMockNode();
             mockNode.fullPath = "/u/test/directory";
             const mockDownloadOptions = {
@@ -2828,6 +2858,47 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
                 "/u/test/directory",
+                expect.objectContaining({
+                    directory: expect.stringMatching(/u.test.directory$/),
+                    overwrite: false,
+                    includeHidden: true,
+                }),
+                expect.objectContaining({
+                    type: "f",
+                    symlinks: false,
+                })
+            );
+            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
+                { success: true, commandResponse: "", apiResponse: {} },
+                "USS directory",
+                path.normalize("/test/download/path/u/test/directory"),
+                false
+            );
+        });
+
+        it("should download a USS directory with directory structure generation 2", async () => {
+            const mockNode = createMockNode();
+            mockNode.fullPath = "/u/test/../directory";
+            const mockDownloadOptions = {
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory: true,
+                overwrite: false,
+                dirOptions: { followSymlinks: true, chooseFilterOptions: true },
+                dirFilterOptions: { includeHidden: true, filesys: false },
+                encoding: { kind: "binary" },
+            };
+
+            vi.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions);
+            globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [{}, {}, {}] } });
+
+            globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                return await callback({ report: vi.fn() }, { isCancellationRequested: false });
+            });
+
+            await USSActions.downloadUssDirectory(mockNode);
+
+            expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
+                "/u/test/../directory",
                 expect.objectContaining({
                     directory: expect.stringMatching(/u.test.directory$/),
                     overwrite: false,

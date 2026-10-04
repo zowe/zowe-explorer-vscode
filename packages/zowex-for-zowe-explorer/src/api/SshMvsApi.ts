@@ -648,6 +648,11 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         return this.buildZosFilesResponse(response);
     }
 
+    public async resolveAlias(aliasName: string): Promise<zosfiles.IZosFilesResponse> {
+        const response = await (await this.client).ds.resolveDsAlias({ dsname: aliasName });
+        return this.buildZosFilesResponse(response);
+    }
+
     private buildZosFilesResponse(apiResponse: any, success = true, errorText?: string): zosfiles.IZosFilesResponse {
         return { apiResponse, commandResponse: "", success: apiResponse?.success ?? success, errorMessage: errorText };
     }

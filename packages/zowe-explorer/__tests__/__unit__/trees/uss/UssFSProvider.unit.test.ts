@@ -939,6 +939,29 @@ describe("UssFSProvider", () => {
     });
 
     describe("fetchEntries", () => {
+        it("prompts for authentication when the profile has no credentials", async () => {
+            vi.spyOn(ZoweExplorerApiRegister.prototype, "getCommonApi").mockReturnValue({
+                getSession: () => ({ ISession: { type: imperative.SessConstants.AUTH_TYPE_NONE } }),
+            } as any);
+            const promptForMissingCredentialsMock = vi.spyOn(AuthUtils, "promptForMissingCredentials").mockResolvedValueOnce(undefined);
+            const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(true);
+            const lookupMock = vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(testEntries.file);
+
+            await (UssFSProvider.instance as any).fetchEntries(testUris.file, {
+                isRoot: false,
+                slashAfterProfilePos: testUris.file.path.indexOf("/", 1),
+                profile: testProfile,
+                profileName: testProfile.name,
+            });
+
+            expect(promptForMissingCredentialsMock).toHaveBeenCalledWith(testProfile);
+            // the entry is returned once the user has authenticated
+            expect(lookupMock).toHaveBeenCalledWith(testUris.file, true);
+
+            existsMock.mockRestore();
+            lookupMock.mockRestore();
+        });
+
         describe("file", () => {
             it("existing URI", async () => {
                 const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
@@ -2758,44 +2781,36 @@ describe("UssFSProvider", () => {
         });
     });
 
-    describe("Expected behavior for functions w/ profile locks", () => {
-        let isProfileLockedMock;
-        let warnLoggerSpy;
-
-        beforeEach(() => {
-            isProfileLockedMock = vi.spyOn(AuthHandler, "isProfileLocked");
-            warnLoggerSpy = vi.spyOn(ZoweLogger, "warn").mockImplementation((() => undefined) as any);
-        });
-
+    describe("Expected behavior for functions that wait on the auth flow", () => {
         afterEach(() => {
-            isProfileLockedMock.mockRestore();
-            warnLoggerSpy.mockRestore();
+            vi.restoreAllMocks();
         });
 
         describe("listFiles", () => {
-            it("returns early without making API calls when profile is locked and user cancelled last auth prompt", async () => {
-                isProfileLockedMock.mockReturnValueOnce(true);
-                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValueOnce(undefined);
+            it("waits for the auth flow to complete before listing files", async () => {
+                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockReturnValueOnce(undefined);
                 const ussApiMock = {
-                    fileList: vi.fn(),
+                    fileList: vi.fn().mockResolvedValueOnce({
+                        success: true,
+                        commandResponse: "",
+                        apiResponse: { items: [] },
+                    }),
                 } as any;
 
                 const getUssApiMock = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(ussApiMock);
-                const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
+                const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
+                const waitForAuthFlowMock = vi.spyOn(AuthHandler, "waitForAuthFlow").mockImplementation(async () => {
+                    expect(ussApiMock.fileList).not.toHaveBeenCalled();
+                });
 
                 const result = await UssFSProvider.instance.listFiles(testProfile, testUris.file);
 
-                expect(ensureAuthNotCancelledMock).toHaveBeenCalled();
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
-                expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
-                expect(result.success).toBe(false);
-                expect(result.commandResponse).toContain("Profile is locked");
-                expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
-                expect(ussApiMock.fileList).not.toHaveBeenCalled();
+                expect(waitForAuthFlowMock).toHaveBeenCalledWith(testProfile);
+                expect(ussApiMock.fileList).toHaveBeenCalled();
+                expect(result.success).toBe(true);
 
-                waitForUnlockMock.mockRestore();
+                existsSpy.mockRestore();
                 getUssApiMock.mockRestore();
             });
 
@@ -2812,7 +2827,6 @@ describe("UssFSProvider", () => {
                     }),
                 };
                 vi.spyOn(ProfilesUtils.extenderProfileReady, "get").mockReturnValueOnce(profilePromise as any);
-                isProfileLockedMock.mockReturnValueOnce(false);
                 const ussApiMock = {
                     fileList: vi.fn().mockResolvedValueOnce({
                         success: true,
@@ -2822,6 +2836,9 @@ describe("UssFSProvider", () => {
 
                 const getUssApiMock = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce(ussApiMock);
                 const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
+                const createRecursiveSpy = vi
+                    .spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive")
+                    .mockImplementation((() => undefined) as any);
 
                 const loadProfileMock = vi.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(testProfile);
 
@@ -2829,220 +2846,227 @@ describe("UssFSProvider", () => {
 
                 expect(waitForUnlockMock).toHaveBeenCalledTimes(2);
                 expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
-                expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
                 expect(ussApiMock.fileList).toHaveBeenCalled();
 
                 waitForUnlockMock.mockRestore();
                 getUssApiMock.mockRestore();
                 loadProfileMock.mockRestore();
+                createRecursiveSpy.mockRestore();
             });
         });
 
         describe("fetchFileAtUri", () => {
-            it("returns early without making API calls when profile is locked", async () => {
+            it("waits for the auth flow to complete before fetching file contents", async () => {
                 const file = new UssFile("testFile");
                 file.metadata = { profile: testProfile, path: "/testFile" };
 
                 const lookupMock = vi.spyOn(UssFSProvider.instance as any, "_lookupAsFile").mockReturnValueOnce(file);
                 const autoDetectEncodingMock = vi.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValueOnce(undefined);
-                const getContentsMock = vi.fn().mockResolvedValueOnce({});
+                const exampleData = "hello world!";
+                const getContentsMock = vi.fn().mockImplementationOnce((filePath, opts) => {
+                    opts.stream.write(exampleData);
+                    return { apiResponse: { etag: "123abc" } };
+                });
                 const getUssApiMock = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ getContents: getContentsMock } as any);
 
-                isProfileLockedMock.mockReturnValueOnce(true);
-                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValueOnce(undefined);
-                const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
+                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockReturnValueOnce(undefined);
+                const waitForAuthFlowMock = vi.spyOn(AuthHandler, "waitForAuthFlow").mockImplementation(async () => {
+                    expect(getContentsMock).not.toHaveBeenCalled();
+                });
 
                 await UssFSProvider.instance.fetchFileAtUri(testUris.file);
 
-                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
-                expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
-                expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
-                expect(getContentsMock).not.toHaveBeenCalled();
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(file.metadata.profile);
+                expect(waitForAuthFlowMock).toHaveBeenCalledWith(file.metadata.profile);
+                expect(getContentsMock).toHaveBeenCalled();
+                expect(file.data?.toString()).toBe(exampleData);
 
                 lookupMock.mockRestore();
                 autoDetectEncodingMock.mockRestore();
                 getUssApiMock.mockRestore();
-                waitForUnlockMock.mockRestore();
             });
         });
 
         describe("fetchEntries", () => {
-            it("returns entry (if present) without making API calls when profile is locked and user cancelled last auth prompt", async () => {
+            it("waits for the auth flow to complete before returning a local entry", async () => {
                 const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(true);
-                const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
                 const lookupMock = vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(testEntries.file);
 
-                isProfileLockedMock.mockReturnValueOnce(true);
-                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
+                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockReturnValueOnce(undefined);
+                const waitForAuthFlowMock = vi.spyOn(AuthHandler, "waitForAuthFlow").mockImplementation(async () => {
+                    expect(lookupMock).not.toHaveBeenCalled();
+                });
 
-                await (UssFSProvider.instance as any).fetchEntries(testUris.file, {
+                const result = await (UssFSProvider.instance as any).fetchEntries(testUris.file, {
                     isRoot: false,
                     slashAfterProfilePos: testUris.file.path.indexOf("/", 1),
                     profile: testProfile,
                     profileName: testProfile.name,
                 });
 
-                expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
                 expect(existsMock).toHaveBeenCalledTimes(1);
                 expect(existsMock).toHaveBeenCalledWith(testUris.file);
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
-                expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForAuthFlowMock).toHaveBeenCalledWith(testProfile);
                 expect(lookupMock).toHaveBeenCalledTimes(1);
-                expect(lookupMock).toHaveBeenCalledWith(testUris.file, false);
+                expect(lookupMock).toHaveBeenCalledWith(testUris.file, true);
+                expect(result).toBe(testEntries.file);
 
                 existsMock.mockRestore();
                 lookupMock.mockRestore();
-                waitForUnlockMock.mockRestore();
             });
 
-            it("throws error if entry does not exist and profile is locked and user cancelled last auth prompt", async () => {
+            it("waits for the auth flow to complete before listing files for a non-existent entry", async () => {
                 const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
-                const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
-                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
-                const lookupSpy = vi.spyOn(UssFSProvider.instance, "lookup");
+                const lookupMock = vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(null);
+                const listFilesMock = vi.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [{ name: testEntries.innerFile.name, mode: "-rwxrwxrwx" }],
+                    },
+                    commandResponse: "",
+                });
+                const createRecursiveSpy = vi
+                    .spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive")
+                    .mockImplementation((() => undefined) as any);
+                const lookupParentDirMock = vi
+                    .spyOn(UssFSProvider.instance as any, "lookupParentDirectory")
+                    .mockReturnValue({ ...testEntries.folder, entries: new Map() });
+                const createDirMock = vi.spyOn(workspace.fs, "createDirectory").mockImplementation((() => undefined) as any);
 
-                isProfileLockedMock.mockReturnValueOnce(true);
+                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockReturnValueOnce(undefined);
+                const waitForAuthFlowMock = vi.spyOn(AuthHandler, "waitForAuthFlow").mockImplementation(async () => {
+                    expect(listFilesMock).not.toHaveBeenCalled();
+                });
 
                 await expect(
-                    (UssFSProvider.instance as any).fetchEntries(testUris.file, {
+                    (UssFSProvider.instance as any).fetchEntries(testUris.innerFile, {
                         isRoot: false,
-                        slashAfterProfilePos: testUris.file.path.indexOf("/", 1),
+                        slashAfterProfilePos: testUris.innerFile.path.indexOf("/", 1),
                         profile: testProfile,
                         profileName: testProfile.name,
                     })
-                ).rejects.toThrow(FileSystemError.FileNotFound(testUris.file));
+                ).resolves.not.toThrow();
 
-                expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
-                expect(existsMock).toHaveBeenCalledTimes(1);
-                expect(existsMock).toHaveBeenCalledWith(testUris.file);
-                expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
-                expect(lookupSpy).not.toHaveBeenCalled();
+                expect(waitForAuthFlowMock).toHaveBeenCalledWith(testProfile);
+                expect(listFilesMock).toHaveBeenCalled();
 
                 existsMock.mockRestore();
-                waitForUnlockMock.mockRestore();
+                lookupMock.mockRestore();
+                listFilesMock.mockRestore();
+                lookupParentDirMock.mockRestore();
+                createDirMock.mockRestore();
+                createRecursiveSpy.mockRestore();
             });
         });
 
         describe("delete", () => {
-            it("returns early without making API calls when profile is locked and user cancelled last auth prompt", async () => {
-                const getDeleteInfoMock = vi
-                    .spyOn(UssFSProvider.instance as any, "_getDeleteInfo")
-                    .mockClear()
-                    .mockReturnValueOnce({
-                        entryToDelete: testEntries.file,
-                        parent: testEntries.session,
-                        parentUri: testUris.session,
-                    });
-                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
-                const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
-                const loadNamedProfileSpy = vi.spyOn(Profiles.prototype, "loadNamedProfile");
+            it("waits for the auth flow to complete before deleting the entry", async () => {
+                const sesEntry = { ...testEntries.session, entries: new Map([["aFile.txt", testEntries.file]]), size: 1 };
+                const getDeleteInfoMock = vi.spyOn(UssFSProvider.instance as any, "_getDeleteInfo").mockReturnValueOnce({
+                    entryToDelete: testEntries.file,
+                    parent: sesEntry,
+                    parentUri: testUris.session,
+                });
+                const deleteMock = vi.fn().mockResolvedValueOnce(undefined);
+                vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ delete: deleteMock } as any);
 
-                isProfileLockedMock.mockReturnValueOnce(true);
+                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockReturnValueOnce(undefined);
+                const waitForAuthFlowMock = vi.spyOn(AuthHandler, "waitForAuthFlow").mockImplementation(async () => {
+                    expect(deleteMock).not.toHaveBeenCalled();
+                });
 
                 await UssFSProvider.instance.delete(testUris.file, { recursive: false });
+
                 expect(getDeleteInfoMock).toHaveBeenCalledTimes(1);
                 expect(getDeleteInfoMock).toHaveBeenCalledWith(testUris.file);
-                expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
-                expect(loadNamedProfileSpy).not.toHaveBeenCalled();
+                expect(waitForAuthFlowMock).toHaveBeenCalledWith(testProfile);
+                expect(deleteMock).toHaveBeenCalledWith(testEntries.file.metadata.path, false);
             });
         });
 
         describe("stat", () => {
-            describe("stat", () => {
-                it("returns early without making API calls when profile is locked and user cancelled last auth prompt", async () => {
-                    const file = new UssFile("testFile");
-                    file.metadata = { profile: testProfile, path: "/testFile" };
+            it("waits for the auth flow to complete before checking for updates on the remote system", async () => {
+                const file = new UssFile("testFile");
+                file.metadata = { profile: testProfile, path: "/testFile" };
 
-                    const lookupMock = vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValue(file);
-                    const listFilesSpy = vi.spyOn(UssFSProvider.instance, "listFiles");
-
-                    isProfileLockedMock.mockReturnValue(true);
-
-                    const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
-                    const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
-
-                    await UssFSProvider.instance.stat(testUris.file.with({ query: "fetch=true" }));
-
-                    expect(ensureAuthNotCancelledMock).toHaveBeenCalled();
-                    expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
-                    expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
-                    expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
-                    expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
-                    expect(listFilesSpy).not.toHaveBeenCalled();
-
-                    lookupMock.mockRestore();
-                    waitForUnlockMock.mockRestore();
+                const lookupMock = vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValue(file);
+                const listFilesMock = vi.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce({
+                    success: true,
+                    apiResponse: { items: [{ name: file.name }] },
+                    commandResponse: "",
                 });
+
+                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockReturnValueOnce(undefined);
+                const waitForAuthFlowMock = vi.spyOn(AuthHandler, "waitForAuthFlow").mockImplementation(async () => {
+                    expect(listFilesMock).not.toHaveBeenCalled();
+                });
+
+                await UssFSProvider.instance.stat(testUris.file.with({ query: "fetch=true" }));
+
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
+                expect(waitForAuthFlowMock).toHaveBeenCalledWith(testProfile);
+                expect(listFilesMock).toHaveBeenCalled();
+
+                lookupMock.mockRestore();
+                listFilesMock.mockRestore();
             });
         });
 
         describe("autoDetectEncoding", () => {
-            it("returns early without making API calls when profile is locked and user cancelled last auth prompt", async () => {
+            it("waits for the auth flow to complete before checking the file tag", async () => {
                 const file = new UssFile("testFile");
                 file.metadata = { profile: testProfile, path: "/testFile" };
 
                 const getTagMock = vi.fn().mockResolvedValueOnce("binary");
                 const getUssApiMock = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ getTag: getTagMock } as any);
 
-                isProfileLockedMock.mockReturnValueOnce(true);
-                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
-                const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
+                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockReturnValueOnce(undefined);
+                const waitForAuthFlowMock = vi.spyOn(AuthHandler, "waitForAuthFlow").mockImplementation(async () => {
+                    expect(getTagMock).not.toHaveBeenCalled();
+                });
 
                 await UssFSProvider.instance.autoDetectEncoding(file);
 
-                expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
-                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
-                expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
-                expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
-                expect(getTagMock).not.toHaveBeenCalled();
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(file.metadata.profile);
+                expect(waitForAuthFlowMock).toHaveBeenCalledWith(file.metadata.profile);
+                expect(getTagMock).toHaveBeenCalledTimes(1);
+                expect(file.encoding).toStrictEqual({ kind: "binary" });
 
                 getUssApiMock.mockRestore();
-                waitForUnlockMock.mockRestore();
             });
         });
 
         describe("uploadEntry", () => {
-            it("throws error without making API calls when profile is locked and user cancelled last auth prompt", async () => {
+            it("waits for the auth flow to complete before uploading the file", async () => {
                 const file = new UssFile("testFile");
                 file.metadata = { profile: testProfile, path: "/testFile" };
                 const content = new Uint8Array([1, 2, 3]);
 
-                const uploadFromBufferMock = vi.fn().mockResolvedValueOnce({});
+                const uploadFromBufferMock = vi.fn().mockResolvedValueOnce({ apiResponse: { etag: "NEWETAG" } });
                 const getUssApiMock = vi
                     .spyOn(ZoweExplorerApiRegister, "getUssApi")
                     .mockReturnValueOnce({ uploadFromBuffer: uploadFromBufferMock } as any);
                 const autoDetectEncodingMock = vi.spyOn(UssFSProvider.instance, "autoDetectEncoding").mockResolvedValueOnce(undefined);
+                const setStatusBarMessageMock = vi.spyOn(Gui, "setStatusBarMessage").mockReturnValueOnce({ dispose: vi.fn() } as any);
 
-                isProfileLockedMock.mockReturnValueOnce(true);
-                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockClear().mockResolvedValueOnce(undefined);
-                const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockClear().mockResolvedValueOnce(undefined);
-                const setStatusBarMessageMock = vi.spyOn(Gui, "setStatusBarMessage").mockReturnValueOnce({ dispose: vi.fn() });
+                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockReturnValueOnce(undefined);
+                const waitForAuthFlowMock = vi.spyOn(AuthHandler, "waitForAuthFlow").mockImplementation(async () => {
+                    expect(uploadFromBufferMock).not.toHaveBeenCalled();
+                });
 
-                await expect((UssFSProvider.instance as any).uploadEntry(file, content)).rejects.toThrow();
+                const resp = await (UssFSProvider.instance as any).uploadEntry(file, content);
 
-                expect(ensureAuthNotCancelledMock).toHaveBeenCalledTimes(1);
-                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledTimes(1);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(file.metadata.profile);
-                expect(isProfileLockedMock).toHaveBeenCalledWith(file.metadata.profile);
-                expect(warnLoggerSpy).toHaveBeenCalledWith("[UssFSProvider] Profile sestest is locked, waiting for authentication");
-                expect(uploadFromBufferMock).not.toHaveBeenCalled();
+                expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(file.metadata.profile);
+                expect(waitForAuthFlowMock).toHaveBeenCalledWith(file.metadata.profile);
+                expect(uploadFromBufferMock).toHaveBeenCalled();
+                expect(resp.apiResponse.etag).toBe("NEWETAG");
 
                 getUssApiMock.mockRestore();
                 autoDetectEncodingMock.mockRestore();
-                waitForUnlockMock.mockRestore();
                 setStatusBarMessageMock.mockRestore();
             });
         });

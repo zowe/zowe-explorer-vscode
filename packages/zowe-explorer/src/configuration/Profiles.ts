@@ -1170,11 +1170,13 @@ export class Profiles extends ProfilesCache {
         this.clearJobFilterFromTree(node);
     }
 
-    public async ssoLogout(node: Types.IZoweNodeType): Promise<void> {
+    public async ssoLogout(node?: Types.IZoweNodeType, label?: string): Promise<boolean> {
         ZoweLogger.trace("Profiles.ssoLogout called.");
-        const serviceProfile = node.getProfile();
+        const serviceProfile = node ? node.getProfile() : this.loadNamedProfile(label.trim());
         try {
-            this.clearFilterFromAllTrees(node);
+            if (node) {
+                this.clearFilterFromAllTrees(node);
+            }
             let logoutOk: boolean;
             const zeRegister = ZoweExplorerApiRegister.getInstance();
 
@@ -1205,6 +1207,7 @@ export class Profiles extends ProfilesCache {
                 );
                 ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
             }
+            return logoutOk;
         } catch (error) {
             const message = vscode.l10n.t({
                 message: "Unable to log out with {0}. {1}",
@@ -1213,6 +1216,7 @@ export class Profiles extends ProfilesCache {
             });
             ZoweLogger.error(message);
             Gui.errorMessage(message);
+            return false;
         }
     }
 

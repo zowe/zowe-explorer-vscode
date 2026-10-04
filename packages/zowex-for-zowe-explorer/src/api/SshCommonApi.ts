@@ -58,7 +58,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
 
                     const cancelButton = vscode.l10n.t("Cancel");
                     const message = vscode.l10n.t(
-                        "Connecting with an SSH profile deploys the SSH server to z/OS UNIX to " +
+                        "Connecting with an SSH profile may deploy the SSH server to z/OS UNIX to " +
                             "enable you to perform actions on the mainframe. Would you like to proceed with connecting?"
                     );
                     const selection = await Gui.showMessage(message, { items: [cancelButton, connectButton, connectDontAskButton] });

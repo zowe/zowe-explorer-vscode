@@ -58,6 +58,7 @@ export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, f
         addSearchedKeywordHistory: vi.fn(),
         addSortSetting: vi.fn(),
         getSearchHistory: vi.fn(),
+        getSearchHistoryGroupLabel: vi.fn(),
         getSearchedKeywordHistory: vi.fn(),
         getFileHistory: vi.fn().mockImplementation(() => testDatasetTree.mFileHistory),
         getSessions: vi.fn().mockReturnValue([]),
