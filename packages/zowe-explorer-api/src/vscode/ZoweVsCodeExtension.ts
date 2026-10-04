@@ -259,7 +259,12 @@ export class ZoweVsCodeExtension {
             imperative.AuthOrder.putNewAuthsFirstInSess(updSession.ISession, [imperative.SessConstants.AUTH_TYPE_BASIC], { onlyTheseAuths: true });
         } else if (response === qpItems[1]) {
             try {
-                const certResponse = await cache.promptCertificate({ profile: serviceProfile, rePrompt: true });
+                const certResponse = await cache.promptCertificate({
+                    profile: serviceProfile,
+                    rePrompt: true,
+                    saveButtonText: vscode.l10n.t(`Save and Log In`),
+                    showLoginButton: true,
+                });
                 if (certResponse) {
                     updSession.ISession.cert = certResponse.cert;
                     updSession.ISession.certKey = certResponse.certKey;

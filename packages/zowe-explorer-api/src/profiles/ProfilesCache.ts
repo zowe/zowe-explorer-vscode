@@ -29,6 +29,7 @@ import * as crypto from "crypto";
 export interface CertPromptResponse {
     cert: string;
     certKey: string;
+    action: "save" | "login";
 }
 export interface CertificatePromptOptions {
     /**
@@ -40,6 +41,8 @@ export interface CertificatePromptOptions {
     rePrompt?: boolean;
     userInputBoxOptions?: vscode.InputBoxOptions;
     passwordInputBoxOptions?: vscode.InputBoxOptions;
+    saveButtonText?: string;
+    showLoginButton?: boolean;
 }
 export class ProfilesCache {
     private profileInfo: imperative.ProfileInfo;
@@ -660,23 +663,29 @@ export class ProfilesCache {
             cert: options.profile.profile?.certFile,
             certKey: options.profile.profile?.certKeyFile,
             profileName: options.profile.name,
+            saveButtonText: options.saveButtonText,
+            showLoginButton: options.showLoginButton,
             dialogOpts: { ...(options.openDialogOptions ?? {}), canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
         });
 
-        // todo : only save if the user pressed save
-        let profileToSave = options.profile;
-        const allowedLoginMethod = options.profile.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
-        if (allowedLoginMethod !== imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM) {
-            // if this is not direct cert-pem authentication, save to the base profile.
-            profileToSave = (await this.fetchBaseProfile(options.profile?.name)) || options.profile;
-            profileToSave = options.profile.name?.startsWith(profileToSave.name + ".") ? { ...profileToSave, type: null } : profileToSave;
-        }
+        if (response.action === "save") {
+            imperative.Logger.getAppLogger().debug("User requested to save certificate to config.");
+            let profileToSave = options.profile;
+            const allowedLoginMethod = options.profile.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+            if (allowedLoginMethod !== imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM) {
+                // if this is not direct cert-pem authentication, save to the base profile.
+                profileToSave = (await this.fetchBaseProfile(options.profile?.name)) || options.profile;
+                profileToSave = options.profile.name?.startsWith(profileToSave.name + ".") ? { ...profileToSave, type: null } : profileToSave;
+            }
 
-        const profileInfo = await this.getProfileInfo();
-        const updateSettings = { profileName: profileToSave.name, profileType: profileToSave.type };
-        await profileInfo.updateProperty({ ...updateSettings, property: "certFile", value: response.cert });
-        await profileInfo.updateProperty({ ...updateSettings, property: "certKeyFile", value: response.certKey });
-        imperative.Logger.getAppLogger().debug(`Updated profile ${profileToSave.name} (type: ${profileToSave.type}) with certificate auth details`);
+            const profileInfo = await this.getProfileInfo();
+            const updateSettings = { profileName: profileToSave.name, profileType: profileToSave.type };
+            await profileInfo.updateProperty({ ...updateSettings, property: "certFile", value: response.cert });
+            await profileInfo.updateProperty({ ...updateSettings, property: "certKeyFile", value: response.certKey });
+            imperative.Logger.getAppLogger().debug(
+                `Updated profile ${profileToSave.name} (type: ${profileToSave.type}) with certificate auth details`
+            );
+        }
         return response;
     }
 }

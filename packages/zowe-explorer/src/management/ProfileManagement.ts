@@ -126,7 +126,7 @@ export class ProfileManagement {
         const profile = node.getProfile();
         ZoweLogger.debug(
             `Building profile management quickpick for profile ${profile.name} with managementType=${managementType},` +
-            ` allowedLoginMethod=${allowedLoginMethod}`
+                ` allowedLoginMethod=${allowedLoginMethod}`
         );
         const qp = Gui.createQuickPick();
         let quickPickOptions: vscode.QuickPickItem[];
@@ -157,14 +157,12 @@ export class ProfileManagement {
             quickPickOptions = Object.values(this.certUpdateQpItems);
             qp.placeholder = placeholders.certAuth;
         } else if (managementType === imperative.SessConstants.AUTH_TYPE_BASIC) {
-            if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC) {
-                quickPickOptions = Object.values(this.basicAuthUpdateQpItems);
-            } else {
-                // for any managementType: only allow switching if allowedLoginMethod is not set or set to "prompt",
-                // because allowedLoginType restricts the type of auth allowed down to one.
-                if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
-                    quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
-                }
+            quickPickOptions = Object.values(this.basicAuthUpdateQpItems);
+
+            // for any managementType: only allow switching if allowedLoginMethod is not set or set to "prompt",
+            // because allowedLoginType restricts the type of auth allowed down to one.
+            if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
+                quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
             }
             qp.placeholder = placeholders.basicAuth;
         }
@@ -232,6 +230,7 @@ export class ProfileManagement {
                 await Profiles.getInstance().promptCertificate({
                     title: vscode.l10n.t("Update Certificate"),
                     profile,
+                    showLoginButton: false,
                     openDialogOptions: { canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
                 });
 

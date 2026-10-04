@@ -9,6 +9,8 @@ export function App() {
   const [certPath, setCertPath] = useState("");
   const [certKeyPath, setCertKeyPath] = useState("");
   const [title, setTitle] = useState(l10n.t("Log in to Authentication Service"));
+  const [showLoginButton, setShowLoginButton] = useState(false);
+  const [saveButtonText, setSaveButtonText] = useState(l10n.t("Save"));
   const [profileName, setProfileName] = useState("");
 
   const [localizationState, setLocalizationState] = useState(null);
@@ -38,6 +40,14 @@ export function App() {
       }
       if (event.data.opts.cert) {
         setCertPath(event.data.opts.cert);
+      }
+
+      if (event.data.opts.showLoginButton != null) {
+        setShowLoginButton(event.data.opts.showLoginButton);
+      }
+
+      if (event.data.opts.saveButtonText) {
+        setSaveButtonText(event.data.opts.saveButtonText);
       }
 
       if (event.data.opts.certKey) {
@@ -99,11 +109,22 @@ export function App() {
           <VSCodeButton
             style={{ marginTop: "1em" }}
             onClick={() => {
-              vscodeApi.postMessage({ command: "submitted" });
+              vscodeApi.postMessage({ command: "save" });
             }}
           >
-            {l10n.t("Submit")}
+            {saveButtonText}
           </VSCodeButton>
+          {showLoginButton ? (
+            <VSCodeButton
+              appearance="secondary"
+              style={{ marginLeft: "1em", marginTop: "1em" }}
+              onClick={() => {
+                vscodeApi.postMessage({ command: "login" });
+              }}
+            >
+              {l10n.t("Log in")}
+            </VSCodeButton>
+          ) : null}
           <VSCodeButton
             appearance="secondary"
             style={{ marginTop: "1em", marginLeft: "1em" }}
