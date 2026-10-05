@@ -185,13 +185,18 @@ export class ProfileManagement {
         }
         else {
             quickPickOptions = Object.values(this.basicAuthAddQpItems);
-            try {
-                ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
-                quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
-            } catch {
-                ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication, will not provide option.`);
+            if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC) {
+
+                qp.placeholder = placeholders.basicAuth;
+            } else {
+                try {
+                    ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
+                    quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
+                } catch {
+                    ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication, will not provide option.`);
+                }
+                qp.placeholder = placeholders.chooseAuth;
             }
-            qp.placeholder = placeholders.chooseAuth;
         }
         this.addFinalQpOptions(node, quickPickOptions);
         let selectedItem = quickPickOptions[0];
