@@ -126,7 +126,7 @@ export class ProfileManagement {
         const profile = node.getProfile();
         ZoweLogger.debug(
             `Building profile management quickpick for profile ${profile.name} with managementType=${managementType},` +
-                ` allowedLoginMethod=${allowedLoginMethod}`
+            ` allowedLoginMethod=${allowedLoginMethod}`
         );
         const qp = Gui.createQuickPick();
         let quickPickOptions: vscode.QuickPickItem[];
@@ -149,7 +149,24 @@ export class ProfileManagement {
         }
 
         const placeholders = this.getQpPlaceholders(profile);
+        // APIML cert pem, bearer and token trigger the same flow - log in to authentication service
         if (
+            (supportsCertAuth && allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM) ||
+            managementType === imperative.SessConstants.AUTH_TYPE_BEARER ||
+            managementType === imperative.SessConstants.AUTH_TYPE_TOKEN
+        ) {
+            quickPickOptions = Object.values(this.tokenAuthLoginQpItem);
+            if (profile.profile.tokenValue) {
+                quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
+            }
+
+            if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
+                quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
+            }
+            qp.placeholder = placeholders.tokenAuth;
+
+        }
+        else if (
             supportsCertAuth &&
             (managementType === imperative.SessConstants.AUTH_TYPE_CERT_PEM ||
                 allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM)
@@ -166,22 +183,7 @@ export class ProfileManagement {
             }
             qp.placeholder = placeholders.basicAuth;
         }
-        // APIML cert pem, bearer and token trigger the same flow - log in to authentication service
-        else if (
-            (supportsCertAuth && allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM) ||
-            managementType === imperative.SessConstants.AUTH_TYPE_BEARER ||
-            managementType === imperative.SessConstants.AUTH_TYPE_TOKEN
-        ) {
-            quickPickOptions = Object.values(this.tokenAuthLoginQpItem);
-            if (profile.profile.tokenValue) {
-                quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
-            }
-
-            if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
-                quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
-            }
-            qp.placeholder = placeholders.tokenAuth;
-        } else {
+        else {
             quickPickOptions = Object.values(this.basicAuthAddQpItems);
             try {
                 ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
