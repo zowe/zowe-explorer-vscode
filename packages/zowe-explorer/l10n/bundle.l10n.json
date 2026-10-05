@@ -1566,6 +1566,7 @@
   "Migrated to new package manager PNPM from Yarn.": "Migrated to new package manager PNPM from Yarn.",
   "Migrated to webpack V5 <a>#2214</a>": "Migrated to webpack V5 <a>#2214</a>",
   "Migrated to webpack v5 <a>#2214</a>": "Migrated to webpack v5 <a>#2214</a>",
+  "Migrated webviews from the deprecated Webview UI Toolkit to VS Code Elements. <a>#3443</a>": "Migrated webviews from the deprecated Webview UI Toolkit to VS Code Elements. <a>#3443</a>",
   "Migration of data set {0} requested./Data Set name": {
     "message": "Migration of data set {0} requested.",
     "comment": [
