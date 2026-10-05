@@ -9,7 +9,6 @@
  *
  */
 
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 import { useDataPanelContext } from "../PersistentUtils";
 import PersistentVSCodeAPI from "../../../PersistentVSCodeAPI";
@@ -30,8 +29,8 @@ export default function PersistentRefreshButton(): JSXInternal.Element {
   const refreshText = l10n.t("Refresh");
 
   return (
-    <VSCodeButton title={refreshText} appearance="primary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
+    <vscode-button title={refreshText} style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
       {refreshText}
-    </VSCodeButton>
+    </vscode-button>
   );
 }

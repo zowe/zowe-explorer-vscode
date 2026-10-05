@@ -1,15 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
 import { FileAttributes, FilePermissions, PERMISSION_GROUPS, PERMISSION_TYPES, PermissionSet } from "./types";
-import {
-  VSCodeButton,
-  VSCodeCheckbox,
-  VSCodeDataGrid,
-  VSCodeDataGridCell,
-  VSCodeDataGridRow,
-  VSCodeDivider,
-  VSCodeProgressRing,
-  VSCodeTextField,
-} from "@vscode/webview-ui-toolkit/react";
 import { isEqual } from "es-toolkit";
 import * as l10n from "@vscode/l10n";
 import { isSecureOrigin } from "../utils";
@@ -173,14 +163,14 @@ export function App() {
               {l10n.t("Last refreshed:")} {timestamp.toLocaleString(navigator.language)}
             </p>
           )}
-          <VSCodeButton
-            appearance="secondary"
+          <vscode-button
+            secondary
+            icon="refresh"
             aria-label={l10n.t("Refresh File Properties")}
             onClick={() => vscodeApi.postMessage({ command: "refresh" })}
           >
-            <span style={{ marginRight: "0.5em" }}>⟳</span>
             {l10n.t("Refresh")}
-          </VSCodeButton>
+          </vscode-button>
         </div>
       </div>
       <strong>
@@ -188,16 +178,16 @@ export function App() {
           {attributes.current.name}
         </pre>
       </strong>
-      <VSCodeDivider />
+      <vscode-divider />
       {(attributes.initial?.directory ?? false) ? null : (
-        <div style={{ marginTop: "1em", display: "flex", marginLeft: "1em" }}>
-          <VSCodeTextField
+        <div style={{ marginTop: "1em", display: "flex", flexDirection: "column", marginLeft: "1em", width: "fit-content" }}>
+          <vscode-label htmlFor="file-tag">{l10n.t("Tag")}</vscode-label>
+          <vscode-textfield
+            id="file-tag"
             readonly={attributes.current.tag === notSupported}
             value={attributes.current.tag}
-            onInput={(e: any) => updateFileAttributes("tag", e.target.value)}
-          >
-            {l10n.t("Tag")}
-          </VSCodeTextField>
+            onInput={(e) => updateFileAttributes("tag", e.currentTarget.value)}
+          ></vscode-textfield>
         </div>
       )}
       <div style={{ marginTop: "1em" }}>
@@ -207,70 +197,74 @@ export function App() {
             role="group"
             aria-label={l10n.t("Owner and group information with text fields to edit them")}
           >
-            <VSCodeTextField value={attributes.current.owner} onInput={(e: any) => updateFileAttributes("owner", e.target.value)}>
-              {l10n.t("Owner")}
-            </VSCodeTextField>
-            <VSCodeTextField
-              style={{ marginLeft: "1em" }}
-              onInput={(e: any) => updateFileAttributes("group", e.target.value)}
-              value={attributes.current.group}
-            >
-              {l10n.t("Group")}
-            </VSCodeTextField>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <vscode-label htmlFor="file-owner">{l10n.t("Owner")}</vscode-label>
+              <vscode-textfield
+                id="file-owner"
+                value={attributes.current.owner}
+                onInput={(e) => updateFileAttributes("owner", e.currentTarget.value)}
+              ></vscode-textfield>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", marginLeft: "1em" }}>
+              <vscode-label htmlFor="file-group">{l10n.t("Group")}</vscode-label>
+              <vscode-textfield
+                id="file-group"
+                value={attributes.current.group}
+                onInput={(e) => updateFileAttributes("group", e.currentTarget.value)}
+              ></vscode-textfield>
+            </div>
           </div>
           {attributes.current.perms ? (
-            <VSCodeDataGrid
-              style={{ marginTop: "1em" }}
-              aria-label={l10n.t("File permissions with checkboxes to toggle them")}
-              aria-describedby="permissions-description"
-            >
-              <VSCodeDataGridRow>
-                <VSCodeDataGridCell cellType="columnheader" gridColumn="1"></VSCodeDataGridCell>
-                {localizedPermissionTypes.map(({ key, localized }, i) => {
-                  return (
-                    <VSCodeDataGridCell cellType="columnheader" gridColumn={(i + 2).toString()} key={`${key}-header`} id={`perm-header-${key}`}>
-                      {localized}
-                    </VSCodeDataGridCell>
-                  );
-                })}
-              </VSCodeDataGridRow>
-              {localizedPermissionGroups.map(({ key, localized }) => {
-                return (
-                  <VSCodeDataGridRow key={`${key}-row`} role="row">
-                    <VSCodeDataGridCell cellType="rowheader" gridColumn="1" id={`group-header-${key}`}>
-                      {localized}
-                    </VSCodeDataGridCell>
-                    {PERMISSION_TYPES.map((perm, i) => {
-                      const permLabel = localizedPermissionTypes.find((p) => p.key === perm)?.localized || perm;
-                      const isChecked = attributes.current!.perms[key as keyof FilePermissions][perm];
-                      const checkboxId = `checkbox-${key}-${perm}`;
-                      const labelId = `label-${key}-${perm}`;
-                      return (
-                        <VSCodeDataGridCell gridColumn={(i + 2).toString()} key={`${key}-${perm}-checkbox`}>
-                          <label id={labelId} htmlFor={checkboxId} style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
-                            <VSCodeCheckbox
-                              id={checkboxId}
-                              checked={isChecked}
-                              onChange={(e: any) => updatePerm(key as keyof FilePermissions, perm, e.target.checked)}
-                              aria-labelledby={`group-header-${key} perm-header-${perm} ${labelId}`}
-                            />
-                            <span style={{ position: "absolute", left: "-10000px", width: "1px", height: "1px", overflow: "hidden" }}>
-                              {l10n.t("{0} {1}", localized, permLabel)}
-                            </span>
-                          </label>
-                        </VSCodeDataGridCell>
-                      );
-                    })}
-                  </VSCodeDataGridRow>
-                );
-              })}
+            <>
+              <vscode-table
+                style={{ marginTop: "1em", minWidth: "26em" }}
+                aria-label={l10n.t("File permissions with checkboxes to toggle them")}
+                aria-describedby="permissions-description"
+              >
+                <vscode-table-header slot="header">
+                  <vscode-table-header-cell></vscode-table-header-cell>
+                  {localizedPermissionTypes.map(({ key, localized }) => {
+                    return (
+                      <vscode-table-header-cell key={`${key}-header`} id={`perm-header-${key}`}>
+                        {localized}
+                      </vscode-table-header-cell>
+                    );
+                  })}
+                </vscode-table-header>
+                <vscode-table-body slot="body">
+                  {localizedPermissionGroups.map(({ key, localized }) => {
+                    return (
+                      <vscode-table-row key={`${key}-row`}>
+                        <vscode-table-cell id={`group-header-${key}`}>{localized}</vscode-table-cell>
+                        {PERMISSION_TYPES.map((perm) => {
+                          const permLabel = localizedPermissionTypes.find((p) => p.key === perm)?.localized || perm;
+                          const isChecked = attributes.current!.perms[key as keyof FilePermissions][perm];
+                          return (
+                            <vscode-table-cell key={`${key}-${perm}-checkbox`}>
+                              <vscode-checkbox
+                                id={`checkbox-${key}-${perm}`}
+                                checked={isChecked}
+                                onChange={(e) => updatePerm(key as keyof FilePermissions, perm, e.currentTarget.checked)}
+                              >
+                                <span style={{ position: "absolute", left: "-10000px", width: "1px", height: "1px", overflow: "hidden" }}>
+                                  {l10n.t("{0} {1}", localized, permLabel)}
+                                </span>
+                              </vscode-checkbox>
+                            </vscode-table-cell>
+                          );
+                        })}
+                      </vscode-table-row>
+                    );
+                  })}
+                </vscode-table-body>
+              </vscode-table>
               <span id="permissions-description" style={{ position: "absolute", left: "-10000px", width: "1px", height: "1px", overflow: "hidden" }}>
                 {l10n.t("Use checkboxes to toggle read, write, and execute permissions for user, group, and all users")}
               </span>
-            </VSCodeDataGrid>
+            </>
           ) : null}
           <div style={{ display: "flex", alignItems: "center", marginLeft: "1em", marginTop: "1em", marginBottom: "1em" }}>
-            <VSCodeButton
+            <vscode-button
               disabled={!allowUpdate || readonly}
               aria-label={
                 !allowUpdate || readonly
@@ -282,8 +276,8 @@ export function App() {
               }}
             >
               {l10n.t("Apply changes")}
-            </VSCodeButton>
-            {isUpdating && <VSCodeProgressRing style={{ marginLeft: "1em" }} aria-label={l10n.t("Updating file properties")} />}
+            </vscode-button>
+            {isUpdating && <vscode-progress-ring style={{ marginLeft: "1em" }} aria-label={l10n.t("Updating file properties")} />}
           </div>
           {readonly && (
             <span style={{ marginLeft: "1em", color: "var(--vscode-editorLightBulb-foreground)" }}>
@@ -297,9 +291,9 @@ export function App() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1>{l10n.t("File Properties")}</h1>
-        <VSCodeProgressRing style={{ marginLeft: "1em" }} />
+        <vscode-progress-ring style={{ marginLeft: "1em" }} />
       </div>
-      <VSCodeDivider />
+      <vscode-divider />
       <p style={{ fontStyle: "italic" }}>{l10n.t("Waiting for data from extension...")}</p>
     </div>
   );
