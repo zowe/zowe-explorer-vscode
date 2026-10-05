@@ -414,9 +414,10 @@ describe("ZoweVsCodeExtension", () => {
             });
 
             // Assume user provides proper certificate and keyfile
-            const promptCertMock = vi.spyOn(ZoweVsCodeExtension as any, "promptCertificate").mockImplementation((opts: any) => {
-                opts.session.cert = "cert";
-                opts.session.certKey = "certKey";
+            const promptCertMock = vi.spyOn(ZoweVsCodeExtension.profilesCache as any, "promptCertificate").mockResolvedValue({
+                cert: "cert",
+                certKey: "certKey",
+                action: "login"
             });
             const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
             await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" });
@@ -437,7 +438,8 @@ describe("ZoweVsCodeExtension", () => {
             // case 1: User selects "user/password" for login quick pick
             const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
 
-            const promptCertMock = vi.spyOn(ZoweVsCodeExtension as any, "promptCertificate").mockRejectedValueOnce(new Error("invalid certificate"));
+            const promptCertMock = vi.spyOn(ZoweVsCodeExtension.profilesCache as any, "promptCertificate")
+                .mockRejectedValueOnce(new Error("invalid certificate"));
             await expect(ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" })).resolves.toBe(false);
             expect(promptCertMock).toHaveBeenCalled();
             expect(quickPickMock).toHaveBeenCalled();
@@ -959,32 +961,6 @@ describe("ZoweVsCodeExtension", () => {
         });
     });
 
-    describe("promptCertificate", () => {
-        it("should set up options related to certificates", async () => {
-            const options: PromptCredentialsOptions.CertificateOptions = {
-                session: {
-                    cert: undefined,
-                    certKey: undefined,
-                },
-                openDialogOptions: {},
-                profile: {
-                    profile: {
-                        cert: "/test/cert/path",
-                        certKey: "/test/key/path",
-                    },
-                } as any,
-            };
-
-            vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue({
-                cert: options.profile?.profile?.cert,
-                certKey: options.profile?.profile?.certKey,
-            });
-
-            await (ZoweVsCodeExtension as any).promptCertificate(options);
-            expect(options.session.cert).toEqual("/test/cert/path");
-            expect(options.session.certKey).toEqual("/test/key/path");
-        });
-    });
     describe("Direct connect token authentication methods", () => {
         let blockMocks: ReturnType<typeof createBlockMocks>;
         const expectedSession = new imperative.Session({
