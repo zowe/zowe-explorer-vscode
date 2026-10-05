@@ -99,9 +99,11 @@ export function ProfileList({
     configurations: ctxConfigurations,
     selectedTab: ctxSelectedTab,
     renames: ctxRenames,
+    setDeletions,
+    setPendingDefaults: ctxSetPendingDefaults,
   } = useConfigContext();
 
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; profileKey: string } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; profileKey: string | null } | null>(null);
 
   const copyProfile = (profileKey: string, isCut: boolean) => {
     const currentTab = ctxSelectedTab !== null && ctxSelectedTab !== undefined ? ctxSelectedTab : selectedTab;
@@ -339,9 +341,144 @@ export function ProfileList({
       destKey = uniqueNewProfileKey;
     }
     if (profileClipboard.type === "cut") {
-      if (onProfileRename) {
-        const originalKey = findOriginalKey(profileClipboard.sourceKey);
-        onProfileRename(originalKey, destKey, true);
+      if (profileClipboard.configPath === configPath) {
+        if (destKey === profileClipboard.sourceKey) {
+          return;
+        }
+        if (targetProfileKey === profileClipboard.sourceKey || targetProfileKey?.startsWith(profileClipboard.sourceKey + ".")) {
+          return;
+        }
+        if (onProfileRename) {
+          const originalKey = findOriginalKey(profileClipboard.sourceKey);
+          onProfileRename(originalKey, destKey, true);
+          setProfileClipboard(null);
+        }
+      } else {
+        // Cut onto different layer (different configuration files)
+        // 1. Copy the profile and descendants to the target layer
+        const newChanges: { [k: string]: any } = {};
+        const getProfileJsonPath = (pk: string): string[] => {
+          const parts = pk.split(".");
+          const pathArr: string[] = ["profiles"];
+          for (let i = 0; i < parts.length; i++) {
+            pathArr.push(parts[i]);
+            if (i < parts.length - 1) {
+              pathArr.push("profiles");
+            }
+          }
+          return pathArr;
+        };
+        Object.entries(profileClipboard.profiles).forEach(([pKey, pData]) => {
+          const suffix = pKey.substring(profileClipboard.sourceKey.length);
+          const newPKey = destKey + suffix;
+          const newProfilePath = getProfileJsonPath(newPKey);
+          if (pData.type) {
+            const typeKey = [...newProfilePath, "type"].join(".");
+            newChanges[typeKey] = {
+              value: pData.type,
+              path: ["type"],
+              profile: newPKey,
+            };
+          }
+          Object.entries(pData.properties).forEach(([propKey, propValue]) => {
+            const propertyKey = [...newProfilePath, "properties", propKey].join(".");
+            const isSecure = pData.secure.includes(propKey);
+            newChanges[propertyKey] = {
+              value: propValue,
+              path: [propKey],
+              profile: newPKey,
+              secure: isSecure,
+            };
+          });
+          if (pData.secure && pData.secure.length > 0) {
+            const secureKey = [...newProfilePath, "secure"].join(".");
+            newChanges[secureKey] = {
+              value: pData.secure,
+              path: ["secure"],
+              profile: newPKey,
+            };
+          }
+          Object.entries(pData.customFields).forEach(([bk, bkValue]) => {
+            const bkKey = [...newProfilePath, bk].join(".");
+            newChanges[bkKey] = {
+              value: bkValue,
+              path: [bk],
+              profile: newPKey,
+            };
+          });
+        });
+        setPendingChanges((prev: any) => ({
+          ...prev,
+          [configPath]: {
+            ...prev[configPath],
+            ...newChanges,
+          },
+        }));
+
+        // 2. Delete the profile from the source layer
+        const sourceFullProfilePath = getProfileJsonPath(profileClipboard.sourceKey).join(".");
+        setDeletions((prev: any) => {
+          const newDeletions = { ...prev };
+          if (!newDeletions[profileClipboard.configPath]) {
+            newDeletions[profileClipboard.configPath] = [];
+          }
+          newDeletions[profileClipboard.configPath].push(sourceFullProfilePath);
+          return newDeletions;
+        });
+
+        // 3. Clear any pending changes for the source profile on the source layer
+        setPendingChanges((prev: any) => {
+          const newState = { ...prev };
+          if (newState[profileClipboard.configPath]) {
+            Object.keys(newState[profileClipboard.configPath]).forEach((key) => {
+              const entry = newState[profileClipboard.configPath][key];
+              if (entry.profile === profileClipboard.sourceKey || entry.profile.startsWith(profileClipboard.sourceKey + ".")) {
+                delete newState[profileClipboard.configPath][key];
+              }
+            });
+          }
+          return newState;
+        });
+
+        // 4. Clear pending defaults in the source layer if the cut profile is set as default
+        const sourceConfig = currentConfigs?.find((c: any) => c.configPath === profileClipboard.configPath);
+        const sourceDefaults = sourceConfig?.properties?.defaults || {};
+        const runSetPendingDefaults = ctxSetPendingDefaults || setPendingDefaults;
+        if (runSetPendingDefaults) {
+          runSetPendingDefaults((prev: any) => {
+            const configPathDefaults = prev[profileClipboard.configPath] || {};
+            const updatedDefaults = { ...configPathDefaults };
+            let hasChanges = false;
+            const profilesToCheck = [profileClipboard.sourceKey];
+
+            Object.entries(updatedDefaults).forEach(([profileType, defaultEntry]) => {
+              if (defaultEntry && (profilesToCheck.includes((defaultEntry as any).value) || profilesToCheck.some((p) => (defaultEntry as any).value.startsWith(p + ".")))) {
+                updatedDefaults[profileType] = { value: "", path: [profileType] };
+                hasChanges = true;
+              }
+            });
+
+            Object.entries(sourceDefaults).forEach(([profileType, defaultProfileName]) => {
+              const defaultProfileNameStr = String(defaultProfileName);
+              if (profilesToCheck.includes(defaultProfileNameStr) || profilesToCheck.some((p) => defaultProfileNameStr.startsWith(p + "."))) {
+                if (!updatedDefaults[profileType] || updatedDefaults[profileType].value !== "") {
+                  updatedDefaults[profileType] = { value: "", path: [profileType] };
+                  hasChanges = true;
+                }
+              }
+            });
+
+            if (hasChanges) {
+              return {
+                ...prev,
+                [profileClipboard.configPath]: updatedDefaults,
+              };
+            }
+            return prev;
+          });
+        }
+
+        onProfileSelect(destKey);
         setProfileClipboard(null);
       }
     } else {
@@ -640,7 +777,26 @@ export function ProfileList({
           onProfileSortOrderChange={handleProfileSortOrderChange}
         />
       </div>
-      <div ref={scrollContainerRef} style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+      <div
+        ref={scrollContainerRef}
+        style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          const menuWidth = 150;
+          const menuHeight = 50;
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          let x = e.clientX;
+          let y = e.clientY;
+          if (x + menuWidth > viewportWidth) {
+            x = viewportWidth - menuWidth - 10;
+          }
+          if (y + menuHeight > viewportHeight) {
+            y = viewportHeight - menuHeight - 10;
+          }
+          setContextMenu({ x, y, profileKey: null });
+        }}
+      >
         {viewMode === "tree" ? (
           <ProfileTree
             profileKeys={filteredProfileKeys}
@@ -798,58 +954,75 @@ export function ProfileList({
       </div>
       {contextMenu && (
         <div className="tab-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }} onClick={(e) => e.stopPropagation()}>
-          <div
-            className="tab-context-menu-item"
-            onClick={() => {
-              copyProfile(contextMenu.profileKey, false);
-              setContextMenu(null);
-            }}
-          >
-            <span className="codicon codicon-copy codicon-tab-menu-icon"></span>
-            <span>{l10n.t("Copy")}</span>
-          </div>
-          <div
-            className="tab-context-menu-item"
-            onClick={() => {
-              copyProfile(contextMenu.profileKey, true);
-              setContextMenu(null);
-            }}
-          >
-            <span className="codicon codicon-copy codicon-tab-menu-icon"></span>
-            <span>{l10n.t("Cut")}</span>
-          </div>
-          <div
-            className={`tab-context-menu-item ${!profileClipboard ? "disabled" : ""}`}
-            onClick={() => {
-              if (profileClipboard) {
-                pasteProfile(contextMenu.profileKey);
-              }
-              setContextMenu(null);
-            }}
-          >
-            <span className="codicon codicon-clippy codicon-tab-menu-icon"></span>
-            <span>{l10n.t("Paste")}</span>
-          </div>
-          <div
-            className="tab-context-menu-item"
-            onClick={() => {
-              duplicateProfile(contextMenu.profileKey);
-              setContextMenu(null);
-            }}
-          >
-            <span className="codicon codicon-files codicon-tab-menu-icon"></span>
-            <span>{l10n.t("Duplicate")}</span>
-          </div>
-          {onDeleteProfile && (
+          {contextMenu.profileKey !== null ? (
+            <>
+              <div
+                className="tab-context-menu-item"
+                onClick={() => {
+                  copyProfile(contextMenu.profileKey!, false);
+                  setContextMenu(null);
+                }}
+              >
+                <span className="codicon codicon-copy codicon-tab-menu-icon"></span>
+                <span>{l10n.t("Copy")}</span>
+              </div>
+              <div
+                className="tab-context-menu-item"
+                onClick={() => {
+                  copyProfile(contextMenu.profileKey!, true);
+                  setContextMenu(null);
+                }}
+              >
+                <span className="codicon codicon-copy codicon-tab-menu-icon"></span>
+                <span>{l10n.t("Cut")}</span>
+              </div>
+              <div
+                className={`tab-context-menu-item ${!profileClipboard ? "disabled" : ""}`}
+                onClick={() => {
+                  if (profileClipboard) {
+                    pasteProfile(contextMenu.profileKey);
+                  }
+                  setContextMenu(null);
+                }}
+              >
+                <span className="codicon codicon-clippy codicon-tab-menu-icon"></span>
+                <span>{l10n.t("Paste")}</span>
+              </div>
+              <div
+                className="tab-context-menu-item"
+                onClick={() => {
+                  duplicateProfile(contextMenu.profileKey!);
+                  setContextMenu(null);
+                }}
+              >
+                <span className="codicon codicon-files codicon-tab-menu-icon"></span>
+                <span>{l10n.t("Duplicate")}</span>
+              </div>
+              {onDeleteProfile && (
+                <div
+                  className="tab-context-menu-item"
+                  onClick={() => {
+                    onDeleteProfile(contextMenu.profileKey!);
+                    setContextMenu(null);
+                  }}
+                >
+                  <span className="codicon codicon-trash codicon-tab-menu-icon"></span>
+                  <span>{l10n.t("Delete")}</span>
+                </div>
+              )}
+            </>
+          ) : (
             <div
-              className="tab-context-menu-item"
+              className={`tab-context-menu-item ${!profileClipboard ? "disabled" : ""}`}
               onClick={() => {
-                onDeleteProfile(contextMenu.profileKey);
+                if (profileClipboard) {
+                  pasteProfile(null);
+                }
                 setContextMenu(null);
               }}
             >
-              <span className="codicon codicon-trash codicon-tab-menu-icon"></span>
-              <span>{l10n.t("Delete")}</span>
+              <span className="codicon codicon-clippy codicon-tab-menu-icon"></span>
+              <span>{l10n.t("Paste")}</span>
             </div>
           )}
         </div>
