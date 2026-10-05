@@ -1,5 +1,4 @@
 import { useEffect, useState } from "preact/hooks";
-import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
 import * as l10n from "@vscode/l10n";
 import { isSecureOrigin } from "../utils";
 
@@ -64,76 +63,73 @@ export function App() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1>{title}</h1>
       </div>
-      <VSCodeDivider />
+      <vscode-divider />
       <div style={{ marginTop: "1em" }}>
         <h4>{profileName}</h4>
-        <VSCodeDataGrid style={{ marginTop: "1em" }} gridTemplateColumns="9em 1fr auto">
-          <h3>{l10n.t("Select a certificate and certificate key in PEM format:")}</h3>
-          <VSCodeDataGridRow rowType="header">
-            <VSCodeDataGridCell cellType="columnheader" gridColumn="1"></VSCodeDataGridCell>
-            <VSCodeDataGridCell cellType="columnheader" gridColumn="2">
-              {l10n.t("Value")}
-            </VSCodeDataGridCell>
-            <VSCodeDataGridCell cellType="columnheader" gridColumn="3">
-              {l10n.t("Actions")}
-            </VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-          <VSCodeDataGridRow>
-            <VSCodeDataGridCell gridColumn="1">
-              <strong>{l10n.t("Certificate File")}</strong>
-            </VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="2">
-              <i>{certPath}</i>
-            </VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="3">
-              <VSCodeButton appearance="secondary" onClick={() => vscodeApi.postMessage({ command: "promptCert" })}>
-                {l10n.t("Browse")}
-              </VSCodeButton>
-            </VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-          <VSCodeDataGridRow>
-            <VSCodeDataGridCell gridColumn="1">
-              <strong>{l10n.t("Certificate Key File")}</strong>
-            </VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="2">
-              <i>{certKeyPath}</i>
-            </VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="3">
-              <VSCodeButton appearance="secondary" onClick={() => vscodeApi.postMessage({ command: "promptCertKey" })}>
-                {l10n.t("Browse")}
-              </VSCodeButton>
-            </VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-        </VSCodeDataGrid>
+        <h3>{l10n.t("Select a certificate and certificate key in PEM format:")}</h3>
+        <vscode-table style={{ marginTop: "1em" }} columns={["160px", "auto", "110px"]}>
+          <vscode-table-header slot="header">
+            <vscode-table-header-cell></vscode-table-header-cell>
+            <vscode-table-header-cell>{l10n.t("Value")}</vscode-table-header-cell>
+            <vscode-table-header-cell>{l10n.t("Actions")}</vscode-table-header-cell>
+          </vscode-table-header>
+          <vscode-table-body slot="body">
+            <vscode-table-row>
+              <vscode-table-cell>
+                <strong>{l10n.t("Certificate File")}</strong>
+              </vscode-table-cell>
+              <vscode-table-cell>
+                <i>{certPath}</i>
+              </vscode-table-cell>
+              <vscode-table-cell>
+                <vscode-button secondary onClick={() => vscodeApi.postMessage({ command: "promptCert" })}>
+                  {l10n.t("Browse")}
+                </vscode-button>
+              </vscode-table-cell>
+            </vscode-table-row>
+            <vscode-table-row>
+              <vscode-table-cell>
+                <strong>{l10n.t("Certificate Key File")}</strong>
+              </vscode-table-cell>
+              <vscode-table-cell>
+                <i>{certKeyPath}</i>
+              </vscode-table-cell>
+              <vscode-table-cell>
+                <vscode-button secondary onClick={() => vscodeApi.postMessage({ command: "promptCertKey" })}>
+                  {l10n.t("Browse")}
+                </vscode-button>
+              </vscode-table-cell>
+            </vscode-table-row>
+          </vscode-table-body>
+        </vscode-table>
         <div style={{ display: "flex" }}>
-          <VSCodeButton
+          <vscode-button
             style={{ marginTop: "1em" }}
             onClick={() => {
               vscodeApi.postMessage({ command: "save" });
             }}
           >
             {saveButtonText}
-          </VSCodeButton>
+          </vscode-button>
           {showLoginButton ? (
-            <VSCodeButton
-              appearance="secondary"
+            <vscode-button
+              secondary
               style={{ marginLeft: "1em", marginTop: "1em" }}
               onClick={() => {
                 vscodeApi.postMessage({ command: "login" });
               }}
             >
               {l10n.t("Log in")}
-            </VSCodeButton>
+            </vscode-button>
           ) : null}
-          <VSCodeButton
-            appearance="secondary"
-            style={{ marginTop: "1em", marginLeft: "1em" }}
-            onClick={() => {
+          <vscode-button>
+            secondary style={{ marginTop: "1em", marginLeft: "1em" }}
+            onClick=
+            {() => {
               vscodeApi.postMessage({ command: "close" });
             }}
-          >
             {l10n.t("Cancel")}
-          </VSCodeButton>
+          </vscode-button>
         </div>
       </div>
     </div>

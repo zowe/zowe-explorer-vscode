@@ -13,6 +13,9 @@ import { createContext } from "preact";
 import { DataPanelContextType } from "../types";
 import { useContext } from "preact/hooks";
 
+/** History lists whose items can be selected (and then deleted) */
+export const SELECTABLE_HISTORY_TYPES = ["search", "fileHistory", "encodingHistory", "searchedKeywordHistory"];
+
 export const DataPanelContext = createContext<DataPanelContextType | null>(null);
 
 export function useDataPanelContext(): DataPanelContextType {
