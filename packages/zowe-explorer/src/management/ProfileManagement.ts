@@ -126,7 +126,7 @@ export class ProfileManagement {
         const profile = node.getProfile();
         ZoweLogger.debug(
             `Building profile management quickpick for profile ${profile.name} with managementType=${managementType},` +
-            ` allowedLoginMethod=${allowedLoginMethod}`
+                ` allowedLoginMethod=${allowedLoginMethod}`
         );
         const qp = Gui.createQuickPick();
         let quickPickOptions: vscode.QuickPickItem[];
@@ -164,9 +164,7 @@ export class ProfileManagement {
                 quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
             }
             qp.placeholder = placeholders.tokenAuth;
-
-        }
-        else if (
+        } else if (
             supportsCertAuth &&
             (managementType === imperative.SessConstants.AUTH_TYPE_CERT_PEM ||
                 allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM)
@@ -182,11 +180,9 @@ export class ProfileManagement {
                 quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
             }
             qp.placeholder = placeholders.basicAuth;
-        }
-        else {
+        } else {
             quickPickOptions = Object.values(this.basicAuthAddQpItems);
             if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC) {
-
                 qp.placeholder = placeholders.basicAuth;
             } else {
                 try {

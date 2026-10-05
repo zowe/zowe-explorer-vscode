@@ -193,8 +193,8 @@ export class ZoweVsCodeExtension {
         if (baseProfile == null) {
             Gui.errorMessage(
                 `Login failed: No base or parent profile found to store SSO token for profile "${serviceProfile.name}". ` +
-                "To fix this, either convert this profile to a nested profile under a parent profile, " +
-                "or add a default base profile to your team configuration."
+                    "To fix this, either convert this profile to a nested profile under a parent profile, " +
+                    "or add a default base profile to your team configuration."
             );
             return false;
         }
@@ -202,7 +202,7 @@ export class ZoweVsCodeExtension {
         const secondaryProfile = opts.preferBaseToken ? serviceProfile : baseProfile;
         let tokenType: string | undefined =
             allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC ||
-                allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM
                 ? imperative.SessConstants.TOKEN_TYPE_APIML
                 : undefined;
 
@@ -333,9 +333,9 @@ export class ZoweVsCodeExtension {
     }
 
     /**
-     * Trigger a direct connection login process. 
-     * 
-     * Do not call this for `zosmf` type profiles, because that will trigger an APIML login. 
+     * Trigger a direct connection login process.
+     *
+     * Do not call this for `zosmf` type profiles, because that will trigger an APIML login.
      *
      * @param {imperative.IProfileLoaded} [serviceProfile] Instance of profile to be used for obtaining token
      * @param {Types.IApiRegisterClient} [zeRegister] Instance of `IApiRegisterClient`
@@ -395,8 +395,8 @@ export class ZoweVsCodeExtension {
         if (!baseProfile) {
             Gui.errorMessage(
                 `Logout failed: No base or parent profile found to remove SSO token for profile "${serviceProfile.name}". ` +
-                "To fix this, either convert this profile to a nested profile under a parent profile, " +
-                "or add a default base profile to your team configuration."
+                    "To fix this, either convert this profile to a nested profile under a parent profile, " +
+                    "or add a default base profile to your team configuration."
             );
             return false;
         }
@@ -602,8 +602,8 @@ export class ZoweVsCodeExtension {
         if (!newUser || options.rePrompt) {
             const fallbackValidateInput = options.userInputBoxOptions?.validateInput
                 ? (value: string): ReturnType<NonNullable<vscode.InputBoxOptions["validateInput"]>> => {
-                    return options.userInputBoxOptions?.validateInput?.(value);
-                }
+                      return options.userInputBoxOptions?.validateInput?.(value);
+                  }
                 : undefined;
             newUser = await Gui.showInputBox({
                 placeHolder: "User Name",

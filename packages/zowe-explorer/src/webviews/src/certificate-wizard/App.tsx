@@ -81,7 +81,7 @@ export function App() {
               <vscode-table-cell>
                 <i>{certPath}</i>
               </vscode-table-cell>
-              <vscode-table-cell>
+              <vscode-table-cell style={{ padding: "1em" }}>
                 <vscode-button secondary onClick={() => vscodeApi.postMessage({ command: "promptCert" })}>
                   {l10n.t("Browse")}
                 </vscode-button>
@@ -94,7 +94,7 @@ export function App() {
               <vscode-table-cell>
                 <i>{certKeyPath}</i>
               </vscode-table-cell>
-              <vscode-table-cell>
+              <vscode-table-cell style={{ padding: "1em" }}>
                 <vscode-button secondary onClick={() => vscodeApi.postMessage({ command: "promptCertKey" })}>
                   {l10n.t("Browse")}
                 </vscode-button>
@@ -122,12 +122,13 @@ export function App() {
               {l10n.t("Log in")}
             </vscode-button>
           ) : null}
-          <vscode-button>
-            secondary style={{ marginTop: "1em", marginLeft: "1em" }}
-            onClick=
-            {() => {
+          <vscode-button
+            secondary
+            style={{ marginTop: "1em", marginLeft: "1em" }}
+            onClick={() => {
               vscodeApi.postMessage({ command: "close" });
             }}
+          >
             {l10n.t("Cancel")}
           </vscode-button>
         </div>
