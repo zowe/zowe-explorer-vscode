@@ -662,6 +662,7 @@ export class ProfilesCache {
         const response: CertPromptResponse = await vscode.commands.executeCommand("zowe.certificateWizard", {
             cert: options.profile.profile?.certFile,
             certKey: options.profile.profile?.certKeyFile,
+            title: options.title,
             profileName: options.profile.name,
             saveButtonText: options.saveButtonText,
             showLoginButton: options.showLoginButton,

@@ -237,6 +237,7 @@ export class ProfileManagement {
                 await Profiles.getInstance().promptCertificate({
                     title: vscode.l10n.t("Update Certificate"),
                     profile,
+                    saveButtonText: vscode.l10n.t("Save"),
                     showLoginButton: false,
                     openDialogOptions: { canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
                 });
