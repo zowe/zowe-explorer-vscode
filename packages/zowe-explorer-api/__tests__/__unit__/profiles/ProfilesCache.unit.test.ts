@@ -31,6 +31,12 @@ vi.mock("crypto", async () => ({
     })),
 }));
 
+vi.mock("module", async () => {
+    return {
+        // createRequire fails with 'Error: Cannot find module'
+        createRequire: vi.fn().mockReturnValue(vi.fn().mockReturnValue(await vi.importActual("../../../src/vscode/session/AuthHandler"))),
+    };
+});
 
 // Explicitly request automocking. Under Vitest, `vi.mock("fs")` without a
 // factory does not consistently produce stand-in spies for every export, so
