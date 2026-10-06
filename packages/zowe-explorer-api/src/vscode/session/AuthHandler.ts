@@ -16,6 +16,7 @@ import { IZoweTreeNode } from "../../tree";
 import { E_CANCELED, Mutex } from "async-mutex";
 import * as vscode from "vscode";
 import { ZoweVsCodeExtension } from "../ZoweVsCodeExtension";
+import { ProfilesCache } from "../..";
 
 /**
  * @brief individual authentication methods (also supports a `ProfilesCache` class)
@@ -200,34 +201,37 @@ export class AuthHandler {
      */
     public static async promptForAuthentication(profile: ProfileLike, params: AuthPromptParams): Promise<boolean> {
         const profileName = AuthHandler.getProfileName(profile);
+        const profileLoaded: imperative.IProfileLoaded =
+            typeof profile === "string" ? ZoweVsCodeExtension.profilesCache.loadNamedProfile(profile) : profile;
+        const allowedLoginMethod = profileLoaded.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+
         AuthHandler.setAuthCancelled(profileName, false);
-        if (params.imperativeError.mDetails.additionalDetails) {
-            const tokenError: string = params.imperativeError.mDetails.additionalDetails;
-            if (tokenError.includes("Token is not valid or expired.") || params.isUsingTokenAuth) {
-                // Handle token-based authentication error through the given `ssoLogin` method.
-                const message = "Log in to Authentication Service";
-                const userResp = await Gui.showMessage(params.errorCorrelation?.message ?? params.imperativeError.message, {
-                    items: [message],
-                    vsCodeOpts: { modal: true },
-                });
-                if (userResp === message && (await params.authMethods.ssoLogin(null, profileName))) {
-                    // Unlock profile so it can be used again
-                    AuthHandler.unlockProfile(profileName, true);
-                    return true;
-                }
-                if (userResp === undefined) {
-                    // User cancelled the SSO login prompt
-                    AuthHandler.setAuthCancelled(profileName, true);
-                    if (params.throwErrorOnCancel) {
-                        throw new AuthCancelledError(profileName, "User cancelled SSO authentication");
-                    }
-                }
-                return false;
+
+        if (params.isUsingTokenAuth || params.imperativeError.mDetails.additionalDetails?.includes("Token is not valid or expired.")) {
+            // Handle token-based authentication error through the given `ssoLogin` method.
+            const message = "Log in to Authentication Service";
+            const userResp = await Gui.showMessage(params.errorCorrelation?.message ?? params.imperativeError.message, {
+                items: [message],
+                vsCodeOpts: { modal: true },
+            });
+            if (userResp === message && (await params.authMethods.ssoLogin(undefined, profileName))) {
+                // Unlock profile so it can be used again
+                AuthHandler.unlockProfile(profileName, true);
+                return true;
             }
+            if (userResp === undefined) {
+                // User cancelled the SSO login prompt
+                AuthHandler.setAuthCancelled(profileName, true);
+                if (params.throwErrorOnCancel) {
+                    throw new AuthCancelledError(profileName, "User cancelled SSO authentication");
+                }
+            }
+            return false;
         }
 
+        const usingCert = allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM;
         // Prompt the user to update their credentials using the given `promptCredentials` method.
-        const checkCredsButton = "Update Credentials";
+        const checkCredsButton = usingCert ? "Update Certificate" : "Update Credentials";
         const selection = await Gui.errorMessage(params.errorCorrelation?.message ?? params.imperativeError.message, {
             items: [checkCredsButton],
             vsCodeOpts: { modal: true },
@@ -242,11 +246,28 @@ export class AuthHandler {
             return false;
         }
 
-        const creds = await params.authMethods.promptCredentials(profile, true);
-        if (creds != null) {
-            // Unlock profile so it can be used again
-            AuthHandler.unlockProfile(profileName, true);
-            return true;
+        if (usingCert) {
+            const certResponse = await ZoweVsCodeExtension.profilesCache.promptCertificate({
+                profile: profileLoaded,
+                rePrompt: true,
+                title: checkCredsButton,
+                showLoginButton: false,
+            });
+
+            if (certResponse) {
+                AuthHandler.unlockProfile(profileName, true);
+                return true;
+            } else {
+                imperative.Logger.getAppLogger().warn(`promptCertificate returned no response. The certificate will not be updated on the profile.`);
+                return false;
+            }
+        } else {
+            const creds = await params.authMethods.promptCredentials(profile, true);
+            if (creds != null) {
+                // Unlock profile so it can be used again
+                AuthHandler.unlockProfile(profileName, true);
+                return true;
+            }
         }
 
         // User cancelled during credential input

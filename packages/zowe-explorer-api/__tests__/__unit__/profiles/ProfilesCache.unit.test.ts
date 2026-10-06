@@ -916,7 +916,7 @@ describe("ProfilesCache", () => {
             };
 
             const expectedCertPath = "/my/wonderful/cert.pem";
-            const expectedCertKeyPath = "/my/cool/cert/key.pem"
+            const expectedCertKeyPath = "/my/cool/cert/key.pem";
             vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue({
                 cert: expectedCertPath,
                 certKey: expectedCertKeyPath,
@@ -924,11 +924,10 @@ describe("ProfilesCache", () => {
             });
 
             await profCache.promptCertificate(options);
-            expect(profInfoMock.updateProperty)
-                .toHaveBeenCalledWith(expect.objectContaining({ property: "certFile", value: expectedCertPath }));
-            expect(profInfoMock.updateProperty)
-                .toHaveBeenCalledWith(expect.objectContaining({ property: "certKeyFile", value: expectedCertKeyPath }));
-
+            expect(profInfoMock.updateProperty).toHaveBeenCalledWith(expect.objectContaining({ property: "certFile", value: expectedCertPath }));
+            expect(profInfoMock.updateProperty).toHaveBeenCalledWith(
+                expect.objectContaining({ property: "certKeyFile", value: expectedCertKeyPath })
+            );
         });
 
         it("should not modify the profile if the user does not choose the save action", async () => {
@@ -946,7 +945,7 @@ describe("ProfilesCache", () => {
             };
 
             const expectedCertPath = "/my/wonderful/cert.pem";
-            const expectedCertKeyPath = "/my/cool/cert/key.pem"
+            const expectedCertKeyPath = "/my/cool/cert/key.pem";
             vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue({
                 cert: expectedCertPath,
                 certKey: expectedCertKeyPath,
@@ -955,7 +954,6 @@ describe("ProfilesCache", () => {
 
             await profCache.promptCertificate(options);
             expect(profInfoMock.updateProperty).not.toHaveBeenCalled();
-
         });
     });
 });

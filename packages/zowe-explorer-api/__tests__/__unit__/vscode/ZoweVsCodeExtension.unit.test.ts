@@ -417,7 +417,7 @@ describe("ZoweVsCodeExtension", () => {
             const promptCertMock = vi.spyOn(ZoweVsCodeExtension.profilesCache as any, "promptCertificate").mockResolvedValue({
                 cert: "cert",
                 certKey: "certKey",
-                action: "login"
+                action: "login",
             });
             const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
             await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" });
@@ -438,7 +438,8 @@ describe("ZoweVsCodeExtension", () => {
             // case 1: User selects "user/password" for login quick pick
             const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
 
-            const promptCertMock = vi.spyOn(ZoweVsCodeExtension.profilesCache as any, "promptCertificate")
+            const promptCertMock = vi
+                .spyOn(ZoweVsCodeExtension.profilesCache as any, "promptCertificate")
                 .mockRejectedValueOnce(new Error("invalid certificate"));
             await expect(ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" })).resolves.toBe(false);
             expect(promptCertMock).toHaveBeenCalled();

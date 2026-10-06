@@ -29,6 +29,7 @@ import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { SharedContext } from "../trees/shared/SharedContext";
+import { Profiles } from "../configuration/Profiles";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
@@ -224,12 +225,16 @@ export class AuthUtils {
                     imperativeError.mDetails.additionalDetails = additionalDetails.join("\n");
                 }
 
+                const allowedLoginMethod = profile.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+
                 const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
                 AuthHandler.enableSequentialRequests(profile);
                 const stillLocked = await AuthHandler.getOrCreateAuthFlow(profile, {
                     authMethods: Constants.PROFILES_CACHE,
                     imperativeError,
                     isUsingTokenAuth:
+                        allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC ||
+                        allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM ||
                         sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
                         sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
                     errorCorrelation,
