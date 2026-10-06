@@ -14,7 +14,7 @@ import * as fs from "fs";
 import * as imperative from "@zowe/imperative";
 import * as vscode from "vscode";
 import { CertificatePromptOptions, ProfilesCache } from "../../../src/profiles/ProfilesCache";
-import { FileManagement, Types } from "../../../src";
+import { FileManagement, Types, ZoweVsCodeExtension } from "../../../src";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
 import * as crypto from "crypto";
@@ -22,6 +22,7 @@ import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 import * as secretsSdkModule from "@zowe/secrets-for-zowe-sdk";
+
 
 vi.mock("crypto", async () => ({
     ...(await vi.importActual<typeof import("crypto")>("crypto")),
@@ -970,5 +971,121 @@ describe("ProfilesCache", () => {
             await profCache.promptCertificate(options);
             expect(profInfoMock.updateProperty).not.toHaveBeenCalled();
         });
+
+        it("should return early if no profile is passed", async () => {
+            const profCache = new ProfilesCache({ error: vi.fn() } as unknown as imperative.Logger);
+            const profInfoMock = createProfInfoMock([baseProfile]);
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock);
+            const options: CertificatePromptOptions = {
+                openDialogOptions: {},
+                profile: undefined,
+            };
+            vi.spyOn(vscode.commands, "executeCommand");
+
+            await profCache.promptCertificate(options);
+            expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
+            expect(profInfoMock.updateProperty).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("isUsingApiml", () => {
+
+        let profCache: ProfilesCache;
+
+        beforeAll(() => {
+            profCache = new ProfilesCache({ error: vi.fn() } as unknown as imperative.Logger);
+
+            profCache.allProfiles = [lpar1Profile as imperative.IProfileLoaded];
+            vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                getCommonApi: () => {
+                    return {
+                        getSession: (p) => new imperative.Session({ ...p.profile, hostname: p.profile.host }),
+                    };
+                },
+            } as any);
+        });
+        it("Should return true if the session's isUsingApiml method returns true", () => {
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(undefined as unknown as imperative.ProfileInfo);
+            expect(profCache.isUsingApiml({
+                ...lpar1Profile, profile: {
+                    ...lpar1Profile.profile,
+                    allowedLoginMethod: imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC,
+                }
+            } as any)).toBe(true);
+        });
+        it("Should return  false if the session has no allowedLoginMethod", () => {
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(undefined as unknown as imperative.ProfileInfo);
+            expect(profCache.isUsingApiml(
+                lpar1Profile.name
+            )).toBe(false);
+        });
+    });
+
+    describe("getApimlDecision", () => {
+
+        let profCache: ProfilesCache;
+
+        beforeAll(() => {
+            profCache = new ProfilesCache({ error: vi.fn() } as unknown as imperative.Logger);
+            profCache.allProfiles = [lpar1Profile as imperative.IProfileLoaded];
+            vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                getCommonApi: () => {
+                    return {
+                        getSession: (p) => new imperative.Session({ ...p.profile, hostname: p.profile.host }),
+                    };
+                },
+            } as any);
+        });
+        it("Should return true if the session's getApimlDecision method returns true", () => {
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(undefined as unknown as imperative.ProfileInfo);
+            expect(profCache.getApimlDecision({
+                ...lpar1Profile, profile: {
+                    ...lpar1Profile.profile,
+                    allowedLoginMethod: imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC,
+                }
+            } as any).usingApiml).toBe(true);
+        });
+        it("Should return  false if the session has no allowedLoginMethod", () => {
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(undefined as unknown as imperative.ProfileInfo);
+            expect(profCache.getApimlDecision(
+                lpar1Profile.name
+            ).usingApiml).toBe(false);
+        });
+    });
+
+    describe("getAllowedLoginMethod", () => {
+
+        let profCache: ProfilesCache;
+
+        beforeAll(() => {
+            profCache = new ProfilesCache({ error: vi.fn(), debug: vi.fn() } as unknown as imperative.Logger);
+            profCache.allProfiles = [lpar1Profile as imperative.IProfileLoaded];
+            vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                getCommonApi: () => {
+                    return {
+                        getSession: (p) => new imperative.Session({ ...p.profile, hostname: p.profile.host }),
+                    };
+                },
+            } as any);
+        });
+        it("Should return the profile's allowedLoginMethod if it is valid", () => {
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(undefined as unknown as imperative.ProfileInfo);
+            expect(profCache.getAllowedLoginMethod({
+                ...lpar1Profile, profile: {
+                    ...lpar1Profile.profile,
+                    allowedLoginMethod: imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC,
+                }
+            } as any)).toBe(imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC);
+        });
+        it("Should return prompt if the value is invalid", () => {
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(undefined as unknown as imperative.ProfileInfo);
+            expect(profCache.getAllowedLoginMethod({
+                ...lpar1Profile, profile: {
+                    ...lpar1Profile.profile,
+                    allowedLoginMethod: "Glorblintine",
+                }
+            } as any)).toBe(imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT);
+        });
+
     });
 });
