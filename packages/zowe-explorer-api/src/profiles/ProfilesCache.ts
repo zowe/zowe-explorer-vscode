@@ -13,7 +13,7 @@ import * as imperative from "@zowe/imperative";
 
 import * as vscode from "vscode";
 import type { IRegisterClient } from "../extend/IRegisterClient";
-import { ProfileLike } from "./AuthHandler";
+import { ProfileLike, AuthHandler } from "./AuthHandler";
 import { FileManagement } from "../utils/FileManagement";
 import { errorMessage } from "../utils/ErrorUtils";
 import { Validation } from "./Validation";
@@ -25,7 +25,6 @@ import { VscSettings } from "../vscode/doc/VscSettings";
 import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
-import { AuthHandler } from "../vscode/session/AuthHandler";
 
 export interface CertPromptResponse {
     cert: string;
@@ -86,7 +85,7 @@ export class ProfilesCache {
         if (keyring == null) {
             throw new Error(
                 "The @zowe/secrets-for-zowe-sdk module was loaded, but it did not export a keyring. " +
-                "This usually means that the module failed to load earlier in this session."
+                    "This usually means that the module failed to load earlier in this session."
             );
         }
         return keyring;
