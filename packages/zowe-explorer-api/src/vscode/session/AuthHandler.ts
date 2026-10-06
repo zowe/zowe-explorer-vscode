@@ -16,7 +16,6 @@ import { IZoweTreeNode } from "../../tree";
 import { E_CANCELED, Mutex } from "async-mutex";
 import * as vscode from "vscode";
 import { ZoweVsCodeExtension } from "../ZoweVsCodeExtension";
-import { ProfilesCache } from "../..";
 
 /**
  * @brief individual authentication methods (also supports a `ProfilesCache` class)

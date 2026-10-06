@@ -29,7 +29,6 @@ import { ZoweLogger } from "../tools/ZoweLogger";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 import { SharedContext } from "../trees/shared/SharedContext";
-import { Profiles } from "../configuration/Profiles";
 
 interface ErrorContext {
     apiType?: ZoweExplorerApiType;
