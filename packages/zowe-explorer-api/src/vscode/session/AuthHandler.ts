@@ -202,7 +202,7 @@ export class AuthHandler {
         const profileName = AuthHandler.getProfileName(profile);
         const profileLoaded: imperative.IProfileLoaded =
             typeof profile === "string" ? ZoweVsCodeExtension.profilesCache.loadNamedProfile(profile) : profile;
-        const allowedLoginMethod = profileLoaded.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+        const allowedLoginMethod = ZoweVsCodeExtension.profilesCache.getAllowedLoginMethod(profileLoaded);
 
         AuthHandler.setAuthCancelled(profileName, false);
 

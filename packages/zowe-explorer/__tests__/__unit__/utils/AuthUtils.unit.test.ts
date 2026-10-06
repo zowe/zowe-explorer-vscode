@@ -192,7 +192,7 @@ describe("AuthUtils", () => {
                         // the same summary shown when a token expires, rather than a bespoke message
                         message: expect.stringContaining(
                             "Your connection is no longer active for profile aProfile. " +
-                                "Please log in to an authentication service to restore the connection."
+                            "Please log in to an authentication service to restore the connection."
                         ),
                     }),
                 })
@@ -437,7 +437,7 @@ describe("AuthUtils", () => {
             expect(await AuthUtils.promptForSsoLogin("aProfileName")).toBe(false);
             expect(showMessageMock).toHaveBeenCalledWith(
                 "Your connection is no longer active for profile 'aProfileName'. " +
-                    "Please log in to an authentication service to restore the connection.",
+                "Please log in to an authentication service to restore the connection.",
                 { items: ["Log in to Authentication Service"], vsCodeOpts: { modal: true } }
             );
             expect(ssoLogin).toHaveBeenCalledWith(null, "aProfileName");
@@ -457,7 +457,7 @@ describe("AuthUtils", () => {
             expect(await AuthUtils.promptForSsoLogin("aProfileName")).toBe(true);
             expect(showMessageMock).toHaveBeenCalledWith(
                 "Your connection is no longer active for profile 'aProfileName'. " +
-                    "Please log in to an authentication service to restore the connection.",
+                "Please log in to an authentication service to restore the connection.",
                 { items: ["Log in to Authentication Service"], vsCodeOpts: { modal: true } }
             );
             expect(ssoLogin).toHaveBeenCalledWith(null, "aProfileName");
@@ -478,7 +478,7 @@ describe("AuthUtils", () => {
             await AuthUtils.promptForSsoLogin("aProfileName");
             expect(showMessageMock).toHaveBeenCalledWith(
                 "Your connection is no longer active for profile 'aProfileName'. " +
-                    "Please log in to an authentication service to restore the connection.",
+                "Please log in to an authentication service to restore the connection.",
                 { items: ["Log in to Authentication Service"], vsCodeOpts: { modal: true } }
             );
             expect(unlockProfile).toHaveBeenCalledWith("aProfileName");
@@ -498,7 +498,7 @@ describe("AuthUtils", () => {
             await AuthUtils.promptForSsoLogin("aProfileName");
             expect(showMessageMock).toHaveBeenCalledWith(
                 "Your connection is no longer active for profile 'aProfileName'. " +
-                    "Please log in to an authentication service to restore the connection.",
+                "Please log in to an authentication service to restore the connection.",
                 { items: ["Log in to Authentication Service"], vsCodeOpts: { modal: true } }
             );
             expect(ssoLogin).toHaveBeenCalledWith(null, "aProfileName");
@@ -516,7 +516,7 @@ describe("AuthUtils", () => {
             await AuthUtils.promptForSsoLogin("aProfileName");
             expect(showMessageMock).toHaveBeenCalledWith(
                 "Your connection is no longer active for profile 'aProfileName'. " +
-                    "Please log in to an authentication service to restore the connection.",
+                "Please log in to an authentication service to restore the connection.",
                 { items: ["Log in to Authentication Service"], vsCodeOpts: { modal: true } }
             );
             expect(ssoLogin).not.toHaveBeenCalledWith(null, "aProfileName");
@@ -1519,6 +1519,7 @@ describe("AuthUtils", () => {
                 value: {
                     loadNamedProfile: loadNamedProfileMock,
                     promptCredentials: vi.fn().mockImplementation((() => undefined) as any),
+                    getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
                 } as any,
                 configurable: true,
             });

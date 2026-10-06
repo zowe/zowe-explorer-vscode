@@ -224,7 +224,7 @@ export class AuthUtils {
                     imperativeError.mDetails.additionalDetails = additionalDetails.join("\n");
                 }
 
-                const allowedLoginMethod = profile.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+                const allowedLoginMethod = Constants.PROFILES_CACHE.getAllowedLoginMethod(profile);
 
                 const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
                 AuthHandler.enableSequentialRequests(profile);

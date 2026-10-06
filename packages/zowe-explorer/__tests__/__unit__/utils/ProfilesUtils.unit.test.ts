@@ -115,6 +115,15 @@ describe("ProfilesUtils unit tests", () => {
                 getCommonApi: () => ({
                     getSession: () => createISession(),
                 }),
+                getExplorerExtenderApi: () => {
+                    return {
+                        getProfilesCache: () => {
+                            return {
+                                getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
+                            };
+                        },
+                    };
+                },
             } as any);
         });
 
@@ -209,6 +218,7 @@ describe("ProfilesUtils unit tests", () => {
                     getPropsForProfile: () => ["tokenValue"],
                     loadNamedProfile: () => profile,
                     shouldRemoveTokenFromProfile: () => vi.fn(),
+                    getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
                 },
                 configurable: true,
             });
@@ -252,6 +262,7 @@ describe("ProfilesUtils unit tests", () => {
                     shouldRemoveTokenFromProfile: () => vi.fn(),
                     ssoLogin: ssoLoginSpy,
                     promptCredentials: promptCredentialsSpy,
+                    getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
                 },
                 configurable: true,
             });
@@ -296,6 +307,7 @@ describe("ProfilesUtils unit tests", () => {
                     getPropsForProfile: () => ["tokenValue"],
                     loadNamedProfile: () => profile,
                     shouldRemoveTokenFromProfile: () => vi.fn(),
+                    getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
                 },
                 configurable: true,
             });

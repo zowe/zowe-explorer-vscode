@@ -52,7 +52,6 @@ import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
 import { JobFSProvider } from "../../../src/trees/job/JobFSProvider";
 import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
 import { Constants } from "../../../src/configuration/Constants";
-import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { FilterDescriptor } from "../../../src/management/FilterManagement";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
@@ -64,6 +63,28 @@ vi.mock("fs");
 vi.mock("fs-extra");
 vi.mock("../../../src/tools/ZoweLogger");
 
+vi.mock("vscode", async (importOriginal) => {
+    const original: any = await importOriginal();
+    return {
+        ...original,
+        Disposable: vi.fn(),
+        workspace: {
+            ...original.workspace,
+            workspaceFolders: [
+                {
+                    uri: { fsPath: "projectPath/zowe.config.user.json", scheme: "file" },
+                    name: "zowe.config.user.json",
+                    index: 0,
+                },
+            ],
+        },
+        ConfigurationTarget: {
+            Global: 1,
+            Workspace: 2,
+            WorkspaceFolder: 3,
+        },
+    };
+});
 function createGlobalMocks(): { [key: string]: any } {
     const newMocks = {
         log: imperative.Logger.getAppLogger(),
@@ -73,7 +94,6 @@ function createGlobalMocks(): { [key: string]: any } {
         mockShowQuickPick: vi.fn(),
         mockShowInformationMessage: vi.fn(),
         mockShowErrorMessage: vi.fn(),
-        mockCreateInputBox: vi.fn(),
         mockLog: vi.fn(),
         mockDebug: vi.fn(),
         mockError: vi.fn(),
@@ -121,123 +141,57 @@ function createGlobalMocks(): { [key: string]: any } {
     vi.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
     vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
 
-    Object.defineProperty(vscode.window, "withProgress", {
-        value: vi.fn().mockImplementation((progLocation, callback) => {
-            const progress = {
-                report: vi.fn(),
-            };
-            const token = {
-                isCancellationRequested: false,
-                onCancellationRequested: vi.fn(),
-            };
-            return callback(progress, token);
-        }),
-        configurable: true,
+    vi.spyOn(vscode.window, "withProgress").mockImplementation((_progLocation, callback) => {
+        const progress = {
+            report: vi.fn(),
+        };
+        const token = {
+            isCancellationRequested: false,
+            onCancellationRequested: vi.fn(),
+        };
+        return callback(progress, token);
     });
 
-    Object.defineProperty(SettingsConfig, "getDirectValue", {
-        value: createGetConfigMock({
+    vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation(
+        createGetConfigMock({
             "zowe.ds.default.sort": Sorting.DatasetSortOpts.Name,
             "zowe.jobs.default.sort": Sorting.JobSortOpts.Id,
             [Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED]: false,
-        }),
-        configurable: true,
-    });
+        })
+    );
 
-    Object.defineProperty(vscode.window, "showInformationMessage", {
-        value: newMocks.mockShowInformationMessage,
-        configurable: true,
-    });
-    Object.defineProperty(vscode.window, "showInputBox", { value: newMocks.mockShowInputBox, configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: vi.fn(), configurable: true });
-    Object.defineProperty(vscode.window, "showErrorMessage", {
-        value: newMocks.mockShowErrorMessage,
-        configurable: true,
-    });
-    Object.defineProperty(Gui, "showQuickPick", { value: newMocks.mockShowQuickPick, configurable: true });
+    vi.spyOn(vscode.window, "showInformationMessage").mockImplementation(newMocks.mockShowInformationMessage);
+    vi.spyOn(vscode.window, "showInputBox").mockImplementation(newMocks.mockShowInputBox);
+    vi.spyOn(ZoweLogger, "trace");
+    vi.spyOn(vscode.window, "showErrorMessage").mockImplementation(newMocks.mockShowErrorMessage);
+    vi.spyOn(Gui, "showQuickPick").mockImplementation(newMocks.mockShowQuickPick);
 
-    Object.defineProperty(Gui, "createQuickPick", {
-        value: vi.fn(() => {
-            return newMocks.mockCreateQuickPick;
-        }),
-        configurable: true,
-    });
-    Object.defineProperty(vscode.window, "createInputBox", { value: newMocks.mockCreateInputBox, configurable: true });
-    Object.defineProperty(zosmf.ZosmfSession, "createSessCfgFromArgs", {
-        value: newMocks.mockCreateSessCfgFromArgs,
-        configurable: true,
-    });
-    Object.defineProperty(vscode.window, "createTreeView", {
-        value: vi.fn().mockReturnValue({ onDidCollapseElement: vi.fn() }),
-        configurable: true,
-    });
-    Object.defineProperty(vscode.workspace, "getConfiguration", {
-        value: newMocks.mockGetConfiguration,
-        configurable: true,
-    });
-    Object.defineProperty(vscode, "ConfigurationTarget", {
-        value: newMocks.mockConfigurationTarget,
-        configurable: true,
-    });
+    vi.spyOn(Gui, "createQuickPick").mockReturnValue(newMocks.mockCreateQuickPick);
+    vi.spyOn(zosmf.ZosmfSession, "createSessCfgFromArgs").mockImplementation(newMocks.mockCreateSessCfgFromArgs);
+    vi.spyOn(vscode.window, "createTreeView").mockReturnValue({ onDidCollapseElement: vi.fn() } as any);
+    vi.spyOn(vscode.workspace, "getConfiguration").mockImplementation(newMocks.mockGetConfiguration);
 
-    Object.defineProperty(ZoweLocalStorage, "globalState", {
-        value: {
-            get: vi.fn(() => ({ persistence: true })),
-            update: vi.fn(),
-            keys: vi.fn(),
-        },
-        configurable: true,
-    });
-
+    vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({ persistence: true });
+    vi.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
     newMocks.mockProfileInstance = new Profiles(newMocks.log);
-    Object.defineProperty(Profiles, "getInstance", {
-        value: () => newMocks.mockProfileInstance,
-        configurable: true,
-    });
-    Object.defineProperty(newMocks.mockProfileInstance, "allProfiles", {
-        value: [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }],
-        configurable: true,
-    });
-    Object.defineProperty(newMocks.mockProfileInstance, "getAllowedLoginMethod", {
-        value: vi.fn().mockReturnValue("prompt"),
-        configurable: true,
-    });
-    Object.defineProperty(newMocks.mockProfileInstance, "getProfileInfo", {
-        value: vi.fn(() => {
-            return createInstanceOfProfileInfo();
-        }),
-        configurable: true,
+    vi.spyOn(Profiles, "getInstance").mockReturnValue(newMocks.mockProfileInstance);
+    newMocks.mockProfileInstance.allProfiles = [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }] as any;
+    vi.spyOn(newMocks.mockProfileInstance, "getAllowedLoginMethod").mockReturnValue("prompt");
+    vi.spyOn(newMocks.mockProfileInstance, "getProfileInfo").mockImplementation(() => {
+        return createInstanceOfProfileInfo();
     });
 
-    Object.defineProperty(imperative, "Config", {
-        value: () => newMocks.mockConfigInstance,
-        configurable: true,
-    });
+    Object.defineProperty(imperative, "Config", { value: () => newMocks.mockConfigInstance, configurable: true });
     newMocks.mockConfigLoad = Object.defineProperty(imperative.Config, "load", {
         value: vi.fn(() => {
             return createConfigLoad();
         }),
         configurable: true,
     });
-    Object.defineProperty(vscode.workspace, "openTextDocument", {
-        value: () => {},
-        configurable: true,
-    });
-    Object.defineProperty(vscode.window, "showTextDocument", {
-        value: () => {},
-        configurable: true,
-    });
+    vi.spyOn(vscode.workspace, "openTextDocument").mockResolvedValue({} as any);
+    vi.spyOn(vscode.window, "showTextDocument").mockResolvedValue({} as any);
 
-    Object.defineProperty(ProfilesUtils, "usingTeamConfig", {
-        value: vi.fn(() => {
-            return true;
-        }),
-        configurable: true,
-    });
-    Object.defineProperty(ProfilesCache, "getProfileSessionWithVscProxy", {
-        value: (args: any) => args ?? newMocks.testSession,
-        configurable: true,
-    });
+    vi.spyOn(ProfilesCache, "getProfileSessionWithVscProxy").mockImplementation((args: any) => args ?? newMocks.testSession);
 
     newMocks.testUSSTree = createUSSTree(undefined as any, [createUSSNode(newMocks.testSession, newMocks.testProfile)], createTreeView());
 
@@ -583,14 +537,8 @@ describe("Profiles Unit Tests - Function createZoweSchema", () => {
         };
         newMocks.testDatasetSessionNode = createDatasetSessionNode(newMocks.session, globalMocks.mockProfileInstance);
         newMocks.testDatasetTree = createDatasetTree(newMocks.testDatasetSessionNode, newMocks.treeView);
-        Object.defineProperty(imperative.ConfigUtils, "getZoweDir", {
-            value: vi.fn().mockReturnValue("file://globalPath/.zowe"),
-            configurable: true,
-        });
-        Object.defineProperty(vscode.workspace, "workspaceFolders", {
-            get: () => [{ uri: { fsPath: "projectPath/zowe.config.user.json", scheme: "file" }, name: "zowe.config.user.json", index: 0 }],
-            configurable: true,
-        });
+        vi.spyOn(imperative.ConfigUtils, "getZoweDir").mockReturnValue("file://globalPath/.zowe");
+
         vi.spyOn(ZoweVsCodeExtension, "workspaceRoot", "get").mockReturnValue({
             uri: { fsPath: "projectPath/zowe.config.user.json" } as any,
             name: "zowe.config.user.json",
@@ -2860,7 +2808,6 @@ describe("Profiles unit tests - function showProfilesInactiveMsg", () => {
 
 describe("Profiles Unit Tests - Function getAllowedLoginMethod", () => {
     beforeEach(() => {
-        // todo fix Profiles test setup to not use Object.defineProperty
         vi.resetAllMocks();
         vi.clearAllMocks();
         vi.restoreAllMocks();
@@ -2873,7 +2820,26 @@ describe("Profiles Unit Tests - Function getAllowedLoginMethod", () => {
             failNotFound: false,
             type: "zosmf",
         });
-        // todo need to adjust imperative mocks
-        // expect(method).toBe(imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT);
+        expect(method).toBe(imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT);
+    });
+
+    it("should default to prompt if the profile has an invalid allowedLoginMethod", () => {
+        const method = Profiles.getInstance().getAllowedLoginMethod({
+            profile: { allowedLoginMethod: "verybad" },
+            message: "",
+            failNotFound: false,
+            type: "zosmf",
+        });
+        expect(method).toBe(imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT);
+    });
+    it("should return an explicitly configured method", () => {
+        const expectedMethod = imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM;
+        const method = Profiles.getInstance().getAllowedLoginMethod({
+            profile: { allowedLoginMethod: expectedMethod },
+            message: "",
+            failNotFound: false,
+            type: "zosmf",
+        });
+        expect(method).toBe(expectedMethod);
     });
 });
