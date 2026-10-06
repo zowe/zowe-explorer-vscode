@@ -206,7 +206,11 @@ export class AuthHandler {
 
         AuthHandler.setAuthCancelled(profileName, false);
 
-        if (params.isUsingTokenAuth || params.imperativeError.mDetails.additionalDetails?.includes("Token is not valid or expired.")) {
+        if (
+            imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC !== allowedLoginMethod &&
+            imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM !== allowedLoginMethod &&
+            (params.isUsingTokenAuth || params.imperativeError.mDetails.additionalDetails?.includes("Token is not valid or expired."))
+        ) {
             // Handle token-based authentication error through the given `ssoLogin` method.
             const message = "Log in to Authentication Service";
             const userResp = await Gui.showMessage(params.errorCorrelation?.message ?? params.imperativeError.message, {
