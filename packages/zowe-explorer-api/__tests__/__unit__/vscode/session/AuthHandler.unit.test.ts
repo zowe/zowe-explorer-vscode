@@ -12,7 +12,7 @@
 import { Mutex } from "async-mutex";
 import { AuthHandler, AuthCancelledError, Gui, ZoweVsCodeExtension, ProfilesCache } from "../../../../src";
 import { FileManagement } from "../../../../src/utils/FileManagement";
-import { ImperativeError, IProfileLoaded, Session, SessConstants, RestConstants, IProfile } from "@zowe/imperative";
+import { ImperativeError, IProfileLoaded, Session, SessConstants, RestConstants } from "@zowe/imperative";
 import { AuthPromptParams } from "../../../../src/vscode/session/AuthHandler";
 import * as vscode from "vscode";
 
@@ -20,20 +20,18 @@ const TEST_PROFILE_NAME = "lpar.zosmf";
 
 describe("AuthHandler", () => {
     beforeEach(() => {
-        vi.spyOn(ProfilesCache.prototype, "loadNamedProfile")
-            .mockImplementation((name, type, _optional) => {
-                return {
-                    message: "",
-                    type: type || "",
-                    failNotFound: false,
-                    profile: {
-                        name,
-                        allowedLoginMethod: undefined,
-                    }
-                }
-            });
-    }
-    )
+        vi.spyOn(ProfilesCache.prototype, "loadNamedProfile").mockImplementation((name, type, _optional) => {
+            return {
+                message: "",
+                type: type || "",
+                failNotFound: false,
+                profile: {
+                    name,
+                    allowedLoginMethod: undefined,
+                },
+            };
+        });
+    });
     describe("disableLocksForType", () => {
         it("removes the profile type from the list of profile types w/ locks enabled", () => {
             AuthHandler.disableLocksForType("zosmf");
