@@ -1520,6 +1520,7 @@
   "Localization is tied to the VS Code localization setting. If there are no localizations available for a string, it will fallback to English.": "Localization is tied to the VS Code localization setting. If there are no localizations available for a string, it will fallback to English.",
   "Localization of strings within Zowe Explorer webviews. <a>#2983</a>": "Localization of strings within Zowe Explorer webviews. <a>#2983</a>",
   "Locate in Tree": "Locate in Tree",
+  "Log in": "Log in",
   "Log in to Authentication Service": "Log in to Authentication Service",
   "Log in to obtain a new token value": "Log in to obtain a new token value",
   "Log out of Authentication Service": "Log out of Authentication Service",
@@ -1843,6 +1844,12 @@
       "Profile name"
     ]
   },
+  "Profile {0} is using cert-pem authentication. Choose a profile action./Profile name": {
+    "message": "Profile {0} is using cert-pem authentication. Choose a profile action.",
+    "comment": [
+      "Profile name"
+    ]
+  },
   "Profile {0} is using token authentication. Choose a profile action./Profile name": {
     "message": "Profile {0} is using token authentication. Choose a profile action.",
     "comment": [
@@ -1856,6 +1863,7 @@
     ]
   },
   "Profile: ": "Profile: ",
+  "Profile: {0}": "Profile: {0}",
   "Progress is shown in the status bar.": "Progress is shown in the status bar.",
   "Project": "Project",
   "Project: in the current working directory": "Project: in the current working directory",
@@ -1980,6 +1988,7 @@
   "SCLM": "SCLM",
   "SSH Key": "SSH Key",
   "SSH profile missing connection details. Please update.": "SSH profile missing connection details. Please update.",
+  "Save": "Save",
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
   "Saving USS file...": "Saving USS file...",
@@ -2156,7 +2165,6 @@
   },
   "Status": "Status",
   "Streamlined attribute viewing options into one feature - \"Show Attributes\".": "Streamlined attribute viewing options into one feature - \"Show Attributes\".",
-  "Submit": "Submit",
   "Submit this query": "Submit this query",
   "Submitting as JCL in document {0}/Document file name": {
     "message": "Submitting as JCL in document {0}",
@@ -2321,8 +2329,8 @@
   },
   "Unable to gather more information": "Unable to gather more information",
   "Unable to list attributes.": "Unable to list attributes.",
-  "Unable to log in with {0}. {1}/Service profile nameError message": {
-    "message": "Unable to log in with {0}. {1}",
+  "Unable to log in with {0}. {1} /Service profile nameError message": {
+    "message": "Unable to log in with {0}. {1} ",
     "comment": [
       "Service profile name",
       "Error message"
