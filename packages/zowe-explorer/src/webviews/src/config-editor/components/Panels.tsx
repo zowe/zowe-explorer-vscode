@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { VscodeToolbarButton } from "@vscode-elements/react-elements";
 import { Footer } from "./Footer";
 import * as l10n from "@vscode/l10n";
 import { useConfigContext } from "../context/ConfigContext";
 import { SortDropdown } from "./SortDropdown";
 import { useElementWidth } from "../hooks/useElementWidth";
+import { useAnchoredDropdown } from "../hooks/useAnchoredDropdown";
 
 const PROFILE_SORT_OPTIONS = ["natural", "alphabetical", "reverse-alphabetical", "type", "defaults"] as const;
 type ProfileSortOrder = (typeof PROFILE_SORT_OPTIONS)[number];
@@ -29,22 +30,10 @@ export function ProfilesOverflowMenu({
   getSortDisplayName,
 }: ProfilesOverflowMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  const { triggerRef, menuRef, menuStyle } = useAnchoredDropdown(isOpen, () => setIsOpen(false));
 
   return (
-    <div className="sort-dropdown" ref={dropdownRef}>
+    <div className="sort-dropdown" ref={triggerRef}>
       <VscodeToolbarButton
         className="sort-dropdown-trigger"
         onClick={() => setIsOpen(!isOpen)}
@@ -55,7 +44,13 @@ export function ProfilesOverflowMenu({
         <span className="codicon codicon-more"></span>
       </VscodeToolbarButton>
       {isOpen && (
-        <div className="sort-dropdown-list align-left" role="menu" style={{ minWidth: "180px" }}>
+        <div
+          className="sort-dropdown-list"
+          role="menu"
+          ref={menuRef}
+          style={{ minWidth: "180px", ...menuStyle }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           <div
             className="sort-dropdown-item"
             role="menuitem"
@@ -79,9 +74,7 @@ export function ProfilesOverflowMenu({
           >
             <span className={`codicon ${viewMode === "tree" ? "codicon-list-flat" : "codicon-list-tree"} sort-dropdown-item-icon`}></span>
             <div className="sort-dropdown-item-content">
-              <div className="sort-dropdown-item-label">
-                {viewMode === "tree" ? l10n.t("Switch to flat view") : l10n.t("Switch to tree view")}
-              </div>
+              <div className="sort-dropdown-item-label">{viewMode === "tree" ? l10n.t("Switch to flat view") : l10n.t("Switch to tree view")}</div>
             </div>
           </div>
           <div className="header-overflow-divider" style={{ height: "1px", backgroundColor: "var(--vscode-dropdown-border)", margin: "4px 0" }}></div>
@@ -174,17 +167,13 @@ export function Panels({
           <div className="panel-content">
             <div className="config-section profiles-section">
               <div className="section-card profiles-card">
-                <div
-                  className="profile-heading-container"
-                  data-tutorial-id="profiles-heading"
-                  ref={selectedTab === index ? headingRef : undefined}
-                >
+                <div className="profile-heading-container" data-tutorial-id="profiles-heading" ref={selectedTab === index ? headingRef : undefined}>
                   <button className="profiles-toggle-button" onClick={toggleProfilesCollapse}>
                     <span className={`codicon ${profilesCollapsed ? "codicon-chevron-right" : "codicon-chevron-down"}`}></span>
                     <h2>{l10n.t("Profiles")}</h2>
                   </button>
-                  {!profilesCollapsed && (
-                    isNarrow ? (
+                  {!profilesCollapsed &&
+                    (isNarrow ? (
                       <ProfilesOverflowMenu
                         onProfileWizard={onProfileWizard}
                         onViewModeToggle={onViewModeToggle}
@@ -215,8 +204,7 @@ export function Panels({
                           <span className="codicon codicon-add"></span>
                         </VscodeToolbarButton>
                       </div>
-                    )
-                  )}
+                    ))}
                 </div>
                 {selectedTab === index && !profilesCollapsed && (
                   <div className="profile-list-container" data-tutorial-id="profiles-list">
@@ -240,11 +228,7 @@ export function Panels({
             </div>
             <div className="resize-divider" id={`resize-divider-${index}`}></div>
             <div className="config-section profile-details-section section-card" data-tutorial-id="profile-details-panel">
-              {selectedTab === index && (
-                <div className="profile-details-content">
-                  {renderProfileDetails()}
-                </div>
-              )}
+              {selectedTab === index && <div className="profile-details-content">{renderProfileDetails()}</div>}
             </div>
           </div>
           {selectedTab === index && (

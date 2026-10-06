@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import * as l10n from "@vscode/l10n";
 import { VscodeToolbarButton } from "@vscode-elements/react-elements";
+import { useAnchoredDropdown } from "../hooks/useAnchoredDropdown";
 
 interface SortDropdownProps<T extends string = string> {
   options: T[];
@@ -25,35 +26,7 @@ export function SortDropdown<T extends string = string>({
   getIcon,
 }: SortDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
-  const [alignLeft, setAlignLeft] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isOpen && listRef.current && dropdownRef.current) {
-      const listRect = listRef.current.getBoundingClientRect();
-      const triggerRect = dropdownRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-
-      // Check if dropdown would overflow on the right
-      const wouldOverflow = triggerRect.left + listRect.width > viewportWidth;
-
-      setAlignLeft(wouldOverflow);
-    }
-  }, [isOpen]);
+  const { triggerRef, menuRef, menuStyle } = useAnchoredDropdown(isOpen, () => setIsOpen(false));
 
   const handleOptionClick = (option: T) => {
     onOptionChange(option);
@@ -61,7 +34,7 @@ export function SortDropdown<T extends string = string>({
   };
 
   return (
-    <div className={`sort-dropdown ${className}`} ref={dropdownRef}>
+    <div className={`sort-dropdown ${className}`} ref={triggerRef}>
       <VscodeToolbarButton
         className="sort-dropdown-trigger"
         onClick={() => setIsOpen(!isOpen)}
@@ -79,9 +52,11 @@ export function SortDropdown<T extends string = string>({
       </VscodeToolbarButton>
       {isOpen && (
         <div
-          className={`sort-dropdown-list ${alignLeft ? "align-left" : ""} ${getDescription ? "sort-dropdown-list--described" : ""}`}
+          className={`sort-dropdown-list ${getDescription ? "sort-dropdown-list--described" : ""}`}
           role="listbox"
-          ref={listRef}
+          ref={menuRef}
+          style={menuStyle}
+          onMouseDown={(e) => e.stopPropagation()}
         >
           {options.map((option) => {
             const description = getDescription?.(option);
@@ -93,6 +68,13 @@ export function SortDropdown<T extends string = string>({
                 onClick={() => handleOptionClick(option)}
                 role="option"
                 aria-selected={option === selectedOption}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleOptionClick(option);
+                  }
+                }}
               >
                 {optIcon && <span className={`codicon ${optIcon} sort-dropdown-item-icon`}></span>}
                 <div className="sort-dropdown-item-content">

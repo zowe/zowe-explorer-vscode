@@ -265,7 +265,13 @@ function AppContent() {
 
   useEffect(() => {
     const isModalOpen =
-      newProfileModalOpen || saveModalOpen || newLayerModalOpen || wizardModalOpen || renameProfileModalOpen || configParseErrors.length > 0 || addConfigModalOpen;
+      newProfileModalOpen ||
+      saveModalOpen ||
+      newLayerModalOpen ||
+      wizardModalOpen ||
+      renameProfileModalOpen ||
+      configParseErrors.length > 0 ||
+      addConfigModalOpen;
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [newProfileModalOpen, saveModalOpen, newLayerModalOpen, wizardModalOpen, renameProfileModalOpen, configParseErrors.length, addConfigModalOpen]);
 
@@ -491,6 +497,7 @@ function AppContent() {
 
   return (
     <div className="app-container" data-testid="config-editor-app" data-config-count={configurations.length} data-selected-tab={selectedTab}>
+      {/* Responsive tab bar: collapses tabs into a tab selector dropdown and toolbar actions into a kebab menu in narrow view */}
       <Tabs
         onTabChange={handleTabChange}
         onOpenFile={handleOpenConfigFile}

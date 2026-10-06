@@ -24,6 +24,7 @@ import { SecureArrayProperty } from "./SecureArrayProperty";
 import { MergedPropertyRow } from "./MergedPropertyRow";
 import { EditablePropertyRow } from "./EditablePropertyRow";
 import { useElementWidth } from "../../hooks/useElementWidth";
+import { useAnchoredDropdown } from "../../hooks/useAnchoredDropdown";
 
 interface PropertiesOverflowMenuProps {
   currentPath: string[];
@@ -45,22 +46,10 @@ export function PropertiesOverflowMenu({
   hasMergedProperties,
 }: PropertiesOverflowMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  const { triggerRef, menuRef, menuStyle } = useAnchoredDropdown(isOpen, () => setIsOpen(false));
 
   return (
-    <div className="sort-dropdown" ref={dropdownRef}>
+    <div className="sort-dropdown" ref={triggerRef}>
       <VscodeToolbarButton
         className="sort-dropdown-trigger"
         onClick={() => setIsOpen(!isOpen)}
@@ -71,7 +60,13 @@ export function PropertiesOverflowMenu({
         <span className="codicon codicon-more"></span>
       </VscodeToolbarButton>
       {isOpen && (
-        <div className="sort-dropdown-list align-left" role="menu" style={{ minWidth: "190px" }}>
+        <div
+          className="sort-dropdown-list"
+          role="menu"
+          ref={menuRef}
+          style={{ minWidth: "190px", ...menuStyle }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           <div
             className="sort-dropdown-item"
             role="menuitem"
@@ -87,7 +82,10 @@ export function PropertiesOverflowMenu({
           </div>
           {hasMergedProperties && onShowMergedPropertiesChange && (
             <>
-              <div className="header-overflow-divider" style={{ height: "1px", backgroundColor: "var(--vscode-dropdown-border)", margin: "4px 0" }}></div>
+              <div
+                className="header-overflow-divider"
+                style={{ height: "1px", backgroundColor: "var(--vscode-dropdown-border)", margin: "4px 0" }}
+              ></div>
               <div style={{ padding: "4px 10px", fontSize: "11px", fontWeight: "bold", color: "var(--vscode-descriptionForeground)", opacity: 0.8 }}>
                 {l10n.t("Merged Properties")}
               </div>

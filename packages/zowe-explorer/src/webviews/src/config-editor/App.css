@@ -232,8 +232,6 @@ div:has(> .vscode-panel) {
 .tabs {
     display: flex;
     background-color: var(--vscode-editor-background);
-    overflow-x: auto;
-    overflow-y: hidden;
     height: 35px;
     position: relative;
     flex-shrink: 0;
@@ -382,10 +380,6 @@ div:has(> .vscode-panel) {
     align-self: stretch;
 }
 
-.config-section.profiles-section:has(.sort-dropdown-container) {
-    overflow: visible !important;
-}
-
 .config-section.profile-details-section {
     flex: 1;
     min-width: 200px;
@@ -418,21 +412,6 @@ div:has(> .vscode-panel) {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-}
-
-.config-section.profile-details-section .sort-dropdown-container {
-    overflow: visible !important;
-    position: relative;
-    z-index: 5;
-}
-
-.config-section.profile-details-section:has(.sort-dropdown-container) {
-    overflow: visible !important;
-}
-
-.config-section.profile-details-section .sort-dropdown-list {
-    position: absolute !important;
-    z-index: 5 !important;
 }
 
 .config-section.defaults-section {
@@ -1053,13 +1032,122 @@ ul {
 .tabs-row-flex {
     display: flex;
     flex: 1;
+    min-width: 0;
+    align-items: stretch;
+    height: 100%;
+}
+
+.tabs-list-scrollable {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    align-items: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+}
+
+.tabs-list-scrollable::-webkit-scrollbar {
+    display: none;
+}
+
+.tabs-collapsed-container {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+    min-width: 0;
+    flex: 1;
+}
+
+.tab-dropdown-container {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+    min-width: 0;
+}
+
+.tab.tab-dropdown-trigger {
+    min-width: 120px;
+    max-width: 280px;
+    padding: 0 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    flex-shrink: 1;
+}
+
+.tab.tab-dropdown-trigger .tab-label-text {
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+}
+
+.tab.tab-dropdown-trigger:hover {
+    background-color: var(--vscode-tab-hoverBackground, var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.1)));
+}
+
+.tab.tab-dropdown-trigger.active:hover {
+    background-color: var(--vscode-editor-background);
+}
+
+.tab-dropdown-trigger-chevron {
+    font-size: 11px;
+    margin-left: 6px;
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+.tab-dropdown-list {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    box-sizing: border-box;
+}
+
+.tab-dropdown-list .tab-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.tab-dropdown-list .tab-dropdown-item .sort-dropdown-item-description {
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 240px;
+}
+
+.tabs-overflow-dropdown {
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+}
+
+.tabs-kebab-menu {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.tabs-kebab-menu .sort-dropdown-item {
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .tab-label-row {
     display: flex;
     align-items: center;
     gap: 6px;
+    min-width: 0;
 }
 
 .tab-label-text {
@@ -1085,6 +1173,9 @@ ul {
     align-items: center;
     gap: 4px;
     padding-right: 12px;
+    flex-shrink: 0;
+    margin-left: auto;
+    height: 100%;
 }
 
 /* Divides the config-scoped actions (open, export) from the help actions. */

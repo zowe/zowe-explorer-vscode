@@ -12,19 +12,20 @@
 import { useState, useEffect, useRef } from "react";
 
 export function useElementWidth<T extends HTMLElement = HTMLDivElement>() {
-  const ref = useRef<T>(null);
-  const [width, setWidth] = useState<number>(0);
+    const ref = useRef<T>(null);
+    const [width, setWidth] = useState<number>(0);
 
-  useEffect(() => {
-    if (!ref.current) return;
-    const observer = new ResizeObserver((entries) => {
-      if (entries[0]) {
-        setWidth(entries[0].contentRect.width);
-      }
-    });
-    observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
+    useEffect(() => {
+        if (!ref.current) return;
+        setWidth(ref.current.getBoundingClientRect().width);
+        const observer = new ResizeObserver((entries) => {
+            if (entries[0]) {
+                setWidth(entries[0].contentRect.width);
+            }
+        });
+        observer.observe(ref.current);
+        return () => observer.disconnect();
+    }, []);
 
-  return [ref, width] as const;
+    return [ref, width] as const;
 }
