@@ -4,6 +4,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
+- Added SSH host key verification when issuing UNIX commands so the identity of a z/OS SSH server is confirmed before credentials are sent. [#4529](https://github.com/zowe/zowe-explorer-vscode/pull/4529)
+
 ### New features and enhancements
 
 - Added support for the `allowedLoginMethod` property. This property can be used to restrict authentication methods down to one allowed. If a profile has no value for `allowedLoginMethod`, or if the value is `"prompt"`, there is no change in behavior compared to previous Zowe Explorer versions. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
