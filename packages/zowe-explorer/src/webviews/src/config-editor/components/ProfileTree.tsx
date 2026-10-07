@@ -1,7 +1,9 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import * as l10n from "@vscode/l10n";
 import { getOriginalProfileKeyWithNested, mergePendingChangesForProfile, isPropertySecure } from "../utils/profileUtils";
+import { flattenProfiles } from "../utils/configUtils";
 import { useConfigContext } from "../context/ConfigContext";
+import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 import { useIsLightTheme } from "../hooks/useIsLightTheme";
 import { useScrollToSelected } from "../hooks/useScrollToSelected";
 import { ProfileTypeBadge } from "./ProfileTypeBadge";
@@ -184,7 +186,9 @@ export function ProfileTree({
     renames: ctxRenames,
     setDeletions,
     setPendingDefaults: ctxSetPendingDefaults,
+    setRenameProfileModalOpen,
   } = useConfigContext();
+  const { isProfileAffectedByDragDrop } = useUtilityHelpers();
 
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; profileKey: string | null } | null>(null);
 
@@ -198,7 +202,9 @@ export function ProfileTree({
     }
     const configPath = config.configPath;
     const profilesObj = config.properties?.profiles || {};
-    const relatedProfileKeys = profileKeys.filter((k) => k === profileKey || k.startsWith(profileKey + "."));
+    const flatProfiles = flattenProfiles(profilesObj);
+    const allConfigProfileKeys = Array.from(new Set([...profileKeys, ...Object.keys(flatProfiles), ...Object.keys(pendingProfiles)]));
+    const relatedProfileKeys = allConfigProfileKeys.filter((k) => k === profileKey || k.startsWith(profileKey + "."));
     const getProfileJsonPath = (pk: string): string[] => {
       const parts = pk.split(".");
       const pathArr: string[] = ["profiles"];
@@ -213,15 +219,15 @@ export function ProfileTree({
     const profilesData: { [k: string]: any } = {};
     for (const pKey of relatedProfileKeys) {
       const pType = getProfileType(pKey);
-      const baseProperties = profilesObj[pKey]?.properties || {};
+      const oldProfilePath = getProfileJsonPath(pKey);
+      const baseProperties = (flatProfiles[pKey]?.properties as Record<string, unknown>) || {};
       const mergedProperties = mergePendingChangesForProfile({
         baseObj: baseProperties,
-        path: ["profiles", ...pKey.split("."), "properties"],
+        path: [...oldProfilePath, "properties"],
         configPath,
         pendingChanges,
         renames: currentRenames || {},
       });
-      const oldProfilePath = getProfileJsonPath(pKey);
       const secureArray: string[] = [];
       Object.keys(mergedProperties).forEach((propKey) => {
         const isSecure = isPropertySecure({
@@ -238,7 +244,7 @@ export function ProfileTree({
         }
       });
       const customFields: Record<string, any> = {};
-      const baseProfile = profilesObj[pKey] || {};
+      const baseProfile = (flatProfiles[pKey] as Record<string, unknown>) || {};
       Object.keys(baseProfile).forEach((bk) => {
         if (bk !== "properties" && bk !== "profiles" && bk !== "type" && bk !== "secure") {
           customFields[bk] = baseProfile[bk];
@@ -270,7 +276,9 @@ export function ProfileTree({
     }
     const configPath = config.configPath;
     const profilesObj = config.properties?.profiles || {};
-    const relatedProfileKeys = profileKeys.filter((k) => k === profileKey || k.startsWith(profileKey + "."));
+    const flatProfiles = flattenProfiles(profilesObj);
+    const allConfigProfileKeys = Array.from(new Set([...profileKeys, ...Object.keys(flatProfiles), ...Object.keys(pendingProfiles)]));
+    const relatedProfileKeys = allConfigProfileKeys.filter((k) => k === profileKey || k.startsWith(profileKey + "."));
     const getProfileJsonPath = (pk: string): string[] => {
       const parts = pk.split(".");
       const pathArr: string[] = ["profiles"];
@@ -285,15 +293,15 @@ export function ProfileTree({
     const profilesData: { [k: string]: any } = {};
     for (const pKey of relatedProfileKeys) {
       const pType = getProfileType(pKey);
-      const baseProperties = profilesObj[pKey]?.properties || {};
+      const oldProfilePath = getProfileJsonPath(pKey);
+      const baseProperties = (flatProfiles[pKey]?.properties as Record<string, unknown>) || {};
       const mergedProperties = mergePendingChangesForProfile({
         baseObj: baseProperties,
-        path: ["profiles", ...pKey.split("."), "properties"],
+        path: [...oldProfilePath, "properties"],
         configPath,
         pendingChanges,
         renames: currentRenames || {},
       });
-      const oldProfilePath = getProfileJsonPath(pKey);
       const secureArray: string[] = [];
       Object.keys(mergedProperties).forEach((propKey) => {
         const isSecure = isPropertySecure({
@@ -310,7 +318,7 @@ export function ProfileTree({
         }
       });
       const customFields: Record<string, any> = {};
-      const baseProfile = profilesObj[pKey] || {};
+      const baseProfile = (flatProfiles[pKey] as Record<string, unknown>) || {};
       Object.keys(baseProfile).forEach((bk) => {
         if (bk !== "properties" && bk !== "profiles" && bk !== "type" && bk !== "secure") {
           customFields[bk] = baseProfile[bk];
@@ -535,7 +543,11 @@ export function ProfileTree({
             const profilesToCheck = [profileClipboard.sourceKey];
 
             Object.entries(updatedDefaults).forEach(([profileType, defaultEntry]) => {
-              if (defaultEntry && (profilesToCheck.includes((defaultEntry as any).value) || profilesToCheck.some((p) => (defaultEntry as any).value.startsWith(p + ".")))) {
+              if (
+                defaultEntry &&
+                (profilesToCheck.includes((defaultEntry as any).value) ||
+                  profilesToCheck.some((p) => (defaultEntry as any).value.startsWith(p + ".")))
+              ) {
                 updatedDefaults[profileType] = { value: "", path: [profileType] };
                 hasChanges = true;
               }
@@ -1098,7 +1110,7 @@ export function ProfileTree({
             e.stopPropagation();
             onProfileSelect(node.key);
             const menuWidth = 150;
-            const menuHeight = 160;
+            const menuHeight = 240;
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
             let x = e.clientX;
@@ -1297,6 +1309,13 @@ export function ProfileTree({
       className="profile-tree profile-tree-scroll"
       data-testid="profile-tree"
       data-profile-count={profileKeys.length}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        flex: 1,
+        minHeight: "100%",
+        width: "100%",
+      }}
       onContextMenu={(e) => {
         e.preventDefault();
         const menuWidth = 150;
@@ -1316,6 +1335,18 @@ export function ProfileTree({
     >
       {draggedProfile && !isDraggingRootProfile && renderRootDropZone()}
       {treeNodes.map((node) => renderNode(node))}
+      <div
+        className="profile-tree-empty-space"
+        data-testid="profile-tree-empty-space"
+        data-profile-key="ROOT"
+        style={{
+          flex: 1,
+          minHeight: "120px",
+          width: "100%",
+          cursor: "default",
+        }}
+        onClick={() => onProfileSelect("")}
+      />
       {contextMenu && (
         <div className="tab-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }} onClick={(e) => e.stopPropagation()}>
           {contextMenu.profileKey !== null ? (
@@ -1337,21 +1368,40 @@ export function ProfileTree({
                   setContextMenu(null);
                 }}
               >
-                <span className="codicon codicon-copy codicon-tab-menu-icon"></span>
+                <span className="codicon codicon-screen-cut codicon-tab-menu-icon"></span>
                 <span>{l10n.t("Cut")}</span>
               </div>
-              <div
-                className={`tab-context-menu-item ${!profileClipboard ? "disabled" : ""}`}
-                onClick={() => {
-                  if (profileClipboard) {
-                    pasteProfile(contextMenu.profileKey);
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <span className="codicon codicon-clippy codicon-tab-menu-icon"></span>
-                <span>{l10n.t("Paste")}</span>
-              </div>
+              {profileClipboard ? (
+                <>
+                  <div
+                    className="tab-context-menu-item"
+                    id="context-menu-paste-child-profile"
+                    onClick={() => {
+                      pasteProfile(contextMenu.profileKey);
+                      setContextMenu(null);
+                    }}
+                  >
+                    <span className="codicon codicon-clippy codicon-tab-menu-icon"></span>
+                    <span>{l10n.t("Paste as Child")}</span>
+                  </div>
+                  <div
+                    className="tab-context-menu-item"
+                    id="context-menu-paste-root-profile"
+                    onClick={() => {
+                      pasteProfile(null);
+                      setContextMenu(null);
+                    }}
+                  >
+                    <span className="codicon codicon-clippy codicon-tab-menu-icon"></span>
+                    <span>{l10n.t("Paste at Root Level")}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="tab-context-menu-item disabled" id="context-menu-paste-profile">
+                  <span className="codicon codicon-clippy codicon-tab-menu-icon"></span>
+                  <span>{l10n.t("Paste")}</span>
+                </div>
+              )}
               <div
                 className="tab-context-menu-item"
                 onClick={() => {
@@ -1361,6 +1411,27 @@ export function ProfileTree({
               >
                 <span className="codicon codicon-files codicon-tab-menu-icon"></span>
                 <span>{l10n.t("Duplicate")}</span>
+              </div>
+              <div
+                className={`tab-context-menu-item ${isProfileAffectedByDragDrop(contextMenu.profileKey) ? "disabled" : ""}`}
+                id="context-menu-rename-profile"
+                title={
+                  isProfileAffectedByDragDrop(contextMenu.profileKey)
+                    ? l10n.t(
+                        "Cannot rename: This profile or a related profile has been moved via drag-and-drop. Save and refresh to enable renaming."
+                      )
+                    : undefined
+                }
+                onClick={() => {
+                  if (!isProfileAffectedByDragDrop(contextMenu.profileKey!)) {
+                    onProfileSelect(contextMenu.profileKey!);
+                    setRenameProfileModalOpen(true);
+                    setContextMenu(null);
+                  }
+                }}
+              >
+                <span className="codicon codicon-edit codicon-tab-menu-icon"></span>
+                <span>{l10n.t("Rename")}</span>
               </div>
               {onDeleteProfile && (
                 <div
@@ -1378,6 +1449,7 @@ export function ProfileTree({
           ) : (
             <div
               className={`tab-context-menu-item ${!profileClipboard ? "disabled" : ""}`}
+              id="context-menu-paste-root"
               onClick={() => {
                 if (profileClipboard) {
                   pasteProfile(null);

@@ -2024,6 +2024,7 @@
   "Removed duplicate context menu items displayed in USS view that now exist within the Manage Profile option.<a>#2547</a>": "Removed duplicate context menu items displayed in USS view that now exist within the Manage Profile option.<a>#2547</a>",
   "Removed excess pop-ups when listing/opening USS files, and replaced required pop-ups with status bar items to improve UX. <a>#2091</a>": "Removed excess pop-ups when listing/opening USS files, and replaced required pop-ups with status bar items to improve UX. <a>#2091</a>",
   "Removed extra files from the VSIX bundle to reduce download size by 64%. <a>#2042</a>": "Removed extra files from the VSIX bundle to reduce download size by 64%. <a>#2042</a>",
+  "Rename": "Rename",
   "Rename Operation cancelled.": "Rename Operation cancelled.",
   "Rename profile": "Rename profile",
   "Renamed \"Zowe Explorer z/OS Console\" to \"z/OS Console\". <a>#3445</a>": "Renamed \"Zowe Explorer z/OS Console\" to \"z/OS Console\". <a>#3445</a>",
@@ -2119,6 +2120,7 @@
   "Select Authentication Order": "Select Authentication Order",
   "Select Certificate": "Select Certificate",
   "Select Certificate Key": "Select Certificate Key",
+  "Select Configuration": "Select Configuration",
   "Select Download Location": "Select Download Location",
   "Select Export Folder": "Select Export Folder",
   "Select a TSO command to run against {0} (An option to edit will follow)/Host name": {

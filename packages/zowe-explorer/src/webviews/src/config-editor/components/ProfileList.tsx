@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import * as l10n from "@vscode/l10n";
 import { getOriginalProfileKeyWithNested, mergePendingChangesForProfile, isPropertySecure } from "../utils/profileUtils";
+import { flattenProfiles } from "../utils/configUtils";
 import { useConfigContext } from "../context/ConfigContext";
+import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 import { ProfileSearchFilter } from "./ProfileSearchFilter";
 import { ProfileTree } from "./ProfileTree";
 import { useIsLightTheme } from "../hooks/useIsLightTheme";
@@ -101,7 +103,9 @@ export function ProfileList({
     renames: ctxRenames,
     setDeletions,
     setPendingDefaults: ctxSetPendingDefaults,
+    setRenameProfileModalOpen,
   } = useConfigContext();
+  const { isProfileAffectedByDragDrop } = useUtilityHelpers();
 
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; profileKey: string | null } | null>(null);
 
@@ -115,7 +119,9 @@ export function ProfileList({
     }
     const configPath = config.configPath;
     const profilesObj = config.properties?.profiles || {};
-    const relatedProfileKeys = sortedProfileKeys.filter((k) => k === profileKey || k.startsWith(profileKey + "."));
+    const flatProfiles = flattenProfiles(profilesObj);
+    const allConfigProfileKeys = Array.from(new Set([...sortedProfileKeys, ...Object.keys(flatProfiles), ...Object.keys(pendingProfiles)]));
+    const relatedProfileKeys = allConfigProfileKeys.filter((k) => k === profileKey || k.startsWith(profileKey + "."));
     const getProfileJsonPath = (pk: string): string[] => {
       const parts = pk.split(".");
       const pathArr: string[] = ["profiles"];
@@ -130,15 +136,15 @@ export function ProfileList({
     const profilesData: { [k: string]: any } = {};
     for (const pKey of relatedProfileKeys) {
       const pType = getProfileType(pKey);
-      const baseProperties = profilesObj[pKey]?.properties || {};
+      const oldProfilePath = getProfileJsonPath(pKey);
+      const baseProperties = (flatProfiles[pKey]?.properties as Record<string, unknown>) || {};
       const mergedProperties = mergePendingChangesForProfile({
         baseObj: baseProperties,
-        path: ["profiles", ...pKey.split("."), "properties"],
+        path: [...oldProfilePath, "properties"],
         configPath,
         pendingChanges,
         renames: currentRenames || {},
       });
-      const oldProfilePath = getProfileJsonPath(pKey);
       const secureArray: string[] = [];
       Object.keys(mergedProperties).forEach((propKey) => {
         const isSecure = isPropertySecure({
@@ -155,7 +161,7 @@ export function ProfileList({
         }
       });
       const customFields: Record<string, any> = {};
-      const baseProfile = profilesObj[pKey] || {};
+      const baseProfile = (flatProfiles[pKey] as Record<string, unknown>) || {};
       Object.keys(baseProfile).forEach((bk) => {
         if (bk !== "properties" && bk !== "profiles" && bk !== "type" && bk !== "secure") {
           customFields[bk] = baseProfile[bk];
@@ -187,7 +193,9 @@ export function ProfileList({
     }
     const configPath = config.configPath;
     const profilesObj = config.properties?.profiles || {};
-    const relatedProfileKeys = sortedProfileKeys.filter((k) => k === profileKey || k.startsWith(profileKey + "."));
+    const flatProfiles = flattenProfiles(profilesObj);
+    const allConfigProfileKeys = Array.from(new Set([...sortedProfileKeys, ...Object.keys(flatProfiles), ...Object.keys(pendingProfiles)]));
+    const relatedProfileKeys = allConfigProfileKeys.filter((k) => k === profileKey || k.startsWith(profileKey + "."));
     const getProfileJsonPath = (pk: string): string[] => {
       const parts = pk.split(".");
       const pathArr: string[] = ["profiles"];
@@ -202,15 +210,15 @@ export function ProfileList({
     const profilesData: { [k: string]: any } = {};
     for (const pKey of relatedProfileKeys) {
       const pType = getProfileType(pKey);
-      const baseProperties = profilesObj[pKey]?.properties || {};
+      const oldProfilePath = getProfileJsonPath(pKey);
+      const baseProperties = (flatProfiles[pKey]?.properties as Record<string, unknown>) || {};
       const mergedProperties = mergePendingChangesForProfile({
         baseObj: baseProperties,
-        path: ["profiles", ...pKey.split("."), "properties"],
+        path: [...oldProfilePath, "properties"],
         configPath,
         pendingChanges,
         renames: currentRenames || {},
       });
-      const oldProfilePath = getProfileJsonPath(pKey);
       const secureArray: string[] = [];
       Object.keys(mergedProperties).forEach((propKey) => {
         const isSecure = isPropertySecure({
@@ -227,7 +235,7 @@ export function ProfileList({
         }
       });
       const customFields: Record<string, any> = {};
-      const baseProfile = profilesObj[pKey] || {};
+      const baseProfile = (flatProfiles[pKey] as Record<string, unknown>) || {};
       Object.keys(baseProfile).forEach((bk) => {
         if (bk !== "properties" && bk !== "profiles" && bk !== "type" && bk !== "secure") {
           customFields[bk] = baseProfile[bk];
@@ -452,7 +460,11 @@ export function ProfileList({
             const profilesToCheck = [profileClipboard.sourceKey];
 
             Object.entries(updatedDefaults).forEach(([profileType, defaultEntry]) => {
-              if (defaultEntry && (profilesToCheck.includes((defaultEntry as any).value) || profilesToCheck.some((p) => (defaultEntry as any).value.startsWith(p + ".")))) {
+              if (
+                defaultEntry &&
+                (profilesToCheck.includes((defaultEntry as any).value) ||
+                  profilesToCheck.some((p) => (defaultEntry as any).value.startsWith(p + ".")))
+              ) {
                 updatedDefaults[profileType] = { value: "", path: [profileType] };
                 hasChanges = true;
               }
@@ -779,7 +791,14 @@ export function ProfileList({
       </div>
       <div
         ref={scrollContainerRef}
-        style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          padding: "0 4px",
+        }}
         onContextMenu={(e) => {
           e.preventDefault();
           const menuWidth = 150;
@@ -822,134 +841,147 @@ export function ProfileList({
             filterType={filterType}
           />
         ) : (
-          filteredProfileKeys.map((profileKey) => {
-            const rowHasPendingEdits =
-              Boolean(pendingProfiles[profileKey]) ||
-              hasPendingSecureChanges(profileKey) ||
-              hasPendingRename(profileKey) ||
-              hasPendingDefaultChange(profileKey);
-            const isCut = !!(
-              profileClipboard &&
-              profileClipboard.type === "cut" &&
-              (profileKey === profileClipboard.sourceKey || profileKey.startsWith(profileClipboard.sourceKey + "."))
-            );
-            return (
-              <div
-                key={profileKey}
-                className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""} ${isCut ? "is-cut" : ""}`}
-                style={{
-                  cursor: "pointer",
-                  margin: "2px 0",
-                  padding: "6px 8px",
-                  borderRadius: "4px",
-                  border: selectedProfileKey === profileKey ? "2px solid var(--vscode-button-background)" : "2px solid transparent",
-                  backgroundColor: "var(--vscode-input-background)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "0.9em",
-                  minHeight: "28px",
-                  opacity: isCut ? 0.5 : 1,
-                  transition: "opacity 0.2s ease",
-                }}
-                tabIndex={0}
-                role="option"
-                aria-selected={selectedProfileKey === profileKey}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
+          <>
+            {filteredProfileKeys.map((profileKey) => {
+              const rowHasPendingEdits =
+                Boolean(pendingProfiles[profileKey]) ||
+                hasPendingSecureChanges(profileKey) ||
+                hasPendingRename(profileKey) ||
+                hasPendingDefaultChange(profileKey);
+              const isCut = !!(
+                profileClipboard &&
+                profileClipboard.type === "cut" &&
+                (profileKey === profileClipboard.sourceKey || profileKey.startsWith(profileClipboard.sourceKey + "."))
+              );
+              return (
+                <div
+                  key={profileKey}
+                  className={`profile-list-item ${selectedProfileKey === profileKey ? "selected" : ""} ${isCut ? "is-cut" : ""}`}
+                  style={{
+                    cursor: "pointer",
+                    margin: "2px 0",
+                    padding: "6px 8px",
+                    borderRadius: "4px",
+                    border: selectedProfileKey === profileKey ? "2px solid var(--vscode-button-background)" : "2px solid transparent",
+                    backgroundColor: "var(--vscode-input-background)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "0.9em",
+                    minHeight: "28px",
+                    opacity: isCut ? 0.5 : 1,
+                    transition: "opacity 0.2s ease",
+                  }}
+                  tabIndex={0}
+                  role="option"
+                  aria-selected={selectedProfileKey === profileKey}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      if (selectedProfileKey === profileKey) {
+                        onProfileSelect("");
+                      } else {
+                        onProfileSelect(profileKey);
+                      }
+                    }
+                  }}
+                  onContextMenu={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
+                    onProfileSelect(profileKey);
+                    const menuWidth = 150;
+                    const menuHeight = 240;
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    let x = e.clientX;
+                    let y = e.clientY;
+                    if (x + menuWidth > viewportWidth) {
+                      x = viewportWidth - menuWidth - 10;
+                    }
+                    if (y + menuHeight > viewportHeight) {
+                      y = viewportHeight - menuHeight - 10;
+                    }
+                    setContextMenu({ x, y, profileKey });
+                  }}
+                  onClick={() => {
                     if (selectedProfileKey === profileKey) {
+                      // If clicking on the already selected profile, deselect it
                       onProfileSelect("");
                     } else {
                       onProfileSelect(profileKey);
                     }
-                  }
-                }}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onProfileSelect(profileKey);
-                  const menuWidth = 150;
-                  const menuHeight = 160;
-                  const viewportWidth = window.innerWidth;
-                  const viewportHeight = window.innerHeight;
-                  let x = e.clientX;
-                  let y = e.clientY;
-                  if (x + menuWidth > viewportWidth) {
-                    x = viewportWidth - menuWidth - 10;
-                  }
-                  if (y + menuHeight > viewportHeight) {
-                    y = viewportHeight - menuHeight - 10;
-                  }
-                  setContextMenu({ x, y, profileKey });
-                }}
-                onClick={() => {
-                  if (selectedProfileKey === profileKey) {
-                    // If clicking on the already selected profile, deselect it
-                    onProfileSelect("");
-                  } else {
-                    onProfileSelect(profileKey);
-                  }
-                }}
-                title={profileKey}
-                data-testid="profile-list-item"
-                data-profile-key={profileKey}
-                data-profile-name={profileKey}
-                data-profile-type={getProfileType(profileKey)}
-                data-is-selected={selectedProfileKey === profileKey}
-              >
-                <span
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    overflow: "hidden",
                   }}
-                  data-testid="profile-name"
+                  title={profileKey}
+                  data-testid="profile-list-item"
+                  data-profile-key={profileKey}
                   data-profile-name={profileKey}
+                  data-profile-type={getProfileType(profileKey)}
+                  data-is-selected={selectedProfileKey === profileKey}
                 >
-                  <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profileKey}</span>
-                  {rowHasPendingEdits && (
-                    <span
-                      className="codicon codicon-circle-filled pending-change-indicator"
-                      title={l10n.t("Unsaved changes")}
-                      style={{ flexShrink: 0 }}
-                    />
-                  )}
-                </span>
-                <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
-                  {getProfileType(profileKey) && (
-                    <ProfileTypeBadge
-                      profileType={getProfileType(profileKey)!}
-                      isLightTheme={isLightTheme}
-                      filterActive={filterType === getProfileType(profileKey)}
-                      onToggleFilter={() => {
-                        const profileType = getProfileType(profileKey);
-                        if (profileType) {
-                          // If clicking on the same type that's already filtered, clear the filter
-                          onFilterChange(filterType === profileType ? null : profileType);
-                        }
-                      }}
-                    />
-                  )}
-                  {getProfileType(profileKey) && (
-                    <DefaultStarButton
-                      variant="flat"
-                      profileKey={profileKey}
-                      profileType={getProfileType(profileKey)}
-                      isDefault={isProfileDefault(profileKey)}
-                      configurations={configurations}
-                      selectedTab={selectedTab}
-                      setPendingDefaults={setPendingDefaults}
-                      onSetAsDefault={onSetAsDefault}
-                    />
-                  )}
+                  <span
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      overflow: "hidden",
+                    }}
+                    data-testid="profile-name"
+                    data-profile-name={profileKey}
+                  >
+                    <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profileKey}</span>
+                    {rowHasPendingEdits && (
+                      <span
+                        className="codicon codicon-circle-filled pending-change-indicator"
+                        title={l10n.t("Unsaved changes")}
+                        style={{ flexShrink: 0 }}
+                      />
+                    )}
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+                    {getProfileType(profileKey) && (
+                      <ProfileTypeBadge
+                        profileType={getProfileType(profileKey)!}
+                        isLightTheme={isLightTheme}
+                        filterActive={filterType === getProfileType(profileKey)}
+                        onToggleFilter={() => {
+                          const profileType = getProfileType(profileKey);
+                          if (profileType) {
+                            // If clicking on the same type that's already filtered, clear the filter
+                            onFilterChange(filterType === profileType ? null : profileType);
+                          }
+                        }}
+                      />
+                    )}
+                    {getProfileType(profileKey) && (
+                      <DefaultStarButton
+                        variant="flat"
+                        profileKey={profileKey}
+                        profileType={getProfileType(profileKey)}
+                        isDefault={isProfileDefault(profileKey)}
+                        configurations={configurations}
+                        selectedTab={selectedTab}
+                        setPendingDefaults={setPendingDefaults}
+                        onSetAsDefault={onSetAsDefault}
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+            <div
+              className="profile-list-empty-space"
+              data-testid="profile-list-empty-space"
+              style={{
+                flex: 1,
+                minHeight: "120px",
+                width: "100%",
+                cursor: "default",
+              }}
+              onClick={() => onProfileSelect("")}
+            />
+          </>
         )}
       </div>
       {contextMenu && (
@@ -973,21 +1005,40 @@ export function ProfileList({
                   setContextMenu(null);
                 }}
               >
-                <span className="codicon codicon-copy codicon-tab-menu-icon"></span>
+                <span className="codicon codicon-screen-cut codicon-tab-menu-icon"></span>
                 <span>{l10n.t("Cut")}</span>
               </div>
-              <div
-                className={`tab-context-menu-item ${!profileClipboard ? "disabled" : ""}`}
-                onClick={() => {
-                  if (profileClipboard) {
-                    pasteProfile(contextMenu.profileKey);
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <span className="codicon codicon-clippy codicon-tab-menu-icon"></span>
-                <span>{l10n.t("Paste")}</span>
-              </div>
+              {profileClipboard ? (
+                <>
+                  <div
+                    className="tab-context-menu-item"
+                    id="context-menu-paste-child-profile"
+                    onClick={() => {
+                      pasteProfile(contextMenu.profileKey);
+                      setContextMenu(null);
+                    }}
+                  >
+                    <span className="codicon codicon-clippy codicon-tab-menu-icon"></span>
+                    <span>{l10n.t("Paste as Child")}</span>
+                  </div>
+                  <div
+                    className="tab-context-menu-item"
+                    id="context-menu-paste-root-profile"
+                    onClick={() => {
+                      pasteProfile(null);
+                      setContextMenu(null);
+                    }}
+                  >
+                    <span className="codicon codicon-clippy codicon-tab-menu-icon"></span>
+                    <span>{l10n.t("Paste at Root Level")}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="tab-context-menu-item disabled" id="context-menu-paste-profile">
+                  <span className="codicon codicon-clippy codicon-tab-menu-icon"></span>
+                  <span>{l10n.t("Paste")}</span>
+                </div>
+              )}
               <div
                 className="tab-context-menu-item"
                 onClick={() => {
@@ -997,6 +1048,27 @@ export function ProfileList({
               >
                 <span className="codicon codicon-files codicon-tab-menu-icon"></span>
                 <span>{l10n.t("Duplicate")}</span>
+              </div>
+              <div
+                className={`tab-context-menu-item ${isProfileAffectedByDragDrop(contextMenu.profileKey) ? "disabled" : ""}`}
+                id="context-menu-rename-profile"
+                title={
+                  isProfileAffectedByDragDrop(contextMenu.profileKey)
+                    ? l10n.t(
+                        "Cannot rename: This profile or a related profile has been moved via drag-and-drop. Save and refresh to enable renaming."
+                      )
+                    : undefined
+                }
+                onClick={() => {
+                  if (!isProfileAffectedByDragDrop(contextMenu.profileKey!)) {
+                    onProfileSelect(contextMenu.profileKey!);
+                    setRenameProfileModalOpen(true);
+                    setContextMenu(null);
+                  }
+                }}
+              >
+                <span className="codicon codicon-edit codicon-tab-menu-icon"></span>
+                <span>{l10n.t("Rename")}</span>
               </div>
               {onDeleteProfile && (
                 <div
@@ -1014,6 +1086,7 @@ export function ProfileList({
           ) : (
             <div
               className={`tab-context-menu-item ${!profileClipboard ? "disabled" : ""}`}
+              id="context-menu-paste-root"
               onClick={() => {
                 if (profileClipboard) {
                   pasteProfile(null);

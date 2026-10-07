@@ -639,7 +639,7 @@ function AppContent() {
       />
 
       <RenameProfileModal
-        key={`rename-profile-${renameProfileModalOpen}`}
+        key={`rename-profile-${renameProfileModalOpen}-${selectedProfileKey}`}
         isOpen={renameProfileModalOpen}
         currentProfileName={selectedProfileKey ? selectedProfileKey.split(".").pop() || selectedProfileKey : ""}
         currentProfileKey={selectedProfileKey || ""}
