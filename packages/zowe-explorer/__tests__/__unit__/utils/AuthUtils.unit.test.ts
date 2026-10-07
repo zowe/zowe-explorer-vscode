@@ -1519,6 +1519,7 @@ describe("AuthUtils", () => {
                 value: {
                     loadNamedProfile: loadNamedProfileMock,
                     promptCredentials: vi.fn().mockImplementation((() => undefined) as any),
+                    profileHasSecureToken: vi.fn().mockResolvedValue(false),
                 } as any,
                 configurable: true,
             });
@@ -1542,6 +1543,27 @@ describe("AuthUtils", () => {
             expect(promptForAuthenticationMock.mock.calls[0][1]).toEqual(
                 expect.objectContaining({
                     imperativeError: testError,
+                })
+            );
+        });
+
+        it("should determine isUsingTokenAuth using profileUsesTokenAuth in errorHandling", async () => {
+            const testError = new imperative.ImperativeError({
+                msg: "Token expired",
+                errorCode: "401",
+            });
+            vi.spyOn(AuthUtils, "profileUsesTokenAuth").mockResolvedValueOnce(true);
+            const getOrCreateAuthFlowSpy = vi.spyOn(AuthHandler, "getOrCreateAuthFlow").mockResolvedValueOnce(false);
+            const moreInfo = {
+                profile: createIProfile(),
+                apiType: ZoweExplorerApiType.Mvs,
+            };
+
+            await expect(AuthUtils.errorHandling(testError, moreInfo)).resolves.toBe(true);
+            expect(getOrCreateAuthFlowSpy).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({
+                    isUsingTokenAuth: true,
                 })
             );
         });
