@@ -255,17 +255,18 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     if (queryParams.has("conflict")) {
                         return { ...memberStat, permissions: vscode.FilePermission.Readonly };
                     }
-                    return memberStat;
+                    return FsAbstractUtils.applyReadOnlyPermission(uri, memberStat);
                 }
             }
             throw vscode.FileSystemError.FileNotFound(uri);
         }
 
-        return this.executeWithReuse<vscode.FileStat>(uri, {
+        const stat = await this.executeWithReuse<vscode.FileStat>(uri, {
             keyGenerator: (u) => "list" + this.getQueryKey(u) + "_" + u.toString().split("/").slice(0, 3).join("/"),
             checkLocal: () => !isVisibleEditor && !!this.lookup(uri, true),
             execute: () => this.statImplementation(uri),
         });
+        return FsAbstractUtils.applyReadOnlyPermission(uri, stat);
     }
 
     private async fetchEntriesForProfile(uri: vscode.Uri, uriInfo: UriFsInfo, pattern: string): Promise<FilterEntry> {
@@ -940,6 +941,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * - `overwrite` - Overwrites the content if the data set exists
      */
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
+        FsAbstractUtils.throwIfReadOnly(uri);
         const basename = path.posix.basename(uri.path);
         // TODO: Improve behavior of creating PDS members with lowercase names, to avoid data loss, just reject from the virtual workspace context if uri path contains lowercase.
         if (options.create && /[a-z]/.test(path.posix.basename(basename, path.posix.extname(basename)))) {

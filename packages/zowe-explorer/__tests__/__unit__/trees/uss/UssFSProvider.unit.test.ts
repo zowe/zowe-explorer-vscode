@@ -610,6 +610,35 @@ describe("UssFSProvider", () => {
         });
     });
 
+    describe("read-only URIs", () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it("returns readonly permissions in stat for a file opened with readonly=true", async () => {
+            vi.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValue(null);
+            vi.spyOn(UssFSProvider.instance as any, "statImplementation").mockResolvedValue(testEntries.file);
+            const res = await UssFSProvider.instance.stat(testUris.file.with({ query: "readonly=true" }));
+            expect(res).toStrictEqual({ ...testEntries.file, permissions: FilePermission.Readonly });
+            expect(testEntries.file.permissions).toBeUndefined();
+        });
+
+        it("does not return readonly permissions in stat without the readonly query", async () => {
+            vi.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValue(null);
+            vi.spyOn(UssFSProvider.instance as any, "statImplementation").mockResolvedValue(testEntries.file);
+            const res = await UssFSProvider.instance.stat(testUris.file);
+            expect(res).toBe(testEntries.file);
+        });
+
+        it("rejects writeFile for a read-only URI", async () => {
+            const lookupParentDirectorySpy = vi.spyOn(UssFSProvider.instance, "lookupParentDirectory");
+            await expect(
+                UssFSProvider.instance.writeFile(testUris.file.with({ query: "readonly=true" }), new Uint8Array(), { create: false, overwrite: true })
+            ).rejects.toThrow("was opened in read-only mode");
+            expect(lookupParentDirectorySpy).not.toHaveBeenCalled();
+        });
+    });
+
     describe("move", () => {
         it("returns true if it successfully moved a valid, old URI to the new URI", async () => {
             const getInfoFromUriMock = vi.spyOn(UssFSProvider.instance as any, "_getInfoFromUri");
