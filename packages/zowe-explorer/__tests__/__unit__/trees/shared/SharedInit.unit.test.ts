@@ -405,7 +405,6 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand.fun });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
             zosmfRestClientSetThrottleOptionsSpy = vi.spyOn(core.ZosmfRestClient, "setThrottlingOptions");
-            // // Shared/hoisted mock history is not cleared :'(
             onProfileUpdated.mockClear();
             SharedInit.registerCommonCommands(test.context, test.value.providers);
         });

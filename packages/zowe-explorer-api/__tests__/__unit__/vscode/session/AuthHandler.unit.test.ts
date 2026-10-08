@@ -93,7 +93,7 @@ describe("AuthHandler", () => {
         });
 
         afterEach(() => {
-            // // Shared/hoisted mock history is not cleared :'(
+            // Shared/hoisted mock history is not cleared :'(
             vi.restoreAllMocks();
         });
 

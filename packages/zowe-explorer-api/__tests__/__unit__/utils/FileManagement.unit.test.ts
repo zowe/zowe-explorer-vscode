@@ -113,7 +113,7 @@ describe("reloadWorkspacesForProfile", () => {
 
 describe("reloadTabsForProfile", () => {
     beforeEach(() => {
-        // // Shared/hoisted mock history is not cleared :'(
+        // Shared/hoisted mock history is not cleared :'(
         vi.clearAllMocks();
     });
 
