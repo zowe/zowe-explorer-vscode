@@ -1,4 +1,3 @@
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 import { useDataPanelContext } from "../PersistentUtils";
 import PersistentVSCodeAPI from "../../../PersistentVSCodeAPI";
@@ -39,14 +38,9 @@ export default function PersistentDeleteSelectedButton(): JSXInternal.Element {
   const renderDeleteSelectedButton = () => {
     const selectionType = ["search", "fileHistory", "encodingHistory", "searchedKeywordHistory"];
     return selectionType.includes(selection[type]) ? (
-      <VSCodeButton
-        title={deleteSelectedText}
-        appearance="secondary"
-        style={{ maxWidth: "20vw", marginRight: "15px" }}
-        onClick={async () => await handleClick()}
-      >
+      <vscode-button title={deleteSelectedText} secondary style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={async () => await handleClick()}>
         {l10n.t("Delete")}
-      </VSCodeButton>
+      </vscode-button>
     ) : null;
   };
 

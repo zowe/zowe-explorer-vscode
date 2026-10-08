@@ -50,14 +50,14 @@
     "vscode": "^1.101.0"
   },
   "dependencies": {
-    "@zowe/zos-files-for-zowe-sdk": "^8.37.0",
+    "@zowe/zos-files-for-zowe-sdk": "^8.38.0",
     "@zowe/zos-ftp-for-zowe-cli": "^3.0.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.37.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.38.0",
     "@zowe/zowe-explorer-api": "workspace:*"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^5.0.0",
-    "vitest": "^5.0.0"
+    "@vitest/coverage-v8": "^5.0.2",
+    "vitest": "^5.0.2"
   },
   "madge": {
     "detectiveOptions": {

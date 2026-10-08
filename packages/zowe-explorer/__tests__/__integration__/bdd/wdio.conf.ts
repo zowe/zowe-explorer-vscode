@@ -87,6 +87,7 @@ export const config: Options.Testrunner = {
                 storagePath: dataDir,
                 // optional VS Code settings
                 userSettings: {
+                    "window.menuStyle": "custom",
                     "editor.fontSize": 14,
                     "zowe.settings.displayReleaseNotes": false,
                     "zowe.automaticProfileValidation": false,
