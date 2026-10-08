@@ -111,7 +111,8 @@ describe("Test src/shared/extension", () => {
                 name: "zowe.certificateWizard",
                 mock: [
                     {
-                        spy: vi.spyOn(certWizard, "CertificateWizard").mockReturnValueOnce({
+                        spy: vi.spyOn(certWizard, "CertificateWizard").mockImplementationOnce(function () {
+                            return {
                             userSubmission: {
                                 promise: Promise.resolve({
                                     cert: "/a/b/cert.pem",
@@ -121,7 +122,8 @@ describe("Test src/shared/extension", () => {
                                 reject: vi.fn(),
                             },
                             panel: { dispose: vi.fn() } as any,
-                        } as any),
+                            } as any;
+                        }),
                         arg: [test.context, test.value],
                     },
                 ],
