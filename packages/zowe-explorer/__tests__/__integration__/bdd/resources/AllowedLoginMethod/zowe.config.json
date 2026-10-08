@@ -1,0 +1,56 @@
+{
+    "$schema": "./zowe.schema.json",
+    "profiles": {
+      "direct-basic": {
+        "type": "zosmf",
+        "properties": {
+
+            "allowedLoginMethod": "direct-basic"
+        }
+      },
+    "direct-cert-pem": {
+        "type": "zosmf",
+        "properties": {
+
+            "allowedLoginMethod": "direct-cert-pem"
+        }
+      },
+    "apiml-cert-pem": {
+        "type": "zosmf",
+        "properties": {
+
+            "allowedLoginMethod": "direct-cert-pem"
+        }
+      },
+      "base": {
+        "type": "base",
+        "properties": {
+          "host": "localhost",
+          "rejectUnauthorized": false
+        },
+        "secure": []
+      },
+      "tso": {
+        "type": "tso",
+        "properties": {
+          "account": "IZUACCT",
+          "codePage": "1047",
+          "logonProcedure": "IZUFPROC"
+        }
+      },
+      "tso2": {
+        "type": "tso",
+        "properties": {
+          "account": "IZUACCT",
+          "codePage": "1047",
+          "logonProcedure": "IZUFPROC"
+        }
+      }
+    },
+    "defaults": {
+      "zosmf": "zosmf_basic",
+      "base": "base",
+      "tso": "tso"
+    },
+    "autoStore": true
+  }
