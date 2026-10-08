@@ -16,7 +16,25 @@
     "apiml-cert-pem": {
         "type": "zosmf",
         "properties": {
-            "allowedLoginMethod": "direct-cert-pem"
+            "allowedLoginMethod": "apiml-cert-pem"
+        }
+      },
+    "apiml-basic": {
+        "type": "zosmf",
+        "properties": {
+            "allowedLoginMethod": "apiml-basic"
+        }
+      },
+          "prompt": {
+        "type": "zosmf",
+        "properties": {
+            "allowedLoginMethod": "prompt"
+        }
+      },
+    "anInvalidValue": {
+        "type": "zosmf",
+        "properties": {
+            "allowedLoginMethod": "anInvalidValue"
         }
       },
       "base": {

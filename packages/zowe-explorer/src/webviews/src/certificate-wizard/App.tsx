@@ -123,6 +123,7 @@ export function App() {
             </vscode-button>
           ) : null}
           <vscode-button
+            id="cancelButton"
             secondary
             style={{ marginTop: "1em", marginLeft: "1em" }}
             onClick={() => {

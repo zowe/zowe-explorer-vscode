@@ -1367,6 +1367,32 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" } } as any);
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
     });
+    it("should show as active in status of profile using certificate auth and open cert wizard if cert is not valid", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        const testProfile = {
+            name: "sestest",
+            profile: {
+                type: "zosmf",
+                host: "test",
+                port: 1443,
+                rejectUnauthorized: false,
+                name: "testName",
+                allowedLoginMethod: imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM,
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false,
+        };
+        Profiles.getInstance().allProfiles = [testProfile];
+        vi.spyOn(Profiles.getInstance(), "isCertFileValid").mockReturnValueOnce(false);
+        vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+        vi.spyOn(Profiles.getInstance(), "promptCertificate").mockResolvedValue({ cert: "cool", certKey: "dog", action: "save" });
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" } } as any);
+        await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+    });
+    
     it("should show as inactive in status of profile using invalid certificate auth", async () => {
         const globalMocks = createGlobalMocks();
         environmentSetup(globalMocks);
