@@ -30,6 +30,7 @@ export default defineConfig({
         hookTimeout: 10000,
         clearMocks: true,
         restoreMocks: true,
+        mockReset: true,
         setupFiles: ["vitest.setup.ts"],
         coverage: {
             include: ["src/**"],
