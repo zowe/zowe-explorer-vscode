@@ -206,8 +206,8 @@ export class Profiles extends ProfilesCache {
 
         ZoweLogger.debug(
             `checkCurrentProfile(): profile ${theProfile.name} (type ${theProfile.type}), ` +
-                `session type from profile=${iSessFromProf.type}, tokenType = ${tokenType} ` +
-                ` allowedLoginMethod = ${allowedLoginMethod} `
+            `session type from profile=${iSessFromProf.type}, tokenType = ${tokenType} ` +
+            ` allowedLoginMethod = ${allowedLoginMethod} `
         );
 
         if (usingTokenAuth || ((await this.profileHasSecureToken(theProfile)) && tokenType)) {
@@ -256,19 +256,29 @@ export class Profiles extends ProfilesCache {
                 return { ...profileStatus, status: "inactive" };
             }
         } else if (!usingTokenAuth && !usingBasicAuth && usingCertAuth) {
-            // todo prompt user for certificate with certificate wizard
 
             if (theProfile.profile.certAccount == null && !this.isCertFileValid(theProfile.profile.certFile)) {
-                ZoweLogger.error(`Profile ${theProfile.name} has an invalid SSL certificate`);
-                Gui.errorMessage(
-                    vscode.l10n.t({
-                        message: `Profile {0} has an invalid SSL certificate.`,
-                        args: [theProfile.name],
-                        comment: ["Profile name"],
-                    })
-                );
-                this.validProfile = Validation.ValidationType.INVALID;
-                return { ...profileStatus, status: "inactive" };
+                const certResponse = await Profiles.getInstance().promptCertificate({
+                    profile: theProfile,
+                    rePrompt: true,
+                    // don't show 'log in' button /text if direct cert pem because that uses no token.
+                    showLoginButton: false,
+                });
+                if (!certResponse || !certResponse.cert || !certResponse.certKey) {
+                    ZoweLogger.error(`Profile ${theProfile.name} has an invalid SSL certificate`);
+                    Gui.errorMessage(
+                        vscode.l10n.t({
+                            message: `Profile {0} has an invalid SSL certificate.`,
+                            args: [theProfile.name],
+                            comment: ["Profile name"],
+                        })
+                    );
+                    this.validProfile = Validation.ValidationType.INVALID;
+                    return { ...profileStatus, status: "inactive" };
+                } else {
+                    Profiles.getInstance().updateCachedProfile(theProfile);
+                }
+
             }
             profileStatus.status = "active";
             this.profilesForValidation.push(profileStatus);
@@ -314,9 +324,8 @@ export class Profiles extends ProfilesCache {
         if (configFileIndex === -1) {
             toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")} `);
         } else {
-            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
-                layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
-            } `;
+            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
+                } `;
         }
 
         const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);

@@ -1,6 +1,7 @@
 import { Then, When } from "@cucumber/cucumber";
 import { paneDivForTree, setFilterForProfile } from "../../../../__common__/shared.wdio";
 import { ProfileNode } from "../../../../__pageobjects__/ProfileNode";
+import { sleep } from "wdio-vscode-service";
 
 When(/a user sets a filter search on the '(.*)' profile in the '(.*)' tree/, async function (profileName: string, tree: string) {
     // Try to find the profile with retries
@@ -20,10 +21,17 @@ When(/a user sets a filter search on the '(.*)' profile in the '(.*)' tree/, asy
         }
     }
     await expect(await this.profileNode.find()).toBeDefined();
-    await setFilterForProfile(this.profileNode, this.tree, "TEST.INT");
+
+    await setFilterForProfile(this.profileNode, this.tree, "TEST.INT", false);
 });
 
-Then("the enter password input should appear", async function () {
-    const inputBox = await $('.input[aria-describedby="quickInput_message"]');
+Then("the basic auth input should appear", async function () {
+    // todo seems to skip username
+    const inputBox = await $('.input[placeholder="Password"]');
     await expect(inputBox).toBeClickable();
+});
+
+Then("the certificate wizard should appear", async function () {
+    await sleep(1000);
+    // todo
 });

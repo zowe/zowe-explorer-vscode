@@ -4,21 +4,18 @@
       "direct-basic": {
         "type": "zosmf",
         "properties": {
-
             "allowedLoginMethod": "direct-basic"
         }
       },
     "direct-cert-pem": {
         "type": "zosmf",
         "properties": {
-
             "allowedLoginMethod": "direct-cert-pem"
         }
       },
     "apiml-cert-pem": {
         "type": "zosmf",
         "properties": {
-
             "allowedLoginMethod": "direct-cert-pem"
         }
       },

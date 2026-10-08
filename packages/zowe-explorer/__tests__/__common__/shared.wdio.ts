@@ -10,7 +10,7 @@
  */
 
 import { Key } from "webdriverio";
-import { ElementWithContextMenu, ViewContent, ViewControl, ViewItemAction, ViewSection } from "wdio-vscode-service";
+import { ElementWithContextMenu, sleep, ViewContent, ViewControl, ViewItemAction, ViewSection } from "wdio-vscode-service";
 import quickPick from "../__pageobjects__/QuickPick";
 
 /* Helper functions */
@@ -61,7 +61,7 @@ export async function clickContextMenuItem(treeItem: ElementWithContextMenu<any>
     await menuItem.elem.click();
 }
 
-export async function setFilterForProfile(profileNode: ProfileNode, tree: string, filter: string): Promise<void> {
+export async function setFilterForProfile(profileNode: ProfileNode, tree: string, filter: string, waitUntilExpanded: boolean = true): Promise<void> {
     let profileItem = await profileNode.find();
 
     // if the profile item is already expanded and has children, return
@@ -128,8 +128,11 @@ export async function setFilterForProfile(profileNode: ProfileNode, tree: string
         const inputBox = await $('.input[aria-describedby="quickInput_message"]');
         await expect(inputBox).toBeClickable();
         await inputBox.setValue(filter);
-        await browser.keys(Key.Enter);
-    }
 
-    await profileNode.waitUntilExpanded();
+        await browser.keys(Key.Enter);
+
+    }
+    if (waitUntilExpanded) {
+        await profileNode.waitUntilExpanded();
+    }
 }

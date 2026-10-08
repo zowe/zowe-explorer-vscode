@@ -7,7 +7,7 @@ Feature: allowedLoginMethod profile field
     Then a user selects Yes to apply to all trees
     Then it will add a tree item for the profile to the correct trees
     Then a user sets a filter search on the 'direct-basic' profile in the 'Data Sets' tree
-    Then the enter password input should appear
+    Then the basic auth input should appear
 
   # Scenario: direct-cert-pem shows certificate wizard
   #   Given a user who is looking at the Add Config quick pick
@@ -15,6 +15,7 @@ Feature: allowedLoginMethod profile field
   #   Then it will prompt the user to add the profile to one or all trees
   #   Then a user selects Yes to apply to all trees
   #   Then it will add a tree item for the profile to the correct trees
-  #   # todo show certificate wizard
+  #   Then a user sets a filter search on the 'direct-cert-pem' profile in the 'Data Sets' tree
+  #   Then the certificate wizard should appear
 
   
