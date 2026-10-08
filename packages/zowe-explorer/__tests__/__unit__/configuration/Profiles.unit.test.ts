@@ -1392,7 +1392,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" } } as any);
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
     });
-    
+
     it("should show as inactive in status of profile using invalid certificate auth", async () => {
         const globalMocks = createGlobalMocks();
         environmentSetup(globalMocks);

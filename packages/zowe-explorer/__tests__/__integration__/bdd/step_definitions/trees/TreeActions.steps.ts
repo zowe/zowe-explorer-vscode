@@ -80,7 +80,7 @@ Then(/the certificate wizard should appear with title '(.*)'/, async function (t
     await certView.wait();
     await certView.open();
 
-    const certInstructionsLabel = await browser.$('h3.=Select a certificate and certificate key in PEM format:');
+    const certInstructionsLabel = await browser.$("h3.=Select a certificate and certificate key in PEM format:");
     await certInstructionsLabel.waitForExist();
     const certWizardTitle = await browser.$(`h1.=${title}`);
     await certWizardTitle.waitForExist();
@@ -89,4 +89,3 @@ Then(/the certificate wizard should appear with title '(.*)'/, async function (t
     await cancelButton.click();
     await browser.switchFrame(null); // exit out of webview
 });
-
