@@ -9,7 +9,6 @@
  *
  */
 
-import { execFile } from "child_process";
 import { Key } from "webdriverio";
 import { ElementWithContextMenu, ViewContent, ViewControl, ViewItemAction, ViewSection } from "wdio-vscode-service";
 import quickPick from "../__pageobjects__/QuickPick";
@@ -52,53 +51,14 @@ export async function paneDivForTree(tree: string): Promise<ViewSection> {
 }
 
 export async function clickContextMenuItem(treeItem: ElementWithContextMenu<any>, cmdName: string): Promise<void> {
-    if (process.platform !== "darwin") {
-        const ctxMenu = await treeItem.openContextMenu();
-        const menuItem = await ctxMenu.getItem(cmdName);
-        await (await menuItem.elem).click();
-    } else {
-        // Open native context menu without waiting for element to be displayed
-        const contextMenuLocators = treeItem.locatorMap.ContextMenu as any;
-        const workbench = browser.$((treeItem.locatorMap.Workbench as any).elem);
-        const menus = await browser.$$(contextMenuLocators.contextView);
-        if (menus.length < 1) {
-            await treeItem.elem.click({ button: 2 });
-            await browser.$(contextMenuLocators.contextView).waitForExist({ timeout: 2000 });
-        } else {
-            if ((await workbench.$$(contextMenuLocators.viewBlock).length) > 0) {
-                await treeItem.elem.click({ button: 2 });
-                await treeItem.elem.waitForDisplayed({ reverse: true, timeout: 1000 });
-            }
-            await treeItem.elem.click({ button: 2 });
-        }
-        await browser.pause(1000); // Wait for menu to load
-
-        // AppleScript fallback: use keyboard navigation with type-ahead search
-        return new Promise((resolve, reject) => {
-            const keyboardScript = `
-                tell application "System Events"
-                    -- Jump to top of menu
-                    key code 126 using {option down} -- Option+Up arrow
-                    delay 0.1
-
-                    -- Type the command name quickly for type-ahead search
-                    keystroke "${cmdName}"
-                    delay 0.2
-
-                    -- Press Return/Enter to select
-                    key code 36 -- Return/Enter
-                    return "success"
-                end tell
-            `;
-            execFile("osascript", ["-e", keyboardScript], (err) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
+    const ctxMenu = await treeItem.openContextMenu();
+    const menuItem = await ctxMenu.getItem(cmdName);
+    if (!menuItem) {
+        await ctxMenu.close();
+        throw new Error(`No context menu item with label '${cmdName}' found`);
     }
+    await menuItem.elem.waitForClickable();
+    await menuItem.elem.click();
 }
 
 export async function setFilterForProfile(profileNode: ProfileNode, tree: string, filter: string): Promise<void> {
