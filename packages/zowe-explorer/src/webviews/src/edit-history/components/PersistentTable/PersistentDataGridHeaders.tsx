@@ -9,9 +9,8 @@
  *
  */
 
-import { VSCodeDataGridRow, VSCodeDataGridCell } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
-import { useDataPanelContext } from "../PersistentUtils";
+import { SELECTABLE_HISTORY_TYPES, useDataPanelContext } from "../PersistentUtils";
 import * as l10n from "@vscode/l10n";
 
 export default function PersistentDataGridHeaders(): JSXInternal.Element {
@@ -20,19 +19,15 @@ export default function PersistentDataGridHeaders(): JSXInternal.Element {
 
   const renderSelectHeader = () => {
     const deleteText = l10n.t("Select");
-    return selection[type] === "search" || selection[type] === "fileHistory" || selection[type] === "searchedKeywordHistory" ? (
-      <VSCodeDataGridCell cell-type="columnheader" grid-column="2" style={{ maxWidth: "20vw", textAlign: "center" }}>
-        {deleteText}
-      </VSCodeDataGridCell>
+    return SELECTABLE_HISTORY_TYPES.includes(selection[type]) ? (
+      <vscode-table-header-cell style={{ textAlign: "center" }}>{deleteText}</vscode-table-header-cell>
     ) : null;
   };
 
   return (
-    <VSCodeDataGridRow row-type="header">
-      <VSCodeDataGridCell cell-type="columnheader" grid-column="1">
-        {itemText}
-      </VSCodeDataGridCell>
+    <vscode-table-header slot="header">
+      <vscode-table-header-cell>{itemText}</vscode-table-header-cell>
       {renderSelectHeader()}
-    </VSCodeDataGridRow>
+    </vscode-table-header>
   );
 }

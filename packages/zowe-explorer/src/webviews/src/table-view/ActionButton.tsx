@@ -1,7 +1,6 @@
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { Table } from "@zowe/zowe-explorer-api";
 import { useEffect, useState } from "preact/hooks";
-import { ActionEvaluationContext, getItemTitle, evaluateItemState, sendItemCommand } from "./ActionUtils";
+import { ActionEvaluationContext, getActionButtonProps, getItemTitle, evaluateItemState, sendItemCommand } from "./ActionUtils";
 
 export interface ActionButtonProps {
   action: Table.Action;
@@ -43,12 +42,14 @@ export const ActionButton = ({ action, params, keyPrefix }: ActionButtonProps) =
     return null;
   }
 
+  const { secondary, style: kindStyle } = getActionButtonProps(action.type);
+
   return (
-    <VSCodeButton
+    <vscode-button
       key={keyPrefix}
-      appearance={action.type}
+      secondary={secondary}
       disabled={!isEnabled || isEvaluating}
-      onClick={(_e: any) => {
+      onClick={() => {
         const context: ActionEvaluationContext = {
           rowData: params.data,
           rowIndex: params.node.rowIndex,
@@ -73,12 +74,13 @@ export const ActionButton = ({ action, params, keyPrefix }: ActionButtonProps) =
         }
       }}
       style={{
+        ...kindStyle,
         marginRight: "0.25em",
         width: "fit-content",
         opacity: isEvaluating ? 0.6 : 1,
       }}
     >
       {title}
-    </VSCodeButton>
+    </vscode-button>
   );
 };

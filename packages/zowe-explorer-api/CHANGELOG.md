@@ -13,8 +13,11 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added support for resolving data set aliases when using SSH profiles in the `SshMvsApi` class. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
 - Added support for the `tsoAccount` and `tsoProcedure` z/OSMF profile properties, which are now passed as the `X-IBM-Request-Acctnum` and `X-IBM-Request-Proc` z/OSMF headers on data set operations that support them. [#4485] (https://github.com/zowe/zowe-explorer-vscode/pull/4485)
 - Added optional `ssoLogin` and `ssoLogout` functions to the `IApiExplorerExtender` interface to expose SSO login and logout capabilities to Zowe Explorer extenders. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
+- Added the `vscode-codicon-stylesheet` id to the codicons `<link>` in the webview HTML template so VS Code Elements components can render icons. [#4534](https://github.com/zowe/zowe-explorer-vscode/pull/4534)
 
 ### Bug fixes
+
+- Fixed an issue where the `ProfilesCache.requireKeyring` function could return an erroneous `undefined` error instead of reporting when the Secrets SDK failed to load, causing callers to treat an unavailable credential manager as available. [#4360](https://github.com/zowe/zowe-explorer-vscode/issues/4360)
 
 ## `3.6.0`
 
