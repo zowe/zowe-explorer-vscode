@@ -31,18 +31,24 @@ import {
 } from "@zowe/zowe-explorer-api";
 import { SettingsConfig } from "./SettingsConfig";
 import { Constants } from "./Constants";
+import { Definitions } from "./Definitions";
 import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../tools/ZoweLogger";
+import { LocalStorageAccess } from "../tools/ZoweLocalStorage";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
+import { SharedContext } from "../trees/shared/SharedContext";
 import { ZoweExplorerExtender } from "../extending/ZoweExplorerExtender";
 import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 import { AuthUtils } from "../utils/AuthUtils";
+import { IconGenerator } from "../icons/IconGenerator";
+import { IconUtils } from "../icons/IconUtils";
 
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
     public static async createInstance(log: imperative.Logger): Promise<Profiles> {
         Profiles.loader = new Profiles(log, ZoweVsCodeExtension.workspaceRoot?.uri.fsPath);
         Constants.PROFILES_CACHE = Profiles.loader;
+        Profiles.loader.loadPersistedValidationSettings();
         try {
             await Profiles.loader.refresh(ZoweExplorerApiRegister.getInstance());
             await Profiles.getInstance().getProfileInfo();
@@ -61,6 +67,12 @@ export class Profiles extends ProfilesCache {
 
     public loadedProfile: imperative.IProfileLoaded;
     public validProfile: Validation.ValidationType = Validation.ValidationType.UNVERIFIED;
+    /**
+     * Validation settings that were explicitly chosen by the user for individual profiles.
+     * Unlike `profilesValidationSetting`, this list only contains user choices (never the global
+     * `zowe.automaticProfileValidation` default) and is persisted in local storage.
+     */
+    public explicitValidationSettings: Validation.IValidationSetting[] = [];
     private mProfileInfo: imperative.ProfileInfo;
     private profilesOpCancelled = vscode.l10n.t(`Operation cancelled`);
     private manualEditMsg = vscode.l10n.t(
@@ -347,53 +359,144 @@ export class Profiles extends ProfilesCache {
 
     public disableValidation(node: Types.IZoweNodeType): Types.IZoweNodeType {
         ZoweLogger.trace("Profiles.disableValidation called.");
-        const treeNodes = SharedTreeProviders.getSessionForAllTrees(node.getLabel().toString());
-        treeNodes.forEach((treeNode) => {
-            if (treeNode) {
-                this.disableValidationContext(treeNode);
-            }
+        const nodesToUpdate = new Set<Types.IZoweNodeType>([node, ...SharedTreeProviders.getSessionForAllTrees(node.getLabel().toString())]);
+        nodesToUpdate.forEach((treeNode) => {
+            this.disableValidationContext(treeNode);
+            this.resetValidationDisplay(treeNode);
         });
+        this.setExplicitValidationSetting(this.getProfileNameForNode(node), false);
         return node;
     }
 
     public disableValidationContext(node: Types.IZoweNodeType): Types.IZoweNodeType {
         ZoweLogger.trace("Profiles.disableValidationContext called.");
         const theProfile: imperative.IProfileLoaded = node.getProfile();
-        this.validationArraySetup(theProfile, false);
+        if (theProfile) {
+            this.validationArraySetup(theProfile, false);
+        }
+
+        node.contextValue = node.contextValue.replace(/(_Active|_Inactive)/g, "");
         if (node.contextValue.includes(Constants.VALIDATE_SUFFIX)) {
             node.contextValue = node.contextValue.replace(Constants.VALIDATE_SUFFIX, Constants.NO_VALIDATE_SUFFIX);
-        } else if (node.contextValue.includes(Constants.NO_VALIDATE_SUFFIX)) {
-            return node;
-        } else {
-            node.contextValue += Constants.VALIDATE_SUFFIX;
+        } else if (!node.contextValue.includes(Constants.NO_VALIDATE_SUFFIX)) {
+            node.contextValue += Constants.NO_VALIDATE_SUFFIX;
         }
         return node;
     }
 
     public enableValidation(node: Types.IZoweNodeType): Types.IZoweNodeType {
         ZoweLogger.trace("Profiles.enableValidation called.");
-        const treeNodes = SharedTreeProviders.getSessionForAllTrees(node.getLabel().toString());
-        treeNodes.forEach((treeNode) => {
-            if (treeNode) {
-                this.enableValidationContext(treeNode);
-            }
+        const nodesToUpdate = new Set<Types.IZoweNodeType>([node, ...SharedTreeProviders.getSessionForAllTrees(node.getLabel().toString())]);
+        nodesToUpdate.forEach((treeNode) => {
+            this.enableValidationContext(treeNode);
+            this.resetValidationDisplay(treeNode);
         });
+        this.setExplicitValidationSetting(this.getProfileNameForNode(node), true);
         return node;
     }
 
     public enableValidationContext(node: Types.IZoweNodeType): Types.IZoweNodeType {
         ZoweLogger.trace("Profiles.enableValidationContext called.");
         const theProfile: imperative.IProfileLoaded = node.getProfile();
-        this.validationArraySetup(theProfile, true);
+        if (theProfile) {
+            this.validationArraySetup(theProfile, true);
+        }
+        node.contextValue = node.contextValue.replace(/(_Active|_Inactive)/g, "");
         if (node.contextValue.includes(Constants.NO_VALIDATE_SUFFIX)) {
             node.contextValue = node.contextValue.replace(Constants.NO_VALIDATE_SUFFIX, Constants.VALIDATE_SUFFIX);
-        } else if (node.contextValue.includes(Constants.VALIDATE_SUFFIX)) {
-            return node;
-        } else {
+        } else if (!node.contextValue.includes(Constants.VALIDATE_SUFFIX)) {
             node.contextValue += Constants.VALIDATE_SUFFIX;
         }
 
         return node;
+    }
+
+    /**
+     * Returns the name of the profile that the given node refers to. Falls back to the node label
+     * for nodes that do not have a profile loaded (e.g. a profile node under Favorites).
+     * @param node The node that was interacted with
+     * @returns The profile name associated with the node
+     */
+    private getProfileNameForNode(node: Types.IZoweNodeType): string {
+        return node.getProfile()?.name ?? node.getLabel().toString();
+    }
+
+    /**
+     * Stores a validation setting that was explicitly chosen by the user for a profile and
+     * persists it so that it can be reapplied after the window or extension is reloaded.
+     * @param profileName The name of the profile that the setting applies to
+     * @param setting Whether profile validation is enabled for the profile
+     */
+    public setExplicitValidationSetting(profileName: string, setting: boolean): void {
+        ZoweLogger.trace("Profiles.setExplicitValidationSetting called.");
+        Profiles.upsertValidationSetting(this.explicitValidationSettings, profileName, setting);
+        Profiles.upsertValidationSetting(this.profilesValidationSetting, profileName, setting);
+        this.persistExplicitValidationSettings();
+    }
+
+    /**
+     * Returns the validation setting that the user explicitly chose for the given profile.
+     * @param profileName The name of the profile to look up
+     * @returns The chosen setting, or `undefined` if the user never toggled validation for that profile
+     */
+    public getExplicitValidationSetting(profileName: string): boolean | undefined {
+        return this.explicitValidationSettings.find((instance) => instance.name === profileName)?.setting;
+    }
+
+    /**
+     * Loads the explicit per-profile validation settings from local storage.
+     * Called during extension activation, before any tree provider applies the global validation setting.
+     */
+    public loadPersistedValidationSettings(): void {
+        ZoweLogger.trace("Profiles.loadPersistedValidationSettings called.");
+        let storedSettings: Validation.IValidationSetting[] | undefined;
+        try {
+            storedSettings = LocalStorageAccess.getValue<Validation.IValidationSetting[]>(Definitions.LocalStorageKey.PROFILE_VALIDATION_SETTINGS);
+        } catch (err) {
+            ZoweLogger.warn(err);
+        }
+        this.explicitValidationSettings = Array.isArray(storedSettings)
+            ? storedSettings.filter((setting) => setting && typeof setting.name === "string" && typeof setting.setting === "boolean")
+            : [];
+        // Seed the effective settings so that validation is skipped for those profiles from the very first check
+        this.profilesValidationSetting = [...this.explicitValidationSettings];
+    }
+
+    private persistExplicitValidationSettings(): void {
+        void LocalStorageAccess.setValue<Validation.IValidationSetting[]>(
+            Definitions.LocalStorageKey.PROFILE_VALIDATION_SETTINGS,
+            this.explicitValidationSettings
+        );
+    }
+
+    private static upsertValidationSetting(settings: Validation.IValidationSetting[], profileName: string, setting: boolean): void {
+        const existingSetting = settings.find((instance) => instance.name === profileName);
+        if (existingSetting) {
+            existingSetting.setting = setting;
+        } else {
+            settings.push({ name: profileName, setting });
+        }
+    }
+
+    /**
+     * Clears the cached validation status of a node after its validation setting was toggled so that
+     * the node does not keep displaying an active/inactive icon for a stale validation result.
+     * @param node The node whose validation display state should be reset
+     */
+    private resetValidationDisplay(node: Types.IZoweNodeType): void {
+        const profileName = this.getProfileNameForNode(node);
+        const cachedStatus = this.profilesForValidation.find((profile) => profile.name === profileName);
+        if (cachedStatus) {
+            cachedStatus.status = "unverified";
+        }
+        if (!SharedContext.isSession(node)) {
+            return;
+        }
+        const iconId = node.collapsibleState === vscode.TreeItemCollapsibleState.Expanded ? IconUtils.IconId.sessionOpen : IconUtils.IconId.session;
+        const icon = IconGenerator.getIconById(iconId);
+        if (icon) {
+            node.iconPath = icon.path;
+        }
     }
 
     public validationArraySetup(theProfile: imperative.IProfileLoaded, validationSetting: boolean): Validation.IValidationSetting {

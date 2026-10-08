@@ -1358,6 +1358,7 @@
   "Fixed an issue where submitting a job from a favorited PDS member would fail. <a>#4282</a>": "",
   "Fixed an issue where switching to a custom credential manager did not update the imperative.json file. <a>#3705</a>": "",
   "Fixed an issue where the \"Created Date\" and \"Modified Date\" columns were not sortable in the data sets table view, specifically when the user's locale differs from the default value (en (en-US)). Now, sorting works regardless of the VS Code language setting, and dates are now formatted with the user's locale. <a>#4008</a>": "",
+  "Fixed an issue where the \"Disable Profile Validation\" choice for an individual profile was not respected. The per-profile choice is now stored in local storage, takes precedence over the zowe.automaticProfileValidation setting, and is applied again when the window reloads. <a>#4513</a>": "",
   "Fixed an issue where the \"Open\" action in the data sets table did not validate the URI before opening it. <a>#4416</a>": "",
   "Fixed an issue where the \"Paste\" option is shown for a multi-select operation in the \"Data Sets\" view.": "",
   "Fixed an issue where the 'Delete' key binding for the USS tree returns a 'contextValue' error. <a>#2796</a>": "",
