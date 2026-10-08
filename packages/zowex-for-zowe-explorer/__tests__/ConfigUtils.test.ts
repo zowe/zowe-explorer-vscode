@@ -64,6 +64,21 @@ vi.mock("@zowe/zowe-explorer-api", () => ({
     },
 }));
 
+vi.mock("../src/SshClientCache", async (importOriginal) => {
+    const original: any = await importOriginal();
+    return {
+        SshClientCache: {
+            inst: {
+                connect: vi.fn().mockResolvedValue({}),
+                end: vi.fn(),
+                detectServerOnPath: vi.fn().mockResolvedValue(undefined),
+                // patch in the original storeServerPath so that we can still test that VS Code config methods are called
+                storeServerPath: original.SshClientCache.prototype.storeServerPath,
+            },
+        },
+    };
+});
+
 describe("SshConfigUtils", () => {
     const defaultPath = "~/.zowe-server";
     afterEach(() => {
@@ -464,20 +479,6 @@ describe("SshConfigUtils", () => {
             beforeEach(() => {
                 mockGet = vi.fn();
                 mockUpdate = vi.fn();
-                vi.mock("../src/SshClientCache", async (importOriginal) => {
-                    const original: any = await importOriginal();
-                    return {
-                        SshClientCache: {
-                            inst: {
-                                connect: vi.fn().mockResolvedValue({}),
-                                end: vi.fn(),
-                                detectServerOnPath: vi.fn().mockResolvedValue(undefined),
-                                // patch in the original storeServerPath so that we can still test that VS Code config methods are called
-                                storeServerPath: original.SshClientCache.prototype.storeServerPath,
-                            },
-                        },
-                    };
-                });
                 vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
                     get: mockGet,
                     update: mockUpdate,

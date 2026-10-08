@@ -102,7 +102,7 @@ describe("reloadWorkspacesForProfile", () => {
             },
         ] as any);
         const statMock = vi.spyOn(workspace.fs, "stat").mockClear().mockRejectedValueOnce(FileSystemError.FileNotFound(folderUri));
-        const consoleErrorMock = vi.spyOn(console, "error").mockImplementationOnce(() => {});
+        const consoleErrorMock = vi.spyOn(console, "error").mockImplementationOnce(() => { });
         await FileManagement.reloadWorkspacesForProfile("sestest");
         expect(statMock).toHaveBeenCalledTimes(1);
         expect(statMock).toHaveBeenCalledWith(folderUri.with({ query: "fetch=true" }));
@@ -112,6 +112,11 @@ describe("reloadWorkspacesForProfile", () => {
 });
 
 describe("reloadTabsForProfile", () => {
+    beforeEach(() => {
+        // // Shared/hoisted mock history is not cleared :'(
+        vi.clearAllMocks();
+    });
+
     function buildFakeFsEntry(path: string): IFileSystemEntry {
         return {
             name: "aFile.txt",

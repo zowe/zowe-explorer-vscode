@@ -92,6 +92,11 @@ describe("AuthHandler", () => {
             (AuthHandler as any).profileLocks.clear();
         });
 
+        afterEach(() => {
+            // // Shared/hoisted mock history is not cleared :'(
+            vi.restoreAllMocks();
+        });
+
         it("returns immediately if the profile is not locked and there is no active auth flow", async () => {
             const waitForUnlockSpy = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
 

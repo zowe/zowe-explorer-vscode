@@ -271,7 +271,7 @@ describe("Tree Provider unit tests, function getTreeItem", () => {
             }),
         });
 
-        const Event = vi.fn().mockImplementation(() => {
+        const Event = vi.fn().mockImplementation(function () {
             return {
                 affectsConfiguration: globalMocks.mockAffects,
             };

@@ -111,17 +111,19 @@ describe("Test src/shared/extension", () => {
                 name: "zowe.certificateWizard",
                 mock: [
                     {
-                        spy: vi.spyOn(certWizard, "CertificateWizard").mockReturnValueOnce({
-                            userSubmission: {
-                                promise: Promise.resolve({
-                                    cert: "/a/b/cert.pem",
-                                    certKey: "/a/b/cert.key.pem",
-                                }),
-                                resolve: vi.fn(),
-                                reject: vi.fn(),
-                            },
-                            panel: { dispose: vi.fn() } as any,
-                        } as any),
+                        spy: vi.spyOn(certWizard, "CertificateWizard").mockImplementationOnce(function () {
+                            return {
+                                userSubmission: {
+                                    promise: Promise.resolve({
+                                        cert: "/a/b/cert.pem",
+                                        certKey: "/a/b/cert.key.pem",
+                                    }),
+                                    resolve: vi.fn(),
+                                    reject: vi.fn(),
+                                },
+                                panel: { dispose: vi.fn() } as any,
+                            } as any;
+                        }),
                         arg: [test.context, test.value],
                     },
                 ],
@@ -403,6 +405,8 @@ describe("Test src/shared/extension", () => {
             Object.defineProperty(vscode.commands, "executeCommand", { value: executeCommand.fun });
             Object.defineProperty(vscode.workspace, "onDidSaveTextDocument", { value: onDidSaveTextDocument });
             zosmfRestClientSetThrottleOptionsSpy = vi.spyOn(core.ZosmfRestClient, "setThrottlingOptions");
+            // // Shared/hoisted mock history is not cleared :'(
+            onProfileUpdated.mockClear();
             SharedInit.registerCommonCommands(test.context, test.value.providers);
         });
 
@@ -778,11 +782,11 @@ describe("Test src/shared/extension", () => {
             const dummyWatcher: any = {
                 subscribeUser: (_event, cb) => {
                     onVaultUpdatedCallback = cb;
-                    return { close: () => {} } as any;
+                    return { close: () => { } } as any;
                 },
                 subscribeShared: (_event, cb) => {
                     onCredentialManagerUpdatedCallback = cb;
-                    return { close: () => {} } as any;
+                    return { close: () => { } } as any;
                 },
             };
             const spyWatcher = vi.spyOn(imperative.EventOperator, "getWatcher").mockReturnValue(dummyWatcher);

@@ -63,3 +63,9 @@ overrides:
   "smol-toml": "^1.7.1"
 # Previously set using `pnpm config set network-timeout`
 fetchTimeout: 60000
+minimumReleaseAgeExclude:
+  - http-cache-semantics@4.2.1
+  - braces@3.0.4
+  - smol-toml@1.8.1
+  - katex@0.18.2
+  - source-map-js@1.2.2
