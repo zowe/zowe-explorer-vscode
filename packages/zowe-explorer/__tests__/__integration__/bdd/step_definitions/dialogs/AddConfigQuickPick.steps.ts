@@ -13,7 +13,6 @@ import { Given, Then, When } from "@cucumber/cucumber";
 import { paneDivForTree } from "../../../../__common__/shared.wdio";
 import { Key } from "webdriverio";
 import quickPick from "../../../../__pageobjects__/QuickPick";
-import { sleep } from "wdio-vscode-service";
 
 Given("a user who is looking at the Add Config quick pick", async function () {
     // use the data sets pane for the sake of testing
@@ -88,8 +87,8 @@ When("a user selects the first profile in the list", async function () {
     await firstProfileEntry.click();
 });
 
-Then(/a user selects the profile named '(.*)' in the list/, async function (desiredProfileName: string) {
-    const profileEntry = await quickPick.findItem('$(home) ' + desiredProfileName);
+Then(/a user selects the profile named '(.*)' in the quick pick/, async function (desiredProfileName: string) {
+    const profileEntry = await quickPick.findItem("$(home) " + desiredProfileName);
     expect(profileEntry.error).toBeUndefined();
     await expect(profileEntry).toBeClickable();
     const profileLabelAttr = await profileEntry.getAttribute("aria-label");
