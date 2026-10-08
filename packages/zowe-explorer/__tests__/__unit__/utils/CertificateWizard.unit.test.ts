@@ -69,9 +69,9 @@ describe("CertificateWizard", () => {
             certKey: "/a/b/cert.key.pem",
         };
         await (certWizard as any).onDidReceiveMessage({
-            command: "submitted",
+            command: "save",
         });
-        expect(resolveMock).toHaveBeenCalledWith((certWizard as any).opts);
+        expect(resolveMock).toHaveBeenCalledWith({ ...(certWizard as any).opts, action: "save" });
     });
 
     it("handles the ready message", async () => {

@@ -396,6 +396,18 @@ export class SessConstants {
     public static readonly AUTH_TYPE_BEARER = "bearer";
     public static readonly AUTH_TYPE_CERT_PEM = "cert-pem";
     public static readonly AUTH_TYPE_NONE = "none";
+    public static readonly ALLOWED_LOGIN_METHOD_DIRECT_BASIC = "direct-basic";
+    public static readonly ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM = "direct-cert-pem";
+    public static readonly ALLOWED_LOGIN_METHOD_APIML_BASIC = "apiml-basic";
+    public static readonly ALLOWED_LOGIN_METHOD_APIML_CERT_PEM = "apiml-cert-pem";
+    public static readonly ALLOWED_LOGIN_METHOD_PROMPT = "prompt";
+    public static readonly ALL_ALLOWED_LOGIN_METHODS = [
+        SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC,
+        SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM,
+        SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC,
+        SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM,
+        SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
+    ];
 }
 
 export const apiErrorHeader = {

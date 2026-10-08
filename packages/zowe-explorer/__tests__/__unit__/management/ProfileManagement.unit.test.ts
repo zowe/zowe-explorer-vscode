@@ -45,7 +45,6 @@ describe("ProfileManagement unit tests", () => {
             mockUnixSessionNode: ZoweUSSNode,
             mockJobSessionNode: ZoweJobNode,
             mockResolveQp: vi.fn(),
-            mockCreateQp: vi.fn(),
             mockUpdateChosen: ProfileManagement.basicAuthUpdateQpItems[ProfileManagement.AuthQpLabels.update],
             mockAddBasicChosen: ProfileManagement.basicAuthAddQpItems[ProfileManagement.AuthQpLabels.add],
             mockLoginChosen: ProfileManagement.tokenAuthLoginQpItem[ProfileManagement.AuthQpLabels.login],
@@ -82,7 +81,8 @@ describe("ProfileManagement unit tests", () => {
         Object.defineProperty(ZoweLogger, "debug", { value: vi.fn(), configurable: true });
         newMocks.debugLogSpy = vi.spyOn(ZoweLogger, "debug");
         Object.defineProperty(Gui, "resolveQuickPick", { value: newMocks.mockResolveQp, configurable: true });
-        newMocks.mockCreateQp.mockReturnValue({
+
+        vi.spyOn(Gui, "createQuickPick").mockReturnValue({
             show: vi.fn(() => {
                 return {};
             }),
@@ -92,14 +92,14 @@ describe("ProfileManagement unit tests", () => {
             onDidAccept: vi.fn(() => {
                 return {};
             }),
-        });
-        Object.defineProperty(Gui, "createQuickPick", { value: newMocks.mockCreateQp, configurable: true });
+        } as any);
         newMocks.mockDsSessionNode = dsMock.createDatasetSessionNode(newMocks.mockSession, newMocks.mockBasicAuthProfile) as any;
         newMocks.mockProfileInstance = sharedMock.createInstanceOfProfile(newMocks.mockBasicAuthProfile);
         Object.defineProperty(Profiles, "getInstance", {
             value: vi.fn().mockReturnValue(newMocks.mockProfileInstance),
             configurable: true,
         });
+        Object.defineProperty(newMocks.mockProfileInstance, "promptCertificate", { value: vi.fn(), configurable: true });
         Object.defineProperty(newMocks.mockProfileInstance, "editSession", { value: vi.fn(), configurable: true });
         newMocks.editSpy = vi.spyOn(newMocks.mockProfileInstance, "editSession");
         Object.defineProperty(newMocks.mockProfileInstance, "ssoLogin", { value: vi.fn(), configurable: true });
@@ -107,6 +107,10 @@ describe("ProfileManagement unit tests", () => {
         Object.defineProperty(newMocks.mockProfileInstance, "handleSwitchAuthentication", { value: vi.fn(), configurable: true });
         newMocks.handleSwitchAuthenticationSpy = vi.spyOn(newMocks.mockProfileInstance, "handleSwitchAuthentication");
         Object.defineProperty(newMocks.mockProfileInstance, "ssoLogout", { value: vi.fn(), configurable: true });
+        Object.defineProperty(newMocks.mockProfileInstance, "getAllowedLoginMethod", {
+            value: vi.fn().mockReturnValue("prompt"),
+            configurable: true,
+        });
         newMocks.logoutSpy = vi.spyOn(newMocks.mockProfileInstance, "ssoLogout");
         Object.defineProperty(vscode.commands, "executeCommand", { value: vi.fn(), configurable: true });
         newMocks.commandSpy = vi.spyOn(vscode.commands, "executeCommand");
@@ -125,7 +129,9 @@ describe("ProfileManagement unit tests", () => {
         });
 
         function createBlockMocks(globalMocks): any {
-            globalMocks.logMsg = `Profile ${globalMocks.mockBasicAuthProfile.name as string} is using basic authentication.`;
+            globalMocks.logMsg =
+                `Building profile management quickpick for profile ${globalMocks.mockBasicAuthProfile.name as string}` +
+                ` with managementType=basic, allowedLoginMethod=prompt`;
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
             globalMocks.mockDsSessionNode.getProfile = vi.fn().mockReturnValue(globalMocks.mockBasicAuthProfile);
             return globalMocks;
@@ -179,7 +185,9 @@ describe("ProfileManagement unit tests", () => {
             vi.restoreAllMocks();
         });
         function createBlockMocks(globalMocks): any {
-            globalMocks.logMsg = `Profile ${globalMocks.mockTokenAuthProfile.name as string} is using token authentication.`;
+            globalMocks.logMsg =
+                `Building profile management quickpick for profile ${globalMocks.mockTokenAuthProfile.name as string}` +
+                ` with managementType=token, allowedLoginMethod=prompt`;
             globalMocks.mockUnixSessionNode = unixMock.createUSSSessionNode(globalMocks.mockSession, globalMocks.mockBasicAuthProfile) as any;
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
             globalMocks.mockDsSessionNode.getProfile = vi.fn().mockReturnValue(globalMocks.mockTokenAuthProfile);
@@ -241,7 +249,9 @@ describe("ProfileManagement unit tests", () => {
     });
     describe("unit tests around no auth declared selections", () => {
         function createBlockMocks(globalMocks): any {
-            globalMocks.logMsg = `Profile ${globalMocks.mockNoAuthProfile.name as string} authentication method is unknown.`;
+            globalMocks.logMsg =
+                `Building profile management quickpick for profile ${globalMocks.mockNoAuthProfile.name as string} ` +
+                `with managementType=none, allowedLoginMethod=prompt`;
             vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "none" } } as any);
             globalMocks.mockDsSessionNode.getProfile = vi.fn().mockReturnValue(globalMocks.mockNoAuthProfile);
             return globalMocks;
@@ -278,6 +288,7 @@ describe("ProfileManagement unit tests", () => {
             const mocks = createBlockMocks(createGlobalMocks());
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockEnableValidationChosen);
             mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[0]);
+
             await ProfileManagement.manageProfile(mocks.mockTreeProviders.ds.mSessionNodes[1]);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg.replace("sestest", "zosmf2"));
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.enableValidation", mocks.mockTreeProviders.ds.mSessionNodes[1]);
@@ -463,5 +474,120 @@ describe("ProfileManagement unit tests", () => {
             expect(ProfileManagement.getRegisteredProfileNameList(Definitions.Trees.JES)).toEqual([]);
             expect(warnSpy).toHaveBeenCalledWith(thrownError);
         });
+    });
+
+    describe("allowedLoginMethod in setupProfileManagementQp", () => {
+        let mocks;
+        beforeEach(() => {
+            mocks = createGlobalMocks();
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+
+            mocks.mockProfileInstance.allProfiles = [{ name: "sestest" }];
+            vi.spyOn(mocks.mockProfileInstance, "loadNamedProfile").mockReturnValue(sharedMock.createValidIProfile());
+            vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+                registeredMvsApiTypes: vi.fn(),
+                registeredUssApiTypes: vi.fn(),
+                registeredJesApiTypes: vi.fn(),
+                getCommonApi: vi.fn().mockReturnValue({
+                    getTokenTypeName: () => {
+                        throw new Error("test error.");
+                    },
+                    login: () => "ajshdlfkjshdalfjhas",
+                    supportsCertAuth: vi.fn().mockReturnValue(true),
+                }),
+            } as any);
+        });
+        it("should show the update certificate option when allowed login method is direct-cert-pem and call promptCertificate", async () => {
+            mocks.mockProfileInstance.getAllowedLoginMethod.mockReturnValue(imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM);
+            // mock the user selecting the update certificate option
+            mocks.mockResolveQp.mockResolvedValue(ProfileManagement.certUpdateQpItems[ProfileManagement.AuthQpLabels.updateCert]);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.arrayContaining([ProfileManagement.certUpdateQpItems[ProfileManagement.AuthQpLabels.updateCert]]),
+                })
+            );
+            // "switch auth" should not be shown if there is any explicit allowedLoginMethod
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.not.arrayContaining([ProfileManagement.switchAuthenticationQpItems[ProfileManagement.AuthQpLabels.switch]]),
+                })
+            );
+            expect(mocks.mockProfileInstance.promptCertificate).toHaveBeenCalled();
+        });
+        it("should show the log in to authentication service option when allowed login method is apiml-cert-pem", async () => {
+            mocks.mockProfileInstance.getAllowedLoginMethod.mockReturnValue(imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.arrayContaining([ProfileManagement.tokenAuthLoginQpItem[ProfileManagement.AuthQpLabels.login]]),
+                })
+            );
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.not.arrayContaining([ProfileManagement.switchAuthenticationQpItems[ProfileManagement.AuthQpLabels.switch]]),
+                })
+            );
+        });
+        it("should show the log in to authentication service option when allowed login method is apiml-basic", async () => {
+            mocks.mockProfileInstance.getAllowedLoginMethod.mockReturnValue(imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.arrayContaining([ProfileManagement.tokenAuthLoginQpItem[ProfileManagement.AuthQpLabels.login]]),
+                })
+            );
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.not.arrayContaining([ProfileManagement.switchAuthenticationQpItems[ProfileManagement.AuthQpLabels.switch]]),
+                })
+            );
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.not.arrayContaining([ProfileManagement.switchAuthenticationQpItems[ProfileManagement.AuthQpLabels.switch]]),
+                })
+            );
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.not.arrayContaining([ProfileManagement.basicAuthAddQpItems[ProfileManagement.AuthQpLabels.add]]),
+                })
+            );
+        });
+        it("should show the update credentials option when allowed login method is direct-basic", async () => {
+            mocks.mockProfileInstance.getAllowedLoginMethod.mockReturnValue(imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.arrayContaining([ProfileManagement.basicAuthUpdateQpItems[ProfileManagement.AuthQpLabels.update]]),
+                })
+            );
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.not.arrayContaining([ProfileManagement.switchAuthenticationQpItems[ProfileManagement.AuthQpLabels.switch]]),
+                })
+            );
+        });
+
+        it(
+            "should  fall back to the default basic auth case if allowed login method is direct-cert-pem," +
+                " but the extender API throws an error when checking for cert auth support",
+            async () => {
+                (ZoweExplorerApiRegister.getInstance().getCommonApi({} as any).supportsCertAuth as any).mockImplementation(() => {
+                    throw new Error("Eek!");
+                });
+                mocks.mockProfileInstance.getAllowedLoginMethod.mockReturnValue(imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM);
+                await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+                expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        items: expect.arrayContaining([ProfileManagement.basicAuthUpdateQpItems[ProfileManagement.AuthQpLabels.update]]),
+                    })
+                );
+                expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        items: expect.not.arrayContaining([ProfileManagement.switchAuthenticationQpItems[ProfileManagement.AuthQpLabels.switch]]),
+                    })
+                );
+            }
+        );
     });
 });

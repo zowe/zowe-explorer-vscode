@@ -1519,6 +1519,7 @@ describe("AuthUtils", () => {
                 value: {
                     loadNamedProfile: loadNamedProfileMock,
                     promptCredentials: vi.fn().mockImplementation((() => undefined) as any),
+                    getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
                 } as any,
                 configurable: true,
             });

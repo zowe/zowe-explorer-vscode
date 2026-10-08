@@ -224,12 +224,16 @@ export class AuthUtils {
                     imperativeError.mDetails.additionalDetails = additionalDetails.join("\n");
                 }
 
+                const allowedLoginMethod = Constants.PROFILES_CACHE.getAllowedLoginMethod(profile);
+
                 const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
                 AuthHandler.enableSequentialRequests(profile);
                 const stillLocked = await AuthHandler.getOrCreateAuthFlow(profile, {
                     authMethods: Constants.PROFILES_CACHE,
                     imperativeError,
                     isUsingTokenAuth:
+                        allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC ||
+                        allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM ||
                         sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
                         sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
                     errorCorrelation,

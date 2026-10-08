@@ -10,7 +10,7 @@
  */
 
 import { Mutex } from "async-mutex";
-import { AuthHandler, AuthCancelledError, Gui, ZoweVsCodeExtension } from "../../../../src";
+import { AuthHandler, AuthCancelledError, Gui, ZoweVsCodeExtension, ProfilesCache, imperative } from "../../../../src";
 import { FileManagement } from "../../../../src/utils/FileManagement";
 import { ImperativeError, IProfileLoaded, Session, SessConstants, RestConstants } from "@zowe/imperative";
 import { AuthPromptParams } from "../../../../src/vscode/session/AuthHandler";
@@ -19,6 +19,19 @@ import * as vscode from "vscode";
 const TEST_PROFILE_NAME = "lpar.zosmf";
 
 describe("AuthHandler", () => {
+    beforeEach(() => {
+        vi.spyOn(ProfilesCache.prototype, "loadNamedProfile").mockImplementation((name, type, _optional) => {
+            return {
+                message: "",
+                type: type || "",
+                failNotFound: false,
+                profile: {
+                    name,
+                    allowedLoginMethod: undefined,
+                },
+            };
+        });
+    });
     describe("disableLocksForType", () => {
         it("removes the profile type from the list of profile types w/ locks enabled", () => {
             AuthHandler.disableLocksForType("zosmf");
@@ -256,7 +269,7 @@ describe("AuthHandler", () => {
             ).resolves.toBe(true);
             expect(promptCredentials).not.toHaveBeenCalled();
             expect(ssoLogin).toHaveBeenCalledTimes(1);
-            expect(ssoLogin).toHaveBeenCalledWith(null, "lpar.zosmf");
+            expect(ssoLogin).toHaveBeenCalledWith(undefined, "lpar.zosmf");
             expect(unlockProfileSpy).toHaveBeenCalledTimes(1);
             expect(unlockProfileSpy).toHaveBeenCalledWith("lpar.zosmf", true);
             expect(showMessageMock).toHaveBeenCalledTimes(1);
@@ -393,6 +406,80 @@ describe("AuthHandler", () => {
             expect(errorMessageMock).toHaveBeenCalledTimes(1);
             expect(promptCredentials).toHaveBeenCalledTimes(1);
         });
+
+        it(
+            "prompts for certificate if the profile has allowedLoginMethod=direct-cert-pem" + " and unlocks the profile on successful cert prompt",
+            async () => {
+                vi.spyOn(ProfilesCache.prototype, "loadNamedProfile").mockImplementation((name, type, _optional) => {
+                    return {
+                        message: "",
+                        type: type || "",
+                        failNotFound: false,
+                        profile: {
+                            name,
+                            allowedLoginMethod: imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM,
+                        },
+                    };
+                });
+                const promptCertificateSpy = vi.spyOn(ProfilesCache.prototype, "promptCertificate").mockResolvedValue({
+                    certKey: "good",
+                    cert: "good",
+                    action: "save",
+                });
+                const unlockSpy = vi.spyOn(AuthHandler, "unlockProfile");
+                const tokenNotValidMsg = "Invalid credentials";
+                const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
+                const ssoLogin = vi.fn();
+                const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockClear().mockResolvedValueOnce("Update Certificate");
+
+                const result = await AuthHandler.promptForAuthentication("lpar.zosmf", {
+                    authMethods: { promptCredentials: vi.fn(), ssoLogin },
+                    imperativeError,
+                });
+
+                expect(result).toBe(true);
+                expect(ssoLogin).not.toHaveBeenCalled();
+                expect(errorMessageMock).toHaveBeenCalledTimes(1);
+                expect(promptCertificateSpy).toHaveBeenCalledTimes(1);
+                expect(unlockSpy).toHaveBeenCalledTimes(1);
+            }
+        );
+
+        it(
+            "prompts for certificate if the profile has allowedLoginMethod=direct-cert-pem" +
+                " and does NOT unlock the profile if the cert prompt is canceled",
+            async () => {
+                vi.spyOn(ProfilesCache.prototype, "loadNamedProfile").mockImplementation((name, type, _optional) => {
+                    return {
+                        message: "",
+                        type: type || "",
+                        failNotFound: false,
+                        profile: {
+                            name,
+                            allowedLoginMethod: imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM,
+                        },
+                    };
+                });
+                // cert prompt canceled
+                const promptCertificateSpy = vi.spyOn(ProfilesCache.prototype, "promptCertificate").mockResolvedValue(undefined);
+                const unlockSpy = vi.spyOn(AuthHandler, "unlockProfile");
+                const tokenNotValidMsg = "Invalid credentials";
+                const imperativeError = new ImperativeError({ additionalDetails: tokenNotValidMsg, msg: tokenNotValidMsg });
+                const ssoLogin = vi.fn();
+                const errorMessageMock = vi.spyOn(Gui, "errorMessage").mockClear().mockResolvedValueOnce("Update Certificate");
+
+                const result = await AuthHandler.promptForAuthentication("lpar.zosmf", {
+                    authMethods: { promptCredentials: vi.fn(), ssoLogin },
+                    imperativeError,
+                });
+
+                expect(result).toBe(false);
+                expect(ssoLogin).not.toHaveBeenCalled();
+                expect(errorMessageMock).toHaveBeenCalledTimes(1);
+                expect(promptCertificateSpy).toHaveBeenCalledTimes(1);
+                expect(unlockSpy).toHaveBeenCalledTimes(0);
+            }
+        );
     });
 
     describe("AuthCancelledError", () => {

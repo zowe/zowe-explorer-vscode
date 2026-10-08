@@ -46,6 +46,8 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public getSessionFromCommandArgument(cmdArgs: imperative.ICommandArguments): imperative.Session {
             const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
             imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
+            // todo remove when SDK fixed
+            sessCfg.allowedLoginMethod = cmdArgs.allowedLoginMethod;
             const sessionToUse = new imperative.Session(sessCfg);
             sessionToUse.ISession.socketConnectTimeout = VscSettings.getDirectValue(
                 "zowe.settings.socketConnectTimeout",
@@ -107,6 +109,13 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
 
         public logout(session: imperative.Session): Promise<void> {
             return Logout.apimlLogout(session);
+        }
+        /**
+         * z/OSMF supports cert-pem authentication.
+         * @returns True
+         */
+        public supportsCertAuth(): boolean {
+            return true;
         }
     }
 
