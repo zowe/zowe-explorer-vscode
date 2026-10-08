@@ -565,7 +565,6 @@
   "EBCDIC": "EBCDIC",
   "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>": "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>",
   "Edit Attributes": "Edit Attributes",
-  "Edit History": "Edit History",
   "Edit Options (Case Sensitive: {0}, Regex: {1})/Case SensitiveRegex": {
     "message": "Edit Options (Case Sensitive: {0}, Regex: {1})",
     "comment": [
@@ -1545,6 +1544,7 @@
   },
   "MVS data set enhancements": "MVS data set enhancements",
   "Manage Persistent Properties": "Manage Persistent Properties",
+  "Manage Saved Data": "Manage Saved Data",
   "Many issues have been addressed to allow screen readers to better navigate and use Zowe Explorer features.": "Many issues have been addressed to allow screen readers to better navigate and use Zowe Explorer features.",
   "Member '{0}' not found in PDS '{1}'/Member namePDS name": {
     "message": "Member '{0}' not found in PDS '{1}'",
@@ -1951,6 +1951,7 @@
   "Renamed 'Display in Tree' to 'Locate in Tree' in table views to improve clarity. <a>#3771</a>": "Renamed 'Display in Tree' to 'Locate in Tree' in table views to improve clarity. <a>#3771</a>",
   "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>": "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>",
   "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>": "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>",
+  "Renamed the \"Edit History\" command to \"Manage Saved Data\". <a>#3804</a>": "Renamed the \"Edit History\" command to \"Manage Saved Data\". <a>#3804</a>",
   "Renamed the \"Restart zowex server on host...\" command to \"\"Restart SSH server on host...\". <a>#4489</a>": "Renamed the \"Restart zowex server on host...\" command to \"\"Restart SSH server on host...\". <a>#4489</a>",
   "Renamed the \"Uninstall zowex server on host...\" command to \"\"Uninstall SSH server on host...\". <a>#4489</a>": "Renamed the \"Uninstall zowex server on host...\" command to \"\"Uninstall SSH server on host...\". <a>#4489</a>",
   "Renaming data set {0}/Old data set name": {
