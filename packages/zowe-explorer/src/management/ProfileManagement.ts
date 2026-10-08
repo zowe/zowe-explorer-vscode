@@ -149,9 +149,10 @@ export class ProfileManagement {
         }
 
         const placeholders = this.getQpPlaceholders(profile);
-        // APIML cert pem, bearer and token trigger the same flow - log in to authentication service
+        // APIML basic, apiml cert pem,  managementType bearer and token trigger the same flow - log in to authentication service
         if (
             (supportsCertAuth && allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM) ||
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC ||
             managementType === imperative.SessConstants.AUTH_TYPE_BEARER ||
             managementType === imperative.SessConstants.AUTH_TYPE_TOKEN
         ) {

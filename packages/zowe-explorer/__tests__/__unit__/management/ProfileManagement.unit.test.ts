@@ -529,6 +529,30 @@ describe("ProfileManagement unit tests", () => {
                 })
             );
         });
+        it("should show the log in to authentication service option when allowed login method is apiml-basic", async () => {
+            mocks.mockProfileInstance.getAllowedLoginMethod.mockReturnValue(imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.arrayContaining([ProfileManagement.tokenAuthLoginQpItem[ProfileManagement.AuthQpLabels.login]]),
+                })
+            );
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.not.arrayContaining([ProfileManagement.switchAuthenticationQpItems[ProfileManagement.AuthQpLabels.switch]]),
+                })
+            );
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.not.arrayContaining([ProfileManagement.switchAuthenticationQpItems[ProfileManagement.AuthQpLabels.switch]]),
+                })
+            );
+            expect(mocks.mockResolveQp).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    items: expect.not.arrayContaining([ProfileManagement.basicAuthAddQpItems[ProfileManagement.AuthQpLabels.add]]),
+                })
+            );
+        });
         it("should show the update credentials option when allowed login method is direct-basic", async () => {
             mocks.mockProfileInstance.getAllowedLoginMethod.mockReturnValue(imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
