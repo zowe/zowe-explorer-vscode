@@ -913,6 +913,67 @@ describe("configEditor", () => {
             expect(handleOpenConfigFileSpy).toHaveBeenCalledWith(mockMessage);
         });
 
+        it("should handle SAVE_CHANGES with defaultsChanges clearing a default", async () => {
+            const mockMessage = {
+                command: "SAVE_CHANGES",
+                configPath: "/test/config/path",
+                defaultsChanges: [
+                    {
+                        key: "zosmf",
+                        value: "",
+                        path: ["defaults", "zosmf"],
+                        configPath: "/test/config/path",
+                        secure: false,
+                    },
+                ],
+                renames: [],
+                otherChanges: [],
+            };
+
+            vi.spyOn((configEditor as any).profileOperations, "handleProfileRenames").mockResolvedValue(undefined);
+            vi.spyOn(ConfigChangeHandlers, "handleAutostoreToggle").mockResolvedValue(undefined);
+            vi.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
+            vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
+            vi.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
+
+            ConfigUtils.parseConfigChanges.mockReturnValue([
+                {
+                    configPath: "/test/config/path",
+                    defaultsChanges: [
+                        {
+                            key: "zosmf",
+                            value: "",
+                            path: ["defaults", "zosmf"],
+                            configPath: "/test/config/path",
+                            secure: false,
+                        },
+                    ],
+                    defaultsDeleteKeys: [],
+                    changes: [],
+                    deletions: [],
+                },
+            ]);
+
+            const handleDefaultChangesSpy = vi.fn().mockResolvedValue(undefined);
+            ConfigChangeHandlers.handleDefaultChanges = handleDefaultChangesSpy;
+
+            await (configEditor as any).onDidReceiveMessage(mockMessage);
+
+            expect(handleDefaultChangesSpy).toHaveBeenCalledWith(
+                [
+                    {
+                        key: "zosmf",
+                        value: "",
+                        path: ["defaults", "zosmf"],
+                        configPath: "/test/config/path",
+                        secure: false,
+                    },
+                ],
+                [],
+                "/test/config/path"
+            );
+        });
+
         it("should handle unknown command gracefully", async () => {
             const mockMessage = {
                 command: "UNKNOWN_COMMAND",

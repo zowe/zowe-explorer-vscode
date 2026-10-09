@@ -40,6 +40,16 @@ describe("defaultsValidation", () => {
             });
             expect(value).toBe("new");
         });
+        it("returns empty string when pending default clears the saved default", () => {
+            const value = getEffectiveDefaultValue({
+                profileType: "zosmf",
+                configPath,
+                savedDefaults: { zosmf: "saved" },
+                pendingDefaults: { [configPath]: { zosmf: { value: "", path: ["defaults", "zosmf"] } } },
+                renames: {},
+            });
+            expect(value).toBe("");
+        });
         it("returns an empty string when unset", () => {
             const value = getEffectiveDefaultValue({
                 profileType: "zosmf",

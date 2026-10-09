@@ -165,3 +165,38 @@ describe("handleInitialSelectionMessage — profile card vs property highlight",
         expect(props.setHighlightProfileCard).not.toHaveBeenCalled();
     });
 });
+
+describe("handleConfigurationsMessage — flattenedDefaults path prefix", () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    it("ensures flattenedDefaults paths are prefixed with 'defaults'", () => {
+        const props = makeProps({ selectedTab: 0 });
+        const contents = [
+            {
+                configPath: "/mock/zowe.config.json",
+                properties: {
+                    profiles: {},
+                    defaults: {
+                        zosmf: "my_zosmf",
+                        nested: {
+                            sub: "val",
+                        },
+                    },
+                },
+            } as any,
+        ];
+
+        handleConfigurationsMessage({ contents }, props);
+
+        expect(props.setFlattenedDefaults).toHaveBeenCalledWith(
+            expect.objectContaining({
+                zosmf: expect.objectContaining({
+                    path: ["defaults", "zosmf"],
+                }),
+                "nested.sub": expect.objectContaining({
+                    path: ["defaults", "nested", "sub"],
+                }),
+            })
+        );
+    });
+});

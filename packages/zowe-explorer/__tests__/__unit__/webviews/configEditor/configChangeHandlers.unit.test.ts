@@ -191,6 +191,27 @@ describe("ConfigChangeHandlers", () => {
             expect(mockTeamConfig.save).toHaveBeenCalled();
         });
 
+        it("should delete default entry when change value is empty string", async () => {
+            const changes: ChangeEntry[] = [
+                {
+                    key: "zosmf",
+                    value: "",
+                    path: ["defaults", "zosmf"],
+                    configPath: "/mock/config.json",
+                    secure: false,
+                },
+            ];
+
+            const deletions: ChangeEntry[] = [];
+            const activeLayer = "/mock/config.json";
+
+            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer);
+
+            expect(mockProfiles.defaultSet).not.toHaveBeenCalled();
+            expect(mockTeamConfig.delete).toHaveBeenCalledWith("defaults.zosmf");
+            expect(mockTeamConfig.save).toHaveBeenCalled();
+        });
+
         it("should activate different layer when activeLayer differs from current", async () => {
             const changes: ChangeEntry[] = [];
             const deletions: ChangeEntry[] = [];
@@ -585,6 +606,39 @@ describe("ConfigChangeHandlers", () => {
 
             expect(teamConfig.api.profiles.defaultSet).toHaveBeenCalledWith("ssh", "test-ssh");
             expect(teamConfig.delete).toHaveBeenCalledWith("defaults.base");
+        });
+
+        it("should delete default entry in simulation mode when change value is empty string", async () => {
+            const changes: ChangeEntry[] = [
+                {
+                    key: "zosmf",
+                    value: "",
+                    path: ["defaults", "zosmf"],
+                    configPath: "/mock/config.json",
+                    secure: false,
+                },
+            ];
+
+            const deletions: ChangeEntry[] = [];
+            const activeLayer = "/mock/config.json";
+            const teamConfig = {
+                api: {
+                    layers: {
+                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
+                        activate: vi.fn(),
+                    },
+                    profiles: {
+                        defaultSet: vi.fn(),
+                    },
+                },
+                layers: [],
+                delete: vi.fn(),
+            };
+
+            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer, teamConfig);
+
+            expect(teamConfig.api.profiles.defaultSet).not.toHaveBeenCalled();
+            expect(teamConfig.delete).toHaveBeenCalledWith("defaults.zosmf");
         });
 
         it("should activate different layer when activeLayer differs from current", async () => {

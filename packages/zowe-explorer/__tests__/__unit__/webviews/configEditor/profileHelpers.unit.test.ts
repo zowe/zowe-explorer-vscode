@@ -75,6 +75,12 @@ describe("profileHelpers", () => {
                 isProfileDefault({ profileKey: "base", selectedTab: 0, configurations: configs, pendingChanges: {}, pendingDefaults, renames: {} })
             ).toBe(true);
         });
+        it("returns false when pending default clears the saved default", () => {
+            const pendingDefaults = { [configPath]: { zowe: { value: "", path: ["defaults", "zowe"] } } };
+            expect(
+                isProfileDefault({ profileKey: "base", selectedTab: 0, configurations: configs, pendingChanges: {}, pendingDefaults, renames: {} })
+            ).toBe(false);
+        });
         it("returns true when default was renamed to current profile", () => {
             const renames = { [configPath]: { oldBase: "base" } };
             const configsWithRename = [

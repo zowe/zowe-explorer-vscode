@@ -191,6 +191,7 @@ export function ProfileTree({
   const { isProfileAffectedByDragDrop } = useUtilityHelpers();
 
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; profileKey: string | null } | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const copyProfile = (profileKey: string, isCut: boolean) => {
     const currentTab = ctxSelectedTab !== null && ctxSelectedTab !== undefined ? ctxSelectedTab : selectedTab;
@@ -640,15 +641,27 @@ export function ProfileTree({
   };
 
   useEffect(() => {
-    const handleClick = () => {
-      setContextMenu(null);
+    if (!contextMenu) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
+        setContextMenu(null);
+      }
     };
-    if (contextMenu) {
-      document.addEventListener("click", handleClick);
-      return () => {
-        document.removeEventListener("click", handleClick);
-      };
-    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setContextMenu(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside, true);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [contextMenu]);
 
   useEffect(() => {
@@ -1316,8 +1329,14 @@ export function ProfileTree({
         minHeight: "100%",
         width: "100%",
       }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onProfileSelect("");
+        }
+      }}
       onContextMenu={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         const menuWidth = 150;
         const menuHeight = 50;
         const viewportWidth = window.innerWidth;
@@ -1335,32 +1354,15 @@ export function ProfileTree({
     >
       {draggedProfile && !isDraggingRootProfile && renderRootDropZone()}
       {treeNodes.map((node) => renderNode(node))}
-      <div
-        className="profile-tree-empty-space"
-        data-testid="profile-tree-empty-space"
-        data-profile-key="ROOT"
-        style={{
-          flex: 1,
-          minHeight: "120px",
-          width: "100%",
-          cursor: "default",
-        }}
-        onClick={() => onProfileSelect("")}
-      />
       {contextMenu && (
-        <div className="tab-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }} onClick={(e) => e.stopPropagation()}>
+        <div
+          ref={contextMenuRef}
+          className="tab-context-menu"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
           {contextMenu.profileKey !== null ? (
             <>
-              <div
-                className="tab-context-menu-item"
-                onClick={() => {
-                  copyProfile(contextMenu.profileKey!, false);
-                  setContextMenu(null);
-                }}
-              >
-                <span className="codicon codicon-copy codicon-tab-menu-icon"></span>
-                <span>{l10n.t("Copy")}</span>
-              </div>
               <div
                 className="tab-context-menu-item"
                 onClick={() => {
@@ -1370,6 +1372,16 @@ export function ProfileTree({
               >
                 <span className="codicon codicon-screen-cut codicon-tab-menu-icon"></span>
                 <span>{l10n.t("Cut")}</span>
+              </div>
+              <div
+                className="tab-context-menu-item"
+                onClick={() => {
+                  copyProfile(contextMenu.profileKey!, false);
+                  setContextMenu(null);
+                }}
+              >
+                <span className="codicon codicon-copy codicon-tab-menu-icon"></span>
+                <span>{l10n.t("Copy")}</span>
               </div>
               {profileClipboard ? (
                 <>

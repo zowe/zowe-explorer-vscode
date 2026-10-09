@@ -16,6 +16,7 @@ import {
     detectClosedLoops,
     checkIfRenameCancelsOut,
     hasPendingRename,
+    buildFormattedPendingChanges,
 } from "../../../../src/webviews/src/config-editor/utils/renameUtils";
 import { getOriginalProfileKeyWithNested, getRenamedProfileKeyWithNested } from "../../../../src/webviews/src/config-editor/utils/profileRenames";
 
@@ -344,6 +345,32 @@ describe("renameUtils", () => {
         });
         it("returns false when profileKey not in renames", () => {
             expect(hasPendingRename("p1", "/c", { "/c": {} })).toBe(false);
+        });
+    });
+
+    describe("buildFormattedPendingChanges", () => {
+        it("includes defaultsChanges with empty value when default is cleared", () => {
+            const result = buildFormattedPendingChanges({
+                pendingChanges: {},
+                deletions: {},
+                pendingDefaults: {
+                    "/mock/config.json": {
+                        zosmf: { value: "", path: ["defaults", "zosmf"] },
+                    },
+                },
+                defaultsDeletions: {},
+                renames: {},
+            });
+
+            expect(result.defaultsChanges).toEqual([
+                {
+                    key: "zosmf",
+                    value: "",
+                    path: ["defaults", "zosmf"],
+                    configPath: "/mock/config.json",
+                    secure: false,
+                },
+            ]);
         });
     });
 });

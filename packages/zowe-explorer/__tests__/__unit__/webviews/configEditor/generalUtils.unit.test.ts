@@ -69,5 +69,9 @@ describe("generalUtils", () => {
             const obj = { x: 42 };
             expect(getNestedProperty(obj, ["x"])).toBe(42);
         });
+        it("returns nested defaults property when path starts with defaults", () => {
+            const obj = { defaults: { zosmf: "zosmf_prod" } };
+            expect(getNestedProperty(obj, ["defaults", "zosmf"])).toBe("zosmf_prod");
+        });
     });
 });

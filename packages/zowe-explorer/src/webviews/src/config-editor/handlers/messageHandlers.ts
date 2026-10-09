@@ -199,7 +199,12 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
         const indexToUse = (prev: number | null) => (prev !== null && prev < contents.length ? prev : 0);
         const config = contents[indexToUse(selectedTab ?? 0)].properties;
         setFlattenedConfig(flattenKeys(config.profiles));
-        setFlattenedDefaults(flattenKeys(config.defaults));
+        const flatDefs = flattenKeys(config.defaults);
+        const defsWithPath: typeof flatDefs = {};
+        for (const [k, v] of Object.entries(flatDefs)) {
+            defsWithPath[k] = { ...v, path: v.path[0] === "defaults" ? v.path : ["defaults", ...v.path] };
+        }
+        setFlattenedDefaults(defsWithPath);
     }
 
     // Send ready message to ConfigEditor after configurations are processed

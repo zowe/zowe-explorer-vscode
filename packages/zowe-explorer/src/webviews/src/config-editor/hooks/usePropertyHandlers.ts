@@ -98,9 +98,9 @@ export function usePropertyHandlers(params: PropertyHandlersParams) {
 
                     setPendingDefaults((prev) => {
                         const next = { ...prev[configPath] };
-                        next[oldType] = { value: "", path: [oldType] };
+                        next[oldType] = { value: "", path: ["defaults", oldType] };
                         if (shouldSetNew) {
-                            next[newTypeStr] = { value: profileKey, path: [newTypeStr] };
+                            next[newTypeStr] = { value: profileKey, path: ["defaults", newTypeStr] };
                         }
                         return { ...prev, [configPath]: next };
                     });
@@ -110,7 +110,9 @@ export function usePropertyHandlers(params: PropertyHandlersParams) {
             const displayKey = path[path.length - 1];
             const currentSecure = utilityHelpers.isPropertySecure(key, displayKey, path, undefined);
             const originalValue = getNestedProperty(configurations[selectedTab!].properties, path);
-            const isBackToOriginal = stringifyValueByType(value) === stringifyValueByType((originalValue !== undefined && originalValue !== null ? originalValue : "") as any);
+            const isBackToOriginal =
+                stringifyValueByType(value) ===
+                stringifyValueByType((originalValue !== undefined && originalValue !== null ? originalValue : "") as any);
 
             setPendingChanges((prev) => {
                 const nextConfigChanges = { ...prev[configPath] };
@@ -158,9 +160,12 @@ export function usePropertyHandlers(params: PropertyHandlersParams) {
             // Cancel any pending property deletion when user changes defaults
             setPendingPropertyDeletion(null);
             const configPath = configurations[selectedTab!]!.configPath;
-            const path = flattenedDefaults[key]?.path ?? key.split(".");
+            const defaultPath = flattenedDefaults[key]?.path ?? key.split(".");
+            const path = defaultPath[0] === "defaults" ? defaultPath : ["defaults", ...defaultPath];
             const originalValue = getNestedProperty(configurations[selectedTab!].properties, path);
-            const isBackToOriginal = stringifyValueByType(value) === stringifyValueByType((originalValue !== undefined && originalValue !== null ? originalValue : "") as any);
+            const isBackToOriginal =
+                stringifyValueByType(value) ===
+                stringifyValueByType((originalValue !== undefined && originalValue !== null ? originalValue : "") as any);
 
             setPendingDefaults((prev) => {
                 const nextConfigDefaults = { ...prev[configPath] };

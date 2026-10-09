@@ -63,7 +63,11 @@ export class ConfigChangeHandlers {
         this.activateLayerIfNeeded(configToUse, activeLayer);
 
         for (const change of changes) {
-            configToUse.api.profiles.defaultSet(change.key, change.value);
+            if (change.value === "" || change.value == null) {
+                configToUse.delete(`defaults.${change.key}`);
+            } else {
+                configToUse.api.profiles.defaultSet(change.key, change.value);
+            }
         }
 
         for (const deletion of deletions) {

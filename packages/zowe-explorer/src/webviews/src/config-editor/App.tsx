@@ -221,7 +221,12 @@ function AppContent() {
     if (selectedTab !== null && configurations[selectedTab]) {
       const config = configurations[selectedTab].properties;
       setFlattenedConfig(flattenKeys(config.profiles ?? {}));
-      setFlattenedDefaults(flattenKeys(config.defaults ?? {}));
+      const flatDefs = flattenKeys(config.defaults ?? {});
+      const defsWithPath: typeof flatDefs = {};
+      for (const [k, v] of Object.entries(flatDefs)) {
+        defsWithPath[k] = { ...v, path: v.path[0] === "defaults" ? v.path : ["defaults", ...v.path] };
+      }
+      setFlattenedDefaults(defsWithPath);
       if (!isSaving) {
         setMergedProperties(null);
       }
@@ -307,7 +312,7 @@ function AppContent() {
       ...prev,
       [configPath]: {
         ...prev[configPath],
-        [profileType]: { value: profileKey, path: [profileType] },
+        [profileType]: { value: profileKey, path: ["defaults", profileType] },
       },
     }));
 
@@ -547,7 +552,7 @@ function AppContent() {
             onHighlightProfileCardConsumed={() => setHighlightProfileCard(false)}
           />
         )}
-        renderDefaults={(defaults) => <RenderDefaults defaults={defaults} handleDefaultsChange={handleDefaultsChange} />}
+        renderDefaults={(defaults) => <RenderDefaults defaults={defaults ?? {}} handleDefaultsChange={handleDefaultsChange} />}
         onProfileWizard={() => setWizardModalOpen(true)}
         onViewModeToggle={() => setViewModeWithStorage(viewMode === "tree" ? "flat" : "tree")}
         onClearChanges={handleRefresh}
