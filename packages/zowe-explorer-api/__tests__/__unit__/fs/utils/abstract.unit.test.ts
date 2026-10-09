@@ -147,3 +147,47 @@ describe("getApiOrThrowUnavailable", () => {
         ).toThrow(expected);
     });
 });
+
+describe("isReadOnlyUri", () => {
+    it("returns true when the readonly query parameter is true", () => {
+        expect(FsAbstractUtils.isReadOnlyUri(fakeUri.with({ query: "readonly=true" }))).toBe(true);
+        expect(FsAbstractUtils.isReadOnlyUri(fakeUri.with({ query: "fetch=true&readonly=true" }))).toBe(true);
+    });
+
+    it("returns false when the readonly query parameter is missing or not true", () => {
+        expect(FsAbstractUtils.isReadOnlyUri(fakeUri)).toBe(false);
+        expect(FsAbstractUtils.isReadOnlyUri(fakeUri.with({ query: "fetch=true" }))).toBe(false);
+        expect(FsAbstractUtils.isReadOnlyUri(fakeUri.with({ query: "readonly=false" }))).toBe(false);
+    });
+});
+
+describe("applyReadOnlyPermission", () => {
+    const stat: vscode.FileStat = { type: vscode.FileType.File, ctime: 0, mtime: 1, size: 2 };
+
+    it("returns a copy of the stat with read-only permissions for a read-only URI", () => {
+        const result = FsAbstractUtils.applyReadOnlyPermission(fakeUri.with({ query: "readonly=true" }), stat);
+        expect(result).toStrictEqual({ ...stat, permissions: vscode.FilePermission.Readonly });
+        expect(stat.permissions).toBeUndefined();
+    });
+
+    it("returns the original stat for a URI that is not read-only", () => {
+        expect(FsAbstractUtils.applyReadOnlyPermission(fakeUri, stat)).toBe(stat);
+    });
+
+    it("returns the stat as-is if it is null", () => {
+        expect(FsAbstractUtils.applyReadOnlyPermission(fakeUri.with({ query: "readonly=true" }), null as any)).toBeNull();
+    });
+});
+
+describe("throwIfReadOnly", () => {
+    it("throws a NoPermissions error for a read-only URI", () => {
+        const noPermissionsSpy = vi.spyOn(vscode.FileSystemError, "NoPermissions");
+        expect(() => FsAbstractUtils.throwIfReadOnly(fakeUri.with({ query: "readonly=true" }))).toThrow();
+        expect(noPermissionsSpy).toHaveBeenCalledWith("file.txt was opened in read-only mode and cannot be modified.");
+        noPermissionsSpy.mockRestore();
+    });
+
+    it("does not throw for a URI that is not read-only", () => {
+        expect(() => FsAbstractUtils.throwIfReadOnly(fakeUri)).not.toThrow();
+    });
+});
