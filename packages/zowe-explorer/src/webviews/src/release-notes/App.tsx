@@ -12,7 +12,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { JSX } from "preact";
 import { isSecureOrigin } from "../utils";
-import { VSCodeDropdown, VSCodeOption, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react";
+import type { VscodeCheckbox, VscodeSingleSelect } from "@vscode-elements/elements";
 import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
@@ -74,13 +74,13 @@ export function App(): JSX.Element {
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "ready" });
   }, []);
 
-  const handleDisplayAfterUpdateChange = (event: JSX.TargetedEvent<HTMLInputElement>) => {
+  const handleDisplayAfterUpdateChange = (event: JSX.TargetedEvent<VscodeCheckbox>) => {
     const checked = event.currentTarget.checked;
     setDisplayAfterUpdate(checked);
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "toggleDisplayAfterUpdate", checked });
   };
 
-  const handleVersionChange = (event: JSX.TargetedEvent<HTMLSelectElement>) => {
+  const handleVersionChange = (event: JSX.TargetedEvent<VscodeSingleSelect>) => {
     const selectedVersion = event.currentTarget.value;
     setVersion(selectedVersion);
     PersistentVSCodeAPI.getVSCodeAPI().postMessage({ command: "selectVersion", version: selectedVersion });
@@ -199,18 +199,18 @@ export function App(): JSX.Element {
         </div>
         <div className="releaseNotesDropdownsRow">
           <div className="releaseNotesDropdownCol">
-            <VSCodeCheckbox checked={displayAfterUpdate} onChange={handleDisplayAfterUpdateChange}>
+            <vscode-checkbox checked={displayAfterUpdate} onChange={handleDisplayAfterUpdateChange}>
               <span className="releaseNotesDropdownLabelText">{l10n.t("Display release notes after an update")}</span>
-            </VSCodeCheckbox>
+            </vscode-checkbox>
           </div>
           <div className="releaseNotesDropdownCol">
-            <VSCodeDropdown value={version ?? ""} onChange={handleVersionChange} className="releaseNotesDropdown">
+            <vscode-single-select value={version ?? ""} onChange={handleVersionChange} className="releaseNotesDropdown">
               {versionOptions.map((ver) => (
-                <VSCodeOption value={ver} key={ver}>
+                <vscode-option value={ver} key={ver} selected={ver === version}>
                   {ver}
-                </VSCodeOption>
+                </vscode-option>
               ))}
-            </VSCodeDropdown>
+            </vscode-single-select>
           </div>
         </div>
         <div className="releaseNotesTabs">

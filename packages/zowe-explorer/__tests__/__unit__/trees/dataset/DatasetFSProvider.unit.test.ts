@@ -14,6 +14,7 @@ import { Disposable, FilePermission, FileSystemError, FileType, TextEditor, Uri 
 import * as vscode from "vscode";
 import { createIProfile } from "../../../__mocks__/mockCreators/shared";
 import {
+    AuthCancelledError,
     AuthHandler,
     DirEntry,
     DsEntry,
@@ -182,6 +183,34 @@ describe("DatasetFSProvider", () => {
         });
     });
 
+    describe("readDirectoryImplementation", () => {
+        it("surfaces an authentication error instead of reporting the data set as missing", async () => {
+            const authError = new AuthCancelledError("sestest", "User cancelled authentication");
+            vi.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockRejectedValueOnce(authError);
+
+            await expect(DatasetFSProvider.instance.readDirectoryImplementation(testUris.pds, true)).rejects.toThrow(authError);
+        });
+
+        it("surfaces an Unavailable error instead of reporting the data set as missing", async () => {
+            const unavailableError = FileSystemError.Unavailable(testUris.pds);
+            vi.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockRejectedValueOnce(unavailableError);
+
+            await expect(DatasetFSProvider.instance.readDirectoryImplementation(testUris.pds, true)).rejects.toThrow(unavailableError);
+        });
+
+        it("falls back to a remote lookup when the entry is not cached locally", async () => {
+            const lookupAsDirMock = vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockImplementation(() => {
+                throw FileSystemError.FileNotFound(testUris.pds);
+            });
+            const pdsEntry = { ...testEntries.pds };
+            const remoteLookupMock = vi.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockResolvedValueOnce(pdsEntry as any);
+
+            await expect(DatasetFSProvider.instance.readDirectoryImplementation(testUris.pds)).resolves.toBe(pdsEntry);
+            expect(lookupAsDirMock).toHaveBeenCalled();
+            expect(remoteLookupMock).toHaveBeenCalledWith(testUris.pds);
+        });
+    });
+
     describe("readDirectory", () => {
         describe("filter entry (session)", () => {
             it("calls dataSetsMatchingPattern when reading directories if it exists", async () => {
@@ -221,6 +250,7 @@ describe("DatasetFSProvider", () => {
                             ],
                         },
                     }),
+                    resolveAlias: vi.fn(),
                 };
                 vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
                 expect(await DatasetFSProvider.instance.readDirectory(testUris.session.with({ query: "pattern=USER.*" }))).toStrictEqual([
@@ -230,12 +260,91 @@ describe("DatasetFSProvider", () => {
                     ["USER.DATA.DS2", FileType.File],
                 ]);
                 expect(mockMvsApi.dataSet).toHaveBeenCalledWith("USER.*");
+                expect(mockMvsApi.resolveAlias).not.toHaveBeenCalled();
             });
         });
 
         it("throws an error if lookup returns a non-filesystem error", async () => {
             vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockRejectedValue(new Error());
             await expect(DatasetFSProvider.instance.readDirectory).rejects.toThrow();
+        });
+
+        it("calls resolveAlias on a data set with *ALIAS volume and renders as directory", async () => {
+            const targetDsn = "OTHER.ORIGINAL.DATASET";
+            const aliasName = "USER.WONDRFUL.ALIAS";
+            const mockMvsApi = {
+                resolveAlias: vi.fn().mockResolvedValue({
+                    apiResponse: {
+                        targetDsn: targetDsn,
+                    },
+                }),
+                dataSet: vi.fn().mockImplementation((dsn, _opts) => {
+                    if (dsn === targetDsn) {
+                        return {
+                            success: true,
+                            apiResponse: {
+                                items: [
+                                    {
+                                        dsname: targetDsn,
+                                        recfm: "FB",
+                                        dsorg: "PO",
+                                    },
+                                ],
+                            },
+                        };
+                    } else if (dsn === aliasName) {
+                        return {
+                            success: true,
+                            apiResponse: {
+                                items: [
+                                    {
+                                        dsname: aliasName,
+                                        vol: "*ALIAS",
+                                    },
+                                ],
+                            },
+                        };
+                    }
+                }),
+                allMembers: vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [{ member: "ALIASM1", m4date: "2024-08-08", mtime: "12", msec: "30" }],
+                    },
+                    commandResponse: "",
+                }),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            expect(
+                await DatasetFSProvider.instance.readDirectory(Uri.from({ scheme: ZoweScheme.DS, path: "/aliastest/USER.WONDRFUL.ALIAS" }))
+            ).toStrictEqual([["ALIASM1", FileType.File]]);
+            expect(mockMvsApi.resolveAlias).toHaveBeenCalledWith("USER.WONDRFUL.ALIAS");
+        });
+
+        it("won't resolve an alias and throws an error if the MVS API does not support it ", async () => {
+            const aliasName = "USER.WONDRFUL.ALIAS";
+            const mockMvsApi = {
+                resolveAlias: undefined,
+                dataSet: vi.fn().mockImplementation((dsn, _opts) => {
+                    if (dsn === aliasName) {
+                        return {
+                            success: true,
+                            apiResponse: {
+                                items: [
+                                    {
+                                        dsname: aliasName,
+                                        vol: "*ALIAS",
+                                    },
+                                ],
+                            },
+                        };
+                    }
+                }),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            await expect(
+                DatasetFSProvider.instance.readDirectory(Uri.from({ scheme: ZoweScheme.DS, path: "/aliasnotsupportedtest/USER.WONDRFUL.ALIAS" }))
+            ).rejects.toBeInstanceOf(FileSystemError);
         });
 
         describe("PDS entry", () => {
@@ -508,6 +617,45 @@ describe("DatasetFSProvider", () => {
             vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue(fakePo);
             vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
             expect(await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps, { isConflict: true })).toBe(null);
+        });
+
+        it("supplies a fresh response stream to each retry attempt after an auth failure", async () => {
+            const contents = "dataset contents";
+            const getContents = vi
+                .fn()
+                // First attempt fails with a 401. Imperative ends the response stream even on the
+                // error path ("Ending response stream"), so the stream cannot be reused afterwards.
+                .mockImplementationOnce((_dsn, opts) => {
+                    opts.stream.end();
+                    throw new imperative.ImperativeError({
+                        msg: "Rest API failure with HTTP(S) status 401",
+                        errorCode: imperative.RestConstants.HTTP_STATUS_401.toString(),
+                    });
+                })
+                // Retry after the user re-authenticates: rejects the way Imperative does if it is
+                // handed a stream that was already ended by a previous attempt.
+                .mockImplementationOnce((_dsn, opts) => {
+                    if (opts.stream.writableEnded) {
+                        throw new imperative.ImperativeError({ msg: "Error writing to responseStream" });
+                    }
+                    opts.stream.write(contents);
+                    return { apiResponse: { etag: "1234ETAG" } };
+                });
+
+            const fakePo = { ...testEntries.ps };
+            vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue(fakePo);
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ getContents } as any);
+            // Simulate the user successfully re-authenticating so that retryRequest makes a second attempt
+            const handleProfileAuthOnErrorMock = vi.spyOn(AuthUtils, "handleProfileAuthOnError").mockResolvedValue(undefined);
+
+            const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
+
+            expect(handleProfileAuthOnErrorMock).toHaveBeenCalledTimes(1);
+            expect(getContents).toHaveBeenCalledTimes(2);
+            expect(entry).not.toBeNull();
+            expect(fakePo.data?.toString()).toStrictEqual(contents);
+            expect(fakePo.etag).toBe("1234ETAG");
+            handleProfileAuthOnErrorMock.mockRestore();
         });
 
         it("should fetchUri info and lookup returns undefined", async () => {
@@ -1078,8 +1226,9 @@ describe("DatasetFSProvider", () => {
             const createOptions = { create: false, overwrite: true };
             let handleErrorMock: any;
             const expectInvalidLines = (msg: string, multiple?: boolean) => {
-                expect(msg).toContain("This upload operation may result in data loss.");
+                expect(msg).toContain("Line(s) in this file exceed the logical record length of this data set.");
                 expect(msg).toContain("Please review the following lines:");
+                expect(msg).toContain('Click "Troubleshoot", then "Full error summary" for more detailed information.');
                 if (multiple) {
                     expect(msg).toContain("1, 3-10");
                     const stack = (handleErrorMock.mock.calls[0][0] as Error).stack;
@@ -1459,8 +1608,16 @@ describe("DatasetFSProvider", () => {
             expect(res).toStrictEqual({ ...fakePs });
             expect(fakePs.wasAccessed).toBe(false);
         });
-        it("should throw an Unavailable error if the type is token and token value is undefined", async () => {
-            let errorMessage;
+        it("propagates an authentication error for a PDS member instead of reporting it as missing", async () => {
+            const authError = new AuthCancelledError("sestest", "User cancelled authentication");
+            vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(undefined);
+            const remoteLookupMock = vi.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockRejectedValue(authError);
+
+            await expect(DatasetFSProvider.instance.stat(testUris.pdsMember)).rejects.toThrow(authError);
+            expect(remoteLookupMock).toHaveBeenCalled();
+        });
+
+        it("prompts for authentication if the type is token and token value is undefined", async () => {
             vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
                 getCommonApi: () => ({
                     getSession: () => {
@@ -1469,12 +1626,14 @@ describe("DatasetFSProvider", () => {
                 }),
                 registeredApiTypes: vi.fn().mockReturnValue(["zosmf"]),
             } as any);
-            try {
-                await DatasetFSProvider.instance.stat(testUris.ps.with({ query: "fetch=true" }));
-            } catch (err) {
-                errorMessage = `${err}`;
-            }
-            expect(errorMessage).toBe("Error: Profile is using token type but missing a token");
+            const promptForMissingCredentialsMock = vi.spyOn(AuthUtils, "promptForMissingCredentials").mockResolvedValueOnce(undefined);
+            const remoteLookupMock = vi.spyOn(DatasetFSProvider.instance, "remoteLookupForResource").mockResolvedValueOnce(testEntries.session);
+
+            await DatasetFSProvider.instance.stat(testUris.ps.with({ query: "fetch=true" }));
+
+            expect(promptForMissingCredentialsMock).toHaveBeenCalledWith(testProfile);
+            // the request continues once the user has authenticated
+            expect(remoteLookupMock).toHaveBeenCalled();
         });
         it("calls allMembers for a PDS member and invalidates its data if mtime is newer", async () => {
             vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValueOnce({
@@ -1669,6 +1828,10 @@ describe("DatasetFSProvider", () => {
                     },
                     commandResponse: "",
                 }),
+                dataSet: vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: { items: [{ dsname: "USER.DATA.PDS", dsorg: "PO" }] },
+                }),
             } as any);
 
             const fetchUri = Uri.from({ scheme: ZoweScheme.DS, path: "sestest/USER.DATA.PDS/MEM1", query: "fetch=true" });
@@ -1709,6 +1872,65 @@ describe("DatasetFSProvider", () => {
             await DatasetFSProvider.instance.stat(fetchUri);
 
             expect(remoteLookupForResourceSpy).toHaveBeenCalledWith(fetchUri.with({ path: "/sestest/USER.DATA.PDS.NEW" }));
+        });
+        describe("PDS member stat cache lookup behavior", () => {
+            it("fetches members from remote when the PDS directory exists locally but the member is not in the cache", async () => {
+                const allMembersMock = vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [{ member: "MEM1", m4date: "2024-08-08", mtime: "12", msec: "30" }],
+                    },
+                    commandResponse: "",
+                });
+                vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    allMembers: allMembersMock,
+                } as any);
+
+                const sessionUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest" });
+                DatasetFSProvider.instance.createDirectory(sessionUri);
+                const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.UNCACHED.PDS" });
+                DatasetFSProvider.instance.createDirectory(pdsUri);
+
+                const pdsEntry = DatasetFSProvider.instance.lookup(pdsUri, true) as PdsEntry;
+
+                const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.UNCACHED.PDS/MEM1" });
+                const res = await DatasetFSProvider.instance.stat(memberUri);
+
+                expect(allMembersMock).toHaveBeenCalledWith("USER.UNCACHED.PDS", { attributes: true });
+                expect(res).toBeDefined();
+                expect(pdsEntry.entries.has("MEM1")).toBe(true);
+            });
+
+            it("uses cached member stat without making a second remote call when the member exists in the parent PDS entries map", async () => {
+                const allMembersMock = vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: {
+                        items: [
+                            { member: "MEM1", m4date: "2024-08-08", mtime: "12", msec: "30" },
+                            { member: "MEM2", m4date: "2024-08-08", mtime: "12", msec: "30" },
+                        ],
+                    },
+                    commandResponse: "",
+                });
+                vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                    allMembers: allMembersMock,
+                } as any);
+
+                const sessionUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest" });
+                DatasetFSProvider.instance.createDirectory(sessionUri);
+                const pdsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.CACHED.PDS" });
+                DatasetFSProvider.instance.createDirectory(pdsUri);
+
+                const member1Uri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.CACHED.PDS/MEM1" });
+                const member2Uri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.CACHED.PDS/MEM2" });
+
+                await DatasetFSProvider.instance.stat(member1Uri);
+                expect(allMembersMock).toHaveBeenCalledTimes(1);
+
+                const res = await DatasetFSProvider.instance.stat(member2Uri);
+                expect(allMembersMock).toHaveBeenCalledTimes(1);
+                expect(res).toBeDefined();
+            });
         });
 
         describe("mtime update scenarios", () => {
@@ -1993,6 +2215,184 @@ describe("DatasetFSProvider", () => {
         });
     });
 
+    describe("fetchEntriesForDataset - member change notifications", () => {
+        // `fireSoon` batches events behind a short debounce, so listings must be given time to flush.
+        const DEBOUNCE_FLUSH_MS = 25;
+
+        const uriInfo = (): any => ({
+            isRoot: false,
+            slashAfterProfilePos: testUris.pds.path.indexOf("/", 1),
+            profileName: "sestest",
+            profile: testProfile,
+        });
+
+        /** Builds a PDS entry whose member cache is already populated with the given names. */
+        const cachedPds = (...memberNames: string[]): PdsEntry => {
+            const pds = Object.assign(Object.create(Object.getPrototypeOf(testEntries.pds)), testEntries.pds) as PdsEntry;
+            pds.entries = new Map(
+                memberNames.map((name) => {
+                    const member = new DsEntry(name, true);
+                    member.metadata = new DsEntryMetadata({ ...pds.metadata, path: path.posix.join(pds.metadata.path, name) });
+                    return [name, member];
+                })
+            );
+            return pds;
+        };
+
+        /**
+         * Mocks the next `allMembers` response.
+         * @param members Member names to return, or `undefined` to simulate a response carrying no member array
+         */
+        const mockListing = (members?: string[], success = true): Mock => {
+            const allMembers = vi.fn().mockResolvedValue({
+                success,
+                apiResponse: members != null ? { items: members.map((member) => ({ member })) } : {},
+                commandResponse: "",
+            });
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ allMembers } as any);
+            return allMembers;
+        };
+
+        /**
+         * Lists the PDS and returns every event `onDidChangeFile` emitted while doing so. The events are
+         * copied out of the batch as it arrives, since `fireSoon` empties its buffer in place after firing.
+         */
+        const refresh = async (pds: PdsEntry, uri: Uri = testUris.pds): Promise<vscode.FileChangeEvent[]> => {
+            const emitted: vscode.FileChangeEvent[] = [];
+            const subscription = DatasetFSProvider.instance.onDidChangeFile((events) => emitted.push(...events));
+            try {
+                await (DatasetFSProvider.instance as any).fetchEntriesForDataset(pds, uri, uriInfo());
+                await new Promise((resolve) => setTimeout(resolve, DEBOUNCE_FLUSH_MS));
+            } finally {
+                subscription.dispose();
+            }
+            return emitted;
+        };
+
+        const eventsOfType = (events: vscode.FileChangeEvent[], type: vscode.FileChangeType): string[] =>
+            events.filter((event) => event.type === type).map((event) => event.uri.path);
+
+        beforeEach(() => {
+            // Drop anything a previous test left queued so each listing starts from a clean batch.
+            const provider = DatasetFSProvider.instance as any;
+            clearTimeout(provider._fireSoonHandle);
+            provider._fireSoonHandle = undefined;
+            provider._bufferedEvents.length = 0;
+        });
+
+        it("emits Created for a member added since the last listing, and Changed for its PDS", async () => {
+            const pds = cachedPds("MEMBER1", "MEMBER2");
+            mockListing(["MEMBER1", "MEMBER2", "MEMBER3"]);
+
+            const events = await refresh(pds);
+
+            expect(eventsOfType(events, vscode.FileChangeType.Created)).toEqual(["/sestest/USER.DATA.PDS/MEMBER3"]);
+            expect(eventsOfType(events, vscode.FileChangeType.Changed)).toEqual(["/sestest/USER.DATA.PDS"]);
+            expect(eventsOfType(events, vscode.FileChangeType.Deleted)).toEqual([]);
+        });
+
+        it("emits Deleted for a cached member missing from the listing, and Changed for its PDS", async () => {
+            const pds = cachedPds("MEMBER1", "MEMBER2", "MEMBER3");
+            mockListing(["MEMBER1", "MEMBER3"]);
+
+            const events = await refresh(pds);
+
+            expect(eventsOfType(events, vscode.FileChangeType.Deleted)).toEqual(["/sestest/USER.DATA.PDS/MEMBER2"]);
+            expect(eventsOfType(events, vscode.FileChangeType.Changed)).toEqual(["/sestest/USER.DATA.PDS"]);
+            expect(eventsOfType(events, vscode.FileChangeType.Created)).toEqual([]);
+        });
+
+        it("drops members that disappeared remotely from the cache", async () => {
+            const pds = cachedPds("MEMBER1", "MEMBER2", "MEMBER3");
+            mockListing(["MEMBER1", "MEMBER3"]);
+
+            await refresh(pds);
+
+            expect(pds.entries.has("MEMBER2")).toBe(false);
+            expect([...pds.entries.keys()]).toEqual(["MEMBER1", "MEMBER3"]);
+        });
+
+        it("adds members that appeared remotely to the cache", async () => {
+            const pds = cachedPds("MEMBER1");
+            mockListing(["MEMBER1", "MEMBER2"]);
+
+            await refresh(pds);
+
+            expect(pds.entries.has("MEMBER2")).toBe(true);
+            const newMember = pds.entries.get("MEMBER2");
+            expect(FsDatasetsUtils.isMemberEntry(newMember)).toBe(true);
+            expect(newMember.metadata.path).toBe("/USER.DATA.PDS/MEMBER2");
+        });
+
+        it("emits nothing when consecutive listings return the same members", async () => {
+            const pds = cachedPds("MEMBER1", "MEMBER2");
+            mockListing(["MEMBER1", "MEMBER2"]);
+
+            expect(await refresh(pds)).toEqual([]);
+            expect(await refresh(pds)).toEqual([]);
+        });
+
+        it("builds the cache key and parent URI from a member URI that carries query params", () => {
+            const provider = DatasetFSProvider.instance as any;
+            const memberUri = testUris.pdsMember.with({ query: "fetch=true" });
+
+            // Only truthy flags contribute to the request-reuse key, so a plain URI shares no key with a fetch.
+            expect(provider.getQueryKey(memberUri)).toBe("_fetch=true");
+            expect(provider.getQueryKey(testUris.pdsMember)).toBe("");
+            expect(provider.isPdsMemberUri(memberUri)).toBe(true);
+            expect(provider.isPdsMemberUri(testUris.pds)).toBe(false);
+            expect(provider.isPdsMemberUri(testUris.session)).toBe(false);
+
+            // The parent event is addressed to the PDS itself, with the child's query stripped.
+            DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: memberUri });
+            const parentEvent = provider._bufferedEvents.find((event: vscode.FileChangeEvent) => event.uri.path === testUris.pds.path);
+            expect(parentEvent).toMatchObject({ type: vscode.FileChangeType.Changed });
+            expect(parentEvent.uri.scheme).toBe(ZoweScheme.DS);
+            expect(parentEvent.uri.query).toBe("");
+        });
+
+        it("keeps the cache and emits nothing when the listing carries no member array", async () => {
+            const pds = cachedPds("MEMBER1", "MEMBER2");
+            mockListing(undefined, false);
+
+            const events = await refresh(pds);
+
+            expect(events).toEqual([]);
+            expect([...pds.entries.keys()]).toEqual(["MEMBER1", "MEMBER2"]);
+        });
+
+        it("clears the cache and emits one Changed for the PDS when every member was removed", async () => {
+            const pds = cachedPds("MEMBER1", "MEMBER2");
+            mockListing([]);
+
+            const events = await refresh(pds);
+
+            expect(pds.entries.size).toBe(0);
+            expect(eventsOfType(events, vscode.FileChangeType.Deleted)).toEqual(["/sestest/USER.DATA.PDS/MEMBER1", "/sestest/USER.DATA.PDS/MEMBER2"]);
+            expect(eventsOfType(events, vscode.FileChangeType.Changed)).toEqual(["/sestest/USER.DATA.PDS"]);
+        });
+
+        it("emits nothing for an initial listing, so an empty cache is not reported as mass creation", async () => {
+            const pds = cachedPds();
+            mockListing(["MEMBER1", "MEMBER2"]);
+
+            expect(await refresh(pds)).toEqual([]);
+            expect([...pds.entries.keys()]).toEqual(["MEMBER1", "MEMBER2"]);
+        });
+
+        it("emits Created for a member that appeared in a PDS that was listed while empty", async () => {
+            const pds = cachedPds();
+            mockListing([]);
+            expect(await refresh(pds)).toEqual([]);
+
+            mockListing(["MEMBER1"]);
+            const events = await refresh(pds);
+
+            expect(eventsOfType(events, vscode.FileChangeType.Created)).toEqual(["/sestest/USER.DATA.PDS/MEMBER1"]);
+            expect(eventsOfType(events, vscode.FileChangeType.Changed)).toEqual(["/sestest/USER.DATA.PDS"]);
+        });
+    });
+
     describe("fetchEntriesForProfile", () => {
         it("calls _handleError in the case of an API error", async () => {
             const dataSetsMatchingPattern = vi.fn().mockRejectedValue(new Error("API error"));
@@ -2020,6 +2420,35 @@ describe("DatasetFSProvider", () => {
     describe("fetchDataset", () => {
         describe("calls dataSet to verify that the data set exists on the mainframe", () => {
             describe("PS", () => {
+                it("prompts for authentication when the profile has no credentials", async () => {
+                    vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+                        getCommonApi: () => ({
+                            getSession: () => ({ ISession: { type: imperative.SessConstants.AUTH_TYPE_NONE } }),
+                        }),
+                        registeredApiTypes: vi.fn().mockReturnValue(["zosmf"]),
+                    } as any);
+                    const promptForMissingCredentialsMock = vi.spyOn(AuthUtils, "promptForMissingCredentials").mockResolvedValueOnce(undefined);
+                    // a data set name that no other test relies on, since the provider caches the entry
+                    const noCredsUri = Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/USER.DATA.NOCREDS" });
+                    const dataSetMock = vi.fn().mockResolvedValue({
+                        success: true,
+                        apiResponse: { items: [{ dsname: "USER.DATA.NOCREDS" }] },
+                        commandResponse: "",
+                    });
+                    vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ dataSet: dataSetMock } as any);
+
+                    await (DatasetFSProvider.instance as any).fetchDataset(noCredsUri, {
+                        isRoot: false,
+                        slashAfterProfilePos: noCredsUri.path.indexOf("/", 1),
+                        profileName: "sestest",
+                        profile: testProfile,
+                    });
+
+                    expect(promptForMissingCredentialsMock).toHaveBeenCalledWith(testProfile);
+                    // the data set request is sent once the user has authenticated
+                    expect(dataSetMock).toHaveBeenCalled();
+                });
+
                 it("non-existent PS URI", async () => {
                     const dataSetMock = vi.fn().mockResolvedValue({
                         success: true,
@@ -2509,19 +2938,9 @@ describe("DatasetFSProvider", () => {
         });
     });
 
-    describe("Expected behavior for functions w/ profile locks", () => {
-        let isProfileLockedMock;
-        let warnLoggerMock;
-
-        beforeEach(() => {
-            isProfileLockedMock = vi.spyOn(AuthHandler, "isProfileLocked");
-            warnLoggerMock = vi.spyOn(ZoweLogger, "warn").mockImplementation((() => undefined) as any);
-        });
-
-        afterEach(() => {});
-
+    describe("Expected behavior for functions that wait on the auth flow", () => {
         describe("stat", () => {
-            it("returns entry without API calls when profile is locked", async () => {
+            it("waits for the auth flow to complete before checking for updates on the remote system", async () => {
                 const fakeEntry = { ...testEntries.ps };
                 vi.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue(fakeEntry);
                 vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
@@ -2531,71 +2950,69 @@ describe("DatasetFSProvider", () => {
                     profileName: "sestest",
                 });
 
-                isProfileLockedMock.mockReturnValue(true);
-                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValue(undefined);
-                const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
-
-                const datasetMock = vi.fn().mockResolvedValue({});
+                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockReturnValue(undefined);
+                const datasetMock = vi.fn().mockResolvedValue({ success: true, apiResponse: { items: [] } });
                 vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ dataSet: datasetMock } as any);
+                const waitForAuthFlowMock = vi.spyOn(AuthHandler, "waitForAuthFlow").mockImplementation(async () => {
+                    expect(datasetMock).not.toHaveBeenCalled();
+                });
 
                 const result = await DatasetFSProvider.instance.stat(testUris.ps);
 
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
-                expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
-                expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
-                expect(datasetMock).not.toHaveBeenCalled();
+                expect(waitForAuthFlowMock).toHaveBeenCalledWith(testProfile);
+                expect(datasetMock).toHaveBeenCalled();
                 expect(result).toBe(fakeEntry);
             });
         });
 
         describe("fetchEntriesForProfile", () => {
-            it("returns early without making API calls when profile is locked", async () => {
+            it("waits for the auth flow to complete before listing data sets", async () => {
                 const fakeEntry = { ...testEntries.session, entries: new Map() };
                 vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsDirectory").mockReturnValue(fakeEntry);
                 const uriInfo = { profile: testProfile };
 
-                isProfileLockedMock.mockReturnValue(true);
-                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValue(undefined);
-                const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
-
-                const datasetMock = vi.fn().mockResolvedValue({});
+                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockReturnValue(undefined);
+                const datasetMock = vi.fn().mockResolvedValue({ success: true, apiResponse: { items: [] } });
                 vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ dataSet: datasetMock } as any);
+                const waitForAuthFlowMock = vi.spyOn(AuthHandler, "waitForAuthFlow").mockImplementation(async () => {
+                    expect(datasetMock).not.toHaveBeenCalled();
+                });
 
                 const result = await (DatasetFSProvider.instance as any).fetchEntriesForProfile(testUris.session, uriInfo, "USER.*");
 
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
-                expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
-                expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
-                expect(datasetMock).not.toHaveBeenCalled();
+                expect(waitForAuthFlowMock).toHaveBeenCalledWith(testProfile);
+                expect(datasetMock).toHaveBeenCalled();
                 expect(result).toBe(fakeEntry);
             });
         });
 
         describe("fetchDatasetAtUri", () => {
-            it("returns null without making API calls when profile is locked", async () => {
-                const file = new DsEntry("TEST.DS", false);
-                file.metadata = new DsEntryMetadata({ profile: testProfile, path: "/TEST.DS" });
+            it("waits for the auth flow to complete before fetching the data set contents", async () => {
+                const contents = "dataset contents";
+                const mockMvsApi = {
+                    getContents: vi.fn((dsn, opts) => {
+                        opts.stream.write(contents);
+                        return { apiResponse: { etag: "123ANETAG" } };
+                    }),
+                };
+                const fakePo = { ...testEntries.ps };
+                vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue(fakePo);
+                vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
 
-                vi.spyOn(DatasetFSProvider.instance as any, "_lookupAsFile").mockReturnValue(file);
-                vi.spyOn(DatasetFSProvider.instance as any, "_getInfoFromUri").mockReturnValue(file.metadata);
-
-                isProfileLockedMock.mockReturnValue(true);
-                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockResolvedValue(undefined);
-                const waitForUnlockMock = vi.spyOn(AuthHandler, "waitForUnlock").mockResolvedValue(undefined);
-
-                const getContentsMock = vi.fn().mockResolvedValue({});
-                vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({ getContents: getContentsMock } as any);
+                const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockReturnValue(undefined);
+                const waitForAuthFlowMock = vi.spyOn(AuthHandler, "waitForAuthFlow").mockImplementation(async () => {
+                    expect(mockMvsApi.getContents).not.toHaveBeenCalled();
+                });
 
                 const result = await DatasetFSProvider.instance.fetchDatasetAtUri(testUris.ps);
 
                 expect(ensureAuthNotCancelledMock).toHaveBeenCalledWith(testProfile);
-                expect(waitForUnlockMock).toHaveBeenCalledWith(testProfile);
-                expect(isProfileLockedMock).toHaveBeenCalledWith(testProfile);
-                expect(warnLoggerMock).toHaveBeenCalledWith("[DatasetFSProvider] Profile sestest is locked, waiting for authentication");
-                expect(getContentsMock).not.toHaveBeenCalled();
-                expect(result).toBeNull();
+                expect(waitForAuthFlowMock).toHaveBeenCalledWith(testProfile);
+                expect(mockMvsApi.getContents).toHaveBeenCalled();
+                expect(fakePo.data?.toString()).toStrictEqual(contents.toString());
+                expect(result).toBe(fakePo);
             });
         });
         describe("request reuse cross-method scenarios", () => {
@@ -2764,13 +3181,6 @@ describe("DatasetFSProvider", () => {
 
             DatasetFSProvider.instance.invalidateCache(testUris.ps);
         });
-
-        it("should handle errors gracefully if lookupParentDirectory throws", () => {
-            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockImplementation(() => {
-                throw new Error("Parent not found");
-            });
-            expect(() => DatasetFSProvider.instance.invalidateCache(testUris.ps)).not.toThrow();
-        });
     });
 
     describe("remoteLookupForResource with migrated directory entry", () => {
@@ -2833,6 +3243,45 @@ describe("DatasetFSProvider", () => {
             expect(mockParent.entries.get("USER.DATA.PDS")?.type).toBe(FileType.File);
             expect(result).toBeDefined();
             expect(result.type).toBe(FileType.File);
+        });
+    });
+
+    describe("remoteLookupForResource with fetch=true", () => {
+        it("fetches a sequential data set from the mainframe even if it is already cached locally", async () => {
+            const dataSetMock = vi.fn().mockResolvedValue({
+                success: true,
+                apiResponse: {
+                    items: [{ dsname: "USER.DATA.PS", dsorg: "PS", vol: "VOL001" }],
+                },
+                commandResponse: "",
+            });
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({
+                dataSet: dataSetMock,
+            } as any);
+            vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+                getCommonApi: () => ({
+                    getSession: () => ({ ISession: { type: imperative.SessConstants.AUTH_TYPE_BASIC } }),
+                }),
+                registeredApiTypes: vi.fn().mockReturnValue(["zosmf"]),
+            } as any);
+            vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                isRoot: false,
+                slashAfterProfilePos: testUris.ps.path.indexOf("/", 1),
+                profileName: "sestest",
+                profile: testProfile,
+            });
+            vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(true);
+
+            // Simulate a data set that is already cached locally (e.g. from a previous fetch).
+            const cachedPs = Object.assign(Object.create(Object.getPrototypeOf(testEntries.ps)), testEntries.ps);
+            vi.spyOn(DatasetFSProvider.instance, "lookup").mockReturnValue(cachedPs);
+
+            const fetchUri = testUris.ps.with({ query: "fetch=true" });
+            const result = await DatasetFSProvider.instance.remoteLookupForResource(fetchUri);
+
+            // The data set was already cached, but fetch=true should still trigger a remote lookup.
+            expect(dataSetMock).toHaveBeenCalledWith("USER.DATA.PS", { attributes: true, maxLength: 1 });
+            expect((result as DsEntry).stats?.vol).toBe("VOL001");
         });
     });
 });

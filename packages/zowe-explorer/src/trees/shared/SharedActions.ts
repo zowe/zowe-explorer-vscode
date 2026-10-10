@@ -131,7 +131,7 @@ export class SharedActions {
 
                 if (node.contextValue !== Constants.USS_DIR_CONTEXT) {
                     // If selected item is file, open it in workspace
-                    ussFileProvider.addSearchHistory(node.fullPath);
+                    ussFileProvider.addSearchHistory(node.fullPath, node.getProfile());
                     const ussNode = node as IZoweUSSTreeNode;
                     await ussNode.openUSS(false, true, ussFileProvider);
                 }
@@ -150,7 +150,7 @@ export class SharedActions {
                     await datasetProvider.getTreeView().reveal(member, { select: true, focus: true, expand: false });
 
                     // Open in workspace
-                    datasetProvider.addSearchHistory(`${nodeName}(${memberName})`);
+                    datasetProvider.addSearchHistory(`${nodeName}(${memberName})`, node.getProfile());
                     await vscode.commands.executeCommand(member.command.command, member.resourceUri);
                 } else {
                     // PDS & SDS
@@ -158,7 +158,7 @@ export class SharedActions {
 
                     // If selected node was SDS, open it in workspace
                     if (SharedContext.isDs(node)) {
-                        datasetProvider.addSearchHistory(nodeName);
+                        datasetProvider.addSearchHistory(nodeName, node.getProfile());
                         await vscode.commands.executeCommand(node.command.command, node.resourceUri);
                     }
                 }

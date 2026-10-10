@@ -1,5 +1,5 @@
 import type { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
-import { Gui, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { Gui, imperative, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { SshErrorHandler } from "./SshErrorHandler";
 import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
@@ -19,6 +19,44 @@ export function deployWithProgress(session: SshSession, serverPath: string): The
                     progress.report({ increment: progressIncrement });
                 },
                 onError: errorCallback,
+                onInsufficientSpaceWarning: async (remainingMB: number, recommendedMB: number) => {
+                    const deployButton = vscode.l10n.t("Deploy");
+                    const cancelButton = vscode.l10n.t("Cancel");
+                    let message = "";
+
+                    if (remainingMB == -1) {
+                        message = vscode.l10n.t({
+                            message: "We couldn't detect how much space is available in the remote directory '{0}'. ",
+                            args: [serverPath],
+                            comment: ["The user-specified or default server path"],
+                        });
+                    } else {
+                        message = vscode.l10n.t({
+                            message:
+                                "The remote directory '{0}' appears to have only {1} MB available," +
+                                " less than the recommended {2} MB of free space. ",
+                            args: [serverPath, remainingMB, recommendedMB],
+                            comment: [
+                                "The user-specified or default server path",
+                                "The available space for the server path",
+                                "The recommended available space in megabytes",
+                            ],
+                        });
+                    }
+                    message += vscode.l10n.t("Would you like to attempt deployment anyway?");
+                    imperative.Logger.getAppLogger().info(
+                        `Prompting the user to determine whether we should proceed` +
+                            ` with the deployment despite the apparent lack of disk space (${remainingMB} vs the recommended ${recommendedMB} MB)`
+                    );
+                    const selection = await Gui.showMessage(message, { items: [deployButton, cancelButton] });
+                    if (selection === deployButton) {
+                        imperative.Logger.getAppLogger().info("User accepted the risk of insufficient disk space");
+                        return true;
+                    } else {
+                        imperative.Logger.getAppLogger().info("User declined to continue with the deployment after disk space warning");
+                        return false;
+                    }
+                },
             });
         }
     );

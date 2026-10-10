@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: lts/-1
 
-      - run: npm install -g pnpm
+      - run: npm install -g pnpm@11
 
       - run: pnpm config set fetchTimeout 60000 && pnpm install
 

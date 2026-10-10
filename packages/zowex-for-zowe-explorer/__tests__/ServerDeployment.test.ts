@@ -11,7 +11,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
-import { ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
+import { Gui, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { deployWithProgress } from "../src/ServerDeployment";
 import { SshErrorHandler } from "../src/SshErrorHandler";
 import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
@@ -87,6 +87,56 @@ describe("ServerDeployment", () => {
             vi.mocked(ZSshUtils.installServer).mockRejectedValue(new Error("install failed"));
 
             await expect(deployWithProgress(fakeSession, "/server/path")).rejects.toThrow("install failed");
+        });
+
+        it("should cancel the deployment if the user receives an insufficient space warning and the user presses cancel", async () => {
+            vi.mocked(ZSshUtils.installServer).mockImplementation(async (_session, _serverPath, opts) => {
+                const proceed = await opts!.onInsufficientSpaceWarning!(1, 20);
+                return proceed;
+            });
+            vi.spyOn(Gui, "showMessage").mockResolvedValue("Cancel");
+            expect(await deployWithProgress(fakeSession, "/server/path")).toEqual(false);
+            expect(Gui.showMessage).toHaveBeenCalled();
+        });
+        it("should cancel the deployment if the user receives an insufficient space warning and the user closes the warning", async () => {
+            vi.mocked(ZSshUtils.installServer).mockImplementation(async (_session, _serverPath, opts) => {
+                const proceed = await opts!.onInsufficientSpaceWarning!(1, 20);
+                return proceed;
+            });
+            vi.spyOn(Gui, "showMessage").mockResolvedValue(undefined); // no option selected
+            expect(await deployWithProgress(fakeSession, "/server/path")).toEqual(false);
+            expect(Gui.showMessage).toHaveBeenCalled();
+        });
+        it("should continue the deployment if the user receives an insufficient space warning and the user presses deploy", async () => {
+            vi.mocked(ZSshUtils.installServer).mockImplementation(async (_session, _serverPath, opts) => {
+                const proceed = await opts!.onInsufficientSpaceWarning!(1, 20);
+                return proceed;
+            });
+            let guiMessage = "";
+            vi.spyOn(Gui, "showMessage").mockImplementation(async (messageArg, _opts) => {
+                guiMessage = messageArg;
+                return "Deploy";
+            });
+            const mockServerPath = "/server/path";
+            expect(await deployWithProgress(fakeSession, mockServerPath)).toEqual(true);
+            expect(Gui.showMessage).toHaveBeenCalled();
+            expect(guiMessage).toContain(`The remote directory '${mockServerPath}' appears to have only 1 MB available`);
+        });
+
+        it("should adapt the warning message if the SSH SDK could not determine the available space", async () => {
+            vi.mocked(ZSshUtils.installServer).mockImplementation(async (_session, _serverPath, opts) => {
+                const proceed = await opts!.onInsufficientSpaceWarning!(-1, 20);
+                return proceed;
+            });
+            let guiMessage = "";
+            const mockServerPath = "/server/path";
+            vi.spyOn(Gui, "showMessage").mockImplementation(async (messageArg, _opts) => {
+                guiMessage = messageArg;
+                return "Cancel";
+            });
+            expect(await deployWithProgress(fakeSession, mockServerPath)).toEqual(false); // canceled
+            expect(Gui.showMessage).toHaveBeenCalled();
+            expect(guiMessage).toContain(`We couldn't detect how much space is available in the remote directory '${mockServerPath}'.`);
         });
     });
 });

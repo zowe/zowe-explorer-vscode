@@ -16,7 +16,7 @@ jobs:
           node-version: lts/-1
 
       - run: |
-          npm install -g pnpm
+          npm install -g pnpm@11
           pnpm install
 
       - name: Check Vulnerabilities
@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: lts/-1
       - run: |
-          npm install -g pnpm
+          npm install -g pnpm@11
           pnpm install
       - name: Check All Vulnerabilities (including dev)
         run: pnpm audit --audit-level high

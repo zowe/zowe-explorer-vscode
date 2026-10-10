@@ -10,18 +10,20 @@
  */
 
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { VSCodePanelView, VSCodeDataGrid } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
-import { DataPanelContext } from "../PersistentUtils";
+import { DataPanelContext, SELECTABLE_HISTORY_TYPES } from "../PersistentUtils";
 import { isSecureOrigin } from "../../../utils";
 import { panelId } from "../../types";
 import PersistentToolBar from "../PersistentToolBar/PersistentToolBar";
 import PersistentTableData from "./PersistentTableData";
 import PersistentDataGridHeaders from "./PersistentDataGridHeaders";
 import PersistentVSCodeAPI from "../../../PersistentVSCodeAPI";
+import * as l10n from "@vscode/l10n";
+
+type HistoryData = { [property: string]: string[] } & { groupLabel?: { key: string; source: "host" | "group" } };
 
 export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<string> }>): JSXInternal.Element {
-  const [data, setData] = useState<{ [type: string]: { [property: string]: string[] } }>({ ds: {}, uss: {}, jobs: {} });
+  const [data, setData] = useState<{ [type: string]: HistoryData }>({ ds: {}, uss: {}, jobs: {} });
   const [selection, setSelection] = useState<{ [type: string]: string }>({ [type]: "search" });
   const [persistentProp, setPersistentProp] = useState<string[]>([]);
   const [selectedItems, setSelectedItems] = useState({});
@@ -79,24 +81,35 @@ export default function PersistentDataPanel({ type }: Readonly<{ type: Readonly<
     }
   }, [data, selection, type]);
 
+  const groupLabel = selection[type] === "search" ? data[type]?.groupLabel : undefined;
+  const showSelectColumn = SELECTABLE_HISTORY_TYPES.includes(selection[type]);
+
   if (type == "cmds") {
     return (
       <DataPanelContext.Provider value={{ type, selection, selectedItems: selectedItemsMemo }}>
-        <VSCodePanelView id={panelId[type]} style={{ flexDirection: "column", minHeight: "100vh" }}>
+        <vscode-tab-panel id={panelId[type]} style={{ flexDirection: "column", minHeight: "100vh" }}>
           <h1>Coming soon!</h1>
-        </VSCodePanelView>
+        </vscode-tab-panel>
       </DataPanelContext.Provider>
     );
   }
   return (
     <DataPanelContext.Provider value={{ type, selection, selectedItems: selectedItemsMemo }}>
-      <VSCodePanelView id={panelId[type]} style={{ flexDirection: "column", minHeight: "100vh" }}>
+      <vscode-tab-panel id={panelId[type]} style={{ flexDirection: "column", minHeight: "100vh" }}>
         <PersistentToolBar handleChange={handleChange} />
-        <VSCodeDataGrid>
+        {groupLabel && (
+          <p>
+            {groupLabel.source === "host"
+              ? l10n.t("Showing history grouped by host: {0}", groupLabel.key)
+              : l10n.t("Showing history grouped by: {0}", groupLabel.key)}
+          </p>
+        )}
+        {/* The table only measures its header cells once, so remount it when the number of columns changes */}
+        <vscode-table key={showSelectColumn ? "with-select" : "item-only"} columns={showSelectColumn ? ["auto", "120px"] : ["auto"]}>
           <PersistentDataGridHeaders />
           <PersistentTableData persistentProp={persistentProp} />
-        </VSCodeDataGrid>
-      </VSCodePanelView>
+        </vscode-table>
+      </vscode-tab-panel>
     </DataPanelContext.Provider>
   );
 }

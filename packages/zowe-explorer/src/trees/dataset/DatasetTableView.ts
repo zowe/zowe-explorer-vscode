@@ -36,6 +36,7 @@ import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { AuthUtils } from "../../utils/AuthUtils";
 import * as imperative from "@zowe/imperative";
+import * as path from "path";
 import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
 import { ZowePersistentFilters } from "../../tools/ZowePersistentFilters";
 
@@ -209,16 +210,17 @@ export function buildMemberInfo(member: any, parentUri: string): IDataSetInfo {
 
     // The virtual filesystem keys PDS members by name plus the extension inferred from the PDS's own
     // qualifiers (e.g. ".jcl" for a `*.JCL.*`-style dataset) - the URI must match that or opening the member fails.
-    const pdsName = parentUri.substring(parentUri.lastIndexOf("/") + 1);
+    const parentPath = Uri.parse(parentUri).path;
+    const pdsName = parentPath.substring(parentPath.lastIndexOf("/") + 1);
     const extension = DatasetUtils.getExtension(pdsName) ?? "";
-    const memberUri = `${parentUri}/${member.member as string}${extension}`;
+    const memberUri = Uri.from({ scheme: ZoweScheme.DS, path: path.posix.join(parentPath, `${member.member as string}${extension}`) });
 
     return {
         name: member.member,
         createdDate,
         modifiedDate,
         user: member.user,
-        uri: memberUri,
+        uri: memberUri.toString(),
         isMember: true,
         isDirectory: false,
         parentId: parentUri,
@@ -286,7 +288,7 @@ export class PatternDataSource implements IDataSetSource {
                         recfm: ds.recfm,
                         volumes: ds.vols || ds.vol,
                         user: ds.user,
-                        uri: `zowe-ds:/${this.profile.name}/${ds.dsname as string}`,
+                        uri: Uri.from({ scheme: ZoweScheme.DS, path: path.posix.join("/", this.profile.name, ds.dsname as string) }).toString(),
                         isMember: false,
                         isDirectory: ds.dsorg?.startsWith("PO"),
                     });
@@ -314,7 +316,7 @@ export class PatternDataSource implements IDataSetSource {
 
     public async loadChildren(parentId: string): Promise<IDataSetInfo[]> {
         // Extract dataset name from URI
-        const segments = parentId.split("/");
+        const segments = Uri.parse(parentId).path.split("/");
         if (segments.length < 3) {
             // Invalid URI, format must be zowe-ds:/<profile_name>/<data_set_name>
             return [];
@@ -825,9 +827,8 @@ export class DatasetTableView {
 
         if (isDsMember) {
             // For members, we need to find or create the PDS node in the tree
-            const uri = data.row.uri as string;
-            const uriParts = uri.substring(uri.indexOf("/") + 1).split("/");
-            const [profileName, datasetName, rawMemberName] = uriParts;
+            const uriPath = Uri.parse(data.row.uri as string).path;
+            const [, profileName, datasetName, rawMemberName] = uriPath.split("/");
             // Member rows carry a synthetic extension (e.g. ".jcl") in their URI for editor language detection,
             // but tree node labels never include it - strip it before comparing against labels.
             const memberName = FsDatasetsUtils.trimExtension(rawMemberName);

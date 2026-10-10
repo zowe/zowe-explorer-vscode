@@ -325,7 +325,7 @@ describe("TreeDataSource", () => {
                 expect.objectContaining({
                     name: "MEM1",
                     migr: "NO",
-                    uri: "zowe-ds:///sestest/TEST.PDS/MEM1",
+                    uri: "zowe-ds:/sestest/TEST.PDS/MEM1",
                     isMember: true,
                     isDirectory: false,
                     parentId: "zowe-ds:/sestest/TEST.PDS",
@@ -1081,6 +1081,18 @@ describe("DatasetTableView", () => {
 
             expect(executeCommandSpy).toHaveBeenCalledTimes(1);
             expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME"), { preview: false });
+        });
+
+        it("should open a single data set member in the editor whose name contains a pound sign", async () => {
+            const rows: Record<number, Table.RowData> = {
+                0: { uri: "zowe-ds:/profile/DATA.SET.NAME/MEM#BER" },
+            };
+            const view = mockViewWithContent(Object.values(rows));
+
+            await (DatasetTableView as any).openInEditor(view, rows);
+
+            expect(executeCommandSpy).toHaveBeenCalledTimes(1);
+            expect(executeCommandSpy).toHaveBeenCalledWith("vscode.open", Uri.parse("zowe-ds:/profile/DATA.SET.NAME/MEM#BER"), { preview: false });
         });
 
         it("should open multiple data sets in the editor", async () => {

@@ -468,9 +468,9 @@ export class DatasetActions {
 
         const theFilter = datasetProvider.createFilterString(newDSName, currSession);
         currSession.pattern = theFilter.toUpperCase();
-        datasetProvider.refresh();
+        currSession.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         currSession.dirty = true;
-        datasetProvider.refreshElement(currSession);
+        datasetProvider.refresh();
         const newNode = (await currSession.getChildren()).find((child) => child.label.toString() === newDSName.toUpperCase());
         await datasetProvider.getTreeView().reveal(currSession, { select: true, focus: true });
         datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
@@ -968,8 +968,9 @@ export class DatasetActions {
         const parent = selectedNode.getParent() as IZoweDatasetTreeNode;
         const datasetName = parent.getLabel() as string;
         const memberName = selectedNode.getLabel() as string;
+        const sanitizedMemberName = SharedUtils.stripBacktrackPathSegments(memberName);
         const fullDatasetName = `${datasetName}(${memberName})`;
-        const fileName = uppercaseNames ? memberName : memberName.toLowerCase();
+        const fileName = uppercaseNames ? sanitizedMemberName : sanitizedMemberName.toLowerCase();
 
         const targetDirectory = generateDirectory
             ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
@@ -1173,7 +1174,7 @@ export class DatasetActions {
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading data set"),
             async () => {
-                const datasetName = node.getLabel() as string;
+                const datasetName = SharedUtils.stripBacktrackPathSegments(node.getLabel() as string);
 
                 let fileName: string;
                 let targetDirectory: string;
@@ -1261,6 +1262,11 @@ export class DatasetActions {
         // Check that there are items to be deleted
         if (!nodes || nodes.length === 0) {
             Gui.showMessage(vscode.l10n.t("No data sets selected for deletion, cancelling..."));
+            return;
+        }
+
+        if (nodes.filter((n) => n.isAlias).length > 0) {
+            Gui.showMessage(vscode.l10n.t("Deleting aliases is not supported. Deselect any alias data sets."));
             return;
         }
 
@@ -1606,7 +1612,7 @@ export class DatasetActions {
                         responseTimeout: nodeProfile?.profile?.responseTimeout,
                     });
                 } else {
-                    attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).dataSet(label, {
+                    attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).dataSet(node.aliasTargetDsn ?? label, {
                         attributes: true,
                         responseTimeout: nodeProfile?.profile?.responseTimeout,
                     });
@@ -1614,7 +1620,7 @@ export class DatasetActions {
                 attributes = attributes.apiResponse.items;
                 if (SharedContext.isDs(node)) {
                     attributes = attributes.filter((dataSet) => {
-                        return dataSet.dsname.toUpperCase() === label.toUpperCase();
+                        return dataSet.dsname.toUpperCase() === (node.aliasTargetDsn ?? label).toUpperCase();
                     });
                 }
                 if (attributes.length === 0) {

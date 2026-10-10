@@ -333,4 +333,60 @@ describe("DatasetFSProvider File System Notifications", () => {
             expect(existingEntry.data).toEqual(content);
         });
     });
+
+    describe("fireSoon - parent PDS notifications", () => {
+        const bufferedEvents = (): vscode.FileChangeEvent[] => (DatasetFSProvider.instance as any)._bufferedEvents;
+
+        beforeEach(() => {
+            bufferedEvents().length = 0;
+        });
+
+        it.each([
+            ["created", FileChangeType.Created],
+            ["deleted", FileChangeType.Deleted],
+        ])("fires a Changed event on the parent PDS when a member is %s", (_label, type) => {
+            DatasetFSProvider.instance.fireSoon({ type, uri: testUris.pdsMember });
+
+            const events = bufferedEvents();
+            expect(events).toHaveLength(2);
+            expect(events[0]).toMatchObject({ type, uri: testUris.pdsMember });
+            expect(events[1].type).toBe(FileChangeType.Changed);
+            expect(events[1].uri.path).toBe(testUris.pds.path);
+            expect(events[1].uri.scheme).toBe(ZoweScheme.DS);
+        });
+
+        it("reports the parent PDS once when several of its members change", () => {
+            const otherMember = testUris.pds.with({ path: `${testUris.pds.path}/MEMBER2` });
+            DatasetFSProvider.instance.fireSoon(
+                { type: FileChangeType.Created, uri: testUris.pdsMember },
+                { type: FileChangeType.Deleted, uri: otherMember }
+            );
+
+            const changedEvents = bufferedEvents().filter((event) => event.type === FileChangeType.Changed);
+            expect(changedEvents).toHaveLength(1);
+            expect(changedEvents[0].uri.path).toBe(testUris.pds.path);
+        });
+
+        it("does not report the parent PDS again if it is already queued in the batch", () => {
+            DatasetFSProvider.instance.fireSoon({ type: FileChangeType.Created, uri: testUris.pdsMember });
+            DatasetFSProvider.instance.fireSoon({ type: FileChangeType.Deleted, uri: testUris.pdsMember });
+
+            expect(bufferedEvents().filter((event) => event.type === FileChangeType.Changed)).toHaveLength(1);
+        });
+
+        it("does not add a parent event for a Changed event on a member", () => {
+            DatasetFSProvider.instance.fireSoon({ type: FileChangeType.Changed, uri: testUris.pdsMember });
+
+            expect(bufferedEvents()).toEqual([{ type: FileChangeType.Changed, uri: testUris.pdsMember }]);
+        });
+
+        it.each([
+            ["a sequential data set", "ps"],
+            ["a PDS", "pds"],
+        ])("does not add a parent event for %s", (_label, uriKey) => {
+            DatasetFSProvider.instance.fireSoon({ type: FileChangeType.Created, uri: testUris[uriKey] });
+
+            expect(bufferedEvents()).toHaveLength(1);
+        });
+    });
 });

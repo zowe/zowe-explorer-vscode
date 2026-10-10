@@ -51,6 +51,10 @@ vi.mock("../../../src/tools/ZoweLogger");
 vi.mock("../../../src/tools/ZoweLocalStorage");
 vi.mock("fs");
 
+// `createBlockMocks` permanently replaces this static, so keep a reference to the real implementation for the
+// test cases that exercise it directly.
+const realCheckDefaultCredentialManager = ProfilesUtils.checkDefaultCredentialManager;
+
 describe("ProfilesUtils unit tests", () => {
     beforeAll(() => {
         (SessConstants as any).AUTH_TYPE_NONE = "none";
@@ -818,7 +822,47 @@ describe("ProfilesUtils unit tests", () => {
             expect(ProfilesUtils.PROFILE_SECURITY).toBe(false);
             expect(loggerInfoSpy).toHaveBeenCalledTimes(1);
             expect(loggerInfoSpy.mock.calls[0][0]).toEqual("Zowe Explorer profiles are being set as unsecured.");
-            expect(recordCredMgrInConfigSpy).toHaveBeenCalledWith(false);
+            // `false` is not a credential manager name, so it must not be recorded in imperative.json
+            expect(recordCredMgrInConfigSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not throw when falling back to unsecured profiles", () => {
+            // `recordCredMgrInConfig` is intentionally left unmocked here: it rejects any value that is not a known
+            // credential manager display name, so passing `false` to it would throw and break activation.
+            ProfilesUtils.PROFILE_SECURITY = Constants.ZOWE_CLI_SCM;
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
+            vi.spyOn(ProfilesUtils, "checkDefaultCredentialManager").mockReturnValue(false);
+            expect(() => ProfilesUtils.updateCredentialManagerSetting()).not.toThrow();
+            expect(ProfilesUtils.PROFILE_SECURITY).toBe(false);
+        });
+    });
+
+    describe("checkDefaultCredentialManager", () => {
+        beforeEach(() => {
+            Object.defineProperty(ProfilesUtils, "checkDefaultCredentialManager", {
+                value: realCheckDefaultCredentialManager,
+                configurable: true,
+            });
+        });
+
+        it("returns true when the keyring loads", () => {
+            vi.spyOn(ProfilesCache, "requireKeyring").mockReturnValue({} as any);
+            expect(ProfilesUtils.checkDefaultCredentialManager()).toBe(true);
+        });
+
+        it("returns false and logs the underlying error when the keyring fails to load", () => {
+            const loadError = new Error("Cannot read properties of undefined (reading 'getReport')");
+            vi.spyOn(ProfilesCache, "requireKeyring").mockImplementation(() => {
+                throw loadError;
+            });
+            const loggerErrorSpy = vi.spyOn(ZoweLogger, "error");
+
+            expect(ProfilesUtils.checkDefaultCredentialManager()).toBe(false);
+
+            // The real cause has to reach the log, otherwise the only breadcrumb left is the generic
+            // "not found on current platform" message, which does not say why the keyring was unavailable.
+            expect(loggerErrorSpy).toHaveBeenCalledTimes(1);
+            expect(loggerErrorSpy.mock.calls[0][0]).toContain("getReport");
         });
     });
 
@@ -1564,6 +1608,39 @@ describe("ProfilesUtils unit tests", () => {
             expect(executeCommandMock).toHaveBeenCalledWith("zowe.setupRemoteWorkspaceFolders", "test");
         });
     });
+    describe("Profiles unit tests - function isMissingToken", () => {
+        const tokenProfile = (tokenValue?: string) =>
+            ({ name: "profile123", type: "zosmf", message: "", failNotFound: false, profile: { tokenValue } }) as any;
+
+        it("returns true when the session uses token auth without a token value", () => {
+            expect(ProfilesUtils.isMissingToken({ type: "token" } as any, tokenProfile())).toBe(true);
+        });
+
+        it("returns false when the profile has a token value", () => {
+            expect(ProfilesUtils.isMissingToken({ type: "token" } as any, tokenProfile("aToken"))).toBe(false);
+        });
+
+        it("returns false when the session does not use token auth", () => {
+            expect(ProfilesUtils.isMissingToken({ type: "basic" } as any, tokenProfile())).toBe(false);
+        });
+    });
+
+    describe("Profiles unit tests - function hasNoCredentials", () => {
+        const profile = { name: "profile123", type: "zosmf", message: "", failNotFound: false, profile: {} } as any;
+
+        it("returns true when the profile has no auth type", () => {
+            expect(ProfilesUtils.hasNoCredentials({ type: "none" } as any, profile)).toBe(true);
+        });
+
+        it("returns true when the profile uses token auth but has no token", () => {
+            expect(ProfilesUtils.hasNoCredentials({ type: "token" } as any, profile)).toBe(true);
+        });
+
+        it("returns false when the profile can authenticate", () => {
+            expect(ProfilesUtils.hasNoCredentials({ type: "basic" } as any, profile)).toBe(false);
+        });
+    });
+
     describe("Profiles unit tests - function hasNoAuthType", () => {
         it("should determine if an ssh profile has an auth type", () => {
             const session = {

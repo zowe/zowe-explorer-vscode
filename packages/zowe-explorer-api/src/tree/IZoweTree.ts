@@ -249,13 +249,17 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
     /**
      * Adds a search history element to persisted settings.
      * @param node: the root node representing the operation
+     * @param profile: the profile the search was performed against, used to group history entries when
+     * the `zowe.settings.historyGroupByHost` setting is enabled
      */
-    addSearchHistory(element: string): void;
+    addSearchHistory(element: string, profile?: imperative.IProfileLoaded): void;
 
     /**
      * Retrieves search history elements from persisted settings.
+     * @param profile: when provided, returns only the history entries for this profile's group; when
+     * omitted, returns every entry across all groups
      */
-    getSearchHistory(): string[];
+    getSearchHistory(profile?: imperative.IProfileLoaded): string[];
 
     /**
      * Returns the type of the tree provider.
