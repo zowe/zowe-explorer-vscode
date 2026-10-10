@@ -27,6 +27,7 @@ import {
     AuthHandler,
     FsAbstractUtils,
     Types,
+    Validation,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
@@ -36,6 +37,7 @@ import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { Definitions } from "../configuration/Definitions";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { IProfileLoaded, ISession, SessConstants } from "@zowe/imperative";
+import { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
@@ -647,9 +649,16 @@ export class ProfilesUtils {
             });
             profile.profile.password = session.ISession.password = newPassword;
             imperative.AuthOrder.addCredsToSession(session.ISession, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
-            AuthHandler.unlockProfile(profile, true); //TODO: Check if this is necessary, and if so, does it go before or after updateCachedProfile?
+
+            // Update the profile cache, then release the locks on it
             Constants.PROFILES_CACHE.updateCachedProfile(profile, node);
+            AuthHandler.unlockProfile(profile, true);
+
+            // Let ZE, extenders amd secure vault (if enabled) know that the profile has updated
             ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(profile);
+            if (SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
+                ZoweExplorerApiRegister.getInstance().onProfilesUpdateEmitter.fire(Validation.EventType.UPDATE);
+            }
             SharedTreeProviders.getProviderForNode(node).refreshElement(node);
         } catch (err) {
             Gui.warningMessage(
