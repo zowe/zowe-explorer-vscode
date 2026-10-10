@@ -145,6 +145,7 @@ export class UnixCommandHandler extends ZoweCommandProvider {
                 const sshSessCfg = zosuss.SshSession.createSshSessCfgFromArgs(cmdArgs);
                 imperative.ConnectionPropsForSessCfg.resolveSessCfgProps<zosuss.ISshSession>(sshSessCfg, cmdArgs);
                 this.sshSession = new zosuss.SshSession(sshSessCfg);
+                this.attachHostKeyVerifier(this.sshSession);
 
                 const profileStatus = await this.profileInstance.profileValidationHelper(this.sshProfile, this.validateSshConnection.bind(this));
 
@@ -225,6 +226,62 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         }
     }
 
+    //TODO: This is short term duplication - later hook into changes made in https://github.com/zowe/zowe-cli/pull/2813
+    private attachHostKeyVerifier(session: zosuss.SshSession): void {
+        session.hostKeyVerifier = async (info): Promise<boolean> => {
+            const hostname = session.ISshSession.hostname ?? "";
+            if (info.changed) {
+                // Refuse rather than offering to overwrite, like the ssh client and the Zowe CLI.
+                const msg = vscode.l10n.t(
+                    "Host key verification failed for {0}. The server's host key does not match the host key saved in the ssh profile, " +
+                        "so no credentials were sent. Expected {1} but the server presented {2}. " +
+                        "If you trust the new key, remove 'hostKey' from the ssh profile and reconnect.",
+                    hostname,
+                    info.pinnedFingerprint ?? vscode.l10n.t("(unknown)"),
+                    info.fingerprint
+                );
+                ZoweLogger.error(msg);
+                Gui.errorMessage(msg);
+                return false;
+            }
+
+            const trust = vscode.l10n.t("Trust and continue");
+            const choice = await Gui.showQuickPick([trust, vscode.l10n.t("Cancel")], {
+                title: vscode.l10n.t("The authenticity of host '{0}' can't be established", hostname),
+                placeHolder: vscode.l10n.t("Host key fingerprint is {0}", info.fingerprint),
+                ignoreFocusOut: true,
+            });
+            if (choice !== trust) {
+                ZoweLogger.warn(vscode.l10n.t("Host key for {0} was not trusted, so the connection was cancelled.", hostname));
+                return false;
+            }
+
+            session.ISshSession.hostKey = info.key;
+            try {
+                await this.saveHostKey(info.key);
+            } catch (err) {
+                ZoweLogger.error(err);
+                Gui.warningMessage(vscode.l10n.t("Could not save the host key to the ssh profile; you may be asked to confirm it again next time."));
+            }
+            return true;
+        };
+    }
+
+    private async saveHostKey(hostKey: string): Promise<void> {
+        const profInfo = await this.profileInstance.getProfileInfo();
+        if (!profInfo.getTeamConfig().properties.autoStore) {
+            Gui.warningMessage(vscode.l10n.t("Host key not saved because autoStore is disabled; you will be asked to confirm it again next time."));
+            return;
+        }
+        await profInfo.updateProperty({
+            profileName: this.sshProfile.name,
+            profileType: this.sshProfile.type,
+            property: "hostKey",
+            value: hostKey,
+            setSecure: false,
+        });
+    }
+
     private getSshCmdArgs(sshProfile: imperative.IProfile): imperative.ICommandArguments {
         const cmdArgs: imperative.ICommandArguments = {
             $0: "zowe",
@@ -258,7 +315,16 @@ export class UnixCommandHandler extends ZoweCommandProvider {
             // https://github.com/zowe/zowe-cli/issues/2646
             this.sshSession.ISshSession.user = prof.profile.user;
         }
-        return (await zosuss.Shell.isConnectionValid(this.sshSession)) ? "active" : "inactive";
+        try {
+            return (await zosuss.Shell.isConnectionValid(this.sshSession)) ? "active" : "inactive";
+        } catch (err: any) {
+            // A rejected host key is reported as an error rather than an invalid connection.
+            if (err?.message?.includes("Host key verification failed")) {
+                ZoweLogger.error(err);
+                return "inactive";
+            }
+            throw err;
+        }
     }
 
     public formatCommandLine(command: string, profile?: imperative.IProfileLoaded): string {
