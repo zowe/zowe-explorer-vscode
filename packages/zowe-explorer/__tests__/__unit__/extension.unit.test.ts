@@ -286,6 +286,7 @@ async function createGlobalMocks() {
             "zowe.promptCredentials",
             "zowe.profileManagement",
             "zowe.all.config.exportRedacted",
+            "zowe.changePassword",
             "zowe.updateSchema",
             "zowe.diff.useLocalContent",
             "zowe.diff.useRemoteContent",

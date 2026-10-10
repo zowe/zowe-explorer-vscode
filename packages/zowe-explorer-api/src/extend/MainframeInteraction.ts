@@ -17,6 +17,7 @@ import * as zostso from "@zowe/zos-tso-for-zowe-sdk";
 import * as zosuss from "@zowe/zos-uss-for-zowe-sdk";
 import { Types } from "../Types";
 import { IDataSetCount } from "../dataset/IDataSetCount";
+import { IChangePasswordResponse } from "../profiles/IChangePasswordResponse";
 
 export namespace MainframeInteraction {
     export interface ICommon {
@@ -80,6 +81,17 @@ export namespace MainframeInteraction {
          * @returns {string} the token type name as defined by a CLI plugin that implements the profile.
          */
         getTokenTypeName?(): string;
+
+        /**
+         * Change the password for a user on the remote system
+         *
+         * Does not update the local credentials
+         *
+         * @param {imperative.Session} session the session containing the current (old) credentials
+         * @param {string} newPassword the new password to set on the remote system
+         * @returns {Promise<IChangePasswordResponse>} the outcome of the change request
+         */
+        changePassword?(session: imperative.Session, newPassword: string): Promise<IChangePasswordResponse>;
     }
 
     /**

@@ -26,6 +26,7 @@ import { ZoweUSSNode } from "../../../src/trees/uss/ZoweUSSNode";
 import { ProfileManagement } from "../../../src/management/ProfileManagement";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { Definitions } from "../../../src/configuration/Definitions";
+import { MockedProperty } from "../../__mocks__/mockUtils";
 
 vi.mock("fs");
 vi.mock("../../../src/tools/ZoweLocalStorage");
@@ -47,6 +48,7 @@ describe("ProfileManagement unit tests", () => {
             mockResolveQp: vi.fn(),
             mockCreateQp: vi.fn(),
             mockUpdateChosen: ProfileManagement.basicAuthUpdateQpItems[ProfileManagement.AuthQpLabels.update],
+            mockChangePasswordChosen: ProfileManagement.changePasswordQpItems[ProfileManagement.AuthQpLabels.changePassword],
             mockAddBasicChosen: ProfileManagement.basicAuthAddQpItems[ProfileManagement.AuthQpLabels.add],
             mockLoginChosen: ProfileManagement.tokenAuthLoginQpItem[ProfileManagement.AuthQpLabels.login],
             mockSwitchChosen: ProfileManagement.switchAuthenticationQpItems[ProfileManagement.AuthQpLabels.switch],
@@ -60,6 +62,7 @@ describe("ProfileManagement unit tests", () => {
             mockTreeProviders: sharedMock.createTreeProviders(),
             debugLogSpy: null as any,
             promptSpy: null as any,
+            changePasswordSpy: null as any,
             editSpy: null as any,
             loginSpy: null as any,
             handleSwitchAuthenticationSpy: null as any,
@@ -143,6 +146,28 @@ describe("ProfileManagement unit tests", () => {
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
             expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
             expect(mocks.promptSpy).toHaveBeenCalled();
+        });
+        it("profile using basic authentication should see changePassword called when Change Password chosen", async () => {
+            const mocks = createBlockMocks(createGlobalMocks());
+            mocks.changePasswordSpy = new MockedProperty(ProfilesUtils, "changePassword", { value: vi.fn(), configurable: true });
+            mocks.changePasswordSpy = vi.spyOn(ProfilesUtils, "changePassword");
+            vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+                getCommonApi: () => ({ changePassword: vi.fn() }),
+            } as any);
+            mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockChangePasswordChosen);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
+            expect(mocks.changePasswordSpy).toHaveBeenCalled();
+        });
+        it("profile using basic authentication should not see Change Password when the API does not support it", async () => {
+            const mocks = createBlockMocks(createGlobalMocks());
+            vi.spyOn(ZoweExplorerApiRegister, "getInstance").mockReturnValue({
+                getCommonApi: () => ({}),
+            } as any);
+            mocks.mockResolveQp.mockResolvedValueOnce(undefined);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(mocks.mockCreateQp).toHaveBeenCalled();
+            expect(mocks.mockCreateQp.mock.results[0].value.items).not.toContain(mocks.mockChangePasswordChosen);
         });
         it("profile using basic authentication should see handleSwitchAuthentication called when Change the Authentication method chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());

@@ -108,6 +108,10 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public logout(session: imperative.Session): Promise<void> {
             return Logout.apimlLogout(session);
         }
+
+        public changePassword(session: imperative.Session, newPassword: string): Promise<zosmf.IZosmfChangePasswordResponse> {
+            return zosmf.ZosmfChangePassword.changePassword(session, newPassword);
+        }
     }
 
     /**
