@@ -212,7 +212,15 @@ export class Profiles extends ProfilesCache {
                 ` allowedLoginMethod = ${allowedLoginMethod} `
         );
 
-        if (usingTokenAuth || ((await this.profileHasSecureToken(theProfile)) && tokenType)) {
+        if (
+            usingTokenAuth ||
+            // if the service profile specifies a direct login method,
+            // then we should not try to use ssoLogin even if the base or parent profile has a token
+            (allowedLoginMethod !== imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM &&
+                allowedLoginMethod !== imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC &&
+                (await this.profileHasSecureToken(theProfile)) &&
+                tokenType)
+        ) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
                 (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")
