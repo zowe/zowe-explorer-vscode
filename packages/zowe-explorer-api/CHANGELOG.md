@@ -6,7 +6,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Deprecated the `CertificateOptions` interface in the `PromptCredentials.ts` file, which was formerly only used by a private method. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
+- Deprecated the `CertificateOptions` interface in the `PromptCredentials.ts` file, which was formerly only used by a private method in the `ZoweVsCodeExtension` class. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
 - Added the `promptCertificate` method to the `ProfilesCache` class, which opens a certificate wizard UI allowing the user to save certificate file paths used for authentication. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
 - Added the `supportsCertAuth` method to the `MainframeInteraction.ICommon` interface so that extenders can indicate if their API supports certificate authentication. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
 - Added the `notifyFileChanged` method to `IZoweExplorerFileApi` (the file API returned by `getFileApi()`) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
