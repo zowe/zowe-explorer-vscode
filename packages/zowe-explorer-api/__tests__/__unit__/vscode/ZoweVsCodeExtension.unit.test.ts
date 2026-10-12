@@ -661,6 +661,40 @@ describe("ZoweVsCodeExtension", () => {
             promptCertMock.mockRestore();
         });
 
+        it("returns false for allowedLoginMethod = apiml-cert-pem if the certificate wizard returns no response", async () => {
+            vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
+            const serviceProfileWithAllowedLogin = {
+                name: "service",
+                profile: {
+                    host: "example",
+                    allowedLoginMethod: imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM,
+                },
+                type: "zosmf",
+                message: "",
+                failNotFound: true,
+            };
+            ZoweVsCodeExtension.profilesCache.allProfiles = [
+                serviceProfileWithAllowedLogin,
+                { ...serviceProfileWithAllowedLogin, name: "base", type: "base" },
+            ];
+
+            const updateBaseProfileFileLoginSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
+
+            const loginSpy = vi.spyOn(Login, "apimlLogin");
+
+            // user cancelled the cert wizard
+            const promptCertMock = vi.spyOn(ZoweVsCodeExtension.profilesCache as any, "promptCertificate").mockResolvedValue(undefined);
+            const quickPickMock = vi.spyOn(Gui, "showQuickPick");
+            const ssoLoginReturn = await ZoweVsCodeExtension.ssoLogin({ serviceProfile: serviceProfileWithAllowedLogin });
+
+            expect(loginSpy).not.toHaveBeenCalled();
+            expect(promptCertMock).toHaveBeenCalled();
+            expect(quickPickMock).not.toHaveBeenCalled();
+            expect(updateBaseProfileFileLoginSpy).not.toHaveBeenCalled();
+            expect(ssoLoginReturn).toBe(false);
+            promptCertMock.mockRestore();
+        });
+
         it("prompts for username and password without showing a quick pick if allowedLoginMethod=apiml-basic", async () => {
             vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
             const serviceProfileWithAllowedLogin = {
