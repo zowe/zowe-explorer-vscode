@@ -13,7 +13,7 @@ import * as path from "path";
 import * as fs from "fs";
 import * as imperative from "@zowe/imperative";
 import * as vscode from "vscode";
-import { CertificateOptions, ProfilesCache } from "../../../src/profiles/ProfilesCache";
+import { CertificatePromptOptions, ProfilesCache } from "../../../src/profiles/ProfilesCache";
 import { FileManagement, Types, ZoweVsCodeExtension } from "../../../src";
 import { mocked } from "../../../__mocks__/mockUtils";
 import { VscSettings } from "../../../src/vscode/doc/VscSettings";
@@ -927,7 +927,7 @@ describe("ProfilesCache", () => {
             const profCache = new ProfilesCache({ error: vi.fn() } as unknown as imperative.Logger);
             const profInfoMock = createProfInfoMock([baseProfile]);
             vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock);
-            const options: CertificateOptions = {
+            const options: CertificatePromptOptions = {
                 openDialogOptions: {},
                 profile: {
                     profile: {
@@ -956,7 +956,7 @@ describe("ProfilesCache", () => {
             const profCache = new ProfilesCache({ error: vi.fn() } as unknown as imperative.Logger);
             const profInfoMock = createProfInfoMock([baseProfile]);
             vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock);
-            const options: CertificateOptions = {
+            const options: CertificatePromptOptions = {
                 openDialogOptions: {},
                 profile: {
                     profile: {
@@ -982,7 +982,7 @@ describe("ProfilesCache", () => {
             const profCache = new ProfilesCache({ error: vi.fn() } as unknown as imperative.Logger);
             const profInfoMock = createProfInfoMock([baseProfile]);
             vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfoMock);
-            const options: CertificateOptions = {
+            const options: CertificatePromptOptions = {
                 openDialogOptions: {},
                 profile: undefined,
             };

@@ -31,7 +31,7 @@ export interface CertPromptResponse {
     certKey: string;
     action: "save" | "login";
 }
-export interface CertificateOptions {
+export interface CertificatePromptOptions {
     /**
      * Shown at the top of the wizard. Defaults to "Log in to authentication service."
      */
@@ -85,7 +85,7 @@ export class ProfilesCache {
         if (keyring == null) {
             throw new Error(
                 "The @zowe/secrets-for-zowe-sdk module was loaded, but it did not export a keyring. " +
-                "This usually means that the module failed to load earlier in this session."
+                    "This usually means that the module failed to load earlier in this session."
             );
         }
         return keyring;
@@ -671,7 +671,7 @@ export class ProfilesCache {
      * TODO describe behavior of saving the certificate
      * @param options
      */
-    public async promptCertificate(options: CertificateOptions): Promise<CertPromptResponse | undefined> {
+    public async promptCertificate(options: CertificatePromptOptions): Promise<CertPromptResponse | undefined> {
         if (!options.profile) {
             imperative.Logger.getAppLogger().error(`Attempted to prompt for an authentication certificate without specifying a profile`);
             return undefined;

@@ -31,4 +31,13 @@ export namespace PromptCredentialsOptions {
     export interface UserPassOptions extends CommonOptions {
         session: imperative.ISession;
     }
+
+    /**
+     * This interface described options to a now-removed private method.
+     * @deprecated Use CertificatePromptOptions with ProfilesCache.promptCertificate
+     */
+    export interface CertificateOptions extends UserPassOptions {
+        openDialogOptions?: OpenDialogOptions;
+        profile?: imperative.IProfileLoaded;
+    }
 }
