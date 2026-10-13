@@ -47,6 +47,8 @@ describe("FeatureFlags", () => {
     });
 
     afterEach(() => {
+        // Shared/hoisted mock history is not cleared :'(
+        vi.clearAllMocks();
         vi.restoreAllMocks();
     });
 
