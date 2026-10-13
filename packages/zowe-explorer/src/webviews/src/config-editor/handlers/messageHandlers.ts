@@ -145,38 +145,27 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
     // Any CONFIGURATIONS message means a prior save/refresh round-trip has completed.
     setIsSaving(false);
 
+    const resolveSelectedTab = (previousTab: number | null): number | null => {
+        if (!pendingSaveSelection && contents.length > previousConfigurations.length) {
+            const previousPaths = new Set(previousConfigurations.map((config) => config.configPath));
+            const addedIndex = contents.findIndex((config) => !previousPaths.has(config.configPath));
+            if (addedIndex !== -1) return addedIndex;
+        }
+        // Layer priority can change the array order. Preserve the selected file, rather than its old index.
+        const previousPath = previousTab !== null ? previousConfigurations[previousTab]?.configPath : undefined;
+        const retainedIndex = contents.findIndex((config) => config.configPath === previousPath);
+        return retainedIndex !== -1 ? retainedIndex : contents.length > 0 ? 0 : null;
+    };
+
     // Check if we have pending save selection to restore
     if (pendingSaveSelection) {
-        setSelectedTab(pendingSaveSelection.tab);
+        setSelectedTab(resolveSelectedTab(pendingSaveSelection.tab));
         setSelectedProfileKey(pendingSaveSelection.profile);
         setPendingSaveSelection(null);
         // Increment sort order version to trigger re-render with updated merged properties after save
         setSortOrderVersion((prev) => prev + 1);
     } else {
-        // Check if a new configuration was added by comparing paths
-        const previousLength = previousConfigurations.length;
-        const newLength = contents.length;
-
-        setSelectedTab((prevSelectedTab) => {
-            // If a new configuration was added, find and select it
-            if (newLength > previousLength && newLength > 0) {
-                // Get the set of previous config paths
-                const previousPaths = new Set(previousConfigurations.map((c) => c.configPath));
-
-                // Find the new configuration that wasn't in the previous set
-                const newConfigIndex = contents.findIndex((config) => !previousPaths.has(config.configPath));
-
-                // If we found the new configuration, select it
-                if (newConfigIndex !== -1) {
-                    return newConfigIndex;
-                }
-            }
-            // Otherwise, maintain the previous tab if it's still valid
-            if (prevSelectedTab !== null && prevSelectedTab < contents.length) {
-                return prevSelectedTab;
-            }
-            return contents.length > 0 ? 0 : null;
-        });
+        setSelectedTab(resolveSelectedTab);
     }
 
     // Initialize selected profiles for each configuration if not already set.
@@ -196,8 +185,7 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
     });
 
     if (contents.length > 0) {
-        const indexToUse = (prev: number | null) => (prev !== null && prev < contents.length ? prev : 0);
-        const config = contents[indexToUse(selectedTab ?? 0)].properties;
+        const config = contents[resolveSelectedTab(pendingSaveSelection?.tab ?? selectedTab)!].properties;
         setFlattenedConfig(flattenKeys(config.profiles));
         const flatDefs = flattenKeys(config.defaults);
         const defsWithPath: typeof flatDefs = {};

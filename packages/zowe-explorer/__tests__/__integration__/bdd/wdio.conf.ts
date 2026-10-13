@@ -123,7 +123,7 @@ export const config: Options.Testrunner = {
     // Retry a failing spec file once before reporting it as failed.
     // This catches transient CI timing issues (e.g. slow VS Code start-up, focus races)
     // without masking real regressions — the spec still fails on a second failure.
-    specFileRetries: 1,
+    specFileRetries: 0,
 
     cucumberOpts: {
         // <string[]> (file/dir) require files before executing features

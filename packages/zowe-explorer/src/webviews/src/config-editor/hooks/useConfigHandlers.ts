@@ -184,25 +184,18 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
             setProfileFilterType(null);
         }
 
-        vscodeApi.postMessage({ command: "GET_PROFILES" });
+        if (originalSelectedProfileKey !== null) {
+            const configPath = currentSelectedTab !== null ? configurations[currentSelectedTab]?.configPath : undefined;
+            // Revert discards pending profiles. Restore the saved selection before requesting data;
+            if (configPath && doesSavedProfileExist(originalSelectedProfileKey, configPath)) {
+                setSelectedProfileKey(originalSelectedProfileKey);
+            } else {
+                setSelectedProfileKey(null);
+                setMergedProperties(null);
+            }
+        }
 
-        setTimeout(() => {
-            if (currentSelectedTab !== null) {
-                setSelectedTab(currentSelectedTab);
-            }
-            if (originalSelectedProfileKey !== null) {
-                const configPath = currentSelectedTab !== null ? configurations[currentSelectedTab]?.configPath : undefined;
-                // Revert discards pending state, so the selection must be validated against the
-                // saved config only. `doesProfileExist` also counts profiles that live solely in
-                // `pendingChanges`, which would keep a just-discarded profile selected.
-                if (configPath && doesSavedProfileExist(originalSelectedProfileKey, configPath)) {
-                    setSelectedProfileKey(originalSelectedProfileKey);
-                } else {
-                    setSelectedProfileKey(null);
-                    setMergedProperties(null);
-                }
-            }
-        }, 100);
+        vscodeApi.postMessage({ command: "GET_PROFILES" });
     }, [
         selectedTab,
         selectedProfileKey,
@@ -225,7 +218,6 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
         setProfileSearchTerm,
         setProfileFilterType,
         vscodeApi,
-        setSelectedTab,
         setSelectedProfileKey,
         doesSavedProfileExist,
         setSelectedProfilesByConfig,

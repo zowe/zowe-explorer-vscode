@@ -14,17 +14,18 @@ import { Workbench } from "wdio-vscode-service";
 declare const browser: any;
 
 /**
- * Dismiss the tutorial overlay backdrop if it is currently blocking the UI.
- * The backdrop's onClick handler calls the tutorial's skip/close callback, so
- * a DOM-level click on it is all that is needed.
+ * Dismiss either the full-screen backdrop or a spotlight backdrop segment, then wait for
+ * the tutorial dialog and backdrops to unmount before interacting with the underlying UI.
  */
 export async function dismissTutorialOverlay(): Promise<void> {
-    await browser.execute(() => {
-        const backdrop = document.querySelector(".tutorial-overlay-backdrop") as HTMLElement | null;
-        if (backdrop) {
-            backdrop.click();
-        }
-    });
+    await browser.waitUntil(
+        () =>
+            browser.execute(() => {
+                document.querySelector<HTMLElement>(".tutorial-overlay-backdrop, .tutorial-overlay-backdrop-segment")?.click();
+                return !document.querySelector(".tutorial-overlay-modal, .tutorial-overlay-backdrop, .tutorial-overlay-backdrop-segment");
+            }),
+        { timeout: 10000, timeoutMsg: "Config Editor tutorial did not close" }
+    );
 }
 
 /**

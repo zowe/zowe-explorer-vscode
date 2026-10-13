@@ -34,7 +34,7 @@ function getNestedProfiles(holder: Record<string, unknown> | undefined): Record<
         return {};
     }
     const h = holder as { profiles?: Record<string, unknown>; children?: Record<string, unknown> };
-    return (h.profiles || h.children || {}) as Record<string, unknown>;
+    return h.profiles || h.children || {};
 }
 
 /** Resolve a dotted profile path (e.g. zosmf2.zosmf1, nested.child1) in team config JSON. */
@@ -70,6 +70,17 @@ When("the user refreshes the Config Editor from disk", async () => {
     // so they have to be addressed by the test id on the host element.
     const refreshBtn = await browser.$("[data-testid='revert-changes-button']");
     await refreshBtn.waitForExist({ timeout: 10000 });
+    // Identical root names can already be on screen before the extension responds to the refresh.
+    await browser.execute(() => {
+        const app = document.querySelector("[data-testid='config-editor-app']");
+        app?.removeAttribute("data-test-refresh-complete");
+        const onConfigurations = (event: MessageEvent) => {
+            if (event.data?.command !== "CONFIGURATIONS") return;
+            app?.setAttribute("data-test-refresh-complete", "true");
+            window.removeEventListener("message", onConfigurations);
+        };
+        window.addEventListener("message", onConfigurations);
+    });
     await robustClick(refreshBtn);
     await waitForProfileTreeToMatchConfigFile();
 });
@@ -77,25 +88,31 @@ When("the user refreshes the Config Editor from disk", async () => {
 async function waitForProfileTreeToMatchConfigFile(timeout = 20000): Promise<void> {
     const config = JSON.parse(fs.readFileSync(getConfigFilePath(), "utf8")) as { profiles?: Record<string, unknown> };
     const expectedRootKeys = Object.keys(config.profiles ?? {});
+    const getProfileKeys = (profiles: Record<string, unknown>, parentKey = ""): string[] =>
+        Object.entries(profiles).flatMap(([name, profile]) => {
+            const key = parentKey ? `${parentKey}.${name}` : name;
+            return [key, ...getProfileKeys(getNestedProfiles(profile as Record<string, unknown>), key)];
+        });
+    const expectedFlatKeys = getProfileKeys(config.profiles ?? {});
 
     await browser.waitUntil(
-        async () => {
-            const profileList = await browser.$("[data-testid='profile-list']");
-            if (!(await profileList.isExisting())) {
-                return false;
-            }
-            const viewMode = await profileList.getAttribute("data-view-mode");
-            const selector = viewMode === "tree" ? "[data-testid='profile-tree-node'][data-profile-level='0']" : "[data-testid='profile-list-item']";
-            const attribute = viewMode === "tree" ? "data-profile-key" : "data-profile-name";
-            const rendered: string[] = [];
-            for (const el of await browser.$$(selector)) {
-                const value = await el.getAttribute(attribute);
-                if (value) {
-                    rendered.push(value);
-                }
-            }
-            return expectedRootKeys.every((key) => rendered.includes(key));
-        },
+        () =>
+            browser.execute(
+                (rootKeys: string[], flatKeys: string[]) => {
+                    if (!document.querySelector("[data-testid='config-editor-app'][data-test-refresh-complete='true']")) return false;
+                    const profileList = document.querySelector(".panel.active [data-testid='profile-list']");
+                    if (!profileList) return false;
+                    const treeMode = profileList.getAttribute("data-view-mode") === "tree";
+                    const selector = treeMode ? "[data-testid='profile-tree-node'][data-profile-level='0']" : "[data-testid='profile-list-item']";
+                    const attribute = treeMode ? "data-profile-key" : "data-profile-name";
+                    const expected = treeMode ? rootKeys : flatKeys;
+                    // Read a single DOM snapshot: refresh can replace or shrink the list between WDIO commands.
+                    const rendered = Array.from(profileList.querySelectorAll(selector), (element) => element.getAttribute(attribute));
+                    return rendered.length === expected.length && expected.every((key) => rendered.includes(key));
+                },
+                expectedRootKeys,
+                expectedFlatKeys
+            ),
         {
             timeout,
             timeoutMsg: `Profile list never reloaded from disk -- expected root profiles ${expectedRootKeys.join(", ")}`,

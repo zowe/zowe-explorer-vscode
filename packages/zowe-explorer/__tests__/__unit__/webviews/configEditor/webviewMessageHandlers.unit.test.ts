@@ -10,11 +10,19 @@
  */
 
 import { vi } from "vitest";
+import { useConfigHandlers } from "../../../../src/webviews/src/config-editor/hooks/useConfigHandlers";
+import { useConfigContext } from "../../../../src/webviews/src/config-editor/context/ConfigContext";
+import { useProfileUtils } from "../../../../src/webviews/src/config-editor/hooks/useProfileUtils";
+import type { Configuration } from "../../../../src/webviews/src/config-editor/types";
 import {
     handleConfigurationsMessage,
     handleInitialSelectionMessage,
     type MessageHandlerProps,
 } from "../../../../src/webviews/src/config-editor/handlers/messageHandlers";
+
+vi.mock("react", () => ({ useCallback: (callback: unknown) => callback }));
+vi.mock("../../../../src/webviews/src/config-editor/context/ConfigContext", () => ({ useConfigContext: vi.fn() }));
+vi.mock("../../../../src/webviews/src/config-editor/hooks/useProfileUtils", () => ({ useProfileUtils: vi.fn() }));
 
 function makeProps(overrides: Partial<MessageHandlerProps> = {}): MessageHandlerProps {
     return {
@@ -57,15 +65,99 @@ function makeProps(overrides: Partial<MessageHandlerProps> = {}): MessageHandler
         selectedTab: null,
         selectedProfilesByConfig: {},
         hasPromptedForZeroConfigs: false,
+        clearHistory: vi.fn(),
+        validationRequestSeqRef: { current: 0 },
         handleRefresh: vi.fn(),
         handleSave: vi.fn(),
         handleChange: vi.fn(),
         vscodeApi: { postMessage: vi.fn() },
         ...overrides,
-    } as unknown as MessageHandlerProps;
+    };
 }
 
 const EMPTY_CONTENTS: any[] = [];
+
+describe("Config Editor selection after a layer refresh", () => {
+    const team: Configuration = {
+        configPath: "/mock/team.json",
+        properties: { profiles: {}, defaults: { base: "team-base" } },
+        secure: [],
+    };
+    const user: Configuration = {
+        configPath: "/mock/user.json",
+        properties: { profiles: {}, defaults: { base: "user-base" } },
+        secure: [],
+    };
+
+    afterEach(() => vi.useRealTimers());
+
+    it.each([
+        { name: "removing the layer before the selected file", previous: [user, team], contents: [team], selected: 1, expected: 0 },
+        { name: "reordering layers", previous: [user, team], contents: [team, user], selected: 1, expected: 0 },
+        { name: "removing the selected file", previous: [user, team], contents: [team], selected: 0, expected: 0 },
+        { name: "adding a layer", previous: [team], contents: [user, team], selected: 0, expected: 0 },
+        { name: "removing all layers", previous: [team], contents: [], selected: 0, expected: null },
+    ])("selects a valid layer after $name", ({ previous, contents, selected, expected }) => {
+        const props = makeProps({ configurationsRef: { current: previous }, selectedTab: selected });
+        handleConfigurationsMessage({ contents }, props);
+        const update = vi.mocked(props.setSelectedTab).mock.calls[0][0];
+        expect(typeof update === "function" ? update(selected) : update).toBe(expected);
+        if (contents.length) {
+            expect(props.setFlattenedDefaults).toHaveBeenCalledWith({
+                base: { value: contents[expected!].properties.defaults.base, path: ["defaults", "base"] },
+            });
+        }
+    });
+
+    it("restores the saved file after its index changes", () => {
+        const props = makeProps({
+            configurationsRef: { current: [user, team] },
+            selectedTab: 1,
+            pendingSaveSelection: { tab: 1, profile: "team-base" },
+        });
+        handleConfigurationsMessage({ contents: [team] }, props);
+        expect(props.setSelectedTab).toHaveBeenCalledWith(0);
+        expect(props.setSelectedProfileKey).toHaveBeenCalledWith("team-base");
+    });
+
+    it("does not restore an obsolete tab index after a fast refresh response", () => {
+        vi.useFakeTimers();
+        const props = makeProps({ configurationsRef: { current: [user, team] }, selectedTab: 1 });
+        let selectedTab: number | null = 1;
+        vi.mocked(props.setSelectedTab).mockImplementation((update) => {
+            selectedTab = typeof update === "function" ? update(selectedTab) : update;
+        });
+        vi.mocked(useConfigContext).mockReturnValue({
+            ...props,
+            configurations: [user, team],
+            selectedProfileKey: null,
+            pendingChanges: {},
+            deletions: {},
+            pendingDefaults: {},
+            defaultsDeletions: {},
+            autostoreChanges: {},
+            renames: {},
+            dragDroppedProfiles: {},
+            setAutostoreChanges: vi.fn(),
+            setDragDroppedProfiles: vi.fn(),
+            setHiddenItems: vi.fn(),
+            configEditorSettings: { profilesWidthPercent: 35 },
+        } as ReturnType<typeof useConfigContext>);
+        vi.mocked(useProfileUtils).mockReturnValue({
+            doesProfileExist: vi.fn(),
+            doesSavedProfileExist: vi.fn(),
+        } as ReturnType<typeof useProfileUtils>);
+        vi.mocked(props.vscodeApi.postMessage).mockImplementation((message) => {
+            if ("command" in message && message.command === "GET_PROFILES") handleConfigurationsMessage({ contents: [team] }, props);
+        });
+
+        useConfigHandlers({ setPendingProfileDeletion: vi.fn(), setPendingPropertyDeletion: vi.fn() }).handleRefresh();
+        vi.runAllTimers();
+
+        expect(selectedTab).toBe(0);
+        expect(props.vscodeApi.postMessage).toHaveBeenCalledWith({ command: "GET_PROFILES" });
+    });
+});
 
 describe("handleConfigurationsMessage — tutorial visibility logic", () => {
     beforeEach(() => vi.clearAllMocks());
