@@ -85,7 +85,7 @@ export class ProfilesCache {
         if (keyring == null) {
             throw new Error(
                 "The @zowe/secrets-for-zowe-sdk module was loaded, but it did not export a keyring. " +
-                    "This usually means that the module failed to load earlier in this session."
+                "This usually means that the module failed to load earlier in this session."
             );
         }
         return keyring;
@@ -676,17 +676,24 @@ export class ProfilesCache {
             imperative.Logger.getAppLogger().error(`Attempted to prompt for an authentication certificate without specifying a profile`);
             return undefined;
         }
-        const response: CertPromptResponse = await vscode.commands.executeCommand("zowe.certificateWizard", {
-            cert: options.profile.profile?.certFile,
-            certKey: options.profile.profile?.certKeyFile,
-            title: options.title,
-            profileName: options.profile.name,
-            saveButtonText: options.saveButtonText,
-            showLoginButton: options.showLoginButton,
-            dialogOpts: { ...(options.openDialogOptions ?? {}), canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
-        });
+        let response: CertPromptResponse | undefined = undefined;
 
-        if (response.action === "save") {
+        try {
+            response = await vscode.commands.executeCommand("zowe.certificateWizard", {
+                cert: options.profile.profile?.certFile,
+                certKey: options.profile.profile?.certKeyFile,
+                title: options.title,
+                profileName: options.profile.name,
+                saveButtonText: options.saveButtonText,
+                showLoginButton: options.showLoginButton,
+                dialogOpts: { ...(options.openDialogOptions ?? {}), canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
+            });
+        } catch (error) {
+            this.log.error(error as string);
+            return response;
+        }
+
+        if (response?.action === "save") {
             imperative.Logger.getAppLogger().debug("User requested to save certificate to config.");
             let profileToSave = options.profile;
             const allowedLoginMethod = options.profile.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
