@@ -31,6 +31,7 @@ describe("AuthHandler", () => {
                 },
             };
         });
+        vi.clearAllMocks();
     });
     describe("disableLocksForType", () => {
         it("removes the profile type from the list of profile types w/ locks enabled", () => {
@@ -452,7 +453,7 @@ describe("AuthHandler", () => {
 
         it(
             "prompts for certificate if the profile has allowedLoginMethod=direct-cert-pem" +
-                " and does NOT unlock the profile if the cert prompt is canceled",
+            " and does NOT unlock the profile if the cert prompt is canceled",
             async () => {
                 vi.spyOn(ProfilesCache.prototype, "loadNamedProfile").mockImplementation((name, type, _optional) => {
                     return {
