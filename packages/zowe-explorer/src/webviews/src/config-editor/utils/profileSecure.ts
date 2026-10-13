@@ -9,6 +9,7 @@
  *
  */
 
+import { profileKeyToPath } from "./configUtils";
 import { extractProfileKeyFromPath } from "./configUtils";
 import { Configuration, SchemaContext, RenamesMap, PendingChangesMap, MergedPropertiesMap, DeletionsMap } from "../types";
 import { getProfileType } from "./profileTypeResolution";
@@ -112,11 +113,7 @@ export function isPropertySecure(params: IsPropertySecureParams): boolean {
                 const renamedProfileKey = getRenamedProfileKeyWithNested(currentProfileKey, configPath, renames);
 
                 if (renamedProfileKey !== currentProfileKey) {
-                    const newProfileParts: string[] = ["profiles"];
-                    renamedProfileKey.split(".").forEach((p, idx, arr) => {
-                        newProfileParts.push(p);
-                        if (idx < arr.length - 1) newProfileParts.push("profiles");
-                    });
+                    const newProfileParts = profileKeyToPath(renamedProfileKey);
                     const newPrefix = newProfileParts.join(".");
 
                     const currentProfilePartsCount = currentProfileKey.split(".").length;

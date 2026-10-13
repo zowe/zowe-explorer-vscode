@@ -54,6 +54,11 @@ export function flattenProfiles(
     return result;
 }
 
+/** Converts a dotted profile key into its nested JSON path, without property suffixes. */
+export function profileKeyToPath(profileKey: string): string[] {
+    return profileKey.split(".").flatMap((part) => ["profiles", part]);
+}
+
 export function pathFromArray(arr: string[]): string {
     return arr.join(".");
 }

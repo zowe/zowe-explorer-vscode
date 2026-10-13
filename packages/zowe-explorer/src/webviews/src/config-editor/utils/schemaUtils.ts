@@ -9,8 +9,9 @@
  *
  */
 
+import { getRelevantPropertySchemas, collectSchemaPropertyKeys, collectSchemaPropertyDescriptions } from "./schemaProperties";
 import { flattenProfiles } from "./configUtils";
-import { Configuration, PendingChangesMap, SchemaValidationsMap, ProfileSchemaEntry } from "../types";
+import { Configuration, PendingChangesMap, SchemaValidationsMap } from "../types";
 
 interface WizardSchemaContext {
     selectedTab: number | null;
@@ -65,23 +66,11 @@ export function getWizardPropertyOptions(params: GetWizardPropertyOptionsParams)
 
     if (selectedTab === null) return [];
 
-    const allPropertyOptions = new Set<string>();
     const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema || {};
-
-    if (wizardSelectedType && propertySchema[wizardSelectedType]) {
-        Object.keys(propertySchema[wizardSelectedType]).forEach((key) => allPropertyOptions.add(key));
-    } else {
-        Object.values(propertySchema).forEach((typeSchema: Record<string, ProfileSchemaEntry>) => {
-            if (typeSchema && typeof typeSchema === "object") {
-                Object.keys(typeSchema).forEach((key) => allPropertyOptions.add(key));
-            }
-        });
-    }
+    const allPropertyOptions = collectSchemaPropertyKeys(getRelevantPropertySchemas(propertySchema, wizardSelectedType));
 
     const usedKeys = new Set(wizardProperties.map((prop) => prop.key));
-    return Array.from(allPropertyOptions)
-        .filter((option) => !usedKeys.has(option))
-        .sort((a, b) => a.localeCompare(b));
+    return allPropertyOptions.filter((option) => !usedKeys.has(option)).sort((a, b) => a.localeCompare(b));
 }
 
 interface GetWizardPropertyDescriptionsParams extends WizardSchemaContext {
@@ -93,28 +82,8 @@ export function getWizardPropertyDescriptions(params: GetWizardPropertyDescripti
 
     if (selectedTab === null) return {};
 
-    const propertyDescriptions: { [key: string]: string } = {};
     const propertySchema = schemaValidations[configurations[selectedTab].configPath]?.propertySchema || {};
-
-    if (wizardSelectedType && propertySchema[wizardSelectedType]) {
-        Object.entries(propertySchema[wizardSelectedType]).forEach(([key, schema]) => {
-            if (schema && typeof schema === "object" && "description" in schema && schema.description) {
-                propertyDescriptions[key] = schema.description;
-            }
-        });
-    } else {
-        Object.values(propertySchema).forEach((typeSchema: Record<string, ProfileSchemaEntry>) => {
-            if (typeSchema && typeof typeSchema === "object") {
-                Object.entries(typeSchema).forEach(([key, schema]) => {
-                    if (schema && typeof schema === "object" && "description" in schema && schema.description && !propertyDescriptions[key]) {
-                        propertyDescriptions[key] = schema.description;
-                    }
-                });
-            }
-        });
-    }
-
-    return propertyDescriptions;
+    return collectSchemaPropertyDescriptions(getRelevantPropertySchemas(propertySchema, wizardSelectedType));
 }
 
 interface GetPropertyTypeParams extends WizardSchemaContext {

@@ -1,3 +1,4 @@
+import { applyProfilePanelWidth, MIN_PROFILES_WIDTH, MIN_DETAILS_WIDTH, PROFILE_DIVIDER_WIDTH } from "../utils/panelWidths";
 import { useEffect, useCallback } from "react";
 import type { Configuration, ConfigEditorSettings } from "../types";
 
@@ -23,26 +24,12 @@ export function usePanelResizer({
     const applyStoredWidth = useCallback(() => {
         const activePanel = document.querySelector(".panel.active .panel-content") as HTMLElement;
         if (activePanel) {
-            const profilesSection = activePanel.querySelector(".profiles-section") as HTMLElement;
-            const profileDetailsSection = activePanel.querySelector(".profile-details-section") as HTMLElement;
-
-            if (profilesSection && profileDetailsSection) {
-                const panelWidth = activePanel.getBoundingClientRect().width;
-                const profilesWidth = (panelWidth * profilesWidthPercent) / 100;
-                const minProfilesWidth = 200;
-                const minDetailsWidth = 300;
-                const maxProfilesWidth = Math.max(minProfilesWidth, panelWidth - minDetailsWidth);
-
-                const constrainedWidth = Math.max(minProfilesWidth, Math.min(maxProfilesWidth, profilesWidth));
-
-                profilesSection.style.width = `${constrainedWidth}px`;
-                profilesSection.style.flex = `0 0 auto`;
-                profilesSection.style.maxWidth = `${maxProfilesWidth}px`;
-
-                profileDetailsSection.style.width = "";
-                profileDetailsSection.style.flex = "1";
-                profileDetailsSection.style.maxWidth = "";
-            }
+            const panelWidth = activePanel.getBoundingClientRect().width;
+            applyProfilePanelWidth(
+                activePanel,
+                (panelWidth * profilesWidthPercent) / 100,
+                Math.max(MIN_PROFILES_WIDTH, panelWidth - MIN_DETAILS_WIDTH)
+            );
         }
     }, [profilesWidthPercent]);
 
@@ -65,39 +52,10 @@ export function usePanelResizer({
             const panelContent = divider.closest(".panel-content") as HTMLElement;
             if (!panelContent) return;
 
-            const profilesSection = panelContent.querySelector(".profiles-section") as HTMLElement;
-            const profileDetailsSection = panelContent.querySelector(".profile-details-section") as HTMLElement;
-
-            if (!profilesSection || !profileDetailsSection) return;
-
             const panelRect = panelContent.getBoundingClientRect();
-            const mouseX = e.clientX - panelRect.left;
-            const panelWidth = panelRect.width;
-
-            // Calculate new widths in pixels
-            const dividerWidth = 22; // 22px for divider width and margins
-            const availableWidth = panelWidth - dividerWidth;
-
-            // Apply minimum and maximum constraints for both profiles and details sections
-            const minProfilesWidth = 200;
-            const minDetailsWidth = 300;
-            const maxProfilesWidth = Math.max(minProfilesWidth, availableWidth - minDetailsWidth);
-
-            // Calculate desired width for profiles section based on mouse position
-            const desiredProfilesWidth = mouseX;
-
-            // Constrain profiles section
-            const constrainedProfilesWidth = Math.max(minProfilesWidth, Math.min(maxProfilesWidth, desiredProfilesWidth));
-
-            // Apply the new width to profiles section only
-            profilesSection.style.width = `${constrainedProfilesWidth}px`;
-            profilesSection.style.flex = `0 0 auto`;
-            profilesSection.style.maxWidth = `${maxProfilesWidth}px`;
-
-            // Let details section use remaining space (flex: 1)
-            profileDetailsSection.style.width = "";
-            profileDetailsSection.style.flex = "1";
-            profileDetailsSection.style.maxWidth = "";
+            const desiredWidth = e.clientX - panelRect.left;
+            const maxWidth = Math.max(MIN_PROFILES_WIDTH, panelRect.width - PROFILE_DIVIDER_WIDTH - MIN_DETAILS_WIDTH);
+            applyProfilePanelWidth(panelContent, desiredWidth, maxWidth);
         };
 
         const handleMouseUp = () => {

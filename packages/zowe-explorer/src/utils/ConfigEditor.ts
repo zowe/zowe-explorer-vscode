@@ -412,9 +412,7 @@ export class ConfigEditor extends WebView {
             }
             case "UNSAVED_CHANGES_STATUS": {
                 const hasPendingChanges = (message as unknown as { hasPendingChanges: boolean }).hasPendingChanges;
-                this.panel.title = hasPendingChanges
-                    ? `${vscode.l10n.t("Config Editor")} (Unsaved)`
-                    : vscode.l10n.t("Config Editor");
+                this.panel.title = hasPendingChanges ? `${vscode.l10n.t("Config Editor")} (Unsaved)` : vscode.l10n.t("Config Editor");
                 break;
             }
 

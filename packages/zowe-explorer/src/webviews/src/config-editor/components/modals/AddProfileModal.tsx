@@ -1,3 +1,5 @@
+import { AuthOrderControls } from "../AuthOrderControls";
+import { isAuthOrderProperty, isValidAuthOrder } from "../../utils/authOrder";
 import * as l10n from "@vscode/l10n";
 import { VscodeButton, VscodeTextfield, VscodeSingleSelect, VscodeOption } from "@vscode-elements/react-elements";
 import { ModalShell } from "../ModalShell";
@@ -48,62 +50,6 @@ export function AddProfileModal({
   focusValueInput = false,
 }: AddProfileModalProps) {
   if (!isOpen) return null;
-
-  const isAuthOrderProperty = (key: string): boolean => {
-    if (!key || typeof key !== "string") {
-      return false;
-    }
-
-    return key.toLowerCase() === "authorder";
-  };
-
-  const handleAuthMethodClick = (authMethod: string) => {
-    const currentValue = newProfileValue.trim();
-    const authMethods = currentValue ? currentValue.split(",").map((m) => m.trim()) : [];
-
-    if (authMethods.includes(authMethod)) {
-      const newAuthMethods = authMethods.filter((method) => method !== authMethod);
-      const newValue = newAuthMethods.join(", ");
-      onNewProfileValueChange(newValue);
-    } else {
-      const newAuthMethods = [...authMethods, authMethod];
-      const newValue = newAuthMethods.join(", ");
-      onNewProfileValueChange(newValue);
-    }
-  };
-
-  const getAuthMethodTooltip = (authMethod: string): string => {
-    switch (authMethod) {
-      case "basic":
-        return "User & password authentication";
-      case "token":
-        return "API ML token authentication";
-      case "bearer":
-        return "Bearer token authentication";
-      case "cert-pem":
-        return "PEM certificate authentication";
-      default:
-        return authMethod;
-    }
-  };
-
-  const isAuthMethodAlreadyAdded = (authMethod: string): boolean => {
-    const currentValue = newProfileValue.trim();
-    const authMethods = currentValue ? currentValue.split(",").map((m) => m.trim()) : [];
-    return authMethods.includes(authMethod);
-  };
-
-  const isValidAuthOrder = (value: string): boolean => {
-    if (!value.trim()) return true; // Empty is valid (will be validated on save)
-
-    const validAuthTypes = ["basic", "token", "bearer", "cert-pem"];
-    const authMethods = value.split(",").map((m) => m.trim());
-
-    const uniqueMethods = new Set(authMethods);
-    if (uniqueMethods.size !== authMethods.length) return false;
-
-    return authMethods.every((method) => validAuthTypes.includes(method));
-  };
 
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter") {
@@ -168,31 +114,7 @@ export function AddProfileModal({
         )}
       </div>
 
-      {/* Auth Order Buttons */}
-      {isAuthOrderProperty(newProfileKey.trim()) && (
-        <div className="auth-order-buttons">
-          <label className="auth-order-label">{l10n.t("Select Authentication Order")}:</label>
-          <div className="auth-order-button-container">
-            {["token", "basic", "bearer", "cert-pem"].map((authMethod) => {
-              const isSelected = isAuthMethodAlreadyAdded(authMethod);
-              return (
-                <button
-                  key={authMethod}
-                  type="button"
-                  onClick={() => handleAuthMethodClick(authMethod)}
-                  className={`auth-order-button ${isSelected ? "selected" : ""}`}
-                  title={`${getAuthMethodTooltip(authMethod)} (${isSelected ? "Click to remove" : "Click to add"})`}
-                >
-                  {authMethod}
-                </button>
-              );
-            })}
-          </div>
-          {!isValidAuthOrder(newProfileValue) && (
-            <div className="auth-order-error">{l10n.t("Invalid format. Use: basic, token, bearer, cert-pem")}</div>
-          )}
-        </div>
-      )}
+      {isAuthOrderProperty(newProfileKey.trim()) && <AuthOrderControls value={newProfileValue} onChange={onNewProfileValueChange} />}
 
       <div className="add-profile-input-row">
         {(() => {

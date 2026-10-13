@@ -12,13 +12,8 @@
 import type { Configuration, PendingChange, MergedPropertiesVisibility, PropertySortOrder, schemaValidation } from "../../types";
 import type { ConfigEditorWebviewApi } from "../../handlers/messageHandlers";
 
-/**
- * The set of handlers, context values and derived flags shared by every node of the
- * config tree. Assembled once by `RenderConfig` and threaded through the recursive
- * `ConfigEntries` renderer and its leaf components, so individual components don't each
- * re-declare 25+ props.
- */
-export interface RenderConfigCtx {
+/** Handlers and helpers supplied to the property renderer by RenderProfileDetails. */
+export interface RenderConfigInputs {
     // Handlers supplied by the parent (RenderProfileDetails).
     handleChange: (key: string, value: string) => void;
     handleDeleteProperty: (fullKey: string, secure?: boolean) => void;
@@ -58,7 +53,10 @@ export interface RenderConfigCtx {
     ) => boolean;
     canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
     isMergedPropertySecure: (displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean) => boolean;
+}
 
+/** Shared inputs plus context values and derived flags for each recursive property row. */
+export interface RenderConfigCtx extends RenderConfigInputs {
     // Values read from ConfigContext.
     configurations: Configuration[];
     selectedTab: number | null;

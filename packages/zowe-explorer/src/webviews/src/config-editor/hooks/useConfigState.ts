@@ -1,3 +1,4 @@
+import type { ProfileClipboard } from "../types";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
     Configuration,
@@ -54,20 +55,7 @@ export function useConfigState(vscodeApi: ConfigEditorWebviewApi) {
     const [profileMenuOpen, setProfileMenuOpen] = useState<string | null>(null);
     const [renameProfileModalOpen, setRenameProfileModalOpen] = useState(false);
     const [configParseErrors, setConfigParseErrors] = useState<ConfigParseError[]>([]);
-    const [profileClipboard, setProfileClipboard] = useState<{
-        type: "copy" | "cut";
-        sourceKey: string;
-        configPath: string;
-        profiles: {
-            [key: string]: {
-                profileKey: string;
-                type: string | null;
-                properties: Record<string, any>;
-                secure: string[];
-                customFields: Record<string, any>;
-            };
-        };
-    } | null>(null);
+    const [profileClipboard, setProfileClipboard] = useState<ProfileClipboard | null>(null);
 
     const configurationsRef = useRef<Configuration[]>([]);
     const pendingChangesRef = useRef<{ [configPath: string]: { [key: string]: PendingChange } }>({});

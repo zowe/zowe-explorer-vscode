@@ -9,6 +9,7 @@
  *
  */
 
+import { profileKeyToPath } from "../utils/configUtils";
 import { useCallback, useEffect, useRef } from "react";
 import { VscodeToolbarButton } from "@vscode-elements/react-elements";
 import { RenderConfig } from "./renderConfig";
@@ -249,21 +250,9 @@ export const RenderProfileDetails = ({
               }
             }
 
-            let effectivePath: string[];
             const pathProfileKey = pendingProfiles[selectedProfileKey] ? selectedProfileKey : effectiveProfileKey;
 
-            const profilePathParts = pathProfileKey.split(".");
-            if (profilePathParts.length === 1) {
-              effectivePath = ["profiles", pathProfileKey];
-            } else {
-              effectivePath = ["profiles"];
-              for (let i = 0; i < profilePathParts.length; i++) {
-                effectivePath.push(profilePathParts[i]);
-                if (i < profilePathParts.length - 1) {
-                  effectivePath.push("profiles");
-                }
-              }
-            }
+            const effectivePath = profileKeyToPath(pathProfileKey);
 
             const effectiveProfile =
               flatProfiles[effectiveProfileKey] || pendingProfiles[effectiveProfileKey] || pendingProfiles[selectedProfileKey] || {};

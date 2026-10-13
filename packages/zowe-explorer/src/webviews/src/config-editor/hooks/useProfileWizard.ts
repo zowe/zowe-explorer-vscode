@@ -9,6 +9,7 @@
  *
  */
 
+import { profileKeyToPath } from "../utils/configUtils";
 import { useEffect, useRef, useCallback } from "react";
 import { parseValueByType, flattenProfiles } from "../utils";
 import {
@@ -202,29 +203,8 @@ export function useProfileWizard({
             return;
         }
 
-        // Create the profile path
-        let profilePath: string[];
-        let newProfileKey: string;
-        if (wizardRootProfile === "root") {
-            profilePath = ["profiles", wizardProfileName];
-            newProfileKey = wizardProfileName;
-        } else {
-            // build the path to the selected profile
-            const profileParts = wizardRootProfile.split(".");
-            profilePath = ["profiles"];
-
-            for (let i = 0; i < profileParts.length; i++) {
-                profilePath.push(profileParts[i]);
-                // Add "profiles" between each level
-                if (i < profileParts.length - 1) {
-                    profilePath.push("profiles");
-                }
-            }
-
-            // Add "profiles" after the selected profile, then the new profile name
-            profilePath.push("profiles", wizardProfileName);
-            newProfileKey = `${wizardRootProfile}.${wizardProfileName}`;
-        }
+        const newProfileKey = wizardRootProfile === "root" ? wizardProfileName : `${wizardRootProfile}.${wizardProfileName}`;
+        const profilePath = profileKeyToPath(newProfileKey);
 
         // Add type property only if selected
         if (wizardSelectedType) {

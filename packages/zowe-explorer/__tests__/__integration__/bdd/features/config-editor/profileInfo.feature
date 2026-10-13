@@ -20,7 +20,13 @@ Feature: Profile Info Management - Comprehensive Testing
       | base  | ,base,test-profile,special-chars,nested                                |
 
   @config-editor @profile-defaults
-  Scenario Outline: Select a new default for each type and save
+  Scenario: Selecting the current TSO default leaves no pending changes
+    When the user selects "tso1" in the tso default dropdown
+    Then there are no pending changes in the Config Editor
+    And the tso default should be "tso1"
+
+  @config-editor @profile-defaults
+  Scenario Outline: Select a new default and save
     When the user selects "<option>" in the <type> default dropdown
     And the user saves the changes
     Then the <type> default should be "<option>"
@@ -28,7 +34,6 @@ Feature: Profile Info Management - Comprehensive Testing
     Examples:
       | type  | option        |
       | zosmf | zosmf-dev     |
-      | tso   | tso1          |
       | ssh   | nested.child2 |
       | base  | special-chars |
 

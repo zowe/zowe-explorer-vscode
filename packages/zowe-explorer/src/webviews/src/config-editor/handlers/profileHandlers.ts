@@ -9,6 +9,7 @@
  *
  */
 
+import { profileKeyToPath } from "../utils/configUtils";
 import { checkIfRenameCancelsOut, consolidateRenames, detectClosedLoops } from "../utils/renameUtils";
 import { getRenamedProfileKeyWithNested } from "../utils/profileUtils";
 import { flattenProfiles } from "../utils";
@@ -318,44 +319,6 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
         const updatedChanges: { [key: string]: PendingChange } = {};
         let hasChanges = false;
 
-        // Helper function to construct new path for nested profiles
-        const constructNewPath = (newProfileKey: string): string => {
-            if (newProfileKey.includes(".")) {
-                // For nested profiles, construct path with "profiles" segments
-                const profileParts = newProfileKey.split(".");
-                const pathParts = ["profiles"];
-                for (let i = 0; i < profileParts.length; i++) {
-                    pathParts.push(profileParts[i]);
-                    if (i < profileParts.length - 1) {
-                        pathParts.push("profiles");
-                    }
-                }
-                return pathParts.join(".");
-            } else {
-                // Top-level profile
-                return `profiles.${newProfileKey}`;
-            }
-        };
-
-        // Helper function to construct old path for nested profiles
-        const constructOldPath = (profileKey: string): string => {
-            if (profileKey.includes(".")) {
-                // For nested profiles, construct path with "profiles" segments
-                const profileParts = profileKey.split(".");
-                const pathParts = ["profiles"];
-                for (let i = 0; i < profileParts.length; i++) {
-                    pathParts.push(profileParts[i]);
-                    if (i < profileParts.length - 1) {
-                        pathParts.push("profiles");
-                    }
-                }
-                return pathParts.join(".");
-            } else {
-                // Top-level profile
-                return `profiles.${profileKey}`;
-            }
-        };
-
         // Process each pending change entry
         Object.entries(configChanges).forEach(([changeKey, changeEntry]) => {
             let newChangeKey = changeKey;
@@ -367,8 +330,8 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
                 newChangeEntry.profile = newKey;
 
                 // Update the key path to reflect the new profile structure
-                const oldProfilePath = constructOldPath(originalKey);
-                const newProfilePath = constructNewPath(newKey);
+                const oldProfilePath = profileKeyToPath(originalKey).join(".");
+                const newProfilePath = profileKeyToPath(newKey).join(".");
 
                 if (changeKey.startsWith(oldProfilePath)) {
                     newChangeKey = changeKey.replace(oldProfilePath, newProfilePath);
@@ -381,8 +344,8 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
                 newChangeEntry.profile = newKey + "." + childPath;
 
                 // Update the key path for child profiles
-                const oldChildProfilePath = constructOldPath(changeEntry.profile);
-                const newChildProfilePath = constructNewPath(newKey + "." + childPath);
+                const oldChildProfilePath = profileKeyToPath(changeEntry.profile).join(".");
+                const newChildProfilePath = profileKeyToPath(newKey + "." + childPath).join(".");
 
                 if (changeKey.startsWith(oldChildProfilePath)) {
                     newChangeKey = changeKey.replace(oldChildProfilePath, newChildProfilePath);
@@ -395,8 +358,8 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
                     if (changeEntry.profile === origKey) {
                         newChangeEntry.profile = renamedValue;
 
-                        const oldProfilePath = constructOldPath(origKey);
-                        const newProfilePath = constructNewPath(renamedValue);
+                        const oldProfilePath = profileKeyToPath(origKey).join(".");
+                        const newProfilePath = profileKeyToPath(renamedValue).join(".");
 
                         if (changeKey.startsWith(oldProfilePath)) {
                             newChangeKey = changeKey.replace(oldProfilePath, newProfilePath);
@@ -409,8 +372,8 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
                         const childPath = changeEntry.profile.substring(origKey.length + 1);
                         newChangeEntry.profile = renamedValue + "." + childPath;
 
-                        const oldChildProfilePath = constructOldPath(changeEntry.profile);
-                        const newChildProfilePath = constructNewPath(renamedValue + "." + childPath);
+                        const oldChildProfilePath = profileKeyToPath(changeEntry.profile).join(".");
+                        const newChildProfilePath = profileKeyToPath(renamedValue + "." + childPath).join(".");
 
                         if (changeKey.startsWith(oldChildProfilePath)) {
                             newChangeKey = changeKey.replace(oldChildProfilePath, newChildProfilePath);
@@ -479,14 +442,7 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
 
                 if (!existsAsOriginal && !existsAsRenamed) {
                     // Create a pending change for the parent profile (without type)
-                    const parentPath = parentKey.split(".");
-                    const fullPath = ["profiles"];
-                    for (let i = 0; i < parentPath.length; i++) {
-                        fullPath.push(parentPath[i]);
-                        if (i < parentPath.length - 1) {
-                            fullPath.push("profiles");
-                        }
-                    }
+                    const fullPath = profileKeyToPath(parentKey);
 
                     const fullPathKey = fullPath.join(".");
                     newState[configPath][fullPathKey] = {
@@ -580,22 +536,7 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
     const effectiveProfileKey = getRenamedProfileKeyWithNested(profileKey, configPath, renames);
 
     // Construct the full profile path using the effective profile key
-    let fullProfilePath: string;
-    if (effectiveProfileKey.includes(".")) {
-        // Nested profile, construct the full path
-        const profileParts = effectiveProfileKey.split(".");
-        const pathArray = ["profiles"];
-        for (let i = 0; i < profileParts.length; i++) {
-            pathArray.push(profileParts[i]);
-            if (i < profileParts.length - 1) {
-                pathArray.push("profiles");
-            }
-        }
-        fullProfilePath = pathArray.join(".");
-    } else {
-        // Top-level profile
-        fullProfilePath = `profiles.${effectiveProfileKey}`;
-    }
+    const fullProfilePath = profileKeyToPath(effectiveProfileKey).join(".");
 
     // Add to deletions - we'll add all profile-related keys to deletions
     setDeletions((prev) => {

@@ -90,6 +90,20 @@ export interface IConfigLayer {
 export type RenamesMap = { [configPath: string]: { [originalKey: string]: string } };
 export type DeletionsMap = { [configPath: string]: string[] };
 export type PendingChangesMap = { [configPath: string]: { [key: string]: PendingChange } };
+export interface ClipboardProfile {
+    profileKey: string;
+    type: string | null;
+    properties: Record<string, PendingChange["value"]>;
+    secure: string[];
+    customFields: Record<string, PendingChange["value"]>;
+}
+
+export interface ProfileClipboard {
+    type: "copy" | "cut";
+    sourceKey: string;
+    configPath: string;
+    profiles: Record<string, ClipboardProfile>;
+}
 export type PendingDefaultsMap = { [configPath: string]: { [key: string]: PendingDefault } };
 export type SchemaValidationsMap = { [configPath: string]: SchemaValidationType | undefined };
 

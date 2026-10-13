@@ -9,7 +9,7 @@
  *
  */
 
-import { extractProfileKeyFromPath } from "./configUtils";
+import { extractProfileKeyFromPath, profileKeyToPath } from "./configUtils";
 import { ConfigStateContext, SchemaContext, DeletionsMap, MergedPropertiesVisibility, MergedPropertiesMap } from "../types";
 import { getProfileType } from "./profileTypeResolution";
 import { getRenamedProfileKeyWithNested, getOriginalProfileKeyWithNested } from "./profileRenames";
@@ -51,14 +51,7 @@ export function isPropertyActuallyInherited(params: IsPropertyActuallyInheritedP
 
         let nestedPropertyPendingKey = "";
         if (originalProfileKey.includes(".")) {
-            const profileParts = originalProfileKey.split(".");
-            const pathParts = ["profiles"];
-            for (let i = 0; i < profileParts.length; i++) {
-                pathParts.push(profileParts[i]);
-                if (i < profileParts.length - 1) {
-                    pathParts.push("profiles");
-                }
-            }
+            const pathParts = profileKeyToPath(originalProfileKey);
             pathParts.push("properties", propertyName);
             nestedPropertyPendingKey = pathParts.join(".");
         }
@@ -211,20 +204,7 @@ export function mergeMergedProperties(params: MergeMergedPropertiesParams): Reco
         const currentPK = extractProfileKeyFromPath(path);
         const originalPK = getOriginalProfileKeyWithNested(currentPK, configPath, renames);
 
-        let originalPath: string;
-        if (originalPK.includes(".")) {
-            const profileParts = originalPK.split(".");
-            const pathParts = ["profiles"];
-            for (let i = 0; i < profileParts.length; i++) {
-                pathParts.push(profileParts[i]);
-                if (i < profileParts.length - 1) {
-                    pathParts.push("profiles");
-                }
-            }
-            originalPath = pathParts.join(".");
-        } else {
-            originalPath = `profiles.${originalPK}`;
-        }
+        const originalPath = profileKeyToPath(originalPK).join(".");
 
         const originalPendingKey = `${originalPath}.properties.${key}`;
 
@@ -234,14 +214,7 @@ export function mergeMergedProperties(params: MergeMergedPropertiesParams): Reco
         let isInDeletions = (deletions[configPath] ?? []).includes(pendingKey) || (deletions[configPath] ?? []).includes(originalPendingKey);
 
         if (!isInDeletions && originalPK.includes(".")) {
-            const profileParts = originalPK.split(".");
-            const pathParts = ["profiles"];
-            for (let i = 0; i < profileParts.length; i++) {
-                pathParts.push(profileParts[i]);
-                if (i < profileParts.length - 1) {
-                    pathParts.push("profiles");
-                }
-            }
+            const pathParts = profileKeyToPath(originalPK);
             pathParts.push("properties", key);
             const nestedPendingKey = pathParts.join(".");
             isInDeletions = (deletions[configPath] ?? []).includes(nestedPendingKey);

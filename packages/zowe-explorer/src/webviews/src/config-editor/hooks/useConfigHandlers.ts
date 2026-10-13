@@ -9,6 +9,7 @@
  *
  */
 
+import { applyProfilePanelWidth } from "../utils/panelWidths";
 import { useCallback } from "react";
 import { useConfigContext } from "../context/ConfigContext";
 import { buildFormattedPendingChanges } from "../utils/renameUtils";
@@ -242,24 +243,8 @@ export function useConfigHandlers(params: ConfigHandlersParams) {
             setTimeout(() => {
                 const panelContent = document.querySelector(`.panel:nth-child(${index + 1}) .panel-content`) as HTMLElement;
                 if (panelContent) {
-                    const profilesSection = panelContent.querySelector(".profiles-section") as HTMLElement;
-                    const profileDetailsSection = panelContent.querySelector(".profile-details-section") as HTMLElement;
-
-                    if (profilesSection && profileDetailsSection) {
-                        const panelWidth = panelContent.getBoundingClientRect().width;
-                        const profilesWidth = (panelWidth * profilesWidthPercent) / 100;
-                        const minProfilesWidth = 200;
-                        const maxProfilesWidth = panelWidth * 0.7;
-                        const constrainedWidth = Math.max(minProfilesWidth, Math.min(maxProfilesWidth, profilesWidth));
-
-                        profilesSection.style.width = `${constrainedWidth}px`;
-                        profilesSection.style.flex = `0 0 auto`;
-                        profilesSection.style.maxWidth = `${maxProfilesWidth}px`;
-
-                        profileDetailsSection.style.width = "";
-                        profileDetailsSection.style.flex = "1";
-                        profileDetailsSection.style.maxWidth = "";
-                    }
+                    const panelWidth = panelContent.getBoundingClientRect().width;
+                    applyProfilePanelWidth(panelContent, (panelWidth * profilesWidthPercent) / 100, panelWidth * 0.7);
                 }
             }, 0);
 

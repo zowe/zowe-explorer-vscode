@@ -1,3 +1,5 @@
+import { AuthOrderControls } from "../AuthOrderControls";
+import { isAuthOrderProperty, isValidAuthOrder } from "../../utils/authOrder";
 import * as l10n from "@vscode/l10n";
 import { VscodeButton, VscodeSingleSelect, VscodeOption } from "@vscode-elements/react-elements";
 import { ModalShell } from "../ModalShell";
@@ -148,61 +150,6 @@ export function ProfileWizardModal() {
     const isValidParent = !isInvalidParentProfile(profile, wizardProfileName);
     return matchesSearch && isValidParent;
   });
-
-  const isAuthOrderProperty = (key: string): boolean => {
-    if (!key || typeof key !== "string") {
-      return false;
-    }
-    return key.toLowerCase() === "authorder";
-  };
-
-  const handleAuthMethodClick = (authMethod: string) => {
-    const currentValue = wizardNewPropertyValue.trim();
-    const authMethods = currentValue ? currentValue.split(",").map((m) => m.trim()) : [];
-
-    if (authMethods.includes(authMethod)) {
-      const newAuthMethods = authMethods.filter((method) => method !== authMethod);
-      const newValue = newAuthMethods.join(", ");
-      onNewPropertyValueChange(newValue);
-    } else {
-      const newAuthMethods = [...authMethods, authMethod];
-      const newValue = newAuthMethods.join(", ");
-      onNewPropertyValueChange(newValue);
-    }
-  };
-
-  const getAuthMethodTooltip = (authMethod: string): string => {
-    switch (authMethod) {
-      case "basic":
-        return "User & password authentication";
-      case "token":
-        return "API ML token authentication";
-      case "bearer":
-        return "Bearer token authentication";
-      case "cert-pem":
-        return "PEM certificate authentication";
-      default:
-        return authMethod;
-    }
-  };
-
-  const isAuthMethodAlreadyAdded = (authMethod: string): boolean => {
-    const currentValue = wizardNewPropertyValue.trim();
-    const authMethods = currentValue ? currentValue.split(",").map((m) => m.trim()) : [];
-    return authMethods.includes(authMethod);
-  };
-
-  const isValidAuthOrder = (value: string): boolean => {
-    if (!value.trim()) return true;
-
-    const validAuthTypes = ["basic", "token", "bearer", "cert-pem"];
-    const authMethods = value.split(",").map((m) => m.trim());
-
-    const uniqueMethods = new Set(authMethods);
-    if (uniqueMethods.size !== authMethods.length) return false;
-
-    return authMethods.every((method) => validAuthTypes.includes(method));
-  };
 
   if (!isOpen) return null;
 
@@ -452,51 +399,8 @@ export function ProfileWizardModal() {
                 )}
               </div>
 
-              {/* Auth Order Buttons */}
               {isAuthOrderProperty(wizardNewPropertyKey.trim()) && (
-                <div className="auth-order-buttons" id="auth-order-buttons">
-                  <label className="auth-order-label" id="auth-order-label">
-                    {l10n.t("Select Authentication Order")}
-                  </label>
-                  <div className="auth-order-button-container" id="auth-order-button-container">
-                    {["token", "basic", "bearer", "cert-pem"].map((authMethod) => {
-                      const isSelected = isAuthMethodAlreadyAdded(authMethod);
-                      let iconClass = "";
-                      switch (authMethod) {
-                        case "basic":
-                          iconClass = "codicon-account";
-                          break;
-                        case "token":
-                          iconClass = "codicon-key";
-                          break;
-                        case "bearer":
-                          iconClass = "codicon-shield";
-                          break;
-                        case "cert-pem":
-                          iconClass = "codicon-verified";
-                          break;
-                      }
-                      return (
-                        <button
-                          key={authMethod}
-                          id={`auth-method-${authMethod}-button`}
-                          type="button"
-                          onClick={() => handleAuthMethodClick(authMethod)}
-                          className={`auth-order-button ${isSelected ? "selected" : ""}`}
-                          title={`${getAuthMethodTooltip(authMethod)} (${isSelected ? "Click to remove" : "Click to add"})`}
-                        >
-                          <span className={`codicon ${iconClass}`} style={{ marginRight: "2px" }}></span>
-                          {authMethod}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {!isValidAuthOrder(wizardNewPropertyValue) && (
-                    <div className="auth-order-error" id="auth-order-error">
-                      {l10n.t("Invalid format. Use: basic, token, bearer, cert-pem")}
-                    </div>
-                  )}
-                </div>
+                <AuthOrderControls value={wizardNewPropertyValue} onChange={onNewPropertyValueChange} variant="wizard" />
               )}
 
               <div className="wizard-property-value-row">

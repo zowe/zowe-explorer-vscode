@@ -9,9 +9,10 @@
  *
  */
 
-import { extractProfileKeyFromPath, flattenProfiles } from "./configUtils";
+import { getRelevantPropertySchemas, collectSchemaPropertyKeys, collectSchemaPropertyDescriptions } from "./schemaProperties";
+import { extractProfileKeyFromPath, flattenProfiles, profileKeyToPath } from "./configUtils";
 import { getProfileType, getOriginalProfileKeyWithNested } from "./profileUtils";
-import { SchemaContext, FullConfigContext, RenamesMap, DeletionsMap, SchemaValidationsMap, ProfileSchemaEntry } from "../types";
+import { SchemaContext, FullConfigContext, RenamesMap, DeletionsMap, SchemaValidationsMap } from "../types";
 
 interface PropertyTypeFromSchemaParams {
     propertyKey: string;
@@ -87,28 +88,10 @@ export function getPropertyDescriptions(params: GetPropertyDescriptionsParams): 
     const profileKey = extractProfileKeyFromPath(path);
     const resolvedType = getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames });
 
-    const propertyDescriptions: { [key: string]: string } = {};
     const propertySchema = schemaValidations[configPath]?.propertySchema || {};
-
-    if (resolvedType && propertySchema[resolvedType]) {
-        Object.entries(propertySchema[resolvedType]).forEach(([key, schema]) => {
-            if (schema && typeof schema === "object" && "description" in schema && schema.description) {
-                propertyDescriptions[key] = schema.description;
-            }
-        });
-    }
-
-    Object.values(propertySchema).forEach((typeSchema: Record<string, ProfileSchemaEntry>) => {
-        if (typeSchema && typeof typeSchema === "object") {
-            Object.entries(typeSchema).forEach(([key, schema]) => {
-                if (schema && typeof schema === "object" && "description" in schema && schema.description && !propertyDescriptions[key]) {
-                    propertyDescriptions[key] = schema.description;
-                }
-            });
-        }
-    });
-
-    return propertyDescriptions;
+    const preferredSchema = resolvedType ? propertySchema[resolvedType] : undefined;
+    const fallbackSchemas = getRelevantPropertySchemas(propertySchema, null);
+    return collectSchemaPropertyDescriptions(preferredSchema ? [preferredSchema, ...fallbackSchemas] : fallbackSchemas);
 }
 
 interface IsPropertyPendingDeletionParams {
@@ -142,12 +125,7 @@ export function isPropertyPendingDeletion(params: IsPropertyPendingDeletionParam
     const suffixIndex = 2 * currentParts.length;
     const suffix = path.slice(suffixIndex);
 
-    const originalParts = originalProfileKey.split(".");
-    const originalPathPrefix = ["profiles"];
-    for (let i = 0; i < originalParts.length; i++) {
-        if (i > 0) originalPathPrefix.push("profiles");
-        originalPathPrefix.push(originalParts[i]);
-    }
+    const originalPathPrefix = profileKeyToPath(originalProfileKey);
 
     const originalFullKey = [...originalPathPrefix, ...suffix, propertyKey].join(".");
     return deletionsList.includes(originalFullKey);
@@ -165,18 +143,8 @@ export function fetchTypeOptions(params: FetchTypeOptionsParams): string[] {
     const profileKey = extractProfileKeyFromPath(path);
     const resolvedType = getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames });
 
-    const allPropertyKeys = new Set<string>();
     const propertySchema = schemaValidations[configPath]?.propertySchema || {};
-
-    if (resolvedType && propertySchema[resolvedType]) {
-        Object.keys(propertySchema[resolvedType]).forEach((key) => allPropertyKeys.add(key));
-    } else {
-        Object.values(propertySchema).forEach((typeSchema: Record<string, ProfileSchemaEntry>) => {
-            if (typeSchema && typeof typeSchema === "object") {
-                Object.keys(typeSchema).forEach((key) => allPropertyKeys.add(key));
-            }
-        });
-    }
+    const allPropertyKeys = collectSchemaPropertyKeys(getRelevantPropertySchemas(propertySchema, resolvedType));
 
     const existingProperties = new Set<string>();
 
@@ -211,7 +179,7 @@ export function fetchTypeOptions(params: FetchTypeOptionsParams): string[] {
         }
     });
 
-    return Array.from(allPropertyKeys).filter((key) => !existingProperties.has(key));
+    return allPropertyKeys.filter((key) => !existingProperties.has(key));
 }
 
 export function isFileProperty(key: string): boolean {

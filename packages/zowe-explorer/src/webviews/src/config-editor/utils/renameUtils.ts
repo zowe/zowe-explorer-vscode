@@ -9,6 +9,7 @@
  *
  */
 
+import { profileKeyToPath } from "./configUtils";
 import { FormattedChange, RenameChange, RenamesMap, FormattedPendingChanges, PendingChangesMap, PendingDefaultsMap, DeletionsMap } from "../types";
 
 /**
@@ -48,9 +49,6 @@ const applyRenameChainToProfileName = (profileName: string, renames: RenameChang
 
     return effectiveName;
 };
-
-/** Builds the "profiles" token sequence for a dotted profile name, e.g. "a.b" -> ["profiles", "a", "profiles", "b"]. */
-const buildProfileTokens = (profileName: string): string[] => profileName.split(".").flatMap((part) => ["profiles", part]);
 
 /**
  * Splits a key/path token array anchored at "profiles" into the dotted profile-name chain it
@@ -92,7 +90,7 @@ const applyRenameChainToTokens = <T extends string | string[]>(tokens: T, rename
         return tokens;
     }
 
-    const newTokens = [...buildProfileTokens(newChain), ...split.suffix];
+    const newTokens = [...profileKeyToPath(newChain), ...split.suffix];
     return (isString ? newTokens.join(".") : newTokens) as T;
 };
 

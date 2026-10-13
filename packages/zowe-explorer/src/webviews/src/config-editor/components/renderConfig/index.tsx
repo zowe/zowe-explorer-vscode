@@ -15,9 +15,9 @@ import { VscodeToolbarButton } from "@vscode-elements/react-elements";
 import { SortDropdown } from "../SortDropdown";
 import { extractProfileKeyFromPath, getSortOrderDisplayName, PropertySortOrder } from "../../utils";
 import { isPropertyPendingDeletion as isPropertyPendingDeletionFn } from "../../utils/propertyUtils";
-import type { Configuration, PendingChange, MergedPropertiesVisibility } from "../../types";
+import type { MergedPropertiesVisibility } from "../../types";
 import { useConfigContext } from "../../context/ConfigContext";
-import type { RenderConfigCtx } from "./context";
+import type { RenderConfigCtx, RenderConfigInputs } from "./context";
 import { buildSortedEntries } from "./buildSortedEntries";
 import { ComplexValueProperty } from "./ComplexValueProperty";
 import { SecureArrayProperty } from "./SecureArrayProperty";
@@ -186,48 +186,10 @@ function getMergedPropertiesIcon(option: MergedPropertiesVisibility): string {
   }
 }
 
-interface RenderConfigProps {
+interface RenderConfigProps extends RenderConfigInputs {
   obj: any;
   path?: string[];
   mergedProps?: any;
-  propertyDescriptions: { [key: string]: string };
-
-  handleChange: (key: string, value: string) => void;
-  handleDeleteProperty: (fullKey: string, secure?: boolean) => void;
-  confirmDeleteProperty: (fullKey: string, secure?: boolean) => void;
-  pendingPropertyDeletion: string | null;
-  setPendingPropertyDeletion: (key: string | null) => void;
-  handleUnlinkMergedProperty: (propertyKey: string | undefined, fullKey: string) => void;
-  handleNavigateToSource: (jsonLoc: string, osLoc?: string[]) => void;
-  handleToggleSecure: (fullKey: string, displayKey: string, path: string[], value: any) => void;
-  openAddProfileModalAtPath: (path: string[], key?: string, value?: string) => void;
-  getWizardTypeOptions: () => string[];
-
-  mergePendingChangesForProfile: (baseObj: any, path: string[], configPath: string) => any;
-  mergeMergedProperties: (combinedConfig: any, path: string[], mergedProps: any, configPath: string) => any;
-  ensureProfileProperties: (combinedConfig: any, path: string[]) => any;
-  filterSecureProperties: (value: any, combinedConfig: any, configPath?: string, pendingChanges?: any, deletions?: any, mergedProps?: any) => any;
-  mergePendingSecureProperties: (
-    value: any[],
-    path: string[],
-    configPath: string,
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-    renames?: { [configPath: string]: { [originalKey: string]: string } }
-  ) => any[];
-  isCurrentProfileUntyped: () => boolean;
-  isPropertyFromMergedProps: (displayKey: string | undefined, path: string[], mergedProps: any, configPath: string) => boolean;
-  isPropertySecure: (
-    fullKey: string,
-    displayKey: string,
-    path: string[],
-    mergedProps?: any,
-    selectedTab?: number | null,
-    configurations?: Configuration[],
-    pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } },
-    renames?: { [configPath: string]: { [originalKey: string]: string } }
-  ) => boolean;
-  canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
-  isMergedPropertySecure: (displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean) => boolean;
   highlightPropertyKey?: string | null;
   onHighlightPropertyKeyConsumed?: () => void;
 }
