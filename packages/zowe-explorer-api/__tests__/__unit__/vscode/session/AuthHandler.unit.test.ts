@@ -453,7 +453,7 @@ describe("AuthHandler", () => {
 
         it(
             "prompts for certificate if the profile has allowedLoginMethod=direct-cert-pem" +
-            " and does NOT unlock the profile if the cert prompt is canceled",
+                " and does NOT unlock the profile if the cert prompt is canceled",
             async () => {
                 vi.spyOn(ProfilesCache.prototype, "loadNamedProfile").mockImplementation((name, type, _optional) => {
                     return {

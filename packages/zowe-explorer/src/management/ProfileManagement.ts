@@ -126,7 +126,7 @@ export class ProfileManagement {
         const profile = node.getProfile();
         ZoweLogger.debug(
             `Building profile management quickpick for profile ${profile.name} with managementType=${managementType},` +
-            ` allowedLoginMethod=${allowedLoginMethod}`
+                ` allowedLoginMethod=${allowedLoginMethod}`
         );
         const qp = Gui.createQuickPick();
         let quickPickOptions: vscode.QuickPickItem[];

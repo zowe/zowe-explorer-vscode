@@ -85,7 +85,7 @@ export class ProfilesCache {
         if (keyring == null) {
             throw new Error(
                 "The @zowe/secrets-for-zowe-sdk module was loaded, but it did not export a keyring. " +
-                "This usually means that the module failed to load earlier in this session."
+                    "This usually means that the module failed to load earlier in this session."
             );
         }
         return keyring;
