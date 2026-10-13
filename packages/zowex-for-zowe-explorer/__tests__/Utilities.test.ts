@@ -92,10 +92,12 @@ vi.mock("@zowe/zowe-explorer-api", () => {
 
 // VscePromptApi is instantiated inside the callbacks; replace its prototype methods.
 vi.mock("../src/VscePromptApi", () => ({
-    VscePromptApi: vi.fn().mockImplementation(() => ({
-        promptForProfile: vi.fn(),
-        promptForDeployDirectory: vi.fn(),
-    })),
+    VscePromptApi: vi.fn().mockImplementation(function () {
+        return {
+            promptForProfile: vi.fn(),
+            promptForDeployDirectory: vi.fn(),
+        };
+    }),
 }));
 vi.mock("../src/ServerDeployment", () => ({
     deployWithProgress: vi.fn().mockResolvedValue(true),
@@ -181,7 +183,9 @@ describe("Utilities", () => {
             const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: { host: "h" } };
-            VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(profile) }));
+            VscePromptApi.mockImplementation(function () {
+                return { promptForProfile: vi.fn().mockResolvedValue(profile) };
+            });
 
             vi.spyOn(SshClientCache.inst, "connect").mockResolvedValue({} as any);
 
@@ -210,7 +214,9 @@ describe("Utilities", () => {
             const profile = { name: "myProf", profile: { host: "myHost", serverPath: "/x" } };
             const promptForProfile = vi.fn().mockResolvedValue(profile);
             const promptForDeployDirectory = vi.fn().mockResolvedValue("/deploy/dir");
-            VscePromptApi.mockImplementation(() => ({ promptForProfile, promptForDeployDirectory }));
+            VscePromptApi.mockImplementation(function () {
+                return { promptForProfile, promptForDeployDirectory };
+            });
 
             vi.spyOn(mockedConfig.ConfigUtils, "getServerPath").mockReturnValue("/default/path");
             const showSessionSpy = vi.spyOn(mockedConfig.ConfigUtils, "showSessionInTree").mockResolvedValue(undefined);
@@ -234,10 +240,12 @@ describe("Utilities", () => {
             const mockedDeploy = await vi.importMock("../src/ServerDeployment");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: {} }; // no host
-            VscePromptApi.mockImplementation(() => ({
-                promptForProfile: vi.fn().mockResolvedValue(profile),
-                promptForDeployDirectory: vi.fn().mockResolvedValue("/deploy/dir"),
-            }));
+            VscePromptApi.mockImplementation(function () {
+                return {
+                    promptForProfile: vi.fn().mockResolvedValue(profile),
+                    promptForDeployDirectory: vi.fn().mockResolvedValue("/deploy/dir"),
+                };
+            });
             vi.spyOn(mockedDeploy, "deployWithProgress").mockResolvedValue(true);
             const showMessageSpy = vi.spyOn(mockedExplorer.Gui, "showMessage");
 
@@ -251,7 +259,9 @@ describe("Utilities", () => {
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const promptForProfile = vi.fn().mockResolvedValue(undefined);
             const promptForDeployDirectory = vi.fn();
-            VscePromptApi.mockImplementation(() => ({ promptForProfile, promptForDeployDirectory }));
+            VscePromptApi.mockImplementation(function () {
+                return { promptForProfile, promptForDeployDirectory };
+            });
 
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await (Utilities as any).connectCallback(api);
@@ -266,7 +276,9 @@ describe("Utilities", () => {
             const profile = { name: "p", profile: { host: "h" } };
             const promptForProfile = vi.fn().mockResolvedValue(profile);
             const promptForDeployDirectory = vi.fn().mockResolvedValue(undefined);
-            VscePromptApi.mockImplementation(() => ({ promptForProfile, promptForDeployDirectory }));
+            VscePromptApi.mockImplementation(function () {
+                return { promptForProfile, promptForDeployDirectory };
+            });
             const deploySpy = vi.spyOn(mockedDeploy, "deployWithProgress");
             const api = mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await (Utilities as any).connectCallback(api);
@@ -279,10 +291,12 @@ describe("Utilities", () => {
             const mockedDeploy = await vi.importMock("../src/ServerDeployment");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "p", profile: { host: "h" } };
-            VscePromptApi.mockImplementation(() => ({
-                promptForProfile: vi.fn().mockResolvedValue(profile),
-                promptForDeployDirectory: vi.fn().mockResolvedValue("/dir"),
-            }));
+            VscePromptApi.mockImplementation(function () {
+                return {
+                    promptForProfile: vi.fn().mockResolvedValue(profile),
+                    promptForDeployDirectory: vi.fn().mockResolvedValue("/dir"),
+                };
+            });
             vi.spyOn(mockedDeploy, "deployWithProgress").mockResolvedValue(false);
             const showSessionSpy = vi.spyOn(mockedConfig.ConfigUtils, "showSessionInTree");
 
@@ -296,10 +310,12 @@ describe("Utilities", () => {
             const mockedDeploy = await vi.importMock("../src/ServerDeployment");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "p", profile: { host: "h" } };
-            VscePromptApi.mockImplementation(() => ({
-                promptForProfile: vi.fn().mockResolvedValue(profile),
-                promptForDeployDirectory: vi.fn().mockResolvedValue("/dir"),
-            }));
+            VscePromptApi.mockImplementation(function () {
+                return {
+                    promptForProfile: vi.fn().mockResolvedValue(profile),
+                    promptForDeployDirectory: vi.fn().mockResolvedValue("/dir"),
+                };
+            });
             vi.spyOn(mockedDeploy, "deployWithProgress").mockRejectedValue(new Error("deploy exploded"));
 
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
@@ -310,10 +326,12 @@ describe("Utilities", () => {
             const mockDeployDir = "/dir";
             const profile = { name: "p", profile: { host: "h" } };
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
-            VscePromptApi.mockImplementation(() => ({
-                promptForProfile: vi.fn().mockResolvedValue(profile),
-                promptForDeployDirectory: vi.fn().mockResolvedValue(mockDeployDir),
-            }));
+            VscePromptApi.mockImplementation(function () {
+                return {
+                    promptForProfile: vi.fn().mockResolvedValue(profile),
+                    promptForDeployDirectory: vi.fn().mockResolvedValue(mockDeployDir),
+                };
+            });
             vi.mocked(ZSshUtils.lacksWriteAccess).mockResolvedValue(true);
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             try {
@@ -330,9 +348,11 @@ describe("Utilities", () => {
             const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: { host: "myHost" } };
-            VscePromptApi.mockImplementation(() => ({
-                promptForProfile: vi.fn().mockResolvedValue(profile),
-            }));
+            VscePromptApi.mockImplementation(function () {
+                return {
+                    promptForProfile: vi.fn().mockResolvedValue(profile),
+                };
+            });
 
             const connectSpy = vi.spyOn(SshClientCache.inst, "connect").mockResolvedValue({} as any);
 
@@ -347,7 +367,9 @@ describe("Utilities", () => {
 
         it("should abort when no profile is selected", async () => {
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
-            VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(undefined) }));
+            VscePromptApi.mockImplementation(function () {
+                return { promptForProfile: vi.fn().mockResolvedValue(undefined) };
+            });
 
             const connectSpy = vi.spyOn(SshClientCache.inst, "connect");
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
@@ -360,7 +382,9 @@ describe("Utilities", () => {
             const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: {} }; // no host
-            VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(profile) }));
+            VscePromptApi.mockImplementation(function () {
+                return { promptForProfile: vi.fn().mockResolvedValue(profile) };
+            });
             vi.spyOn(SshClientCache.inst, "connect").mockResolvedValue({} as any);
             const infoSpy = vi.fn();
             vi.spyOn(mockedExplorer.imperative.Logger, "getAppLogger").mockReturnValue({ trace: vi.fn(), info: infoSpy } as any);
@@ -374,9 +398,11 @@ describe("Utilities", () => {
         it("should propagate a rejection from connect", async () => {
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: { host: "myHost" } };
-            VscePromptApi.mockImplementation(() => ({
-                promptForProfile: vi.fn().mockResolvedValue(profile),
-            }));
+            VscePromptApi.mockImplementation(function () {
+                return {
+                    promptForProfile: vi.fn().mockResolvedValue(profile),
+                };
+            });
             vi.spyOn(SshClientCache.inst, "connect").mockRejectedValue(new Error("connect failed"));
 
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
@@ -390,9 +416,11 @@ describe("Utilities", () => {
             const mockedConfig = await vi.importMock("../src/ConfigUtils");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: { host: "myHost" } };
-            VscePromptApi.mockImplementation(() => ({
-                promptForProfile: vi.fn().mockResolvedValue(profile),
-            }));
+            VscePromptApi.mockImplementation(function () {
+                return {
+                    promptForProfile: vi.fn().mockResolvedValue(profile),
+                };
+            });
 
             vi.spyOn(mockedConfig.ConfigUtils, "getServerPath").mockReturnValue("/server/path");
             const showSessionSpy = vi.spyOn(mockedConfig.ConfigUtils, "showSessionInTree").mockResolvedValue(undefined);
@@ -412,7 +440,9 @@ describe("Utilities", () => {
 
         it("should abort when no profile is selected", async () => {
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
-            VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(undefined) }));
+            VscePromptApi.mockImplementation(function () {
+                return { promptForProfile: vi.fn().mockResolvedValue(undefined) };
+            });
 
             const endSpy = vi.spyOn(SshClientCache.inst, "end");
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
@@ -426,7 +456,9 @@ describe("Utilities", () => {
             const mockedConfig = await vi.importMock("../src/ConfigUtils");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: {} }; // no host
-            VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(profile) }));
+            VscePromptApi.mockImplementation(function () {
+                return { promptForProfile: vi.fn().mockResolvedValue(profile) };
+            });
 
             vi.spyOn(mockedConfig.ConfigUtils, "getServerPath").mockReturnValue("/server/path");
             vi.spyOn(mockedConfig.ConfigUtils, "showSessionInTree").mockResolvedValue(undefined);
@@ -446,7 +478,9 @@ describe("Utilities", () => {
             const mockedConfig = await vi.importMock("../src/ConfigUtils");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: { host: "myHost" } };
-            VscePromptApi.mockImplementation(() => ({ promptForProfile: vi.fn().mockResolvedValue(profile) }));
+            VscePromptApi.mockImplementation(function () {
+                return { promptForProfile: vi.fn().mockResolvedValue(profile) };
+            });
 
             vi.spyOn(mockedConfig.ConfigUtils, "getServerPath").mockReturnValue("/server/path");
             vi.spyOn(mockedConfig.ConfigUtils, "showSessionInTree").mockResolvedValue(undefined);
