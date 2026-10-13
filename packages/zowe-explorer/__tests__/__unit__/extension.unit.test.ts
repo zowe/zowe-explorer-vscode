@@ -453,7 +453,7 @@ async function createGlobalMocks() {
                 },
             }) as unknown as vscode.ExtensionContext
     );
-    globalMocks.mockExtension = new mockExtensionCreator();
+    globalMocks.mockExtension = mockExtensionCreator();
 
     Object.defineProperty(ZoweLocalStorage, "initializeZoweLocalStorage", {
         value: vi.fn(),
