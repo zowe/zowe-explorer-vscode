@@ -213,6 +213,7 @@ describe("ProfilesUtils unit tests", () => {
                     getPropsForProfile: () => ["tokenValue"],
                     loadNamedProfile: () => profile,
                     shouldRemoveTokenFromProfile: () => vi.fn(),
+                    profileHasSecureToken: vi.fn().mockResolvedValue(false),
                 },
                 configurable: true,
             });
@@ -254,6 +255,7 @@ describe("ProfilesUtils unit tests", () => {
                     getPropsForProfile: () => ["tokenValue"],
                     loadNamedProfile: () => profile,
                     shouldRemoveTokenFromProfile: () => vi.fn(),
+                    profileHasSecureToken: vi.fn().mockResolvedValue(false),
                     ssoLogin: ssoLoginSpy,
                     promptCredentials: promptCredentialsSpy,
                 },
@@ -300,6 +302,7 @@ describe("ProfilesUtils unit tests", () => {
                     getPropsForProfile: () => ["tokenValue"],
                     loadNamedProfile: () => profile,
                     shouldRemoveTokenFromProfile: () => vi.fn(),
+                    profileHasSecureToken: vi.fn().mockResolvedValue(false),
                 },
                 configurable: true,
             });

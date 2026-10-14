@@ -91,7 +91,7 @@ export class AuthUtils {
         return (
             sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
             sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER ||
-            Boolean(await Constants.PROFILES_CACHE.profileHasSecureToken?.(profile))
+            (await Constants.PROFILES_CACHE.profileHasSecureToken(profile))
         );
     }
 
