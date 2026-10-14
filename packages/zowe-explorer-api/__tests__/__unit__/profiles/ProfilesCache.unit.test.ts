@@ -763,24 +763,28 @@ describe("ProfilesCache", () => {
     describe("isCertFileValid", () => {
         it("should return true with valid certificate file", () => {
             vi.spyOn(fs, "readFileSync");
-            vi.spyOn(crypto, "X509Certificate").mockImplementationOnce(() => ({
-                subject: "CN=Test",
-                fingerprint256: "mockedFingerprint",
-                validFrom: "2022-01-01",
-                validTo: `${new Date().getFullYear() + 1}-01-01`,
-            }));
+            vi.spyOn(crypto, "X509Certificate").mockImplementationOnce(function () {
+                return {
+                    subject: "CN=Test",
+                    fingerprint256: "mockedFingerprint",
+                    validFrom: "2022-01-01",
+                    validTo: `${new Date().getFullYear() + 1}-01-01`,
+                };
+            });
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger, __dirname);
             expect(profCache.isCertFileValid("mockedCertFilePath")).toBe(true);
         });
         it("should log invalid cert message and return false with invalid certificate file", () => {
             const logger = fakeLogger as unknown as imperative.Logger;
             vi.spyOn(fs, "readFileSync");
-            vi.spyOn(crypto, "X509Certificate").mockImplementationOnce(() => ({
-                subject: "CN=Test",
-                fingerprint256: "mockedFingerprint",
-                validFrom: "2022-01-01",
-                validTo: "2024-01-01",
-            }));
+            vi.spyOn(crypto, "X509Certificate").mockImplementationOnce(function () {
+                return {
+                    subject: "CN=Test",
+                    fingerprint256: "mockedFingerprint",
+                    validFrom: "2022-01-01",
+                    validTo: "2024-01-01",
+                };
+            });
             const profCache = new ProfilesCache(logger, __dirname);
             const response = profCache.isCertFileValid("mockedCertFilePath");
             expect(logger.error).toHaveBeenCalledWith("Certificate file mockedCertFilePath is outside its validity period.");
