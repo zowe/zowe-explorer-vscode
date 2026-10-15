@@ -694,8 +694,8 @@ export const TableView = ({ actionsCellRenderer, baseTheme, data }: TableViewPro
         });
       }
 
-      // Find action buttons by their appearance and content
-      const actionButtons = document.querySelectorAll<HTMLElement>('vscode-button[appearance="primary"], vscode-button[appearance="secondary"]');
+      // Find action buttons by their content; icon-only buttons (e.g., the gear) have no text and are skipped below
+      const actionButtons = document.querySelectorAll<HTMLElement>("vscode-button");
 
       actionButtons.forEach((button) => {
         const buttonText = button.textContent?.trim();

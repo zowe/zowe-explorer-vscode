@@ -10,7 +10,6 @@
  */
 
 import { useEffect, useState } from "preact/hooks";
-import { VSCodeDivider, VSCodePanels, VSCodePanelTab } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 import { isSecureOrigin } from "../utils";
 import PersistentDataPanel from "./components/PersistentTable/PersistentDataPanel";
@@ -18,9 +17,12 @@ import PersistentVSCodeAPI from "../PersistentVSCodeAPI";
 import PersistentManagerHeader from "./components/PersistentManagerHeader/PersistentManagerHeader";
 import * as l10n from "@vscode/l10n";
 
+/** Tab ids sent by the extension (see `Constants.HISTORY_VIEW_TABS`), in the order the tabs are rendered. */
+const TAB_IDS = ["ds-panel-tab", "uss-panel-tab", "jobs-panel-tab", "cmds-panel-tab"];
+
 export function App(): JSXInternal.Element {
   const [timestamp, setTimestamp] = useState<Date | undefined>();
-  const [currentTab, setCurrentTab] = useState<{ [key: string]: string }>({});
+  const [tabIndex, setTabIndex] = useState<number>(0);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -31,9 +33,10 @@ export function App(): JSXInternal.Element {
         return;
       }
       if ("tab" in event.data) {
-        setCurrentTab(() => ({
-          tab: event.data.tab,
-        }));
+        const index = TAB_IDS.indexOf(event.data.tab);
+        if (index !== -1) {
+          setTabIndex(index);
+        }
       }
       setTimestamp(new Date());
       if (event.data.command === "GET_LOCALIZATION") {
@@ -56,25 +59,25 @@ export function App(): JSXInternal.Element {
   return (
     <div>
       <PersistentManagerHeader timestamp={timestamp} />
-      <VSCodeDivider />
-      <VSCodePanels activeid={currentTab.tab}>
-        <VSCodePanelTab id="ds-panel-tab">
+      <vscode-divider />
+      <vscode-tabs selectedIndex={tabIndex} onvsc-tabs-select={(event) => setTabIndex(event.detail.selectedIndex)}>
+        <vscode-tab-header slot="header" id="ds-panel-tab">
           <h2>{l10n.t("Data Sets")}</h2>
-        </VSCodePanelTab>
-        <VSCodePanelTab id="uss-panel-tab">
+        </vscode-tab-header>
+        <vscode-tab-header slot="header" id="uss-panel-tab">
           <h2>{l10n.t("Unix System Services (USS)")}</h2>
-        </VSCodePanelTab>
-        <VSCodePanelTab id="jobs-panel-tab">
+        </vscode-tab-header>
+        <vscode-tab-header slot="header" id="jobs-panel-tab">
           <h2>{l10n.t("Jobs")}</h2>
-        </VSCodePanelTab>
-        <VSCodePanelTab id="cmds-panel-tab">
+        </vscode-tab-header>
+        <vscode-tab-header slot="header" id="cmds-panel-tab">
           <h2>Zowe Commands</h2>
-        </VSCodePanelTab>
+        </vscode-tab-header>
         <PersistentDataPanel type="ds" />
         <PersistentDataPanel type="uss" />
         <PersistentDataPanel type="jobs" />
         <PersistentDataPanel type="cmds" />
-      </VSCodePanels>
+      </vscode-tabs>
     </div>
   );
 }

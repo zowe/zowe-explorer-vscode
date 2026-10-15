@@ -9,9 +9,8 @@
  *
  */
 
-import { VSCodeCheckbox, VSCodeDataGridCell, VSCodeDataGridRow } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
-import { useDataPanelContext } from "../PersistentUtils";
+import { SELECTABLE_HISTORY_TYPES, useDataPanelContext } from "../PersistentUtils";
 import { useEffect, useState } from "preact/hooks";
 import { isEqual } from "es-toolkit";
 import * as l10n from "@vscode/l10n";
@@ -31,39 +30,38 @@ export default function PersistentTableData({ persistentProp }: Readonly<{ persi
     }
   }, [persistentProp]);
 
-  const handleClick = (event: any, item: number) => {
-    selectedItems.setVal({ ...selectedItems.val, [persistentProp[item]]: !event.target.checked });
-  };
-
   const renderSelectButton = (item: string, i: number) => {
-    const selectionType = ["search", "fileHistory", "encodingHistory", "searchedKeywordHistory"];
-    return selectionType.includes(selection[type]) ? (
-      <VSCodeDataGridCell grid-column="2" style={{ maxWidth: "20vw", textAlign: "center" }}>
-        <VSCodeCheckbox key={`${i}${item}`} onClick={(event: any) => handleClick(event, i)}></VSCodeCheckbox>
-      </VSCodeDataGridCell>
+    return SELECTABLE_HISTORY_TYPES.includes(selection[type]) ? (
+      <vscode-table-cell style={{ textAlign: "center" }}>
+        <vscode-checkbox
+          key={`${i}${item}`}
+          checked={!!selectedItems.val[item]}
+          onChange={(event) => selectedItems.setVal({ ...selectedItems.val, [item]: event.currentTarget.checked })}
+        ></vscode-checkbox>
+      </vscode-table-cell>
     ) : null;
   };
 
   const renderOptions = () => {
     return persistentProp.map((item, i) => {
       return (
-        <VSCodeDataGridRow key={item}>
-          <VSCodeDataGridCell grid-column="1">{item}</VSCodeDataGridCell>
+        <vscode-table-row key={item}>
+          <vscode-table-cell>{item}</vscode-table-cell>
           {renderSelectButton(item, i)}
-        </VSCodeDataGridRow>
+        </vscode-table-row>
       );
     });
   };
 
   const renderNoRecordsFound = () => {
     return (
-      <VSCodeDataGridRow>
-        <VSCodeDataGridCell grid-column="1">{l10n.t("No records found")}</VSCodeDataGridCell>
-      </VSCodeDataGridRow>
+      <vscode-table-row>
+        <vscode-table-cell>{l10n.t("No records found")}</vscode-table-cell>
+      </vscode-table-row>
     );
   };
 
   const data = persistentProp?.length ? renderOptions() : renderNoRecordsFound();
 
-  return <>{data}</>;
+  return <vscode-table-body slot="body">{data}</vscode-table-body>;
 }
