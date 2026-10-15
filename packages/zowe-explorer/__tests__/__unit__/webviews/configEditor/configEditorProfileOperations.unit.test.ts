@@ -799,6 +799,48 @@ describe("ConfigEditorProfileOperations", () => {
             expect(result.message).toBe("Profile name conflicts with a renamed profile");
         });
 
+        it("should return valid when creating a child under a renamed parent", () => {
+            const profiles = {
+                oldParent: {
+                    type: "zosmf",
+                    properties: {},
+                },
+            };
+            const result = profileOperations.validateProfileName({
+                profileName: "child",
+                rootProfile: "newParent",
+                configPath: "/config.json",
+                profiles,
+                pendingChanges: {},
+                renames: { "/config.json": { oldParent: "newParent" } },
+            });
+            expect(result.isValid).toBe(true);
+        });
+
+        it("should return invalid when a child under a renamed parent already exists", () => {
+            const profiles = {
+                oldParent: {
+                    type: "zosmf",
+                    profiles: {
+                        child: {
+                            type: "tso",
+                            properties: {},
+                        },
+                    },
+                },
+            };
+            const result = profileOperations.validateProfileName({
+                profileName: "child",
+                rootProfile: "newParent",
+                configPath: "/config.json",
+                profiles,
+                pendingChanges: {},
+                renames: { "/config.json": { oldParent: "newParent" } },
+            });
+            expect(result.isValid).toBe(false);
+            expect(result.message).toBe("Profile name already exists under this root");
+        });
+
         it("should return valid when profile name is available", () => {
             const result = profileOperations.validateProfileName({
                 profileName: "newProfile",

@@ -14,6 +14,7 @@ import type { Config, IConfigLayer as ImperativeConfigLayer, ProfileInfo } from 
 import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { ConfigMoveAPI, IConfigLayer } from "../webviews/src/config-editor/types";
 import { updateDefaultsAfterRename, simulateDefaultsUpdateAfterRename } from "../webviews/src/config-editor/utils/moveUtils";
+import { getRenamedProfileKeyWithNested } from "../webviews/src/config-editor/utils/profileRenames";
 import { ConfigUtils } from "./ConfigUtils";
 import { ConfigEditorPathUtils } from "./ConfigEditorPathUtils";
 import { FavoritePersistenceUtils } from "./FavoritePersistenceUtils";
@@ -67,8 +68,10 @@ export class ConfigEditorProfileOperations {
 
         const newProfileKeyLower = newProfileKey.toLowerCase();
 
+        // The parent dropdown offers effective (post-rename) keys, so saved keys have to be resolved
+        // through pending renames before comparing; otherwise a sibling of a renamed profile looks free.
         const existingProfilesUnderRoot = Object.keys(flatProfiles).some((profileKey) => {
-            const profileKeyLower = profileKey.toLowerCase();
+            const profileKeyLower = getRenamedProfileKeyWithNested(profileKey, configPath, renames).toLowerCase();
             return profileKeyLower === newProfileKeyLower || profileKeyLower.startsWith(`${newProfileKeyLower}.`);
         });
 
@@ -92,9 +95,6 @@ export class ConfigEditorProfileOperations {
         const renameIsOccupyingName = Object.entries(renamesForConfig).some(([, newName]) => {
             const newNameLower = newName.toLowerCase();
             if (newNameLower === newProfileKeyLower) {
-                return true;
-            }
-            if (newProfileKeyLower.startsWith(newNameLower + ".")) {
                 return true;
             }
             if (newNameLower.startsWith(newProfileKeyLower + ".")) {

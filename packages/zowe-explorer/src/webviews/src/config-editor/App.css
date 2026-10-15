@@ -863,6 +863,10 @@ a.ce-icon-button {
     color: var(--vscode-foreground);
 }
 
+.tabs a.ce-icon-button:hover {
+    background-color: var(--vscode-toolbar-hoverBackground, var(--vscode-button-secondaryHoverBackground));
+}
+
 .header-button {
     padding: 10px 19px;
     font-size: 17px;

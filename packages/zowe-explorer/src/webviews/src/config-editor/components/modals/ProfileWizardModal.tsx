@@ -300,7 +300,7 @@ export function ProfileWizardModal() {
             />
             {isProfileNameTakenValue ? (
               <div className="wizard-error" id="profile-name-error">
-                {l10n.t("Profile name already exists under this root")}
+                {wizardProfileNameValidation.message ?? l10n.t("Profile name already exists under this root")}
               </div>
             ) : (
               <div className="wizard-hint" id="profile-name-required-hint">

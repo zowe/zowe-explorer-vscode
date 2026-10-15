@@ -60,9 +60,7 @@ function getSteps(): TutorialStep[] {
     },
     {
       title: l10n.t("Saving Changes"),
-      description: l10n.t(
-        "After editing, click Save to write your changes to disk. Use Refresh to discard unsaved changes and reload from the file."
-      ),
+      description: l10n.t("After editing, click Save to write your changes to disk. Use Revert to discard unsaved changes and reload from the file."),
       targetSelectors: ['.panel.active [data-tutorial-id="save-refresh-footer"]'],
     },
     {
