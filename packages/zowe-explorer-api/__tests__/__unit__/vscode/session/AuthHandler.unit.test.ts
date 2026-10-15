@@ -427,6 +427,7 @@ describe("AuthHandler", () => {
                         },
                     };
                 });
+                const updateCachedProfileSpy = vi.spyOn(ProfilesCache.prototype, "updateCachedProfile").mockReturnValue(undefined);
                 const promptCertificateSpy = vi.spyOn(ProfilesCache.prototype, "promptCertificate").mockResolvedValue({
                     certKey: "good",
                     cert: "good",
@@ -448,12 +449,13 @@ describe("AuthHandler", () => {
                 expect(errorMessageMock).toHaveBeenCalledTimes(1);
                 expect(promptCertificateSpy).toHaveBeenCalledTimes(1);
                 expect(unlockSpy).toHaveBeenCalledTimes(1);
+                expect(updateCachedProfileSpy).toHaveBeenCalledTimes(1);
             }
         );
 
         it(
             "prompts for certificate if the profile has allowedLoginMethod=direct-cert-pem" +
-                " and does NOT unlock the profile if the cert prompt is canceled",
+            " and does NOT unlock the profile if the cert prompt is canceled",
             async () => {
                 vi.spyOn(ProfilesCache.prototype, "loadNamedProfile").mockImplementation((name, type, _optional) => {
                     return {

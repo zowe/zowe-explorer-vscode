@@ -52,6 +52,14 @@ overrides:
   smol-toml: ^1.9.0
   source-map-js: ^1.2.2
   http-cache-semantics: ^4.3.0
+  '@zowe/core-for-zowe-sdk': file:../zowe-cli/packages/core
+  '@zowe/imperative': file:../zowe-cli/packages/imperative
+  '@zowe/zos-console-for-zowe-sdk': file:../zowe-cli/packages/zosconsole
+  '@zowe/zos-files-for-zowe-sdk': file:../zowe-cli/packages/zosfiles
+  '@zowe/zos-jobs-for-zowe-sdk': file:../zowe-cli/packages/zosjobs
+  '@zowe/zos-tso-for-zowe-sdk': file:../zowe-cli/packages/zostso
+  '@zowe/zos-uss-for-zowe-sdk': file:../zowe-cli/packages/zosuss
+  '@zowe/zosmf-for-zowe-sdk': file:../zowe-cli/packages/zosmf
 
 importers:
 
@@ -111,7 +119,7 @@ importers:
         version: 8.10.2(eslint@8.57.1(supports-color@8.1.1))
       eslint-plugin-deprecation:
         specifier: ^2.0.0
-        version: 2.0.0(eslint@8.57.1(supports-color@8.1.1))(typescript@5.9.3)
+        version: 2.0.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)
       eslint-plugin-prettier:
         specifier: ^4.2.5
         version: 4.2.5(eslint-config-prettier@8.10.2(eslint@8.57.1(supports-color@8.1.1)))(eslint@8.57.1(supports-color@8.1.1))(prettier@3.8.4)
@@ -156,7 +164,7 @@ importers:
         version: 3.0.2
       terser-webpack-plugin:
         specifier: ^5.4.0
-        version: 5.4.0(webpack@5.105.2)
+        version: 5.4.0(esbuild@0.27.2)(webpack@5.105.2)
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -168,7 +176,7 @@ importers:
         version: 5.0.2(@types/node@22.15.34)(@vitest/coverage-v8@5.0.2)(@vitest/ui@5.0.2)(vite@6.4.3(@types/node@22.15.34)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.3))
       webpack:
         specifier: ^5.105.2
-        version: 5.105.2(webpack-cli@5.1.4)
+        version: 5.105.2(esbuild@0.27.2)(webpack-cli@5.1.4)
       webpack-cli:
         specifier: ^5.1.4
         version: 5.1.4(webpack@5.105.2)
@@ -177,7 +185,7 @@ importers:
     devDependencies:
       '@typescript-eslint/rule-tester':
         specifier: ^6.21.0
-        version: 6.21.0(@eslint/eslintrc@2.1.4)(eslint@8.57.1)(typescript@5.9.3)
+        version: 6.21.0(@eslint/eslintrc@2.1.4(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)
       requireindex:
         specifier: ^1.2.0
         version: 1.2.0
@@ -194,20 +202,20 @@ importers:
         specifier: ^0.0.35
         version: 0.0.35
       '@zowe/core-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/core
+        version: file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/secrets-for-zowe-sdk':
         specifier: ^8.38.0
         version: 8.38.0
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zosfiles
+        version: file:../zowe-cli/packages/zosfiles(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zosjobs
+        version: file:../zowe-cli/packages/zosjobs(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zosmf-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zosmf
+        version: file:../zowe-cli/packages/zosmf(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zowe-explorer-api':
         specifier: workspace:*
         version: link:../zowe-explorer-api
@@ -244,19 +252,19 @@ importers:
         version: 5.0.2(vitest@5.0.2)
       '@wdio/cli':
         specifier: ^9.27.2
-        version: 9.27.2(@types/node@22.15.34)(expect-webdriverio@5.6.7)(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0)
+        version: 9.27.2(@types/node@22.15.34)(expect-webdriverio@5.6.7)(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0)
       '@wdio/cucumber-framework':
         specifier: ^9.12.3
-        version: 9.12.3(yauzl@2.10.0)
+        version: 9.12.3(supports-color@8.1.1)(yauzl@2.10.0)
       '@wdio/junit-reporter':
         specifier: ^9.27.2
         version: 9.27.2
       '@wdio/local-runner':
         specifier: ^9.27.2
-        version: 9.27.2(@wdio/globals@9.27.2)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0))(yauzl@2.10.0)
+        version: 9.27.2(@wdio/globals@9.27.2)(supports-color@8.1.1)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0))(yauzl@2.10.0)
       '@wdio/mocha-framework':
         specifier: ^9.27.2
-        version: 9.27.2(yauzl@2.10.0)
+        version: 9.27.2(supports-color@8.1.1)(yauzl@2.10.0)
       '@wdio/spec-reporter':
         specifier: ^9.27.2
         version: 9.27.2
@@ -274,7 +282,7 @@ importers:
         version: link:../eslint-plugin-zowe-explorer
       expect-webdriverio:
         specifier: ^5.6.7
-        version: 5.6.7(@wdio/globals@9.27.2)(@wdio/logger@9.18.0)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0))
+        version: 5.6.7(@wdio/globals@9.27.2)(@wdio/logger@9.18.0)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0))
       fs-extra:
         specifier: 8.0.1
         version: 8.0.1
@@ -283,7 +291,7 @@ importers:
         version: 3.0.5
       log4js:
         specifier: ^6.9.1
-        version: 6.9.1
+        version: 6.9.1(supports-color@8.1.1)
       markdownlint-cli:
         specifier: ^0.48.0
         version: 0.48.0(supports-color@8.1.1)
@@ -298,13 +306,13 @@ importers:
         version: 5.0.2(@types/node@22.15.34)(@vitest/coverage-v8@5.0.2)(@vitest/ui@5.0.2)(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.3))
       wdio-vscode-service:
         specifier: ^8.0.0
-        version: 8.0.0(supports-color@8.1.1)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0))
+        version: 8.0.0(supports-color@8.1.1)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0))
       wdio-wait-for:
         specifier: ^3.0.11
         version: 3.0.11
       webdriverio:
         specifier: ^9.27.2
-        version: 9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0)
+        version: 9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0)
 
   packages/zowe-explorer-api:
     dependencies:
@@ -312,32 +320,32 @@ importers:
         specifier: ~1.101.0
         version: 1.101.0
       '@zowe/core-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/core
+        version: file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/imperative':
-        specifier: ^8.38.0
-        version: 8.38.0
+        specifier: file:../../../zowe-cli/packages/imperative
+        version: file:../zowe-cli/packages/imperative(supports-color@8.1.1)
       '@zowe/secrets-for-zowe-sdk':
         specifier: ^8.38.0
         version: 8.38.0
       '@zowe/zos-console-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zosconsole
+        version: file:../zowe-cli/packages/zosconsole(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zosfiles
+        version: file:../zowe-cli/packages/zosfiles(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zosjobs
+        version: file:../zowe-cli/packages/zosjobs(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zos-tso-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zostso
+        version: file:../zowe-cli/packages/zostso(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zos-uss-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zosuss
+        version: file:../zowe-cli/packages/zosuss(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zosmf-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zosmf
+        version: file:../zowe-cli/packages/zosmf(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       async-mutex:
         specifier: ^0.5.0
         version: 0.5.0
@@ -373,14 +381,14 @@ importers:
   packages/zowe-explorer-ftp-extension:
     dependencies:
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zosfiles
+        version: file:../zowe-cli/packages/zosfiles(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zos-ftp-for-zowe-cli':
         specifier: ^3.0.0
-        version: 3.0.0(@zowe/imperative@8.38.0)
+        version: 3.0.0(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zosjobs
+        version: file:../zowe-cli/packages/zosjobs(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zowe-explorer-api':
         specifier: workspace:*
         version: link:../zowe-explorer-api
@@ -433,7 +441,7 @@ importers:
     devDependencies:
       '@preact/preset-vite':
         specifier: ^2.10.1
-        version: 2.10.1(@babel/core@7.29.7)(preact@10.22.0)(supports-color@8.1.1)(vite@6.4.3(@types/node@22.15.34)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.3))
+        version: 2.10.1(@babel/core@7.29.7(supports-color@8.1.1))(preact@10.22.0)(supports-color@8.1.1)(vite@6.4.3(@types/node@22.15.34)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.3))
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -450,14 +458,14 @@ importers:
   packages/zowex-for-zowe-explorer:
     dependencies:
       '@zowe/core-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/core
+        version: file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zowe-explorer-api':
         specifier: workspace:*
         version: link:../zowe-explorer-api
       '@zowe/zowex-for-zowe-sdk':
         specifier: ^1.0.1
-        version: 1.0.1(@zowe/imperative@8.38.0)(@zowe/zos-uss-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(rxjs@7.8.2)
+        version: 1.0.1(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))(@zowe/zos-uss-for-zowe-sdk@file:../zowe-cli/packages/zosuss(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(rxjs@7.8.2)
       ssh2:
         specifier: ^1.17.0
         version: 1.17.0
@@ -466,14 +474,14 @@ importers:
         specifier: ^1.15.5
         version: 1.15.5
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zosfiles
+        version: file:../zowe-cli/packages/zosfiles(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zosjobs
+        version: file:../zowe-cli/packages/zosjobs(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       '@zowe/zos-uss-for-zowe-sdk':
-        specifier: ^8.38.0
-        version: 8.38.0(@zowe/imperative@8.38.0)
+        specifier: file:../../../zowe-cli/packages/zosuss
+        version: file:../zowe-cli/packages/zosuss(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
 
 packages:
 
@@ -2283,29 +2291,29 @@ packages:
     resolution: {integrity: sha512-RQ4h9F6DOiHxpdocUDrOl6xBM+yOtz+LkUol47AVWcfebGBDpZ7w7Xvz9PS24JgXvLGiXXzSAfdCdVy1tPlaFA==}
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=18.0.0'}
 
-  '@zowe/core-for-zowe-sdk@8.38.0':
-    resolution: {integrity: sha512-VMpAt/jKORpVrYt2O22lBR5/s3eNNBSR4CygPm3LTeUPs7tSA4rkmao5J5UOBCiJH9smYM6q9t/T//UOkXemEw==}
+  '@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core':
+    resolution: {directory: ../zowe-cli/packages/core, type: directory}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/imperative@8.38.0':
-    resolution: {integrity: sha512-5tfJXjJ+c5L13FKfndhTtNv//UE/Nekgc2fp7MAKHg5FZf+2GFNEp1Elz/Sset78+CyUm9+t19w4x/pz1gvJ3g==}
+  '@zowe/imperative@file:../zowe-cli/packages/imperative':
+    resolution: {directory: ../zowe-cli/packages/imperative, type: directory}
     engines: {node: '>=20.9.0'}
 
   '@zowe/secrets-for-zowe-sdk@8.38.0':
     resolution: {integrity: sha512-9afpGP7QR8PRXlXcMfmUvUQEhdyzyYKGs8izBy3FoRCgD+ItvXx2Fs32+Imwy1e3M4LKN7nn1iWKEsJpTEYgsA==}
     engines: {node: '>=14'}
 
-  '@zowe/zos-console-for-zowe-sdk@8.38.0':
-    resolution: {integrity: sha512-mZdDloSFz2cxMj/EBFowqmQ/lmPa/U7Nk9TNMiprgJTKWlHasIzFYqMR1y7tLyj/o8C7ap6Rdzrr4gCdXRQBAA==}
+  '@zowe/zos-console-for-zowe-sdk@file:../zowe-cli/packages/zosconsole':
+    resolution: {directory: ../zowe-cli/packages/zosconsole, type: directory}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zos-files-for-zowe-sdk@8.38.0':
-    resolution: {integrity: sha512-3sAqlpvP1l5ypLZcAMMlHL3pYk5Ho+zvcE+dF2peEKrv0pS9V53Uxv4fcmBn1YDTDvstj/ScwHHY0bisFiQSZg==}
+  '@zowe/zos-files-for-zowe-sdk@file:../zowe-cli/packages/zosfiles':
+    resolution: {directory: ../zowe-cli/packages/zosfiles, type: directory}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
@@ -2313,31 +2321,32 @@ packages:
 
   '@zowe/zos-ftp-for-zowe-cli@3.0.0':
     resolution: {integrity: sha512-lNt4t4VJMvnnjQXXusw5N5w5nVysbKZVSD+c7wvj/RJt6ceSV2aMH7QPeiyvTE0FEFErCkjCRl2AxeVtBkn82Q==}
+    version: 3.0.0
     peerDependencies:
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zos-jobs-for-zowe-sdk@8.38.0':
-    resolution: {integrity: sha512-gEQCd4s18xJ+lu13M0QoSrakZ1AT8RMVRN4v0i9PC7h3bwCxTpGyLO2StzJu3KNiCMx060aiWnFXkt7+BSlRMw==}
+  '@zowe/zos-jobs-for-zowe-sdk@file:../zowe-cli/packages/zosjobs':
+    resolution: {directory: ../zowe-cli/packages/zosjobs, type: directory}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zos-tso-for-zowe-sdk@8.38.0':
-    resolution: {integrity: sha512-3v+5XMkt9LN7gB83e8++shLui4Xc5mzAFMEuw98i8cERYjcpJwmkVxzbrkj035aqSK7G9TtMNMdhXFmRJuIh8g==}
+  '@zowe/zos-tso-for-zowe-sdk@file:../zowe-cli/packages/zostso':
+    resolution: {directory: ../zowe-cli/packages/zostso, type: directory}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zos-uss-for-zowe-sdk@8.38.0':
-    resolution: {integrity: sha512-3oTTTegJHQvsmxQoeSh9M+RNYwCbpqa/xrLNzlcWRBL0Cha7rGlQqI2n6WkWrAZCfB21079QK+4WizuI0ZXy4Q==}
+  '@zowe/zos-uss-for-zowe-sdk@file:../zowe-cli/packages/zosuss':
+    resolution: {directory: ../zowe-cli/packages/zosuss, type: directory}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zosmf-for-zowe-sdk@8.38.0':
-    resolution: {integrity: sha512-tkvhe1hV/0/hSWv7QpbLyqsvUIyzbDQ2Asbf+bDIq89b8Y/euSPYYSkPI6hWFVNzsWrYTBaVXkwutk7qzLZ0sA==}
+  '@zowe/zosmf-for-zowe-sdk@file:../zowe-cli/packages/zosmf':
+    resolution: {directory: ../zowe-cli/packages/zosmf, type: directory}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
@@ -2345,6 +2354,7 @@ packages:
 
   '@zowe/zowex-for-zowe-sdk@1.0.1':
     resolution: {integrity: sha512-1Bd+r7IO+Fqtyzifzn12W9gsYZrqSkzsC/MrdlFA1VwDMUuClDKnt1koFu4xRVMwD9KgZpg2HqTBJb1s3i6oWw==}
+    version: 1.0.1
     peerDependencies:
       '@zowe/imperative': ^8.11.0
       '@zowe/zos-uss-for-zowe-sdk': ^8.11.0
@@ -2415,19 +2425,9 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.18.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
 
   ajv-formats@3.0.1:
     resolution: {integrity: sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ==}
-    peerDependencies:
-      ajv: ^8.18.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
 
   ajv-keywords@3.5.2:
     resolution: {integrity: sha512-5p6WTN0DdTGVQk6VjcEju19IgaHudalcfabD7yhDGeA6bcQnmL+CpveLJq/3hvfwd1aof6L386Ougkx6RfyMIQ==}
@@ -7268,21 +7268,21 @@ snapshots:
     dependencies:
       '@azu/format-text': 1.0.2
 
-  '@azure-rest/ai-translation-text@1.0.0-beta.1':
+  '@azure-rest/ai-translation-text@1.0.0-beta.1(supports-color@8.1.1)':
     dependencies:
-      '@azure-rest/core-client': 1.4.0
+      '@azure-rest/core-client': 1.4.0(supports-color@8.1.1)
       '@azure/core-auth': 1.7.2
-      '@azure/core-rest-pipeline': 1.16.0
+      '@azure/core-rest-pipeline': 1.16.0(supports-color@8.1.1)
       '@azure/logger': 1.1.2
       tslib: 2.6.2
     transitivePeerDependencies:
       - supports-color
 
-  '@azure-rest/core-client@1.4.0':
+  '@azure-rest/core-client@1.4.0(supports-color@8.1.1)':
     dependencies:
       '@azure/abort-controller': 2.1.2
       '@azure/core-auth': 1.7.2
-      '@azure/core-rest-pipeline': 1.16.0
+      '@azure/core-rest-pipeline': 1.16.0(supports-color@8.1.1)
       '@azure/core-tracing': 1.1.2
       '@azure/core-util': 1.9.0
       tslib: 2.6.2
@@ -7293,10 +7293,10 @@ snapshots:
     dependencies:
       tslib: 2.6.2
 
-  '@azure/core-auth@1.10.1':
+  '@azure/core-auth@1.10.1(supports-color@8.1.1)':
     dependencies:
       '@azure/abort-controller': 2.1.2
-      '@azure/core-util': 1.13.1
+      '@azure/core-util': 1.13.1(supports-color@8.1.1)
       tslib: 2.6.2
     transitivePeerDependencies:
       - supports-color
@@ -7307,39 +7307,39 @@ snapshots:
       '@azure/core-util': 1.9.0
       tslib: 2.6.2
 
-  '@azure/core-client@1.9.2':
+  '@azure/core-client@1.9.2(supports-color@8.1.1)':
     dependencies:
       '@azure/abort-controller': 2.1.2
-      '@azure/core-auth': 1.10.1
-      '@azure/core-rest-pipeline': 1.22.2
+      '@azure/core-auth': 1.10.1(supports-color@8.1.1)
+      '@azure/core-rest-pipeline': 1.22.2(supports-color@8.1.1)
       '@azure/core-tracing': 1.3.1
-      '@azure/core-util': 1.13.1
-      '@azure/logger': 1.3.0
+      '@azure/core-util': 1.13.1(supports-color@8.1.1)
+      '@azure/logger': 1.3.0(supports-color@8.1.1)
       tslib: 2.6.2
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/core-rest-pipeline@1.16.0':
+  '@azure/core-rest-pipeline@1.16.0(supports-color@8.1.1)':
     dependencies:
       '@azure/abort-controller': 2.1.2
       '@azure/core-auth': 1.7.2
       '@azure/core-tracing': 1.1.2
       '@azure/core-util': 1.9.0
       '@azure/logger': 1.1.2
-      http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6
+      http-proxy-agent: 7.0.2(supports-color@8.1.1)
+      https-proxy-agent: 7.0.6(supports-color@8.1.1)
       tslib: 2.6.2
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/core-rest-pipeline@1.22.2':
+  '@azure/core-rest-pipeline@1.22.2(supports-color@8.1.1)':
     dependencies:
       '@azure/abort-controller': 2.1.2
-      '@azure/core-auth': 1.10.1
+      '@azure/core-auth': 1.10.1(supports-color@8.1.1)
       '@azure/core-tracing': 1.3.1
-      '@azure/core-util': 1.13.1
-      '@azure/logger': 1.3.0
-      '@typespec/ts-http-runtime': 0.3.2
+      '@azure/core-util': 1.13.1(supports-color@8.1.1)
+      '@azure/logger': 1.3.0(supports-color@8.1.1)
+      '@typespec/ts-http-runtime': 0.3.2(supports-color@8.1.1)
       tslib: 2.6.2
     transitivePeerDependencies:
       - supports-color
@@ -7352,10 +7352,10 @@ snapshots:
     dependencies:
       tslib: 2.6.2
 
-  '@azure/core-util@1.13.1':
+  '@azure/core-util@1.13.1(supports-color@8.1.1)':
     dependencies:
       '@azure/abort-controller': 2.1.2
-      '@typespec/ts-http-runtime': 0.3.2
+      '@typespec/ts-http-runtime': 0.3.2(supports-color@8.1.1)
       tslib: 2.6.2
     transitivePeerDependencies:
       - supports-color
@@ -7365,15 +7365,15 @@ snapshots:
       '@azure/abort-controller': 2.1.2
       tslib: 2.6.2
 
-  '@azure/identity@4.13.0':
+  '@azure/identity@4.13.0(supports-color@8.1.1)':
     dependencies:
       '@azure/abort-controller': 2.1.2
-      '@azure/core-auth': 1.10.1
-      '@azure/core-client': 1.9.2
-      '@azure/core-rest-pipeline': 1.22.2
+      '@azure/core-auth': 1.10.1(supports-color@8.1.1)
+      '@azure/core-client': 1.9.2(supports-color@8.1.1)
+      '@azure/core-rest-pipeline': 1.22.2(supports-color@8.1.1)
       '@azure/core-tracing': 1.3.1
-      '@azure/core-util': 1.13.1
-      '@azure/logger': 1.3.0
+      '@azure/core-util': 1.13.1(supports-color@8.1.1)
+      '@azure/logger': 1.3.0(supports-color@8.1.1)
       '@azure/msal-browser': 4.27.0
       '@azure/msal-node': 3.8.8
       open: 10.2.0
@@ -7385,9 +7385,9 @@ snapshots:
     dependencies:
       tslib: 2.6.2
 
-  '@azure/logger@1.3.0':
+  '@azure/logger@1.3.0(supports-color@8.1.1)':
     dependencies:
-      '@typespec/ts-http-runtime': 0.3.2
+      '@typespec/ts-http-runtime': 0.3.2(supports-color@8.1.1)
       tslib: 2.6.2
     transitivePeerDependencies:
       - supports-color
@@ -7424,16 +7424,16 @@ snapshots:
 
   '@babel/compat-data@7.29.7': {}
 
-  '@babel/core@7.29.7':
+  '@babel/core@7.29.7(supports-color@8.1.1)':
     dependencies:
       '@babel/code-frame': 7.29.7
       '@babel/generator': 7.29.7
       '@babel/helper-compilation-targets': 7.29.7
-      '@babel/helper-module-transforms': 7.29.7(@babel/core@7.29.7)
+      '@babel/helper-module-transforms': 7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
       '@babel/helpers': 7.29.7
       '@babel/parser': 7.29.7
       '@babel/template': 7.29.7
-      '@babel/traverse': 7.29.7
+      '@babel/traverse': 7.29.7(supports-color@8.1.1)
       '@babel/types': 7.29.7
       '@jridgewell/remapping': 2.3.5
       convert-source-map: 2.0.0
@@ -7481,19 +7481,19 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/helper-module-imports@7.29.7':
+  '@babel/helper-module-imports@7.29.7(supports-color@8.1.1)':
     dependencies:
-      '@babel/traverse': 7.29.7
+      '@babel/traverse': 7.29.7(supports-color@8.1.1)
       '@babel/types': 7.29.7
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/helper-module-transforms@7.29.7(@babel/core@7.29.7)':
+  '@babel/helper-module-transforms@7.29.7(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@babel/core': 7.29.7
-      '@babel/helper-module-imports': 7.29.7
+      '@babel/core': 7.29.7(supports-color@8.1.1)
+      '@babel/helper-module-imports': 7.29.7(supports-color@8.1.1)
       '@babel/helper-validator-identifier': 7.29.7
-      '@babel/traverse': 7.29.7
+      '@babel/traverse': 7.29.7(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -7529,25 +7529,25 @@ snapshots:
     dependencies:
       '@babel/types': 7.29.7
 
-  '@babel/plugin-syntax-jsx@7.24.1(@babel/core@7.29.7)':
+  '@babel/plugin-syntax-jsx@7.24.1(@babel/core@7.29.7(supports-color@8.1.1))':
     dependencies:
-      '@babel/core': 7.29.7
+      '@babel/core': 7.29.7(supports-color@8.1.1)
       '@babel/helper-plugin-utils': 7.24.5
 
-  '@babel/plugin-transform-react-jsx-development@7.22.5(@babel/core@7.29.7)':
+  '@babel/plugin-transform-react-jsx-development@7.22.5(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@babel/core': 7.29.7
-      '@babel/plugin-transform-react-jsx': 7.23.4(@babel/core@7.29.7)(supports-color@8.1.1)
+      '@babel/core': 7.29.7(supports-color@8.1.1)
+      '@babel/plugin-transform-react-jsx': 7.23.4(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/plugin-transform-react-jsx@7.23.4(@babel/core@7.29.7)(supports-color@8.1.1)':
+  '@babel/plugin-transform-react-jsx@7.23.4(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
-      '@babel/core': 7.29.7
+      '@babel/core': 7.29.7(supports-color@8.1.1)
       '@babel/helper-annotate-as-pure': 7.22.5
       '@babel/helper-module-imports': 7.25.9(supports-color@8.1.1)
       '@babel/helper-plugin-utils': 7.24.5
-      '@babel/plugin-syntax-jsx': 7.24.1(@babel/core@7.29.7)
+      '@babel/plugin-syntax-jsx': 7.24.1(@babel/core@7.29.7(supports-color@8.1.1))
       '@babel/types': 7.27.0
     transitivePeerDependencies:
       - supports-color
@@ -7580,7 +7580,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/traverse@7.29.7':
+  '@babel/traverse@7.29.7(supports-color@8.1.1)':
     dependencies:
       '@babel/code-frame': 7.29.7
       '@babel/generator': 7.29.7
@@ -7895,11 +7895,6 @@ snapshots:
       eslint: 8.57.1(supports-color@8.1.1)
       eslint-visitor-keys: 3.4.3
 
-  '@eslint-community/eslint-utils@4.4.0(eslint@8.57.1)':
-    dependencies:
-      eslint: 8.57.1
-      eslint-visitor-keys: 3.4.3
-
   '@eslint-community/regexpp@4.10.0': {}
 
   '@eslint/eslintrc@0.4.3(supports-color@8.1.1)':
@@ -7937,7 +7932,7 @@ snapshots:
   '@fastify/ajv-compiler@4.0.5':
     dependencies:
       ajv: 8.18.0
-      ajv-formats: 3.0.1(ajv@8.18.0)
+      ajv-formats: 3.0.1
       fast-uri: 3.1.8
 
   '@fastify/cors@9.0.1':
@@ -8237,14 +8232,14 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@preact/preset-vite@2.10.1(@babel/core@7.29.7)(preact@10.22.0)(supports-color@8.1.1)(vite@6.4.3(@types/node@22.15.34)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.3))':
+  '@preact/preset-vite@2.10.1(@babel/core@7.29.7(supports-color@8.1.1))(preact@10.22.0)(supports-color@8.1.1)(vite@6.4.3(@types/node@22.15.34)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.3))':
     dependencies:
-      '@babel/core': 7.29.7
-      '@babel/plugin-transform-react-jsx': 7.23.4(@babel/core@7.29.7)(supports-color@8.1.1)
-      '@babel/plugin-transform-react-jsx-development': 7.22.5(@babel/core@7.29.7)
-      '@prefresh/vite': 2.4.7(preact@10.22.0)(vite@6.4.3(@types/node@22.15.34)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.3))
+      '@babel/core': 7.29.7(supports-color@8.1.1)
+      '@babel/plugin-transform-react-jsx': 7.23.4(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
+      '@babel/plugin-transform-react-jsx-development': 7.22.5(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
+      '@prefresh/vite': 2.4.7(preact@10.22.0)(supports-color@8.1.1)(vite@6.4.3(@types/node@22.15.34)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.3))
       '@rollup/pluginutils': 4.2.1
-      babel-plugin-transform-hook-names: 1.0.2(@babel/core@7.29.7)
+      babel-plugin-transform-hook-names: 1.0.2(@babel/core@7.29.7(supports-color@8.1.1))
       debug: 4.4.0(supports-color@8.1.1)
       kolorist: 1.8.0
       vite: 6.4.3(@types/node@22.15.34)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.3)
@@ -8261,9 +8256,9 @@ snapshots:
 
   '@prefresh/utils@1.2.0': {}
 
-  '@prefresh/vite@2.4.7(preact@10.22.0)(vite@6.4.3(@types/node@22.15.34)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.3))':
+  '@prefresh/vite@2.4.7(preact@10.22.0)(supports-color@8.1.1)(vite@6.4.3(@types/node@22.15.34)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.3))':
     dependencies:
-      '@babel/core': 7.29.7
+      '@babel/core': 7.29.7(supports-color@8.1.1)
       '@prefresh/babel-plugin': 0.5.1
       '@prefresh/core': 1.5.2(preact@10.22.0)
       '@prefresh/utils': 1.2.0
@@ -8382,18 +8377,18 @@ snapshots:
     dependencies:
       '@secretlint/types': 10.2.2
 
-  '@secretlint/config-loader@10.2.2':
+  '@secretlint/config-loader@10.2.2(supports-color@8.1.1)':
     dependencies:
       '@secretlint/profiler': 10.2.2
       '@secretlint/resolver': 10.2.2
       '@secretlint/types': 10.2.2
       ajv: 8.18.0
       debug: 4.4.3(supports-color@8.1.1)
-      rc-config-loader: 4.1.3
+      rc-config-loader: 4.1.3(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@secretlint/core@10.2.2':
+  '@secretlint/core@10.2.2(supports-color@8.1.1)':
     dependencies:
       '@secretlint/profiler': 10.2.2
       '@secretlint/types': 10.2.2
@@ -8402,11 +8397,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@secretlint/formatter@10.2.2':
+  '@secretlint/formatter@10.2.2(supports-color@8.1.1)':
     dependencies:
       '@secretlint/resolver': 10.2.2
       '@secretlint/types': 10.2.2
-      '@textlint/linter-formatter': 15.5.2
+      '@textlint/linter-formatter': 15.5.2(supports-color@8.1.1)
       '@textlint/module-interop': 15.5.2
       '@textlint/types': 15.5.2
       chalk: 5.6.2
@@ -8418,11 +8413,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@secretlint/node@10.2.2':
+  '@secretlint/node@10.2.2(supports-color@8.1.1)':
     dependencies:
-      '@secretlint/config-loader': 10.2.2
-      '@secretlint/core': 10.2.2
-      '@secretlint/formatter': 10.2.2
+      '@secretlint/config-loader': 10.2.2(supports-color@8.1.1)
+      '@secretlint/core': 10.2.2(supports-color@8.1.1)
+      '@secretlint/formatter': 10.2.2(supports-color@8.1.1)
       '@secretlint/profiler': 10.2.2
       '@secretlint/source-creator': 10.2.2
       '@secretlint/types': 10.2.2
@@ -8500,7 +8495,7 @@ snapshots:
 
   '@textlint/ast-node-types@15.5.2': {}
 
-  '@textlint/linter-formatter@15.5.2':
+  '@textlint/linter-formatter@15.5.2(supports-color@8.1.1)':
     dependencies:
       '@azu/format-text': 1.0.2
       '@azu/style-format': 1.0.1
@@ -8666,7 +8661,7 @@ snapshots:
       '@typescript-eslint/parser': 6.21.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)
       '@typescript-eslint/scope-manager': 6.21.0
       '@typescript-eslint/type-utils': 6.21.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)
-      '@typescript-eslint/utils': 6.21.0(eslint@8.57.1(supports-color@8.1.1))(typescript@5.9.3)
+      '@typescript-eslint/utils': 6.21.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)
       '@typescript-eslint/visitor-keys': 6.21.0
       debug: 4.4.3(supports-color@8.1.1)
       eslint: 8.57.1(supports-color@8.1.1)
@@ -8693,13 +8688,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/rule-tester@6.21.0(@eslint/eslintrc@2.1.4)(eslint@8.57.1)(typescript@5.9.3)':
+  '@typescript-eslint/rule-tester@6.21.0(@eslint/eslintrc@2.1.4(supports-color@8.1.1))(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)':
     dependencies:
       '@eslint/eslintrc': 2.1.4(supports-color@8.1.1)
       '@typescript-eslint/typescript-estree': 6.21.0(supports-color@8.1.1)(typescript@5.9.3)
-      '@typescript-eslint/utils': 6.21.0(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/utils': 6.21.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)
       ajv: 6.14.0
-      eslint: 8.57.1
+      eslint: 8.57.1(supports-color@8.1.1)
       lodash.merge: 4.6.2
       semver: 7.7.4
     transitivePeerDependencies:
@@ -8714,7 +8709,7 @@ snapshots:
   '@typescript-eslint/type-utils@6.21.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/typescript-estree': 6.21.0(supports-color@8.1.1)(typescript@5.9.3)
-      '@typescript-eslint/utils': 6.21.0(eslint@8.57.1(supports-color@8.1.1))(typescript@5.9.3)
+      '@typescript-eslint/utils': 6.21.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)
       debug: 4.4.3(supports-color@8.1.1)
       eslint: 8.57.1(supports-color@8.1.1)
       ts-api-utils: 1.3.0(typescript@5.9.3)
@@ -8756,7 +8751,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@6.21.0(eslint@8.57.1(supports-color@8.1.1))(typescript@5.9.3)':
+  '@typescript-eslint/utils@6.21.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)':
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@8.57.1(supports-color@8.1.1))
       '@types/json-schema': 7.0.15
@@ -8765,20 +8760,6 @@ snapshots:
       '@typescript-eslint/types': 6.21.0
       '@typescript-eslint/typescript-estree': 6.21.0(supports-color@8.1.1)(typescript@5.9.3)
       eslint: 8.57.1(supports-color@8.1.1)
-      semver: 7.7.4
-    transitivePeerDependencies:
-      - supports-color
-      - typescript
-
-  '@typescript-eslint/utils@6.21.0(eslint@8.57.1)(typescript@5.9.3)':
-    dependencies:
-      '@eslint-community/eslint-utils': 4.4.0(eslint@8.57.1)
-      '@types/json-schema': 7.0.15
-      '@types/semver': 7.8.0
-      '@typescript-eslint/scope-manager': 6.21.0
-      '@typescript-eslint/types': 6.21.0
-      '@typescript-eslint/typescript-estree': 6.21.0(supports-color@8.1.1)(typescript@5.9.3)
-      eslint: 8.57.1
       semver: 7.7.4
     transitivePeerDependencies:
       - supports-color
@@ -8794,10 +8775,10 @@ snapshots:
       '@typescript-eslint/types': 6.21.0
       eslint-visitor-keys: 3.4.3
 
-  '@typespec/ts-http-runtime@0.3.2':
+  '@typespec/ts-http-runtime@0.3.2(supports-color@8.1.1)':
     dependencies:
-      http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6
+      http-proxy-agent: 7.0.2(supports-color@8.1.1)
+      https-proxy-agent: 7.0.6(supports-color@8.1.1)
       tslib: 2.6.2
     transitivePeerDependencies:
       - supports-color
@@ -8901,7 +8882,7 @@ snapshots:
 
   '@vscode/l10n-dev@0.0.35(supports-color@8.1.1)':
     dependencies:
-      '@azure-rest/ai-translation-text': 1.0.0-beta.1
+      '@azure-rest/ai-translation-text': 1.0.0-beta.1(supports-color@8.1.1)
       debug: 4.3.4(supports-color@8.1.1)
       deepmerge-json: 1.5.0
       glob: 10.5.0
@@ -8925,10 +8906,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vscode/test-electron@2.5.2':
+  '@vscode/test-electron@2.5.2(supports-color@8.1.1)':
     dependencies:
-      http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6
+      http-proxy-agent: 7.0.2(supports-color@8.1.1)
+      https-proxy-agent: 7.0.6(supports-color@8.1.1)
       jszip: 3.10.1
       ora: 8.2.0
       semver: 7.8.5
@@ -8976,8 +8957,8 @@ snapshots:
 
   '@vscode/vsce@3.9.1(supports-color@8.1.1)':
     dependencies:
-      '@azure/identity': 4.13.0
-      '@secretlint/node': 10.2.2
+      '@azure/identity': 4.13.0(supports-color@8.1.1)
+      '@secretlint/node': 10.2.2(supports-color@8.1.1)
       '@secretlint/secretlint-formatter-sarif': 10.2.2
       '@secretlint/secretlint-rule-no-dotenv': 10.2.2
       '@secretlint/secretlint-rule-preset-recommend': 10.2.2
@@ -9010,15 +8991,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@wdio/cli@9.27.2(@types/node@22.15.34)(expect-webdriverio@5.6.7)(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0)':
+  '@wdio/cli@9.27.2(@types/node@22.15.34)(expect-webdriverio@5.6.7)(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0)':
     dependencies:
       '@vitest/snapshot': 2.1.1
-      '@wdio/config': 9.27.2(yauzl@2.10.0)
-      '@wdio/globals': 9.27.2(expect-webdriverio@5.6.7)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0))
+      '@wdio/config': 9.27.2(supports-color@8.1.1)(yauzl@2.10.0)
+      '@wdio/globals': 9.27.2(expect-webdriverio@5.6.7)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0))
       '@wdio/logger': 9.18.0
       '@wdio/protocols': 9.27.2
       '@wdio/types': 9.27.2
-      '@wdio/utils': 9.27.2(yauzl@2.10.0)
+      '@wdio/utils': 9.27.2(supports-color@8.1.1)(yauzl@2.10.0)
       async-exit-hook: 2.0.1
       chalk: 5.6.2
       chokidar: 4.0.3
@@ -9030,7 +9011,7 @@ snapshots:
       lodash.union: 4.6.0
       read-pkg-up: 10.0.0
       tsx: 4.21.0
-      webdriverio: 9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0)
+      webdriverio: 9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0)
       yargs: 17.7.2
     transitivePeerDependencies:
       - '@types/node'
@@ -9042,11 +9023,11 @@ snapshots:
       - utf-8-validate
       - yauzl
 
-  '@wdio/config@9.27.2(yauzl@2.10.0)':
+  '@wdio/config@9.27.2(supports-color@8.1.1)(yauzl@2.10.0)':
     dependencies:
       '@wdio/logger': 9.18.0
       '@wdio/types': 9.27.2
-      '@wdio/utils': 9.27.2(yauzl@2.10.0)
+      '@wdio/utils': 9.27.2(supports-color@8.1.1)(yauzl@2.10.0)
       deepmerge-ts: 8.0.0
       glob: 10.5.0
       import-meta-resolve: 4.1.0
@@ -9056,7 +9037,7 @@ snapshots:
       - supports-color
       - yauzl
 
-  '@wdio/cucumber-framework@9.12.3(yauzl@2.10.0)':
+  '@wdio/cucumber-framework@9.12.3(supports-color@8.1.1)(yauzl@2.10.0)':
     dependencies:
       '@cucumber/cucumber': 10.9.0
       '@cucumber/gherkin': 29.0.0
@@ -9064,7 +9045,7 @@ snapshots:
       '@types/node': 20.19.33
       '@wdio/logger': 9.4.4
       '@wdio/types': 9.12.3
-      '@wdio/utils': 9.12.3(yauzl@2.10.0)
+      '@wdio/utils': 9.12.3(supports-color@8.1.1)(yauzl@2.10.0)
       glob: 10.5.0
       import-meta-resolve: 4.1.0
       is-glob: 4.0.3
@@ -9080,10 +9061,10 @@ snapshots:
       '@wdio/types': 9.27.2
       chalk: 5.6.2
 
-  '@wdio/globals@9.27.2(expect-webdriverio@5.6.7)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0))':
+  '@wdio/globals@9.27.2(expect-webdriverio@5.6.7)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0))':
     dependencies:
-      expect-webdriverio: 5.6.7(@wdio/globals@9.27.2)(@wdio/logger@9.18.0)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0))
-      webdriverio: 9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0)
+      expect-webdriverio: 5.6.7(@wdio/globals@9.27.2)(@wdio/logger@9.18.0)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0))
+      webdriverio: 9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0)
 
   '@wdio/junit-reporter@9.27.2':
     dependencies:
@@ -9092,16 +9073,16 @@ snapshots:
       json-stringify-safe: 5.0.1
       junit-report-builder: 5.1.2
 
-  '@wdio/local-runner@9.27.2(@wdio/globals@9.27.2)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0))(yauzl@2.10.0)':
+  '@wdio/local-runner@9.27.2(@wdio/globals@9.27.2)(supports-color@8.1.1)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0))(yauzl@2.10.0)':
     dependencies:
       '@types/node': 20.19.33
       '@wdio/logger': 9.18.0
       '@wdio/repl': 9.16.2
-      '@wdio/runner': 9.27.2(expect-webdriverio@5.6.7)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0))(yauzl@2.10.0)
+      '@wdio/runner': 9.27.2(expect-webdriverio@5.6.7)(supports-color@8.1.1)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0))(yauzl@2.10.0)
       '@wdio/types': 9.27.2
       '@wdio/xvfb': 9.27.2
       exit-hook: 4.0.0
-      expect-webdriverio: 5.6.7(@wdio/globals@9.27.2)(@wdio/logger@9.18.0)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0))
+      expect-webdriverio: 5.6.7(@wdio/globals@9.27.2)(@wdio/logger@9.18.0)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0))
       split2: 4.2.0
       stream-buffers: 3.0.2
     transitivePeerDependencies:
@@ -9128,13 +9109,13 @@ snapshots:
       loglevel-plugin-prefix: 0.8.4
       strip-ansi: 7.2.0
 
-  '@wdio/mocha-framework@9.27.2(yauzl@2.10.0)':
+  '@wdio/mocha-framework@9.27.2(supports-color@8.1.1)(yauzl@2.10.0)':
     dependencies:
       '@types/mocha': 10.0.10
       '@types/node': 20.19.33
       '@wdio/logger': 9.18.0
       '@wdio/types': 9.27.2
-      '@wdio/utils': 9.27.2(yauzl@2.10.0)
+      '@wdio/utils': 9.27.2(supports-color@8.1.1)(yauzl@2.10.0)
       mocha: 10.8.2
     transitivePeerDependencies:
       - proxy-agent
@@ -9155,19 +9136,19 @@ snapshots:
       diff: 8.0.4
       object-inspect: 1.13.4
 
-  '@wdio/runner@9.27.2(expect-webdriverio@5.6.7)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0))(yauzl@2.10.0)':
+  '@wdio/runner@9.27.2(expect-webdriverio@5.6.7)(supports-color@8.1.1)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0))(yauzl@2.10.0)':
     dependencies:
       '@types/node': 20.19.33
-      '@wdio/config': 9.27.2(yauzl@2.10.0)
+      '@wdio/config': 9.27.2(supports-color@8.1.1)(yauzl@2.10.0)
       '@wdio/dot-reporter': 9.27.2
-      '@wdio/globals': 9.27.2(expect-webdriverio@5.6.7)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0))
+      '@wdio/globals': 9.27.2(expect-webdriverio@5.6.7)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0))
       '@wdio/logger': 9.18.0
       '@wdio/types': 9.27.2
-      '@wdio/utils': 9.27.2(yauzl@2.10.0)
+      '@wdio/utils': 9.27.2(supports-color@8.1.1)(yauzl@2.10.0)
       deepmerge-ts: 8.0.0
-      expect-webdriverio: 5.6.7(@wdio/globals@9.27.2)(@wdio/logger@9.18.0)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0))
-      webdriver: 9.27.2(yauzl@2.10.0)
-      webdriverio: 9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0)
+      expect-webdriverio: 5.6.7(@wdio/globals@9.27.2)(@wdio/logger@9.18.0)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0))
+      webdriver: 9.27.2(supports-color@8.1.1)(yauzl@2.10.0)
+      webdriverio: 9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0)
     transitivePeerDependencies:
       - bufferutil
       - proxy-agent
@@ -9191,43 +9172,43 @@ snapshots:
     dependencies:
       '@types/node': 20.19.33
 
-  '@wdio/utils@9.12.3(yauzl@2.10.0)':
+  '@wdio/utils@9.12.3(supports-color@8.1.1)(yauzl@2.10.0)':
     dependencies:
       '@puppeteer/browsers': 3.2.1(yauzl@2.10.0)
       '@wdio/logger': 9.4.4
       '@wdio/types': 9.12.3
       decamelize: 6.0.1
       deepmerge-ts: 8.0.0
-      edgedriver: 6.1.1
-      geckodriver: 5.0.0
+      edgedriver: 6.1.1(supports-color@8.1.1)
+      geckodriver: 5.0.0(supports-color@8.1.1)
       get-port: 7.1.0
       import-meta-resolve: 4.1.0
       locate-app: 2.5.0
       safaridriver: 1.0.0
       split2: 4.2.0
-      wait-port: 1.1.0
+      wait-port: 1.1.0(supports-color@8.1.1)
     transitivePeerDependencies:
       - bare-buffer
       - proxy-agent
       - supports-color
       - yauzl
 
-  '@wdio/utils@9.27.2(yauzl@2.10.0)':
+  '@wdio/utils@9.27.2(supports-color@8.1.1)(yauzl@2.10.0)':
     dependencies:
       '@puppeteer/browsers': 3.2.1(yauzl@2.10.0)
       '@wdio/logger': 9.18.0
       '@wdio/types': 9.27.2
       decamelize: 6.0.1
       deepmerge-ts: 8.0.0
-      edgedriver: 6.3.0
-      geckodriver: 6.1.0
+      edgedriver: 6.3.0(supports-color@8.1.1)
+      geckodriver: 6.1.0(supports-color@8.1.1)
       get-port: 7.1.0
       import-meta-resolve: 4.1.0
       locate-app: 2.5.0
       mitt: 3.0.1
       safaridriver: 1.0.0
       split2: 4.2.0
-      wait-port: 1.1.0
+      wait-port: 1.1.0(supports-color@8.1.1)
     transitivePeerDependencies:
       - proxy-agent
       - supports-color
@@ -9315,26 +9296,26 @@ snapshots:
 
   '@webpack-cli/configtest@2.1.1(webpack-cli@5.1.4)(webpack@5.105.2)':
     dependencies:
-      webpack: 5.105.2(webpack-cli@5.1.4)
+      webpack: 5.105.2(esbuild@0.27.2)(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.105.2)
 
   '@webpack-cli/info@2.0.2(webpack-cli@5.1.4)(webpack@5.105.2)':
     dependencies:
-      webpack: 5.105.2(webpack-cli@5.1.4)
+      webpack: 5.105.2(esbuild@0.27.2)(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.105.2)
 
   '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4)(webpack@5.105.2)':
     dependencies:
-      webpack: 5.105.2(webpack-cli@5.1.4)
+      webpack: 5.105.2(esbuild@0.27.2)(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.105.2)
 
-  '@xhmikosr/archive-type@7.0.0':
+  '@xhmikosr/archive-type@7.0.0(supports-color@8.1.1)':
     dependencies:
       file-type: 21.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@xhmikosr/decompress-tar@8.1.0':
+  '@xhmikosr/decompress-tar@8.1.0(supports-color@8.1.1)':
     dependencies:
       file-type: 21.3.4(supports-color@8.1.1)
       is-stream: 2.0.1
@@ -9345,9 +9326,9 @@ snapshots:
       - react-native-b4a
       - supports-color
 
-  '@xhmikosr/decompress-tarbz2@8.1.0':
+  '@xhmikosr/decompress-tarbz2@8.1.0(supports-color@8.1.1)':
     dependencies:
-      '@xhmikosr/decompress-tar': 8.1.0
+      '@xhmikosr/decompress-tar': 8.1.0(supports-color@8.1.1)
       file-type: 21.3.4(supports-color@8.1.1)
       is-stream: 2.0.1
       seek-bzip: 2.0.0
@@ -9358,9 +9339,9 @@ snapshots:
       - react-native-b4a
       - supports-color
 
-  '@xhmikosr/decompress-targz@8.1.0':
+  '@xhmikosr/decompress-targz@8.1.0(supports-color@8.1.1)':
     dependencies:
-      '@xhmikosr/decompress-tar': 8.1.0
+      '@xhmikosr/decompress-tar': 8.1.0(supports-color@8.1.1)
       file-type: 21.3.4(supports-color@8.1.1)
       is-stream: 2.0.1
     transitivePeerDependencies:
@@ -9369,7 +9350,7 @@ snapshots:
       - react-native-b4a
       - supports-color
 
-  '@xhmikosr/decompress-unzip@7.1.0':
+  '@xhmikosr/decompress-unzip@7.1.0(supports-color@8.1.1)':
     dependencies:
       file-type: 21.3.4(supports-color@8.1.1)
       get-stream: 6.0.1
@@ -9377,12 +9358,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@xhmikosr/decompress@10.2.2':
+  '@xhmikosr/decompress@10.2.2(supports-color@8.1.1)':
     dependencies:
-      '@xhmikosr/decompress-tar': 8.1.0
-      '@xhmikosr/decompress-tarbz2': 8.1.0
-      '@xhmikosr/decompress-targz': 8.1.0
-      '@xhmikosr/decompress-unzip': 7.1.0
+      '@xhmikosr/decompress-tar': 8.1.0(supports-color@8.1.1)
+      '@xhmikosr/decompress-tarbz2': 8.1.0(supports-color@8.1.1)
+      '@xhmikosr/decompress-targz': 8.1.0(supports-color@8.1.1)
+      '@xhmikosr/decompress-unzip': 7.1.0(supports-color@8.1.1)
       graceful-fs: 4.2.11
       strip-dirs: 3.0.0
     transitivePeerDependencies:
@@ -9393,8 +9374,8 @@ snapshots:
 
   '@xhmikosr/downloader@15.0.1(supports-color@8.1.1)':
     dependencies:
-      '@xhmikosr/archive-type': 7.0.0
-      '@xhmikosr/decompress': 10.2.2
+      '@xhmikosr/archive-type': 7.0.0(supports-color@8.1.1)
+      '@xhmikosr/decompress': 10.2.2(supports-color@8.1.1)
       content-disposition: 0.5.4
       defaults: 3.0.0
       ext-name: 5.0.0
@@ -9416,13 +9397,13 @@ snapshots:
 
   '@zip.js/zip.js@2.8.26': {}
 
-  '@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0)':
+  '@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
     dependencies:
-      '@zowe/imperative': 8.38.0
+      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
       comment-json: 4.2.5
       string-width: 4.2.3
 
-  '@zowe/imperative@8.38.0':
+  '@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)':
     dependencies:
       '@types/semver': 7.8.0
       '@types/yargs': 17.0.35
@@ -9440,15 +9421,15 @@ snapshots:
       fastest-levenshtein: 1.0.16
       find-up: 5.0.0
       fs-extra: 11.4.0
-      http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6
+      http-proxy-agent: 7.0.2(supports-color@8.1.1)
+      https-proxy-agent: 7.0.6(supports-color@8.1.1)
       jest-diff: 29.7.0
       js-yaml: 4.3.2
       jsonfile: 6.2.1
       jsonschema: 1.5.0
       lodash: 4.18.1
       lodash-deep: 2.0.0
-      log4js: 6.9.1
+      log4js: 6.9.1(supports-color@8.1.1)
       markdown-it: 14.3.2
       mustache: 4.2.0
       npm-package-arg: 11.0.3
@@ -9469,49 +9450,49 @@ snapshots:
 
   '@zowe/secrets-for-zowe-sdk@8.38.0': {}
 
-  '@zowe/zos-console-for-zowe-sdk@8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)':
+  '@zowe/zos-console-for-zowe-sdk@file:../zowe-cli/packages/zosconsole(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.38.0(@zowe/imperative@8.38.0)
-      '@zowe/imperative': 8.38.0
+      '@zowe/core-for-zowe-sdk': file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
 
-  '@zowe/zos-files-for-zowe-sdk@8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)':
+  '@zowe/zos-files-for-zowe-sdk@file:../zowe-cli/packages/zosfiles(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.38.0(@zowe/imperative@8.38.0)
-      '@zowe/imperative': 8.38.0
+      '@zowe/core-for-zowe-sdk': file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
       lodash: 4.18.1
       minimatch: 10.2.6
 
-  '@zowe/zos-ftp-for-zowe-cli@3.0.0(@zowe/imperative@8.38.0)':
+  '@zowe/zos-ftp-for-zowe-cli@3.0.0(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
     dependencies:
-      '@zowe/imperative': 8.38.0
+      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
       zos-node-accessor: 2.0.11
 
-  '@zowe/zos-jobs-for-zowe-sdk@8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)':
+  '@zowe/zos-jobs-for-zowe-sdk@file:../zowe-cli/packages/zosjobs(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.38.0(@zowe/imperative@8.38.0)
-      '@zowe/imperative': 8.38.0
-      '@zowe/zos-files-for-zowe-sdk': 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+      '@zowe/core-for-zowe-sdk': file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
+      '@zowe/zos-files-for-zowe-sdk': file:../zowe-cli/packages/zosfiles(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
 
-  '@zowe/zos-tso-for-zowe-sdk@8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)':
+  '@zowe/zos-tso-for-zowe-sdk@file:../zowe-cli/packages/zostso(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.38.0(@zowe/imperative@8.38.0)
-      '@zowe/imperative': 8.38.0
-      '@zowe/zosmf-for-zowe-sdk': 8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)
+      '@zowe/core-for-zowe-sdk': file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
+      '@zowe/zosmf-for-zowe-sdk': file:../zowe-cli/packages/zosmf(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
 
-  '@zowe/zos-uss-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0)':
+  '@zowe/zos-uss-for-zowe-sdk@file:../zowe-cli/packages/zosuss(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
     dependencies:
-      '@zowe/imperative': 8.38.0
+      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
       ssh2: 1.17.0
 
-  '@zowe/zosmf-for-zowe-sdk@8.38.0(@zowe/core-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(@zowe/imperative@8.38.0)':
+  '@zowe/zosmf-for-zowe-sdk@file:../zowe-cli/packages/zosmf(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
     dependencies:
-      '@zowe/core-for-zowe-sdk': 8.38.0(@zowe/imperative@8.38.0)
-      '@zowe/imperative': 8.38.0
+      '@zowe/core-for-zowe-sdk': file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
 
-  '@zowe/zowex-for-zowe-sdk@1.0.1(@zowe/imperative@8.38.0)(@zowe/zos-uss-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(rxjs@7.8.2)':
+  '@zowe/zowex-for-zowe-sdk@1.0.1(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))(@zowe/zos-uss-for-zowe-sdk@file:../zowe-cli/packages/zosuss(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(rxjs@7.8.2)':
     dependencies:
-      '@zowe/imperative': 8.38.0
-      '@zowe/zos-uss-for-zowe-sdk': 8.38.0(@zowe/imperative@8.38.0)
+      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
+      '@zowe/zos-uss-for-zowe-sdk': file:../zowe-cli/packages/zosuss(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
       base64-stream: 1.0.0
       es-toolkit: 1.47.1
       node-ssh: 13.2.1
@@ -9566,7 +9547,7 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  agent-base@6.0.2:
+  agent-base@6.0.2(supports-color@8.1.1):
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
@@ -9574,12 +9555,12 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ajv-formats@2.1.1(ajv@8.18.0):
-    optionalDependencies:
+  ajv-formats@2.1.1:
+    dependencies:
       ajv: 8.18.0
 
-  ajv-formats@3.0.1(ajv@8.18.0):
-    optionalDependencies:
+  ajv-formats@3.0.1:
+    dependencies:
       ajv: 8.18.0
 
   ajv-keywords@3.5.2(ajv@6.14.0):
@@ -9739,9 +9720,9 @@ snapshots:
 
   b4a@1.8.1: {}
 
-  babel-plugin-transform-hook-names@1.0.2(@babel/core@7.29.7):
+  babel-plugin-transform-hook-names@1.0.2(@babel/core@7.29.7(supports-color@8.1.1)):
     dependencies:
-      '@babel/core': 7.29.7
+      '@babel/core': 7.29.7(supports-color@8.1.1)
 
   balanced-match@1.0.2: {}
 
@@ -10363,7 +10344,7 @@ snapshots:
 
   depd@2.0.0: {}
 
-  dependency-tree@10.0.9:
+  dependency-tree@10.0.9(supports-color@8.1.1):
     dependencies:
       commander: 10.0.1
       filing-cabinet: 4.2.0
@@ -10542,29 +10523,29 @@ snapshots:
       '@types/which': 2.0.2
       which: 2.0.2
 
-  edgedriver@6.1.1:
+  edgedriver@6.1.1(supports-color@8.1.1):
     dependencies:
       '@wdio/logger': 9.18.0
       '@zip.js/zip.js': 2.7.60
       decamelize: 6.0.1
       edge-paths: 3.0.5
       fast-xml-parser: 5.7.3
-      http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6
+      http-proxy-agent: 7.0.2(supports-color@8.1.1)
+      https-proxy-agent: 7.0.6(supports-color@8.1.1)
       node-fetch: 3.3.2
       which: 5.0.0
     transitivePeerDependencies:
       - supports-color
 
-  edgedriver@6.3.0:
+  edgedriver@6.3.0(supports-color@8.1.1):
     dependencies:
       '@wdio/logger': 9.18.0
       '@zip.js/zip.js': 2.8.26
       decamelize: 6.0.1
       edge-paths: 3.0.5
       fast-xml-parser: 5.7.3
-      http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6
+      http-proxy-agent: 7.0.2(supports-color@8.1.1)
+      https-proxy-agent: 7.0.6(supports-color@8.1.1)
       which: 6.0.1
     transitivePeerDependencies:
       - supports-color
@@ -10724,7 +10705,7 @@ snapshots:
       esbuild: 0.27.2
       get-tsconfig: 4.13.6
       loader-utils: 2.0.4
-      webpack: 5.105.2(webpack-cli@5.1.4)
+      webpack: 5.105.2(esbuild@0.27.2)(webpack-cli@5.1.4)
       webpack-sources: 1.4.3
 
   esbuild@0.25.12:
@@ -10809,9 +10790,9 @@ snapshots:
     dependencies:
       eslint: 8.57.1(supports-color@8.1.1)
 
-  eslint-plugin-deprecation@2.0.0(eslint@8.57.1(supports-color@8.1.1))(typescript@5.9.3):
+  eslint-plugin-deprecation@2.0.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3):
     dependencies:
-      '@typescript-eslint/utils': 6.21.0(eslint@8.57.1(supports-color@8.1.1))(typescript@5.9.3)
+      '@typescript-eslint/utils': 6.21.0(eslint@8.57.1(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)
       eslint: 8.57.1(supports-color@8.1.1)
       tslib: 2.6.2
       tsutils: 3.21.0(typescript@5.9.3)
@@ -10889,49 +10870,6 @@ snapshots:
       table: 6.8.2
       text-table: 0.2.0
       v8-compile-cache: 2.4.0
-    transitivePeerDependencies:
-      - supports-color
-
-  eslint@8.57.1:
-    dependencies:
-      '@eslint-community/eslint-utils': 4.4.0(eslint@8.57.1)
-      '@eslint-community/regexpp': 4.10.0
-      '@eslint/eslintrc': 2.1.4(supports-color@8.1.1)
-      '@eslint/js': 8.57.1
-      '@humanwhocodes/config-array': 0.13.0(supports-color@8.1.1)
-      '@humanwhocodes/module-importer': 1.0.1
-      '@nodelib/fs.walk': 1.2.8
-      '@ungap/structured-clone': 1.2.0
-      ajv: 6.14.0
-      chalk: 4.1.2
-      cross-spawn: 7.0.6
-      debug: 4.4.3(supports-color@8.1.1)
-      doctrine: 3.0.0
-      escape-string-regexp: 4.0.0
-      eslint-scope: 7.2.2
-      eslint-visitor-keys: 3.4.3
-      espree: 9.6.1
-      esquery: 1.5.0
-      esutils: 2.0.3
-      fast-deep-equal: 3.1.3
-      file-entry-cache: 6.0.1
-      find-up: 5.0.0
-      glob-parent: 6.0.2
-      globals: 13.24.0
-      graphemer: 1.4.0
-      ignore: 5.3.1
-      imurmurhash: 0.1.4
-      is-glob: 4.0.3
-      is-path-inside: 3.0.3
-      js-yaml: 4.3.2
-      json-stable-stringify-without-jsonify: 1.0.1
-      levn: 0.4.1
-      lodash.merge: 4.6.2
-      minimatch: 3.1.5
-      natural-compare: 1.4.0
-      optionator: 0.9.4
-      strip-ansi: 6.0.1
-      text-table: 0.2.0
     transitivePeerDependencies:
       - supports-color
 
@@ -11044,15 +10982,15 @@ snapshots:
 
   expect-type@1.4.0: {}
 
-  expect-webdriverio@5.6.7(@wdio/globals@9.27.2)(@wdio/logger@9.18.0)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0)):
+  expect-webdriverio@5.6.7(@wdio/globals@9.27.2)(@wdio/logger@9.18.0)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0)):
     dependencies:
       '@vitest/snapshot': 4.1.8
-      '@wdio/globals': 9.27.2(expect-webdriverio@5.6.7)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0))
+      '@wdio/globals': 9.27.2(expect-webdriverio@5.6.7)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0))
       '@wdio/logger': 9.18.0
       deep-eql: 5.0.2
       expect: 30.4.1
       jest-matcher-utils: 30.4.1
-      webdriverio: 9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0)
+      webdriverio: 9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0)
 
   expect@30.4.1:
     dependencies:
@@ -11100,7 +11038,7 @@ snapshots:
     dependencies:
       '@fastify/merge-json-schemas': 0.2.1
       ajv: 8.18.0
-      ajv-formats: 3.0.1(ajv@8.18.0)
+      ajv-formats: 3.0.1
       fast-uri: 3.1.8
       json-schema-ref-resolver: 3.0.0
       rfdc: 1.3.1
@@ -11109,7 +11047,7 @@ snapshots:
     dependencies:
       '@fastify/merge-json-schemas': 0.2.1
       ajv: 8.18.0
-      ajv-formats: 3.0.1(ajv@8.18.0)
+      ajv-formats: 3.0.1
       fast-uri: 3.1.8
       json-schema-ref-resolver: 3.0.0
       rfdc: 1.3.1
@@ -11295,7 +11233,7 @@ snapshots:
       semver: 7.7.4
       tapable: 2.2.1
       typescript: 5.9.3
-      webpack: 5.105.2(webpack-cli@5.1.4)
+      webpack: 5.105.2(esbuild@0.27.2)(webpack-cli@5.1.4)
 
   form-data-encoder@2.1.4: {}
 
@@ -11378,13 +11316,13 @@ snapshots:
 
   functions-have-names@1.2.3: {}
 
-  geckodriver@5.0.0:
+  geckodriver@5.0.0(supports-color@8.1.1):
     dependencies:
       '@wdio/logger': 9.18.0
       '@zip.js/zip.js': 2.7.60
       decamelize: 6.0.1
-      http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6
+      http-proxy-agent: 7.0.2(supports-color@8.1.1)
+      https-proxy-agent: 7.0.6(supports-color@8.1.1)
       node-fetch: 3.3.2
       tar-fs: 3.1.1
       which: 5.0.0
@@ -11392,13 +11330,13 @@ snapshots:
       - bare-buffer
       - supports-color
 
-  geckodriver@6.1.0:
+  geckodriver@6.1.0(supports-color@8.1.1):
     dependencies:
       '@wdio/logger': 9.18.0
       '@zip.js/zip.js': 2.8.26
       decamelize: 6.0.1
-      http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6
+      http-proxy-agent: 7.0.2(supports-color@8.1.1)
+      https-proxy-agent: 7.0.6(supports-color@8.1.1)
       modern-tar: 0.7.6
     transitivePeerDependencies:
       - supports-color
@@ -11675,12 +11613,12 @@ snapshots:
   http-proxy-agent@4.0.1(supports-color@8.1.1):
     dependencies:
       '@tootallnate/once': 3.0.1
-      agent-base: 6.0.2
+      agent-base: 6.0.2(supports-color@8.1.1)
       debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
-  http-proxy-agent@7.0.2:
+  http-proxy-agent@7.0.2(supports-color@8.1.1):
     dependencies:
       agent-base: 7.1.4
       debug: 4.4.3(supports-color@8.1.1)
@@ -11694,12 +11632,12 @@ snapshots:
 
   https-proxy-agent@5.0.1(supports-color@8.1.1):
     dependencies:
-      agent-base: 6.0.2
+      agent-base: 6.0.2(supports-color@8.1.1)
       debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
-  https-proxy-agent@7.0.6:
+  https-proxy-agent@7.0.6(supports-color@8.1.1):
     dependencies:
       agent-base: 7.1.4
       debug: 4.4.3(supports-color@8.1.1)
@@ -12320,13 +12258,13 @@ snapshots:
       chalk: 5.6.2
       is-unicode-supported: 1.3.0
 
-  log4js@6.9.1:
+  log4js@6.9.1(supports-color@8.1.1):
     dependencies:
       date-format: 4.0.14
       debug: 4.3.4(supports-color@8.1.1)
       flatted: 3.4.2
       rfdc: 1.3.1
-      streamroller: 3.1.5
+      streamroller: 3.1.5(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -12373,7 +12311,7 @@ snapshots:
       commander: 7.2.0
       commondir: 1.0.1
       debug: 4.3.4(supports-color@8.1.1)
-      dependency-tree: 10.0.9
+      dependency-tree: 10.0.9(supports-color@8.1.1)
       ora: 5.4.1
       pluralize: 8.0.0
       precinct: 11.0.5(supports-color@8.1.1)
@@ -12849,7 +12787,7 @@ snapshots:
   node-loader@2.1.0(webpack@5.105.2):
     dependencies:
       loader-utils: 2.0.4
-      webpack: 5.105.2(webpack-cli@5.1.4)
+      webpack: 5.105.2(esbuild@0.27.2)(webpack-cli@5.1.4)
 
   node-releases@2.0.54: {}
 
@@ -13300,7 +13238,7 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0):
+  puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0):
     dependencies:
       '@puppeteer/browsers': 3.2.3(yauzl@2.10.0)
       chromium-bidi: 0.5.8(devtools-protocol@0.0.1232444)
@@ -13334,7 +13272,7 @@ snapshots:
 
   quote-unquote@1.0.0: {}
 
-  rc-config-loader@4.1.3:
+  rc-config-loader@4.1.3(supports-color@8.1.1):
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
       js-yaml: 4.3.2
@@ -13719,14 +13657,14 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.18.0
-      ajv-formats: 2.1.1(ajv@8.18.0)
+      ajv-formats: 2.1.1
       ajv-keywords: 5.1.0(ajv@8.18.0)
 
   secretlint@10.2.2(supports-color@8.1.1):
     dependencies:
       '@secretlint/config-creator': 10.2.2
-      '@secretlint/formatter': 10.2.2
-      '@secretlint/node': 10.2.2
+      '@secretlint/formatter': 10.2.2(supports-color@8.1.1)
+      '@secretlint/node': 10.2.2(supports-color@8.1.1)
       '@secretlint/profiler': 10.2.2
       debug: 4.4.3(supports-color@8.1.1)
       globby: 14.1.0
@@ -13970,7 +13908,7 @@ snapshots:
     dependencies:
       any-promise: 1.3.0
 
-  streamroller@3.1.5:
+  streamroller@3.1.5(supports-color@8.1.1):
     dependencies:
       date-format: 4.0.14
       debug: 4.4.3(supports-color@8.1.1)
@@ -14210,13 +14148,15 @@ snapshots:
       ansi-escapes: 7.3.0
       supports-hyperlinks: 3.2.0
 
-  terser-webpack-plugin@5.4.0(webpack@5.105.2):
+  terser-webpack-plugin@5.4.0(esbuild@0.27.2)(webpack@5.105.2):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.3.3
       terser: 5.46.0
-      webpack: 5.105.2(webpack-cli@5.1.4)
+      webpack: 5.105.2(esbuild@0.27.2)(webpack-cli@5.1.4)
+    optionalDependencies:
+      esbuild: 0.27.2
 
   terser@5.46.0:
     dependencies:
@@ -14647,7 +14587,7 @@ snapshots:
 
   vscode-uri@3.1.0: {}
 
-  wait-port@1.1.0:
+  wait-port@1.1.0(supports-color@8.1.1):
     dependencies:
       chalk: 4.1.2
       commander: 9.4.1
@@ -14666,12 +14606,12 @@ snapshots:
     dependencies:
       defaults: 1.0.4
 
-  wdio-vscode-service@8.0.0(supports-color@8.1.1)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0)):
+  wdio-vscode-service@8.0.0(supports-color@8.1.1)(webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0)):
     dependencies:
       '@fastify/cors': 9.0.1
       '@fastify/static': 10.1.2
       '@types/ws': 8.18.1
-      '@vscode/test-electron': 2.5.2
+      '@vscode/test-electron': 2.5.2(supports-color@8.1.1)
       '@wdio/logger': 9.18.0
       '@xhmikosr/downloader': 15.0.1(supports-color@8.1.1)
       decamelize: 6.0.0
@@ -14687,7 +14627,7 @@ snapshots:
       ws: 8.21.0
       yargs-parser: 21.1.1
     optionalDependencies:
-      webdriverio: 9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0)
+      webdriverio: 9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0)
     transitivePeerDependencies:
       - bare-abort-controller
       - bare-buffer
@@ -14702,17 +14642,17 @@ snapshots:
 
   web-tree-sitter@0.20.8: {}
 
-  webdriver@9.27.2(yauzl@2.10.0):
+  webdriver@9.27.2(supports-color@8.1.1)(yauzl@2.10.0):
     dependencies:
       '@types/node': 20.19.33
       '@types/ws': 8.18.1
-      '@wdio/config': 9.27.2(yauzl@2.10.0)
+      '@wdio/config': 9.27.2(supports-color@8.1.1)(yauzl@2.10.0)
       '@wdio/logger': 9.18.0
       '@wdio/protocols': 9.27.2
       '@wdio/types': 9.27.2
-      '@wdio/utils': 9.27.2(yauzl@2.10.0)
+      '@wdio/utils': 9.27.2(supports-color@8.1.1)(yauzl@2.10.0)
       deepmerge-ts: 8.0.0
-      https-proxy-agent: 7.0.6
+      https-proxy-agent: 7.0.6(supports-color@8.1.1)
       undici: 6.28.1
       ws: 8.21.0
     transitivePeerDependencies:
@@ -14722,16 +14662,16 @@ snapshots:
       - utf-8-validate
       - yauzl
 
-  webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(yauzl@2.10.0))(yauzl@2.10.0):
+  webdriverio@9.27.2(puppeteer-core@21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0))(supports-color@8.1.1)(yauzl@2.10.0):
     dependencies:
       '@types/node': 20.19.33
       '@types/sinonjs__fake-timers': 8.1.5
-      '@wdio/config': 9.27.2(yauzl@2.10.0)
+      '@wdio/config': 9.27.2(supports-color@8.1.1)(yauzl@2.10.0)
       '@wdio/logger': 9.18.0
       '@wdio/protocols': 9.27.2
       '@wdio/repl': 9.16.2
       '@wdio/types': 9.27.2
-      '@wdio/utils': 9.27.2(yauzl@2.10.0)
+      '@wdio/utils': 9.27.2(supports-color@8.1.1)(yauzl@2.10.0)
       archiver: 7.0.1
       aria-query: 5.3.0
       cheerio: 1.0.0-rc.12
@@ -14748,9 +14688,9 @@ snapshots:
       rgb2hex: 0.2.5
       serialize-error: 12.0.0
       urlpattern-polyfill: 10.0.0
-      webdriver: 9.27.2(yauzl@2.10.0)
+      webdriver: 9.27.2(supports-color@8.1.1)(yauzl@2.10.0)
     optionalDependencies:
-      puppeteer-core: 21.11.0(encoding@0.1.13)(yauzl@2.10.0)
+      puppeteer-core: 21.11.0(encoding@0.1.13)(supports-color@8.1.1)(yauzl@2.10.0)
     transitivePeerDependencies:
       - bufferutil
       - proxy-agent
@@ -14775,7 +14715,7 @@ snapshots:
       import-local: 3.1.0
       interpret: 3.1.1
       rechoir: 0.8.0
-      webpack: 5.105.2(webpack-cli@5.1.4)
+      webpack: 5.105.2(esbuild@0.27.2)(webpack-cli@5.1.4)
       webpack-merge: 5.10.0
 
   webpack-merge@5.10.0:
@@ -14791,7 +14731,7 @@ snapshots:
 
   webpack-sources@3.3.4: {}
 
-  webpack@5.105.2(webpack-cli@5.1.4):
+  webpack@5.105.2(esbuild@0.27.2)(webpack-cli@5.1.4):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.8
@@ -14815,7 +14755,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.0
-      terser-webpack-plugin: 5.4.0(webpack@5.105.2)
+      terser-webpack-plugin: 5.4.0(esbuild@0.27.2)(webpack@5.105.2)
       watchpack: 2.5.1
       webpack-sources: 3.3.4
     optionalDependencies:
