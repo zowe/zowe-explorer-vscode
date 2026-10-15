@@ -223,6 +223,7 @@ describe("ProfilesUtils unit tests", () => {
                     loadNamedProfile: () => profile,
                     shouldRemoveTokenFromProfile: () => vi.fn(),
                     getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
+                    profileHasSecureToken: vi.fn().mockResolvedValue(false),
                 },
                 configurable: true,
             });
@@ -267,6 +268,7 @@ describe("ProfilesUtils unit tests", () => {
                     ssoLogin: ssoLoginSpy,
                     promptCredentials: promptCredentialsSpy,
                     getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
+                    profileHasSecureToken: vi.fn().mockResolvedValue(false),
                 },
                 configurable: true,
             });
@@ -312,6 +314,7 @@ describe("ProfilesUtils unit tests", () => {
                     loadNamedProfile: () => profile,
                     shouldRemoveTokenFromProfile: () => vi.fn(),
                     getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
+                    profileHasSecureToken: vi.fn().mockResolvedValue(false),
                 },
                 configurable: true,
             });
