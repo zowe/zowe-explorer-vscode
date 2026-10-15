@@ -13,7 +13,7 @@
 import { useState, useRef, useCallback, useLayoutEffect, useEffect, useMemo } from "react";
 import * as l10n from "@vscode/l10n";
 import { VscodeButton, VscodeToolbarButton } from "@vscode-elements/react-elements";
-import { useConfigContext } from "../context/ConfigContext";
+import { useEditorFields } from "../context/EditorStoreContext";
 
 interface TutorialStep {
   title: string;
@@ -163,7 +163,11 @@ export function TutorialOverlay({ onClose, selectedProfileKey, onSelectProfile }
   const [spotlight, setSpotlight] = useState<Rect | null>(null);
   const [modalPosition, setModalPosition] = useState<{ top: number; left: number } | null>(null);
 
-  const { configEditorSettings, setProfilesCollapsedWithStorage, setDefaultsCollapsedWithStorage } = useConfigContext();
+  const { configEditorSettings, setProfilesCollapsedWithStorage, setDefaultsCollapsedWithStorage } = useEditorFields(
+    "configEditorSettings",
+    "setProfilesCollapsedWithStorage",
+    "setDefaultsCollapsedWithStorage"
+  );
   const { profilesCollapsed, defaultsCollapsed } = configEditorSettings;
   const [originalProfilesCollapsed] = useState(profilesCollapsed);
   const [originalDefaultsCollapsed] = useState(defaultsCollapsed);

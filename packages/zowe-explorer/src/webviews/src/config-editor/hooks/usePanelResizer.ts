@@ -2,7 +2,8 @@ import { applyProfilePanelWidth, MIN_PROFILES_WIDTH, MIN_DETAILS_WIDTH, PROFILE_
 import { useEffect, useCallback } from "react";
 import type { Configuration, ConfigEditorSettings } from "../types";
 
-export const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
+import { CONFIG_EDITOR_SETTINGS_KEY } from "../store/initialization";
+export { CONFIG_EDITOR_SETTINGS_KEY } from "../store/initialization";
 const DEFAULT_PROFILES_WIDTH_PERCENT = 35;
 
 interface UsePanelResizerProps {

@@ -9,12 +9,8 @@
  *
  */
 
-import { flattenKeys } from "../utils";
 import type {
-    Configuration,
     ConfigurationWithSchema,
-    PendingChange,
-    PendingDefault,
     schemaValidation,
     ConfigParseError,
     ConfigEditorSettings,
@@ -22,67 +18,12 @@ import type {
     MergedArgItem,
     MergedPropertiesMessagePayload,
 } from "../types";
-const CONFIG_EDITOR_SETTINGS_KEY = "zowe.configEditor.settings";
+import { CONFIG_EDITOR_SETTINGS_KEY, createDefaultEditorSettings } from "../store/initialization";
+import type { EditorStore } from "../store/editorStore";
 
 /** Minimal VS Code webview API used by message handlers (postMessage to extension host). */
 export interface ConfigEditorWebviewApi {
     postMessage: (message: object) => void;
-}
-
-export interface MessageHandlerProps {
-    // State setters
-    setConfigurations: React.Dispatch<React.SetStateAction<Configuration[]>>;
-    setSelectedTab: React.Dispatch<React.SetStateAction<number | null>>;
-    setSelectedProfileKey: React.Dispatch<React.SetStateAction<string | null>>;
-    setFlattenedConfig: React.Dispatch<React.SetStateAction<{ [key: string]: { value: string; path: string[] } }>>;
-    setFlattenedDefaults: React.Dispatch<React.SetStateAction<{ [key: string]: { value: string; path: string[] } }>>;
-    setMergedProperties: React.Dispatch<React.SetStateAction<MergedPropertiesMap | null>>;
-    setPendingChanges: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: PendingChange } }>>;
-    setDeletions: React.Dispatch<React.SetStateAction<{ [configPath: string]: string[] }>>;
-    setPendingDefaults: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: PendingDefault } }>>;
-    setDefaultsDeletions: React.Dispatch<React.SetStateAction<{ [configPath: string]: string[] }>>;
-    setProfileSearchTerm: React.Dispatch<React.SetStateAction<string>>;
-    setProfileFilterType: React.Dispatch<React.SetStateAction<string | null>>;
-    setHasPromptedForZeroConfigs: React.Dispatch<React.SetStateAction<boolean>>;
-    /** Drops the undo/redo stack; the history is meaningless once state is reloaded from disk. */
-    clearHistory: () => void;
-    setSaveModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    setPendingMergedPropertiesRequest: React.Dispatch<React.SetStateAction<string | null>>;
-    setNewProfileValue: React.Dispatch<React.SetStateAction<string>>;
-    setHasWorkspace: React.Dispatch<React.SetStateAction<boolean>>;
-    setSelectedProfilesByConfig: React.Dispatch<React.SetStateAction<{ [configPath: string]: string | null }>>;
-    setConfigEditorSettings: React.Dispatch<React.SetStateAction<ConfigEditorSettings>>;
-    setSortOrderVersion: React.Dispatch<React.SetStateAction<number>>;
-    setSecureValuesAllowed: React.Dispatch<React.SetStateAction<boolean>>;
-    setSchemaValidations: React.Dispatch<React.SetStateAction<{ [configPath: string]: schemaValidation | undefined }>>;
-    setAddConfigModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    setIsSaving: React.Dispatch<React.SetStateAction<boolean>>;
-    setPendingSaveSelection: React.Dispatch<React.SetStateAction<{ tab: number | null; profile: string | null } | null>>;
-    setWizardProfileNameValidation: React.Dispatch<React.SetStateAction<{ isValid: boolean; message?: string }>>;
-    setRenames: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [originalKey: string]: string } }>>;
-    setConfigParseErrors: React.Dispatch<React.SetStateAction<ConfigParseError[]>>;
-    setTutorialSeen: React.Dispatch<React.SetStateAction<boolean>>;
-    setShowTutorial: React.Dispatch<React.SetStateAction<boolean>>;
-    setHighlightPropertyKey: React.Dispatch<React.SetStateAction<string | null>>;
-    setHighlightProfileCard: React.Dispatch<React.SetStateAction<boolean>>;
-
-    // Refs
-    configurationsRef: React.MutableRefObject<Configuration[]>;
-    mergedPropertiesLatestRequestSeqRef: React.MutableRefObject<number>;
-    validationRequestSeqRef: React.MutableRefObject<number>;
-    selectedProfileKeyRef: React.MutableRefObject<string | null>;
-
-    // State values
-    pendingSaveSelection: { tab: number | null; profile: string | null } | null;
-    selectedTab: number | null;
-    selectedProfilesByConfig: { [configPath: string]: string | null };
-    hasPromptedForZeroConfigs: boolean;
-
-    // Functions
-    handleRefresh: () => void;
-    handleSave: () => void;
-    handleChange: (key: string, value: string) => void;
-    vscodeApi: ConfigEditorWebviewApi;
 }
 
 interface ConfigurationsMessagePayload {
@@ -93,11 +34,11 @@ interface ConfigurationsMessagePayload {
 }
 
 // Handle CONFIGURATIONS message
-export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, props: MessageHandlerProps) => {
+export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, store: EditorStore) => {
+    const props = store.getState();
     const {
         setConfigurations,
         setSecureValuesAllowed,
-        configurationsRef,
         setSchemaValidations,
         pendingSaveSelection,
         setSelectedTab,
@@ -106,9 +47,6 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
         setIsSaving,
         setSortOrderVersion,
         setSelectedProfilesByConfig,
-        selectedTab,
-        setFlattenedConfig,
-        setFlattenedDefaults,
         vscodeApi,
         hasPromptedForZeroConfigs,
         setHasPromptedForZeroConfigs,
@@ -125,12 +63,11 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
     }
     const parseErrorList: ConfigParseError[] = parseErrors ?? [];
     setConfigParseErrors(parseErrorList);
-    const previousConfigurations = configurationsRef.current;
+    const previousConfigurations = props.configurations;
     setConfigurations(contents);
     const newSecureValuesAllowed = secureValuesAllowed !== undefined ? secureValuesAllowed : true;
     setSecureValuesAllowed(newSecureValuesAllowed);
 
-    configurationsRef.current = contents;
     const newSchemaValidations: { [configPath: string]: schemaValidation | undefined } = {};
     contents.forEach((config) => {
         newSchemaValidations[config.configPath] = config.schemaValidation;
@@ -184,17 +121,6 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
         return changed ? next : prev;
     });
 
-    if (contents.length > 0) {
-        const config = contents[resolveSelectedTab(pendingSaveSelection?.tab ?? selectedTab)!].properties;
-        setFlattenedConfig(flattenKeys(config.profiles));
-        const flatDefs = flattenKeys(config.defaults);
-        const defsWithPath: typeof flatDefs = {};
-        for (const [k, v] of Object.entries(flatDefs)) {
-            defsWithPath[k] = { ...v, path: v.path[0] === "defaults" ? v.path : ["defaults", ...v.path] };
-        }
-        setFlattenedDefaults(defsWithPath);
-    }
-
     // Send ready message to ConfigEditor after configurations are processed
     vscodeApi.postMessage({ command: "CONFIGURATIONS_READY" });
 
@@ -209,7 +135,8 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
 };
 
 // Handle DISABLE_OVERLAY message
-export const handleDisableOverlayMessage = (props: MessageHandlerProps) => {
+export const handleDisableOverlayMessage = (store: EditorStore) => {
+    const props = store.getState();
     const { setSaveModalOpen } = props;
     setSaveModalOpen(false);
 };
@@ -219,7 +146,8 @@ interface SaveErrorMessagePayload {
 }
 
 // Handle SAVE_ERROR message
-export const handleSaveErrorMessage = (data: SaveErrorMessagePayload, props: MessageHandlerProps) => {
+export const handleSaveErrorMessage = (data: SaveErrorMessagePayload, store: EditorStore) => {
+    const props = store.getState();
     const { setRenames, setIsSaving, setSaveModalOpen } = props;
     console.log("[SAVE_ERROR] Rolling back renames due to save error", JSON.stringify({ error: data.error }, null, 2));
     setRenames({});
@@ -248,11 +176,12 @@ function convertValueToProperType(value: unknown, dataType?: string): unknown {
 }
 
 // Handle MERGED_PROPERTIES message
-export const handleMergedPropertiesMessage = (data: MergedPropertiesMessagePayload, props: MessageHandlerProps) => {
-    const { setMergedProperties, setPendingMergedPropertiesRequest, mergedPropertiesLatestRequestSeqRef } = props;
+export const handleMergedPropertiesMessage = (data: MergedPropertiesMessagePayload, store: EditorStore) => {
+    const props = store.getState();
+    const { setMergedProperties, setPendingMergedPropertiesRequest, mergedPropertiesRequestSeq } = props;
 
     const responseSeq = data.mergedPropertiesRequestSeq;
-    if (responseSeq !== undefined && responseSeq !== mergedPropertiesLatestRequestSeqRef.current) {
+    if (responseSeq !== undefined && responseSeq !== mergedPropertiesRequestSeq) {
         return;
     }
 
@@ -295,7 +224,8 @@ interface FileSelectedMessagePayload {
 }
 
 // Handle FILE_SELECTED message
-export const handleFileSelectedMessage = (data: FileSelectedMessagePayload, props: MessageHandlerProps) => {
+export const handleFileSelectedMessage = (data: FileSelectedMessagePayload, store: EditorStore) => {
+    const props = store.getState();
     const { setNewProfileValue, handleChange } = props;
 
     // Handle file selection response from VS Code
@@ -315,7 +245,8 @@ interface EnvInformationMessagePayload {
 }
 
 // Handle ENV_INFORMATION message
-export const handleEnvInformationMessage = (data: EnvInformationMessagePayload, props: MessageHandlerProps) => {
+export const handleEnvInformationMessage = (data: EnvInformationMessagePayload, store: EditorStore) => {
+    const props = store.getState();
     const { setHasWorkspace } = props;
     setHasWorkspace(data.hasWorkspace ?? false);
 };
@@ -327,23 +258,22 @@ interface InitialSelectionMessagePayload {
 }
 
 // Handle INITIAL_SELECTION message
-export const handleInitialSelectionMessage = (data: InitialSelectionMessagePayload, props: MessageHandlerProps) => {
+export const handleInitialSelectionMessage = (data: InitialSelectionMessagePayload, store: EditorStore) => {
+    const props = store.getState();
     const {
         setSelectedTab,
         setSelectedProfileKey,
         setSelectedProfilesByConfig,
-        configurationsRef,
         setHighlightPropertyKey,
         setHighlightProfileCard,
         setConfigEditorSettings,
-        selectedProfileKeyRef,
     } = props;
 
     // Handle initial profile selection when opening the config editor
     const { profileName, configPath, propertyKey } = data;
 
     // Use the configurations from the ref to avoid state timing issues
-    const currentConfigs = configurationsRef.current;
+    const currentConfigs = props.configurations;
 
     // Find the config tab that contains this profile.
     // Normalize paths for comparison to handle different path separator styles.
@@ -367,7 +297,6 @@ export const handleInitialSelectionMessage = (data: InitialSelectionMessagePaylo
             // Update the ref immediately so focus/visibility event handlers see the
             // new selection before React's useEffect has had a chance to sync it.
             // This prevents spurious GET_PROFILES calls that would clobber the selection.
-            selectedProfileKeyRef.current = profileName;
 
             // Set the selected profile key state
             setSelectedProfileKey(profileName);
@@ -400,21 +329,14 @@ interface LocalStorageValueMessagePayload {
 }
 
 // Handle LOCAL_STORAGE_VALUE message
-export const handleLocalStorageValueMessage = (data: LocalStorageValueMessagePayload, props: MessageHandlerProps) => {
+export const handleLocalStorageValueMessage = (data: LocalStorageValueMessagePayload, store: EditorStore) => {
+    const props = store.getState();
     const { setConfigEditorSettings, setSortOrderVersion } = props;
 
     // Handle localStorage value retrieval
     const { key, value } = data;
     if (key === CONFIG_EDITOR_SETTINGS_KEY) {
-        const defaultSettings: ConfigEditorSettings = {
-            showMergedProperties: "show",
-            viewMode: "tree",
-            propertySortOrder: "alphabetical",
-            profileSortOrder: "natural",
-            profilesWidthPercent: 35,
-            defaultsCollapsed: true,
-            profilesCollapsed: false,
-        };
+        const defaultSettings = createDefaultEditorSettings();
         const settings: ConfigEditorSettings = value !== undefined ? (value as ConfigEditorSettings) : defaultSettings;
         setConfigEditorSettings(settings);
 
@@ -431,39 +353,31 @@ interface LocalStorageErrorMessagePayload {
 }
 
 // Handle LOCAL_STORAGE_ERROR message
-export const handleLocalStorageErrorMessage = (data: LocalStorageErrorMessagePayload, props: MessageHandlerProps) => {
+export const handleLocalStorageErrorMessage = (data: LocalStorageErrorMessagePayload, store: EditorStore) => {
+    const props = store.getState();
     const { setConfigEditorSettings, setSortOrderVersion } = props;
     console.error(`Local storage operation failed for key "${data.key}":`, data.error);
 
     // If reading/writing the editor settings failed, fall back to defaults so the UI isn't left uninitialized.
     if (data.key === CONFIG_EDITOR_SETTINGS_KEY) {
-        const defaultSettings: ConfigEditorSettings = {
-            showMergedProperties: "show",
-            viewMode: "tree",
-            propertySortOrder: "alphabetical",
-            profileSortOrder: "natural",
-            profilesWidthPercent: 35,
-            defaultsCollapsed: true,
-            profilesCollapsed: false,
-        };
+        const defaultSettings = createDefaultEditorSettings();
         setConfigEditorSettings(defaultSettings);
         setSortOrderVersion((prev) => prev + 1);
     }
 };
 
 // Handle LOCAL_STORAGE_SET_SUCCESS message (acknowledgement only; nothing for the UI to react to today)
-export const handleLocalStorageSetSuccessMessage = (_data: { key?: string }, _props: MessageHandlerProps) => {
+export const handleLocalStorageSetSuccessMessage = (_data: { key?: string }, _store: EditorStore) => {
     // no-op — explicitly handled so this ack isn't silently dropped as an unrecognized command
 };
 
 // Handle RELOAD message
-export const handleReloadMessage = (props: MessageHandlerProps) => {
+export const handleReloadMessage = (store: EditorStore) => {
+    const props = store.getState();
     const {
         setConfigurations,
         setSelectedTab,
         setSelectedProfileKey,
-        setFlattenedConfig,
-        setFlattenedDefaults,
         setMergedProperties,
         setPendingChanges,
         setDeletions,
@@ -483,8 +397,6 @@ export const handleReloadMessage = (props: MessageHandlerProps) => {
     setConfigurations([]);
     setSelectedTab(null);
     setSelectedProfileKey(null);
-    setFlattenedConfig({});
-    setFlattenedDefaults({});
     setMergedProperties(null);
     setPendingChanges({});
     setDeletions({});
@@ -499,14 +411,16 @@ export const handleReloadMessage = (props: MessageHandlerProps) => {
 };
 
 // Handle REFRESH message
-export const handleRefreshMessage = (props: MessageHandlerProps) => {
+export const handleRefreshMessage = (store: EditorStore) => {
+    const props = store.getState();
     const { handleRefresh } = props;
     // Handle refresh command from VS Code
     handleRefresh();
 };
 
 // Handle SAVE message
-export const handleSaveMessage = (props: MessageHandlerProps) => {
+export const handleSaveMessage = (store: EditorStore) => {
+    const props = store.getState();
     const { handleSave, setSaveModalOpen } = props;
     // Handle save command from VS Code
     handleSave();
@@ -519,10 +433,11 @@ interface ProfileNameValidationResultPayload {
     requestSeq?: number;
 }
 
-const handleProfileNameValidationResultMessage = (data: ProfileNameValidationResultPayload, props: MessageHandlerProps) => {
-    const { setWizardProfileNameValidation, validationRequestSeqRef } = props;
+const handleProfileNameValidationResultMessage = (data: ProfileNameValidationResultPayload, store: EditorStore) => {
+    const props = store.getState();
+    const { setWizardProfileNameValidation, validationRequestSeq } = props;
 
-    if (data.requestSeq !== undefined && data.requestSeq !== validationRequestSeqRef.current) {
+    if (data.requestSeq !== undefined && data.requestSeq !== validationRequestSeq) {
         return;
     }
 
@@ -532,51 +447,56 @@ const handleProfileNameValidationResultMessage = (data: ProfileNameValidationRes
     });
 };
 
-// Main message handler dispatcher
-export const handleMessage = (event: MessageEvent, props: MessageHandlerProps) => {
+/** Apply host updates atomically, recording file-picker edits in the user's undo history. */
+export const handleMessage = (event: MessageEvent, store: EditorStore) => {
+    const recordHistory = event.data.command === "FILE_SELECTED" && event.data.source === "editor" && !event.data.isNewProperty;
+    store.getState().transaction(() => dispatchMessage(event, store), recordHistory);
+};
+
+const dispatchMessage = (event: MessageEvent, store: EditorStore) => {
     if (!event.data.command) return;
     switch (event.data.command) {
         case "CONFIGURATIONS":
-            handleConfigurationsMessage(event.data, props);
+            handleConfigurationsMessage(event.data, store);
             break;
         case "DISABLE_OVERLAY":
-            handleDisableOverlayMessage(props);
+            handleDisableOverlayMessage(store);
             break;
         case "SAVE_ERROR":
-            handleSaveErrorMessage(event.data, props);
+            handleSaveErrorMessage(event.data, store);
             break;
         case "MERGED_PROPERTIES":
-            handleMergedPropertiesMessage(event.data, props);
+            handleMergedPropertiesMessage(event.data, store);
             break;
         case "FILE_SELECTED":
-            handleFileSelectedMessage(event.data, props);
+            handleFileSelectedMessage(event.data, store);
             break;
         case "ENV_INFORMATION":
-            handleEnvInformationMessage(event.data, props);
+            handleEnvInformationMessage(event.data, store);
             break;
         case "INITIAL_SELECTION":
-            handleInitialSelectionMessage(event.data, props);
+            handleInitialSelectionMessage(event.data, store);
             break;
         case "LOCAL_STORAGE_VALUE":
-            handleLocalStorageValueMessage(event.data, props);
+            handleLocalStorageValueMessage(event.data, store);
             break;
         case "LOCAL_STORAGE_ERROR":
-            handleLocalStorageErrorMessage(event.data, props);
+            handleLocalStorageErrorMessage(event.data, store);
             break;
         case "LOCAL_STORAGE_SET_SUCCESS":
-            handleLocalStorageSetSuccessMessage(event.data, props);
+            handleLocalStorageSetSuccessMessage(event.data, store);
             break;
         case "RELOAD":
-            handleReloadMessage(props);
+            handleReloadMessage(store);
             break;
         case "REFRESH":
-            handleRefreshMessage(props);
+            handleRefreshMessage(store);
             break;
         case "SAVE":
-            handleSaveMessage(props);
+            handleSaveMessage(store);
             break;
         case "PROFILE_NAME_VALIDATION_RESULT":
-            handleProfileNameValidationResultMessage(event.data, props);
+            handleProfileNameValidationResultMessage(event.data, store);
             break;
         default:
             // Handle unknown commands if needed

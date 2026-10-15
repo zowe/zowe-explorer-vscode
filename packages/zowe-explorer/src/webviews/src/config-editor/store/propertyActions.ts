@@ -1,0 +1,275 @@
+/**
+ * This program and the accompanying materials are made available under the terms of the
+ * Eclipse Public License v2.0 which accompanies this distribution, and is available at
+ * https://www.eclipse.org/legal/epl-v20.html
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Copyright Contributors to the Zowe Project.
+ *
+ */
+
+import type { EditorRuntime } from "./types";
+import { selectFlattenedConfig, selectFlattenedDefaults } from "./selectors";
+import { createUtilityHelpers } from "./utilityHelpers";
+import { extractProfileKeyFromPath, getRenamedProfileKeyWithNested, parseValueByType, getNestedProperty, stringifyValueByType } from "../utils";
+import { getPropertyTypeForAddProfile } from "../utils/propertyUtils";
+import { getProfileType } from "../utils/profileUtils";
+import { isProfileDefault } from "../utils/profileHelpers";
+
+export function createPropertyActions(state: EditorRuntime) {
+    const {
+        setPendingPropertyDeletion,
+        setNewProfileKey,
+        setNewProfileValue,
+        setNewProfileKeyPath,
+        setNewProfileModalOpen,
+        setFocusValueInput,
+        newProfileKey,
+        newProfileValue,
+        newProfileKeyPath,
+        isSecure,
+        setIsSecure,
+        configurations,
+        selectedTab,
+        selectedProfileKey,
+        renames,
+        pendingChanges,
+        setPendingChanges,
+        deletions,
+        setDeletions,
+        setPendingDefaults,
+        defaultsDeletions,
+        setDefaultsDeletions,
+        setHiddenItems,
+        schemaValidations,
+        pendingDefaults,
+    } = state;
+
+    const flattenedConfig = selectFlattenedConfig(state);
+    const flattenedDefaults = selectFlattenedDefaults(state);
+    const utilityHelpers = createUtilityHelpers(state);
+
+    const handleChange = (key: string, value: string) => {
+        // Cancel any pending property deletion when user changes a value
+        setPendingPropertyDeletion(null);
+
+        const configPath = configurations[selectedTab!]!.configPath;
+        const path = flattenedConfig[key]?.path ?? key.split(".");
+
+        let profileKey = selectedProfileKey || extractProfileKeyFromPath(path);
+
+        if (selectedProfileKey && renames[configPath]) {
+            profileKey = getRenamedProfileKeyWithNested(selectedProfileKey, configPath, renames);
+        }
+
+        const isProfileLevelType = path[path.length - 1] === "type" && !path.includes("properties");
+        if (isProfileLevelType) {
+            const oldType = getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames });
+            const newTypeStr = (value ?? "").trim();
+            const wasDefaultForOldType =
+                oldType &&
+                oldType !== newTypeStr &&
+                isProfileDefault({ profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames });
+
+            if (wasDefaultForOldType) {
+                const config = configurations[selectedTab!].properties;
+                const savedDefaults = config?.defaults || {};
+                const currentDefaultForNewType = pendingDefaults[configPath]?.[newTypeStr]?.value ?? savedDefaults[newTypeStr] ?? "";
+                const shouldSetNew = newTypeStr !== "" && !currentDefaultForNewType;
+
+                setPendingDefaults((prev) => {
+                    const next = { ...prev[configPath] };
+                    next[oldType] = { value: "", path: ["defaults", oldType] };
+                    if (shouldSetNew) {
+                        next[newTypeStr] = { value: profileKey, path: ["defaults", newTypeStr] };
+                    }
+                    return { ...prev, [configPath]: next };
+                });
+            }
+        }
+
+        const displayKey = path[path.length - 1];
+        const currentSecure = utilityHelpers.isPropertySecure(key, displayKey, path, undefined);
+        const originalValue = getNestedProperty(configurations[selectedTab!].properties, path);
+        const isBackToOriginal =
+            stringifyValueByType(value) === stringifyValueByType((originalValue !== undefined && originalValue !== null ? originalValue : "") as any);
+
+        setPendingChanges((prev) => {
+            const nextConfigChanges = { ...prev[configPath] };
+            if (isBackToOriginal) {
+                delete nextConfigChanges[key];
+            } else {
+                nextConfigChanges[key] = { value, path, profile: profileKey, secure: currentSecure };
+            }
+
+            const nextPendingChanges = { ...prev };
+            if (Object.keys(nextConfigChanges).length === 0) {
+                delete nextPendingChanges[configPath];
+            } else {
+                nextPendingChanges[configPath] = nextConfigChanges;
+            }
+            return nextPendingChanges;
+        });
+
+        if (deletions[configPath]?.includes(key)) {
+            setDeletions((prev) => ({
+                ...prev,
+                [configPath]: prev[configPath]?.filter((k) => k !== key) ?? [],
+            }));
+        }
+    };
+
+    const handleDefaultsChange = (key: string, value: string) => {
+        // Cancel any pending property deletion when user changes defaults
+        setPendingPropertyDeletion(null);
+        const configPath = configurations[selectedTab!]!.configPath;
+        const defaultPath = flattenedDefaults[key]?.path ?? key.split(".");
+        const path = defaultPath[0] === "defaults" ? defaultPath : ["defaults", ...defaultPath];
+        const originalValue = getNestedProperty(configurations[selectedTab!].properties, path);
+        const isBackToOriginal =
+            stringifyValueByType(value) === stringifyValueByType((originalValue !== undefined && originalValue !== null ? originalValue : "") as any);
+
+        setPendingDefaults((prev) => {
+            const nextConfigDefaults = { ...prev[configPath] };
+            if (isBackToOriginal) {
+                delete nextConfigDefaults[key];
+            } else {
+                nextConfigDefaults[key] = { value, path };
+            }
+
+            const nextPendingDefaults = { ...prev };
+            if (Object.keys(nextConfigDefaults).length === 0) {
+                delete nextPendingDefaults[configPath];
+            } else {
+                nextPendingDefaults[configPath] = nextConfigDefaults;
+            }
+            return nextPendingDefaults;
+        });
+
+        if (defaultsDeletions[configPath]?.includes(key)) {
+            setDefaultsDeletions((prev) => ({
+                ...prev,
+                [configPath]: prev[configPath]?.filter((k) => k !== key) ?? [],
+            }));
+        }
+    };
+
+    const handleDeleteProperty = (fullKey: string, _secure?: boolean) => {
+        // Show inline confirmation by setting the pending deletion key
+        setPendingPropertyDeletion(fullKey);
+    };
+
+    const confirmDeleteProperty = (fullKey: string, secure?: boolean) => {
+        const configPath = configurations[selectedTab!]!.configPath;
+
+        let index = fullKey.split(".").pop();
+        if (secure) {
+            setHiddenItems((prev) => ({
+                ...prev,
+                [configPath]: {
+                    ...prev[configPath],
+                    [index!]: { path: fullKey },
+                },
+            }));
+        }
+        setPendingChanges((prev) => {
+            const newPendingChanges = { ...prev };
+            if (prev[configPath]) {
+                newPendingChanges[configPath] = { ...prev[configPath] };
+                delete newPendingChanges[configPath][fullKey];
+            }
+
+            return newPendingChanges;
+        });
+        setDeletions((prev) => {
+            const newDeletions = {
+                ...prev,
+                [configPath]: [...(prev[configPath] ?? []), fullKey],
+            };
+
+            return newDeletions;
+        });
+        setPendingPropertyDeletion(null);
+    };
+
+    const handleUnlinkMergedProperty = (propertyKey: string | undefined, fullKey: string) => {
+        if (!propertyKey) return;
+        // Cancel any pending property deletion when user unlinks merged property
+        setPendingPropertyDeletion(null);
+        setNewProfileKey(propertyKey);
+        setNewProfileValue("");
+        setNewProfileKeyPath(fullKey.split(".").slice(0, -1));
+        setNewProfileModalOpen(true);
+        setFocusValueInput(true);
+    };
+
+    const handleAddNewProfileKey = () => {
+        if (!newProfileKey.trim() || !newProfileKeyPath) return;
+
+        const configPath = configurations[selectedTab!]!.configPath;
+        const path = [...newProfileKeyPath, newProfileKey.trim()];
+        const fullKey = isSecure ? path.join(".").replace("secure", "properties") : path.join(".");
+        const profileKey = extractProfileKeyFromPath(path);
+
+        const propertyType = getPropertyTypeForAddProfile({
+            propertyKey: newProfileKey.trim(),
+            selectedTab: selectedTab!,
+            configurations,
+            selectedProfileKey,
+            schemaValidations,
+            pendingChanges,
+            renames,
+        });
+        const convertedValue = parseValueByType(newProfileValue, propertyType);
+
+        setPendingChanges((prev) => ({
+            ...prev,
+            [configPath]: {
+                ...prev[configPath],
+                [fullKey]: { value: convertedValue, path: path.slice(-1), profile: profileKey, secure: isSecure },
+            },
+        }));
+
+        setDeletions((prev) => {
+            const newDeletions = { ...prev };
+            const fullPath = path.join(".");
+            if (newDeletions[configPath]) {
+                newDeletions[configPath] = newDeletions[configPath].filter((key) => key !== fullPath);
+            }
+            return newDeletions;
+        });
+
+        if (isSecure) {
+            setHiddenItems((prev) => {
+                const newHiddenItems = { ...prev };
+                const fullPath = path.join(".").replace("secure", "properties");
+
+                const configHiddenItems = newHiddenItems[configPath];
+
+                if (configHiddenItems) {
+                    const filteredItems = Object.fromEntries(Object.entries(configHiddenItems).filter(([, value]) => value.path !== fullPath));
+                    newHiddenItems[configPath] = filteredItems;
+                }
+
+                return newHiddenItems;
+            });
+        }
+
+        setNewProfileKey("");
+        setNewProfileValue("");
+        setNewProfileKeyPath(null);
+        setNewProfileModalOpen(false);
+        setIsSecure(false);
+        setFocusValueInput(false);
+    };
+
+    return {
+        handleChange,
+        handleDefaultsChange,
+        handleDeleteProperty,
+        confirmDeleteProperty,
+        handleUnlinkMergedProperty,
+        handleAddNewProfileKey,
+    };
+}

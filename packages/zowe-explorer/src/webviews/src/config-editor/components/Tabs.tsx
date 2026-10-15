@@ -1,32 +1,40 @@
 import { useState, useEffect, useRef } from "react";
 import * as l10n from "@vscode/l10n";
 import { VscodeToolbarButton } from "@vscode-elements/react-elements";
-import { useConfigContext } from "../context/ConfigContext";
+import { useEditorFields } from "../context/EditorStoreContext";
 import { useElementWidth } from "../hooks/useElementWidth";
 
-export interface TabsProps {
-  onTabChange: (index: number) => void;
-  onOpenFile: (filePath: string) => void;
-  onRevealInFinder: (filePath: string) => void;
-  onOpenSchemaFile: (filePath: string) => void;
-  onAddNewConfig: () => void;
-  onToggleAutostore: (configPath: string) => void;
-  onShowTutorial: () => void;
-  onExportRedacted: () => void;
-}
+export function Tabs() {
+  const {
+    handleTabChange: onTabChange,
+    handleOpenConfigFile: onOpenFile,
+    handleRevealInFinder: onRevealInFinder,
+    handleOpenSchemaFile: onOpenSchemaFile,
+    handleAddNewConfig: onAddNewConfig,
+    handleAutostoreToggle: onToggleAutostore,
+    handleOpenTutorial: onShowTutorial,
+    handleExportRedacted: onExportRedacted,
+  } = useEditorFields(
+    "handleTabChange",
+    "handleOpenConfigFile",
+    "handleRevealInFinder",
+    "handleOpenSchemaFile",
+    "handleAddNewConfig",
+    "handleAutostoreToggle",
+    "handleOpenTutorial",
+    "handleExportRedacted"
+  );
 
-export function Tabs({
-  onTabChange,
-  onOpenFile,
-  onRevealInFinder,
-  onOpenSchemaFile,
-  onAddNewConfig,
-  onToggleAutostore,
-  onShowTutorial,
-  onExportRedacted,
-}: TabsProps) {
-  const { configurations, selectedTab, pendingChanges, autostoreChanges, renames, deletions, pendingDefaults, defaultsDeletions } =
-    useConfigContext();
+  const { configurations, selectedTab, pendingChanges, autostoreChanges, renames, deletions, pendingDefaults, defaultsDeletions } = useEditorFields(
+    "configurations",
+    "selectedTab",
+    "pendingChanges",
+    "autostoreChanges",
+    "renames",
+    "deletions",
+    "pendingDefaults",
+    "defaultsDeletions"
+  );
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabIndex: number } | null>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
 

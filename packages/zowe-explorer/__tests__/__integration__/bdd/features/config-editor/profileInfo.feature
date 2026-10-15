@@ -74,7 +74,10 @@ Feature: Profile Info Management - Comprehensive Testing
   @config-editor @profile-wizard
   Scenario: Create new profiles using Profile Wizard
     When the user opens the Profile Wizard modal
+    And the user types "base" as the profile name
+    Then the wizard create profile button should be "disabled"
     And the user types "testtsoprofile" as the profile name
+    Then the wizard create profile button should be "enabled"
     And the user selects "tso" as the profile type
     And the user clicks the populate defaults button
     And the user presses Enter to submit the profile

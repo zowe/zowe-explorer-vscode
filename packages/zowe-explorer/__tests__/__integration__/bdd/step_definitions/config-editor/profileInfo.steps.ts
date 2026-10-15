@@ -655,6 +655,16 @@ When("the user selects {string} as the profile type", async function (profileTyp
     await browser.pause(100);
 });
 
+Then("the wizard create profile button should be {string}", async (state: string) => {
+    if (state !== "enabled" && state !== "disabled") throw new Error(`Unknown button state: ${state}`);
+    const button = await browser.$("#create-profile-button");
+    await button.waitForExist({ timeout: 10000 });
+    await browser.waitUntil(async () => (await button.getProperty("disabled")) === (state === "disabled"), {
+        timeout: 10000,
+        timeoutMsg: `Wizard Create button did not become ${state} after name validation`,
+    });
+});
+
 When("the user clicks the populate defaults button", async function () {
     await ensureConfigEditorReady();
 

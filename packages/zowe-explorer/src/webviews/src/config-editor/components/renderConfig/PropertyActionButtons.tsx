@@ -40,8 +40,6 @@ export function PropertyActionButtons({ ctx, displayKey, path, fullKey, pendingV
     vscodeApi,
     configurations,
     selectedTab,
-    pendingChanges,
-    renames,
     openAddProfileModalAtPath,
     handleToggleSecure,
     confirmDeleteProperty,
@@ -56,7 +54,7 @@ export function PropertyActionButtons({ ctx, displayKey, path, fullKey, pendingV
     return null;
   }
 
-  const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames);
+  const isSecure = isPropertySecure(fullKey, displayKey, path, mergedProps);
   const canBeSecure = canPropertyBeSecure(displayKey, path);
 
   const showSecureButton = canBeSecure && !isSecure && !isFromMergedProps && pendingPropertyDeletion !== fullKey;

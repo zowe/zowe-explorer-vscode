@@ -79,10 +79,7 @@ export function EditablePropertyRow({
   const isSecureProperty = isFromMergedProps && jsonLoc && displayKey ? isMergedPropertySecure(displayKey, jsonLoc, osLoc, secure) : false;
 
   // Check if this is a local secure property (in the current profile's secure array)
-  const isLocalSecureProperty =
-    displayKey && path && configPath
-      ? isPropertySecure(fullKey, displayKey, path, mergedProps, selectedTab, configurations, pendingChanges, renames)
-      : false;
+  const isLocalSecureProperty = displayKey && path && configPath ? isPropertySecure(fullKey, displayKey, path, mergedProps) : false;
 
   // Check if this is a secure property that was added for sorting
   const isSecureForSorting = isSecurePropertyForSorting;

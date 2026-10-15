@@ -185,3 +185,24 @@ Feature: Config Editor profile drag and drop
     And the profile at dotted path "base.wizardDragDropTest" should not exist in the config file
     And the profile at dotted path "base.ssh1" should not exist in the config file
     And the profile at dotted path "zosmf1" should not exist in the config file
+
+  @config-editor @drag-drop @drag-drop-selection
+  Scenario Outline: Selection follows a moved profile and the next click works immediately
+    When the user refreshes the Config Editor from disk
+    Then the Config Editor profile list is in tree view mode after reload
+    Given the user expands the profile tree node "nested"
+    When the user selects the profile tree item "<selected>"
+    Then the profile tree selection should be "<selected>"
+    Given the drag drop source is profile key "<source>"
+    When the user starts dragging the prepared profile key source
+    And the user drops the drag on profile key "<target>" at root level in the tree
+    Then the profile tree selection should be "<movedSelection>"
+    When the user selects the profile tree item "ssh1"
+    Then the profile tree selection should be "ssh1"
+    When the user selects the profile tree item "<movedSelection>"
+    Then the profile tree selection should be "<movedSelection>"
+
+    Examples:
+      | selected      | source | target | movedSelection     |
+      | zosmf1        | zosmf1 | zosmf2 | zosmf2.zosmf1      |
+      | nested.child1 | nested | base   | base.nested.child1 |

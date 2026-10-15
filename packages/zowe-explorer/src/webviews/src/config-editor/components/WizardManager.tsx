@@ -11,15 +11,21 @@
 
 import { useEffect, useCallback } from "react";
 import { ProfileWizardModal } from "./modals/ProfileWizardModal";
-import { useWizardContext } from "../context/WizardContext";
+import { useEditorFields, useEditorStoreApi } from "../context/EditorStoreContext";
+import { isSecureOrigin } from "../../utils";
 
 export function WizardManager() {
-  const { wizardModalOpen, setWizardMergedProperties, setWizardNewPropertyValue, setWizardProperties, wizardMergedPropertiesRequestSeqRef } =
-    useWizardContext();
+  const store = useEditorStoreApi();
+  const { wizardModalOpen, setWizardMergedProperties, setWizardNewPropertyValue, setWizardProperties } = useEditorFields(
+    "wizardModalOpen",
+    "setWizardMergedProperties",
+    "setWizardNewPropertyValue",
+    "setWizardProperties"
+  );
 
   const onWizardMergedProperties = useCallback(
     (data: any) => {
-      if (data.requestSeq !== undefined && data.requestSeq !== wizardMergedPropertiesRequestSeqRef.current) {
+      if (data.requestSeq !== undefined && data.requestSeq !== store.getState().wizardMergedPropertiesRequestSeq) {
         return;
       }
 
@@ -70,6 +76,7 @@ export function WizardManager() {
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      if (!isSecureOrigin(event.origin)) return;
       if (event.data.command === "WIZARD_MERGED_PROPERTIES") {
         onWizardMergedProperties(event.data);
       } else if (event.data.command === "FILE_SELECTED") {

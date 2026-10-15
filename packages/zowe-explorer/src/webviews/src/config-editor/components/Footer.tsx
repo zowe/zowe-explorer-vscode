@@ -1,16 +1,18 @@
 import * as l10n from "@vscode/l10n";
 import { VscodeToolbarButton, VscodeButton } from "@vscode-elements/react-elements";
-interface FooterProps {
-  onClearChanges: () => void;
-  onSaveAll: () => void;
-  hasPendingChanges: boolean;
-  onUndo: () => void;
-  onRedo: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
-}
+import { useEditorFields, useEditorStore } from "../context/EditorStoreContext";
+import { selectHasPendingChanges } from "../store/selectors";
 
-export function Footer({ onClearChanges, onSaveAll, hasPendingChanges, onUndo, onRedo, canUndo, canRedo }: FooterProps) {
+export function Footer() {
+  const {
+    handleRefresh: onClearChanges,
+    handleSave: onSaveAll,
+    undo: onUndo,
+    redo: onRedo,
+  } = useEditorFields("handleRefresh", "handleSave", "undo", "redo");
+  const hasPendingChanges = useEditorStore(selectHasPendingChanges);
+  const canUndo = useEditorStore((state) => state.undoStack.length > 0);
+  const canRedo = useEditorStore((state) => state.redoStack.length > 0);
   return (
     <div className="footer" data-tutorial-id="save-refresh-footer">
       <VscodeToolbarButton

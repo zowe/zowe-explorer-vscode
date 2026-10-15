@@ -30,7 +30,8 @@
     "marked": "^15.0.12",
     "preact": "^10.22.0",
     "preact-render-to-string": "^6.5.7",
-    "uuid": "^14.0.0"
+    "uuid": "^14.0.0",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.1",

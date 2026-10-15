@@ -12,16 +12,23 @@
 import { useCallback } from "react";
 import * as l10n from "@vscode/l10n";
 import { VscodeSingleSelect, VscodeOption } from "@vscode-elements/react-elements";
-import { useConfigContext } from "../context/ConfigContext";
+import { useEditorFields } from "../context/EditorStoreContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 
 interface RenderDefaultsProps {
-  defaults: { [key: string]: any };
-  handleDefaultsChange: (key: string, value: string) => void;
+  defaults: Record<string, unknown>;
 }
 
-export const RenderDefaults = ({ defaults, handleDefaultsChange }: RenderDefaultsProps) => {
-  const { configurations, selectedTab, pendingDefaults, defaultsDeletions, renames } = useConfigContext();
+export const RenderDefaults = ({ defaults }: RenderDefaultsProps) => {
+  const { handleDefaultsChange } = useEditorFields("handleDefaultsChange");
+
+  const { configurations, selectedTab, pendingDefaults, defaultsDeletions, renames } = useEditorFields(
+    "configurations",
+    "selectedTab",
+    "pendingDefaults",
+    "defaultsDeletions",
+    "renames"
+  );
 
   const { getWizardTypeOptions, getAvailableProfilesByType } = useUtilityHelpers();
   const renderDefaults = useCallback(

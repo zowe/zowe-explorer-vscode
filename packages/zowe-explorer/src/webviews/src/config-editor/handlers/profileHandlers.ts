@@ -16,10 +16,10 @@ import { flattenProfiles } from "../utils";
 
 // Types
 import type { PendingChange } from "../types";
-import type { HandlerContext } from "../hooks/useHandlerContext";
+import type { ProfileHandlerContext } from "../store/profileActions";
 
 // Profile handler props interface
-// Replaced by HandlerContext from ../hooks/useHandlerContext
+// Replaced by ProfileHandlerContext from ../hooks/useProfileHandlerContext
 
 // Applies a rename (originalKey -> newKey) on top of the existing renames map, consolidating
 // chains and dropping any closed loops. Shared by handleRenameProfile's renames-state update and
@@ -95,7 +95,7 @@ function resolveKeyAfterRename(
     return key;
 }
 
-export const handleRenameProfile = (originalKey: string, newKey: string, isDragDrop: boolean = false, props: HandlerContext): boolean => {
+export const handleRenameProfile = (originalKey: string, newKey: string, isDragDrop: boolean = false, props: ProfileHandlerContext): boolean => {
     const {
         selectedTab,
         configurations,
@@ -424,9 +424,7 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
         // Add pending changes for parent profiles that don't exist
         setPendingChanges((prev) => {
             const newState = { ...prev };
-            if (!newState[configPath]) {
-                newState[configPath] = {};
-            }
+            newState[configPath] = { ...prev[configPath] };
 
             parentKeys.forEach((parentKey) => {
                 // Check if this parent key is already a target of another rename operation
@@ -462,9 +460,7 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
     if (isDragDrop) {
         setDragDroppedProfiles((prev) => {
             const newState = { ...prev };
-            if (!newState[configPath]) {
-                newState[configPath] = new Set();
-            }
+            newState[configPath] = new Set(prev[configPath]);
 
             // Add the original profile and all its parents/children to the drag-dropped set
             const addProfileAndRelated = (profileKey: string) => {
@@ -516,7 +512,7 @@ export const handleRenameProfile = (originalKey: string, newKey: string, isDragD
     return true; // Return true to indicate success
 };
 
-export const handleDeleteProfile = (profileKey: string, props: HandlerContext): void => {
+export const handleDeleteProfile = (profileKey: string, props: ProfileHandlerContext): void => {
     const {
         selectedTab,
         configurations,
@@ -541,9 +537,7 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
     // Add to deletions - we'll add all profile-related keys to deletions
     setDeletions((prev) => {
         const newDeletions = { ...prev };
-        if (!newDeletions[configPath]) {
-            newDeletions[configPath] = [];
-        }
+        newDeletions[configPath] = [...(prev[configPath] ?? [])];
 
         // Add the full profile path to deletions
         newDeletions[configPath].push(fullProfilePath);
@@ -555,6 +549,7 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
     setPendingChanges((prev) => {
         const newState = { ...prev };
         if (newState[configPath]) {
+            newState[configPath] = { ...prev[configPath] };
             // Remove all pending changes that belong to this profile
             Object.keys(newState[configPath]).forEach((key) => {
                 const entry = newState[configPath][key];
@@ -635,7 +630,7 @@ export const handleDeleteProfile = (profileKey: string, props: HandlerContext): 
 /**
  * Handle navigation to source profile
  */
-export const handleNavigateToSource = (props: HandlerContext) => {
+export const handleNavigateToSource = (props: ProfileHandlerContext) => {
     const { configurations, setSelectedTab, setSelectedProfileKey } = props;
 
     return (jsonLoc: string, osLoc?: string[]) => {
@@ -742,7 +737,7 @@ export const handleNavigateToSource = (props: HandlerContext) => {
     };
 };
 
-export const handleProfileSelection = (profileKey: string, props: HandlerContext): void => {
+export const handleProfileSelection = (profileKey: string, props: ProfileHandlerContext): void => {
     const { selectedTab, configurations, setSelectedProfileKey, setSelectedProfilesByConfig } = props;
 
     if (profileKey === "") {

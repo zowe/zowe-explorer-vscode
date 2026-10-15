@@ -1,78 +1,55 @@
-/**
- * This program and the accompanying materials are made available under the terms of the
- * Eclipse Public License v2.0 which accompanies this distribution, and is available at
- * https://www.eclipse.org/legal/epl-v20.html
- *
- * SPDX-License-Identifier: EPL-2.0
- *
- * Copyright Contributors to the Zowe Project.
- *
- */
+import type { EditorStoreState } from "../../store/editorStore";
+import type { createUtilityHelpers } from "../../store/utilityHelpers";
+import type { ensureProfileProperties, isMergedPropertySecure } from "../../utils";
+import type { MergedPropertiesVisibility, PropertySortOrder } from "../../types";
 
-import type { Configuration, PendingChange, MergedPropertiesVisibility, PropertySortOrder, schemaValidation } from "../../types";
-import type { ConfigEditorWebviewApi } from "../../handlers/messageHandlers";
+/** Shared editor dependencies resolved once for the recursive property renderer. */
+type RenderConfigInputs = Pick<
+    EditorStoreState,
+    | "handleChange"
+    | "handleDeleteProperty"
+    | "confirmDeleteProperty"
+    | "pendingPropertyDeletion"
+    | "setPendingPropertyDeletion"
+    | "handleUnlinkMergedProperty"
+    | "handleNavigateToSource"
+    | "openAddProfileModalAtPath"
+> &
+    Pick<
+        ReturnType<typeof createUtilityHelpers>,
+        | "handleToggleSecure"
+        | "getWizardTypeOptions"
+        | "mergePendingChangesForProfile"
+        | "mergeMergedProperties"
+        | "filterSecureProperties"
+        | "mergePendingSecureProperties"
+        | "isCurrentProfileUntyped"
+        | "isPropertyFromMergedProps"
+        | "isPropertySecure"
+        | "canPropertyBeSecure"
+    > & {
+        propertyDescriptions: Record<string, string>;
+        ensureProfileProperties: typeof ensureProfileProperties;
+        isMergedPropertySecure: typeof isMergedPropertySecure;
+    };
 
-/** Handlers and helpers supplied to the property renderer by RenderProfileDetails. */
-export interface RenderConfigInputs {
-    // Handlers supplied by the parent (RenderProfileDetails).
-    handleChange: (key: string, value: string) => void;
-    handleDeleteProperty: (fullKey: string, secure?: boolean) => void;
-    confirmDeleteProperty: (fullKey: string, secure?: boolean) => void;
-    pendingPropertyDeletion: string | null;
-    setPendingPropertyDeletion: (key: string | null) => void;
-    handleUnlinkMergedProperty: (propertyKey: string | undefined, fullKey: string) => void;
-    handleNavigateToSource: (jsonLoc: string, osLoc?: string[]) => void;
-    handleToggleSecure: (fullKey: string, displayKey: string, path: string[], value: any) => void;
-    openAddProfileModalAtPath: (path: string[], key?: string, value?: string) => void;
-    getWizardTypeOptions: () => string[];
-    propertyDescriptions: { [key: string]: string };
-
-    // Merge / secure helpers (partially-applied pure utils supplied by the parent).
-    mergePendingChangesForProfile: (baseObj: any, path: string[], configPath: string) => any;
-    mergeMergedProperties: (combinedConfig: any, path: string[], mergedProps: any, configPath: string) => any;
-    ensureProfileProperties: (combinedConfig: any, path: string[]) => any;
-    filterSecureProperties: (value: any, combinedConfig: any, configPath?: string, pendingChanges?: any, deletions?: any, mergedProps?: any) => any;
-    mergePendingSecureProperties: (
-        value: any[],
-        path: string[],
-        configPath: string,
-        pendingChanges: { [configPath: string]: { [key: string]: PendingChange } },
-        renames?: { [configPath: string]: { [originalKey: string]: string } }
-    ) => any[];
-    isCurrentProfileUntyped: () => boolean;
-    isPropertyFromMergedProps: (displayKey: string | undefined, path: string[], mergedProps: any, configPath: string) => boolean;
-    isPropertySecure: (
-        fullKey: string,
-        displayKey: string,
-        path: string[],
-        mergedProps?: any,
-        selectedTab?: number | null,
-        configurations?: Configuration[],
-        pendingChanges?: { [configPath: string]: { [key: string]: PendingChange } },
-        renames?: { [configPath: string]: { [originalKey: string]: string } }
-    ) => boolean;
-    canPropertyBeSecure: (displayKey: string, path: string[]) => boolean;
-    isMergedPropertySecure: (displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean) => boolean;
-}
-
-/** Shared inputs plus context values and derived flags for each recursive property row. */
-export interface RenderConfigCtx extends RenderConfigInputs {
-    // Values read from ConfigContext.
-    configurations: Configuration[];
-    selectedTab: number | null;
-    pendingChanges: { [configPath: string]: { [key: string]: PendingChange } };
-    deletions: { [configPath: string]: string[] };
-    renames: { [configPath: string]: { [originalKey: string]: string } };
-    schemaValidations: { [configPath: string]: schemaValidation | undefined };
-    hiddenItems: { [configPath: string]: { [key: string]: { path: string } } };
-    secureValuesAllowed: boolean;
-    selectedProfileKey: string | null;
-    vscodeApi: ConfigEditorWebviewApi;
-    showMergedProperties: MergedPropertiesVisibility;
-    propertySortOrder: PropertySortOrder;
-    setPropertySortOrderWithStorage: (value: PropertySortOrder) => void;
-    setShowMergedPropertiesWithStorage: (value: MergedPropertiesVisibility) => void;
-
-    // Derived once per render.
-    isUntypedProfile: boolean;
-}
+export type RenderConfigCtx = RenderConfigInputs &
+    Pick<
+        EditorStoreState,
+        | "configurations"
+        | "selectedTab"
+        | "pendingChanges"
+        | "deletions"
+        | "renames"
+        | "schemaValidations"
+        | "hiddenItems"
+        | "secureValuesAllowed"
+        | "selectedProfileKey"
+        | "vscodeApi"
+        | "setPropertySortOrderWithStorage"
+        | "setShowMergedPropertiesWithStorage"
+    > & {
+        showMergedProperties: MergedPropertiesVisibility;
+        propertySortOrder: PropertySortOrder;
+        isUntypedProfile: boolean;
+    };

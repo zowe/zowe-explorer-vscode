@@ -11,7 +11,7 @@
 
 import * as l10n from "@vscode/l10n";
 import type { RefObject } from "react";
-import { useConfigContext } from "../context/ConfigContext";
+import { useEditorFields } from "../context/EditorStoreContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 import type { useProfileClipboard } from "../hooks/useProfileClipboard";
 import type { ProfileContextMenuState } from "../hooks/useProfileContextMenu";
@@ -35,7 +35,7 @@ export function ProfileContextMenu({
   duplicateProfile,
   pasteProfile,
 }: ProfileContextMenuProps) {
-  const { setRenameProfileModalOpen } = useConfigContext();
+  const { setRenameProfileModalOpen } = useEditorFields("setRenameProfileModalOpen");
   const { isProfileAffectedByDragDrop } = useUtilityHelpers();
   return (
     <div ref={contextMenuRef} className="tab-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }} onClick={(e) => e.stopPropagation()}>

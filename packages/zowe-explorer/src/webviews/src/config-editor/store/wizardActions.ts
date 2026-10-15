@@ -10,7 +10,6 @@
  */
 
 import { profileKeyToPath } from "../utils/configUtils";
-import { useEffect, useRef, useCallback } from "react";
 import { parseValueByType, flattenProfiles } from "../utils";
 import {
     getWizardTypeOptions as getTypeOptions,
@@ -18,50 +17,32 @@ import {
     getWizardPropertyDescriptions as getPropertyDescriptions,
     getPropertyType as getSchemaPropertyType,
 } from "../utils/schemaUtils";
-import { useWizardState } from "./useWizardState";
-import type { Configuration, FormattedPendingChanges, PendingChangesMap, ProfileSchemaEntry, RenamesMap, SchemaValidationsMap } from "../types";
-import type { ConfigEditorWebviewApi } from "../handlers/messageHandlers";
+import type { ProfileSchemaEntry } from "../types";
+import type { EditorRuntime, WizardState } from "./types";
+import { createProfileUtils } from "./profileUtils";
 
-interface UseProfileWizardProps {
-    selectedTab: number | null;
-    configurations: Configuration[];
-    schemaValidations: SchemaValidationsMap;
-    pendingChanges: PendingChangesMap;
-    setPendingChanges: React.Dispatch<React.SetStateAction<PendingChangesMap>>;
-    setSelectedProfileKey: (key: string | null) => void;
-    vscodeApi: ConfigEditorWebviewApi;
-    formatPendingChanges: () => FormattedPendingChanges;
-    getAvailableProfiles: () => string[];
-    secureValuesAllowed: boolean;
-    renames: RenamesMap;
-}
-
-export function useProfileWizard({
-    selectedTab,
-    configurations,
-    schemaValidations,
-    pendingChanges,
-    setPendingChanges,
-    setSelectedProfileKey,
-    vscodeApi,
-    formatPendingChanges,
-    secureValuesAllowed,
-    renames,
-}: UseProfileWizardProps) {
-    // Profile Wizard state - delegated to useWizardState hook
+export function createWizardActions(state: EditorRuntime) {
     const {
-        wizardModalOpen,
+        selectedTab,
+        configurations,
+        schemaValidations,
+        pendingChanges,
+        setPendingChanges,
+        setSelectedProfileKey,
+        vscodeApi,
+        secureValuesAllowed,
+        renames,
+    } = state;
+    const { formatPendingChanges } = createProfileUtils(state);
+    const {
         wizardRootProfile,
         wizardSelectedType,
         wizardProfileName,
         wizardProperties,
-        wizardShowKeyDropdown,
         wizardNewPropertyKey,
         wizardNewPropertyValue,
         wizardNewPropertySecure,
         wizardMergedProperties,
-        wizardPopulatedDefaults,
-        wizardProfileNameValidation,
         setWizardModalOpen,
         setWizardRootProfile,
         setWizardSelectedType,
@@ -74,12 +55,7 @@ export function useProfileWizard({
         setWizardMergedProperties,
         setWizardPopulatedDefaults,
         setWizardProfileNameValidation,
-    } = useWizardState();
-
-    const validationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const validationRequestSeqRef = useRef(0);
-    const wizardMergedPropertiesTargetRef = useRef<string | null>(null);
-    const wizardMergedPropertiesRequestSeqRef = useRef(0);
+    } = state;
 
     const getWizardTypeOptions = () => getTypeOptions({ selectedTab, configurations, schemaValidations, pendingChanges });
     const getWizardPropertyOptions = () =>
@@ -88,7 +64,7 @@ export function useProfileWizard({
     const getPropertyType = (propertyKey: string) =>
         getSchemaPropertyType({ propertyKey, selectedTab, configurations, schemaValidations, wizardSelectedType });
 
-    const validateProfileNameWithServer = useCallback(() => {
+    const validateProfileNameWithServer = () => {
         if (!wizardProfileName.trim() || selectedTab === null) {
             setWizardProfileNameValidation({ isValid: true });
             return;
@@ -97,7 +73,8 @@ export function useProfileWizard({
         const configPath = configurations[selectedTab].configPath;
         const config = configurations[selectedTab].properties;
 
-        validationRequestSeqRef.current += 1;
+        const requestSeq = state.validationRequestSeq + 1;
+        state.setValidationRequestSeq(requestSeq);
         vscodeApi.postMessage({
             command: "VALIDATE_PROFILE_NAME",
             profileName: wizardProfileName,
@@ -106,12 +83,8 @@ export function useProfileWizard({
             profiles: config.profiles,
             pendingChanges: pendingChanges,
             renames: renames,
-            requestSeq: validationRequestSeqRef.current,
+            requestSeq,
         });
-    }, [wizardProfileName, wizardRootProfile, selectedTab, configurations, pendingChanges, renames, vscodeApi]);
-
-    const isProfileNameTaken = () => {
-        return !wizardProfileNameValidation.isValid;
     };
 
     const handleWizardAddProperty = () => {
@@ -224,9 +197,11 @@ export function useProfileWizard({
             }));
         }
         if (wizardProperties.length === 0 && !wizardSelectedType) {
-            wizardProperties.push({ key: "", value: {} });
+            setWizardProperties([{ key: "", value: {} }]);
         }
-        wizardProperties.forEach((prop) => {
+        const propertiesToCreate: WizardState["wizardProperties"] =
+            wizardProperties.length === 0 && !wizardSelectedType ? [{ key: "", value: {} }] : wizardProperties;
+        propertiesToCreate.forEach((prop) => {
             const propertyPath = [...profilePath, "properties"];
 
             if (prop.key !== "") propertyPath.push(prop.key);
@@ -249,21 +224,12 @@ export function useProfileWizard({
 
         setSelectedProfileKey(newProfileKey);
 
-        // Reset wizard state
-        setWizardModalOpen(false);
-        setWizardRootProfile("root");
-        setWizardSelectedType("");
-        setWizardProfileName("");
-        setWizardProperties([]);
-        setWizardNewPropertyKey("");
-        setWizardNewPropertyValue("");
-        setWizardNewPropertySecure(false);
-        setWizardShowKeyDropdown(false);
-        setWizardPopulatedDefaults(new Set());
-        setWizardProfileNameValidation({ isValid: true });
+        handleWizardCancel();
     };
 
     const handleWizardCancel = () => {
+        state.setValidationRequestSeq(state.validationRequestSeq + 1);
+        state.setWizardMergedPropertiesRequestSeq(state.wizardMergedPropertiesRequestSeq + 1);
         setWizardModalOpen(false);
         setWizardRootProfile("root");
         setWizardSelectedType("");
@@ -282,7 +248,8 @@ export function useProfileWizard({
         if (selectedTab !== null) {
             const configPath = configurations[selectedTab].configPath;
             const changes = formatPendingChanges();
-            wizardMergedPropertiesRequestSeqRef.current += 1;
+            const requestSeq = state.wizardMergedPropertiesRequestSeq + 1;
+            state.setWizardMergedPropertiesRequestSeq(requestSeq);
             vscodeApi.postMessage({
                 command: "GET_WIZARD_MERGED_PROPERTIES",
                 rootProfile: wizardRootProfile,
@@ -291,7 +258,7 @@ export function useProfileWizard({
                 profileName: wizardProfileName,
                 changes: changes,
                 renames: changes.renames,
-                requestSeq: wizardMergedPropertiesRequestSeqRef.current,
+                requestSeq,
             });
         }
     };
@@ -304,7 +271,7 @@ export function useProfileWizard({
 
         const existingKeys = new Set(wizardProperties.map((prop) => prop.key));
 
-        const newProperties: { key: string; value: string | boolean | number | Object; secure?: boolean }[] = [];
+        const newProperties: WizardState["wizardProperties"] = [];
         const populatedKeys = new Set<string>();
 
         Object.entries(propertySchema).forEach(([key, schema]: [string, ProfileSchemaEntry]) => {
@@ -335,87 +302,13 @@ export function useProfileWizard({
         }
     };
 
-    // Clear populated defaults when type changes
-    useEffect(() => {
-        if (wizardSelectedType && wizardPopulatedDefaults.size > 0) {
-            // Clear properties that were populated from defaults (not merged properties)
-            setWizardProperties((prev) => {
-                const mergedKeys = new Set(Object.keys(wizardMergedProperties));
-                return prev.filter((prop) => mergedKeys.has(prop.key) || !wizardPopulatedDefaults.has(prop.key));
-            });
-            setWizardPopulatedDefaults(new Set());
-        }
-    }, [wizardSelectedType]);
-
-    useEffect(() => {
-        if (!wizardModalOpen || selectedTab === null || !(wizardRootProfile || wizardSelectedType)) {
-            wizardMergedPropertiesTargetRef.current = null;
-            return;
-        }
-
-        // Fetch immediately when the target itself changes (modal opened, different parent or
-        // type) so inherited values aren't delayed; only debounce follow-up pendingChanges churn.
-        const target = `${selectedTab}:${wizardRootProfile}:${wizardSelectedType}`;
-        if (wizardMergedPropertiesTargetRef.current !== target) {
-            wizardMergedPropertiesTargetRef.current = target;
-            requestWizardMergedProperties();
-            return;
-        }
-
-        const timeoutId = setTimeout(() => requestWizardMergedProperties(), 1000);
-        return () => clearTimeout(timeoutId);
-    }, [wizardRootProfile, wizardSelectedType, wizardModalOpen, selectedTab, pendingChanges]);
-
-    // Debounced profile name validation
-    useEffect(() => {
-        if (validationTimeoutRef.current) {
-            clearTimeout(validationTimeoutRef.current);
-        }
-
-        validationTimeoutRef.current = setTimeout(() => {
-            validateProfileNameWithServer();
-        }, 300);
-
-        return () => {
-            if (validationTimeoutRef.current) {
-                clearTimeout(validationTimeoutRef.current);
-            }
-        };
-    }, [wizardProfileName, wizardRootProfile, selectedTab, pendingChanges, renames]);
-
     return {
-        // State
-        wizardModalOpen,
-        wizardRootProfile,
-        wizardSelectedType,
-        wizardProfileName,
-        wizardProperties,
-        wizardShowKeyDropdown,
-        wizardNewPropertyKey,
-        wizardNewPropertyValue,
-        wizardNewPropertySecure,
-        wizardMergedProperties,
-        wizardProfileNameValidation,
-
-        // Setters
-        setWizardModalOpen,
-        setWizardRootProfile,
-        setWizardSelectedType,
-        setWizardProfileName,
-        setWizardProperties,
-        setWizardShowKeyDropdown,
-        setWizardNewPropertyKey,
-        setWizardNewPropertyValue,
-        setWizardNewPropertySecure,
-        setWizardMergedProperties,
-        setWizardProfileNameValidation,
-
         // Functions
+        validateProfileNameWithServer,
         getWizardTypeOptions,
         getWizardPropertyOptions,
         getWizardPropertyDescriptions,
         getPropertyType,
-        isProfileNameTaken,
         handleWizardAddProperty,
         handleWizardRemoveProperty,
         handleWizardPropertyValueChange,
@@ -424,7 +317,5 @@ export function useProfileWizard({
         handleWizardCancel,
         requestWizardMergedProperties,
         handleWizardPopulateDefaults,
-        validationRequestSeqRef,
-        wizardMergedPropertiesRequestSeqRef,
     };
 }

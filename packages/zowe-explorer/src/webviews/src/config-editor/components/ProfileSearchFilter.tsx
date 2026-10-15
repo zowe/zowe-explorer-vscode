@@ -1,17 +1,17 @@
 import * as l10n from "@vscode/l10n";
 import { VscodeTextfield, VscodeOption, VscodeSingleSelect } from "@vscode-elements/react-elements";
+import { useEditorStore } from "../context/EditorStoreContext";
 interface ProfileSearchFilterProps {
-  onSearchChange: (searchTerm: string) => void;
-  onFilterChange: (filterType: string | null) => void;
   availableTypes: string[];
-  // Current values as props
-  searchTerm: string;
-  filterType: string | null;
   profileSortOrder?: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
   onProfileSortOrderChange?: (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults") => void;
 }
 
-export function ProfileSearchFilter({ onSearchChange, onFilterChange, availableTypes, searchTerm, filterType }: ProfileSearchFilterProps) {
+export function ProfileSearchFilter({ availableTypes }: ProfileSearchFilterProps) {
+  const searchTerm = useEditorStore((state) => state.profileSearchTerm);
+  const filterType = useEditorStore((state) => state.profileFilterType);
+  const onSearchChange = useEditorStore((state) => state.setProfileSearchTerm);
+  const onFilterChange = useEditorStore((state) => state.setProfileFilterType);
   const handleFilterChange = (e: any) => {
     const value = e.target!.value as string;
     onFilterChange(value === "all" ? null : value);

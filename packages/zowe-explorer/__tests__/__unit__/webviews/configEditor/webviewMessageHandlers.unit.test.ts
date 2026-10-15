@@ -10,285 +10,191 @@
  */
 
 import { vi } from "vitest";
-import { useConfigHandlers } from "../../../../src/webviews/src/config-editor/hooks/useConfigHandlers";
-import { useConfigContext } from "../../../../src/webviews/src/config-editor/context/ConfigContext";
-import { useProfileUtils } from "../../../../src/webviews/src/config-editor/hooks/useProfileUtils";
+import { createEditorStore, type EditorStoreState } from "../../../../src/webviews/src/config-editor/store/editorStore";
+import { selectFlattenedDefaults } from "../../../../src/webviews/src/config-editor/store/selectors";
 import type { Configuration } from "../../../../src/webviews/src/config-editor/types";
 import {
     handleConfigurationsMessage,
     handleInitialSelectionMessage,
-    type MessageHandlerProps,
+    handleMergedPropertiesMessage,
+    handleMessage,
 } from "../../../../src/webviews/src/config-editor/handlers/messageHandlers";
 
-vi.mock("react", () => ({ useCallback: (callback: unknown) => callback }));
-vi.mock("../../../../src/webviews/src/config-editor/context/ConfigContext", () => ({ useConfigContext: vi.fn() }));
-vi.mock("../../../../src/webviews/src/config-editor/hooks/useProfileUtils", () => ({ useProfileUtils: vi.fn() }));
-
-function makeProps(overrides: Partial<MessageHandlerProps> = {}): MessageHandlerProps {
-    return {
-        setConfigurations: vi.fn(),
-        setSelectedTab: vi.fn(),
-        setSelectedProfileKey: vi.fn(),
-        setFlattenedConfig: vi.fn(),
-        setFlattenedDefaults: vi.fn(),
-        setMergedProperties: vi.fn(),
-        setPendingChanges: vi.fn(),
-        setDeletions: vi.fn(),
-        setPendingDefaults: vi.fn(),
-        setDefaultsDeletions: vi.fn(),
-        setProfileSearchTerm: vi.fn(),
-        setProfileFilterType: vi.fn(),
-        setHasPromptedForZeroConfigs: vi.fn(),
-        setSaveModalOpen: vi.fn(),
-        setPendingMergedPropertiesRequest: vi.fn(),
-        setNewProfileValue: vi.fn(),
-        setHasWorkspace: vi.fn(),
-        setSelectedProfilesByConfig: vi.fn(),
-        setConfigEditorSettings: vi.fn(),
-        setSortOrderVersion: vi.fn(),
-        setSecureValuesAllowed: vi.fn(),
-        setSchemaValidations: vi.fn(),
-        setAddConfigModalOpen: vi.fn(),
-        setIsSaving: vi.fn(),
-        setPendingSaveSelection: vi.fn(),
-        setWizardProfileNameValidation: vi.fn(),
-        setRenames: vi.fn(),
-        setConfigParseErrors: vi.fn(),
-        setTutorialSeen: vi.fn(),
-        setShowTutorial: vi.fn(),
-        setHighlightPropertyKey: vi.fn(),
-        setHighlightProfileCard: vi.fn(),
-        configurationsRef: { current: [] },
-        mergedPropertiesLatestRequestSeqRef: { current: 0 },
-        selectedProfileKeyRef: { current: null },
-        pendingSaveSelection: null,
-        selectedTab: null,
-        selectedProfilesByConfig: {},
-        hasPromptedForZeroConfigs: false,
-        clearHistory: vi.fn(),
-        validationRequestSeqRef: { current: 0 },
-        handleRefresh: vi.fn(),
-        handleSave: vi.fn(),
-        handleChange: vi.fn(),
-        vscodeApi: { postMessage: vi.fn() },
-        ...overrides,
-    };
+function makeStore(overrides: Partial<EditorStoreState> = {}) {
+    const store = createEditorStore({ postMessage: vi.fn() });
+    store.setState(overrides);
+    return store;
 }
 
-const EMPTY_CONTENTS: any[] = [];
+const team: Configuration = { configPath: "/mock/team.json", properties: { profiles: {}, defaults: { base: "team-base" } }, secure: [] };
+const user: Configuration = { configPath: "/mock/user.json", properties: { profiles: {}, defaults: { base: "user-base" } }, secure: [] };
 
-describe("Config Editor selection after a layer refresh", () => {
-    const team: Configuration = {
-        configPath: "/mock/team.json",
-        properties: { profiles: {}, defaults: { base: "team-base" } },
-        secure: [],
-    };
-    const user: Configuration = {
-        configPath: "/mock/user.json",
-        properties: { profiles: {}, defaults: { base: "user-base" } },
-        secure: [],
-    };
-
+describe("webviewMessageHandlers", () => {
     afterEach(() => vi.useRealTimers());
-
-    it.each([
-        { name: "removing the layer before the selected file", previous: [user, team], contents: [team], selected: 1, expected: 0 },
-        { name: "reordering layers", previous: [user, team], contents: [team, user], selected: 1, expected: 0 },
-        { name: "removing the selected file", previous: [user, team], contents: [team], selected: 0, expected: 0 },
-        { name: "adding a layer", previous: [team], contents: [user, team], selected: 0, expected: 0 },
-        { name: "removing all layers", previous: [team], contents: [], selected: 0, expected: null },
-    ])("selects a valid layer after $name", ({ previous, contents, selected, expected }) => {
-        const props = makeProps({ configurationsRef: { current: previous }, selectedTab: selected });
-        handleConfigurationsMessage({ contents }, props);
-        const update = vi.mocked(props.setSelectedTab).mock.calls[0][0];
-        expect(typeof update === "function" ? update(selected) : update).toBe(expected);
-        if (contents.length) {
-            expect(props.setFlattenedDefaults).toHaveBeenCalledWith({
-                base: { value: contents[expected!].properties.defaults.base, path: ["defaults", "base"] },
+    describe("configuration refresh and selection", () => {
+        it.each([
+            { name: "removing the layer before the selected file", previous: [user, team], contents: [team], selected: 1, expected: 0 },
+            { name: "reordering layers", previous: [user, team], contents: [team, user], selected: 1, expected: 0 },
+            { name: "removing the selected file", previous: [user, team], contents: [team], selected: 0, expected: 0 },
+            { name: "adding a layer", previous: [team], contents: [user, team], selected: 0, expected: 0 },
+            { name: "removing all layers", previous: [team], contents: [], selected: 0, expected: null },
+        ])("selects a valid layer after $name", ({ previous, contents, selected, expected }) => {
+            const store = makeStore({ configurations: previous, selectedTab: selected });
+            handleConfigurationsMessage({ contents }, store);
+            expect(store.getState().selectedTab).toBe(expected);
+            if (contents.length)
+                expect(selectFlattenedDefaults(store.getState())).toEqual({
+                    base: { value: contents[expected!].properties.defaults.base, path: ["defaults", "base"] },
+                });
+        });
+        it("restores the saved file after its index changes", () => {
+            const store = makeStore({ configurations: [user, team], selectedTab: 1, pendingSaveSelection: { tab: 1, profile: "team-base" } });
+            handleConfigurationsMessage({ contents: [team] }, store);
+            expect(store.getState()).toMatchObject({ selectedTab: 0, selectedProfileKey: "team-base", pendingSaveSelection: null });
+        });
+        it("does not restore an obsolete index after a fast refresh response", () => {
+            vi.useFakeTimers();
+            const store = makeStore({ configurations: [user, team], selectedTab: 1 });
+            vi.mocked(store.getState().vscodeApi.postMessage).mockImplementation((message) => {
+                if ("command" in message && message.command === "GET_PROFILES") handleConfigurationsMessage({ contents: [team] }, store);
             });
-        }
-    });
-
-    it("restores the saved file after its index changes", () => {
-        const props = makeProps({
-            configurationsRef: { current: [user, team] },
-            selectedTab: 1,
-            pendingSaveSelection: { tab: 1, profile: "team-base" },
+            store.getState().handleRefresh();
+            vi.runAllTimers();
+            expect(store.getState().selectedTab).toBe(0);
         });
-        handleConfigurationsMessage({ contents: [team] }, props);
-        expect(props.setSelectedTab).toHaveBeenCalledWith(0);
-        expect(props.setSelectedProfileKey).toHaveBeenCalledWith("team-base");
-    });
-
-    it("does not restore an obsolete tab index after a fast refresh response", () => {
-        vi.useFakeTimers();
-        const props = makeProps({ configurationsRef: { current: [user, team] }, selectedTab: 1 });
-        let selectedTab: number | null = 1;
-        vi.mocked(props.setSelectedTab).mockImplementation((update) => {
-            selectedTab = typeof update === "function" ? update(selectedTab) : update;
+        it("derives defaults paths with their defaults prefix", () => {
+            const store = makeStore();
+            handleConfigurationsMessage(
+                { contents: [{ ...team, properties: { profiles: {}, defaults: { zosmf: "my_zosmf", nested: { sub: "val" } } } }] },
+                store
+            );
+            expect(selectFlattenedDefaults(store.getState())).toMatchObject({
+                zosmf: { path: ["defaults", "zosmf"] },
+                "nested.sub": { path: ["defaults", "nested", "sub"] },
+            });
         });
-        vi.mocked(useConfigContext).mockReturnValue({
-            ...props,
-            configurations: [user, team],
-            selectedProfileKey: null,
-            pendingChanges: {},
-            deletions: {},
-            pendingDefaults: {},
-            defaultsDeletions: {},
-            autostoreChanges: {},
-            renames: {},
-            dragDroppedProfiles: {},
-            setAutostoreChanges: vi.fn(),
-            setDragDroppedProfiles: vi.fn(),
-            setHiddenItems: vi.fn(),
-            configEditorSettings: { profilesWidthPercent: 35 },
-        } as ReturnType<typeof useConfigContext>);
-        vi.mocked(useProfileUtils).mockReturnValue({
-            doesProfileExist: vi.fn(),
-            doesSavedProfileExist: vi.fn(),
-        } as ReturnType<typeof useProfileUtils>);
-        vi.mocked(props.vscodeApi.postMessage).mockImplementation((message) => {
-            if ("command" in message && message.command === "GET_PROFILES") handleConfigurationsMessage({ contents: [team] }, props);
+    });
+    describe("tutorial visibility", () => {
+        it("leaves existing tutorial state alone when the message omits tutorialSeen", () => {
+            const store = makeStore({ tutorialSeen: true });
+            handleConfigurationsMessage({ contents: [] }, store);
+            expect(store.getState()).toMatchObject({ tutorialSeen: true, showTutorial: false });
+        });
+        it("records an already-seen tutorial without opening it", () => {
+            const store = makeStore();
+            handleConfigurationsMessage({ contents: [], tutorialSeen: true }, store);
+            expect(store.getState()).toMatchObject({ tutorialSeen: true, showTutorial: false });
+        });
+        it("opens the tutorial on first use", () => {
+            const store = makeStore();
+            handleConfigurationsMessage({ contents: [], tutorialSeen: false }, store);
+            expect(store.getState()).toMatchObject({ tutorialSeen: false, showTutorial: true });
+        });
+        it("does not reopen the tutorial when another configuration is created", () => {
+            const store = makeStore({ configurations: [team], tutorialSeen: true });
+            handleConfigurationsMessage({ contents: [user, team], tutorialSeen: true }, store);
+            expect(store.getState().showTutorial).toBe(false);
+        });
+    });
+    describe("initial selection and highlights", () => {
+        it("highlights the profile card when no property was requested", () => {
+            const store = makeStore({ configurations: [team] });
+            handleInitialSelectionMessage({ profileName: "zosmf", configPath: team.configPath }, store);
+            expect(store.getState()).toMatchObject({ highlightProfileCard: true, highlightPropertyKey: null });
+        });
+        it("highlights the requested property", () => {
+            const store = makeStore({ configurations: [team] });
+            handleInitialSelectionMessage({ profileName: "zosmf", configPath: team.configPath, propertyKey: "host" }, store);
+            expect(store.getState()).toMatchObject({ highlightProfileCard: false, highlightPropertyKey: "host" });
+        });
+        it("retains a property highlight even if the configuration is unavailable", () => {
+            const store = makeStore();
+            handleInitialSelectionMessage({ profileName: "zosmf", configPath: team.configPath, propertyKey: "port" }, store);
+            expect(store.getState()).toMatchObject({ highlightProfileCard: false, highlightPropertyKey: "port", selectedTab: null });
+        });
+        it("selects the requested file and profile", () => {
+            const store = makeStore({ configurations: [team] });
+            handleInitialSelectionMessage({ profileName: "myprof", configPath: team.configPath }, store);
+            expect(store.getState()).toMatchObject({
+                selectedTab: 0,
+                selectedProfileKey: "myprof",
+                selectedProfilesByConfig: { [team.configPath]: "myprof" },
+            });
+        });
+        it("normalizes Windows path separators", () => {
+            const store = makeStore({ configurations: [{ ...team, configPath: "C:\\Users\\user\\team.json" }] });
+            handleInitialSelectionMessage({ profileName: "zosmf", configPath: "C:/Users/user/team.json" }, store);
+            expect(store.getState()).toMatchObject({ selectedTab: 0, highlightProfileCard: true });
+        });
+        it("leaves selection alone when the requested file is unavailable", () => {
+            const store = makeStore({ configurations: [team] });
+            handleInitialSelectionMessage({ profileName: "zosmf", configPath: "/other/team.json" }, store);
+            expect(store.getState()).toMatchObject({ selectedTab: null, selectedProfileKey: null, highlightProfileCard: false });
+        });
+    });
+    describe("async response guards", () => {
+        it("publishes current wizard validation results without adding undo history", () => {
+            const store = makeStore({ validationRequestSeq: 2 });
+            const validations: boolean[] = [];
+            store.subscribe((state, previous) => {
+                if (state.wizardProfileNameValidation !== previous.wizardProfileNameValidation) {
+                    validations.push(state.wizardProfileNameValidation.isValid);
+                }
+            });
+            for (const isValid of [false, true]) {
+                handleMessage({ data: { command: "PROFILE_NAME_VALIDATION_RESULT", requestSeq: 2, isValid } } as MessageEvent, store);
+            }
+            expect(validations).toEqual([false, true]);
+            expect(store.getState().undoStack).toHaveLength(0);
+        });
+        it("ignores stale merged-property responses and accepts the current one", () => {
+            const store = makeStore({ mergedPropertiesRequestSeq: 2 });
+            handleMergedPropertiesMessage({ mergedPropertiesRequestSeq: 1, mergedArgs: [{ argName: "host", argValue: "stale" }] }, store);
+            expect(store.getState().mergedProperties).toBeNull();
+            handleMergedPropertiesMessage({ mergedPropertiesRequestSeq: 2, mergedArgs: [{ argName: "host", argValue: "current" }] }, store);
+            expect(store.getState().mergedProperties?.host.value).toBe("current");
+        });
+        it("ignores wizard validation responses from a canceled session", () => {
+            const store = makeStore({ validationRequestSeq: 2 });
+            store.getState().handleWizardCancel();
+            handleMessage({ data: { command: "PROFILE_NAME_VALIDATION_RESULT", requestSeq: 2, isValid: false } } as MessageEvent, store);
+            expect(store.getState().wizardProfileNameValidation.isValid).toBe(true);
+        });
+    });
+    describe("file-picker history", () => {
+        it("records the chosen file as one edit and discards obsolete redo entries", () => {
+            const key = "profiles.demo.properties.certFile";
+            const store = makeStore({
+                configurations: [{ ...team, properties: { profiles: { demo: { type: "base", properties: { certFile: "original.pem" } } } } }],
+                selectedTab: 0,
+                selectedProfileKey: "demo",
+            });
+            store.getState().handleChange(key, "typed.pem");
+            store.getState().undo();
+            expect(store.getState().redoStack).toHaveLength(1);
+            const notified = vi.fn();
+            store.subscribe(notified);
+
+            handleMessage({ data: { command: "FILE_SELECTED", source: "editor", fullKey: key, filePath: "chosen.pem" } } as MessageEvent, store);
+            expect(notified).toHaveBeenCalledTimes(1);
+            expect(store.getState().pendingChanges[team.configPath][key].value).toBe("chosen.pem");
+            expect(store.getState().undoStack).toHaveLength(1);
+            expect(store.getState().redoStack).toHaveLength(0);
+            store.getState().undo();
+            expect(store.getState().pendingChanges).toEqual({});
+            store.getState().redo();
+            expect(store.getState().pendingChanges[team.configPath][key].value).toBe("chosen.pem");
         });
 
-        useConfigHandlers({ setPendingProfileDeletion: vi.fn(), setPendingPropertyDeletion: vi.fn() }).handleRefresh();
-        vi.runAllTimers();
-
-        expect(selectedTab).toBe(0);
-        expect(props.vscodeApi.postMessage).toHaveBeenCalledWith({ command: "GET_PROFILES" });
-    });
-});
-
-describe("handleConfigurationsMessage — tutorial visibility logic", () => {
-    beforeEach(() => vi.clearAllMocks());
-
-    it("does not call setTutorialSeen or setShowTutorial when tutorialSeen is undefined", () => {
-        const props = makeProps();
-        handleConfigurationsMessage({ contents: EMPTY_CONTENTS }, props);
-        expect(props.setTutorialSeen).not.toHaveBeenCalled();
-        expect(props.setShowTutorial).not.toHaveBeenCalled();
-    });
-
-    it("calls setTutorialSeen(true) and does NOT show tutorial when tutorialSeen is true", () => {
-        const props = makeProps();
-        handleConfigurationsMessage({ contents: EMPTY_CONTENTS, tutorialSeen: true }, props);
-        expect(props.setTutorialSeen).toHaveBeenCalledWith(true);
-        expect(props.setShowTutorial).not.toHaveBeenCalled();
-    });
-
-    it("calls setTutorialSeen(false) AND setShowTutorial(true) on first open", () => {
-        const props = makeProps();
-        handleConfigurationsMessage({ contents: EMPTY_CONTENTS, tutorialSeen: false }, props);
-        expect(props.setTutorialSeen).toHaveBeenCalledWith(false);
-        expect(props.setShowTutorial).toHaveBeenCalledWith(true);
-    });
-
-    it("does NOT auto-show the tutorial for a newly-created config once it has been seen globally", () => {
-        // tutorialSeen is the single source of truth now — creating a new config file no longer
-        // forces the tutorial open on its own.
-        const props = makeProps();
-        handleConfigurationsMessage({ contents: EMPTY_CONTENTS, tutorialSeen: true }, props);
-        expect(props.setShowTutorial).not.toHaveBeenCalled();
-    });
-});
-
-// ─── handleInitialSelectionMessage — highlight logic ────────────────────────
-
-describe("handleInitialSelectionMessage — profile card vs property highlight", () => {
-    const CONFIG_PATH = "/path/to/zowe.config.json";
-
-    beforeEach(() => vi.clearAllMocks());
-
-    function makePropsWithConfig(overrides: Partial<MessageHandlerProps> = {}): MessageHandlerProps {
-        return makeProps({
-            configurationsRef: { current: [{ configPath: CONFIG_PATH } as any] },
-            ...overrides,
+        it("does not record a file choice in the add-property modal as a draft edit", () => {
+            const store = makeStore();
+            handleMessage(
+                { data: { command: "FILE_SELECTED", source: "editor", isNewProperty: true, filePath: "chosen.pem" } } as MessageEvent,
+                store
+            );
+            expect(store.getState().newProfileValue).toBe("chosen.pem");
+            expect(store.getState().pendingChanges).toEqual({});
+            expect(store.getState().undoStack).toHaveLength(0);
         });
-    }
-
-    it("blinks the whole profile card (and not a property) when navigating to a profile with no propertyKey", () => {
-        const props = makePropsWithConfig();
-        handleInitialSelectionMessage({ profileName: "zosmf", configPath: CONFIG_PATH }, props);
-        expect(props.setHighlightProfileCard).toHaveBeenCalledWith(true);
-        expect(props.setHighlightPropertyKey).not.toHaveBeenCalled();
-    });
-
-    it("blinks only the property row (not the card) when navigating with a propertyKey", () => {
-        const props = makePropsWithConfig();
-        handleInitialSelectionMessage({ profileName: "zosmf", configPath: CONFIG_PATH, propertyKey: "host" }, props);
-        expect(props.setHighlightProfileCard).not.toHaveBeenCalled();
-        expect(props.setHighlightPropertyKey).toHaveBeenCalledWith("host");
-    });
-
-    it("still highlights the property key even when the config path is not found", () => {
-        const props = makeProps({
-            configurationsRef: { current: [] },
-        });
-        handleInitialSelectionMessage({ profileName: "zosmf", configPath: CONFIG_PATH, propertyKey: "port" }, props);
-        // setHighlightProfileCard must NOT be called (no config found → profile block skipped)
-        expect(props.setHighlightProfileCard).not.toHaveBeenCalled();
-        // propertyKey highlight runs unconditionally after the config-tab block
-        expect(props.setHighlightPropertyKey).toHaveBeenCalledWith("port");
-    });
-
-    it("selects the correct tab and profile when config path matches", () => {
-        const props = makePropsWithConfig();
-        handleInitialSelectionMessage({ profileName: "myprof", configPath: CONFIG_PATH }, props);
-        expect(props.setSelectedTab).toHaveBeenCalledWith(0);
-        expect(props.setSelectedProfileKey).toHaveBeenCalledWith("myprof");
-    });
-
-    it("normalises path separators when matching config paths", () => {
-        const windowsPath = "C:\\Users\\user\\zowe.config.json";
-        const props = makeProps({
-            configurationsRef: {
-                current: [{ configPath: windowsPath } as any],
-            },
-        });
-        handleInitialSelectionMessage({ profileName: "zosmf", configPath: "C:/Users/user/zowe.config.json" }, props);
-        expect(props.setSelectedTab).toHaveBeenCalledWith(0);
-        expect(props.setHighlightProfileCard).toHaveBeenCalledWith(true);
-    });
-
-    it("does nothing when the config path is not found in the loaded configs", () => {
-        const props = makePropsWithConfig();
-        handleInitialSelectionMessage({ profileName: "zosmf", configPath: "/other/path.json" }, props);
-        expect(props.setSelectedTab).not.toHaveBeenCalled();
-        expect(props.setHighlightProfileCard).not.toHaveBeenCalled();
-    });
-});
-
-describe("handleConfigurationsMessage — flattenedDefaults path prefix", () => {
-    beforeEach(() => vi.clearAllMocks());
-
-    it("ensures flattenedDefaults paths are prefixed with 'defaults'", () => {
-        const props = makeProps({ selectedTab: 0 });
-        const contents = [
-            {
-                configPath: "/mock/zowe.config.json",
-                properties: {
-                    profiles: {},
-                    defaults: {
-                        zosmf: "my_zosmf",
-                        nested: {
-                            sub: "val",
-                        },
-                    },
-                },
-            } as any,
-        ];
-
-        handleConfigurationsMessage({ contents }, props);
-
-        expect(props.setFlattenedDefaults).toHaveBeenCalledWith(
-            expect.objectContaining({
-                zosmf: expect.objectContaining({
-                    path: ["defaults", "zosmf"],
-                }),
-                "nested.sub": expect.objectContaining({
-                    path: ["defaults", "nested", "sub"],
-                }),
-            })
-        );
     });
 });

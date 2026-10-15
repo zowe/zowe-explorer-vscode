@@ -209,6 +209,11 @@ async function performProfileTreeMouseDragDrop(sourceSelector: string, targetSel
                 done("missing .profile-tree-item");
                 return;
             }
+            // A real mouse release emits a click on the nearest common ancestor of the rows.
+            let releaseClickTarget: Element | null = srcItem;
+            while (releaseClickTarget && !releaseClickTarget.contains(tgtItem)) {
+                releaseClickTarget = releaseClickTarget.parentElement;
+            }
             src.scrollIntoView({ block: "center", inline: "nearest" });
             tgt.scrollIntoView({ block: "center", inline: "nearest" });
 
@@ -240,6 +245,9 @@ async function performProfileTreeMouseDragDrop(sourceSelector: string, targetSel
 
                 dispatchMouse(document, "mousemove", endX, endY);
                 dispatchMouse(document, "mouseup", endX, endY);
+                if (releaseClickTarget) {
+                    dispatchMouse(releaseClickTarget, "click", endX, endY);
+                }
                 done(null);
             }, 150);
         },
@@ -260,6 +268,20 @@ Given("the user expands the profile tree node {string}", async (profileKey: stri
         await expandChevron.click();
         await browser.pause(150);
     }
+});
+
+When("the user selects the profile tree item {string}", async (profileKey: string) => {
+    const node = await getTreeNodeByProfileKey(profileKey);
+    const row = await node.$(".profile-tree-item");
+    await row.waitForClickable({ timeout: TREE_ELEMENT_TIMEOUT });
+    await row.click();
+});
+
+Then("the profile tree selection should be {string}", async (profileKey: string) => {
+    const node = await getTreeNodeByProfileKey(profileKey);
+    await expect(await node.$(".profile-tree-item")).toHaveAttribute("aria-selected", "true");
+    const heading = await browser.$(".panel.active .profile-details-section .profile-heading-container h2");
+    await expect(heading).toHaveText(profileKey);
 });
 
 Given("the drag drop source is profile key {string}", async function (profileKey: string) {

@@ -16,8 +16,10 @@ import { SortDropdown } from "../SortDropdown";
 import { extractProfileKeyFromPath, getSortOrderDisplayName, PropertySortOrder } from "../../utils";
 import { isPropertyPendingDeletion as isPropertyPendingDeletionFn } from "../../utils/propertyUtils";
 import type { MergedPropertiesVisibility } from "../../types";
-import { useConfigContext } from "../../context/ConfigContext";
-import type { RenderConfigCtx, RenderConfigInputs } from "./context";
+import { useUtilityHelpers } from "../../hooks/useUtilityHelpers";
+import { ensureProfileProperties, isMergedPropertySecure } from "../../utils";
+import { useEditorFields } from "../../context/EditorStoreContext";
+import type { RenderConfigCtx } from "./context";
 import { buildSortedEntries } from "./buildSortedEntries";
 import { ComplexValueProperty } from "./ComplexValueProperty";
 import { SecureArrayProperty } from "./SecureArrayProperty";
@@ -186,12 +188,11 @@ function getMergedPropertiesIcon(option: MergedPropertiesVisibility): string {
   }
 }
 
-interface RenderConfigProps extends RenderConfigInputs {
+interface RenderConfigProps {
+  propertyDescriptions: Record<string, string>;
   obj: any;
   path?: string[];
   mergedProps?: any;
-  highlightPropertyKey?: string | null;
-  onHighlightPropertyKeyConsumed?: () => void;
 }
 
 /**
@@ -330,7 +331,7 @@ function ConfigEntry({
   // Merge pending secure properties for secure arrays
   let renderValue: any[] = Array.isArray(entryValue) ? entryValue : [];
   if (isArray && key === "secure") {
-    renderValue = mergePendingSecureProperties(entryValue, path, configPath, pendingChanges, renames);
+    renderValue = mergePendingSecureProperties(entryValue, path, configPath);
   }
 
   // Handle sub-objects and arrays within properties early to prevent recursive rendering
@@ -469,34 +470,43 @@ function ConfigEntry({
   );
 }
 
-export const RenderConfig = ({
-  obj,
-  path = [],
-  mergedProps,
-  propertyDescriptions,
-  handleChange,
-  handleDeleteProperty,
-  confirmDeleteProperty,
-  pendingPropertyDeletion,
-  setPendingPropertyDeletion,
-  handleUnlinkMergedProperty,
-  handleNavigateToSource,
-  handleToggleSecure,
-  openAddProfileModalAtPath,
-  getWizardTypeOptions,
-  mergePendingChangesForProfile,
-  mergeMergedProperties,
-  ensureProfileProperties,
-  filterSecureProperties,
-  mergePendingSecureProperties,
-  isCurrentProfileUntyped,
-  isPropertyFromMergedProps,
-  isPropertySecure,
-  canPropertyBeSecure,
-  isMergedPropertySecure,
-  highlightPropertyKey,
-  onHighlightPropertyKeyConsumed,
-}: RenderConfigProps) => {
+export const RenderConfig = ({ obj, path = [], mergedProps, propertyDescriptions }: RenderConfigProps) => {
+  const {
+    handleChange,
+    handleDeleteProperty,
+    confirmDeleteProperty,
+    pendingPropertyDeletion,
+    setPendingPropertyDeletion,
+    handleUnlinkMergedProperty,
+    handleNavigateToSource,
+    openAddProfileModalAtPath,
+    highlightPropertyKey,
+    setHighlightPropertyKey,
+  } = useEditorFields(
+    "handleChange",
+    "handleDeleteProperty",
+    "confirmDeleteProperty",
+    "pendingPropertyDeletion",
+    "setPendingPropertyDeletion",
+    "handleUnlinkMergedProperty",
+    "handleNavigateToSource",
+    "openAddProfileModalAtPath",
+    "highlightPropertyKey",
+    "setHighlightPropertyKey"
+  );
+  const {
+    handleToggleSecure,
+    getWizardTypeOptions,
+    mergePendingChangesForProfile,
+    mergeMergedProperties,
+    filterSecureProperties,
+    mergePendingSecureProperties,
+    isCurrentProfileUntyped,
+    isPropertyFromMergedProps,
+    isPropertySecure,
+    canPropertyBeSecure,
+  } = useUtilityHelpers();
+  const onHighlightPropertyKeyConsumed = () => setHighlightPropertyKey(null);
   const {
     configurations,
     selectedTab,
@@ -511,7 +521,21 @@ export const RenderConfig = ({
     configEditorSettings,
     setPropertySortOrderWithStorage,
     setShowMergedPropertiesWithStorage,
-  } = useConfigContext();
+  } = useEditorFields(
+    "configurations",
+    "selectedTab",
+    "pendingChanges",
+    "deletions",
+    "renames",
+    "schemaValidations",
+    "hiddenItems",
+    "secureValuesAllowed",
+    "selectedProfileKey",
+    "vscodeApi",
+    "configEditorSettings",
+    "setPropertySortOrderWithStorage",
+    "setShowMergedPropertiesWithStorage"
+  );
 
   const { showMergedProperties, propertySortOrder } = configEditorSettings;
 

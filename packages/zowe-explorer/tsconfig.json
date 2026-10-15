@@ -39,6 +39,7 @@
     "src/webviews/src/config-editor/context/**",
     "src/webviews/src/config-editor/handlers/**",
     "src/webviews/src/config-editor/hooks/**",
+    "src/webviews/src/config-editor/store/**",
     "src/webviews/src/MessageHandler.ts",
     "src/webviews/src/Messenger.ts",
     "src/webviews/src/PersistentVSCodeAPI.ts",

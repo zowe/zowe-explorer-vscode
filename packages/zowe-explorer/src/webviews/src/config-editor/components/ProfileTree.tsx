@@ -8,6 +8,7 @@ import { useIsLightTheme } from "../hooks/useIsLightTheme";
 import { useScrollToSelected } from "../hooks/useScrollToSelected";
 import { ProfileTypeBadge } from "./ProfileTypeBadge";
 import { DefaultStarButton } from "./DefaultStarButton";
+import { suppressClickAfterDrag } from "../utils/dragDropUtils";
 
 // Re-exported for backward compatibility with existing importers (e.g. ProfileList, tests).
 export { getColorForProfileType, PROFILE_TYPE_COLORS, coreTypeColors, coreColors } from "../utils/profileColors";
@@ -153,7 +154,6 @@ export function ProfileTree({
   const [dragOverProfile, setDragOverProfile] = useState<string | null>(null);
   const scrollContainerRef = useScrollToSelected(selectedProfileKey);
 
-  const suppressNextClickRef = useRef(false);
   const activeDragCleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -178,16 +178,7 @@ export function ProfileTree({
 
   const { contextMenu, setContextMenu, contextMenuRef, openContextMenu } = useProfileContextMenu();
 
-  const clipboardActions = useProfileClipboard({
-    profileKeys: profileKeys,
-    pendingProfiles,
-    getProfileType,
-    onProfileSelect,
-    onProfileRename,
-    configurations,
-    selectedTab,
-    renames,
-  });
+  const clipboardActions = useProfileClipboard();
 
   const { profileClipboard } = clipboardActions;
 
@@ -473,7 +464,7 @@ export function ProfileTree({
 
     const onMouseUp = () => {
       if (moved) {
-        suppressNextClickRef.current = true;
+        suppressClickAfterDrag();
         if (lastHoverTarget) {
           dragHelpersRef.current.performDrop(profileKey, lastHoverTarget);
         }
@@ -596,10 +587,6 @@ export function ProfileTree({
           }}
           onClick={(e) => {
             e.stopPropagation();
-            if (suppressNextClickRef.current) {
-              suppressNextClickRef.current = false;
-              return;
-            }
             if (isSelected) {
               onProfileSelect("");
             } else {

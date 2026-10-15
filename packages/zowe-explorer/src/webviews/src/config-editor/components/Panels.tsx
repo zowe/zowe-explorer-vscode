@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { VscodeToolbarButton } from "@vscode-elements/react-elements";
 import { Footer } from "./Footer";
 import * as l10n from "@vscode/l10n";
-import { useConfigContext } from "../context/ConfigContext";
+import { RenderProfiles } from "./renderProfiles";
+import { RenderDefaults } from "./renderDefaults";
+import { RenderProfileDetails } from "./RenderProfileDetails";
+import { useEditorFields } from "../context/EditorStoreContext";
 import { SortDropdown } from "./SortDropdown";
 import { useElementWidth } from "../hooks/useElementWidth";
 import { useAnchoredDropdown } from "../hooks/useAnchoredDropdown";
@@ -101,35 +104,10 @@ export function ProfilesOverflowMenu({
   );
 }
 
-interface PanelsProps {
-  renderProfiles: (profilesObj: any) => React.ReactNode;
-  renderDefaults: (defaultsObj: any) => React.ReactNode;
-  renderProfileDetails: () => React.ReactNode;
-  onProfileWizard: () => void;
-  onViewModeToggle: () => void;
-  onClearChanges: () => void;
-  onSaveAll: () => void;
-  hasPendingChanges: boolean;
-  onUndo: () => void;
-  onRedo: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
-}
-
-export function Panels({
-  renderProfiles,
-  renderDefaults,
-  renderProfileDetails,
-  onProfileWizard,
-  onViewModeToggle,
-  onClearChanges,
-  onSaveAll,
-  hasPendingChanges,
-  onUndo,
-  onRedo,
-  canUndo,
-  canRedo,
-}: PanelsProps) {
+export function Panels() {
+  const { setWizardModalOpen, toggleViewMode } = useEditorFields("setWizardModalOpen", "toggleViewMode");
+  const onProfileWizard = () => setWizardModalOpen(true);
+  const onViewModeToggle = toggleViewMode;
   const {
     configurations,
     selectedTab,
@@ -137,7 +115,14 @@ export function Panels({
     setDefaultsCollapsedWithStorage,
     setProfilesCollapsedWithStorage,
     setProfileSortOrderWithStorage,
-  } = useConfigContext();
+  } = useEditorFields(
+    "configurations",
+    "selectedTab",
+    "configEditorSettings",
+    "setDefaultsCollapsedWithStorage",
+    "setProfilesCollapsedWithStorage",
+    "setProfileSortOrderWithStorage"
+  );
 
   const { viewMode, defaultsCollapsed, profilesCollapsed, profileSortOrder } = configEditorSettings;
 
@@ -208,7 +193,7 @@ export function Panels({
                 </div>
                 {selectedTab === index && !profilesCollapsed && (
                   <div className="profile-list-container" data-tutorial-id="profiles-list">
-                    {renderProfiles(config.properties.profiles)}
+                    <RenderProfiles profilesObj={config.properties.profiles} />
                   </div>
                 )}
               </div>
@@ -222,26 +207,24 @@ export function Panels({
                       <h2>{l10n.t("Defaults")}</h2>
                     </button>
                   </div>
-                  {!defaultsCollapsed && <div className="defaults-content">{renderDefaults(config.properties.defaults)}</div>}
+                  {!defaultsCollapsed && (
+                    <div className="defaults-content">
+                      <RenderDefaults defaults={config.properties.defaults ?? {}} />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
             <div className="resize-divider" id={`resize-divider-${index}`}></div>
             <div className="config-section profile-details-section section-card" data-tutorial-id="profile-details-panel">
-              {selectedTab === index && <div className="profile-details-content">{renderProfileDetails()}</div>}
+              {selectedTab === index && (
+                <div className="profile-details-content">
+                  <RenderProfileDetails />
+                </div>
+              )}
             </div>
           </div>
-          {selectedTab === index && (
-            <Footer
-              onClearChanges={onClearChanges}
-              onSaveAll={onSaveAll}
-              hasPendingChanges={hasPendingChanges}
-              onUndo={onUndo}
-              onRedo={onRedo}
-              canUndo={canUndo}
-              canRedo={canRedo}
-            />
-          )}
+          {selectedTab === index && <Footer />}
         </div>
       ))}
     </div>

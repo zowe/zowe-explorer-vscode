@@ -49,9 +49,8 @@ export const UNDOABLE_KEYS: UndoableKey[] = [
 ];
 
 /**
- * `dragDroppedProfiles` is updated by mutating the existing `Set` behind a shallow-copied outer
- * object, so its sets must be copied to snapshot them. Every other slice is replaced immutably,
- * so holding the previous reference is both correct and cheap.
+ * Copy drag-marker sets so history owns its snapshots independently of subsequent edits.
+ * Other draft fields are replaced immutably, so their previous references can be retained.
  */
 export function snapshotValue<K extends UndoableKey>(key: K, value: UndoableState[K]): UndoableState[K] {
     if (key !== "dragDroppedProfiles") {

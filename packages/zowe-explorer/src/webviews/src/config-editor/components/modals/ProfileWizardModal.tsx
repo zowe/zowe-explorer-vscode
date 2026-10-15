@@ -7,7 +7,9 @@ import { EnvVarAutocomplete } from "../EnvVarAutocomplete";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { isFileProperty } from "../../utils/propertyUtils";
 import { sanitizeProfileNameSegment } from "../../utils/profileNames";
-import { useWizardContext } from "../../context/WizardContext";
+import { useEditorFields } from "../../context/EditorStoreContext";
+import { useUtilityHelpers } from "../../hooks/useUtilityHelpers";
+import { stringifyValueByType } from "../../utils";
 
 export function ProfileWizardModal() {
   const {
@@ -40,18 +42,50 @@ export function ProfileWizardModal() {
     getWizardTypeOptions,
     getWizardPropertyOptions,
     getWizardPropertyDescriptions,
-    isProfileNameTaken,
+    wizardProfileNameValidation,
     secureValuesAllowed,
     vscodeApi,
-    utilityHelpers,
-    stringifyValueByType,
-  } = useWizardContext();
+  } = useEditorFields(
+    "wizardModalOpen",
+    "wizardRootProfile",
+    "wizardSelectedType",
+    "wizardProfileName",
+    "wizardProperties",
+    "wizardShowKeyDropdown",
+    "wizardNewPropertyKey",
+    "wizardNewPropertyValue",
+    "wizardNewPropertySecure",
+    "wizardMergedProperties",
+    "setWizardRootProfile",
+    "setWizardSelectedType",
+    "setWizardProfileName",
+    "setWizardNewPropertyKey",
+    "setWizardNewPropertyValue",
+    "setWizardNewPropertySecure",
+    "setWizardShowKeyDropdown",
+    "handleWizardAddProperty",
+    "handleWizardRemoveProperty",
+    "handleWizardPropertyValueChange",
+    "handleWizardPropertySecureToggle",
+    "handleWizardCreateProfile",
+    "handleWizardCancel",
+    "handleWizardPopulateDefaults",
+    "getPropertyType",
+    "getAvailableProfiles",
+    "getWizardTypeOptions",
+    "getWizardPropertyOptions",
+    "getWizardPropertyDescriptions",
+    "wizardProfileNameValidation",
+    "secureValuesAllowed",
+    "vscodeApi"
+  );
 
+  const utilityHelpers = useUtilityHelpers();
   const availableProfiles = getAvailableProfiles();
   const typeOptions = getWizardTypeOptions();
   const propertyOptions = getWizardPropertyOptions();
   const propertyDescriptions = getWizardPropertyDescriptions();
-  const isProfileNameTakenValue = isProfileNameTaken();
+  const isProfileNameTakenValue = !wizardProfileNameValidation.isValid;
 
   const canPropertyBeSecureForWizard = useCallback(
     (displayKey: string, profileType: string): boolean => {

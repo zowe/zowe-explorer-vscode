@@ -1,90 +1,37 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { isSecureOrigin } from "../../utils";
-import { handleMessage, MessageHandlerProps } from "../handlers/messageHandlers";
+import { handleMessage } from "../handlers/messageHandlers";
+import { useEditorStoreApi } from "../context/EditorStoreContext";
 import { postProfilesAndEnv } from "../utils/extensionRequests";
+import { CONFIG_EDITOR_SETTINGS_KEY } from "../store/initialization";
 
-// selectedProfileKeyRef is now part of MessageHandlerProps; no extra fields needed here.
-type UseMessageHandlerProps = MessageHandlerProps;
-
-export function useMessageHandler(props: UseMessageHandlerProps) {
-    const propsRef = useRef(props);
-
+/** The extension owns disk access; this hook connects its messages to the scoped store. */
+export function useMessageHandler() {
+    const store = useEditorStoreApi();
     useEffect(() => {
-        propsRef.current = props;
-    });
-
-    const {
-        setConfigurations,
-        setSelectedTab,
-        setSelectedProfileKey,
-        setFlattenedConfig,
-        setFlattenedDefaults,
-        setMergedProperties,
-        setPendingChanges,
-        setDeletions,
-        setPendingDefaults,
-        setDefaultsDeletions,
-        setProfileSearchTerm,
-        setProfileFilterType,
-        setHasPromptedForZeroConfigs,
-        setConfigParseErrors,
-        vscodeApi,
-        selectedProfileKeyRef,
-    } = props;
-
-    useEffect(() => {
-        setConfigParseErrors([]);
-        setConfigurations([]);
-        setSelectedTab(null);
-        setSelectedProfileKey(null);
-        setFlattenedConfig({});
-        setFlattenedDefaults({});
-        setMergedProperties(null);
-        setPendingChanges({});
-        setDeletions({});
-        setPendingDefaults({});
-        setDefaultsDeletions({});
-        setProfileSearchTerm("");
-        setProfileFilterType(null);
-        setHasPromptedForZeroConfigs(false);
-
-        const messageListener = (event: MessageEvent) => {
-            if (!isSecureOrigin(event.origin)) {
-                return;
-            }
-
-            handleMessage(event, propsRef.current);
+        const { vscodeApi } = store.getState();
+        const onMessage = (event: MessageEvent) => {
+            if (isSecureOrigin(event.origin)) handleMessage(event, store);
         };
-
-        window.addEventListener("message", messageListener);
-
-        // Only request env information on initial mount — the extension already sends
-        // CONFIGURATIONS via initializeWebview() in the constructor, so a GET_PROFILES
-        // here would race with that and cause a second CONFIGURATIONS_READY that consumes
-        // this.initialSelection before INITIAL_SELECTION can be applied.
-        vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
-
-        const handleWindowFocus = () => {
-            if (!selectedProfileKeyRef.current) {
-                // On re-focus (e.g. user switched away and back), refresh profiles and env.
+        const onFocus = () => {
+            if (!store.getState().selectedProfileKey) {
                 postProfilesAndEnv(vscodeApi);
                 vscodeApi.postMessage({ command: "GET_KEYBINDS" });
             }
         };
-
-        const handleVisibilityChange = () => {
-            if (!document.hidden && !selectedProfileKeyRef.current) {
-                postProfilesAndEnv(vscodeApi);
-            }
+        const onVisibility = () => {
+            if (!document.hidden && !store.getState().selectedProfileKey) postProfilesAndEnv(vscodeApi);
         };
-
-        window.addEventListener("focus", handleWindowFocus);
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-
+        window.addEventListener("message", onMessage);
+        window.addEventListener("focus", onFocus);
+        document.addEventListener("visibilitychange", onVisibility);
+        // CONFIGURATIONS is already sent by the extension constructor; avoid racing INITIAL_SELECTION.
+        vscodeApi.postMessage({ command: "GET_ENV_INFORMATION" });
+        vscodeApi.postMessage({ command: "GET_LOCAL_STORAGE_VALUE", key: CONFIG_EDITOR_SETTINGS_KEY });
         return () => {
-            window.removeEventListener("message", messageListener);
-            window.removeEventListener("focus", handleWindowFocus);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("message", onMessage);
+            window.removeEventListener("focus", onFocus);
+            document.removeEventListener("visibilitychange", onVisibility);
         };
-    }, []);
+    }, [store]);
 }

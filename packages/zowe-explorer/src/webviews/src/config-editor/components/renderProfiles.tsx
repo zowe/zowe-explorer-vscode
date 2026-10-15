@@ -18,31 +18,31 @@ import {
   mergePendingProfileKeys,
   filterConflictingProfileKeys,
 } from "../utils";
-import { useConfigContext } from "../context/ConfigContext";
+import { useEditorFields } from "../context/EditorStoreContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 
 // Props interface for the renderProfiles component
 interface RenderProfilesProps {
-  profilesObj: any;
-
-  // Handler functions
-  handleProfileSelection: (profileKey: string) => void;
-  handleDeleteProfile: (profileKey: string) => void;
-  confirmDeleteProfile?: (profileKey: string) => void;
-  handleSetAsDefault: (profileKey: string) => void;
-  handleRenameProfile: (originalKey: string, newKey: string, isDragDrop?: boolean) => boolean;
-  onViewModeToggle?: () => void;
+  profilesObj: Record<string, unknown>;
 }
 
-export const RenderProfiles = ({
-  profilesObj,
-  handleProfileSelection,
-  handleDeleteProfile,
-  confirmDeleteProfile,
-  handleSetAsDefault,
-  handleRenameProfile,
-  onViewModeToggle,
-}: RenderProfilesProps) => {
+export const RenderProfiles = ({ profilesObj }: RenderProfilesProps) => {
+  const {
+    handleProfileSelection,
+    handleDeleteProfile,
+    confirmDeleteProfile,
+    handleSetAsDefault,
+    handleRenameProfile,
+    toggleViewMode: onViewModeToggle,
+  } = useEditorFields(
+    "handleProfileSelection",
+    "handleDeleteProfile",
+    "confirmDeleteProfile",
+    "handleSetAsDefault",
+    "handleRenameProfile",
+    "toggleViewMode"
+  );
+
   const {
     configurations,
     selectedTab,
@@ -54,14 +54,24 @@ export const RenderProfiles = ({
     setProfileMenuOpen,
     vscodeApi,
     configEditorSettings,
-    profileSearchTerm,
-    profileFilterType,
-    setProfileSearchTerm,
-    setProfileFilterType,
     setProfileSortOrderWithStorage,
     setPendingDefaults,
     pendingDefaults,
-  } = useConfigContext();
+  } = useEditorFields(
+    "configurations",
+    "selectedTab",
+    "deletions",
+    "pendingChanges",
+    "renames",
+    "selectedProfileKey",
+    "profileMenuOpen",
+    "setProfileMenuOpen",
+    "vscodeApi",
+    "configEditorSettings",
+    "setProfileSortOrderWithStorage",
+    "setPendingDefaults",
+    "pendingDefaults"
+  );
 
   const { viewMode, profileSortOrder } = configEditorSettings;
 
@@ -294,10 +304,6 @@ export const RenderProfiles = ({
               ([profileType, entry]) => entry.value === profileKey || savedDefaults[profileType] === profileKey
             );
           }}
-          searchTerm={profileSearchTerm}
-          filterType={profileFilterType}
-          onSearchChange={setProfileSearchTerm}
-          onFilterChange={setProfileFilterType}
           profileSortOrder={profileSortOrder || "natural"}
           onProfileSortOrderChange={setProfileSortOrderWithStorage}
           expandedNodes={getExpandedNodesForConfig(configurations[selectedTab!]?.configPath || "")}
@@ -329,10 +335,6 @@ export const RenderProfiles = ({
       viewMode,
       hasPendingSecureChangesForProfile,
       hasPendingPropertyDeletions,
-      profileSearchTerm,
-      profileFilterType,
-      setProfileSearchTerm,
-      setProfileFilterType,
       extractPendingProfiles,
       isProfileOrParentDeleted,
       getRenamedProfileKeyWithNestedHelper,

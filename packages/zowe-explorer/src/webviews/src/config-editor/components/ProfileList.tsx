@@ -10,6 +10,7 @@ import { useIsLightTheme } from "../hooks/useIsLightTheme";
 import { useScrollToSelected } from "../hooks/useScrollToSelected";
 import { ProfileTypeBadge } from "./ProfileTypeBadge";
 import { DefaultStarButton } from "./DefaultStarButton";
+import { useEditorStore } from "../context/EditorStoreContext";
 
 interface ProfileListProps {
   sortedProfileKeys: string[];
@@ -28,10 +29,6 @@ interface ProfileListProps {
   hasPendingSecureChanges: (profileKey: string) => boolean;
   hasPendingRename: (profileKey: string) => boolean;
   hasPendingDefaultChange: (profileKey: string) => boolean;
-  searchTerm: string;
-  filterType: string | null;
-  onSearchChange: (searchTerm: string) => void;
-  onFilterChange: (filterType: string | null) => void;
   profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
   onProfileSortOrderChange: (sortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults") => void;
   expandedNodes: Set<string>;
@@ -57,10 +54,6 @@ export function ProfileList({
   hasPendingSecureChanges,
   hasPendingRename,
   hasPendingDefaultChange,
-  searchTerm,
-  filterType,
-  onSearchChange,
-  onFilterChange,
   profileSortOrder,
   onProfileSortOrderChange,
   expandedNodes,
@@ -72,6 +65,9 @@ export function ProfileList({
   setPendingDefaults,
   onViewModeToggle,
 }: ProfileListProps) {
+  const searchTerm = useEditorStore((state) => state.profileSearchTerm);
+  const filterType = useEditorStore((state) => state.profileFilterType);
+  const onFilterChange = useEditorStore((state) => state.setProfileFilterType);
   const [filteredProfileKeys, setFilteredProfileKeys] = useState<string[]>(sortedProfileKeys);
   const [isFilteringActive, setIsFilteringActive] = useState<boolean>(false);
   const [lastSelectedProfileKey, setLastSelectedProfileKey] = useState<string | null>(null);
@@ -80,16 +76,7 @@ export function ProfileList({
 
   const { contextMenu, setContextMenu, contextMenuRef, openContextMenu } = useProfileContextMenu();
 
-  const clipboardActions = useProfileClipboard({
-    profileKeys: sortedProfileKeys,
-    pendingProfiles,
-    getProfileType,
-    onProfileSelect,
-    onProfileRename,
-    configurations,
-    selectedTab,
-    renames,
-  });
+  const clipboardActions = useProfileClipboard();
 
   const { profileClipboard } = clipboardActions;
   useProfileClipboardShortcuts(selectedProfileKey, clipboardActions);
@@ -249,11 +236,7 @@ export function ProfileList({
         }}
       >
         <ProfileSearchFilter
-          onSearchChange={onSearchChange}
-          onFilterChange={onFilterChange}
           availableTypes={availableTypes}
-          searchTerm={searchTerm}
-          filterType={filterType}
           profileSortOrder={profileSortOrder}
           onProfileSortOrderChange={handleProfileSortOrderChange}
         />
