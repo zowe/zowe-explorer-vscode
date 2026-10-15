@@ -85,7 +85,7 @@ export class ProfilesCache {
         if (keyring == null) {
             throw new Error(
                 "The @zowe/secrets-for-zowe-sdk module was loaded, but it did not export a keyring. " +
-                "This usually means that the module failed to load earlier in this session."
+                    "This usually means that the module failed to load earlier in this session."
             );
         }
         return keyring;
@@ -669,11 +669,11 @@ export class ProfilesCache {
     /**
      * Prompt the user for a certificate to use for cert-pem auth.
      * If the save button is clicked, the cert and certKey paths will be saved to the base profile if any,
-     * unless allowedLoginMethod is direct-cert-pem, in which case the paths will be saved to the service profile. 
-     * 
+     * unless allowedLoginMethod is direct-cert-pem, in which case the paths will be saved to the service profile.
+     *
      * You can optionally show a "login" button for SSO use cases, which will not store the cert nor certKey paths
-     * in any profile but just use the provided paths to log in. 
-     * 
+     * in any profile but just use the provided paths to log in.
+     *
      * @returns The {@link CertPromptResponse} describing the user's entries, or undefined if the prompt was dismissed.
      */
     public async promptCertificate(options: CertificatePromptOptions): Promise<CertPromptResponse | undefined> {

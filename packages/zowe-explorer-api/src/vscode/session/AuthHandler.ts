@@ -260,13 +260,15 @@ export class AuthHandler {
             if (certResponse && certResponse.cert && certResponse.certKey) {
                 ZoweVsCodeExtension.profilesCache.updateCachedProfile({
                     ...profileLoaded,
-                    profile: { ...profileLoaded.profile, cert: certResponse.cert, certKey: certResponse.certKey }
+                    profile: { ...profileLoaded.profile, cert: certResponse.cert, certKey: certResponse.certKey },
                 });
                 AuthHandler.unlockProfile(profileName, true);
                 return true;
             } else {
-                imperative.Logger.getAppLogger().warn("promptCertificate returned no response or the response had no cert and certKey." +
-                    "The certificate will not be updated on the profile.");
+                imperative.Logger.getAppLogger().warn(
+                    "promptCertificate returned no response or the response had no cert and certKey. " +
+                        "The certificate will not be updated on the profile."
+                );
                 return false;
             }
         } else {
