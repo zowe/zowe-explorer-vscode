@@ -12,7 +12,7 @@
     "packages/*",
     "packages/zowe-explorer/src/webviews"
   ],
-  "packageManager": "pnpm@11.5.2",
+  "packageManager": "pnpm@11.28.2",
   "dependencies": {
     "@vscode/l10n": "^0.0.18",
     "disposablestack": "^1.1.7"
