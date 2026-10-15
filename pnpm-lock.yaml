@@ -52,14 +52,6 @@ overrides:
   smol-toml: ^1.9.0
   source-map-js: ^1.2.2
   http-cache-semantics: ^4.3.0
-  '@zowe/core-for-zowe-sdk': file:../zowe-cli/packages/core
-  '@zowe/imperative': file:../zowe-cli/packages/imperative
-  '@zowe/zos-console-for-zowe-sdk': file:../zowe-cli/packages/zosconsole
-  '@zowe/zos-files-for-zowe-sdk': file:../zowe-cli/packages/zosfiles
-  '@zowe/zos-jobs-for-zowe-sdk': file:../zowe-cli/packages/zosjobs
-  '@zowe/zos-tso-for-zowe-sdk': file:../zowe-cli/packages/zostso
-  '@zowe/zos-uss-for-zowe-sdk': file:../zowe-cli/packages/zosuss
-  '@zowe/zosmf-for-zowe-sdk': file:../zowe-cli/packages/zosmf
 
 importers:
 
@@ -202,20 +194,20 @@ importers:
         specifier: ^0.0.35
         version: 0.0.35
       '@zowe/core-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/core
-        version: file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/secrets-for-zowe-sdk':
         specifier: ^8.38.0
         version: 8.38.0
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zosfiles
-        version: file:../zowe-cli/packages/zosfiles(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zosjobs
-        version: file:../zowe-cli/packages/zosjobs(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zosmf-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zosmf
-        version: file:../zowe-cli/packages/zosmf(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zowe-explorer-api':
         specifier: workspace:*
         version: link:../zowe-explorer-api
@@ -320,32 +312,32 @@ importers:
         specifier: ~1.101.0
         version: 1.101.0
       '@zowe/core-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/core
-        version: file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/imperative':
-        specifier: file:../../../zowe-cli/packages/imperative
-        version: file:../zowe-cli/packages/imperative(supports-color@8.1.1)
+        specifier: ^8.38.0
+        version: 8.39.0(supports-color@8.1.1)
       '@zowe/secrets-for-zowe-sdk':
         specifier: ^8.38.0
         version: 8.38.0
       '@zowe/zos-console-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zosconsole
-        version: file:../zowe-cli/packages/zosconsole(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zosfiles
-        version: file:../zowe-cli/packages/zosfiles(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zosjobs
-        version: file:../zowe-cli/packages/zosjobs(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zos-tso-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zostso
-        version: file:../zowe-cli/packages/zostso(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zos-uss-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zosuss
-        version: file:../zowe-cli/packages/zosuss(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zosmf-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zosmf
-        version: file:../zowe-cli/packages/zosmf(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
       async-mutex:
         specifier: ^0.5.0
         version: 0.5.0
@@ -381,14 +373,14 @@ importers:
   packages/zowe-explorer-ftp-extension:
     dependencies:
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zosfiles
-        version: file:../zowe-cli/packages/zosfiles(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zos-ftp-for-zowe-cli':
         specifier: ^3.0.0
-        version: 3.0.0(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        version: 3.0.0(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zosjobs
-        version: file:../zowe-cli/packages/zosjobs(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zowe-explorer-api':
         specifier: workspace:*
         version: link:../zowe-explorer-api
@@ -458,14 +450,14 @@ importers:
   packages/zowex-for-zowe-explorer:
     dependencies:
       '@zowe/core-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/core
-        version: file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zowe-explorer-api':
         specifier: workspace:*
         version: link:../zowe-explorer-api
       '@zowe/zowex-for-zowe-sdk':
         specifier: ^1.0.1
-        version: 1.0.1(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))(@zowe/zos-uss-for-zowe-sdk@file:../zowe-cli/packages/zosuss(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(rxjs@7.8.2)
+        version: 1.0.1(@zowe/imperative@8.39.0(supports-color@8.1.1))(@zowe/zos-uss-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(rxjs@7.8.2)
       ssh2:
         specifier: ^1.17.0
         version: 1.17.0
@@ -474,14 +466,14 @@ importers:
         specifier: ^1.15.5
         version: 1.15.5
       '@zowe/zos-files-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zosfiles
-        version: file:../zowe-cli/packages/zosfiles(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zos-jobs-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zosjobs
-        version: file:../zowe-cli/packages/zosjobs(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
       '@zowe/zos-uss-for-zowe-sdk':
-        specifier: file:../../../zowe-cli/packages/zosuss
-        version: file:../zowe-cli/packages/zosuss(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+        specifier: ^8.38.0
+        version: 8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1))
 
 packages:
 
@@ -2291,29 +2283,29 @@ packages:
     resolution: {integrity: sha512-RQ4h9F6DOiHxpdocUDrOl6xBM+yOtz+LkUol47AVWcfebGBDpZ7w7Xvz9PS24JgXvLGiXXzSAfdCdVy1tPlaFA==}
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=18.0.0'}
 
-  '@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core':
-    resolution: {directory: ../zowe-cli/packages/core, type: directory}
+  '@zowe/core-for-zowe-sdk@8.39.0':
+    resolution: {integrity: sha512-gf3EP7TTLRgotq3FKRz1uohavMEx4noIf1+8d2gVMC/dXSkPZU5l5qiMwhHos0BNR/Jz5Q9HVzM9GG7fzNXJfg==}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/imperative@file:../zowe-cli/packages/imperative':
-    resolution: {directory: ../zowe-cli/packages/imperative, type: directory}
+  '@zowe/imperative@8.39.0':
+    resolution: {integrity: sha512-ku/7ak+vu5uFSwexRFjY4AL6tlkjf9XSNR5Ya/hfjhB3UvvWFUFIWx+xjAIsE0Tptrn9SDSBP3o12HpLbsEJXQ==}
     engines: {node: '>=20.9.0'}
 
   '@zowe/secrets-for-zowe-sdk@8.38.0':
     resolution: {integrity: sha512-9afpGP7QR8PRXlXcMfmUvUQEhdyzyYKGs8izBy3FoRCgD+ItvXx2Fs32+Imwy1e3M4LKN7nn1iWKEsJpTEYgsA==}
     engines: {node: '>=14'}
 
-  '@zowe/zos-console-for-zowe-sdk@file:../zowe-cli/packages/zosconsole':
-    resolution: {directory: ../zowe-cli/packages/zosconsole, type: directory}
+  '@zowe/zos-console-for-zowe-sdk@8.39.0':
+    resolution: {integrity: sha512-r+5oohO2nddG1LPex+7LI0K0E8zU/FQiTeE9NNtQsu9I3V5QWZGKN/teuTsU2l/30nhRRmLAK0ZeP7ArUbXKEw==}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zos-files-for-zowe-sdk@file:../zowe-cli/packages/zosfiles':
-    resolution: {directory: ../zowe-cli/packages/zosfiles, type: directory}
+  '@zowe/zos-files-for-zowe-sdk@8.39.0':
+    resolution: {integrity: sha512-ZXq5uaYBb57rRXbZGE8LE+u0sje35XQgt0AqH3ftW8pwDbtw5qV5IbuN2EVZEooI4vjfbXcB19cCSbE6Bj1phQ==}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
@@ -2321,32 +2313,31 @@ packages:
 
   '@zowe/zos-ftp-for-zowe-cli@3.0.0':
     resolution: {integrity: sha512-lNt4t4VJMvnnjQXXusw5N5w5nVysbKZVSD+c7wvj/RJt6ceSV2aMH7QPeiyvTE0FEFErCkjCRl2AxeVtBkn82Q==}
-    version: 3.0.0
     peerDependencies:
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zos-jobs-for-zowe-sdk@file:../zowe-cli/packages/zosjobs':
-    resolution: {directory: ../zowe-cli/packages/zosjobs, type: directory}
+  '@zowe/zos-jobs-for-zowe-sdk@8.39.0':
+    resolution: {integrity: sha512-8p7H0QDWmFdV+R9B7vDlT76AuWrqwnRfcrYWohwzBR1Hre8lbJeeZSqzYFNKg+5B6WcSVsASznMrqJ1T3lTxpA==}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zos-tso-for-zowe-sdk@file:../zowe-cli/packages/zostso':
-    resolution: {directory: ../zowe-cli/packages/zostso, type: directory}
+  '@zowe/zos-tso-for-zowe-sdk@8.39.0':
+    resolution: {integrity: sha512-TywL7LqUK3LwODX+1vOlYiYjl3CCxxK/jv5d6qXgBmOZUbeT7rrgOk6lr9Y9GCugjvVkrT1Ahe/mInfJ1AXi8A==}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zos-uss-for-zowe-sdk@file:../zowe-cli/packages/zosuss':
-    resolution: {directory: ../zowe-cli/packages/zosuss, type: directory}
+  '@zowe/zos-uss-for-zowe-sdk@8.39.0':
+    resolution: {integrity: sha512-k2tUTroGgo2taNwu9niz3VDVHZumRzilsYY+sDgVtbXkM0v7O8ojclxDpT7WQmbW9mugrMadxlDrtReYtYx7HA==}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zosmf-for-zowe-sdk@file:../zowe-cli/packages/zosmf':
-    resolution: {directory: ../zowe-cli/packages/zosmf, type: directory}
+  '@zowe/zosmf-for-zowe-sdk@8.39.0':
+    resolution: {integrity: sha512-vH7Qju3HFh2fWCWQoupPKFwA6NTTKGHO+p3kbGya7sZH4vlnxEn9kwlOvIxnEmXilYm4E6PpJQ8yYU9dKQ+m2w==}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       '@zowe/core-for-zowe-sdk': ^8.0.0
@@ -2354,7 +2345,6 @@ packages:
 
   '@zowe/zowex-for-zowe-sdk@1.0.1':
     resolution: {integrity: sha512-1Bd+r7IO+Fqtyzifzn12W9gsYZrqSkzsC/MrdlFA1VwDMUuClDKnt1koFu4xRVMwD9KgZpg2HqTBJb1s3i6oWw==}
-    version: 1.0.1
     peerDependencies:
       '@zowe/imperative': ^8.11.0
       '@zowe/zos-uss-for-zowe-sdk': ^8.11.0
@@ -9397,13 +9387,13 @@ snapshots:
 
   '@zip.js/zip.js@2.8.26': {}
 
-  '@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
+  '@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1))':
     dependencies:
-      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
+      '@zowe/imperative': 8.39.0(supports-color@8.1.1)
       comment-json: 4.2.5
       string-width: 4.2.3
 
-  '@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)':
+  '@zowe/imperative@8.39.0(supports-color@8.1.1)':
     dependencies:
       '@types/semver': 7.8.0
       '@types/yargs': 17.0.35
@@ -9450,49 +9440,49 @@ snapshots:
 
   '@zowe/secrets-for-zowe-sdk@8.38.0': {}
 
-  '@zowe/zos-console-for-zowe-sdk@file:../zowe-cli/packages/zosconsole(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
+  '@zowe/zos-console-for-zowe-sdk@8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))':
     dependencies:
-      '@zowe/core-for-zowe-sdk': file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
-      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
+      '@zowe/core-for-zowe-sdk': 8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1))
+      '@zowe/imperative': 8.39.0(supports-color@8.1.1)
 
-  '@zowe/zos-files-for-zowe-sdk@file:../zowe-cli/packages/zosfiles(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
+  '@zowe/zos-files-for-zowe-sdk@8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))':
     dependencies:
-      '@zowe/core-for-zowe-sdk': file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
-      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
+      '@zowe/core-for-zowe-sdk': 8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1))
+      '@zowe/imperative': 8.39.0(supports-color@8.1.1)
       lodash: 4.18.1
       minimatch: 10.2.6
 
-  '@zowe/zos-ftp-for-zowe-cli@3.0.0(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
+  '@zowe/zos-ftp-for-zowe-cli@3.0.0(@zowe/imperative@8.39.0(supports-color@8.1.1))':
     dependencies:
-      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
+      '@zowe/imperative': 8.39.0(supports-color@8.1.1)
       zos-node-accessor: 2.0.11
 
-  '@zowe/zos-jobs-for-zowe-sdk@file:../zowe-cli/packages/zosjobs(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
+  '@zowe/zos-jobs-for-zowe-sdk@8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))':
     dependencies:
-      '@zowe/core-for-zowe-sdk': file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
-      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
-      '@zowe/zos-files-for-zowe-sdk': file:../zowe-cli/packages/zosfiles(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+      '@zowe/core-for-zowe-sdk': 8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1))
+      '@zowe/imperative': 8.39.0(supports-color@8.1.1)
+      '@zowe/zos-files-for-zowe-sdk': 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
 
-  '@zowe/zos-tso-for-zowe-sdk@file:../zowe-cli/packages/zostso(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
+  '@zowe/zos-tso-for-zowe-sdk@8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))':
     dependencies:
-      '@zowe/core-for-zowe-sdk': file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
-      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
-      '@zowe/zosmf-for-zowe-sdk': file:../zowe-cli/packages/zosmf(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+      '@zowe/core-for-zowe-sdk': 8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1))
+      '@zowe/imperative': 8.39.0(supports-color@8.1.1)
+      '@zowe/zosmf-for-zowe-sdk': 8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))
 
-  '@zowe/zos-uss-for-zowe-sdk@file:../zowe-cli/packages/zosuss(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
+  '@zowe/zos-uss-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1))':
     dependencies:
-      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
+      '@zowe/imperative': 8.39.0(supports-color@8.1.1)
       ssh2: 1.17.0
 
-  '@zowe/zosmf-for-zowe-sdk@file:../zowe-cli/packages/zosmf(@zowe/core-for-zowe-sdk@file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))':
+  '@zowe/zosmf-for-zowe-sdk@8.39.0(@zowe/core-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(@zowe/imperative@8.39.0(supports-color@8.1.1))':
     dependencies:
-      '@zowe/core-for-zowe-sdk': file:../zowe-cli/packages/core(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
-      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
+      '@zowe/core-for-zowe-sdk': 8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1))
+      '@zowe/imperative': 8.39.0(supports-color@8.1.1)
 
-  '@zowe/zowex-for-zowe-sdk@1.0.1(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))(@zowe/zos-uss-for-zowe-sdk@file:../zowe-cli/packages/zosuss(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1)))(rxjs@7.8.2)':
+  '@zowe/zowex-for-zowe-sdk@1.0.1(@zowe/imperative@8.39.0(supports-color@8.1.1))(@zowe/zos-uss-for-zowe-sdk@8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1)))(rxjs@7.8.2)':
     dependencies:
-      '@zowe/imperative': file:../zowe-cli/packages/imperative(supports-color@8.1.1)
-      '@zowe/zos-uss-for-zowe-sdk': file:../zowe-cli/packages/zosuss(@zowe/imperative@file:../zowe-cli/packages/imperative(supports-color@8.1.1))
+      '@zowe/imperative': 8.39.0(supports-color@8.1.1)
+      '@zowe/zos-uss-for-zowe-sdk': 8.39.0(@zowe/imperative@8.39.0(supports-color@8.1.1))
       base64-stream: 1.0.0
       es-toolkit: 1.47.1
       node-ssh: 13.2.1
