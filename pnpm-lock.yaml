@@ -454,8 +454,8 @@ importers:
         specifier: workspace:*
         version: link:../zowe-explorer-api
       '@zowe/zowex-for-zowe-sdk':
-        specifier: ^1.0.1
-        version: 1.0.1(@zowe/imperative@8.38.0)(@zowe/zos-uss-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(rxjs@7.8.2)
+        specifier: ^1.0.2
+        version: 1.0.2(@zowe/imperative@8.38.0)(@zowe/zos-uss-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(rxjs@7.8.2)
       ssh2:
         specifier: ^1.17.0
         version: 1.17.0
@@ -2341,8 +2341,8 @@ packages:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zowex-for-zowe-sdk@1.0.1':
-    resolution: {integrity: sha512-1Bd+r7IO+Fqtyzifzn12W9gsYZrqSkzsC/MrdlFA1VwDMUuClDKnt1koFu4xRVMwD9KgZpg2HqTBJb1s3i6oWw==}
+  '@zowe/zowex-for-zowe-sdk@1.0.2':
+    resolution: {integrity: sha512-85RAk26DltvMBIZyPmR8u0d/f5awZ1idMqh9KkSlBiPkoKktiYPcRwRUoqihGQ1CYE/pNzGiVfb0JxJ2Cf6XjQ==}
     peerDependencies:
       '@zowe/imperative': ^8.11.0
       '@zowe/zos-uss-for-zowe-sdk': ^8.11.0
@@ -8928,7 +8928,7 @@ snapshots:
       https-proxy-agent: 7.0.6
       jszip: 3.10.1
       ora: 8.2.0
-      semver: 7.7.4
+      semver: 7.8.5
     transitivePeerDependencies:
       - supports-color
 
@@ -9505,7 +9505,7 @@ snapshots:
       '@zowe/core-for-zowe-sdk': 8.38.0(@zowe/imperative@8.38.0)
       '@zowe/imperative': 8.38.0
 
-  '@zowe/zowex-for-zowe-sdk@1.0.1(@zowe/imperative@8.38.0)(@zowe/zos-uss-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(rxjs@7.8.2)':
+  '@zowe/zowex-for-zowe-sdk@1.0.2(@zowe/imperative@8.38.0)(@zowe/zos-uss-for-zowe-sdk@8.38.0(@zowe/imperative@8.38.0))(rxjs@7.8.2)':
     dependencies:
       '@zowe/imperative': 8.38.0
       '@zowe/zos-uss-for-zowe-sdk': 8.38.0(@zowe/imperative@8.38.0)
@@ -12140,7 +12140,7 @@ snapshots:
       lodash.isstring: 4.0.1
       lodash.once: 4.1.1
       ms: 2.1.3
-      semver: 7.7.4
+      semver: 7.8.5
 
   jszip@3.10.1:
     dependencies:
@@ -12811,7 +12811,7 @@ snapshots:
 
   node-abi@3.62.0:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.5
     optional: true
 
   node-abort-controller@3.1.1: {}
@@ -12887,7 +12887,7 @@ snapshots:
   normalize-package-data@6.0.2:
     dependencies:
       hosted-git-info: 7.0.2
-      semver: 7.7.4
+      semver: 7.8.5
       validate-npm-package-license: 3.0.4
 
   normalize-package-data@7.0.1:
