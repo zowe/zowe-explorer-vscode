@@ -23,7 +23,7 @@ export const DS_EXTENSION_MAP: Map<string, (string | RegExp)[]> = new Map([
     [".cbl", ["COBOL", "CBL", "COB", "SCBL"]],
     [".cpy", ["COPYBOOK", "COPY", "CPY", "COBCOPY"]],
     [".inc", ["INC", "INCLUDE", "PLINC"]],
-    [".pli", ["PLI", "PL1", "PLX", "PCX"]],
+    [".pli", ["PLI", "PL1", "PCX"]],
     [".sh", ["SH", "SHELL"]],
     [".rexx", ["REXX", "REXEC", "EXEC"]],
     [".xml", ["XML"]],
