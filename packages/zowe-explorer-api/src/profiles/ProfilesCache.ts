@@ -85,7 +85,7 @@ export class ProfilesCache {
         if (keyring == null) {
             throw new Error(
                 "The @zowe/secrets-for-zowe-sdk module was loaded, but it did not export a keyring. " +
-                    "This usually means that the module failed to load earlier in this session."
+                "This usually means that the module failed to load earlier in this session."
             );
         }
         return keyring;
@@ -649,7 +649,7 @@ export class ProfilesCache {
     }
 
     /**
-     * Get the allowedLoginMethod field from the profile, defaulting to "prompt" if there is no value
+     * Get the allowedLoginMethod field from the profile, defaulting to "prompt" if there is no value,
      * or if the value is invalid.
      * @param profile - the loaded profile to check
      * @returns the specified allowedLoginMethod field on the profile, or "prompt"
