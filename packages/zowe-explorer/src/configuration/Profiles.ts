@@ -208,8 +208,8 @@ export class Profiles extends ProfilesCache {
 
         ZoweLogger.debug(
             `checkCurrentProfile(): profile ${theProfile.name} (type ${theProfile.type}), ` +
-                `session type from profile=${iSessFromProf.type}, tokenType = ${tokenType} ` +
-                ` allowedLoginMethod = ${allowedLoginMethod} `
+            `session type from profile=${iSessFromProf.type}, tokenType = ${tokenType} ` +
+            ` allowedLoginMethod = ${allowedLoginMethod} `
         );
 
         if (
@@ -286,7 +286,10 @@ export class Profiles extends ProfilesCache {
                     this.validProfile = Validation.ValidationType.INVALID;
                     return { ...profileStatus, status: "inactive" };
                 } else {
-                    Profiles.getInstance().updateCachedProfile(theProfile);
+                    Profiles.getInstance().updateCachedProfile({
+                        ...theProfile,
+                        profile: { ...theProfile.profile, cert: certResponse.cert, certKey: certResponse.certKey }
+                    });
                 }
             }
             profileStatus.status = "active";
@@ -333,9 +336,8 @@ export class Profiles extends ProfilesCache {
         if (configFileIndex === -1) {
             toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")} `);
         } else {
-            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
-                layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
-            } `;
+            toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
+                } `;
         }
 
         const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
