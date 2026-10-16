@@ -8,6 +8,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added support for opening data sets and USS files in read-only mode by adding the `readonly=true` query parameter to their resource URI. [#2297](https://github.com/zowe/zowe-explorer-vscode/issues/2297)
 - Added the `notifyFileChanged` method to `IZoweExplorerFileApi` (the file API returned by `getFileApi()`) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
 - Added a `getFileApi` method to `ZoweExplorerApiRegister` that returns a file API for querying mainframe file system state. The initial API includes `getEncodingForUri`, which returns the encoding ZE has determined for a given resource URI, checking auto-detected encodings (such as USS file-tag detection) before falling back to explicitly user-selected encodings. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
 - Renamed the `"Uninstall zowex server on host..."` command to `""Uninstall SSH server on host..."`. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)

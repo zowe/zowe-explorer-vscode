@@ -229,7 +229,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const entry = result as UssDirectory | UssFile;
 
         if (!entry || !entry.metadata || !entry.metadata.path) {
-            return result;
+            return FsAbstractUtils.applyReadOnlyPermission(uri, result);
         }
 
         const uriInfo = this._getInfoFromUri(uri);
@@ -237,10 +237,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const entryPath = entry.metadata.path.replace(/\/+/g, "/");
         const reqPath = uriInfo.path.replace(/\/+/g, "/");
         if (entryPath !== reqPath) {
-            return this.lookup(uri, false);
+            return FsAbstractUtils.applyReadOnlyPermission(uri, this.lookup(uri, false));
         }
 
-        return result;
+        return FsAbstractUtils.applyReadOnlyPermission(uri, result);
     }
 
     /**
@@ -770,6 +770,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         content: Uint8Array,
         options: { create: boolean; overwrite: boolean; noStatusMsg?: boolean }
     ): Promise<void> {
+        FsAbstractUtils.throwIfReadOnly(uri);
         const fileName = path.posix.basename(uri.path);
         const parentDir = this.lookupParentDirectory(uri);
 

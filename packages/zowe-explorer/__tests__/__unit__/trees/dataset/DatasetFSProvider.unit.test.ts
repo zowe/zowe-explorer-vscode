@@ -1516,6 +1516,48 @@ describe("DatasetFSProvider", () => {
         });
     });
 
+    describe("read-only URIs", () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it("returns readonly permissions in stat for a data set opened with readonly=true", async () => {
+            vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(null);
+            vi.spyOn(DatasetFSProvider.instance as any, "statImplementation").mockResolvedValue(testEntries.ps);
+            const res = await DatasetFSProvider.instance.stat(testUris.ps.with({ query: "readonly=true" }));
+            expect(res.permissions).toBe(FilePermission.Readonly);
+            expect(testEntries.ps.permissions).toBeUndefined();
+        });
+
+        it("returns readonly permissions in stat for a PDS member opened with readonly=true", async () => {
+            const mockPdsEntry = {
+                type: vscode.FileType.Directory,
+                entries: new Map([["MEMBER1", testEntries.pdsMember]]),
+            };
+            vi.spyOn(DatasetFSProvider.instance as any, "readDirectoryImplementation").mockResolvedValue(mockPdsEntry);
+            const res = await DatasetFSProvider.instance.stat(testUris.pdsMember.with({ query: "readonly=true" }));
+            expect(res.permissions).toBe(FilePermission.Readonly);
+        });
+
+        it("does not return readonly permissions in stat without the readonly query", async () => {
+            vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(null);
+            vi.spyOn(DatasetFSProvider.instance as any, "statImplementation").mockResolvedValue(testEntries.ps);
+            const res = await DatasetFSProvider.instance.stat(testUris.ps);
+            expect(res).toBe(testEntries.ps);
+        });
+
+        it("rejects writeFile for a read-only URI", async () => {
+            const lookupParentDirectorySpy = vi.spyOn(DatasetFSProvider.instance, "lookupParentDirectory");
+            await expect(
+                DatasetFSProvider.instance.writeFile(testUris.ps.with({ query: "readonly=true" }), new Uint8Array(), {
+                    create: false,
+                    overwrite: true,
+                })
+            ).rejects.toThrow("was opened in read-only mode");
+            expect(lookupParentDirectorySpy).not.toHaveBeenCalled();
+        });
+    });
+
     describe("watch", () => {
         it("returns an empty Disposable object", () => {
             expect(DatasetFSProvider.instance.watch(testUris.pds, { recursive: false, excludes: [] })).toBeInstanceOf(Disposable);
