@@ -635,7 +635,7 @@ export class ProfilesCache {
      */
     public isUsingApiml(profile: ProfileLike): boolean {
         const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
-        return AuthHandler.getSessFromProfile(profileLoaded).isUsingApiml();
+        return this.getApimlDecision(profileLoaded).usingApiml;
     }
     /**
      * Detect if sessions created from the specified profile connect to APIML, and report the reason for that decision.
@@ -645,7 +645,31 @@ export class ProfilesCache {
      */
     public getApimlDecision(profile: ProfileLike): imperative.IApimlDecision {
         const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
-        return AuthHandler.getSessFromProfile(profileLoaded).getApimlDecision();
+        return this.sessionForApimlDecision(profileLoaded).getApimlDecision();
+    }
+
+    /**
+     * Get the session object for the APIML decision in imperative. If the session can't be created from an extender's
+     * registered getSession API, use the profile properties to create a session instead.
+     * 
+     * @param profile
+     * @returns
+     */
+    private sessionForApimlDecision(profile: imperative.IProfileLoaded): imperative.Session {
+        try {
+            return AuthHandler.getSessFromProfile(profile);
+        } catch (err) {
+            this.log.debug(`No session from the common API for profile ${profile.name}; using profile properties for the APIML decision. ${err}`);
+            const p = profile.profile ?? {};
+            return new imperative.Session({
+                hostname: p.host,
+                port: p.port,
+                protocol: p.protocol,
+                basePath: p.basePath,
+                tokenType: p.tokenType,
+                allowedLoginMethod: p.allowedLoginMethod,
+            });
+        }
     }
 
     /**
