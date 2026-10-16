@@ -15,13 +15,15 @@ import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { ProfileInfo } from "@zowe/imperative";
 import { vi } from "vitest";
 
+vi.spyOn(ConfigEditorSaveOperations, "readRevision").mockResolvedValue(undefined);
+
 // Global import statements for mocked modules
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { ConfigSchemaHelpers } from "../../../../src/utils/ConfigSchemaHelpers";
 import { ConfigUtils } from "../../../../src/utils/ConfigUtils";
-import { ConfigChangeHandlers } from "../../../../src/utils/ConfigChangeHandlers";
+import { ConfigEditorSaveOperations } from "../../../../src/utils/ConfigEditorSaveOperations";
 
 vi.mock("../../../../src/configuration/Profiles", () => ({
     Profiles: {
@@ -861,42 +863,24 @@ describe("configEditor", () => {
             expect(handleGetProfilesSpy).toHaveBeenCalledWith();
         });
 
-        it("should handle SAVE_CHANGES command successfully", async () => {
-            const mockMessage = {
-                command: "SAVE_CHANGES",
-                renames: [],
-                otherChanges: [],
-            };
+        it("delegates saves to the staged save operation and refreshes on success", async () => {
+            const message = { command: "SAVE_CHANGES", changes: [], renames: [], revisions: {} };
+            const save = vi.spyOn(ConfigEditorSaveOperations.prototype, "save").mockResolvedValueOnce(undefined);
+            vi.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
+            vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
+            await Reflect.apply(configEditor["onDidReceiveMessage"], configEditor, [message]);
+            expect(save).toHaveBeenCalledWith(message, expect.any(Function));
+            expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({ command: "CONFIGURATIONS" }));
+            expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith({ command: "DISABLE_OVERLAY" });
+        });
 
-            // Mock the required methods
-            const handleProfileRenamesSpy = vi.spyOn((configEditor as any).profileOperations, "handleProfileRenames").mockResolvedValue(undefined);
-            const handleAutostoreToggleSpy = vi.spyOn(ConfigChangeHandlers, "handleAutostoreToggle").mockResolvedValue(undefined);
-            const getLocalConfigsSpy = vi.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
-            const areSecureValuesAllowedSpy = vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
-            const postMessageSpy = vi.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
-
-            // Mock ConfigUtils.parseConfigChanges
-            ConfigUtils.parseConfigChanges.mockReturnValue([]);
-
-            // Mock ConfigChangeHandlers
-            ConfigChangeHandlers.handleDefaultChanges = vi.fn().mockResolvedValue(undefined);
-            ConfigChangeHandlers.handleProfileChanges = vi.fn().mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(handleProfileRenamesSpy).toHaveBeenCalledWith([]);
-            expect(handleAutostoreToggleSpy).toHaveBeenCalledWith([]);
-            expect(getLocalConfigsSpy).toHaveBeenCalled();
-            expect(areSecureValuesAllowedSpy).toHaveBeenCalled();
-            expect(postMessageSpy).toHaveBeenCalledWith({
-                command: "CONFIGURATIONS",
-                contents: [],
-                parseErrors: [],
-                secureValuesAllowed: true,
-            });
-            expect(postMessageSpy).toHaveBeenCalledWith({
-                command: "DISABLE_OVERLAY",
-            });
+        it("reports a failed save and refreshes the discarded draft", async () => {
+            vi.spyOn(ConfigEditorSaveOperations.prototype, "save").mockRejectedValueOnce(new Error("Save rejected"));
+            vi.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
+            vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
+            await Reflect.apply(configEditor["onDidReceiveMessage"], configEditor, [{ command: "SAVE_CHANGES" }]);
+            expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith({ command: "SAVE_ERROR", error: "Save rejected" });
+            expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith({ command: "DISABLE_OVERLAY" });
         });
 
         it("should handle OPEN_CONFIG_FILE command successfully", async () => {
@@ -911,67 +895,6 @@ describe("configEditor", () => {
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
             expect(handleOpenConfigFileSpy).toHaveBeenCalledWith(mockMessage);
-        });
-
-        it("should handle SAVE_CHANGES with defaultsChanges clearing a default", async () => {
-            const mockMessage = {
-                command: "SAVE_CHANGES",
-                configPath: "/test/config/path",
-                defaultsChanges: [
-                    {
-                        key: "zosmf",
-                        value: "",
-                        path: ["defaults", "zosmf"],
-                        configPath: "/test/config/path",
-                        secure: false,
-                    },
-                ],
-                renames: [],
-                otherChanges: [],
-            };
-
-            vi.spyOn((configEditor as any).profileOperations, "handleProfileRenames").mockResolvedValue(undefined);
-            vi.spyOn(ConfigChangeHandlers, "handleAutostoreToggle").mockResolvedValue(undefined);
-            vi.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
-            vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
-            vi.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
-
-            ConfigUtils.parseConfigChanges.mockReturnValue([
-                {
-                    configPath: "/test/config/path",
-                    defaultsChanges: [
-                        {
-                            key: "zosmf",
-                            value: "",
-                            path: ["defaults", "zosmf"],
-                            configPath: "/test/config/path",
-                            secure: false,
-                        },
-                    ],
-                    defaultsDeleteKeys: [],
-                    changes: [],
-                    deletions: [],
-                },
-            ]);
-
-            const handleDefaultChangesSpy = vi.fn().mockResolvedValue(undefined);
-            ConfigChangeHandlers.handleDefaultChanges = handleDefaultChangesSpy;
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(handleDefaultChangesSpy).toHaveBeenCalledWith(
-                [
-                    {
-                        key: "zosmf",
-                        value: "",
-                        path: ["defaults", "zosmf"],
-                        configPath: "/test/config/path",
-                        secure: false,
-                    },
-                ],
-                [],
-                "/test/config/path"
-            );
         });
 
         it("should handle unknown command gracefully", async () => {
@@ -1260,82 +1183,6 @@ describe("configEditor", () => {
             expect(showErrorMessageSpy).toHaveBeenCalledWith("Test error message");
         });
 
-        it("should handle SAVE_CHANGES with error and refresh configurations", async () => {
-            const mockMessage = {
-                command: "SAVE_CHANGES",
-                renames: [],
-                otherChanges: [],
-            };
-
-            const getLocalConfigsSpy = vi.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
-            const areSecureValuesAllowedSpy = vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
-            const postMessageSpy = vi.spyOn(configEditor.panel.webview, "postMessage").mockResolvedValue(undefined as any);
-
-            const mockProfileInfo = {
-                readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
-            };
-            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
-
-            ConfigUtils.parseConfigChanges.mockReturnValue([]);
-
-            ConfigChangeHandlers.handleDefaultChanges = vi.fn().mockRejectedValue(new Error("Test error"));
-            ConfigChangeHandlers.handleProfileChanges = vi.fn().mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(postMessageSpy).toHaveBeenCalledWith({
-                command: "CONFIGURATIONS",
-                contents: [],
-                parseErrors: [],
-                secureValuesAllowed: true,
-            });
-            expect(postMessageSpy).toHaveBeenCalledWith({
-                command: "DISABLE_OVERLAY",
-            });
-        });
-
-        it("should handle SAVE_CHANGES with renames and update profile changes", async () => {
-            const mockMessage = {
-                command: "SAVE_CHANGES",
-                renames: [
-                    {
-                        originalKey: "profiles.testProfile",
-                        newKey: "profiles.renamedProfile",
-                        configPath: "/test/config/path",
-                    },
-                ],
-                changes: [
-                    {
-                        profile: "profiles.testProfile",
-                        configPath: "/test/config/path",
-                    },
-                ],
-            };
-
-            const handleProfileRenamesSpy = vi.spyOn((configEditor as any).profileOperations, "handleProfileRenames").mockResolvedValue(undefined);
-            const updateProfileChangesForRenamesSpy = vi
-                .spyOn((configEditor as any).profileOperations, "updateProfileChangesForRenames")
-                .mockResolvedValue(mockMessage);
-
-            ConfigUtils.parseConfigChanges.mockReturnValue([]);
-
-            ConfigChangeHandlers.handleDefaultChanges = vi.fn().mockResolvedValue(undefined);
-            ConfigChangeHandlers.handleProfileChanges = vi.fn().mockResolvedValue(undefined);
-
-            const mockProfileInfo = {
-                readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
-                getTeamConfig: vi.fn(() => ({
-                    layers: [],
-                })),
-            };
-            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(handleProfileRenamesSpy).toHaveBeenCalledWith(mockMessage.renames);
-            expect(updateProfileChangesForRenamesSpy).toHaveBeenCalledWith(mockMessage, mockMessage.renames);
-        });
-
         it("should handle unknown command gracefully", async () => {
             const mockMessage = {
                 command: "UNKNOWN_COMMAND",
@@ -1343,114 +1190,6 @@ describe("configEditor", () => {
             };
 
             await expect((configEditor as any).onDidReceiveMessage(mockMessage)).resolves.not.toThrow();
-        });
-
-        it("should handle SAVE_CHANGES with ConfigUtils.parseConfigChanges and ConfigChangeHandlers", async () => {
-            const mockMessage = {
-                command: "SAVE_CHANGES",
-                renames: [],
-                changes: [{ type: "profile", profile: "profiles.testProfile", configPath: "/test/config/path" }],
-                otherChanges: [],
-            };
-
-            const mocks = createGlobalMocks();
-            const mockProfileInfo = createMockProfileInfo({
-                readProfilesFromDisk: mocks.mockFn.resolved,
-            });
-
-            ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
-
-            const parseConfigChangesSpy = vi.spyOn(ConfigUtils, "parseConfigChanges").mockReturnValue([
-                {
-                    changes: [{ key: "host", value: "new.host.com" }],
-                    deletions: [],
-                    configPath: "/test/config/path",
-                },
-            ]);
-
-            // Use the mocked modules directly
-            const mockedConfigChangeHandlers = { ConfigChangeHandlers };
-            const handleDefaultChangesSpy = vi
-                .spyOn(mockedConfigChangeHandlers.ConfigChangeHandlers, "handleDefaultChanges")
-                .mockResolvedValue(undefined);
-            const handleProfileChangesSpy = vi
-                .spyOn(mockedConfigChangeHandlers.ConfigChangeHandlers, "handleProfileChanges")
-                .mockResolvedValue(undefined);
-
-            const getLocalConfigsSpy = vi.spyOn(configEditor as any, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
-            const areSecureValuesAllowedSpy = vi.spyOn(configEditor as any, "areSecureValuesAllowed").mockResolvedValue(true);
-            const postMessageSpy = vi.spyOn((configEditor as any).panel.webview, "postMessage").mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(parseConfigChangesSpy).toHaveBeenCalled();
-            expect(handleProfileChangesSpy).toHaveBeenCalled();
-
-            parseConfigChangesSpy.mockRestore();
-            handleDefaultChangesSpy.mockRestore();
-            handleProfileChangesSpy.mockRestore();
-            getLocalConfigsSpy.mockRestore();
-            areSecureValuesAllowedSpy.mockRestore();
-            postMessageSpy.mockRestore();
-        });
-
-        it("should handle SAVE_CHANGES catch block with error handling and configuration refresh", async () => {
-            const mockMessage = {
-                command: "SAVE_CHANGES",
-                renames: [],
-                changes: [{ type: "profile", profile: "profiles.testProfile", configPath: "/test/config/path" }],
-                otherChanges: [],
-            };
-
-            const mocks = createGlobalMocks();
-
-            // Mock ZoweVsCodeExtension.workspaceRoot
-            const workspaceRootSpy = vi.spyOn(ZoweVsCodeExtension, "workspaceRoot", "get").mockReturnValue({
-                uri: { fsPath: "/test/workspace", scheme: "file", authority: "", path: "/test/workspace", query: "", fragment: "" } as any,
-                name: "test-workspace",
-                index: 0,
-            } as any);
-
-            // Mock console.error to track error logging
-            const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-            // Mock ConfigUtils.parseConfigChanges to throw an error
-            const originalParseConfigChanges = ConfigUtils.parseConfigChanges;
-            ConfigUtils.parseConfigChanges = vi.fn().mockImplementation(() => {
-                throw new Error("Parse config changes failed");
-            });
-
-            const getLocalConfigsSpy = vi.spyOn(configEditor as any, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
-            const areSecureValuesAllowedSpy = vi.spyOn(configEditor as any, "areSecureValuesAllowed").mockResolvedValue(true);
-            const postMessageSpy = vi.spyOn((configEditor as any).panel.webview, "postMessage").mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            // Verify error was logged
-            expect(consoleErrorSpy).toHaveBeenCalledWith("Save operation failed:", "Parse config changes failed");
-
-            // Verify configuration refresh happened (via refreshConfigurationsAndNotifyWebview -> getLocalConfigs)
-            expect(getLocalConfigsSpy).toHaveBeenCalled();
-            expect(areSecureValuesAllowedSpy).toHaveBeenCalled();
-
-            // Verify messages were sent to clear saving state
-            expect(postMessageSpy).toHaveBeenCalledWith({
-                command: "CONFIGURATIONS",
-                contents: [],
-                parseErrors: [],
-                secureValuesAllowed: true,
-            });
-            expect(postMessageSpy).toHaveBeenCalledWith({
-                command: "DISABLE_OVERLAY",
-            });
-
-            // Restore all mocks
-            ConfigUtils.parseConfigChanges = originalParseConfigChanges;
-            consoleErrorSpy.mockRestore();
-            workspaceRootSpy.mockRestore();
-            getLocalConfigsSpy.mockRestore();
-            areSecureValuesAllowedSpy.mockRestore();
-            postMessageSpy.mockRestore();
         });
     });
 });

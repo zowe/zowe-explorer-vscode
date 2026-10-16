@@ -9,7 +9,7 @@
  *
  */
 
-import type { ConfigParseError } from "../webviews/src/config-editor/types";
+import type { ConfigParseError, SecurePropertySource } from "../webviews/src/config-editor/types";
 
 export type { ConfigParseError };
 
@@ -21,6 +21,7 @@ export type ChangeEntry = {
     profile?: string;
     configPath: string;
     secure: boolean;
+    secureSource?: SecurePropertySource;
 };
 
 /** Incoming layer modification blob (before parseConfigChanges groups by configPath). */
@@ -78,6 +79,7 @@ export interface ConfigLayerDescriptor {
     schemaPath?: string;
     global: boolean;
     user: boolean;
+    revision?: string;
 }
 
 export interface LocalConfigsResult {
@@ -173,6 +175,7 @@ export interface LayerChangesPayload {
 
 /** SAVE_CHANGES payload from webview (changes carry configPath; optional renames / autostore). */
 export interface SaveChangesMessage extends WebviewCommandMessage, LayerChangesPayload {
+    revisions?: Record<string, string>;
     renames?: ProfileRenameEntry[];
     otherChanges?: AutostoreToggleChange[];
 }

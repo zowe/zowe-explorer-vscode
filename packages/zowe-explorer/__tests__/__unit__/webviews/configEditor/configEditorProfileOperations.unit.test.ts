@@ -1247,7 +1247,7 @@ describe("ConfigEditorProfileOperations", () => {
             expect(mockTeamConfig.set).toHaveBeenCalledWith("defaults", { zosmf: "profiles.renamedProfile" }, { parseString: true });
         });
 
-        it("should swallow errors from MoveUtils and log a warning", () => {
+        it("should propagate defaults errors before saving", () => {
             const mockTeamConfig = {
                 api: { layers: { get: vi.fn().mockReturnValue({ properties: { defaults: {} } }) } },
                 set: vi.fn(),
@@ -1261,11 +1261,7 @@ describe("ConfigEditorProfileOperations", () => {
 
             expect(() => {
                 (profileOperations as any).updateDefaultsAfterRename(mockTeamConfig, rename);
-            }).not.toThrow();
-
-            expect(console.warn).toHaveBeenCalledWith(
-                expect.stringContaining("update defaults from 'profiles.testProfile' to 'profiles.renamedProfile': Defaults update failed")
-            );
+            }).toThrow("Defaults update failed");
         });
 
         it("should update defaults referencing a child of the renamed profile", () => {

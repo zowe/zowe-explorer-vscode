@@ -13,7 +13,6 @@ import { ConfigChangeHandlers, ChangeEntry } from "../../../../src/utils/ConfigC
 import { Mock, vi } from "vitest";
 import { ProfileInfo } from "@zowe/imperative";
 import { ConfigSchemaHelpers } from "../../../../src/utils/ConfigSchemaHelpers";
-import * as vscode from "vscode";
 
 vi.mock("vscode", () => ({
     window: {
@@ -149,6 +148,11 @@ describe("ConfigChangeHandlers", () => {
             set: vi.fn(),
             save: vi.fn(),
         };
+
+        mockTeamConfig.api.layers.activate.mockImplementation(() => {
+            const layer = mockLayers.find.mock.results.at(-1)?.value;
+            if (layer) mockTeamConfig.api.layers.get.mockReturnValue({ ...layer, properties: {} });
+        });
 
         // Mock ProfileInfo constructor to return our mock
         vi.mocked(ProfileInfo).mockImplementation(
@@ -316,7 +320,7 @@ describe("ConfigChangeHandlers", () => {
                 path: "/current/config.json",
             });
 
-            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer);
+            await expect(ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer)).rejects.toThrow("no longer exists");
 
             expect(mockLayers.find).toHaveBeenCalled();
             expect(mockTeamConfig.api.layers.activate).not.toHaveBeenCalled();
@@ -355,7 +359,7 @@ describe("ConfigChangeHandlers", () => {
 
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, mockAreSecureValuesAllowed);
 
-            expect(mockAreSecureValuesAllowed).toHaveBeenCalled();
+            expect(mockAreSecureValuesAllowed).not.toHaveBeenCalled();
             expect(mockTeamConfig.set).toHaveBeenCalledWith("profiles.test.host", "test-host", {
                 parseString: false,
                 secure: false,
@@ -364,7 +368,7 @@ describe("ConfigChangeHandlers", () => {
             expect(mockTeamConfig.save).toHaveBeenCalled();
         });
 
-        it("should filter out secure changes when secure values not allowed", async () => {
+        it("should reject the whole batch when secure storage is unavailable", async () => {
             mockAreSecureValuesAllowed.mockResolvedValue(false);
 
             const changes: ChangeEntry[] = [
@@ -386,13 +390,12 @@ describe("ConfigChangeHandlers", () => {
 
             const deletions: ChangeEntry[] = [];
 
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed);
+            await expect(
+                ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed)
+            ).rejects.toThrow("Secure storage is unavailable");
 
-            expect(mockTeamConfig.set).toHaveBeenCalledTimes(1);
-            expect(mockTeamConfig.set).toHaveBeenCalledWith("profiles.test.host", "test-host", {
-                parseString: false,
-                secure: false,
-            });
+            expect(mockTeamConfig.set).not.toHaveBeenCalled();
+            expect(mockTeamConfig.save).not.toHaveBeenCalled();
         });
 
         it("should transform secure keys to properties in changes", async () => {
@@ -416,7 +419,7 @@ describe("ConfigChangeHandlers", () => {
             });
         });
 
-        it("should transform secure keys to properties in profile field", async () => {
+        it("should leave the input profile field unchanged", async () => {
             const changes: ChangeEntry[] = [
                 {
                     key: "profiles.test.host",
@@ -503,7 +506,7 @@ describe("ConfigChangeHandlers", () => {
             });
         });
 
-        it("should handle errors in set operation gracefully", async () => {
+        it("should reject errors in set operations", async () => {
             const changes: ChangeEntry[] = [
                 {
                     key: "profiles.test.host",
@@ -520,15 +523,14 @@ describe("ConfigChangeHandlers", () => {
                 throw new Error("Set operation failed");
             });
 
-            // Should not throw
             await expect(
                 ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed)
-            ).resolves.not.toThrow();
+            ).rejects.toThrow();
 
             expect(mockTeamConfig.set).toHaveBeenCalled();
         });
 
-        it("should handle errors in delete operation gracefully", async () => {
+        it("should reject errors in delete operations", async () => {
             const changes: ChangeEntry[] = [];
             const deletions: ChangeEntry[] = [
                 {
@@ -544,10 +546,9 @@ describe("ConfigChangeHandlers", () => {
                 throw new Error("Delete operation failed");
             });
 
-            // Should not throw
             await expect(
                 ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed)
-            ).resolves.not.toThrow();
+            ).rejects.toThrow();
 
             expect(mockTeamConfig.delete).toHaveBeenCalled();
         });
@@ -558,7 +559,7 @@ describe("ConfigChangeHandlers", () => {
 
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed);
 
-            expect(mockAreSecureValuesAllowed).toHaveBeenCalled();
+            expect(mockAreSecureValuesAllowed).not.toHaveBeenCalled();
             expect(mockTeamConfig.set).not.toHaveBeenCalled();
             expect(mockTeamConfig.delete).not.toHaveBeenCalled();
             expect(mockTeamConfig.save).toHaveBeenCalled();
@@ -602,6 +603,9 @@ describe("ConfigChangeHandlers", () => {
                 delete: vi.fn(),
             };
 
+            teamConfig.api.layers.activate.mockImplementation(() => {
+                teamConfig.api.layers.get.mockReturnValue(mockLayer);
+            });
             await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer, teamConfig);
 
             expect(teamConfig.api.profiles.defaultSet).toHaveBeenCalledWith("ssh", "test-ssh");
@@ -635,6 +639,9 @@ describe("ConfigChangeHandlers", () => {
                 delete: vi.fn(),
             };
 
+            teamConfig.api.layers.activate.mockImplementation(() => {
+                teamConfig.api.layers.get.mockReturnValue(mockLayer);
+            });
             await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer, teamConfig);
 
             expect(teamConfig.api.profiles.defaultSet).not.toHaveBeenCalled();
@@ -666,6 +673,9 @@ describe("ConfigChangeHandlers", () => {
                 delete: vi.fn(),
             };
 
+            teamConfig.api.layers.activate.mockImplementation(() => {
+                teamConfig.api.layers.get.mockReturnValue(mockLayer);
+            });
             await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer, teamConfig);
 
             expect(teamConfig.api.layers.activate).toHaveBeenCalledWith(true, false);
@@ -760,7 +770,7 @@ describe("ConfigChangeHandlers", () => {
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, undefined, teamConfig);
 
             expect(teamConfig.set).toHaveBeenCalledWith("profiles.test.host", "test-host", {
-                parseString: true,
+                parseString: false,
                 secure: false,
             });
             expect(teamConfig.delete).toHaveBeenCalledWith("profiles.test.port");
@@ -794,12 +804,12 @@ describe("ConfigChangeHandlers", () => {
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
 
             expect(teamConfig.set).toHaveBeenCalledWith("profiles.test.properties.password", "secret", {
-                parseString: true,
+                parseString: false,
                 secure: true,
             });
         });
 
-        it("should transform secure keys to properties in profile field", async () => {
+        it("should leave the input profile field unchanged", async () => {
             const changes: ChangeEntry[] = [
                 {
                     key: "profiles.test.host",
@@ -828,7 +838,7 @@ describe("ConfigChangeHandlers", () => {
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
 
             expect(teamConfig.set).toHaveBeenCalledWith("profiles.test.host", "test-host", {
-                parseString: true,
+                parseString: false,
                 secure: false,
             });
         });
@@ -885,12 +895,15 @@ describe("ConfigChangeHandlers", () => {
                 delete: vi.fn(),
             };
 
+            teamConfig.api.layers.activate.mockImplementation(() => {
+                teamConfig.api.layers.get.mockReturnValue(mockLayer);
+            });
             await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, undefined, teamConfig);
 
             expect(teamConfig.api.layers.activate).toHaveBeenCalledWith(false, true);
         });
 
-        it("should handle errors in set operation gracefully", async () => {
+        it("should reject errors in set operations", async () => {
             const changes: ChangeEntry[] = [
                 {
                     key: "profiles.test.host",
@@ -917,12 +930,14 @@ describe("ConfigChangeHandlers", () => {
                 delete: vi.fn(),
             };
 
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
+            await expect(ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig)).rejects.toThrow(
+                "Set operation failed"
+            );
 
             expect(teamConfig.set).toHaveBeenCalled();
         });
 
-        it("should handle errors in delete operation gracefully", async () => {
+        it("should reject errors in delete operations", async () => {
             const changes: ChangeEntry[] = [];
             const deletions: ChangeEntry[] = [
                 {
@@ -948,7 +963,9 @@ describe("ConfigChangeHandlers", () => {
                 }),
             };
 
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
+            await expect(ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig)).rejects.toThrow(
+                "Delete operation failed"
+            );
 
             expect(teamConfig.delete).toHaveBeenCalled();
         });
@@ -1026,11 +1043,11 @@ describe("ConfigChangeHandlers", () => {
 
             expect(teamConfig.set).toHaveBeenCalledTimes(2);
             expect(teamConfig.set).toHaveBeenCalledWith("profiles.test1.host", "host1", {
-                parseString: true,
+                parseString: false,
                 secure: false,
             });
             expect(teamConfig.set).toHaveBeenCalledWith("profiles.test2.host", "host2", {
-                parseString: true,
+                parseString: false,
                 secure: false,
             });
 
@@ -1047,7 +1064,7 @@ describe("ConfigChangeHandlers", () => {
 
             await ConfigChangeHandlers.handleAutostoreToggle([{ type: "autostore", value: true, configPath: "/mock/config.json" }]);
 
-            expect(mockTeamConfig.api.layers.activate).toHaveBeenCalledWith(true, false);
+            expect(mockTeamConfig.api.layers.activate).not.toHaveBeenCalled();
             expect(mockTeamConfig.set).toHaveBeenCalledWith("autoStore", true, { parseString: true });
             expect(mockTeamConfig.save).toHaveBeenCalled();
         });
@@ -1078,21 +1095,23 @@ describe("ConfigChangeHandlers", () => {
         it("should not set or save when the target layer is not found", async () => {
             mockLayers.find.mockReturnValue(undefined);
 
-            await ConfigChangeHandlers.handleAutostoreToggle([{ type: "autostore", value: true, configPath: "/missing/config.json" }]);
+            await expect(
+                ConfigChangeHandlers.handleAutostoreToggle([{ type: "autostore", value: true, configPath: "/missing/config.json" }])
+            ).rejects.toThrow("no longer exists");
 
             expect(mockTeamConfig.api.layers.activate).not.toHaveBeenCalled();
             expect(mockTeamConfig.set).not.toHaveBeenCalled();
             expect(mockTeamConfig.save).not.toHaveBeenCalled();
         });
 
-        it("should show an error message when applying the toggle throws", async () => {
+        it("should propagate an autostore failure", async () => {
             vi.mocked(ProfileInfo).mockImplementation(() => {
                 throw new Error("Test error");
             });
 
-            await ConfigChangeHandlers.handleAutostoreToggle([{ type: "autostore", value: true, configPath: "/mock/config.json" }]);
-
-            expect(vscode.window.showErrorMessage).toHaveBeenCalledWith("Error updating autostore setting: Test error");
+            await expect(
+                ConfigChangeHandlers.handleAutostoreToggle([{ type: "autostore", value: true, configPath: "/mock/config.json" }])
+            ).rejects.toThrow("Test error");
         });
     });
 });

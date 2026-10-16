@@ -64,7 +64,16 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
     const parseErrorList: ConfigParseError[] = parseErrors ?? [];
     setConfigParseErrors(parseErrorList);
     const previousConfigurations = props.configurations;
-    setConfigurations(contents);
+    setConfigurations(
+        contents.map((config) =>
+            props.hasPendingChanges()
+                ? {
+                      ...config,
+                      revision: previousConfigurations.find((previous) => previous.configPath === config.configPath)?.revision ?? config.revision,
+                  }
+                : config
+        )
+    );
     const newSecureValuesAllowed = secureValuesAllowed !== undefined ? secureValuesAllowed : true;
     setSecureValuesAllowed(newSecureValuesAllowed);
 

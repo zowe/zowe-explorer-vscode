@@ -18,7 +18,15 @@ export type Configuration = {
     global?: boolean;
     user?: boolean;
     schemaPath?: string;
+    revision?: string;
 };
+
+/** Resolve an existing credential in the host; never send it through the clipboard. */
+export interface SecurePropertySource {
+    configPath: string;
+    profileKey: string;
+    propertyKey: string;
+}
 
 /** Configuration entry from CONFIGURATIONS message (optional schema validation from extension). */
 export type ConfigurationWithSchema = Configuration & {
@@ -39,6 +47,7 @@ export type PendingChange = {
     path: string[];
     profile: string;
     secure?: boolean;
+    secureSource?: SecurePropertySource;
 };
 
 export type PendingChanges = {
@@ -96,6 +105,7 @@ export interface ClipboardProfile {
     properties: Record<string, PendingChange["value"]>;
     secure: string[];
     customFields: Record<string, PendingChange["value"]>;
+    secureSources?: Record<string, SecurePropertySource>;
 }
 
 export interface ProfileClipboard {
@@ -144,6 +154,7 @@ export interface FormattedChange {
     profile?: string;
     configPath: string;
     secure?: boolean;
+    secureSource?: SecurePropertySource;
 }
 
 /** Payload returned by `formatPendingChanges()` for save / merged-properties requests. */

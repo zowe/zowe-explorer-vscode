@@ -549,7 +549,14 @@ export class ConfigEditorProfileOperations {
         }
     }
 
-    private async processSingleRename(rename: ProfileRenameEntry, profInfo: ProfileInfo): Promise<void> {
+    /** Stage the entire rename batch before any configuration or credential writes. */
+    public async stageProfileRenames(renames: ProfileRenameEntry[], profInfo: ProfileInfo): Promise<void> {
+        for (const rename of this.prepareRenamesForProcessing(renames)) {
+            await this.processSingleRename(rename, profInfo, false);
+        }
+    }
+
+    private async processSingleRename(rename: ProfileRenameEntry, profInfo: ProfileInfo, persist = true): Promise<void> {
         const originalPath = ConfigEditorPathUtils.constructNestedProfilePath(rename.originalKey);
         const newPath = ConfigEditorPathUtils.constructNestedProfilePath(rename.newKey);
 
@@ -586,6 +593,9 @@ export class ConfigEditorProfileOperations {
 
         this.updateDefaultsAfterRename(teamConfig, rename);
 
+        if (!persist) {
+            return;
+        }
         await teamConfig.save();
         await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
         // loadNamedProfile (favorites + session rebuild) reads ProfilesCache.allProfiles, updated only by refresh().
@@ -699,17 +709,12 @@ export class ConfigEditorProfileOperations {
     }
 
     private updateDefaultsAfterRename(teamConfig: Config, rename: { originalKey: string; newKey: string }): void {
-        try {
-            updateDefaultsAfterRename(
-                () => teamConfig.api.layers.get(),
-                rename.originalKey,
-                rename.newKey,
-                (updatedDefaults) => teamConfig.set("defaults", updatedDefaults, { parseString: true })
-            );
-        } catch (defaultsError) {
-            const errorMessage = this.handleMoveUtilsError(defaultsError, "update defaults", rename.originalKey, rename.newKey);
-            console.warn(errorMessage);
-        }
+        updateDefaultsAfterRename(
+            () => teamConfig.api.layers.get(),
+            rename.originalKey,
+            rename.newKey,
+            (updatedDefaults) => teamConfig.set("defaults", updatedDefaults, { parseString: true })
+        );
     }
 
     private handleRenameError(error: unknown, rename: { originalKey: string; newKey: string }): void {

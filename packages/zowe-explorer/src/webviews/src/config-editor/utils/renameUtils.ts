@@ -139,8 +139,8 @@ export function buildFormattedPendingChanges(params: FormatPendingChangesParams)
 
     const changes = Object.entries(pendingChanges).flatMap(([configPath, changesForPath]) =>
         Object.keys(changesForPath).map((key) => {
-            const { value, path, profile, secure } = changesForPath[key];
-            return { key, value, path, profile, configPath, secure };
+            const { value, path, profile, secure, secureSource } = changesForPath[key];
+            return { key, value, path, profile, configPath, secure, ...(secureSource ? { secureSource } : {}) };
         })
     );
 

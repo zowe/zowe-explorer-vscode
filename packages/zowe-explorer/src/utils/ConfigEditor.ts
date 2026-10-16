@@ -9,13 +9,14 @@
  *
  */
 
-import { DeferredPromise, WebView, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import { DeferredPromise, Gui, WebView, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import type { ProfileInfo } from "@zowe/imperative";
 import * as path from "path";
 import * as fs from "fs";
 import { ConfigSchemaHelpers, schemaValidation } from "./ConfigSchemaHelpers";
-import { ConfigChangeHandlers } from "./ConfigChangeHandlers";
+import { ConfigEditorSaveOperations } from "./ConfigEditorSaveOperations";
+import { ZoweLogger } from "../tools/ZoweLogger";
 import { ConfigUtils } from "./ConfigUtils";
 import { ConfigEditorMessageHandlers } from "./ConfigEditorMessageHandlers";
 import { ConfigEditorProfileOperations } from "./ConfigEditorProfileOperations";
@@ -25,7 +26,6 @@ import type { ConfigParseError } from "../webviews/src/config-editor/types";
 import type {
     ConfigLayerDescriptor,
     InitialSelectionPayload,
-    LayerChangesPayload,
     LayerModifications,
     LocalConfigsResult,
     ProfileRenameEntry,
@@ -53,6 +53,7 @@ export class ConfigEditor extends WebView {
     private profileOperations: ConfigEditorProfileOperations;
     private mergedProperties: ConfigEditorMergedProperties;
     private fileOperations: ConfigEditorFileOperations;
+    private static saveInProgress = false;
     private lastParseErrorPaths: Set<string> = new Set();
 
     public constructor(context: vscode.ExtensionContext, initialSelection?: InitialSelectionPayload) {
@@ -154,6 +155,7 @@ export class ConfigEditor extends WebView {
             if (layer.exists) {
                 const configPath = path.resolve(layer.path);
                 try {
+                    const revision = await ConfigEditorSaveOperations.readRevision(configPath);
                     if (layer.properties && layer.properties.$schema) {
                         const schemaPath = path.join(path.dirname(configPath), layer.properties.$schema);
                         const schemaContent = fs.readFileSync(schemaPath, { encoding: "utf8" });
@@ -164,6 +166,7 @@ export class ConfigEditor extends WebView {
 
                         allConfigs.push({
                             configPath,
+                            revision,
                             properties: layer.properties,
                             schema,
                             schemaValidation,
@@ -190,6 +193,7 @@ export class ConfigEditor extends WebView {
 
                         allConfigs.push({
                             configPath,
+                            revision,
                             properties: layer.properties,
                             schema: undefined,
                             global: layer.global,
@@ -234,46 +238,21 @@ export class ConfigEditor extends WebView {
                 break;
             }
             case "SAVE_CHANGES": {
+                if (ConfigEditor.saveInProgress) {
+                    await this.panel.webview.postMessage({ command: "SAVE_ERROR", error: "A configuration save is already in progress." });
+                    break;
+                }
+                ConfigEditor.saveInProgress = true;
                 try {
-                    const saveMsg = message as SaveChangesMessage;
-                    if (saveMsg.renames && Array.isArray(saveMsg.renames)) {
-                        await this.profileOperations.handleProfileRenames(saveMsg.renames);
-                    }
-
-                    let updatedMessage: LayerChangesPayload = saveMsg;
-                    if (saveMsg.renames && Array.isArray(saveMsg.renames)) {
-                        updatedMessage = await this.profileOperations.updateProfileChangesForRenames(saveMsg, saveMsg.renames);
-                    }
-
-                    const normalizedSave: LayerModifications = {
-                        configPath: updatedMessage.configPath,
-                        changes: updatedMessage.changes ?? [],
-                        deletions: updatedMessage.deletions ?? [],
-                        defaultsChanges: updatedMessage.defaultsChanges ?? [],
-                        defaultsDeleteKeys: updatedMessage.defaultsDeleteKeys ?? [],
-                    };
-                    const parsedChanges = ConfigUtils.parseConfigChanges(normalizedSave);
-                    for (const change of parsedChanges) {
-                        if (change.defaultsChanges || change.defaultsDeleteKeys) {
-                            await ConfigChangeHandlers.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath);
-                        }
-
-                        if (change.changes || change.deletions) {
-                            await ConfigChangeHandlers.handleProfileChanges(change.changes, change.deletions, change.configPath, () =>
-                                this.areSecureValuesAllowed()
-                            );
-                        }
-                    }
-
-                    if (saveMsg.otherChanges) {
-                        await ConfigChangeHandlers.handleAutostoreToggle(saveMsg.otherChanges);
-                    }
-
+                    await new ConfigEditorSaveOperations().save(message as SaveChangesMessage, () => this.areSecureValuesAllowed());
                     await this.refreshConfigurationsAndNotifyWebview();
                 } catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : String(error);
-                    console.error("Save operation failed:", errorMessage);
+                    const errorMessage = error instanceof Error ? error.message : "Configuration save failed.";
+                    ZoweLogger.error("Configuration editor save failed.");
+                    void Gui.errorMessage(errorMessage);
                     await this.refreshConfigurationsAndNotifyWebview({ saveError: errorMessage });
+                } finally {
+                    ConfigEditor.saveInProgress = false;
                 }
                 break;
             }

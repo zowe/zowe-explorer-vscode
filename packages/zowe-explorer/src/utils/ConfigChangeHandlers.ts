@@ -10,8 +10,7 @@
  */
 
 import * as path from "path";
-import * as vscode from "vscode";
-import type { Config, IConfigLayer } from "@zowe/imperative";
+import type { Config } from "@zowe/imperative";
 import { ConfigSchemaHelpers } from "./ConfigSchemaHelpers";
 import { ConfigUtils } from "./ConfigUtils";
 import type { AutostoreToggleChange, ChangeEntry } from "./ConfigTypes";
@@ -28,11 +27,15 @@ export class ConfigChangeHandlers {
         return keyOrPath;
     }
 
-    private static activateLayerIfNeeded(configToUse: Config, layerPath: string): void {
+    public static activateLayerIfNeeded(configToUse: Config, layerPath: string): void {
         if (layerPath !== configToUse.api.layers.get().path) {
             const layer = configToUse.layers.find((prof) => prof.path === layerPath);
-            if (layer) {
-                configToUse.api.layers.activate(layer.user, layer.global);
+            if (!layer) {
+                throw new Error(`Configuration layer no longer exists: ${layerPath}. Reopen or revert the editor before saving.`);
+            }
+            configToUse.api.layers.activate(layer.user, layer.global);
+            if (configToUse.api.layers.get().path !== layerPath) {
+                throw new Error(`Cannot activate configuration layer: ${layerPath}`);
             }
         }
     }
@@ -97,50 +100,32 @@ export class ConfigChangeHandlers {
     ): Promise<void> {
         const { config: configToUse, isSimulation } = await this.getConfigToUse(teamConfig);
 
-        let filteredChanges = changes;
-        if (!isSimulation && areSecureValuesAllowed) {
+        if (areSecureValuesAllowed && changes.some((change) => change.secure)) {
             const secureValuesAllowed = await areSecureValuesAllowed();
-            filteredChanges = secureValuesAllowed ? changes : changes.filter((change) => !change.secure);
-        }
-
-        for (const item of filteredChanges) {
-            item.key = this.transformSecureKeyToProperties(item.key);
-            if (item.profile) {
-                item.profile = this.transformSecureKeyToProperties(item.profile);
+            if (!secureValuesAllowed) {
+                throw new Error("Secure storage is unavailable. Your changes have not been saved.");
             }
-        }
-
-        for (const item of deletions) {
-            item.key = this.transformSecureKeyToProperties(item.key);
         }
 
         this.activateLayerIfNeeded(configToUse, configPath);
 
-        for (const change of filteredChanges) {
-            try {
-                if (isSimulation) {
-                    // Simulation mode: use parseString: true (simpler, no schema validation)
-                    configToUse.set(change.key, change.value, { parseString: true, secure: change.secure });
-                } else {
-                    // Normal mode: use schema validation
-                    let profileProps: Map<string, { type: string | string[]; path: string; description?: string }> | undefined;
-                    const currentLayer = configToUse.api.layers.get();
-                    let schemaPath: string | undefined;
+        for (const change of changes) {
+            const key = this.transformSecureKeyToProperties(change.key);
+            // Preview and save must use identical schema-based conversion.
+            let profileProps: Map<string, { type: string | string[]; path: string; description?: string }> | undefined;
+            const currentLayer = configToUse.api.layers.get();
+            let schemaPath: string | undefined;
 
-                    if (currentLayer.properties && currentLayer.properties.$schema) {
-                        schemaPath = path.join(path.dirname(currentLayer.path), currentLayer.properties.$schema);
-                        profileProps = ConfigSchemaHelpers.getProfileProperties(schemaPath);
-                    }
-                    const parseString = profileProps?.has(change.key.split(".")[change.key.split(".").length - 1]) ?? false;
-                    configToUse.set(change.key, change.value as string, { parseString, secure: change.secure });
-                }
-            } catch {}
+            if (currentLayer.properties && currentLayer.properties.$schema) {
+                schemaPath = path.join(path.dirname(currentLayer.path), currentLayer.properties.$schema);
+                profileProps = ConfigSchemaHelpers.getProfileProperties(schemaPath);
+            }
+            const parseString = profileProps?.has(change.key.split(".")[change.key.split(".").length - 1]) ?? false;
+            configToUse.set(key, change.value, { parseString: typeof change.value === "string" && parseString, secure: change.secure });
         }
 
         for (const deletion of deletions) {
-            try {
-                configToUse.delete(deletion.key);
-            } catch {}
+            configToUse.delete(this.transformSecureKeyToProperties(deletion.key));
         }
 
         // Only save if not in simulation mode
@@ -152,23 +137,14 @@ export class ConfigChangeHandlers {
     /**
      * Applies pending autostore toggles to their target configuration layer.
      */
-    public static async handleAutostoreToggle(otherChanges: AutostoreToggleChange[]): Promise<void> {
+    public static async handleAutostoreToggle(otherChanges: AutostoreToggleChange[], config?: Config): Promise<void> {
         for (const change of otherChanges) {
             if (change.type === "autostore") {
-                try {
-                    const profInfo = await ConfigUtils.createProfileInfoAndLoad();
-                    const teamConfig = profInfo.getTeamConfig();
-
-                    const targetLayer = teamConfig.layers.find((layer: IConfigLayer) => layer.path === change.configPath);
-
-                    if (targetLayer) {
-                        teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
-                        teamConfig.set("autoStore", change.value, { parseString: true });
-                        await teamConfig.save();
-                    }
-                } catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : String(error);
-                    vscode.window.showErrorMessage(`Error updating autostore setting: ${errorMessage}`);
+                const { config: teamConfig, isSimulation } = await this.getConfigToUse(config);
+                this.activateLayerIfNeeded(teamConfig, change.configPath);
+                teamConfig.set("autoStore", change.value, { parseString: true });
+                if (!isSimulation) {
+                    await teamConfig.save();
                 }
             }
         }

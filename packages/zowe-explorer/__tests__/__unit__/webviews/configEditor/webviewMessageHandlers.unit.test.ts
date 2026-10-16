@@ -32,6 +32,18 @@ const user: Configuration = { configPath: "/mock/user.json", properties: { profi
 describe("webviewMessageHandlers", () => {
     afterEach(() => vi.useRealTimers());
     describe("configuration refresh and selection", () => {
+        it("keeps the original save revision when a background refresh arrives during editing", () => {
+            const store = makeStore({ configurations: [{ ...team, revision: "before-edit" }], selectedTab: 0 });
+            store.getState().handleDefaultsChange("base", "edited-base");
+            handleConfigurationsMessage({ contents: [{ ...team, revision: "external-edit" }] }, store);
+            store.getState().handleSave();
+            expect(store.getState().vscodeApi.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    command: "SAVE_CHANGES",
+                    revisions: { [team.configPath]: "before-edit" },
+                })
+            );
+        });
         it.each([
             { name: "removing the layer before the selected file", previous: [user, team], contents: [team], selected: 1, expected: 0 },
             { name: "reordering layers", previous: [user, team], contents: [team, user], selected: 1, expected: 0 },

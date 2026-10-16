@@ -10,7 +10,7 @@
  */
 
 import { flattenProfiles, profileKeyToPath } from "./configUtils";
-import { isPropertySecure, mergePendingChangesForProfile } from "./profileUtils";
+import { getOriginalProfileKeyWithNested, getRenamedProfileKeyWithNested, isPropertySecure, mergePendingChangesForProfile } from "./profileUtils";
 import type { ClipboardProfile, ConfigStateContext, PendingChange, PendingChangesMap, PendingDefaultsMap, ProfileClipboard } from "../types";
 
 interface CollectClipboardProfilesParams extends ConfigStateContext {
@@ -27,12 +27,17 @@ export function collectClipboardProfiles(params: CollectClipboardProfilesParams)
     if (!config) return {};
 
     const flatProfiles = flattenProfiles(config.properties?.profiles || {});
-    const allKeys = new Set([...profileKeys, ...Object.keys(flatProfiles), ...Object.keys(pendingProfiles)]);
+    const allKeys = new Set(
+        [...profileKeys, ...Object.keys(flatProfiles), ...Object.keys(pendingProfiles)].map((key) =>
+            getRenamedProfileKeyWithNested(key, config.configPath, renames)
+        )
+    );
     const profiles: ProfileClipboard["profiles"] = {};
     for (const key of allKeys) {
         if (key !== profileKey && !key.startsWith(profileKey + ".")) continue;
         const profilePath = profileKeyToPath(key);
-        const baseProfile = flatProfiles[key] || {};
+        const originalKey = getOriginalProfileKeyWithNested(key, config.configPath, renames);
+        const baseProfile = flatProfiles[originalKey] || {};
         // Merging nested pending values must not mutate the saved configuration or an earlier clipboard.
         const properties = mergePendingChangesForProfile({
             baseObj: structuredClone((baseProfile.properties as Record<string, unknown>) || {}),
@@ -55,7 +60,20 @@ export function collectClipboardProfiles(params: CollectClipboardProfilesParams)
         const customFields = Object.fromEntries(
             Object.entries(baseProfile).filter(([field]) => !["properties", "profiles", "type", "secure"].includes(field))
         ) as ClipboardProfile["customFields"];
-        profiles[key] = { profileKey: key, type: getProfileType(key), properties, secure, customFields };
+        const secureSources: NonNullable<ClipboardProfile["secureSources"]> = {};
+        // Existing credentials are absent from the webview's redacted properties.
+        for (const propertyKey of (baseProfile.secure as string[] | undefined) ?? []) {
+            if (Object.prototype.hasOwnProperty.call(properties, propertyKey)) continue;
+            properties[propertyKey] = "";
+            secure.push(propertyKey);
+            secureSources[propertyKey] = { configPath: config.configPath, profileKey: originalKey, propertyKey };
+        }
+        for (const entry of Object.values(pendingChanges[config.configPath] ?? {})) {
+            if (entry.profile === key && entry.secureSource) {
+                secureSources[entry.path[entry.path.length - 1]] = entry.secureSource;
+            }
+        }
+        profiles[key] = { profileKey: key, type: getProfileType(key), properties, secure, customFields, secureSources };
     }
     return structuredClone(profiles);
 }
@@ -87,6 +105,7 @@ export function buildClipboardChanges(
                 path: [propertyKey],
                 profile: newKey,
                 secure: profile.secure.includes(propertyKey),
+                ...(profile.secureSources?.[propertyKey] ? { secureSource: profile.secureSources[propertyKey] } : {}),
             };
         }
         if (profile.secure.length > 0) addField("secure", profile.secure);

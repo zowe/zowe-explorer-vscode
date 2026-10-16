@@ -81,6 +81,7 @@ export function createConfigurationActions(state: EditorRuntime) {
 
         vscodeApi.postMessage({
             command: "SAVE_CHANGES",
+            revisions: Object.fromEntries(configurations.map((config) => [config.configPath, config.revision])),
             changes,
             deletions: deleteKeys,
             defaultsChanges,
