@@ -639,10 +639,11 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         return this.buildZosFilesResponse(response);
     }
 
-    public async deleteDataSet(dataSetName: string, _options?: zosfiles.IDeleteDatasetOptions): Promise<zosfiles.IZosFilesResponse> {
+    public async deleteDataSet(dataSetName: string, options?: zosfiles.IDeleteDatasetOptions): Promise<zosfiles.IZosFilesResponse> {
+        const deleteType = options?.volume === "*VSAM*" ? "deleteVsam" : "deleteDataset";
         const response = await (
             await this.client
-        ).ds.deleteDataset({
+        ).ds[deleteType]({
             dsname: dataSetName,
         });
         return this.buildZosFilesResponse(response);
