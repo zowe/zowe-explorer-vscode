@@ -160,6 +160,8 @@ export function createSessCfgFromArgs(testProfile: imperative.IProfileLoaded) {
         password: testProfile.profile.password,
     };
     const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
+    // todo remove when SDK fixed
+    sessCfg.allowedLoginMethod = testProfile.profile.allowedLoginMethod;
     const session = new imperative.Session(sessCfg);
     return session;
 }
