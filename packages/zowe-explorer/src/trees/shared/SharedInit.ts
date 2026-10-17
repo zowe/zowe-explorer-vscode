@@ -323,6 +323,9 @@ export class SharedInit {
 
         if (providers.ds || providers.uss) {
             context.subscriptions.push(
+                vscode.window.onDidChangeActiveTextEditor((editor) => SharedInit.addToRecentMembers(editor?.document?.uri, providers))
+            );
+            context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.openRecentMember", () => SharedActions.openRecentMemberPrompt(providers.ds, providers.uss))
             );
             context.subscriptions.push(
@@ -585,6 +588,34 @@ export class SharedInit {
             context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
         } catch (err) {
             Gui.errorMessage("Unable to watch for credential manager changes. " + JSON.stringify(err));
+        }
+    }
+
+    /**
+     * Records a Zowe data set or USS file URI that was opened in the editor to the "Recent Members" history.
+     * Opens that are not user-initiated (conflict/diff views, background fetches) are ignored.
+     */
+    public static addToRecentMembers(uri: vscode.Uri | undefined, providers: Definitions.IZoweProviders): void {
+        if (uri == null || (uri.scheme !== ZoweScheme.DS && uri.scheme !== ZoweScheme.USS)) {
+            return;
+        }
+        const query = new URLSearchParams(uri.query);
+        if (query.has("conflict") || query.has("inDiff") || query.get("fetch") === "true") {
+            return;
+        }
+        const { isRoot, profileName, slashAfterProfilePos } = FsAbstractUtils.getInfoForUri(uri);
+        if (isRoot) {
+            return;
+        }
+        const itemPath = uri.path.substring(slashAfterProfilePos);
+        if (uri.scheme === ZoweScheme.USS) {
+            providers.uss?.addFileHistory(`[${profileName}]: ${itemPath}`);
+            return;
+        }
+        // Data set URIs have the format `/{profile}/{dsname}` or `/{profile}/{pdsname}/{member}`
+        const [dsName, member] = itemPath.split("/").filter(Boolean);
+        if (dsName) {
+            providers.ds?.addFileHistory(`[${profileName}]: ${member ? `${dsName}(${member})` : dsName}`);
         }
     }
 

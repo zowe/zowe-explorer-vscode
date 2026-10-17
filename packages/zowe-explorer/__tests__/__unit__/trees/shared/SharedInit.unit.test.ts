@@ -781,11 +781,11 @@ describe("Test src/shared/extension", () => {
             const dummyWatcher: any = {
                 subscribeUser: (_event, cb) => {
                     onVaultUpdatedCallback = cb;
-                    return { close: () => { } } as any;
+                    return { close: () => {} } as any;
                 },
                 subscribeShared: (_event, cb) => {
                     onCredentialManagerUpdatedCallback = cb;
-                    return { close: () => { } } as any;
+                    return { close: () => {} } as any;
                 },
             };
             const spyWatcher = vi.spyOn(imperative.EventOperator, "getWatcher").mockReturnValue(dummyWatcher);
@@ -862,6 +862,39 @@ describe("Test src/shared/extension", () => {
             expect(spyExpand).toHaveBeenCalled();
             expect(spyOnCollapsibleStateChange).toHaveBeenCalled();
             expect(treeView.onDidChangeSelection).toHaveBeenCalled();
+        });
+    });
+
+    describe("addToRecentMembers", () => {
+        const createProviders = (): any => ({ ds: { addFileHistory: vi.fn() }, uss: { addFileHistory: vi.fn() } });
+
+        it("records a PDS member", () => {
+            const providers = createProviders();
+            SharedInit.addToRecentMembers(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/SOME.PDS/MEM1" }), providers);
+            expect(providers.ds.addFileHistory).toHaveBeenCalledWith("[sestest]: SOME.PDS(MEM1)");
+            expect(providers.uss.addFileHistory).not.toHaveBeenCalled();
+        });
+        it("records a sequential data set", () => {
+            const providers = createProviders();
+            SharedInit.addToRecentMembers(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/SOME.SEQ" }), providers);
+            expect(providers.ds.addFileHistory).toHaveBeenCalledWith("[sestest]: SOME.SEQ");
+        });
+        it("records a USS file", () => {
+            const providers = createProviders();
+            SharedInit.addToRecentMembers(vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/u/user/file.txt" }), providers);
+            expect(providers.uss.addFileHistory).toHaveBeenCalledWith("[sestest]: /u/user/file.txt");
+            expect(providers.ds.addFileHistory).not.toHaveBeenCalled();
+        });
+        it("ignores undefined URIs, other schemes, session roots, and conflict/diff/fetch URIs", () => {
+            const providers = createProviders();
+            SharedInit.addToRecentMembers(undefined, providers);
+            SharedInit.addToRecentMembers(vscode.Uri.from({ scheme: ZoweScheme.Jobs, path: "/sestest/JOB1" }), providers);
+            SharedInit.addToRecentMembers(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/sestest" }), providers);
+            for (const query of ["conflict=true", "inDiff=true", "fetch=true"]) {
+                SharedInit.addToRecentMembers(vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/SOME.PDS/MEM1", query }), providers);
+            }
+            expect(providers.ds.addFileHistory).not.toHaveBeenCalled();
+            expect(providers.uss.addFileHistory).not.toHaveBeenCalled();
         });
     });
 

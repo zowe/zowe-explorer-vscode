@@ -866,6 +866,8 @@ export namespace window {
         all: [] as any[],
         close: vi.fn(),
     };
+
+    export const onDidChangeActiveTextEditor = vi.fn().mockReturnValue({ dispose: vi.fn() });
 }
 
 export namespace languages {
