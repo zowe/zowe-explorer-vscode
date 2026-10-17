@@ -1339,15 +1339,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 } else {
                     await vscode.commands.executeCommand("vscode.open", this.resourceUri);
                 }
-                if (datasetProvider) {
-                    let criteria = `[${this.getProfileName()}]: `;
-                    if (SharedContext.isDsMember(this)) {
-                        criteria = `${criteria}${this.getParent().label as string}(${this.label as string})`;
-                    } else {
-                        criteria = `${criteria}${this.label as string}`;
-                    }
-                    datasetProvider.addFileHistory(criteria);
-                }
             } catch (err) {
                 await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: this.getProfile() });
                 throw err;

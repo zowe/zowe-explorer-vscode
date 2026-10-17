@@ -672,8 +672,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     await vscode.commands.executeCommand("vscode.open", this.resourceUri);
                 }
                 if (ussFileProvider) {
-                    // Add document name to recently-opened files
-                    ussFileProvider.addFileHistory(`[${this.getProfile().name}]: ${this.fullPath}`);
                     ussFileProvider.getTreeView().reveal(this, { select: true, focus: true, expand: false });
                 }
             } catch (err) {
