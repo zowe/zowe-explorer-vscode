@@ -1035,7 +1035,7 @@ describe("ProfilesCache", () => {
         let profCache: ProfilesCache;
 
         beforeAll(() => {
-            profCache = new ProfilesCache({ error: vi.fn(), debug: vi.fn() } as unknown as imperative.Logger);
+            profCache = new ProfilesCache({ error: vi.fn(), debug: vi.fn(), debug: vi.fn() } as unknown as imperative.Logger);
             profCache.allProfiles = [lpar1Profile as imperative.IProfileLoaded];
             vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
                 getCommonApi: () => {
@@ -1051,6 +1051,28 @@ describe("ProfilesCache", () => {
                 getCommonApi: () => {
                     return {
                         getSession: null,
+                    };
+                },
+            } as any);
+            vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(undefined as unknown as imperative.ProfileInfo);
+            expect(
+                profCache.getApimlDecision({
+                    ...lpar1Profile,
+                    profile: {
+                        ...lpar1Profile.profile,
+                        allowedLoginMethod: imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC,
+                    },
+                } as any).usingApiml
+            ).toBe(true);
+            expect((profCache as any).log.debug).toHaveBeenCalledOnce();
+        });
+
+
+        it('Should return true for extenders without registered getSession API', () => {
+            vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
+                getCommonApi: () => {
+                    return {
+                        getSession: null
                     };
                 },
             } as any);

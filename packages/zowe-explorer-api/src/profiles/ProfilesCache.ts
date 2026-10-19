@@ -85,7 +85,7 @@ export class ProfilesCache {
         if (keyring == null) {
             throw new Error(
                 "The @zowe/secrets-for-zowe-sdk module was loaded, but it did not export a keyring. " +
-                    "This usually means that the module failed to load earlier in this session."
+                "This usually means that the module failed to load earlier in this session."
             );
         }
         return keyring;
@@ -636,6 +636,7 @@ export class ProfilesCache {
     public isUsingApiml(profile: ProfileLike): boolean {
         const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
         return this.getApimlDecision(profileLoaded).usingApiml;
+        return this.getApimlDecision(profileLoaded).usingApiml;
     }
     /**
      * Detect if sessions created from the specified profile connect to APIML, and report the reason for that decision.
@@ -651,7 +652,7 @@ export class ProfilesCache {
     /**
      * Get the session object for the APIML decision in imperative. If the session can't be created from an extender's
      * registered getSession API, use the profile properties to create a session instead.
-     *
+     * 
      * @param profile
      * @returns
      */
