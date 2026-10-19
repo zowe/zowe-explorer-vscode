@@ -66,6 +66,8 @@ export function createEditorData(): EditorData {
 
         // Lifecycle
         isSaving: false,
+        saveRequestSeq: 0,
+        pendingSaveRequestId: null,
         pendingSaveSelection: null,
         saveModalOpen: false,
 

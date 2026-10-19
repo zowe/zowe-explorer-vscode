@@ -17,10 +17,12 @@ import { ConfirmableDeleteButton } from "./ConfirmableDeleteButton";
 import { flattenProfiles } from "../utils";
 import { getPropertyDescriptions } from "../utils/propertyUtils";
 import * as l10n from "@vscode/l10n";
-import { useEditorFields } from "../context/EditorStoreContext";
+import { useEditorFields, useEditorStore } from "../context/EditorStoreContext";
+import { selectCanOpenProfileInFile } from "../store/selectors";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 
 export const RenderProfileDetails = () => {
+  const canOpenProfileInFile = useEditorStore(selectCanOpenProfileInFile);
   const {
     handleSetAsDefault,
     openRenameProfile,
@@ -113,17 +115,27 @@ export const RenderProfileDetails = () => {
           <div className="profile-actions">
             <VscodeToolbarButton
               id="open-with-highlight"
-              onClick={() => {
-                const configPath = configurations[selectedTab!]?.configPath;
-                if (configPath) {
-                  vscodeApi.postMessage({
-                    command: "OPEN_CONFIG_FILE_WITH_PROFILE",
-                    filePath: configPath,
-                    profileKey: selectedProfileKey,
-                  });
-                }
-              }}
-              title={l10n.t("Open config file with profile highlighted")}
+              onClick={
+                canOpenProfileInFile
+                  ? () => {
+                      const configPath = configurations[selectedTab!]?.configPath;
+                      if (configPath) {
+                        vscodeApi.postMessage({
+                          command: "OPEN_CONFIG_FILE_WITH_PROFILE",
+                          filePath: configPath,
+                          profileKey: selectedProfileKey,
+                        });
+                      }
+                    }
+                  : undefined
+              }
+              aria-disabled={!canOpenProfileInFile}
+              tabIndex={canOpenProfileInFile ? 0 : -1}
+              title={
+                canOpenProfileInFile
+                  ? l10n.t("Open config file with profile highlighted")
+                  : l10n.t("Save this profile before opening its location in the config file")
+              }
             >
               <span className="codicon codicon-go-to-file"></span>
             </VscodeToolbarButton>

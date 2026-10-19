@@ -9,11 +9,28 @@
 import { flattenKeys } from "../utils";
 import type { EditorData } from "./types";
 import type { FlattenedConfig } from "../types";
+import { doesSavedProfileExist } from "../utils/profileKeyListing";
+import { getOriginalProfileKeyWithNested, getRenamedProfileKeyWithNested, isProfileOrParentDeleted } from "../utils/profileRenames";
 
 // Loaded configuration objects are replaced on refresh/save; weak keys let obsolete snapshots be collected.
 const flattenedProfiles = new WeakMap<object, FlattenedConfig>();
 const flattenedDefaults = new WeakMap<object, FlattenedConfig>();
 const emptyFlattened: FlattenedConfig = {};
+
+/** Highlight only a profile whose displayed path already exists in the saved file. */
+export function selectCanOpenProfileInFile(
+    state: Pick<EditorData, "configurations" | "selectedTab" | "selectedProfileKey" | "renames" | "deletions" | "isSaving">
+): boolean {
+    const { selectedProfileKey, selectedTab, configurations, renames, deletions, isSaving } = state;
+    const config = selectedTab === null ? undefined : configurations[selectedTab];
+    if (!selectedProfileKey || !config || isSaving) return false;
+    return (
+        getOriginalProfileKeyWithNested(selectedProfileKey, config.configPath, renames) === selectedProfileKey &&
+        getRenamedProfileKeyWithNested(selectedProfileKey, config.configPath, renames) === selectedProfileKey &&
+        !isProfileOrParentDeleted(selectedProfileKey, deletions, config.configPath) &&
+        doesSavedProfileExist(selectedProfileKey, config.configPath, configurations)
+    );
+}
 
 export function selectFlattenedConfig(state: Pick<EditorData, "configurations" | "selectedTab">): FlattenedConfig {
     const config = state.selectedTab === null ? undefined : state.configurations[state.selectedTab];

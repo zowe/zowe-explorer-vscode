@@ -39,6 +39,10 @@ export function createConfigurationActions(state: EditorRuntime) {
         setDragDroppedProfiles,
         setHiddenItems,
         setIsSaving,
+        isSaving,
+        saveRequestSeq,
+        setSaveRequestSeq,
+        setPendingSaveRequestId,
         setSaveModalOpen,
         setPendingSaveSelection,
         setProfileSearchTerm,
@@ -53,6 +57,10 @@ export function createConfigurationActions(state: EditorRuntime) {
     const { doesProfileExist, doesSavedProfileExist } = createProfileUtils(state);
 
     const handleSave = () => {
+        if (isSaving) return;
+        const saveRequestId = saveRequestSeq + 1;
+        setSaveRequestSeq(saveRequestId);
+        setPendingSaveRequestId(saveRequestId);
         setIsSaving(true);
         setSaveModalOpen(true);
         setPendingSaveSelection({
@@ -81,6 +89,7 @@ export function createConfigurationActions(state: EditorRuntime) {
 
         vscodeApi.postMessage({
             command: "SAVE_CHANGES",
+            saveRequestId,
             revisions: Object.fromEntries(configurations.map((config) => [config.configPath, config.revision])),
             changes,
             deletions: deleteKeys,
@@ -90,20 +99,11 @@ export function createConfigurationActions(state: EditorRuntime) {
             renames: renamesData,
         });
 
-        setHiddenItems({});
-        setPendingChanges({});
-        setDeletions({});
-        setPendingDefaults({});
-        setDefaultsDeletions({});
-        setAutostoreChanges({});
-        setRenames({});
-        setDragDroppedProfiles({});
-        clearHistory();
-
-        // CONFIGURATIONS is pushed by the extension after SAVE_CHANGES; no GET_PROFILES here.
+        // Retain the draft and its base snapshot until the matching SAVE_SUCCESS response.
     };
 
     const handleRefresh = () => {
+        if (isSaving) return;
         const currentSelectedTab = selectedTab;
         const currentSelectedProfileKey = selectedProfileKey;
 

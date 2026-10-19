@@ -69,6 +69,8 @@ export interface ClipboardState {
 
 export interface LifecycleState {
     isSaving: boolean;
+    saveRequestSeq: number;
+    pendingSaveRequestId: number | null;
     pendingSaveSelection: { tab: number | null; profile: string | null } | null;
     saveModalOpen: boolean;
 }

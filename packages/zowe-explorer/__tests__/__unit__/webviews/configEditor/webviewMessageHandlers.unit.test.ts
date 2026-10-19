@@ -31,6 +31,123 @@ const user: Configuration = { configPath: "/mock/user.json", properties: { profi
 
 describe("webviewMessageHandlers", () => {
     afterEach(() => vi.useRealTimers());
+    describe("save acknowledgments", () => {
+        it.each(["SAVE_ERROR", "SAVE_CANCELLED"])("retains the complete draft, base snapshot and history after %s, ready to retry", (command) => {
+            const store = makeStore({ configurations: [{ ...team, revision: "original-revision" }], selectedTab: 0, selectedProfileKey: "renamed" });
+            store.getState().transaction(() => {
+                store.getState().setPendingChanges({
+                    [team.configPath]: { "profiles.renamed.properties.host": { value: "edited", path: ["host"], profile: "renamed" } },
+                });
+                store.getState().setPendingDefaults({ [team.configPath]: { base: { value: "renamed", path: ["base"] } } });
+                store.getState().setDeletions({ [team.configPath]: ["profiles.old"] });
+                store.getState().setDefaultsDeletions({ [team.configPath]: ["zosmf"] });
+                store.getState().setRenames({ [team.configPath]: { base: "renamed" } });
+                store.getState().setAutostoreChanges({ [team.configPath]: true });
+                store.getState().setDragDroppedProfiles({ [team.configPath]: new Set(["renamed"]) });
+                store.getState().setHiddenItems({ [team.configPath]: { password: { path: "profiles.renamed.properties.password" } } });
+            });
+            store.getState().handleDefaultsChange("base", "another-profile");
+            store.getState().undo();
+            const before = store.getState();
+            store.getState().handleSave();
+            const saveRequestId = store.getState().pendingSaveRequestId;
+            const changedConfig = { ...team, revision: "external-revision", properties: { profiles: {}, defaults: { base: "external-profile" } } };
+            handleMessage({ data: { command: "CONFIGURATIONS", contents: [changedConfig] } } as MessageEvent, store);
+            expect(store.getState()).toMatchObject({ isSaving: true, saveModalOpen: true });
+            handleMessage({ data: { command, saveRequestId, error: "Save blocked" } } as MessageEvent, store);
+            handleMessage({ data: { command: "CONFIGURATIONS", contents: [changedConfig] } } as MessageEvent, store);
+            const after = store.getState();
+            for (const key of [
+                "pendingChanges",
+                "pendingDefaults",
+                "deletions",
+                "defaultsDeletions",
+                "renames",
+                "autostoreChanges",
+                "dragDroppedProfiles",
+                "hiddenItems",
+                "undoStack",
+                "redoStack",
+            ] as const) {
+                expect(after[key]).toBe(before[key]);
+            }
+            expect(after.configurations[0]).toBe(before.configurations[0]);
+            expect(after).toMatchObject({
+                isSaving: false,
+                saveModalOpen: false,
+                pendingSaveRequestId: null,
+                pendingSaveSelection: null,
+                selectedProfileKey: "renamed",
+            });
+            after.redo();
+            expect(store.getState().pendingDefaults[team.configPath].base.value).toBe("another-profile");
+            after.undo();
+            after.handleSave();
+            expect(after.vscodeApi.postMessage).toHaveBeenLastCalledWith(
+                expect.objectContaining({
+                    command: "SAVE_CHANGES",
+                    saveRequestId: 2,
+                    revisions: { [team.configPath]: "original-revision" },
+                    changes: expect.arrayContaining([expect.objectContaining({ value: "edited" })]),
+                    renames: [{ originalKey: "base", newKey: "renamed", configPath: team.configPath }],
+                })
+            );
+        });
+
+        it("clears committed edits only on the matching success and adopts the saved snapshot atomically", () => {
+            const store = makeStore({ configurations: [{ ...team, revision: "original" }], selectedTab: 0 });
+            store.getState().handleDefaultsChange("base", "saved-profile");
+            store.getState().handleSave();
+            const saveRequestId = store.getState().pendingSaveRequestId;
+            const committedConfig = { ...team, revision: "committed", properties: { profiles: {}, defaults: { base: "saved-profile" } } };
+            const notified = vi.fn();
+            store.subscribe(notified);
+            handleMessage({ data: { command: "SAVE_SUCCESS", saveRequestId, contents: [committedConfig] } } as MessageEvent, store);
+            expect(notified).toHaveBeenCalledTimes(1);
+            expect(store.getState()).toMatchObject({
+                configurations: [committedConfig],
+                pendingChanges: {},
+                pendingDefaults: {},
+                deletions: {},
+                defaultsDeletions: {},
+                renames: {},
+                autostoreChanges: {},
+                hiddenItems: {},
+                dragDroppedProfiles: {},
+                undoStack: [],
+                redoStack: [],
+                isSaving: false,
+                saveModalOpen: false,
+                pendingSaveRequestId: null,
+                pendingSaveSelection: null,
+            });
+            expect(store.getState().hasPendingChanges()).toBe(false);
+        });
+
+        it("ignores stale save results and generic overlay updates during a newer save", () => {
+            const store = makeStore({ configurations: [team], selectedTab: 0 });
+            store.getState().handleDefaultsChange("base", "edited");
+            store.getState().handleSave();
+            handleMessage({ data: { command: "SAVE_CANCELLED", saveRequestId: 1 } } as MessageEvent, store);
+            store.getState().handleSave();
+            const before = store.getState();
+            for (const command of ["SAVE_SUCCESS", "SAVE_ERROR", "SAVE_CANCELLED"]) {
+                handleMessage({ data: { command, saveRequestId: 1, contents: [user] } } as MessageEvent, store);
+            }
+            handleMessage({ data: { command: "DISABLE_OVERLAY" } } as MessageEvent, store);
+            expect(store.getState()).toBe(before);
+        });
+
+        it("clears a committed draft and requests a refresh when the success response has no snapshot", () => {
+            const store = makeStore({ configurations: [team], selectedTab: 0 });
+            store.getState().handleDefaultsChange("base", "edited");
+            store.getState().handleSave();
+            handleMessage({ data: { command: "SAVE_SUCCESS", saveRequestId: 1 } } as MessageEvent, store);
+            expect(store.getState().hasPendingChanges()).toBe(false);
+            expect(store.getState()).toMatchObject({ isSaving: false, saveModalOpen: false, pendingSaveSelection: null });
+            expect(store.getState().vscodeApi.postMessage).toHaveBeenLastCalledWith({ command: "GET_PROFILES" });
+        });
+    });
     describe("configuration refresh and selection", () => {
         it("keeps the original save revision when a background refresh arrives during editing", () => {
             const store = makeStore({ configurations: [{ ...team, revision: "before-edit" }], selectedTab: 0 });

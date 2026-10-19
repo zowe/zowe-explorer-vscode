@@ -36,6 +36,8 @@ interface ConfigurationsMessagePayload {
 // Handle CONFIGURATIONS message
 export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, store: EditorStore) => {
     const props = store.getState();
+    // A background refresh cannot complete a save or replace the snapshot used by its draft.
+    if (props.isSaving) return;
     const {
         setConfigurations,
         setSecureValuesAllowed,
@@ -44,7 +46,6 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
         setSelectedTab,
         setSelectedProfileKey,
         setPendingSaveSelection,
-        setIsSaving,
         setSortOrderVersion,
         setSelectedProfilesByConfig,
         vscodeApi,
@@ -54,7 +55,15 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
         setConfigParseErrors,
     } = props;
 
-    const { contents, secureValuesAllowed, parseErrors, tutorialSeen } = data;
+    const { secureValuesAllowed, parseErrors, tutorialSeen } = data;
+    const previousConfigurations = props.configurations;
+    const hasPendingChanges = props.hasPendingChanges();
+    const contents = hasPendingChanges
+        ? [
+              ...previousConfigurations,
+              ...data.contents.filter((config) => !previousConfigurations.some((previous) => previous.configPath === config.configPath)),
+          ]
+        : data.contents;
     if (tutorialSeen !== undefined) {
         props.setTutorialSeen(tutorialSeen);
         if (!tutorialSeen) {
@@ -63,33 +72,16 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
     }
     const parseErrorList: ConfigParseError[] = parseErrors ?? [];
     setConfigParseErrors(parseErrorList);
-    const previousConfigurations = props.configurations;
-    setConfigurations(
-        contents.map((config) =>
-            props.hasPendingChanges()
-                ? {
-                      ...config,
-                      revision: previousConfigurations.find((previous) => previous.configPath === config.configPath)?.revision ?? config.revision,
-                  }
-                : config
-        )
-    );
+    setConfigurations(contents);
     const newSecureValuesAllowed = secureValuesAllowed !== undefined ? secureValuesAllowed : true;
     setSecureValuesAllowed(newSecureValuesAllowed);
 
-    const newSchemaValidations: { [configPath: string]: schemaValidation | undefined } = {};
-    contents.forEach((config) => {
+    const newSchemaValidations: { [configPath: string]: schemaValidation | undefined } = hasPendingChanges ? { ...props.schemaValidations } : {};
+    data.contents.forEach((config) => {
+        if (hasPendingChanges && previousConfigurations.some((previous) => previous.configPath === config.configPath)) return;
         newSchemaValidations[config.configPath] = config.schemaValidation;
     });
     setSchemaValidations(newSchemaValidations);
-
-    const newValidDefaults: { [configPath: string]: string[] } = {};
-    contents.forEach((config) => {
-        newValidDefaults[config.configPath] = config.schemaValidation?.validDefaults || [];
-    });
-
-    // Any CONFIGURATIONS message means a prior save/refresh round-trip has completed.
-    setIsSaving(false);
 
     const resolveSelectedTab = (previousTab: number | null): number | null => {
         if (!pendingSaveSelection && contents.length > previousConfigurations.length) {
@@ -146,22 +138,48 @@ export const handleConfigurationsMessage = (data: ConfigurationsMessagePayload, 
 // Handle DISABLE_OVERLAY message
 export const handleDisableOverlayMessage = (store: EditorStore) => {
     const props = store.getState();
+    if (props.isSaving) return;
     const { setSaveModalOpen } = props;
     setSaveModalOpen(false);
 };
 
 interface SaveErrorMessagePayload {
+    saveRequestId?: number;
     error?: string;
 }
 
-// Handle SAVE_ERROR message
+/** A failed or cancelled save releases the UI while preserving the complete draft and history. */
 export const handleSaveErrorMessage = (data: SaveErrorMessagePayload, store: EditorStore) => {
     const props = store.getState();
-    const { setRenames, setIsSaving, setSaveModalOpen } = props;
-    console.log("[SAVE_ERROR] Rolling back renames due to save error", JSON.stringify({ error: data.error }, null, 2));
-    setRenames({});
-    setIsSaving(false);
-    setSaveModalOpen(false);
+    if (!props.isSaving || data.saveRequestId !== props.pendingSaveRequestId) return;
+    props.setIsSaving(false);
+    props.setSaveModalOpen(false);
+    props.setPendingSaveRequestId(null);
+    props.setPendingSaveSelection(null);
+};
+
+/** Clear only the draft acknowledged as committed, then adopt the new disk snapshot atomically. */
+export const handleSaveSuccessMessage = (data: Partial<ConfigurationsMessagePayload> & { saveRequestId?: number }, store: EditorStore) => {
+    const props = store.getState();
+    if (!props.isSaving || data.saveRequestId !== props.pendingSaveRequestId) return;
+    props.setHiddenItems({});
+    props.setPendingChanges({});
+    props.setDeletions({});
+    props.setPendingDefaults({});
+    props.setDefaultsDeletions({});
+    props.setAutostoreChanges({});
+    props.setRenames({});
+    props.setDragDroppedProfiles({});
+    props.clearHistory();
+    props.setIsSaving(false);
+    props.setSaveModalOpen(false);
+    props.setPendingSaveRequestId(null);
+    if (data.contents) {
+        handleConfigurationsMessage({ ...data, contents: data.contents }, store);
+    } else {
+        props.setPendingSaveSelection(null);
+        props.vscodeApi.postMessage({ command: "GET_PROFILES" });
+    }
 };
 
 /**
@@ -472,7 +490,11 @@ const dispatchMessage = (event: MessageEvent, store: EditorStore) => {
             handleDisableOverlayMessage(store);
             break;
         case "SAVE_ERROR":
+        case "SAVE_CANCELLED":
             handleSaveErrorMessage(event.data, store);
+            break;
+        case "SAVE_SUCCESS":
+            handleSaveSuccessMessage(event.data, store);
             break;
         case "MERGED_PROPERTIES":
             handleMergedPropertiesMessage(event.data, store);

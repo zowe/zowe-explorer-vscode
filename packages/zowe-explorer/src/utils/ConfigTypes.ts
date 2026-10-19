@@ -175,6 +175,7 @@ export interface LayerChangesPayload {
 
 /** SAVE_CHANGES payload from webview (changes carry configPath; optional renames / autostore). */
 export interface SaveChangesMessage extends WebviewCommandMessage, LayerChangesPayload {
+    saveRequestId?: number;
     revisions?: Record<string, string>;
     renames?: ProfileRenameEntry[];
     otherChanges?: AutostoreToggleChange[];

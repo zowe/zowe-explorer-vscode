@@ -9,6 +9,7 @@
 import { createHash } from "crypto";
 import * as vscode from "vscode";
 import type { IConfigLayer } from "@zowe/imperative";
+import { Gui } from "@zowe/zowe-explorer-api";
 import { ConfigUtils } from "./ConfigUtils";
 import { ConfigChangeHandlers } from "./ConfigChangeHandlers";
 import { ConfigEditorProfileOperations } from "./ConfigEditorProfileOperations";
@@ -17,6 +18,8 @@ import { FavoritePersistenceUtils } from "./FavoritePersistenceUtils";
 import { Profiles } from "../configuration/Profiles";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import type { ChangeEntry, SaveChangesMessage } from "./ConfigTypes";
+
+class ConfigEditorSaveCancelled extends Error {}
 
 export class ConfigEditorSaveOperations {
     public static revision(contents: Uint8Array): string {
@@ -28,7 +31,19 @@ export class ConfigEditorSaveOperations {
     }
 
     /** One in-memory edit followed by recoverable layer commits. No writes during validation. */
-    public async save(message: SaveChangesMessage, areSecureValuesAllowed: () => Promise<boolean>): Promise<void> {
+    public async save(message: SaveChangesMessage, areSecureValuesAllowed: () => Promise<boolean>): Promise<boolean> {
+        try {
+            await this.saveChanges(message, areSecureValuesAllowed);
+            return true;
+        } catch (error) {
+            if (!(error instanceof ConfigEditorSaveCancelled)) {
+                throw error;
+            }
+            return false;
+        }
+    }
+
+    private async saveChanges(message: SaveChangesMessage, areSecureValuesAllowed: () => Promise<boolean>): Promise<void> {
         const operations = new ConfigEditorProfileOperations();
         const grouped = ConfigUtils.parseConfigChanges({
             changes: message.changes ?? [],
@@ -46,8 +61,7 @@ export class ConfigEditorSaveOperations {
             ...paths,
             ...(message.changes ?? []).flatMap((change) => (change.secureSource ? [change.secureSource.configPath] : [])),
         ])) {
-            const contents = await vscode.workspace.fs.readFile(vscode.Uri.file(configPath));
-            await this.assertUnchanged(configPath, message.revisions?.[configPath], contents);
+            const contents = await this.confirmOverwriteIfChanged(configPath, message.revisions?.[configPath]);
             contentsByPath.set(configPath, contents);
         }
         const profInfo = await ConfigUtils.createProfileInfoAndLoad();
@@ -71,7 +85,7 @@ export class ConfigEditorSaveOperations {
             }
             const source = change.secureSource;
             ConfigChangeHandlers.activateLayerIfNeeded(config, source.configPath);
-            await this.assertUnchanged(source.configPath, message.revisions?.[source.configPath]);
+            await this.assertUnchanged(source.configPath, ConfigEditorSaveOperations.revision(contentsByPath.get(source.configPath)));
             const key = `${ConfigEditorPathUtils.constructNestedProfilePath(source.profileKey)}.properties.${source.propertyKey}`;
             const value = this.getValue(config.api.layers.get().properties, key);
             if (value === undefined) {
@@ -96,22 +110,35 @@ export class ConfigEditorSaveOperations {
         }
         await ConfigChangeHandlers.handleAutostoreToggle(message.otherChanges ?? [], config);
 
-        // Recheck after asynchronous staging, before the first write.
-        for (const [configPath, original] of originals) {
-            await this.assertUnchanged(configPath, ConfigEditorSaveOperations.revision(original.contents));
-        }
         const attempted: string[] = [];
+        const committedRevisions = new Map<string, string>();
         try {
             for (const configPath of paths) {
+                const original = originals.get(configPath);
+                const contents = await this.confirmOverwriteIfChanged(configPath, ConfigEditorSaveOperations.revision(original.contents));
+                if (ConfigEditorSaveOperations.revision(contents) !== ConfigEditorSaveOperations.revision(original.contents)) {
+                    // An explicitly approved overwrite must still roll back to the latest external version.
+                    const latestConfig = (await ConfigUtils.createProfileInfoAndLoad()).getTeamConfig();
+                    ConfigChangeHandlers.activateLayerIfNeeded(latestConfig, configPath);
+                    original.layer = latestConfig.api.layers.get();
+                    original.contents = contents;
+                    await this.assertUnchanged(configPath, ConfigEditorSaveOperations.revision(contents));
+                }
                 ConfigChangeHandlers.activateLayerIfNeeded(config, configPath);
                 attempted.push(configPath); // save may update the vault before a file write fails
                 await config.save();
+                committedRevisions.set(configPath, await ConfigEditorSaveOperations.readRevision(configPath));
             }
-        } catch {
+        } catch (error) {
             const failedRestores: string[] = [];
             for (const configPath of attempted.reverse()) {
                 const original = originals.get(configPath);
                 try {
+                    // Do not undo a later edit made by another writer while this save was running.
+                    const committedRevision = committedRevisions.get(configPath);
+                    if (committedRevision) {
+                        await this.assertUnchanged(configPath, committedRevision);
+                    }
                     ConfigChangeHandlers.activateLayerIfNeeded(config, configPath);
                     config.api.layers.set(original.layer.properties);
                     await config.save();
@@ -122,6 +149,9 @@ export class ConfigEditorSaveOperations {
             }
             if (failedRestores.length > 0) {
                 throw new Error(`Save failed and could not restore these files: ${failedRestores.join(", ")}. Check these files before retrying.`);
+            }
+            if (error instanceof ConfigEditorSaveCancelled) {
+                throw error;
             }
             throw new Error("Save failed. The original configuration was restored.");
         }
@@ -140,15 +170,40 @@ export class ConfigEditorSaveOperations {
         }
     }
 
-    private async assertUnchanged(configPath: string, revision: string | undefined, contents?: Uint8Array): Promise<void> {
-        const dirty = vscode.workspace.textDocuments.some((doc) => doc.uri.fsPath === configPath && doc.isDirty);
-        if (
-            dirty ||
-            !revision ||
-            revision !== (contents ? ConfigEditorSaveOperations.revision(contents) : await ConfigEditorSaveOperations.readRevision(configPath))
-        ) {
+    private async confirmOverwriteIfChanged(configPath: string, revision: string | undefined): Promise<Uint8Array> {
+        const contents = await vscode.workspace.fs.readFile(vscode.Uri.file(configPath));
+        this.assertNoDirtyTextDocument(configPath);
+        const currentRevision = ConfigEditorSaveOperations.revision(contents);
+        if (currentRevision !== revision) {
+            const saveAnyway = vscode.l10n.t("Save Anyway");
+            const response = await Gui.warningMessage(
+                vscode.l10n.t(
+                    "This configuration file changed outside the configuration editor. Saving may overwrite external changes.\n{0}",
+                    configPath
+                ),
+                { items: [saveAnyway], vsCodeOpts: { modal: true } }
+            );
+            if (response !== saveAnyway) {
+                throw new ConfigEditorSaveCancelled();
+            }
+            // Approval applies only to the version shown in the confirmation.
+            await this.assertUnchanged(configPath, currentRevision);
+        }
+        return contents;
+    }
+
+    private assertNoDirtyTextDocument(configPath: string): void {
+        if (vscode.workspace.textDocuments.some((doc) => doc.uri.fsPath === configPath && doc.isDirty)) {
+            throw new Error(vscode.l10n.t("Configuration changed outside this editor: {0}. Save any text edits before retrying.", configPath));
+        }
+    }
+
+    private async assertUnchanged(configPath: string, revision: string | undefined): Promise<void> {
+        this.assertNoDirtyTextDocument(configPath);
+        if (!revision || revision !== (await ConfigEditorSaveOperations.readRevision(configPath))) {
             throw new Error(
-                `Configuration changed outside this editor: ${configPath}. Save any text edits, then refresh the configuration editor before retrying.`
+                `Configuration changed outside this editor: ${configPath}. ` +
+                    "Save any text edits, then refresh the configuration editor before retrying."
             );
         }
     }

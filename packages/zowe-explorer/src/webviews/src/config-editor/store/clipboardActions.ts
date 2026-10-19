@@ -43,20 +43,24 @@ export function createClipboardActions(state: EditorRuntime) {
               .map((key) => getRenamedProfileKeyWithNested(key, config.configPath, renames))
         : [];
     const pendingProfiles = config ? createUtilityHelpers(state).extractPendingProfiles(config.configPath) : {};
-    const getType = (profileKey: string) => getProfileType({ ...state, profileKey });
     const { handleProfileSelection: onProfileSelect, handleRenameProfile: onProfileRename } = createProfileActions(state);
 
-    const collectProfiles = (profileKey: string) =>
-        collectClipboardProfiles({
+    const collectProfiles = (profileKey: string, sourceTab = selectedTab) => {
+        const sourceState = { ...state, selectedTab: sourceTab };
+        const sourcePath = sourceTab === null ? undefined : configurations[sourceTab]?.configPath;
+        if (!sourcePath) return {};
+        return collectClipboardProfiles({
             profileKey,
-            profileKeys,
-            pendingProfiles,
-            getProfileType: getType,
-            selectedTab,
+            profileKeys: createProfileUtils(sourceState).getAvailableProfilesForConfig(sourcePath),
+            pendingProfiles: createUtilityHelpers(sourceState).extractPendingProfiles(sourcePath),
+            getProfileType: (key) => getProfileType({ ...sourceState, profileKey: key }),
+            selectedTab: sourceTab,
             configurations,
             pendingChanges,
             renames,
+            deletions: state.deletions,
         });
+    };
     const uniqueKey = (proposedKey: string) =>
         getUniqueProfileKey(proposedKey, [...profileKeys, ...Object.keys(pendingProfiles), ...Object.values(renames[config!.configPath] || {})]);
     const addProfiles = (profiles: NonNullable<typeof profileClipboard>["profiles"], sourceKey: string, destinationKey: string) => {
@@ -70,6 +74,7 @@ export function createClipboardActions(state: EditorRuntime) {
         setProfileClipboard({
             type: isCut ? "cut" : "copy",
             sourceKey: profileKey,
+            originalKey: getOriginalProfileKeyWithNested(profileKey, config.configPath, renames),
             configPath: config.configPath,
             profiles: collectProfiles(profileKey),
         });
@@ -83,29 +88,31 @@ export function createClipboardActions(state: EditorRuntime) {
 
     const pasteProfile = (targetProfileKey: string | null) => {
         if (!profileClipboard || !config) return;
-        const leafName = profileClipboard.sourceKey.split(".").pop() || profileClipboard.sourceKey;
+        const sourceTab = configurations.findIndex((entry) => entry.configPath === profileClipboard.configPath);
+        const sourceKey =
+            profileClipboard.type === "cut"
+                ? getRenamedProfileKeyWithNested(profileClipboard.originalKey ?? profileClipboard.sourceKey, profileClipboard.configPath, renames)
+                : profileClipboard.sourceKey;
+        const profiles = profileClipboard.type === "cut" ? (sourceTab < 0 ? {} : collectProfiles(sourceKey, sourceTab)) : profileClipboard.profiles;
+        if (!profiles[sourceKey]) return;
+        const leafName = sourceKey.split(".").pop() || sourceKey;
         const destinationKey = uniqueKey(targetProfileKey ? `${targetProfileKey}.${leafName}` : leafName);
         if (profileClipboard.type === "cut" && profileClipboard.configPath === config.configPath) {
-            if (
-                destinationKey === profileClipboard.sourceKey ||
-                targetProfileKey === profileClipboard.sourceKey ||
-                targetProfileKey?.startsWith(profileClipboard.sourceKey + ".")
-            )
-                return;
-            if (onProfileRename) {
-                onProfileRename(getOriginalProfileKeyWithNested(profileClipboard.sourceKey, config.configPath, renames), destinationKey, true);
+            if (destinationKey === sourceKey || targetProfileKey === sourceKey || targetProfileKey?.startsWith(sourceKey + ".")) return;
+            if (onProfileRename(getOriginalProfileKeyWithNested(sourceKey, config.configPath, renames), destinationKey, true)) {
                 setProfileClipboard(null);
             }
             return;
         }
 
-        addProfiles(profileClipboard.profiles, profileClipboard.sourceKey, destinationKey);
+        addProfiles(profiles, sourceKey, destinationKey);
         if (profileClipboard.type === "cut") {
-            const sourcePath = profileKeyToPath(profileClipboard.sourceKey).join(".");
+            const sourcePath = profileKeyToPath(sourceKey).join(".");
+            const clipboard = { ...profileClipboard, sourceKey };
             setDeletions((prev) => ({ ...prev, [profileClipboard.configPath]: [...(prev[profileClipboard.configPath] || []), sourcePath] }));
-            setPendingChanges((prev) => removeCutProfileChanges(prev, profileClipboard));
+            setPendingChanges((prev) => removeCutProfileChanges(prev, clipboard));
             const savedDefaults = configurations.find((entry) => entry.configPath === profileClipboard.configPath)?.properties?.defaults || {};
-            setPendingDefaults((prev) => clearCutProfileDefaults(prev, savedDefaults, profileClipboard));
+            setPendingDefaults((prev) => clearCutProfileDefaults(prev, savedDefaults, clipboard));
             setProfileClipboard(null);
         }
     };

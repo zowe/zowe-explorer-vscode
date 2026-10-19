@@ -12,6 +12,7 @@
 import { vi } from "vitest";
 import * as vscode from "vscode";
 import type { IConfigLayer } from "@zowe/imperative";
+import { Gui } from "@zowe/zowe-explorer-api";
 import { createEditorConfig } from "../../../__mocks__/mockCreators/configEditor";
 import { ConfigEditorSaveOperations } from "../../../../src/utils/ConfigEditorSaveOperations";
 import { ConfigUtils } from "../../../../src/utils/ConfigUtils";
@@ -26,8 +27,9 @@ vi.mock("../../../../src/utils/FavoritePersistenceUtils", () => ({
         fireAndForgetExplorerTreeRebuildAfterRename: vi.fn(),
     },
 }));
-vi.mock("@zowe/zowe-explorer-api", () => ({ ZoweVsCodeExtension: {}, ProfilesCache: {}, FileManagement: {} }));
+vi.mock("@zowe/zowe-explorer-api", () => ({ Gui: { warningMessage: vi.fn() }, ZoweVsCodeExtension: {}, ProfilesCache: {}, FileManagement: {} }));
 vi.mock("vscode", () => ({
+    l10n: { t: (message: string) => message },
     workspace: { fs: { readFile: vi.fn(), writeFile: vi.fn() }, textDocuments: [] },
     Uri: { file: (fsPath: string) => ({ fsPath }) },
 }));
@@ -79,6 +81,7 @@ describe("ConfigEditorSaveOperations", () => {
     beforeEach(() => {
         vi.restoreAllMocks();
         vi.clearAllMocks();
+        vi.mocked(Gui.warningMessage).mockResolvedValue(undefined);
     });
 
     it("preserves profiles dragged beneath a newly added unsaved parent", async () => {
@@ -121,6 +124,69 @@ describe("ConfigEditorSaveOperations", () => {
         expect(saved.get(configs[0].configPath)?.profiles.base).toBeDefined();
     });
 
+    it("moves the latest source edits and new descendants made after Cut", async () => {
+        const { store, saved, commit, configs } = setup();
+        store.getState().copyProfile("base", true);
+        store.getState().handleChange("profiles.base.properties.host", "edited after cut");
+        store.getState().handleChange("profiles.base.properties.password", "new synthetic credential");
+        store.setState({ wizardProfileName: "newChild", wizardRootProfile: "base", wizardSelectedType: "", wizardProperties: [] });
+        store.getState().handleWizardCreateProfile();
+        store.getState().handleTabChange(1);
+        store.getState().pasteProfile(null);
+        await commit();
+        expect(saved.get(configs[0].configPath)?.profiles).toEqual({});
+        expect(saved.get(configs[1].configPath)?.profiles.base).toMatchObject({
+            properties: { host: "edited after cut", password: "new synthetic credential" },
+            secure: ["password"],
+            profiles: { newChild: { properties: {} }, leaf: { type: "zosmf" } },
+        });
+    });
+
+    it("follows a rename made after Cut and respects property and subtree deletions", async () => {
+        const { store, saved, commit, configs } = setup();
+        store.getState().copyProfile("base", true);
+        expect(store.getState().handleRenameProfile("base", "renamed")).toBe(true);
+        store.getState().confirmDeleteProperty("profiles.renamed.properties.host");
+        store.getState().confirmDeleteProperty("profiles.renamed.properties.password", true);
+        store.getState().confirmDeleteProfile("renamed.leaf");
+        store.getState().handleTabChange(1);
+        store.getState().pasteProfile(null);
+        await commit();
+        expect(saved.get(configs[0].configPath)?.profiles).toEqual({});
+        const moved = saved.get(configs[1].configPath)?.profiles.renamed;
+        expect(moved).toBeDefined();
+        expect(moved.properties).toEqual({});
+        expect(moved.profiles?.leaf).toBeUndefined();
+        expect(moved.secure ?? []).not.toContain("password");
+    });
+
+    it("preserves empty grouping profiles and empty descendants when moving across layers", async () => {
+        const { store, config, saved, commit, configs } = setup();
+        const profiles = { empty: {}, group: { profiles: { empty: {} } } };
+        config.api.layers.set({ profiles, defaults: {} });
+        store.setState({ configurations: [{ ...configs[0], properties: { profiles, defaults: {} } }, configs[1]], selectedProfileKey: "empty" });
+        store.getState().copyProfile("empty", true);
+        store.getState().handleTabChange(1);
+        store.getState().pasteProfile(null);
+        store.getState().handleTabChange(0);
+        store.getState().copyProfile("group", true);
+        store.getState().handleTabChange(1);
+        store.getState().pasteProfile(null);
+        await commit();
+        expect(saved.get(configs[0].configPath)?.profiles).toEqual({});
+        expect(saved.get(configs[1].configPath)?.profiles).toMatchObject({ empty: {}, group: { profiles: { empty: {} } } });
+    });
+
+    it("does not paste or delete a Cut source that has since been deleted", () => {
+        const { store } = setup();
+        store.getState().copyProfile("base", true);
+        store.getState().confirmDeleteProfile("base");
+        store.getState().handleTabChange(1);
+        const before = store.getState();
+        store.getState().pasteProfile(null);
+        expect(store.getState()).toBe(before);
+    });
+
     it("rejects a stale target path without touching the active layer", async () => {
         const { config, save } = setup();
         await expect(
@@ -136,12 +202,116 @@ describe("ConfigEditorSaveOperations", () => {
         expect(save).not.toHaveBeenCalled();
     });
 
-    it("rejects external changes before writing", async () => {
+    it("cancels without writing when the external-change confirmation is dismissed", async () => {
         const { store, commit, save } = setup();
         store.getState().handleChange("profiles.base.properties.host", "edited");
         vi.mocked(vscode.workspace.fs.readFile).mockResolvedValue(Buffer.from("external edit"));
+        await expect(commit()).resolves.toBe(false);
+        expect(save).not.toHaveBeenCalled();
+        expect(Gui.warningMessage).toHaveBeenCalledWith(expect.stringContaining("changed outside"), {
+            items: ["Save Anyway"],
+            vsCodeOpts: { modal: true },
+        });
+    });
+
+    it.each(["property", "rename", "default", "autostore"])("confirms an external change before saving %s edits", async (kind) => {
+        const { store, commit, save, payload } = setup();
+        if (kind === "property") store.getState().handleChange("profiles.base.properties.host", "edited");
+        if (kind === "rename") store.getState().handleRenameProfile("base", "renamed");
+        if (kind === "default") store.getState().handleDefaultsChange("base", "base.leaf");
+        if (kind === "autostore") store.getState().handleAutostoreToggle("/mock/team.json");
+        vi.mocked(vscode.workspace.fs.readFile).mockResolvedValue(Buffer.from("external edit"));
+        vi.mocked(Gui.warningMessage).mockResolvedValue("Save Anyway");
+        if (kind === "autostore") {
+            await new ConfigEditorSaveOperations().save(
+                { ...payload(), otherChanges: [{ type: "autostore", configPath: "/mock/team.json", value: true }] },
+                async () => true
+            );
+        } else {
+            await commit();
+        }
+        expect(Gui.warningMessage).toHaveBeenCalledTimes(1);
+        expect(save).toHaveBeenCalledTimes(1);
+    });
+
+    it("rejects another change made while awaiting confirmation", async () => {
+        const { store, commit, save } = setup();
+        store.getState().handleChange("profiles.base.properties.host", "edited");
+        vi.mocked(vscode.workspace.fs.readFile)
+            .mockResolvedValueOnce(Buffer.from("external edit"))
+            .mockResolvedValue(Buffer.from("another external edit"));
+        vi.mocked(Gui.warningMessage).mockResolvedValue("Save Anyway");
         await expect(commit()).rejects.toThrow("changed outside");
         expect(save).not.toHaveBeenCalled();
+    });
+
+    it("keeps unrelated external additions when an initial conflict is approved", async () => {
+        const { store, config, saved, configs, commit } = setup();
+        store.getState().handleChange("profiles.base.properties.host", "edited");
+        config.set("profiles.external", { type: "base", properties: { host: "external" } });
+        vi.mocked(vscode.workspace.fs.readFile).mockResolvedValue(Buffer.from("external addition"));
+        vi.mocked(Gui.warningMessage).mockResolvedValue("Save Anyway");
+        await commit();
+        expect(saved.get(configs[0].configPath)?.profiles).toMatchObject({
+            base: { properties: { host: "edited" } },
+            external: { properties: { host: "external" } },
+        });
+    });
+
+    it("checks each layer again and restores earlier commits when a later overwrite is declined", async () => {
+        const { store, saved, commit, save, configs } = setup();
+        const originals = structuredClone([...saved.entries()]);
+        store.getState().copyProfile("base", true);
+        store.getState().handleTabChange(1);
+        store.getState().pasteProfile(null);
+        const persist = save.getMockImplementation();
+        save.mockImplementationOnce(async () => {
+            await persist();
+            vi.mocked(vscode.workspace.fs.readFile).mockImplementation(async (uri) =>
+                Buffer.from(uri.fsPath === configs[0].configPath ? "external edit between commits" : "synthetic file revision")
+            );
+        });
+        await commit();
+        expect(Gui.warningMessage).toHaveBeenCalledTimes(1);
+        expect([...saved.entries()]).toEqual(originals);
+        expect(vscode.workspace.fs.writeFile).toHaveBeenCalledTimes(1);
+    });
+
+    it("saves a later layer changed between commits only after explicit approval", async () => {
+        const { store, saved, commit, save, configs } = setup();
+        store.getState().copyProfile("base", true);
+        store.getState().handleTabChange(1);
+        store.getState().pasteProfile(null);
+        const persist = save.getMockImplementation();
+        save.mockImplementationOnce(async () => {
+            await persist();
+            vi.mocked(vscode.workspace.fs.readFile).mockImplementation(async (uri) =>
+                Buffer.from(uri.fsPath === configs[0].configPath ? "external edit between commits" : "synthetic file revision")
+            );
+        });
+        vi.mocked(Gui.warningMessage).mockResolvedValue("Save Anyway");
+        await commit();
+        expect(Gui.warningMessage).toHaveBeenCalledTimes(1);
+        expect(save).toHaveBeenCalledTimes(2);
+        expect(saved.get(configs[0].configPath)?.profiles).toEqual({});
+        expect(saved.get(configs[1].configPath)?.profiles.base).toBeDefined();
+    });
+
+    it("does not overwrite a later external edit to an earlier layer during rollback", async () => {
+        const { store, commit, save, configs } = setup();
+        store.getState().copyProfile("base", true);
+        store.getState().handleTabChange(1);
+        store.getState().pasteProfile(null);
+        const persist = save.getMockImplementation();
+        save.mockImplementationOnce(persist).mockImplementationOnce(async () => {
+            vi.mocked(vscode.workspace.fs.readFile).mockImplementation(async (uri) =>
+                Buffer.from(uri.fsPath === configs[1].configPath ? "external edit after commit" : "synthetic file revision")
+            );
+            throw new Error("write failed");
+        });
+        await expect(commit()).rejects.toThrow(`could not restore these files: ${configs[1].configPath}`);
+        expect(vscode.workspace.fs.writeFile).toHaveBeenCalledTimes(1);
+        expect(vscode.workspace.fs.writeFile).toHaveBeenCalledWith(vscode.Uri.file(configs[0].configPath), expect.any(Uint8Array));
     });
 
     it("does not save any layer when staging a change fails", async () => {

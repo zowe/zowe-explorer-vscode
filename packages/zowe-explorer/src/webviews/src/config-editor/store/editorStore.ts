@@ -83,7 +83,10 @@ export function createEditorStore(vscodeApi: ConfigEditorWebviewApi = { postMess
                 keys.map((key) => [
                     key,
                     (...args: unknown[]) =>
-                        transaction(() => Reflect.apply(factory(read())[key] as (...values: unknown[]) => unknown, undefined, args), recordHistory),
+                        transaction(() => {
+                            if (recordHistory && read().isSaving) return;
+                            return Reflect.apply(factory(read())[key] as (...values: unknown[]) => unknown, undefined, args);
+                        }, recordHistory),
                 ])
             ) as Pick<T, K>;
         };
@@ -106,11 +109,13 @@ export function createEditorStore(vscodeApi: ConfigEditorWebviewApi = { postMess
             },
             undo: () =>
                 transaction(() => {
+                    if (read().isSaving) return;
                     const transition = undoTransition(read().undoStack, read().redoStack);
                     if (transition) update({ ...transition.snapshot, undoStack: transition.undoStack, redoStack: transition.redoStack });
                 }, false),
             redo: () =>
                 transaction(() => {
+                    if (read().isSaving) return;
                     const transition = redoTransition(read().undoStack, read().redoStack);
                     if (transition) update({ ...transition.snapshot, undoStack: transition.undoStack, redoStack: transition.redoStack });
                 }, false),

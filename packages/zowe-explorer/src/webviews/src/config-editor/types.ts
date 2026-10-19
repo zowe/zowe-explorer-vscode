@@ -111,6 +111,7 @@ export interface ClipboardProfile {
 export interface ProfileClipboard {
     type: "copy" | "cut";
     sourceKey: string;
+    originalKey?: string;
     configPath: string;
     profiles: Record<string, ClipboardProfile>;
 }

@@ -245,17 +245,29 @@ describe("editorStore", () => {
         expect(team.properties.profiles.container.profiles.leaf.properties.host).toBe("leaf-host");
     });
 
-    it("saves the latest draft and clears history without recording the reset", () => {
+    it("submits the latest draft while retaining its edits and history until acknowledged", () => {
         const { store, team } = makeEditor();
         store.getState().handleChange("profiles.base.properties.host", "changed");
+        const pendingChanges = store.getState().pendingChanges;
+        const undoStack = store.getState().undoStack;
         const save = store.getState().handleSave;
         save();
         expect(store.getState().vscodeApi.postMessage).toHaveBeenCalledWith(
             expect.objectContaining({
                 command: "SAVE_CHANGES",
+                saveRequestId: 1,
                 changes: expect.arrayContaining([expect.objectContaining({ configPath: team.configPath, value: "changed" })]),
             })
         );
-        expect(store.getState()).toMatchObject({ pendingChanges: {}, undoStack: [], redoStack: [], isSaving: true, saveModalOpen: true });
+        expect(store.getState()).toMatchObject({ isSaving: true, saveModalOpen: true, pendingSaveRequestId: 1 });
+        expect(store.getState().pendingChanges).toBe(pendingChanges);
+        expect(store.getState().undoStack).toBe(undoStack);
+        save();
+        store.getState().handleRefresh();
+        store.getState().undo();
+        store.getState().handleChange("profiles.base.properties.host", "edit while saving");
+        expect(store.getState().vscodeApi.postMessage).toHaveBeenCalledTimes(1);
+        expect(store.getState().pendingChanges).toBe(pendingChanges);
+        expect(store.getState().undoStack).toBe(undoStack);
     });
 });

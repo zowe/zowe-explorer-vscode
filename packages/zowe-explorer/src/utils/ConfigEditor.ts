@@ -211,21 +211,16 @@ export class ConfigEditor extends WebView {
         return { configs: allConfigs, parseErrors };
     }
 
-    private async refreshConfigurationsAndNotifyWebview(options?: { saveError?: string }): Promise<void> {
+    private async refreshConfigurationsAndNotifyWebview(save?: { saveRequestId?: number }): Promise<void> {
         const { configs, parseErrors } = await this.getLocalConfigs();
         const secureValuesAllowed = await this.areSecureValuesAllowed();
         await this.panel.webview.postMessage({
-            command: "CONFIGURATIONS",
+            command: save ? "SAVE_SUCCESS" : "CONFIGURATIONS",
+            ...(save ? { saveRequestId: save.saveRequestId } : {}),
             contents: configs,
             parseErrors,
             secureValuesAllowed,
         });
-        if (options?.saveError) {
-            await this.panel.webview.postMessage({
-                command: "SAVE_ERROR",
-                error: options.saveError,
-            });
-        }
         await this.panel.webview.postMessage({
             command: "DISABLE_OVERLAY",
         });
@@ -238,19 +233,36 @@ export class ConfigEditor extends WebView {
                 break;
             }
             case "SAVE_CHANGES": {
+                const saveMessage = message as SaveChangesMessage;
+                const saveRequestId = saveMessage.saveRequestId;
                 if (ConfigEditor.saveInProgress) {
-                    await this.panel.webview.postMessage({ command: "SAVE_ERROR", error: "A configuration save is already in progress." });
+                    await this.panel.webview.postMessage({
+                        command: "SAVE_ERROR",
+                        saveRequestId,
+                        error: "A configuration save is already in progress.",
+                    });
                     break;
                 }
                 ConfigEditor.saveInProgress = true;
+                let committed = false;
                 try {
-                    await new ConfigEditorSaveOperations().save(message as SaveChangesMessage, () => this.areSecureValuesAllowed());
-                    await this.refreshConfigurationsAndNotifyWebview();
+                    committed = await new ConfigEditorSaveOperations().save(saveMessage, () => this.areSecureValuesAllowed());
+                    if (committed) {
+                        await this.refreshConfigurationsAndNotifyWebview({ saveRequestId });
+                    } else {
+                        await this.panel.webview.postMessage({ command: "SAVE_CANCELLED", saveRequestId });
+                    }
                 } catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : "Configuration save failed.";
-                    ZoweLogger.error("Configuration editor save failed.");
-                    void Gui.errorMessage(errorMessage);
-                    await this.refreshConfigurationsAndNotifyWebview({ saveError: errorMessage });
+                    if (committed) {
+                        // The write succeeded. A refresh failure must not leave destructive edits ready to retry.
+                        ZoweLogger.warn("Configuration saved, but the configuration editor could not be refreshed.");
+                        await this.panel.webview.postMessage({ command: "SAVE_SUCCESS", saveRequestId });
+                    } else {
+                        const errorMessage = error instanceof Error ? error.message : "Configuration save failed.";
+                        ZoweLogger.error("Configuration editor save failed.");
+                        void Gui.errorMessage(errorMessage);
+                        await this.panel.webview.postMessage({ command: "SAVE_ERROR", saveRequestId, error: errorMessage });
+                    }
                 } finally {
                     ConfigEditor.saveInProgress = false;
                 }

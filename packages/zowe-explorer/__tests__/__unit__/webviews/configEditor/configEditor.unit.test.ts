@@ -864,23 +864,69 @@ describe("configEditor", () => {
         });
 
         it("delegates saves to the staged save operation and refreshes on success", async () => {
-            const message = { command: "SAVE_CHANGES", changes: [], renames: [], revisions: {} };
-            const save = vi.spyOn(ConfigEditorSaveOperations.prototype, "save").mockResolvedValueOnce(undefined);
+            const message = { command: "SAVE_CHANGES", saveRequestId: 1, changes: [], renames: [], revisions: {} };
+            const save = vi.spyOn(ConfigEditorSaveOperations.prototype, "save").mockResolvedValueOnce(true);
             vi.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
             vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
             await Reflect.apply(configEditor["onDidReceiveMessage"], configEditor, [message]);
             expect(save).toHaveBeenCalledWith(message, expect.any(Function));
-            expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({ command: "CONFIGURATIONS" }));
+            expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({ command: "SAVE_SUCCESS", saveRequestId: 1 })
+            );
             expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith({ command: "DISABLE_OVERLAY" });
         });
 
-        it("reports a failed save and refreshes the discarded draft", async () => {
+        it("reports a failed save without refreshing the retained draft", async () => {
             vi.spyOn(ConfigEditorSaveOperations.prototype, "save").mockRejectedValueOnce(new Error("Save rejected"));
+            const refresh = vi.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
+            vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
+            await Reflect.apply(configEditor["onDidReceiveMessage"], configEditor, [{ command: "SAVE_CHANGES", saveRequestId: 2 }]);
+            expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith({ command: "SAVE_ERROR", saveRequestId: 2, error: "Save rejected" });
+            expect(refresh).not.toHaveBeenCalled();
+        });
+
+        it("reports cancellation without refreshing or acknowledging a successful save", async () => {
+            vi.spyOn(ConfigEditorSaveOperations.prototype, "save").mockResolvedValueOnce(false);
+            const refresh = vi.spyOn(configEditor, "getLocalConfigs");
+            await Reflect.apply(configEditor["onDidReceiveMessage"], configEditor, [{ command: "SAVE_CHANGES", saveRequestId: 3 }]);
+            expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith({ command: "SAVE_CANCELLED", saveRequestId: 3 });
+            expect(refresh).not.toHaveBeenCalled();
+        });
+
+        it("acknowledges a committed save even when refreshing the editor fails", async () => {
+            vi.spyOn(ConfigEditorSaveOperations.prototype, "save").mockResolvedValueOnce(true);
+            vi.spyOn(configEditor, "getLocalConfigs").mockRejectedValueOnce(new Error("Refresh failed"));
+            await Reflect.apply(configEditor["onDidReceiveMessage"], configEditor, [{ command: "SAVE_CHANGES", saveRequestId: 4 }]);
+            expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith({ command: "SAVE_SUCCESS", saveRequestId: 4 });
+            expect(configEditor.panel.webview.postMessage).not.toHaveBeenCalledWith(
+                expect.objectContaining({ command: "SAVE_ERROR", saveRequestId: 4 })
+            );
+        });
+
+        it("correlates a busy response with the rejected request while completing the active save", async () => {
+            let finishSave: (saved: boolean) => void = () => undefined;
+            vi.spyOn(ConfigEditorSaveOperations.prototype, "save").mockReturnValueOnce(
+                new Promise<boolean>((resolve) => {
+                    finishSave = resolve;
+                })
+            );
             vi.spyOn(configEditor, "getLocalConfigs").mockResolvedValue({ configs: [], parseErrors: [] });
             vi.spyOn(configEditor, "areSecureValuesAllowed").mockResolvedValue(true);
-            await Reflect.apply(configEditor["onDidReceiveMessage"], configEditor, [{ command: "SAVE_CHANGES" }]);
-            expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith({ command: "SAVE_ERROR", error: "Save rejected" });
-            expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith({ command: "DISABLE_OVERLAY" });
+            const active = Reflect.apply(configEditor["onDidReceiveMessage"], configEditor, [{ command: "SAVE_CHANGES", saveRequestId: 5 }]);
+            try {
+                await Reflect.apply(configEditor["onDidReceiveMessage"], configEditor, [{ command: "SAVE_CHANGES", saveRequestId: 6 }]);
+                expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith({
+                    command: "SAVE_ERROR",
+                    saveRequestId: 6,
+                    error: "A configuration save is already in progress.",
+                });
+            } finally {
+                finishSave(true);
+                await active;
+            }
+            expect(configEditor.panel.webview.postMessage).toHaveBeenCalledWith(
+                expect.objectContaining({ command: "SAVE_SUCCESS", saveRequestId: 5 })
+            );
         });
 
         it("should handle OPEN_CONFIG_FILE command successfully", async () => {

@@ -10,7 +10,11 @@
  */
 
 import { createEditorStore } from "../../../../src/webviews/src/config-editor/store/editorStore";
-import { selectFlattenedConfig, selectFlattenedDefaults } from "../../../../src/webviews/src/config-editor/store/selectors";
+import {
+    selectCanOpenProfileInFile,
+    selectFlattenedConfig,
+    selectFlattenedDefaults,
+} from "../../../../src/webviews/src/config-editor/store/selectors";
 import type { Configuration } from "../../../../src/webviews/src/config-editor/types";
 
 describe("config editor selectors", () => {
@@ -64,5 +68,53 @@ describe("config editor selectors", () => {
         expect(reads).toBe(1);
         store.getState().handleDeleteProperty("profiles.base.type");
         expect(reads).toBe(1);
+    });
+
+    it("allows saved profiles with property edits and disables new profiles until saved", () => {
+        const store = createEditorStore();
+        store.setState({ configurations: [configuration("original")], selectedTab: 0, selectedProfileKey: "base" });
+        store.getState().handleChange("profiles.base.properties.host", "edited");
+        expect(selectCanOpenProfileInFile(store.getState())).toBe(true);
+        store.setState({ wizardProfileName: "newProfile", wizardSelectedType: "base", wizardProperties: [] });
+        store.getState().handleWizardCreateProfile();
+        store.getState().setSelectedProfileKey("newProfile");
+        expect(selectCanOpenProfileInFile(store.getState())).toBe(false);
+        const savedConfig = configuration("original");
+        savedConfig.properties.profiles.newProfile = { type: "base" };
+        store.setState({ configurations: [savedConfig], pendingChanges: {} });
+        expect(selectCanOpenProfileInFile(store.getState())).toBe(true);
+    });
+
+    it.each(["renamed", "renamed.child"])("disables a pending renamed path %s and enables it after saving", (profileKey) => {
+        const config = configuration("original");
+        config.properties.profiles.base.profiles = { child: {} };
+        const store = createEditorStore();
+        store.setState({
+            configurations: [config],
+            selectedTab: 0,
+            selectedProfileKey: profileKey,
+            renames: { [config.configPath]: { base: "renamed" } },
+        });
+        expect(selectCanOpenProfileInFile(store.getState())).toBe(false);
+        config.properties.profiles.renamed = config.properties.profiles.base;
+        delete config.properties.profiles.base;
+        store.setState({ configurations: [{ ...config }], renames: {} });
+        expect(selectCanOpenProfileInFile(store.getState())).toBe(true);
+    });
+
+    it("disables moved and deleted paths even when their old locations exist on disk", () => {
+        const store = createEditorStore();
+        const config = configuration("original");
+        store.setState({
+            configurations: [config],
+            selectedTab: 0,
+            selectedProfileKey: "base",
+            renames: { [config.configPath]: { base: "group.base" } },
+        });
+        expect(selectCanOpenProfileInFile(store.getState())).toBe(false);
+        store.setState({ renames: {}, deletions: { [config.configPath]: ["profiles.base"] } });
+        expect(selectCanOpenProfileInFile(store.getState())).toBe(false);
+        store.setState({ deletions: {}, isSaving: true });
+        expect(selectCanOpenProfileInFile(store.getState())).toBe(false);
     });
 });
