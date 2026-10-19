@@ -95,7 +95,6 @@
   "Add": "Add",
   "Add Credentials": "Add Credentials",
   "Add New History Item": "Add New History Item",
-  "Add Profile to Tree": "Add Profile to Tree",
   "Add a data set or USS resource to a virtual workspace with the new \"Add to Workspace\" context menu option. <a>#3265</a>": "Add a data set or USS resource to a virtual workspace with the new \"Add to Workspace\" context menu option. <a>#3265</a>",
   "Add data sets, USS profiles, or USS directories to a VS Code workspace to group resources from different locations. Right-click a data set, USS profile, or USS directory and select **Add to workspace**.": "Add data sets, USS profiles, or USS directories to a VS Code workspace to group resources from different locations. Right-click a data set, USS profile, or USS directory and select **Add to workspace**.",
   "Add deprecation message to history settings explaining to users how to edit items. <a>#2303</a>": "Add deprecation message to history settings explaining to users how to edit items. <a>#2303</a>",
@@ -2115,6 +2114,7 @@
   "Setting to hide hidden USS files": "Setting to hide hidden USS files",
   "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.",
   "Several members may be favorited or unfavorited at once by doing a multi-selection.": "Several members may be favorited or unfavorited at once by doing a multi-selection.",
+  "Show Profile in Tree": "Show Profile in Tree",
   "Show host and basePath values": "Show host and basePath values",
   "Showing attributes for {0}./Label": {
     "message": "Showing attributes for {0}.",
@@ -2220,8 +2220,8 @@
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
   "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
   "The polling interval must be greater than or equal to 1000ms.": "The polling interval must be greater than or equal to 1000ms.",
-  "The profile {0} has been added to the {1} tree./chosen profiletree type": {
-    "message": "The profile {0} has been added to the {1} tree.",
+  "The profile {0} has been shown in the {1} tree./chosen profiletree type": {
+    "message": "The profile {0} has been shown in the {1} tree.",
     "comment": [
       "chosen profile",
       "tree type"
@@ -2394,6 +2394,7 @@
   "Updated the @zowe/cli dependency to address the \"blksz to 0 after an Allocate Like\" issue. <a>#2610</a>. Thanks @KevinLoesch1": "Updated the @zowe/cli dependency to address the \"blksz to 0 after an Allocate Like\" issue. <a>#2610</a>. Thanks @KevinLoesch1",
   "Updated the SDK dependencies to 8.0.0-next.202403041352 for technical currency <a>#2754</a>.": "Updated the SDK dependencies to 8.0.0-next.202403041352 for technical currency <a>#2754</a>.",
   "Updated the test for the default credential manager for better compatibility with Cloud-based platforms such as Eclipse Che and Red Hat OpenShift Dev Spaces. <a>#3297</a>": "Updated the test for the default credential manager for better compatibility with Cloud-based platforms such as Eclipse Che and Red Hat OpenShift Dev Spaces. <a>#3297</a>",
+  "Updated tree view terminology from \"Add Profile\" to \"Show Profile\" to be consistent with \"Hide Profile\". <a>#3617</a>": "Updated tree view terminology from \"Add Profile\" to \"Show Profile\" to be consistent with \"Hide Profile\". <a>#3617</a>",
   "Updating data set templates.": "Updating data set templates.",
   "Updating file properties": "Updating file properties",
   "Updating imperative.json credential manager to {0}.\n{1}/Default credential override settingNew credential override setting": {
@@ -2654,22 +2655,22 @@
     ]
   },
   "{0} {1}": "{0} {1}",
-  "{0}. Or select a profile to add to the DATA SETS tree./Instruction for add profile quick pick": {
-    "message": "{0}. Or select a profile to add to the DATA SETS tree.",
+  "{0}. Or select a profile to show in the DATA SETS tree./Instruction for show profile quick pick": {
+    "message": "{0}. Or select a profile to show in the DATA SETS tree.",
     "comment": [
-      "Instruction for add profile quick pick"
+      "Instruction for show profile quick pick"
     ]
   },
-  "{0}. Or select a profile to add to the JOBS tree./Instruction for add profile quick pick": {
-    "message": "{0}. Or select a profile to add to the JOBS tree.",
+  "{0}. Or select a profile to show in the JOBS tree./Instruction for show profile quick pick": {
+    "message": "{0}. Or select a profile to show in the JOBS tree.",
     "comment": [
-      "Instruction for add profile quick pick"
+      "Instruction for show profile quick pick"
     ]
   },
-  "{0}. Or select a profile to add to the USS tree./Instruction for add profile quick pick": {
-    "message": "{0}. Or select a profile to add to the USS tree.",
+  "{0}. Or select a profile to show in the USS tree./Instruction for show profile quick pick": {
+    "message": "{0}. Or select a profile to show in the USS tree.",
     "comment": [
-      "Instruction for add profile quick pick"
+      "Instruction for show profile quick pick"
     ]
   },
   "{0}/{1} members/Number of favorited members out of total members in a PDS": {

@@ -17,7 +17,7 @@ import quickPick from "../../../../__pageobjects__/QuickPick";
 Given("a user who is looking at the Add Config quick pick", async function () {
     // use the data sets pane for the sake of testing
     const dsPane = await paneDivForTree("data sets");
-    const plusIcon = await dsPane.getAction(`Add Profile to Data Sets View`);
+    const plusIcon = await dsPane.getAction(`Show Profile in Data Sets View`);
     await expect(plusIcon).toBeDefined();
     await dsPane.elem.moveTo();
     await expect(plusIcon.elem).toBeClickable();
