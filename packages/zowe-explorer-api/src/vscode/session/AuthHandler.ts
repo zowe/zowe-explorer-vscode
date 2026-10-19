@@ -260,7 +260,7 @@ export class AuthHandler {
             if (certResponse && certResponse.cert && certResponse.certKey) {
                 ZoweVsCodeExtension.profilesCache.updateCachedProfile({
                     ...profileLoaded,
-                    profile: { ...profileLoaded.profile, cert: certResponse.cert, certKey: certResponse.certKey },
+                    profile: { ...profileLoaded.profile, certFile: certResponse.cert, certKeyFile: certResponse.certKey },
                 });
                 AuthHandler.unlockProfile(profileName, true);
                 return true;
@@ -283,7 +283,7 @@ export class AuthHandler {
         // User cancelled during credential input
         AuthHandler.setAuthCancelled(profileName, true);
         if (params.throwErrorOnCancel) {
-            throw new AuthCancelledError(profileName, "User cancelled during credential input");
+            throw new AuthCancelledError(profileName, `User cancelled during ${usingCert ? "certificate" : "credential"} input`);
         }
         return false;
     }

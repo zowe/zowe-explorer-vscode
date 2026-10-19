@@ -288,7 +288,7 @@ export class Profiles extends ProfilesCache {
                 } else {
                     Profiles.getInstance().updateCachedProfile({
                         ...theProfile,
-                        profile: { ...theProfile.profile, cert: certResponse.cert, certKey: certResponse.certKey },
+                        profile: { ...theProfile.profile, certFile: certResponse.cert, certKeyFile: certResponse.certKey },
                     });
                 }
             }
@@ -990,7 +990,7 @@ export class Profiles extends ProfilesCache {
             return loginOk;
         } catch (err) {
             const message = vscode.l10n.t({
-                message: `Unable to log in with {0}. {1} `,
+                message: `Unable to log in with {0}. {1}`,
                 args: [serviceProfile.name, err?.message],
                 comment: [`Service profile name`, `Error message`],
             });

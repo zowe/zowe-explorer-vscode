@@ -2338,8 +2338,8 @@
   },
   "Unable to gather more information": "Unable to gather more information",
   "Unable to list attributes.": "Unable to list attributes.",
-  "Unable to log in with {0}. {1} /Service profile nameError message": {
-    "message": "Unable to log in with {0}. {1} ",
+  "Unable to log in with {0}. {1}/Service profile nameError message": {
+    "message": "Unable to log in with {0}. {1}",
     "comment": [
       "Service profile name",
       "Error message"

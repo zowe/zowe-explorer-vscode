@@ -85,7 +85,7 @@ export class ProfilesCache {
         if (keyring == null) {
             throw new Error(
                 "The @zowe/secrets-for-zowe-sdk module was loaded, but it did not export a keyring. " +
-                "This usually means that the module failed to load earlier in this session."
+                    "This usually means that the module failed to load earlier in this session."
             );
         }
         return keyring;
@@ -651,7 +651,7 @@ export class ProfilesCache {
     /**
      * Get the session object for the APIML decision in imperative. If the session can't be created from an extender's
      * registered getSession API, use the profile properties to create a session instead.
-     * 
+     *
      * @param profile
      * @returns
      */
@@ -725,7 +725,7 @@ export class ProfilesCache {
         if (response?.action === "save") {
             imperative.Logger.getAppLogger().debug("User requested to save certificate to config.");
             let profileToSave = options.profile;
-            const allowedLoginMethod = options.profile.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+            const allowedLoginMethod = this.getAllowedLoginMethod(options.profile);
             if (allowedLoginMethod !== imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM) {
                 // if this is not direct cert-pem authentication, save to the base profile.
                 profileToSave = (await this.fetchBaseProfile(options.profile?.name)) || options.profile;

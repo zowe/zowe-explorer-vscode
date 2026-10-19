@@ -1046,11 +1046,11 @@ describe("ProfilesCache", () => {
             } as any);
         });
 
-        it('Should return true for extenders without registered getSession API', () => {
+        it("Should return true for extenders without registered getSession API", () => {
             vi.spyOn(ZoweVsCodeExtension, "getZoweExplorerApi").mockReturnValue({
                 getCommonApi: () => {
                     return {
-                        getSession: null
+                        getSession: null,
                     };
                 },
             } as any);
