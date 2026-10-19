@@ -9,7 +9,7 @@
  *
  */
 
-import { flattenProfiles } from "./configUtils";
+import { findProfile } from "./configUtils";
 import { ConfigStateContext } from "../types";
 import { getOriginalProfileKey, getOriginalProfileKeyWithNested } from "./profileRenames";
 
@@ -48,11 +48,10 @@ export function getProfileType(params: GetProfileTypeParams): string | null {
     }
 
     const config = configurations[selectedTab!].properties;
-    const flatProfiles = flattenProfiles(config.profiles);
-    let profile = flatProfiles[profileKey];
+    let profile = findProfile(config.profiles, profileKey);
 
     if (!profile) {
-        profile = flatProfiles[originalProfileKey];
+        profile = findProfile(config.profiles, originalProfileKey);
     }
 
     if (!profile && profileKey.includes(".")) {
@@ -78,7 +77,7 @@ export function getProfileType(params: GetProfileTypeParams): string | null {
         }
 
         if (originalPath !== profileKey && originalPath !== originalProfileKey) {
-            profile = flatProfiles[originalPath];
+            profile = findProfile(config.profiles, originalPath);
         }
     }
 

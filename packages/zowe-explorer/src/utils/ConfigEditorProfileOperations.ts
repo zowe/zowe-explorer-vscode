@@ -9,18 +9,15 @@
  *
  */
 
-import * as vscode from "vscode";
 import type { Config, IConfigLayer as ImperativeConfigLayer, ProfileInfo } from "@zowe/imperative";
-import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { ConfigMoveAPI, IConfigLayer } from "../webviews/src/config-editor/types";
-import { updateDefaultsAfterRename, simulateDefaultsUpdateAfterRename } from "../webviews/src/config-editor/utils/moveUtils";
+import { updateDefaultsAfterRename } from "../webviews/src/config-editor/utils/moveUtils";
 import { getRenamedProfileKeyWithNested } from "../webviews/src/config-editor/utils/profileRenames";
 import { ConfigUtils } from "./ConfigUtils";
 import { ConfigEditorPathUtils } from "./ConfigEditorPathUtils";
-import { FavoritePersistenceUtils } from "./FavoritePersistenceUtils";
-import { Profiles } from "../configuration/Profiles";
 import type {
     LayerChangesPayload,
+    ChangeEntry,
     NestedProfilesMap,
     PendingChangesByConfig,
     ProfileRenameEntry,
@@ -351,7 +348,9 @@ export class ConfigEditorProfileOperations {
 
             if (secureProperties.length > 0) {
                 const childProfile = configMoveAPI.get(childPath);
-                if (childProfile) {
+                // The child normally inherits this metadata from the copied profile. Setting an
+                // existing array through the SDK appends the supplied value instead of replacing it.
+                if (childProfile && !childProfile.secure?.length) {
                     configMoveAPI.set(`${childPath}.secure`, secureProperties);
                 }
 
@@ -364,63 +363,6 @@ export class ConfigEditorProfileOperations {
         } catch (error) {
             console.warn(`Failed to move secure properties for nested profile creation: ${error}`);
         }
-    }
-
-    /**
-     * Validates the ConfigMoveAPI before calling MoveUtils functions
-     */
-    validateConfigMoveAPI(configMoveAPI: ConfigMoveAPI, layerActive: () => IConfigLayer): void {
-        if (!configMoveAPI) {
-            throw new Error("ConfigMoveAPI is null or undefined");
-        }
-
-        if (typeof configMoveAPI.get !== "function") {
-            throw new Error("ConfigMoveAPI.get is not a function");
-        }
-
-        if (typeof configMoveAPI.set !== "function") {
-            throw new Error("ConfigMoveAPI.set is not a function");
-        }
-
-        if (typeof configMoveAPI.delete !== "function") {
-            throw new Error("ConfigMoveAPI.delete is not a function");
-        }
-
-        if (typeof layerActive !== "function") {
-            throw new Error("layerActive is not a function");
-        }
-
-        try {
-            const layer = layerActive();
-            if (!layer || !layer.properties || !layer.properties.profiles) {
-                throw new Error("Invalid layer structure: missing properties or profiles");
-            }
-        } catch (error) {
-            throw new Error(`Failed to validate layer: ${error instanceof Error ? error.message : String(error)}`);
-        }
-    }
-
-    /**
-     * Handles errors from MoveUtils functions with consistent error messaging
-     */
-    handleMoveUtilsError(error: unknown, operation: string, originalKey: string, newKey: string, isSimulation: boolean = false): string {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        const simulationPrefix = isSimulation ? "Simulation failed for " : "";
-        return `${simulationPrefix}${operation} from '${originalKey}' to '${newKey}': ${errorMessage}`;
-    }
-
-    isCriticalMoveError(error: unknown): boolean {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-
-        const criticalErrorPatterns = [
-            /Profile.*already exists/i,
-            /Target profile already exists/i,
-            /Profile with name.*already exists/i,
-            /Cannot rename profile.*Profile.*already exists/i,
-            /Cannot rename profile.*Would create circular reference/i,
-        ];
-
-        return criticalErrorPatterns.some((pattern) => pattern.test(errorMessage));
     }
 
     /**
@@ -523,40 +465,14 @@ export class ConfigEditorProfileOperations {
         return finalRenames.filter((rename) => rename.originalKey !== rename.newKey);
     }
 
-    /**
-     * Applies a batch of profile renames to disk: moves each profile within the team config,
-     * updates defaults, persists the config, and refreshes profile/favorite state.
-     */
-    async handleProfileRenames(renames: ProfileRenameEntry[]): Promise<void> {
-        if (!renames || renames.length === 0) {
-            return;
-        }
-
-        const profInfo = await ConfigUtils.createProfileInfoAndLoad();
-        const preparedRenames = this.prepareRenamesForProcessing(renames);
-
-        for (const rename of preparedRenames) {
-            try {
-                await this.processSingleRename(rename, profInfo);
-            } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                if (this.isCriticalMoveError(error)) {
-                    vscode.window.showErrorMessage(`Save operation cancelled: ${errorMessage}`);
-                    throw new Error(`Critical error during profile rename: ${errorMessage}`);
-                }
-                this.handleRenameError(error, rename);
-            }
-        }
-    }
-
     /** Stage the entire rename batch before any configuration or credential writes. */
-    public async stageProfileRenames(renames: ProfileRenameEntry[], profInfo: ProfileInfo): Promise<void> {
+    public stageProfileRenames(renames: ProfileRenameEntry[], profInfo: ProfileInfo): void {
         for (const rename of this.prepareRenamesForProcessing(renames)) {
-            await this.processSingleRename(rename, profInfo, false);
+            this.stageSingleRename(rename, profInfo.getTeamConfig());
         }
     }
 
-    private async processSingleRename(rename: ProfileRenameEntry, profInfo: ProfileInfo, persist = true): Promise<void> {
+    private stageSingleRename(rename: ProfileRenameEntry, teamConfig: Config): void {
         const originalPath = ConfigEditorPathUtils.constructNestedProfilePath(rename.originalKey);
         const newPath = ConfigEditorPathUtils.constructNestedProfilePath(rename.newKey);
 
@@ -564,7 +480,6 @@ export class ConfigEditorProfileOperations {
             throw new Error(`Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Would create circular reference`);
         }
 
-        const teamConfig = profInfo.getTeamConfig();
         const targetLayer = teamConfig.layers.find((layer: ImperativeConfigLayer) => layer.path === rename.configPath);
 
         if (!targetLayer) {
@@ -572,12 +487,6 @@ export class ConfigEditorProfileOperations {
         }
 
         teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
-
-        const layerActive = (): { properties: { profiles: NestedProfilesMap } } => ({
-            properties: {
-                profiles: teamConfig.api.layers.get().properties.profiles as NestedProfilesMap,
-            },
-        });
 
         const validationResult = this.validateProfileRename(teamConfig, originalPath, newPath, rename);
         if (validationResult.skip) {
@@ -588,21 +497,10 @@ export class ConfigEditorProfileOperations {
         if (this.isNestedProfileCreation(rename.originalKey, rename.newKey)) {
             this.createNestedProfileStructureDirectly(teamConfig, originalPath, newPath, rename.originalKey, rename.newKey);
         } else {
-            this.moveProfileDirectly(teamConfig, layerActive, originalPath, newPath);
+            this.moveProfileDirectly(teamConfig, originalPath, newPath);
         }
 
         this.updateDefaultsAfterRename(teamConfig, rename);
-
-        if (!persist) {
-            return;
-        }
-        await teamConfig.save();
-        await profInfo.readProfilesFromDisk({ projectDir: ZoweVsCodeExtension.workspaceRoot?.uri.fsPath });
-        // loadNamedProfile (favorites + session rebuild) reads ProfilesCache.allProfiles, updated only by refresh().
-        await Profiles.getInstance().refresh();
-        await FavoritePersistenceUtils.applyProfileRenameToStoredTreePersistence(rename);
-        // Do not await: Explorer tree refresh (favorites + sessions) is slow and does not affect config editor webview state.
-        FavoritePersistenceUtils.fireAndForgetExplorerTreeRebuildAfterRename(rename);
     }
 
     private getProfileFromTeamConfig(teamConfig: Config, path: string): ProfileTreeNode | null {
@@ -612,12 +510,7 @@ export class ConfigEditorProfileOperations {
         return this.findNestedProfile(profileKey, profiles);
     }
 
-    private moveProfileDirectly(
-        teamConfig: Config,
-        layerActive: () => { properties: { profiles: NestedProfilesMap } },
-        sourcePath: string,
-        targetPath: string
-    ): void {
+    private moveProfileDirectly(teamConfig: Config, sourcePath: string, targetPath: string): void {
         const sourceProfile = this.getProfileFromTeamConfig(teamConfig, sourcePath);
         if (!sourceProfile) {
             throw new Error(`Source profile not found at path: ${sourcePath}`);
@@ -717,82 +610,44 @@ export class ConfigEditorProfileOperations {
         );
     }
 
-    private handleRenameError(error: unknown, rename: { originalKey: string; newKey: string }): void {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-
-        if (this.isCriticalMoveError(error)) {
-            vscode.window.showErrorMessage(`Save operation cancelled: ${errorMessage}`);
-            throw new Error(`Critical error during profile rename: ${errorMessage}`);
-        }
-
-        vscode.window.showErrorMessage(`Error renaming profile from '${rename.originalKey}' to '${rename.newKey}': ${errorMessage}`);
-    }
-
     /**
      * Updates profile changes to use new profile names before processing
      * This prevents duplicate profiles by ensuring changes target the correct names
-     * Uses TeamConfig API for more reliable profile path resolution
      */
-    async updateProfileChangesForRenames(message: LayerChangesPayload, renames: ProfileRenameEntry[]): Promise<LayerChangesPayload> {
+    public updateProfileChangesForRenames(message: LayerChangesPayload, renames: ProfileRenameEntry[]): LayerChangesPayload {
         if (!renames || renames.length === 0) {
             return message;
         }
 
-        await ConfigUtils.createProfileInfoAndLoad();
-
-        const updatedMessage = { ...message };
-
-        const renameMap = new Map<string, { oldKey: string; newKey: string; configPath: string }>();
-        renames.forEach((rename) => {
-            renameMap.set(rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath });
-        });
-
-        // Update changes
-        if (updatedMessage.changes) {
-            updatedMessage.changes = updatedMessage.changes.map((change) => {
-                if (change.configPath) {
-                    let updatedChange = { ...change };
-
-                    if (updatedChange.profile) {
-                        updatedChange.profile = ConfigEditorPathUtils.getNewProfilePath(updatedChange.profile, change.configPath, renameMap);
-                    }
-
-                    updatedChange = ConfigEditorPathUtils.updateChangeKey(updatedChange, change.configPath, renameMap) as typeof updatedChange;
-                    updatedChange = ConfigEditorPathUtils.updateChangePath(updatedChange, change.configPath, renameMap) as typeof updatedChange;
-
-                    return updatedChange;
-                }
+        const mapsByConfig = new Map<string, Map<string, { oldKey: string; newKey: string; configPath: string }>>();
+        for (const rename of renames) {
+            let map = mapsByConfig.get(rename.configPath);
+            if (!map) {
+                map = new Map();
+                mapsByConfig.set(rename.configPath, map);
+            }
+            map.set(rename.originalKey, { oldKey: rename.originalKey, newKey: rename.newKey, configPath: rename.configPath });
+        }
+        const update = (change: ChangeEntry): ChangeEntry => {
+            const map = mapsByConfig.get(change.configPath);
+            if (!map) {
                 return change;
-            });
-        }
-
-        // Update profile deletions to use new names
-        if (updatedMessage.deletions) {
-            updatedMessage.deletions = updatedMessage.deletions.map((deletion) => {
-                if (deletion.configPath) {
-                    let updatedDeletion = { ...deletion };
-
-                    if (updatedDeletion.profile) {
-                        updatedDeletion.profile = ConfigEditorPathUtils.getNewProfilePath(updatedDeletion.profile, deletion.configPath, renameMap);
-                    }
-
-                    updatedDeletion = ConfigEditorPathUtils.updateChangeKey(
-                        updatedDeletion,
-                        deletion.configPath,
-                        renameMap
-                    ) as typeof updatedDeletion;
-                    updatedDeletion = ConfigEditorPathUtils.updateChangePath(
-                        updatedDeletion,
-                        deletion.configPath,
-                        renameMap
-                    ) as typeof updatedDeletion;
-
-                    return updatedDeletion;
-                }
-                return deletion;
-            });
-        }
-        return updatedMessage;
+            }
+            const updated = {
+                ...change,
+                ...(change.profile && { profile: ConfigEditorPathUtils.getNewProfilePath(change.profile, change.configPath, map) }),
+            };
+            return ConfigEditorPathUtils.updateChangePath(
+                ConfigEditorPathUtils.updateChangeKey(updated, change.configPath, map),
+                change.configPath,
+                map
+            ) as ChangeEntry;
+        };
+        return {
+            ...message,
+            ...(message.changes && { changes: message.changes.map(update) }),
+            ...(message.deletions && { deletions: message.deletions.map(update) }),
+        };
     }
 
     /**
@@ -809,60 +664,11 @@ export class ConfigEditorProfileOperations {
             return;
         }
 
-        const preparedRenames = this.prepareRenamesForProcessing(renames);
-
-        for (const rename of preparedRenames) {
+        for (const rename of this.prepareRenamesForProcessing(renames)) {
             try {
-                const targetLayer = teamConfig.layers.find((layer: ImperativeConfigLayer) => layer.path === rename.configPath);
-
-                if (!targetLayer) {
-                    continue; // Skip if layer not found
-                }
-
-                teamConfig.api.layers.activate(targetLayer.user, targetLayer.global);
-
-                const layerActive = (): { properties: { profiles: NestedProfilesMap } } => ({
-                    properties: {
-                        profiles: teamConfig.api.layers.get().properties.profiles as NestedProfilesMap,
-                    },
-                });
-
-                let originalPath: string;
-                let newPath: string;
-
-                try {
-                    originalPath = ConfigEditorPathUtils.constructNestedProfilePath(rename.originalKey);
-                    newPath = ConfigEditorPathUtils.constructNestedProfilePath(rename.newKey);
-                } catch (pathError) {
-                    const errorMessage = this.handleMoveUtilsError(pathError, "construct profile path", rename.originalKey, rename.newKey, true);
-                    throw new Error(`${errorMessage}. Cannot proceed with operation - rename state is invalid.`);
-                }
-
-                try {
-                    if (this.isNestedProfileCreation(rename.originalKey, rename.newKey)) {
-                        this.createNestedProfileStructureDirectly(teamConfig, originalPath, newPath, rename.originalKey, rename.newKey);
-                    } else {
-                        this.moveProfileDirectly(teamConfig, layerActive, originalPath, newPath);
-                    }
-                } catch (moveError) {
-                    const errorMessage = this.handleMoveUtilsError(moveError, "simulate move profile", originalPath, newPath, true);
-                    throw new Error(`${errorMessage}. Cannot proceed with operation - rename state is invalid.`);
-                }
-
-                // Simulate defaults updates for this rename
-                try {
-                    simulateDefaultsUpdateAfterRename(() => teamConfig.api.layers.get(), rename.originalKey, rename.newKey);
-                } catch (defaultsError) {
-                    const errorMessage = this.handleMoveUtilsError(
-                        defaultsError,
-                        "simulate defaults update",
-                        rename.originalKey,
-                        rename.newKey,
-                        true
-                    );
-                    console.warn(errorMessage);
-                }
-            } catch (error) {
+                this.stageSingleRename(rename, teamConfig);
+            } catch {
+                // An incomplete draft can fail validation; previews keep processing other renames.
                 continue;
             }
         }

@@ -13,11 +13,26 @@ import * as path from "path";
 import type { Config } from "@zowe/imperative";
 import { ConfigSchemaHelpers } from "./ConfigSchemaHelpers";
 import { ConfigUtils } from "./ConfigUtils";
-import type { AutostoreToggleChange, ChangeEntry } from "./ConfigTypes";
+import type { AutostoreToggleChange, ChangeEntry, LayerChangesPayload } from "./ConfigTypes";
 
 export type { ChangeEntry } from "./ConfigTypes";
 
 export class ConfigChangeHandlers {
+    /** Apply a complete edit batch to an existing in-memory config, without loading or saving it. */
+    public static async stageChanges(message: LayerChangesPayload, config: Config, areSecureValuesAllowed?: () => Promise<boolean>): Promise<void> {
+        const groups = ConfigUtils.parseConfigChanges({
+            configPath: message.configPath,
+            changes: message.changes ?? [],
+            deletions: message.deletions ?? [],
+            defaultsChanges: message.defaultsChanges ?? [],
+            defaultsDeleteKeys: message.defaultsDeleteKeys ?? [],
+        });
+        for (const group of groups) {
+            await this.handleDefaultChanges(group.defaultsChanges, group.defaultsDeleteKeys, group.configPath, config);
+            await this.handleProfileChanges(group.changes, group.deletions, group.configPath, areSecureValuesAllowed, config);
+        }
+    }
+
     private static transformSecureKeyToProperties(keyOrPath: string): string {
         const parts = keyOrPath.split(".");
         if (parts.length >= 2 && parts[parts.length - 2] === "secure") {

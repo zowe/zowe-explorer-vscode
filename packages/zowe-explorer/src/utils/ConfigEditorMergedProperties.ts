@@ -11,6 +11,7 @@
 
 import type { Config, IConfigLayer } from "@zowe/imperative";
 import * as path from "path";
+import { applyRenameChainToProfileName, profileKeyToPath } from "../webviews/src/config-editor/utils/profilePaths";
 import { ConfigChangeHandlers } from "./ConfigChangeHandlers";
 import { ConfigUtils } from "./ConfigUtils";
 import { ConfigEditorProfileOperations } from "./ConfigEditorProfileOperations";
@@ -33,62 +34,16 @@ export class ConfigEditorMergedProperties {
         }
 
         const effectiveChanges: LayerChangesPayload =
-            renames && renames.length > 0 ? await this.profileOperations.updateProfileChangesForRenames(changes, renames) : changes;
+            renames && renames.length > 0 ? this.profileOperations.updateProfileChangesForRenames(changes, renames) : changes;
 
-        const parsedInput: LayerModifications =
-            renames && renames.length > 0
-                ? {
-                      configPath: effectiveChanges.configPath,
-                      changes: effectiveChanges.changes ?? [],
-                      deletions: effectiveChanges.deletions ?? [],
-                      defaultsChanges: effectiveChanges.defaultsChanges ?? [],
-                      defaultsDeleteKeys: effectiveChanges.defaultsDeleteKeys ?? [],
-                  }
-                : (effectiveChanges as LayerModifications);
-
-        const parsedChanges = ConfigUtils.parseConfigChanges(parsedInput);
-        for (const change of parsedChanges) {
-            if (change.defaultsChanges || change.defaultsDeleteKeys) {
-                await ConfigChangeHandlers.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
-            }
-
-            if (change.changes || change.deletions) {
-                await ConfigChangeHandlers.handleProfileChanges(change.changes, change.deletions, change.configPath, undefined, teamConfig);
-            }
-        }
+        await ConfigChangeHandlers.stageChanges(effectiveChanges, teamConfig);
 
         const allProfiles = profInfo.getAllProfiles();
 
-        // After simulateProfileRenames, the profile data has been moved to the new location
-        // So we need to look for the profile using the new name (after rename simulation)
-        let profileNameToLookup = profPath;
-
-        // Apply renames to get the current effective profile name
-        if (renames && Array.isArray(renames)) {
-            const configRenames = renames.filter((r) => r.configPath === configPath);
-
-            // Apply renames iteratively until no more changes
-            let changed = true;
-            while (changed) {
-                changed = false;
-
-                for (const rename of configRenames) {
-                    // Check for exact match
-                    if (profileNameToLookup === rename.originalKey) {
-                        profileNameToLookup = rename.newKey;
-                        changed = true;
-                        break;
-                    }
-
-                    // Check for partial matches (parent renames affecting children)
-                    if (profileNameToLookup.startsWith(rename.originalKey + ".")) {
-                        profileNameToLookup = profileNameToLookup.replace(rename.originalKey + ".", rename.newKey + ".");
-                        changed = true;
-                        break;
-                    }
-                }
-            }
-        }
+        const profileNameToLookup = applyRenameChainToProfileName(
+            profPath,
+            (renames ?? []).filter((rename) => rename.configPath === configPath)
+        );
 
         // Look for the profile using the original name first
         // The allProfiles array contains profiles from the original configuration
@@ -150,22 +105,7 @@ export class ConfigEditorMergedProperties {
         }
 
         if (changes) {
-            const normalized: LayerModifications = {
-                configPath: changes.configPath,
-                changes: changes.changes ?? [],
-                deletions: changes.deletions ?? [],
-                defaultsChanges: changes.defaultsChanges ?? [],
-                defaultsDeleteKeys: changes.defaultsDeleteKeys ?? [],
-            };
-            const parsedChanges = ConfigUtils.parseConfigChanges(normalized);
-            for (const change of parsedChanges) {
-                if (change.defaultsChanges || change.defaultsDeleteKeys) {
-                    await ConfigChangeHandlers.handleDefaultChanges(change.defaultsChanges, change.defaultsDeleteKeys, change.configPath, teamConfig);
-                }
-                if (change.changes || change.deletions) {
-                    await ConfigChangeHandlers.handleProfileChanges(change.changes, change.deletions, change.configPath, undefined, teamConfig);
-                }
-            }
+            await ConfigChangeHandlers.stageChanges(changes, teamConfig);
         }
 
         if (configPath !== teamConfig.api.layers.get().path) {
@@ -175,41 +115,13 @@ export class ConfigEditorMergedProperties {
             }
         }
 
-        let actualRootProfile = rootProfile;
-        if (renames && Array.isArray(renames)) {
-            for (const rename of renames) {
-                if (rename.configPath === configPath) {
-                    if (rootProfile === rename.originalKey) {
-                        actualRootProfile = rename.newKey;
-                        break;
-                    } else if (rootProfile.startsWith(rename.originalKey + ".")) {
-                        actualRootProfile = rootProfile.replace(rename.originalKey + ".", rename.newKey + ".");
-                        break;
-                    }
-                }
-            }
-        }
-
+        const actualRootProfile = applyRenameChainToProfileName(
+            rootProfile,
+            (renames ?? []).filter((rename) => rename.configPath === configPath)
+        );
         const tempProfileName = profileName || `temp_${Date.now()}`;
-        let tempProfilePath: string;
-        let expectedProfileName: string;
-
-        if (actualRootProfile === "root") {
-            tempProfilePath = `profiles.${tempProfileName}`;
-            expectedProfileName = tempProfileName;
-        } else {
-            const profileParts = actualRootProfile.split(".");
-            const pathParts = ["profiles"];
-
-            for (const part of profileParts) {
-                pathParts.push(part);
-                pathParts.push("profiles");
-            }
-
-            pathParts.push(tempProfileName);
-            tempProfilePath = pathParts.join(".");
-            expectedProfileName = `${actualRootProfile}.${tempProfileName}`;
-        }
+        const expectedProfileName = actualRootProfile === "root" ? tempProfileName : `${actualRootProfile}.${tempProfileName}`;
+        const tempProfilePath = profileKeyToPath(expectedProfileName).join(".");
 
         try {
             teamConfig.set(tempProfilePath, { type: profileType }, { parseString: true });

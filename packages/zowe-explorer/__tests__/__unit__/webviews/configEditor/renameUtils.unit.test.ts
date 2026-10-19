@@ -240,12 +240,6 @@ describe("renameUtils", () => {
             expect(renames.ssh).toBe("tso.wiz.ssh");
             expect(renames.zosmf).toBe("tso.wiz.zosmf");
         });
-        it("removes child when parent rename implies same target (early removal)", () => {
-            const renames = { a: "a.b", "a.b": "a.b.c" };
-            const result = consolidateConflictingRenames(renames);
-            expect(result["a.b"]).toBeUndefined();
-            expect(result.a).toBe("a.b.c");
-        });
         it("updates child renames when parent is renamed (third pass)", () => {
             const renames = { a: "x", "x.b": "x.b" };
             const result = consolidateConflictingRenames(renames);
@@ -266,12 +260,6 @@ describe("renameUtils", () => {
             const renames = { a: "x", "a.b": "other" };
             const result = consolidateConflictingRenames(renames);
             expect(result["a.b"]).toBe("other");
-        });
-        it("removes intermediate renames (fifth pass)", () => {
-            const renames = { a: "b", b: "c" };
-            const result = consolidateConflictingRenames(renames);
-            expect(result.a).toBe("c");
-            expect(result.b).toBeUndefined();
         });
         it("updates child when parent part is renamed (additional pass)", () => {
             const renames = { zftp: "tso.zftp", "zftp.zosmf": "zftp.zosmf" };

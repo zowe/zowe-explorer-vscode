@@ -9,6 +9,7 @@
  *
  */
 
+import { splitProfilePath } from "./profilePaths";
 import { RenamesMap, DeletionsMap, ProfileMap } from "../types";
 
 export function getRenamedProfileKey(originalKey: string, configPath: string, renames: RenamesMap): string {
@@ -141,37 +142,19 @@ export function getOriginalProfileKeyWithNested(renamedKey: string, configPath: 
  * below need it — keeping it here avoids a circular import between this module and the others.
  */
 export function isProfileOrParentDeleted(profileKey: string, deletions: DeletionsMap, configPath: string): boolean {
-    const configDeletions = deletions[configPath];
-    if (!configDeletions) return false;
+    return getDeletedProfileKeys(deletions, configPath).some((key) => profileKey === key || profileKey.startsWith(key + "."));
+}
 
-    const deletedProfiles = new Set<string>();
-    configDeletions.forEach((key) => {
-        const keyParts = key.split(".");
-        if (keyParts[0] === "profiles" && keyParts.length >= 2) {
-            const profileParts: string[] = [];
-            for (let i = 1; i < keyParts.length; i++) {
-                if (keyParts[i] !== "profiles") {
-                    profileParts.push(keyParts[i]);
-                }
-            }
-            const profileName = profileParts.join(".");
-            deletedProfiles.add(profileName);
-        }
-    });
-
-    if (deletedProfiles.has(profileKey)) {
-        return true;
+/** Whole-profile deletions only; deleting a property must not hide its owning profile. */
+export function getDeletedProfileKeys(deletions: DeletionsMap, configPath: string, renames: RenamesMap = {}): string[] {
+    const result = new Set<string>();
+    for (const key of deletions[configPath] ?? []) {
+        const parsed = splitProfilePath(key.split("."));
+        if (!parsed || parsed.suffix.length) continue;
+        result.add(parsed.profileKey);
+        result.add(getRenamedProfileKeyWithNested(parsed.profileKey, configPath, renames));
     }
-
-    const profileParts = profileKey.split(".");
-    for (let i = 1; i < profileParts.length; i++) {
-        const parentKey = profileParts.slice(0, i).join(".");
-        if (deletedProfiles.has(parentKey)) {
-            return true;
-        }
-    }
-
-    return false;
+    return [...result];
 }
 
 interface ApplyRenamesToProfileKeysParams {

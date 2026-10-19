@@ -9,90 +9,8 @@
  *
  */
 
-import { profileKeyToPath } from "./configUtils";
+import { mapProfilePath, applyRenameChainToProfileName } from "./profilePaths";
 import { FormattedChange, RenameChange, RenamesMap, FormattedPendingChanges, PendingChangesMap, PendingDefaultsMap, DeletionsMap } from "../types";
-
-/**
- * Resolves a dotted profile name through a chain of renames (e.g. a -> b, b -> c yields "a" -> "c"),
- * also covering renames of an ancestor segment (e.g. rename "a" -> "x" updates "a.child" -> "x.child").
- * Handles renames that change nesting depth in either direction (e.g. "b" -> "a.b" or "a.b" -> "c").
- */
-const applyRenameChainToProfileName = (profileName: string, renames: RenameChange[]): string => {
-    let effectiveName = profileName;
-    const appliedRenames = new Set<string>();
-    let changed = true;
-    let iteration = 0;
-
-    while (changed && iteration < 10) {
-        changed = false;
-        iteration++;
-
-        for (const rename of renames) {
-            const renameKey = `${rename.originalKey}->${rename.newKey}`;
-            if (appliedRenames.has(renameKey)) {
-                continue;
-            }
-
-            if (effectiveName === rename.originalKey) {
-                effectiveName = rename.newKey;
-            } else if (effectiveName.startsWith(rename.originalKey + ".")) {
-                effectiveName = rename.newKey + effectiveName.slice(rename.originalKey.length);
-            } else {
-                continue;
-            }
-
-            appliedRenames.add(renameKey);
-            changed = true;
-            break;
-        }
-    }
-
-    return effectiveName;
-};
-
-/**
- * Splits a key/path token array anchored at "profiles" into the dotted profile-name chain it
- * represents and the remaining suffix tokens (e.g. ["properties", "host"]). Returns null when the
- * tokens aren't anchored at a profile (e.g. a path that was truncated elsewhere to just a property name).
- */
-const splitProfileChain = (tokens: string[]): { chain: string; suffix: string[] } | null => {
-    if (tokens[0] !== "profiles" || tokens.length < 2) {
-        return null;
-    }
-
-    const chainParts: string[] = [];
-    let i = 1;
-    while (i < tokens.length) {
-        chainParts.push(tokens[i]);
-        i++;
-        if (tokens[i] === "profiles") {
-            i++;
-        } else {
-            break;
-        }
-    }
-
-    return { chain: chainParts.join("."), suffix: tokens.slice(i) };
-};
-
-/** Applies the resolved rename chain to a key string or path array that's anchored at "profiles". */
-const applyRenameChainToTokens = <T extends string | string[]>(tokens: T, renames: RenameChange[]): T => {
-    const isString = typeof tokens === "string";
-    const tokenArray = isString ? (tokens as string).split(".") : (tokens as string[]);
-
-    const split = splitProfileChain(tokenArray);
-    if (!split) {
-        return tokens;
-    }
-
-    const newChain = applyRenameChainToProfileName(split.chain, renames);
-    if (newChain === split.chain) {
-        return tokens;
-    }
-
-    const newTokens = [...profileKeyToPath(newChain), ...split.suffix];
-    return (isString ? newTokens.join(".") : newTokens) as T;
-};
 
 export const updateChangesForRenames = (changes: FormattedChange[], renames: RenameChange[]) => {
     if (!renames || renames.length === 0) {
@@ -111,11 +29,11 @@ export const updateChangesForRenames = (changes: FormattedChange[], renames: Ren
         }
 
         if (updatedChange.key) {
-            updatedChange.key = applyRenameChainToTokens(updatedChange.key, relevantRenames);
+            updatedChange.key = mapProfilePath(updatedChange.key, (key) => applyRenameChainToProfileName(key, relevantRenames));
         }
 
         if (updatedChange.path && Array.isArray(updatedChange.path)) {
-            updatedChange.path = applyRenameChainToTokens(updatedChange.path, relevantRenames);
+            updatedChange.path = mapProfilePath(updatedChange.path, (key) => applyRenameChainToProfileName(key, relevantRenames));
         }
 
         return updatedChange;

@@ -9,1109 +9,226 @@
  *
  */
 
-import { ConfigChangeHandlers, ChangeEntry } from "../../../../src/utils/ConfigChangeHandlers";
-import { Mock, vi } from "vitest";
-import { ProfileInfo } from "@zowe/imperative";
+import { vi } from "vitest";
+import { ConfigChangeHandlers, type ChangeEntry } from "../../../../src/utils/ConfigChangeHandlers";
+import { ConfigUtils } from "../../../../src/utils/ConfigUtils";
 import { ConfigSchemaHelpers } from "../../../../src/utils/ConfigSchemaHelpers";
+import { createEditorConfig, createEditorChange, createEditorLayer } from "../../../__mocks__/mockCreators/configEditor";
 
-vi.mock("vscode", () => ({
-    window: {
-        showErrorMessage: vi.fn(),
-    },
-}));
+vi.mock("../../../../src/configuration/Profiles", () => ({ Profiles: { getInstance: () => ({ overrideWithEnv: false }) } }));
 
-// Mock all external dependencies
-vi.mock("@zowe/imperative", () => ({
-    ProfileInfo: vi.fn().mockImplementation(() => ({
-        readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
-        getTeamConfig: vi.fn().mockReturnValue({
-            api: {
-                layers: {
-                    get: vi.fn().mockReturnValue({
-                        path: "/mock/config.json",
-                        properties: {
-                            $schema: "schema.json",
-                        },
-                    }),
-                    activate: vi.fn(),
-                },
-                profiles: {
-                    defaultSet: vi.fn(),
-                },
-            },
-            layers: [],
-            delete: vi.fn(),
-            set: vi.fn(),
-            save: vi.fn(),
-        }),
-    })),
-    ProfileCredentials: {
-        defaultCredMgrWithKeytar: vi.fn().mockReturnValue("mock-cred-mgr"),
-    },
-}));
-
-vi.mock("@zowe/zowe-explorer-api", () => ({
-    ProfilesCache: {
-        requireKeyring: "mock-keyring",
-    },
-    ZoweVsCodeExtension: {
-        workspaceRoot: {
-            uri: {
-                fsPath: "/mock/workspace",
-            },
-        },
-    },
-}));
-
-vi.mock("../../../../src/utils/ConfigSchemaHelpers", () => ({
-    ConfigSchemaHelpers: {
-        getProfileProperties: vi.fn().mockReturnValue(new Map()),
-    },
-}));
-
-vi.mock("../../../../src/configuration/Profiles", () => ({
-    Profiles: {
-        getInstance: vi.fn().mockReturnValue({
-            overrideWithEnv: false,
-        }),
-    },
-}));
-
-vi.mock("path", () => ({
-    join: vi.fn().mockImplementation((...args: string[]) => args.join("/")),
-    dirname: vi.fn().mockImplementation((p: string) => p.split("/").slice(0, -1).join("/")),
-}));
-
-// Mock other dependencies that might cause initialization issues
-vi.mock("../../../../src/extending/ZoweExplorerApiRegister", () => ({
-    ZoweExplorerApiRegister: {
-        getInstance: vi.fn().mockReturnValue({
-            registerUssApi: vi.fn(),
-            registerMvsApi: vi.fn(),
-            registerJesApi: vi.fn(),
-        }),
-    },
-}));
-
-vi.mock("../../../../src/tools/ZoweLogger", () => ({
-    ZoweLogger: {
-        error: vi.fn(),
-        trace: vi.fn(),
-        debug: vi.fn(),
-        info: vi.fn(),
-        warn: vi.fn(),
-    },
-}));
-
-vi.mock("../../../../src/configuration/Constants", () => ({
-    Constants: {
-        PROFILES_CACHE: null,
-        SETTINGS_OVERRIDE_WITH_ENV_VAR: "zowe.overrides.env",
-    },
-}));
+const teamPath = "/mock/team.json";
+const userPath = "/mock/user.json";
+const hostKey = "profiles.test.properties.host";
 
 describe("ConfigChangeHandlers", () => {
-    let mockTeamConfig: any;
-    let mockLayers: any;
-    let mockProfiles: any;
+    afterEach(() => vi.restoreAllMocks());
 
-    beforeEach(() => {
-        // Reset all mocks
-        vi.clearAllMocks();
-
-        // Mock layers
-        mockLayers = {
-            find: vi.fn(),
-        };
-
-        // Mock profiles API
-        mockProfiles = {
-            defaultSet: vi.fn(),
-        };
-
-        // Mock team config
-        mockTeamConfig = {
-            api: {
-                layers: {
-                    get: vi.fn().mockReturnValue({
-                        path: "/mock/config.json",
-                        properties: {
-                            $schema: "schema.json",
-                        },
-                    }),
-                    activate: vi.fn(),
-                },
-                profiles: mockProfiles,
-            },
-            layers: mockLayers,
-            delete: vi.fn(),
-            set: vi.fn(),
-            save: vi.fn(),
-        };
-
-        mockTeamConfig.api.layers.activate.mockImplementation(() => {
-            const layer = mockLayers.find.mock.results.at(-1)?.value;
-            if (layer) mockTeamConfig.api.layers.get.mockReturnValue({ ...layer, properties: {} });
-        });
-
-        // Mock ProfileInfo constructor to return our mock
-        vi.mocked(ProfileInfo).mockImplementation(
-            () =>
-                ({
-                    readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
-                    getTeamConfig: vi.fn().mockReturnValue(mockTeamConfig),
-                }) as any
-        );
-    });
-
-    describe("handleDefaultChanges", () => {
-        it("should handle default changes successfully", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "host",
-                    value: "test-host",
-                    path: ["defaults", "host"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [
-                {
-                    key: "port",
-                    value: "",
-                    path: ["defaults", "port"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const activeLayer = "/mock/config.json";
-
-            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer);
-
-            expect(mockProfiles.defaultSet).toHaveBeenCalledWith("host", "test-host");
-            expect(mockTeamConfig.delete).toHaveBeenCalledWith("defaults.port");
-            expect(mockTeamConfig.save).toHaveBeenCalled();
-        });
-
-        it("should delete default entry when change value is empty string", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "zosmf",
-                    value: "",
-                    path: ["defaults", "zosmf"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [];
-            const activeLayer = "/mock/config.json";
-
-            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer);
-
-            expect(mockProfiles.defaultSet).not.toHaveBeenCalled();
-            expect(mockTeamConfig.delete).toHaveBeenCalledWith("defaults.zosmf");
-            expect(mockTeamConfig.save).toHaveBeenCalled();
-        });
-
-        it("should activate different layer when activeLayer differs from current", async () => {
-            const changes: ChangeEntry[] = [];
-            const deletions: ChangeEntry[] = [];
-            const activeLayer = "/different/config.json";
-
-            const mockLayer = {
-                path: "/different/config.json",
-                user: true,
-                global: false,
-            };
-
-            mockLayers.find.mockReturnValue(mockLayer);
-            mockTeamConfig.api.layers.get.mockReturnValue({
-                path: "/current/config.json",
-            });
-
-            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer);
-
-            expect(mockLayers.find).toHaveBeenCalled();
-            expect(mockTeamConfig.api.layers.activate).toHaveBeenCalledWith(true, false);
-        });
-
-        it("should not activate layer when activeLayer matches current", async () => {
-            const changes: ChangeEntry[] = [];
-            const deletions: ChangeEntry[] = [];
-            const activeLayer = "/mock/config.json";
-
-            mockTeamConfig.api.layers.get.mockReturnValue({
-                path: "/mock/config.json",
-            });
-
-            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer);
-
-            expect(mockLayers.find).not.toHaveBeenCalled();
-            expect(mockTeamConfig.api.layers.activate).not.toHaveBeenCalled();
-        });
-
-        it("should handle multiple changes and deletions", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "tso",
-                    value: "tso1",
-                    path: ["defaults", "tso"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-                {
-                    key: "zosmf",
-                    value: "zosmf1",
-                    path: ["defaults", "zosmf"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [
-                {
-                    key: "ssh",
-                    value: "ssh1",
-                    path: ["defaults", "ssh"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-                {
-                    key: "base",
-                    value: "base1",
-                    path: ["defaults", "base"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, "/mock/config.json");
-
-            expect(mockProfiles.defaultSet).toHaveBeenCalledTimes(2);
-            expect(mockProfiles.defaultSet).toHaveBeenCalledWith("tso", "tso1");
-            expect(mockProfiles.defaultSet).toHaveBeenCalledWith("zosmf", "zosmf1");
-
-            expect(mockTeamConfig.delete).toHaveBeenCalledTimes(2);
-            expect(mockTeamConfig.delete).toHaveBeenCalledWith("defaults.ssh");
-            expect(mockTeamConfig.delete).toHaveBeenCalledWith("defaults.base");
-        });
-
-        it("should handle empty changes and deletions arrays", async () => {
-            const changes: ChangeEntry[] = [];
-            const deletions: ChangeEntry[] = [];
-
-            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, "/mock/config.json");
-
-            expect(mockProfiles.defaultSet).not.toHaveBeenCalled();
-            expect(mockTeamConfig.delete).not.toHaveBeenCalled();
-            expect(mockTeamConfig.save).toHaveBeenCalled();
-        });
-
-        it("should not activate layer when findProfile returns undefined", async () => {
-            const changes: ChangeEntry[] = [];
-            const deletions: ChangeEntry[] = [];
-            const activeLayer = "/different/config.json";
-
-            mockLayers.find.mockReturnValue(undefined);
-            mockTeamConfig.api.layers.get.mockReturnValue({
-                path: "/current/config.json",
-            });
-
-            await expect(ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer)).rejects.toThrow("no longer exists");
-
-            expect(mockLayers.find).toHaveBeenCalled();
-            expect(mockTeamConfig.api.layers.activate).not.toHaveBeenCalled();
-        });
-    });
-
-    describe("handleProfileChanges", () => {
-        let mockAreSecureValuesAllowed: Mock;
+    describe.each([
+        { mode: "preview", persist: false },
+        { mode: "persisted", persist: true },
+    ])("$mode changes", ({ persist }) => {
+        let memory: ReturnType<typeof createEditorConfig>;
+        let allowed: ReturnType<typeof vi.fn<() => Promise<boolean>>>;
+        const defaults = (changes: ChangeEntry[], deletions: ChangeEntry[] = [], configPath = teamPath) =>
+            ConfigChangeHandlers.handleDefaultChanges(changes, deletions, configPath, persist ? undefined : memory.config);
+        const profiles = (changes: ChangeEntry[], deletions: ChangeEntry[] = [], configPath = teamPath) =>
+            ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, allowed, persist ? undefined : memory.config);
+        const autostore = (configPath = teamPath) =>
+            ConfigChangeHandlers.handleAutostoreToggle([{ type: "autostore", value: true, configPath }], persist ? undefined : memory.config);
 
         beforeEach(() => {
-            mockAreSecureValuesAllowed = vi.fn().mockResolvedValue(true);
-        });
-
-        it("should handle profile changes successfully", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "profiles.test.host",
-                    value: "test-host",
-                    path: ["profiles", "test", "host"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [
-                {
-                    key: "profiles.test.port",
-                    value: "",
-                    path: ["profiles", "test", "port"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const configPath = "/mock/config.json";
-
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, mockAreSecureValuesAllowed);
-
-            expect(mockAreSecureValuesAllowed).not.toHaveBeenCalled();
-            expect(mockTeamConfig.set).toHaveBeenCalledWith("profiles.test.host", "test-host", {
-                parseString: false,
-                secure: false,
-            });
-            expect(mockTeamConfig.delete).toHaveBeenCalledWith("profiles.test.port");
-            expect(mockTeamConfig.save).toHaveBeenCalled();
-        });
-
-        it("should reject the whole batch when secure storage is unavailable", async () => {
-            mockAreSecureValuesAllowed.mockResolvedValue(false);
-
-            const changes: ChangeEntry[] = [
-                {
-                    key: "profiles.test.host",
-                    value: "test-host",
-                    path: ["profiles", "test", "host"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-                {
-                    key: "profiles.test.password",
-                    value: "secret",
-                    path: ["profiles", "test", "password"],
-                    configPath: "/mock/config.json",
-                    secure: true,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [];
-
-            await expect(
-                ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed)
-            ).rejects.toThrow("Secure storage is unavailable");
-
-            expect(mockTeamConfig.set).not.toHaveBeenCalled();
-            expect(mockTeamConfig.save).not.toHaveBeenCalled();
-        });
-
-        it("should transform secure keys to properties in changes", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "profiles.test.secure.password",
-                    value: "secret",
-                    path: ["profiles", "test", "secure", "password"],
-                    configPath: "/mock/config.json",
-                    secure: true,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [];
-
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed);
-
-            expect(mockTeamConfig.set).toHaveBeenCalledWith("profiles.test.properties.password", "secret", {
-                parseString: false,
-                secure: true,
-            });
-        });
-
-        it("should leave the input profile field unchanged", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "profiles.test.host",
-                    value: "test-host",
-                    path: ["profiles", "test", "host"],
-                    profile: "profiles.test.secure.password",
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [];
-
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed);
-
-            expect(mockTeamConfig.set).toHaveBeenCalledWith("profiles.test.host", "test-host", {
-                parseString: false,
-                secure: false,
-            });
-        });
-
-        it("should transform secure keys to properties in deletions", async () => {
-            const changes: ChangeEntry[] = [];
-            const deletions: ChangeEntry[] = [
-                {
-                    key: "profiles.test.secure.password",
-                    value: "",
-                    path: ["profiles", "test", "secure", "password"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed);
-
-            expect(mockTeamConfig.delete).toHaveBeenCalledWith("profiles.test.properties.password");
-        });
-
-        it("should activate different layer when configPath differs from current", async () => {
-            const changes: ChangeEntry[] = [];
-            const deletions: ChangeEntry[] = [];
-            const configPath = "/different/config.json";
-
-            const mockLayer = {
-                path: "/different/config.json",
-                user: false,
-                global: true,
-            };
-
-            mockLayers.find.mockReturnValue(mockLayer);
-            mockTeamConfig.api.layers.get.mockReturnValue({
-                path: "/current/config.json",
-            });
-
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, mockAreSecureValuesAllowed);
-
-            expect(mockLayers.find).toHaveBeenCalled();
-            expect(mockTeamConfig.api.layers.activate).toHaveBeenCalledWith(false, true);
-        });
-
-        it("should handle schema path and profile properties", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "profiles.test.port",
-                    value: "443",
-                    path: ["profiles", "test", "port"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [];
-
-            const mockProfileProps = new Map([["port", { type: "number", path: "profiles.test.port" }]]);
-
-            vi.mocked(ConfigSchemaHelpers.getProfileProperties).mockReturnValue(mockProfileProps);
-
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed);
-
-            expect(ConfigSchemaHelpers.getProfileProperties).toHaveBeenCalledWith("/mock/schema.json");
-            expect(mockTeamConfig.set).toHaveBeenCalledWith("profiles.test.port", "443", {
-                parseString: true,
-                secure: false,
-            });
-        });
-
-        it("should reject errors in set operations", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "profiles.test.host",
-                    value: "test-host",
-                    path: ["profiles", "test", "host"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [];
-
-            mockTeamConfig.set.mockImplementation(() => {
-                throw new Error("Set operation failed");
-            });
-
-            await expect(
-                ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed)
-            ).rejects.toThrow();
-
-            expect(mockTeamConfig.set).toHaveBeenCalled();
-        });
-
-        it("should reject errors in delete operations", async () => {
-            const changes: ChangeEntry[] = [];
-            const deletions: ChangeEntry[] = [
-                {
-                    key: "profiles.test.host",
-                    value: "",
-                    path: ["profiles", "test", "host"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            mockTeamConfig.delete.mockImplementation(() => {
-                throw new Error("Delete operation failed");
-            });
-
-            await expect(
-                ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed)
-            ).rejects.toThrow();
-
-            expect(mockTeamConfig.delete).toHaveBeenCalled();
-        });
-
-        it("should handle empty changes and deletions arrays", async () => {
-            const changes: ChangeEntry[] = [];
-            const deletions: ChangeEntry[] = [];
-
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", mockAreSecureValuesAllowed);
-
-            expect(mockAreSecureValuesAllowed).not.toHaveBeenCalled();
-            expect(mockTeamConfig.set).not.toHaveBeenCalled();
-            expect(mockTeamConfig.delete).not.toHaveBeenCalled();
-            expect(mockTeamConfig.save).toHaveBeenCalled();
-        });
-    });
-
-    describe("handleDefaultChanges (simulation mode)", () => {
-        it("should simulate default changes without affecting original config", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "ssh",
-                    value: "test-ssh",
-                    path: ["defaults", "ssh"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [
-                {
-                    key: "base",
-                    value: "",
-                    path: ["defaults", "base"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const activeLayer = "/mock/config.json";
-            const teamConfig = {
-                api: {
-                    layers: {
-                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: vi.fn(),
+            vi.restoreAllMocks();
+            memory = createEditorConfig([
+                createEditorLayer({
+                    path: teamPath,
+                    properties: {
+                        $schema: "schema.json",
+                        profiles: { test: { properties: { host: "original", port: 80, password: "stored" }, secure: ["password"] } },
+                        defaults: { zosmf: "old", ssh: "old", base: "base", tso: "old-tso" },
                     },
-                    profiles: {
-                        defaultSet: vi.fn(),
-                    },
-                },
-                layers: [],
-                delete: vi.fn(),
-            };
-
-            teamConfig.api.layers.activate.mockImplementation(() => {
-                teamConfig.api.layers.get.mockReturnValue(mockLayer);
-            });
-            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer, teamConfig);
-
-            expect(teamConfig.api.profiles.defaultSet).toHaveBeenCalledWith("ssh", "test-ssh");
-            expect(teamConfig.delete).toHaveBeenCalledWith("defaults.base");
-        });
-
-        it("should delete default entry in simulation mode when change value is empty string", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "zosmf",
-                    value: "",
-                    path: ["defaults", "zosmf"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [];
-            const activeLayer = "/mock/config.json";
-            const teamConfig = {
-                api: {
-                    layers: {
-                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: vi.fn(),
-                    },
-                    profiles: {
-                        defaultSet: vi.fn(),
-                    },
-                },
-                layers: [],
-                delete: vi.fn(),
-            };
-
-            teamConfig.api.layers.activate.mockImplementation(() => {
-                teamConfig.api.layers.get.mockReturnValue(mockLayer);
-            });
-            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer, teamConfig);
-
-            expect(teamConfig.api.profiles.defaultSet).not.toHaveBeenCalled();
-            expect(teamConfig.delete).toHaveBeenCalledWith("defaults.zosmf");
-        });
-
-        it("should activate different layer when activeLayer differs from current", async () => {
-            const changes: ChangeEntry[] = [];
-            const deletions: ChangeEntry[] = [];
-            const activeLayer = "/different/config.json";
-
-            const mockLayer = {
-                path: "/different/config.json",
-                user: true,
-                global: false,
-            };
-
-            const teamConfig = {
-                api: {
-                    layers: {
-                        get: vi.fn().mockReturnValue({ path: "/current/config.json" }),
-                        activate: vi.fn(),
-                    },
-                    profiles: {
-                        defaultSet: vi.fn(),
-                    },
-                },
-                layers: [mockLayer],
-                delete: vi.fn(),
-            };
-
-            teamConfig.api.layers.activate.mockImplementation(() => {
-                teamConfig.api.layers.get.mockReturnValue(mockLayer);
-            });
-            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, activeLayer, teamConfig);
-
-            expect(teamConfig.api.layers.activate).toHaveBeenCalledWith(true, false);
-        });
-
-        it("should handle multiple changes and deletions", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "ssh",
-                    value: "ssh1",
-                    path: ["defaults", "ssh"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-                {
-                    key: "zosmf",
-                    value: "zosmf1",
-                    path: ["defaults", "zosmf"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [
-                {
-                    key: "base",
-                    value: "base1",
-                    path: ["defaults", "base"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const teamConfig = {
-                api: {
-                    layers: {
-                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: vi.fn(),
-                    },
-                    profiles: {
-                        defaultSet: vi.fn(),
-                    },
-                },
-                layers: [],
-                delete: vi.fn(),
-            };
-
-            await ConfigChangeHandlers.handleDefaultChanges(changes, deletions, "/mock/config.json", teamConfig);
-
-            expect(teamConfig.api.profiles.defaultSet).toHaveBeenCalledTimes(2);
-            expect(teamConfig.api.profiles.defaultSet).toHaveBeenCalledWith("ssh", "ssh1");
-            expect(teamConfig.api.profiles.defaultSet).toHaveBeenCalledWith("zosmf", "zosmf1");
-            expect(teamConfig.delete).toHaveBeenCalledWith("defaults.base");
-        });
-    });
-
-    describe("handleProfileChanges (simulation mode)", () => {
-        it("should simulate profile changes without affecting original config", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "profiles.test.host",
-                    value: "test-host",
-                    path: ["profiles", "test", "host"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [
-                {
-                    key: "profiles.test.port",
-                    value: "",
-                    path: ["profiles", "test", "port"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const configPath = "/mock/config.json";
-            const teamConfig = {
-                api: {
-                    layers: {
-                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: vi.fn(),
-                    },
-                },
-                layers: [],
-                set: vi.fn(),
-                delete: vi.fn(),
-            };
-
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, undefined, teamConfig);
-
-            expect(teamConfig.set).toHaveBeenCalledWith("profiles.test.host", "test-host", {
-                parseString: false,
-                secure: false,
-            });
-            expect(teamConfig.delete).toHaveBeenCalledWith("profiles.test.port");
-        });
-
-        it("should transform secure keys to properties in changes", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "profiles.test.secure.password",
-                    value: "secret",
-                    path: ["profiles", "test", "secure", "password"],
-                    configPath: "/mock/config.json",
-                    secure: true,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [];
-
-            const teamConfig = {
-                api: {
-                    layers: {
-                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: vi.fn(),
-                    },
-                },
-                layers: [],
-                set: vi.fn(),
-                delete: vi.fn(),
-            };
-
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
-
-            expect(teamConfig.set).toHaveBeenCalledWith("profiles.test.properties.password", "secret", {
-                parseString: false,
-                secure: true,
-            });
-        });
-
-        it("should leave the input profile field unchanged", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "profiles.test.host",
-                    value: "test-host",
-                    path: ["profiles", "test", "host"],
-                    profile: "profiles.test.secure.password",
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [];
-
-            const teamConfig = {
-                api: {
-                    layers: {
-                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: vi.fn(),
-                    },
-                },
-                layers: [],
-                set: vi.fn(),
-                delete: vi.fn(),
-            };
-
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
-
-            expect(teamConfig.set).toHaveBeenCalledWith("profiles.test.host", "test-host", {
-                parseString: false,
-                secure: false,
-            });
-        });
-
-        it("should transform secure keys to properties in deletions", async () => {
-            const changes: ChangeEntry[] = [];
-            const deletions: ChangeEntry[] = [
-                {
-                    key: "profiles.test.secure.password",
-                    value: "",
-                    path: ["profiles", "test", "secure", "password"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const teamConfig = {
-                api: {
-                    layers: {
-                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: vi.fn(),
-                    },
-                },
-                layers: [],
-                set: vi.fn(),
-                delete: vi.fn(),
-            };
-
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
-
-            expect(teamConfig.delete).toHaveBeenCalledWith("profiles.test.properties.password");
-        });
-
-        it("should activate different layer when configPath differs from current", async () => {
-            const changes: ChangeEntry[] = [];
-            const deletions: ChangeEntry[] = [];
-            const configPath = "/different/config.json";
-
-            const mockLayer = {
-                path: "/different/config.json",
-                user: false,
-                global: true,
-            };
-
-            const teamConfig = {
-                api: {
-                    layers: {
-                        get: vi.fn().mockReturnValue({ path: "/current/config.json" }),
-                        activate: vi.fn(),
-                    },
-                },
-                layers: [mockLayer],
-                set: vi.fn(),
-                delete: vi.fn(),
-            };
-
-            teamConfig.api.layers.activate.mockImplementation(() => {
-                teamConfig.api.layers.get.mockReturnValue(mockLayer);
-            });
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, configPath, undefined, teamConfig);
-
-            expect(teamConfig.api.layers.activate).toHaveBeenCalledWith(false, true);
-        });
-
-        it("should reject errors in set operations", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "profiles.test.host",
-                    value: "test-host",
-                    path: ["profiles", "test", "host"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [];
-
-            const teamConfig = {
-                api: {
-                    layers: {
-                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: vi.fn(),
-                    },
-                },
-                layers: [],
-                set: vi.fn().mockImplementation(() => {
-                    throw new Error("Set operation failed");
                 }),
-                delete: vi.fn(),
-            };
-
-            await expect(ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig)).rejects.toThrow(
-                "Set operation failed"
-            );
-
-            expect(teamConfig.set).toHaveBeenCalled();
-        });
-
-        it("should reject errors in delete operations", async () => {
-            const changes: ChangeEntry[] = [];
-            const deletions: ChangeEntry[] = [
-                {
-                    key: "profiles.test.host",
-                    value: "",
-                    path: ["profiles", "test", "host"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const teamConfig = {
-                api: {
-                    layers: {
-                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: vi.fn(),
-                    },
-                },
-                layers: [],
-                set: vi.fn(),
-                delete: vi.fn().mockImplementation(() => {
-                    throw new Error("Delete operation failed");
-                }),
-            };
-
-            await expect(ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig)).rejects.toThrow(
-                "Delete operation failed"
-            );
-
-            expect(teamConfig.delete).toHaveBeenCalled();
-        });
-
-        it("should handle empty changes and deletions arrays", async () => {
-            const changes: ChangeEntry[] = [];
-            const deletions: ChangeEntry[] = [];
-
-            const teamConfig = {
-                api: {
-                    layers: {
-                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: vi.fn(),
-                    },
-                },
-                layers: [],
-                set: vi.fn(),
-                delete: vi.fn(),
-            };
-
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
-
-            expect(teamConfig.set).not.toHaveBeenCalled();
-            expect(teamConfig.delete).not.toHaveBeenCalled();
-        });
-
-        it("should handle multiple changes and deletions", async () => {
-            const changes: ChangeEntry[] = [
-                {
-                    key: "profiles.test1.host",
-                    value: "host1",
-                    path: ["profiles", "test1", "host"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-                {
-                    key: "profiles.test2.host",
-                    value: "host2",
-                    path: ["profiles", "test2", "host"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const deletions: ChangeEntry[] = [
-                {
-                    key: "profiles.test1.port",
-                    value: "",
-                    path: ["profiles", "test1", "port"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-                {
-                    key: "profiles.test2.port",
-                    value: "",
-                    path: ["profiles", "test2", "port"],
-                    configPath: "/mock/config.json",
-                    secure: false,
-                },
-            ];
-
-            const teamConfig = {
-                api: {
-                    layers: {
-                        get: vi.fn().mockReturnValue({ path: "/mock/config.json" }),
-                        activate: vi.fn(),
-                    },
-                },
-                layers: [],
-                set: vi.fn(),
-                delete: vi.fn(),
-            };
-
-            await ConfigChangeHandlers.handleProfileChanges(changes, deletions, "/mock/config.json", undefined, teamConfig);
-
-            expect(teamConfig.set).toHaveBeenCalledTimes(2);
-            expect(teamConfig.set).toHaveBeenCalledWith("profiles.test1.host", "host1", {
-                parseString: false,
-                secure: false,
-            });
-            expect(teamConfig.set).toHaveBeenCalledWith("profiles.test2.host", "host2", {
-                parseString: false,
-                secure: false,
-            });
-
-            expect(teamConfig.delete).toHaveBeenCalledTimes(2);
-            expect(teamConfig.delete).toHaveBeenCalledWith("profiles.test1.port");
-            expect(teamConfig.delete).toHaveBeenCalledWith("profiles.test2.port");
-        });
-    });
-
-    describe("handleAutostoreToggle", () => {
-        it("should apply an autostore toggle to its target layer", async () => {
-            const targetLayer = { path: "/mock/config.json", user: true, global: false };
-            mockLayers.find.mockReturnValue(targetLayer);
-
-            await ConfigChangeHandlers.handleAutostoreToggle([{ type: "autostore", value: true, configPath: "/mock/config.json" }]);
-
-            expect(mockTeamConfig.api.layers.activate).not.toHaveBeenCalled();
-            expect(mockTeamConfig.set).toHaveBeenCalledWith("autoStore", true, { parseString: true });
-            expect(mockTeamConfig.save).toHaveBeenCalled();
-        });
-
-        it("should handle multiple autostore changes across different config paths", async () => {
-            const targetLayer1 = { path: "/mock/config1.json", user: true, global: false };
-            const targetLayer2 = { path: "/mock/config2.json", user: false, global: true };
-            mockLayers.find.mockReturnValueOnce(targetLayer1).mockReturnValueOnce(targetLayer2);
-
-            await ConfigChangeHandlers.handleAutostoreToggle([
-                { type: "autostore", value: true, configPath: "/mock/config1.json" },
-                { type: "autostore", value: false, configPath: "/mock/config2.json" },
+                createEditorLayer({ path: userPath, user: true }),
             ]);
-
-            expect(mockTeamConfig.set).toHaveBeenCalledWith("autoStore", true, { parseString: true });
-            expect(mockTeamConfig.set).toHaveBeenCalledWith("autoStore", false, { parseString: true });
-            expect(mockTeamConfig.save).toHaveBeenCalledTimes(2);
+            vi.spyOn(ConfigUtils, "createProfileInfoAndLoad").mockResolvedValue(memory.profileInfo);
+            vi.spyOn(ConfigSchemaHelpers, "getProfileProperties").mockReturnValue(new Map());
+            vi.spyOn(memory.config, "set");
+            vi.spyOn(memory.config, "delete");
+            vi.spyOn(memory.config.api.layers, "activate");
+            allowed = vi.fn().mockResolvedValue(true);
         });
 
-        it("should skip changes that are not of type autostore", async () => {
-            await ConfigChangeHandlers.handleAutostoreToggle([{ type: "other", value: "test", configPath: "/mock/config.json" } as any]);
-
-            expect(mockLayers.find).not.toHaveBeenCalled();
-            expect(mockTeamConfig.set).not.toHaveBeenCalled();
-            expect(mockTeamConfig.save).not.toHaveBeenCalled();
+        it("updates multiple defaults and removes explicitly deleted entries", async () => {
+            await defaults(
+                [createEditorChange("zosmf", "new", { configPath: teamPath }), createEditorChange("tso", "new-tso", { configPath: teamPath })],
+                [createEditorChange("ssh", "", { configPath: teamPath }), createEditorChange("base", "", { configPath: teamPath })]
+            );
+            expect(memory.config.api.layers.get().properties.defaults).toEqual({ zosmf: "new", tso: "new-tso" });
+            expect(memory.save).toHaveBeenCalledTimes(persist ? 1 : 0);
+            expect(ConfigUtils.createProfileInfoAndLoad).toHaveBeenCalledTimes(persist ? 1 : 0);
         });
 
-        it("should not set or save when the target layer is not found", async () => {
-            mockLayers.find.mockReturnValue(undefined);
-
-            await expect(
-                ConfigChangeHandlers.handleAutostoreToggle([{ type: "autostore", value: true, configPath: "/missing/config.json" }])
-            ).rejects.toThrow("no longer exists");
-
-            expect(mockTeamConfig.api.layers.activate).not.toHaveBeenCalled();
-            expect(mockTeamConfig.set).not.toHaveBeenCalled();
-            expect(mockTeamConfig.save).not.toHaveBeenCalled();
+        it.each(["", null, undefined])("clears a default whose value is %s", async (value) => {
+            await defaults([createEditorChange("zosmf", "", { configPath: teamPath, value })]);
+            expect(memory.config.api.layers.get().properties.defaults).not.toHaveProperty("zosmf");
+            expect(memory.save).toHaveBeenCalledTimes(persist ? 1 : 0);
         });
 
-        it("should propagate an autostore failure", async () => {
-            vi.mocked(ProfileInfo).mockImplementation(() => {
-                throw new Error("Test error");
+        it("applies multiple property edits and deletions without requesting secure storage", async () => {
+            await profiles(
+                [
+                    createEditorChange(hostKey, "changed", { configPath: teamPath }),
+                    createEditorChange("profiles.other.properties.host", "other", { configPath: teamPath }),
+                ],
+                [createEditorChange("profiles.test.properties.port", "", { configPath: teamPath })]
+            );
+            expect(memory.config.api.layers.get().properties.profiles).toMatchObject({
+                test: { properties: { host: "changed", password: "stored" } },
+                other: { properties: { host: "other" } },
             });
-
-            await expect(
-                ConfigChangeHandlers.handleAutostoreToggle([{ type: "autostore", value: true, configPath: "/mock/config.json" }])
-            ).rejects.toThrow("Test error");
+            expect(memory.config.api.layers.get().properties.profiles.test.properties).not.toHaveProperty("port");
+            expect(allowed).not.toHaveBeenCalled();
+            expect(memory.save).toHaveBeenCalledTimes(persist ? 1 : 0);
         });
+
+        it("rejects the whole batch before edits or deletions when secure storage is unavailable", async () => {
+            allowed.mockResolvedValue(false);
+            await expect(
+                profiles(
+                    [
+                        createEditorChange(hostKey, "changed", { configPath: teamPath }),
+                        createEditorChange("profiles.test.secure.password", "synthetic", { configPath: teamPath, secure: true }),
+                    ],
+                    [createEditorChange("profiles.test.properties.port", "", { configPath: teamPath })]
+                )
+            ).rejects.toThrow("Secure storage is unavailable");
+            expect(memory.config.set).not.toHaveBeenCalled();
+            expect(memory.config.delete).not.toHaveBeenCalled();
+            expect(memory.save).not.toHaveBeenCalled();
+        });
+
+        it("translates secure edit and deletion paths into properties", async () => {
+            await profiles([createEditorChange("profiles.test.secure.password", "synthetic", { configPath: teamPath, secure: true })]);
+            expect(memory.config.set).toHaveBeenCalledWith("profiles.test.properties.password", "synthetic", { parseString: false, secure: true });
+            expect(memory.config.api.layers.get().properties.profiles.test).toMatchObject({
+                properties: { password: "synthetic" },
+                secure: ["password"],
+            });
+            expect(allowed).toHaveBeenCalledOnce();
+            expect(memory.save).toHaveBeenCalledTimes(persist ? 1 : 0);
+            await profiles([], [createEditorChange("profiles.test.secure.password", "", { configPath: teamPath })]);
+            expect(memory.config.delete).toHaveBeenCalledWith("profiles.test.properties.password");
+            expect(memory.config.api.layers.get().properties.profiles.test.properties).not.toHaveProperty("password");
+        });
+
+        it("does not rewrite the input profile field", async () => {
+            const change = createEditorChange(hostKey, "changed", { configPath: teamPath, profile: "profiles.test.secure.password" });
+            const original = structuredClone(change);
+            await profiles([change]);
+            expect(change).toEqual(original);
+            expect(memory.config.set).toHaveBeenCalledWith(hostKey, "changed", { parseString: false, secure: false });
+        });
+
+        it("uses the active schema for typed property conversion", async () => {
+            vi.mocked(ConfigSchemaHelpers.getProfileProperties).mockReturnValue(new Map([["port", { type: "number", path: "port" }]]));
+            await profiles([createEditorChange("profiles.test.properties.port", "443", { configPath: teamPath })]);
+            expect(ConfigSchemaHelpers.getProfileProperties).toHaveBeenCalledWith("/mock/schema.json");
+            expect(memory.config.set).toHaveBeenCalledWith("profiles.test.properties.port", "443", { parseString: true, secure: false });
+            expect(memory.config.api.layers.get().properties.profiles.test.properties.port).toBe(443);
+        });
+
+        it("applies properties without a schema", async () => {
+            await profiles([createEditorChange(hostKey, "changed", { configPath: userPath })], [], userPath);
+            expect(ConfigSchemaHelpers.getProfileProperties).not.toHaveBeenCalled();
+            expect(memory.config.set).toHaveBeenCalledWith(hostKey, "changed", { parseString: false, secure: false });
+        });
+
+        it.each(["set", "delete"] as const)("propagates a %s failure without saving", async (operation) => {
+            vi.spyOn(memory.config, operation).mockImplementationOnce(() => {
+                throw new Error(`${operation} failed`);
+            });
+            const changes = [createEditorChange(hostKey, "changed", { configPath: teamPath })];
+            await expect(profiles(operation === "set" ? changes : [], operation === "delete" ? changes : [])).rejects.toThrow(`${operation} failed`);
+            expect(memory.save).not.toHaveBeenCalled();
+        });
+
+        it.each(["defaults", "profiles"])("handles an empty %s batch", async (kind) => {
+            await (kind === "defaults" ? defaults : profiles)([]);
+            expect(memory.config.set).not.toHaveBeenCalled();
+            expect(memory.config.delete).not.toHaveBeenCalled();
+            expect(allowed).not.toHaveBeenCalled();
+            expect(memory.save).toHaveBeenCalledTimes(persist ? 1 : 0);
+        });
+
+        it.each(["defaults", "profiles", "autostore"])("activates the requested layer for %s", async (kind) => {
+            if (kind === "autostore") await autostore(userPath);
+            else await (kind === "defaults" ? defaults : profiles)([], [], userPath);
+            expect(memory.config.api.layers.activate).toHaveBeenCalledExactlyOnceWith(true, false);
+            expect(memory.config.api.layers.get().path).toBe(userPath);
+            expect(memory.save).toHaveBeenCalledTimes(persist ? 1 : 0);
+        });
+
+        it.each(["defaults", "profiles", "autostore"])("rejects a missing layer before %s writes", async (kind) => {
+            const result = kind === "autostore" ? autostore("/missing.json") : (kind === "defaults" ? defaults : profiles)([], [], "/missing.json");
+            await expect(result).rejects.toThrow("no longer exists");
+            expect(memory.config.api.layers.activate).not.toHaveBeenCalled();
+            expect(memory.config.set).not.toHaveBeenCalled();
+            expect(memory.config.delete).not.toHaveBeenCalled();
+            expect(memory.save).not.toHaveBeenCalled();
+        });
+
+        it("does not reactivate the current layer", async () => {
+            await defaults([]);
+            expect(memory.config.api.layers.activate).not.toHaveBeenCalled();
+        });
+
+        it("toggles autostore across layers", async () => {
+            await ConfigChangeHandlers.handleAutostoreToggle(
+                [
+                    { type: "autostore", value: true, configPath: teamPath },
+                    { type: "autostore", value: false, configPath: userPath },
+                ],
+                persist ? undefined : memory.config
+            );
+            expect(memory.config.layers.map((layer) => layer.properties.autoStore)).toEqual([true, false]);
+            expect(memory.save).toHaveBeenCalledTimes(persist ? 2 : 0);
+        });
+    });
+
+    it("stages a mixed batch across layers without loading or saving", async () => {
+        const memory = createEditorConfig([createEditorLayer({ path: teamPath }), createEditorLayer({ path: userPath, user: true })]);
+        const load = vi.spyOn(ConfigUtils, "createProfileInfoAndLoad");
+        await ConfigChangeHandlers.stageChanges(
+            {
+                defaultsChanges: [createEditorChange("zosmf", "test", { configPath: teamPath })],
+                changes: [createEditorChange(hostKey, "changed", { configPath: userPath })],
+            },
+            memory.config
+        );
+        expect(memory.config.layers[0].properties.defaults).toEqual({ zosmf: "test" });
+        expect(memory.config.layers[1].properties.profiles.test.properties.host).toBe("changed");
+        expect(load).not.toHaveBeenCalled();
+        expect(memory.save).not.toHaveBeenCalled();
+    });
+
+    it("skips changes that are not autostore toggles", async () => {
+        const memory = createEditorConfig([createEditorLayer()]);
+        await ConfigChangeHandlers.handleAutostoreToggle(
+            [
+                { type: "other", value: true, configPath: teamPath } as unknown as Parameters<
+                    typeof ConfigChangeHandlers.handleAutostoreToggle
+                >[0][number],
+            ],
+            memory.config
+        );
+        expect(memory.save).not.toHaveBeenCalled();
+        expect(memory.config.api.layers.get().properties).not.toHaveProperty("autoStore");
+    });
+
+    it("propagates a configuration-load failure", async () => {
+        vi.spyOn(ConfigUtils, "createProfileInfoAndLoad").mockRejectedValue(new Error("load failed"));
+        await expect(ConfigChangeHandlers.handleAutostoreToggle([{ type: "autostore", value: true, configPath: teamPath }])).rejects.toThrow(
+            "load failed"
+        );
     });
 });

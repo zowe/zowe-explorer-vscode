@@ -9,7 +9,8 @@
  *
  */
 
-import { ConfigSchemaHelpers, schemaValidation } from "../../../../src/utils/ConfigSchemaHelpers";
+import { createEditorSchema } from "../../../__mocks__/mockCreators/configEditor";
+import { ConfigSchemaHelpers } from "../../../../src/utils/ConfigSchemaHelpers";
 import * as fs from "fs";
 import { vi } from "vitest";
 
@@ -27,55 +28,21 @@ describe("ConfigSchemaHelpers", () => {
 
     describe("generateSchemaValidation", () => {
         it("should generate schema validation from valid schema", () => {
-            const schema = {
-                properties: {
-                    profiles: {
-                        patternProperties: {
-                            "^\\S*$": {
-                                allOf: [
-                                    {
-                                        if: {
-                                            properties: {
-                                                type: { const: "zosmf" },
-                                            },
-                                        },
-                                        then: {
-                                            properties: {
-                                                properties: {
-                                                    properties: {
-                                                        host: {
-                                                            type: "string",
-                                                            description: "Host name",
-                                                            default: "localhost",
-                                                        },
-                                                        port: {
-                                                            type: "number",
-                                                            description: "Port number",
-                                                            default: 443,
-                                                        },
-                                                    },
-                                                },
-                                                secure: {
-                                                    items: {
-                                                        enum: ["password", "token"],
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                ],
-                            },
-                        },
+            const schema = createEditorSchema(
+                {
+                    host: {
+                        type: "string",
+                        description: "Host name",
+                        default: "localhost",
                     },
-                    defaults: {
-                        properties: {
-                            zosmf: {
-                                type: "object",
-                            },
-                        },
+                    port: {
+                        type: "number",
+                        description: "Port number",
+                        default: 443,
                     },
                 },
-            };
+                ["password", "token"]
+            );
 
             const result = ConfigSchemaHelpers.generateSchemaValidation(schema);
 
@@ -101,53 +68,19 @@ describe("ConfigSchemaHelpers", () => {
         });
 
         it("should handle schema with secure properties", () => {
-            const schema = {
-                properties: {
-                    profiles: {
-                        patternProperties: {
-                            "^\\S*$": {
-                                allOf: [
-                                    {
-                                        if: {
-                                            properties: {
-                                                type: { const: "zosmf" },
-                                            },
-                                        },
-                                        then: {
-                                            properties: {
-                                                properties: {
-                                                    properties: {
-                                                        host: {
-                                                            type: "string",
-                                                            description: "Host name",
-                                                        },
-                                                        password: {
-                                                            type: "string",
-                                                            description: "Password",
-                                                        },
-                                                    },
-                                                },
-                                                secure: {
-                                                    items: {
-                                                        enum: ["password"],
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                ],
-                            },
-                        },
+            const schema = createEditorSchema(
+                {
+                    host: {
+                        type: "string",
+                        description: "Host name",
                     },
-                    defaults: {
-                        properties: {
-                            zosmf: {
-                                type: "object",
-                            },
-                        },
+                    password: {
+                        type: "string",
+                        description: "Password",
                     },
                 },
-            };
+                ["password"]
+            );
 
             const result = ConfigSchemaHelpers.generateSchemaValidation(schema);
 
@@ -156,49 +89,15 @@ describe("ConfigSchemaHelpers", () => {
         });
 
         it("should handle array type values", () => {
-            const schema = {
-                properties: {
-                    profiles: {
-                        patternProperties: {
-                            "^\\S*$": {
-                                allOf: [
-                                    {
-                                        if: {
-                                            properties: {
-                                                type: { const: "zosmf" },
-                                            },
-                                        },
-                                        then: {
-                                            properties: {
-                                                properties: {
-                                                    properties: {
-                                                        protocol: {
-                                                            type: ["string", "null"],
-                                                            description: "Protocol",
-                                                        },
-                                                    },
-                                                },
-                                                secure: {
-                                                    items: {
-                                                        enum: [],
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                ],
-                            },
-                        },
-                    },
-                    defaults: {
-                        properties: {
-                            zosmf: {
-                                type: "object",
-                            },
-                        },
+            const schema = createEditorSchema(
+                {
+                    protocol: {
+                        type: ["string", "null"],
+                        description: "Protocol",
                     },
                 },
-            };
+                []
+            );
 
             const result = ConfigSchemaHelpers.generateSchemaValidation(schema);
 
@@ -257,36 +156,16 @@ describe("ConfigSchemaHelpers", () => {
 
     describe("getProfileProperties", () => {
         it("should read and process schema file successfully", () => {
-            const mockSchema = {
-                properties: {
-                    profiles: {
-                        patternProperties: {
-                            "^\\S*$": {
-                                allOf: [
-                                    {
-                                        then: {
-                                            properties: {
-                                                properties: {
-                                                    properties: {
-                                                        host: {
-                                                            type: "string",
-                                                            description: "Host name",
-                                                        },
-                                                        port: {
-                                                            type: "number",
-                                                            description: "Port number",
-                                                        },
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                ],
-                            },
-                        },
-                    },
+            const mockSchema = createEditorSchema({
+                host: {
+                    type: "string",
+                    description: "Host name",
                 },
-            };
+                port: {
+                    type: "number",
+                    description: "Port number",
+                },
+            });
 
             MockedFs.readFileSync.mockReturnValue(JSON.stringify(mockSchema));
 
@@ -297,7 +176,7 @@ describe("ConfigSchemaHelpers", () => {
         });
 
         it("should handle file read errors", () => {
-            const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation();
+            const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
             MockedFs.readFileSync.mockImplementation(() => {
                 throw new Error("File not found");
             });
@@ -311,7 +190,7 @@ describe("ConfigSchemaHelpers", () => {
         });
 
         it("should handle invalid JSON", () => {
-            const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation();
+            const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
             MockedFs.readFileSync.mockReturnValue("invalid json");
 
             const result = ConfigSchemaHelpers.getProfileProperties("/path/to/schema.json");
@@ -574,40 +453,20 @@ describe("ConfigSchemaHelpers", () => {
 
     describe("private methods through public interfaces", () => {
         it("should process profile properties through getProfileProperties", () => {
-            const mockSchema = {
-                properties: {
-                    profiles: {
-                        patternProperties: {
-                            "^\\S*$": {
-                                allOf: [
-                                    {
-                                        then: {
-                                            properties: {
-                                                properties: {
-                                                    properties: {
-                                                        host: {
-                                                            type: "string",
-                                                            description: "Host name",
-                                                        },
-                                                        port: {
-                                                            type: "number",
-                                                            description: "Port number",
-                                                        },
-                                                        enabled: {
-                                                            type: "boolean",
-                                                            description: "Enable flag",
-                                                        },
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                ],
-                            },
-                        },
-                    },
+            const mockSchema = createEditorSchema({
+                host: {
+                    type: "string",
+                    description: "Host name",
                 },
-            };
+                port: {
+                    type: "number",
+                    description: "Port number",
+                },
+                enabled: {
+                    type: "boolean",
+                    description: "Enable flag",
+                },
+            });
 
             MockedFs.readFileSync.mockReturnValue(JSON.stringify(mockSchema));
 
@@ -627,48 +486,28 @@ describe("ConfigSchemaHelpers", () => {
         });
 
         it("should handle complex nested profile structure", () => {
-            const mockSchema = {
-                properties: {
-                    profiles: {
-                        patternProperties: {
-                            "^\\S*$": {
-                                allOf: [
-                                    {
-                                        then: {
-                                            properties: {
-                                                properties: {
-                                                    properties: {
-                                                        config: {
-                                                            properties: {
-                                                                host: {
-                                                                    type: "string",
-                                                                    description: "Host name",
-                                                                },
-                                                                port: {
-                                                                    type: "number",
-                                                                    description: "Port number",
-                                                                },
-                                                            },
-                                                        },
-                                                        flags: {
-                                                            type: ["boolean", "string"],
-                                                            description: "Flags",
-                                                        },
-                                                        pure: {
-                                                            type: ["number", "boolean"],
-                                                            description: "Pure non-string types",
-                                                        },
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                ],
-                            },
+            const mockSchema = createEditorSchema({
+                config: {
+                    properties: {
+                        host: {
+                            type: "string",
+                            description: "Host name",
+                        },
+                        port: {
+                            type: "number",
+                            description: "Port number",
                         },
                     },
                 },
-            };
+                flags: {
+                    type: ["boolean", "string"],
+                    description: "Flags",
+                },
+                pure: {
+                    type: ["number", "boolean"],
+                    description: "Pure non-string types",
+                },
+            });
 
             MockedFs.readFileSync.mockReturnValue(JSON.stringify(mockSchema));
 

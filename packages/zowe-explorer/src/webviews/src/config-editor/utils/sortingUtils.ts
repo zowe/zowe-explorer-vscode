@@ -17,62 +17,30 @@ export function sortProfilesAtLevel(profileKeys: string[], profileSortOrder: Pro
         return profileKeys;
     }
 
-    const profileInfo = profileKeys.map((profileKey) => {
-        const parts = profileKey.split(".");
-        const depth = parts.length - 1;
-        const parentKey = parts.length > 1 ? parts.slice(0, -1).join(".") : "";
-        return { profileKey, depth, parentKey, parts };
-    });
-
-    const sortedProfiles: string[] = [];
-    const processedProfiles = new Set<string>();
-
-    const addProfileAndDescendants = (profileKey: string) => {
-        if (processedProfiles.has(profileKey)) return;
-
-        const children = profileInfo.filter((info) => info.parentKey === profileKey);
-
-        if (currentProfileSortOrder === "alphabetical") {
-            children.sort((a, b) => {
-                const aName = a.parts[a.parts.length - 1];
-                const bName = b.parts[b.parts.length - 1];
-                return aName.localeCompare(bName);
-            });
-        } else if (currentProfileSortOrder === "reverse-alphabetical") {
-            children.sort((a, b) => {
-                const aName = a.parts[a.parts.length - 1];
-                const bName = b.parts[b.parts.length - 1];
-                return bName.localeCompare(aName);
-            });
-        }
-
-        sortedProfiles.push(profileKey);
-        processedProfiles.add(profileKey);
-
-        children.forEach((child) => {
-            addProfileAndDescendants(child.profileKey);
-        });
-    };
-
-    const topLevelProfiles = profileInfo.filter((info) => info.depth === 0);
-
-    if (currentProfileSortOrder === "alphabetical") {
-        topLevelProfiles.sort((a, b) => {
-            const aName = a.parts[a.parts.length - 1];
-            const bName = b.parts[b.parts.length - 1];
-            return aName.localeCompare(bName);
-        });
-    } else if (currentProfileSortOrder === "reverse-alphabetical") {
-        topLevelProfiles.sort((a, b) => {
-            const aName = a.parts[a.parts.length - 1];
-            const bName = b.parts[b.parts.length - 1];
-            return bName.localeCompare(aName);
-        });
+    const childrenByParent = new Map<string, string[]>();
+    for (const key of profileKeys) {
+        const lastDot = key.lastIndexOf(".");
+        const parent = lastDot === -1 ? "" : key.slice(0, lastDot);
+        const children = childrenByParent.get(parent) ?? [];
+        children.push(key);
+        childrenByParent.set(parent, children);
     }
-
-    topLevelProfiles.forEach((info) => {
-        addProfileAndDescendants(info.profileKey);
-    });
-
-    return sortedProfiles;
+    const direction = currentProfileSortOrder === "reverse-alphabetical" ? -1 : 1;
+    if (currentProfileSortOrder === "alphabetical" || currentProfileSortOrder === "reverse-alphabetical") {
+        for (const children of childrenByParent.values()) {
+            children.sort((a, b) => direction * a.slice(a.lastIndexOf(".") + 1).localeCompare(b.slice(b.lastIndexOf(".") + 1)));
+        }
+    }
+    const result: string[] = [];
+    const visited = new Set<string>();
+    const visitChildren = (parent: string) => {
+        for (const key of childrenByParent.get(parent) ?? []) {
+            if (visited.has(key)) continue;
+            visited.add(key);
+            result.push(key);
+            visitChildren(key);
+        }
+    };
+    visitChildren("");
+    return result;
 }

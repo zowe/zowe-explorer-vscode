@@ -96,18 +96,9 @@ export class ConfigEditorSaveOperations {
         if (changes.some((change) => change.secure) && !(await areSecureValuesAllowed())) {
             throw new Error("Secure storage is unavailable. Your changes have not been saved.");
         }
-        await operations.stageProfileRenames(message.renames ?? [], profInfo);
-        const updated = await operations.updateProfileChangesForRenames({ ...message, changes }, message.renames ?? []);
-        const staged = ConfigUtils.parseConfigChanges({
-            changes: updated.changes ?? [],
-            deletions: updated.deletions ?? [],
-            defaultsChanges: updated.defaultsChanges ?? [],
-            defaultsDeleteKeys: updated.defaultsDeleteKeys ?? [],
-        });
-        for (const group of staged) {
-            await ConfigChangeHandlers.handleDefaultChanges(group.defaultsChanges, group.defaultsDeleteKeys, group.configPath, config);
-            await ConfigChangeHandlers.handleProfileChanges(group.changes, group.deletions, group.configPath, areSecureValuesAllowed, config);
-        }
+        operations.stageProfileRenames(message.renames ?? [], profInfo);
+        const updated = operations.updateProfileChangesForRenames({ ...message, changes }, message.renames ?? []);
+        await ConfigChangeHandlers.stageChanges(updated, config, areSecureValuesAllowed);
         await ConfigChangeHandlers.handleAutostoreToggle(message.otherChanges ?? [], config);
 
         const attempted: string[] = [];

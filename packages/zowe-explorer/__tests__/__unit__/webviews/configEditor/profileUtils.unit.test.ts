@@ -16,12 +16,9 @@ import {
     getOriginalProfileKey,
     getOriginalProfileKeyWithNested,
     getAvailableProfilesByType,
-    getOrderedProfileKeys,
-    getAllProfileKeys,
     getReplacementProfileAfterDelete,
     isPropertyActuallyInherited,
     isMergedPropertySecure,
-    getProfileTypeFromPath,
     hasPendingSecureChanges,
     extractPendingProfiles,
     isProfileOrParentDeleted,
@@ -106,6 +103,27 @@ describe("profileUtils", () => {
         it("returns type from config when profile exists", () => {
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } } as any];
             expect(getProfileType({ profileKey: "p1", selectedTab: 0, configurations: configs, pendingChanges: {}, renames: {} })).toBe("zowe");
+        });
+        it("resolves one type without traversing unrelated profile subtrees", () => {
+            const configs = [
+                {
+                    configPath,
+                    secure: [],
+                    properties: {
+                        profiles: {
+                            selected: { type: "zosmf" },
+                            unrelated: {
+                                get profiles() {
+                                    throw new Error("Unrelated subtree traversed");
+                                },
+                            },
+                        },
+                    },
+                },
+            ];
+            expect(getProfileType({ profileKey: "selected", selectedTab: 0, configurations: configs, pendingChanges: {}, renames: {} })).toBe(
+                "zosmf"
+            );
         });
         it("returns type from pending change when present", () => {
             const configs = [{ configPath, properties: { profiles: { p1: { type: "zowe", properties: {} } } } } as any];
@@ -237,40 +255,6 @@ describe("profileUtils", () => {
             });
             expect(result).toContain("gu");
             expect(result).toContain("gt");
-        });
-    });
-
-    describe("getAllProfileKeys", () => {
-        it("returns empty for empty profiles", () => {
-            expect(getAllProfileKeys({})).toEqual([]);
-        });
-        it("returns top-level profile keys", () => {
-            const profiles = { p1: { type: "zowe" }, p2: { type: "zowe" } };
-            expect(getAllProfileKeys(profiles).sort()).toEqual(["p1", "p2"]);
-        });
-        it("returns nested profile keys with dot notation", () => {
-            const profiles = { parent: { type: "zowe", profiles: { child: { type: "zowe" } } } };
-            expect(getAllProfileKeys(profiles).sort()).toEqual(["parent", "parent.child"]);
-        });
-    });
-
-    describe("getOrderedProfileKeys", () => {
-        it("returns empty for empty profiles", () => {
-            expect(getOrderedProfileKeys({ profiles: {} })).toEqual([]);
-        });
-        it("returns keys in object order", () => {
-            const profiles = { p1: { type: "zowe" }, p2: { type: "zowe" } };
-            expect(getOrderedProfileKeys({ profiles })).toEqual(["p1", "p2"]);
-        });
-        it("excludes deleted profiles when isProfileOrParentDeleted returns true", () => {
-            const profiles = { p1: { type: "zowe" }, p2: { type: "zowe" } };
-            const deleted = ["p2"];
-            const isDeleted = (key: string, list: string[]) => list.includes(key);
-            expect(getOrderedProfileKeys({ profiles, parentKey: "", deletedProfiles: deleted, isProfileOrParentDeleted: isDeleted })).toEqual(["p1"]);
-        });
-        it("includes nested keys", () => {
-            const profiles = { parent: { type: "zowe", profiles: { child: { type: "zowe" } } } };
-            expect(getOrderedProfileKeys({ profiles })).toEqual(["parent", "parent.child"]);
         });
     });
 
@@ -517,19 +501,6 @@ describe("profileUtils", () => {
                     renames: {},
                 })
             ).toBe(true);
-        });
-    });
-
-    describe("getProfileTypeFromPath", () => {
-        it("returns null when path length < 2", () => {
-            expect(getProfileTypeFromPath([])).toBeNull();
-            expect(getProfileTypeFromPath(["profiles"])).toBeNull();
-        });
-        it("returns null when path[0] is not profiles", () => {
-            expect(getProfileTypeFromPath(["other", "p1"])).toBeNull();
-        });
-        it("returns first profile name segment after profiles", () => {
-            expect(getProfileTypeFromPath(["profiles", "p1", "properties", "host"])).toBe("p1");
         });
     });
 

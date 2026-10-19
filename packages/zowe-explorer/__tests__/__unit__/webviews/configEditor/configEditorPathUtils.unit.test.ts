@@ -10,74 +10,22 @@
  */
 
 import { ConfigEditorPathUtils } from "../../../../src/utils/ConfigEditorPathUtils";
-import { vi } from "vitest";
+import type { PathAwareChange } from "../../../../src/utils/ConfigTypes";
 
 describe("ConfigEditorPathUtils", () => {
     describe("constructNestedProfilePath", () => {
-        it("should construct nested profile path for single profile", () => {
-            const result = ConfigEditorPathUtils.constructNestedProfilePath("testProfile");
-            expect(result).toBe("profiles.testProfile");
+        it.each([
+            ["testProfile", "profiles.testProfile"],
+            ["parent.child", "profiles.parent.profiles.child"],
+            ["a.b.c.d", "profiles.a.profiles.b.profiles.c.profiles.d"],
+        ])("constructs the nested path for %s", (key, expected) => {
+            expect(ConfigEditorPathUtils.constructNestedProfilePath(key)).toBe(expected);
         });
-
-        it("should construct nested profile path for nested profiles", () => {
-            const result = ConfigEditorPathUtils.constructNestedProfilePath("parent.child");
-            expect(result).toBe("profiles.parent.profiles.child");
+        it.each(["", null, undefined, 123])("rejects a non-profile key: %s", (key) => {
+            expect(() => ConfigEditorPathUtils.constructNestedProfilePath(key as string)).toThrow("Profile key must be a non-empty string");
         });
-
-        it("should construct nested profile path for deeply nested profiles", () => {
-            const result = ConfigEditorPathUtils.constructNestedProfilePath("a.b.c.d");
-            expect(result).toBe("profiles.a.profiles.b.profiles.c.profiles.d");
-        });
-
-        it("should throw error for empty profile key", () => {
-            expect(() => {
-                ConfigEditorPathUtils.constructNestedProfilePath("");
-            }).toThrow("Profile key must be a non-empty string");
-        });
-
-        it("should throw error for null profile key", () => {
-            expect(() => {
-                ConfigEditorPathUtils.constructNestedProfilePath(null as any);
-            }).toThrow("Profile key must be a non-empty string");
-        });
-
-        it("should throw error for undefined profile key", () => {
-            expect(() => {
-                ConfigEditorPathUtils.constructNestedProfilePath(undefined as any);
-            }).toThrow("Profile key must be a non-empty string");
-        });
-
-        it("should throw error for non-string profile key", () => {
-            expect(() => {
-                ConfigEditorPathUtils.constructNestedProfilePath(123 as any);
-            }).toThrow("Profile key must be a non-empty string");
-        });
-
-        it("should throw error for profile key with empty parts", () => {
-            expect(() => {
-                ConfigEditorPathUtils.constructNestedProfilePath("test..profile");
-            }).toThrow("Profile key parts cannot be empty");
-        });
-
-        it("should throw error for profile key with whitespace-only parts", () => {
-            expect(() => {
-                ConfigEditorPathUtils.constructNestedProfilePath("test. .profile");
-            }).toThrow("Profile key parts cannot be empty");
-        });
-
-        it("should handle edge case with split result", () => {
-            // This test covers the theoretical case where split might return empty array
-            // In practice, split(".") on a non-empty string will never return empty array
-            // But we test the condition for completeness
-            const originalSplit = String.prototype.split;
-            String.prototype.split = vi.fn().mockReturnValue([]);
-
-            expect(() => {
-                ConfigEditorPathUtils.constructNestedProfilePath("test");
-            }).toThrow("Profile key cannot be empty");
-
-            // Restore original split
-            String.prototype.split = originalSplit;
+        it.each(["test..profile", "test. .profile"])("rejects empty name segments in %s", (key) => {
+            expect(() => ConfigEditorPathUtils.constructNestedProfilePath(key)).toThrow("Profile key parts cannot be empty");
         });
     });
 
@@ -140,176 +88,82 @@ describe("ConfigEditorPathUtils", () => {
         });
     });
 
-    describe("updateChangeKey", () => {
-        let renameMap: Map<string, { oldKey: string; newKey: string; configPath: string }>;
+    describe.each(["key", "path"] as const)("rename-aware %s adapter", (field) => {
+        const update =
+            field === "key"
+                ? ConfigEditorPathUtils.updateChangeKey.bind(ConfigEditorPathUtils)
+                : ConfigEditorPathUtils.updateChangePath.bind(ConfigEditorPathUtils);
+        const address = (value: string) => (field === "key" ? value : value.split("."));
+        const configPath = "/config.json";
 
-        beforeEach(() => {
-            renameMap = new Map();
+        it.each([
+            {
+                name: "unmatched profile",
+                old: "other",
+                target: "renamed",
+                input: "profiles.test.properties.host",
+                expected: "profiles.test.properties.host",
+            },
+            {
+                name: "property",
+                old: "test",
+                target: "renamed",
+                input: "profiles.test.properties.host",
+                expected: "profiles.renamed.properties.host",
+            },
+            {
+                name: "nested profile",
+                old: "test.profile",
+                target: "renamed.profile",
+                input: "profiles.test.profiles.profile.properties.host",
+                expected: "profiles.renamed.profiles.profile.properties.host",
+            },
+            { name: "type", old: "test", target: "renamed", input: "profiles.test.type", expected: "profiles.renamed.type" },
+            { name: "secure metadata", old: "test", target: "renamed", input: "profiles.test.secure", expected: "profiles.renamed.secure" },
+            { name: "whole profile", old: "test", target: "renamed", input: "profiles.test", expected: "profiles.renamed" },
+            {
+                name: "different config",
+                old: "test",
+                target: "renamed",
+                input: "profiles.test.properties.host",
+                expected: "profiles.test.properties.host",
+                otherConfig: true,
+            },
+            {
+                name: "changed ancestors",
+                old: "a.b",
+                target: "x.y",
+                input: "profiles.a.profiles.b.properties.host",
+                expected: "profiles.x.profiles.y.properties.host",
+            },
+            {
+                name: "nested property suffix",
+                old: "test",
+                target: "renamed",
+                input: "profiles.test.properties.host.port",
+                expected: "profiles.renamed.properties.host.port",
+            },
+            {
+                name: "JSON field names used as profile names",
+                old: "properties.type",
+                target: "renamed",
+                input: "profiles.properties.profiles.type.secure",
+                expected: "profiles.renamed.secure",
+            },
+        ])("rewrites $name while preserving other change fields", ({ old, target, input, expected, otherConfig }) => {
+            const map = new Map([[old, { oldKey: old, newKey: target, configPath: otherConfig ? "/other.json" : configPath }]]);
+            const change = { [field]: address(input), value: "localhost", type: "string" };
+            expect(update(change, configPath, map)).toEqual({ ...change, [field]: address(expected) });
+            expect(change[field]).toEqual(address(input));
         });
 
-        it("should return unchanged change when no key", () => {
-            const change = { value: "test" };
-            const result = ConfigEditorPathUtils.updateChangeKey(change, "/config.json", renameMap);
-            expect(result).toEqual(change);
-        });
-
-        it("should return unchanged change when no renames match", () => {
-            const change = { key: "profiles.test.properties.host", value: "localhost" };
-            const result = ConfigEditorPathUtils.updateChangeKey(change, "/config.json", renameMap);
-            expect(result).toEqual(change);
-        });
-
-        it("should update key for profile rename with properties", () => {
-            renameMap.set("test", { oldKey: "test", newKey: "renamed", configPath: "/config.json" });
-            const change = { key: "profiles.test.properties.host", value: "localhost" };
-            const result = ConfigEditorPathUtils.updateChangeKey(change, "/config.json", renameMap);
-            expect(result.key).toBe("profiles.renamed.properties.host");
-        });
-
-        it("should update key for nested profile rename with properties", () => {
-            renameMap.set("test.profile", { oldKey: "test.profile", newKey: "renamed.profile", configPath: "/config.json" });
-            const change = { key: "profiles.test.profiles.profile.properties.host", value: "localhost" };
-            const result = ConfigEditorPathUtils.updateChangeKey(change, "/config.json", renameMap);
-            expect(result.key).toBe("profiles.renamed.profiles.profile.properties.host");
-        });
-
-        it("should update key for profile rename with type", () => {
-            renameMap.set("test", { oldKey: "test", newKey: "renamed", configPath: "/config.json" });
-            const change = { key: "profiles.test.type", value: "zosmf" };
-            const result = ConfigEditorPathUtils.updateChangeKey(change, "/config.json", renameMap);
-            expect(result.key).toBe("profiles.renamed.type");
-        });
-
-        it("should update key for profile rename with secure", () => {
-            renameMap.set("test", { oldKey: "test", newKey: "renamed", configPath: "/config.json" });
-            const change = { key: "profiles.test.secure", value: ["password"] };
-            const result = ConfigEditorPathUtils.updateChangeKey(change, "/config.json", renameMap);
-            expect(result.key).toBe("profiles.renamed.secure");
-        });
-
-        it("should handle profile-only key", () => {
-            renameMap.set("test", { oldKey: "test", newKey: "renamed", configPath: "/config.json" });
-            const change = { key: "profiles.test", value: "profile" };
-            const result = ConfigEditorPathUtils.updateChangeKey(change, "/config.json", renameMap);
-            expect(result.key).toBe("profiles.renamed");
-        });
-
-        it("should not update key for different config path", () => {
-            renameMap.set("test", { oldKey: "test", newKey: "renamed", configPath: "/other.json" });
-            const change = { key: "profiles.test.properties.host", value: "localhost" };
-            const result = ConfigEditorPathUtils.updateChangeKey(change, "/config.json", renameMap);
-            expect(result.key).toBe("profiles.test.properties.host");
-        });
-
-        it("should handle complex nested profile paths", () => {
-            renameMap.set("a.b", { oldKey: "a.b", newKey: "x.y", configPath: "/config.json" });
-            const change = { key: "profiles.a.profiles.b.properties.host", value: "localhost" };
-            const result = ConfigEditorPathUtils.updateChangeKey(change, "/config.json", renameMap);
-            expect(result.key).toBe("profiles.x.profiles.y.properties.host");
-        });
-
-        it("should preserve other change properties", () => {
-            renameMap.set("test", { oldKey: "test", newKey: "renamed", configPath: "/config.json" });
-            const change = { key: "profiles.test.properties.host", value: "localhost", type: "string" };
-            const result = ConfigEditorPathUtils.updateChangeKey(change, "/config.json", renameMap);
-            expect(result).toEqual({
-                key: "profiles.renamed.properties.host",
-                value: "localhost",
-                type: "string",
-            });
+        it("leaves a change without an address unchanged", () => {
+            expect(update({ value: "test" }, configPath, new Map())).toEqual({ value: "test" });
         });
     });
 
-    describe("updateChangePath", () => {
-        let renameMap: Map<string, { oldKey: string; newKey: string; configPath: string }>;
-
-        beforeEach(() => {
-            renameMap = new Map();
-        });
-
-        it("should return unchanged change when no path", () => {
-            const change = { value: "test" };
-            const result = ConfigEditorPathUtils.updateChangePath(change, "/config.json", renameMap);
-            expect(result).toEqual(change);
-        });
-
-        it("should return unchanged change when path is not array", () => {
-            const change = { path: "not-an-array", value: "test" };
-            const result = ConfigEditorPathUtils.updateChangePath(change, "/config.json", renameMap);
-            expect(result).toEqual(change);
-        });
-
-        it("should return unchanged change when no renames match", () => {
-            const change = { path: ["profiles", "test", "properties", "host"], value: "localhost" };
-            const result = ConfigEditorPathUtils.updateChangePath(change, "/config.json", renameMap);
-            expect(result).toEqual(change);
-        });
-
-        it("should update path for profile rename with properties", () => {
-            renameMap.set("test", { oldKey: "test", newKey: "renamed", configPath: "/config.json" });
-            const change = { path: ["profiles", "test", "properties", "host"], value: "localhost" };
-            const result = ConfigEditorPathUtils.updateChangePath(change, "/config.json", renameMap);
-            expect(result.path).toEqual(["profiles", "renamed", "properties", "host"]);
-        });
-
-        it("should update path for nested profile rename with properties", () => {
-            renameMap.set("test.profile", { oldKey: "test.profile", newKey: "renamed.profile", configPath: "/config.json" });
-            const change = { path: ["profiles", "test", "profiles", "profile", "properties", "host"], value: "localhost" };
-            const result = ConfigEditorPathUtils.updateChangePath(change, "/config.json", renameMap);
-            expect(result.path).toEqual(["profiles", "renamed", "profiles", "profile", "properties", "host"]);
-        });
-
-        it("should update path for profile rename with type", () => {
-            renameMap.set("test", { oldKey: "test", newKey: "renamed", configPath: "/config.json" });
-            const change = { path: ["profiles", "test", "type"], value: "zosmf" };
-            const result = ConfigEditorPathUtils.updateChangePath(change, "/config.json", renameMap);
-            expect(result.path).toEqual(["profiles", "renamed", "type"]);
-        });
-
-        it("should update path for profile rename with secure", () => {
-            renameMap.set("test", { oldKey: "test", newKey: "renamed", configPath: "/config.json" });
-            const change = { path: ["profiles", "test", "secure"], value: ["password"] };
-            const result = ConfigEditorPathUtils.updateChangePath(change, "/config.json", renameMap);
-            expect(result.path).toEqual(["profiles", "renamed", "secure"]);
-        });
-
-        it("should handle profile-only path", () => {
-            renameMap.set("test", { oldKey: "test", newKey: "renamed", configPath: "/config.json" });
-            const change = { path: ["profiles", "test"], value: "profile" };
-            const result = ConfigEditorPathUtils.updateChangePath(change, "/config.json", renameMap);
-            expect(result.path).toEqual(["profiles", "renamed"]);
-        });
-
-        it("should not update path for different config path", () => {
-            renameMap.set("test", { oldKey: "test", newKey: "renamed", configPath: "/other.json" });
-            const change = { path: ["profiles", "test", "properties", "host"], value: "localhost" };
-            const result = ConfigEditorPathUtils.updateChangePath(change, "/config.json", renameMap);
-            expect(result.path).toEqual(["profiles", "test", "properties", "host"]);
-        });
-
-        it("should handle complex nested profile paths", () => {
-            renameMap.set("a.b", { oldKey: "a.b", newKey: "x.y", configPath: "/config.json" });
-            const change = { path: ["profiles", "a", "profiles", "b", "properties", "host"], value: "localhost" };
-            const result = ConfigEditorPathUtils.updateChangePath(change, "/config.json", renameMap);
-            expect(result.path).toEqual(["profiles", "x", "profiles", "y", "properties", "host"]);
-        });
-
-        it("should preserve other change properties", () => {
-            renameMap.set("test", { oldKey: "test", newKey: "renamed", configPath: "/config.json" });
-            const change = { path: ["profiles", "test", "properties", "host"], value: "localhost", type: "string" };
-            const result = ConfigEditorPathUtils.updateChangePath(change, "/config.json", renameMap);
-            expect(result).toEqual({
-                path: ["profiles", "renamed", "properties", "host"],
-                value: "localhost",
-                type: "string",
-            });
-        });
-
-        it("should handle path with multiple property sections", () => {
-            renameMap.set("test", { oldKey: "test", newKey: "renamed", configPath: "/config.json" });
-            const change = { path: ["profiles", "test", "properties", "host", "port"], value: 8080 };
-            const result = ConfigEditorPathUtils.updateChangePath(change, "/config.json", renameMap);
-            expect(result.path).toEqual(["profiles", "renamed", "properties", "host", "port"]);
-        });
+    it("leaves a non-array path unchanged", () => {
+        const change = { path: "not-an-array", value: "test" } as unknown as PathAwareChange;
+        expect(ConfigEditorPathUtils.updateChangePath(change, "/config.json", new Map())).toEqual(change);
     });
 });

@@ -9,6 +9,7 @@
  *
  */
 
+import { mapProfilePath, profileKeyToPath } from "../webviews/src/config-editor/utils/profilePaths";
 import type { PathAwareChange } from "./ConfigTypes";
 
 export class ConfigEditorPathUtils {
@@ -25,18 +26,10 @@ export class ConfigEditorPathUtils {
             throw new Error("Profile key cannot be empty");
         }
 
-        const pathParts = ["profiles"];
-
-        for (const part of profileParts) {
-            if (!part || part.trim() === "") {
-                throw new Error("Profile key parts cannot be empty");
-            }
-            pathParts.push(part);
-            pathParts.push("profiles");
+        if (profileParts.some((part) => !part.trim())) {
+            throw new Error("Profile key parts cannot be empty");
         }
-
-        pathParts.pop();
-        return pathParts.join(".");
+        return profileKeyToPath(profileKey).join(".");
     }
 
     /**
@@ -62,22 +55,8 @@ export class ConfigEditorPathUtils {
             }
         }
 
-        if (includeProfilesSegments) {
-            const pathWithProfiles: string[] = [];
-            const pathParts = modified ? newPath : parts;
-
-            pathWithProfiles.push("profiles");
-
-            for (let i = 0; i < pathParts.length; i++) {
-                pathWithProfiles.push(pathParts[i]);
-                if (i < pathParts.length - 1) {
-                    pathWithProfiles.push("profiles");
-                }
-            }
-            return pathWithProfiles.join(".");
-        }
-
-        return modified ? newPath.join(".") : profilePath;
+        const effectivePath = modified ? newPath.join(".") : profilePath;
+        return includeProfilesSegments ? profileKeyToPath(effectivePath).join(".") : effectivePath;
     }
 
     /**
@@ -88,94 +67,20 @@ export class ConfigEditorPathUtils {
         configPath: string,
         renameMap: Map<string, { oldKey: string; newKey: string; configPath: string }>
     ): PathAwareChange {
-        const updatedChange = { ...change };
-
-        if (updatedChange.key) {
-            const keyParts = updatedChange.key.split(".");
-            let propertyPath = "";
-            let inProfile = false;
-            let currentProfile = "";
-            let profileEndIndex = -1;
-
-            for (let i = 0; i < keyParts.length; i++) {
-                const part = keyParts[i];
-                if (part === "profiles") {
-                    inProfile = true;
-                    continue;
-                }
-                if (part === "properties") {
-                    propertyPath = keyParts.slice(i).join(".");
-                    profileEndIndex = i;
-                    break;
-                }
-                if (part === "type" || part === "secure") {
-                    // For direct profile properties like 'type' or 'secure' (not under 'properties')
-                    propertyPath = keyParts.slice(i).join(".");
-                    profileEndIndex = i;
-                    break;
-                }
-                if (inProfile) {
-                    if (currentProfile) {
-                        currentProfile += "." + part;
-                    } else {
-                        currentProfile = part;
-                    }
-                }
-            }
-
-            if (profileEndIndex === -1 && inProfile) {
-                profileEndIndex = keyParts.length;
-            }
-
-            if (currentProfile) {
-                const newProfilePath = this.getNewProfilePath(currentProfile, configPath, renameMap, true);
-                updatedChange.key = propertyPath ? `${newProfilePath}.${propertyPath}` : newProfilePath;
-            }
-        }
-
-        return updatedChange;
+        return {
+            ...change,
+            ...(change.key && { key: mapProfilePath(change.key, (key) => this.getNewProfilePath(key, configPath, renameMap)) }),
+        };
     }
 
-    /**
-     * Updates a change object's path array to reflect profile renames
-     */
     static updateChangePath(
         change: PathAwareChange,
         configPath: string,
         renameMap: Map<string, { oldKey: string; newKey: string; configPath: string }>
     ): PathAwareChange {
-        const updatedChange = { ...change };
-
-        if (updatedChange.path && Array.isArray(updatedChange.path)) {
-            let currentProfile = "";
-            let propertyPath: string[] = [];
-            let foundPropertySection = false;
-
-            for (const part of updatedChange.path) {
-                if (part === "properties" || part === "type" || part === "secure") {
-                    foundPropertySection = true;
-                    propertyPath.push(part);
-                    continue;
-                }
-                if (!foundPropertySection) {
-                    if (part !== "profiles") {
-                        if (currentProfile) {
-                            currentProfile += "." + part;
-                        } else {
-                            currentProfile = part;
-                        }
-                    }
-                } else {
-                    propertyPath.push(part);
-                }
-            }
-
-            if (currentProfile) {
-                const newProfilePath = this.getNewProfilePath(currentProfile, configPath, renameMap, true);
-                updatedChange.path = [...newProfilePath.split("."), ...propertyPath];
-            }
-        }
-
-        return updatedChange;
+        return {
+            ...change,
+            ...(Array.isArray(change.path) && { path: mapProfilePath(change.path, (key) => this.getNewProfilePath(key, configPath, renameMap)) }),
+        };
     }
 }

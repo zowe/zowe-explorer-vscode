@@ -10,6 +10,7 @@
  */
 
 import { vi } from "vitest";
+import type { ChangeEntry } from "../../../src/utils/ConfigTypes";
 import type { Config, IConfigLayer, ProfileInfo } from "@zowe/imperative";
 import { Config as RealConfig } from "@zowe/imperative/lib/config/src/Config";
 
@@ -54,4 +55,42 @@ export function createEditorConfig(layers: IConfigLayer[]) {
     };
     const profileInfo = { getTeamConfig: () => config, readProfilesFromDisk: vi.fn() } as unknown as ProfileInfo;
     return { config: config as unknown as Config, profileInfo, saved, save: config.save };
+}
+
+/** Synthetic schema wrapper; tests supply only the property definitions relevant to their case. */
+export function createEditorSchema(properties: Record<string, unknown>, secure: string[] = []) {
+    return {
+        properties: {
+            profiles: {
+                patternProperties: {
+                    "^\\S*$": {
+                        allOf: [
+                            {
+                                if: { properties: { type: { const: "zosmf" } } },
+                                then: { properties: { properties: { properties }, secure: { items: { enum: secure } } } },
+                            },
+                        ],
+                    },
+                },
+            },
+            defaults: { properties: { zosmf: { type: "object" } } },
+        },
+    };
+}
+
+export function createEditorLayer(
+    overrides: Partial<Omit<IConfigLayer, "properties">> & { properties?: Partial<IConfigLayer["properties"]> } = {}
+): IConfigLayer {
+    return {
+        path: "/mock/team.json",
+        exists: true,
+        user: false,
+        global: false,
+        ...overrides,
+        properties: { profiles: {}, defaults: {}, ...overrides.properties },
+    };
+}
+
+export function createEditorChange(key: string, value = "", overrides: Partial<ChangeEntry> = {}): ChangeEntry {
+    return { key, value, path: key.split("."), configPath: "/mock/team.json", secure: false, ...overrides };
 }

@@ -9,13 +9,11 @@
  *
  */
 
+import { createEditorLayer } from "../../../__mocks__/mockCreators/configEditor";
 import { ExtensionContext } from "vscode";
 import { ConfigEditor } from "../../../../src/utils/ConfigEditor";
 import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
-import { ProfileInfo } from "@zowe/imperative";
 import { vi } from "vitest";
-
-vi.spyOn(ConfigEditorSaveOperations, "readRevision").mockResolvedValue(undefined);
 
 // Global import statements for mocked modules
 import * as fs from "fs";
@@ -44,7 +42,7 @@ vi.mock("@zowe/imperative", () => ({
         defaultCredMgrWithKeytar: vi.fn(),
     },
     AbstractCredentialManager: class AbstractCredentialManager {
-        constructor() {}
+        public constructor() {}
     },
     Logger: {
         getAppLogger: vi.fn(() => ({
@@ -66,7 +64,7 @@ vi.mock("@zowe/zosmf-for-zowe-sdk", () => ({}));
 vi.mock("fs", () => ({
     readFileSync: vi.fn(),
     existsSync: vi.fn(),
-    realpathSync: vi.fn((path) => path),
+    realpathSync: vi.fn((filePath) => filePath),
 }));
 
 vi.mock("path", () => ({
@@ -81,21 +79,6 @@ vi.mock("../../../../src/utils/ConfigSchemaHelpers", () => ({
         generateSchemaValidation: vi.fn(),
     },
 }));
-
-const createDefaultMockProfileInfo = () => ({
-    readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
-    getTeamConfig: vi.fn(() => ({
-        layers: [],
-        api: {
-            layers: { activate: vi.fn(), get: vi.fn(() => ({ path: "/test/config/path" })) },
-            secure: { secureFields: vi.fn().mockReturnValue([]) },
-            set: vi.fn(),
-            delete: vi.fn(),
-        },
-    })),
-    getAllProfiles: vi.fn(() => []),
-    mergeArgsForProfile: vi.fn(() => ({ knownArgs: [] })),
-});
 
 vi.mock("../../../../src/utils/ConfigUtils", () => ({
     ConfigUtils: {
@@ -127,9 +110,7 @@ vi.mock("../../../../src/utils/ConfigEditorPathUtils", () => ({
 }));
 
 vi.mock("../../../../src/webviews/src/config-editor/utils/moveUtils", () => ({
-    moveProfile: vi.fn(),
     updateDefaultsAfterRename: vi.fn(),
-    simulateDefaultsUpdateAfterRename: vi.fn(),
 }));
 
 vi.mock("../../../../src/tools/ZoweLocalStorage", () => ({
@@ -175,42 +156,40 @@ vi.mock("vscode", () => ({
         t: vi.fn((text) => text),
     },
     FileSystemError: class FileSystemError extends Error {
-        constructor(message?: string) {
+        public constructor(message?: string) {
             super(message);
             this.name = "FileSystemError";
         }
     },
     TreeItem: class TreeItem {
-        constructor(label?: string, collapsibleState?: any) {
+        public constructor(label?: string, collapsibleState?: number) {
             this.label = label;
             this.collapsibleState = collapsibleState;
         }
-        label?: string;
-        collapsibleState?: any;
+        public label?: string;
+        public collapsibleState?: number;
     },
     Command: class Command {
-        constructor() {}
+        public constructor() {}
     },
     QuickPickItemKind: {
         Separator: -1,
         Default: 0,
     },
     EventEmitter: class EventEmitter<T> {
-        private subscribers: Function[] = [];
-        event = vi.fn().mockImplementation((listener) => {
+        private subscribers: Array<(data?: T) => void> = [];
+        public event = vi.fn().mockImplementation((listener: (data?: T) => void) => {
             this.subscribers.push(listener);
             return { dispose: () => {} };
         });
-        fire(data?: T): void {
+        public fire(data?: T): void {
             for (const sub of this.subscribers) {
-                try {
-                    sub(data);
-                } catch (err) {}
+                sub(data);
             }
         }
     },
     Uri: {
-        file: vi.fn((path: string) => ({ fsPath: path, path, scheme: "file" })),
+        file: vi.fn((filePath: string) => ({ fsPath: filePath, path: filePath, scheme: "file" })),
     },
     extensions: {
         getExtension: vi.fn(() => ({
@@ -224,150 +203,31 @@ vi.mock("vscode", () => ({
     },
 }));
 
-// Helper functions for creating reusable mocks
-const createMockProfileInfo = (overrides: any = {}) => ({
+const createMockProfileInfo = (layers: ReturnType<typeof createEditorLayer>[] = []) => ({
     readProfilesFromDisk: vi.fn().mockResolvedValue(undefined),
-    getTeamConfig: vi.fn(() => ({
-        layers: [],
-        api: {
-            layers: {
-                activate: vi.fn(),
-                get: vi.fn(() => ({ path: "/test/config/path" })),
-            },
-            secure: {
-                secureFields: vi.fn().mockReturnValue([]),
-            },
-            set: vi.fn().mockResolvedValue(undefined),
-            delete: vi.fn().mockResolvedValue(undefined),
-        },
-    })),
-    getAllProfiles: vi.fn(() => []),
-    mergeArgsForProfile: vi.fn(() => ({ knownArgs: [] })),
-    ...overrides,
-});
-
-const createGlobalMocks = () => ({
-    // Common mock functions
-    mockFn: {
-        resolved: vi.fn().mockResolvedValue(undefined),
-        rejected: vi.fn().mockRejectedValue(new Error("Mock error")),
-        returnValue: vi.fn().mockReturnValue("mock value"),
-        returnTrue: vi.fn().mockReturnValue(true),
-        returnFalse: vi.fn().mockReturnValue(false),
-        returnEmptyArray: vi.fn().mockReturnValue([]),
-        returnEmptyObject: vi.fn().mockReturnValue({}),
-    },
-
-    // Common mock objects
-    mockLayer: {
-        path: "/test/config/path",
-        user: true,
-        global: false,
-        properties: { profiles: { testProfile: { type: "zosmf", properties: { host: "test.host.com" } } } },
-    },
-
-    mockLayerActive: vi.fn(() => ({ path: "/test/config/path" })),
-
-    mockConfigMoveAPI: {
-        get: vi.fn().mockReturnValue({ type: "zosmf", properties: { host: "test.host.com" } }),
-        set: vi.fn().mockResolvedValue(undefined),
-        delete: vi.fn().mockResolvedValue(undefined),
-    },
-
-    mockProfileOperations: {
-        updateRenameKeysForParentChanges: vi.fn().mockReturnValue([]),
-        removeDuplicateRenames: vi.fn().mockReturnValue([]),
-        wouldCreateCircularReference: vi.fn().mockReturnValue(false),
-        isCriticalMoveError: vi.fn().mockReturnValue(false),
-        handleMoveUtilsError: vi.fn().mockReturnValue("Mock error message"),
-        validateConfigMoveAPI: vi.fn().mockReturnValue(true),
-        isNestedProfileCreation: vi.fn().mockReturnValue(false),
-        createNestedProfileStructure: vi.fn().mockImplementation(() => {}),
-        redactSecureValues: vi.fn().mockReturnValue([]),
-    },
-
-    mockMessageHandlers: {
-        handleOpenConfigFile: vi.fn().mockResolvedValue(undefined),
-        handleRevealInFinder: vi.fn().mockResolvedValue(undefined),
-        handleOpenSchemaFile: vi.fn().mockResolvedValue(undefined),
-        handleGetEnvInformation: vi.fn().mockResolvedValue(undefined),
-        handleGetEnvVars: vi.fn().mockResolvedValue(undefined),
-        handleInitialSelection: vi.fn().mockResolvedValue(undefined),
-        handleConfigurationsReady: vi.fn().mockResolvedValue(undefined),
-        handleOpenConfigFileWithProfile: vi.fn().mockResolvedValue(undefined),
-        handleGetMergedProperties: vi.fn().mockResolvedValue(undefined),
-        handleGetWizardMergedProperties: vi.fn().mockResolvedValue(undefined),
-        handleSelectFile: vi.fn().mockResolvedValue(undefined),
-        handleCreateNewConfig: vi.fn().mockResolvedValue(undefined),
-        handleGetLocalStorageValue: vi.fn().mockResolvedValue(undefined),
-        handleOpenVscodeSettings: vi.fn().mockResolvedValue(undefined),
-        handleSetLocalStorageValue: vi.fn().mockResolvedValue(undefined),
-        handleShowErrorMessage: vi.fn().mockResolvedValue(undefined),
-        handleSaveChanges: vi.fn().mockResolvedValue(undefined),
-        handleGetProfiles: vi.fn().mockResolvedValue(undefined),
-        handleAutostoreToggle: vi.fn().mockResolvedValue(undefined),
-    },
-
-    mockFileOperations: {
-        createNewConfig: vi.fn().mockResolvedValue({ configs: [], parseErrors: [] }),
-    },
-
-    // Common mock modules
-    mockModules: {
-        fs: {
-            readFileSync: vi.fn().mockReturnValue('{"type": "object"}'),
-            existsSync: vi.fn().mockReturnValue(true),
-            realpathSync: vi.fn((path) => path),
-        },
-        path: {
-            resolve: vi.fn().mockReturnValue("/test/config/path"),
-            join: vi.fn().mockReturnValue("/test/config/zowe.schema.json"),
-            dirname: vi.fn().mockReturnValue("/test/config"),
-        },
-        ConfigSchemaHelpers: {
-            generateSchemaValidation: vi.fn().mockReturnValue({ validate: vi.fn() }),
-        },
-        ConfigUtils: {
-            processProfilesRecursively: vi.fn().mockImplementation(() => {}),
-        },
-        MoveUtils: {
-            moveProfile: vi.fn().mockImplementation(() => {}),
-            moveProfileInPlace: vi.fn().mockImplementation(() => {}),
-            simulateDefaultsUpdateAfterRename: vi.fn().mockImplementation(() => {}),
-            updateDefaultsAfterRename: vi.fn().mockImplementation(() => {}),
-        },
-        ConfigEditorPathUtils: {
-            constructNestedProfilePath: vi.fn().mockReturnValue("profiles.testProfile"),
-            getNewProfilePath: vi.fn().mockReturnValue("profiles.newProfile"),
-            updateChangeKey: vi.fn().mockReturnValue({}),
-            updateChangePath: vi.fn().mockReturnValue({}),
-        },
-    },
-
-    // Common mock spies
-    mockSpies: {
-        vscode: {
-            showErrorMessage: vi.fn().mockResolvedValue(undefined),
-            openTextDocument: vi.fn().mockResolvedValue({}),
-            showTextDocument: vi.fn().mockResolvedValue({ selection: {}, revealRange: vi.fn() }),
-        },
-        console: {
-            warn: vi.fn().mockImplementation(() => {}),
-            error: vi.fn().mockImplementation(() => {}),
-        },
-    },
+    getTeamConfig: vi.fn(() => ({ layers })),
 });
 
 describe("configEditor", () => {
     let mockContext: ExtensionContext;
     let configEditor: ConfigEditor;
     beforeEach(() => {
+        vi.restoreAllMocks();
+        vi.clearAllMocks();
+        vi.spyOn(ConfigEditorSaveOperations, "readRevision").mockResolvedValue(undefined);
+        fs.readFileSync.mockReset().mockReturnValue('{"type":"object"}');
+        fs.existsSync.mockReset().mockReturnValue(true);
+        path.resolve.mockReturnValue("/test/config/path");
+        path.join.mockReturnValue("/test/config/zowe.schema.json");
+        path.dirname.mockReturnValue("/test/config");
+        ConfigSchemaHelpers.generateSchemaValidation.mockReturnValue({ validate: vi.fn() });
+        ConfigUtils.pushParseError.mockReset();
         mockContext = {
             extensionPath: "/mock/extension/path",
             subscriptions: [],
         } as ExtensionContext;
 
-        ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(createDefaultMockProfileInfo());
+        ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(createMockProfileInfo());
 
         configEditor = new ConfigEditor(mockContext);
     });
@@ -413,35 +273,25 @@ describe("configEditor", () => {
     });
     describe("getLocalConfigs", () => {
         it("should return configurations when profiles are successfully read", async () => {
-            const mocks = createGlobalMocks();
-            const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: vi.fn(() => ({
-                    layers: [
-                        {
-                            exists: true,
-                            path: "/test/config/path",
-                            properties: {
-                                $schema: "zowe.schema.json",
-                                profiles: {
-                                    testProfile: {
-                                        type: "zosmf",
-                                        properties: { host: "test.host.com", port: 443 },
-                                    },
-                                },
+            const mockProfileInfo = createMockProfileInfo([
+                createEditorLayer({
+                    exists: true,
+                    path: "/test/config/path",
+                    properties: {
+                        $schema: "zowe.schema.json",
+                        profiles: {
+                            testProfile: {
+                                type: "zosmf",
+                                properties: { host: "test.host.com", port: 443 },
                             },
-                            global: false,
-                            user: true,
                         },
-                    ],
-                })),
-            });
+                    },
+                    global: false,
+                    user: true,
+                }),
+            ]);
 
             ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
-
-            Object.assign(fs, mocks.mockModules.fs);
-            Object.assign(path, mocks.mockModules.path);
-            Object.assign(ConfigSchemaHelpers, mocks.mockModules.ConfigSchemaHelpers);
-            Object.assign(ConfigUtils, mocks.mockModules.ConfigUtils);
 
             const result = await configEditor.getLocalConfigs();
 
@@ -502,28 +352,24 @@ describe("configEditor", () => {
         });
 
         it("should handle layers that do not exist (layer.exists = false)", async () => {
-            const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: vi.fn(() => ({
-                    layers: [
-                        {
-                            exists: false,
-                            path: "/test/nonexistent/config/path",
-                            properties: {
-                                profiles: {
-                                    testProfile: {
-                                        type: "zosmf",
-                                        properties: {
-                                            host: "test.host.com",
-                                        },
-                                    },
+            const mockProfileInfo = createMockProfileInfo([
+                createEditorLayer({
+                    exists: false,
+                    path: "/test/nonexistent/config/path",
+                    properties: {
+                        profiles: {
+                            testProfile: {
+                                type: "zosmf",
+                                properties: {
+                                    host: "test.host.com",
                                 },
                             },
-                            global: false,
-                            user: true,
                         },
-                    ],
-                })),
-            });
+                    },
+                    global: false,
+                    user: true,
+                }),
+            ]);
 
             ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
@@ -536,46 +382,42 @@ describe("configEditor", () => {
         });
 
         it("should handle error when reading or parsing file and return partial results", async () => {
-            const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: vi.fn(() => ({
-                    layers: [
-                        {
-                            exists: true,
-                            path: "/test/valid/config/path",
-                            properties: {
-                                $schema: "zowe.schema.json",
-                                profiles: {
-                                    validProfile: {
-                                        type: "zosmf",
-                                        properties: {
-                                            host: "valid.host.com",
-                                        },
-                                    },
+            const mockProfileInfo = createMockProfileInfo([
+                createEditorLayer({
+                    exists: true,
+                    path: "/test/valid/config/path",
+                    properties: {
+                        $schema: "zowe.schema.json",
+                        profiles: {
+                            validProfile: {
+                                type: "zosmf",
+                                properties: {
+                                    host: "valid.host.com",
                                 },
                             },
-                            global: false,
-                            user: true,
                         },
-                        {
-                            exists: true,
-                            path: "/test/invalid/config/path",
-                            properties: {
-                                $schema: "zowe.schema.json",
-                                profiles: {
-                                    invalidProfile: {
-                                        type: "zosmf",
-                                        properties: {
-                                            host: "invalid.host.com",
-                                        },
-                                    },
+                    },
+                    global: false,
+                    user: true,
+                }),
+                createEditorLayer({
+                    exists: true,
+                    path: "/test/invalid/config/path",
+                    properties: {
+                        $schema: "zowe.schema.json",
+                        profiles: {
+                            invalidProfile: {
+                                type: "zosmf",
+                                properties: {
+                                    host: "invalid.host.com",
                                 },
                             },
-                            global: false,
-                            user: true,
                         },
-                    ],
-                })),
-            });
+                    },
+                    global: false,
+                    user: true,
+                }),
+            ]);
 
             ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
@@ -623,29 +465,25 @@ describe("configEditor", () => {
         });
 
         it("should handle schema validation with existing schema file (lines 170-184)", async () => {
-            const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: vi.fn(() => ({
-                    layers: [
-                        {
-                            exists: true,
-                            path: "/test/config/path",
-                            properties: {
-                                $schema: "zowe.schema.json",
-                                profiles: {
-                                    testProfile: {
-                                        type: "zosmf",
-                                        properties: {
-                                            host: "test.host.com",
-                                        },
-                                    },
+            const mockProfileInfo = createMockProfileInfo([
+                createEditorLayer({
+                    exists: true,
+                    path: "/test/config/path",
+                    properties: {
+                        $schema: "zowe.schema.json",
+                        profiles: {
+                            testProfile: {
+                                type: "zosmf",
+                                properties: {
+                                    host: "test.host.com",
                                 },
                             },
-                            global: false,
-                            user: true,
                         },
-                    ],
-                })),
-            });
+                    },
+                    global: false,
+                    user: true,
+                }),
+            ]);
 
             ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
@@ -685,28 +523,24 @@ describe("configEditor", () => {
         });
 
         it("should handle schema validation when schema file does not exist (lines 170-184)", async () => {
-            const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: vi.fn(() => ({
-                    layers: [
-                        {
-                            exists: true,
-                            path: "/test/config/path",
-                            properties: {
-                                profiles: {
-                                    testProfile: {
-                                        type: "zosmf",
-                                        properties: {
-                                            host: "test.host.com",
-                                        },
-                                    },
+            const mockProfileInfo = createMockProfileInfo([
+                createEditorLayer({
+                    exists: true,
+                    path: "/test/config/path",
+                    properties: {
+                        profiles: {
+                            testProfile: {
+                                type: "zosmf",
+                                properties: {
+                                    host: "test.host.com",
                                 },
                             },
-                            global: false,
-                            user: true,
                         },
-                    ],
-                })),
-            });
+                    },
+                    global: false,
+                    user: true,
+                }),
+            ]);
 
             ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
@@ -732,28 +566,24 @@ describe("configEditor", () => {
         });
 
         it("should handle schema validation when schema file is invalid (lines 170-184)", async () => {
-            const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: vi.fn(() => ({
-                    layers: [
-                        {
-                            exists: true,
-                            path: "/test/config/path",
-                            properties: {
-                                profiles: {
-                                    testProfile: {
-                                        type: "zosmf",
-                                        properties: {
-                                            host: "test.host.com",
-                                        },
-                                    },
+            const mockProfileInfo = createMockProfileInfo([
+                createEditorLayer({
+                    exists: true,
+                    path: "/test/config/path",
+                    properties: {
+                        profiles: {
+                            testProfile: {
+                                type: "zosmf",
+                                properties: {
+                                    host: "test.host.com",
                                 },
                             },
-                            global: false,
-                            user: true,
                         },
-                    ],
-                })),
-            });
+                    },
+                    global: false,
+                    user: true,
+                }),
+            ]);
 
             ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
@@ -780,29 +610,25 @@ describe("configEditor", () => {
         });
 
         it("should handle getLocalConfigs with schema validation and layer processing (lines 175, 207-208)", async () => {
-            const mockProfileInfo = createMockProfileInfo({
-                getTeamConfig: vi.fn(() => ({
-                    layers: [
-                        {
-                            exists: true,
-                            path: "/test/config/path",
-                            properties: {
-                                $schema: "zowe.schema.json",
-                                profiles: {
-                                    testProfile: {
-                                        type: "zosmf",
-                                        properties: {
-                                            host: "test.host.com",
-                                        },
-                                    },
+            const mockProfileInfo = createMockProfileInfo([
+                createEditorLayer({
+                    exists: true,
+                    path: "/test/config/path",
+                    properties: {
+                        $schema: "zowe.schema.json",
+                        profiles: {
+                            testProfile: {
+                                type: "zosmf",
+                                properties: {
+                                    host: "test.host.com",
                                 },
                             },
-                            global: true,
-                            user: false,
                         },
-                    ],
-                })),
-            });
+                    },
+                    global: true,
+                    user: false,
+                }),
+            ]);
 
             ConfigUtils.createProfileInfoAndLoad.mockResolvedValue(mockProfileInfo);
 
@@ -850,19 +676,6 @@ describe("configEditor", () => {
     });
 
     describe("onDidReceiveMessage", () => {
-        it("should handle GET_PROFILES command successfully", async () => {
-            const mockMessage = {
-                command: "GET_PROFILES",
-            };
-
-            // Mock the messageHandlers.handleGetProfiles method
-            const handleGetProfilesSpy = vi.spyOn((configEditor as any).messageHandlers, "handleGetProfiles").mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(handleGetProfilesSpy).toHaveBeenCalledWith();
-        });
-
         it("delegates saves to the staged save operation and refreshes on success", async () => {
             const message = { command: "SAVE_CHANGES", saveRequestId: 1, changes: [], renames: [], revisions: {} };
             const save = vi.spyOn(ConfigEditorSaveOperations.prototype, "save").mockResolvedValueOnce(true);
@@ -929,20 +742,6 @@ describe("configEditor", () => {
             );
         });
 
-        it("should handle OPEN_CONFIG_FILE command successfully", async () => {
-            const mockMessage = {
-                command: "OPEN_CONFIG_FILE",
-                configPath: "/test/config/path",
-            };
-
-            // Mock the messageHandlers.handleOpenConfigFile method
-            const handleOpenConfigFileSpy = vi.spyOn((configEditor as any).messageHandlers, "handleOpenConfigFile").mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(handleOpenConfigFileSpy).toHaveBeenCalledWith(mockMessage);
-        });
-
         it("should handle unknown command gracefully", async () => {
             const mockMessage = {
                 command: "UNKNOWN_COMMAND",
@@ -955,57 +754,90 @@ describe("configEditor", () => {
     });
 
     describe("onDidReceiveMessages", () => {
-        it("should handle REVEAL_IN_FINDER command", async () => {
-            const mockMessage = {
-                command: "REVEAL_IN_FINDER",
-                configPath: "/test/config/path",
-            };
-
-            const handleRevealInFinderSpy = vi.spyOn((configEditor as any).messageHandlers, "handleRevealInFinder").mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(handleRevealInFinderSpy).toHaveBeenCalledWith(mockMessage);
-        });
-
-        it("should handle OPEN_SCHEMA_FILE command", async () => {
-            const mockMessage = {
-                command: "OPEN_SCHEMA_FILE",
-                schemaPath: "/test/schema/path",
-            };
-
-            const handleOpenSchemaFileSpy = vi.spyOn((configEditor as any).messageHandlers, "handleOpenSchemaFile").mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(handleOpenSchemaFileSpy).toHaveBeenCalledWith(mockMessage);
-        });
-
-        it("should handle GET_ENV_INFORMATION command", async () => {
-            const mockMessage = {
-                command: "GET_ENV_INFORMATION",
-            };
-
-            const handleGetEnvInformationSpy = vi
-                .spyOn((configEditor as any).messageHandlers, "handleGetEnvInformation")
-                .mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(handleGetEnvInformationSpy).toHaveBeenCalledWith();
-        });
-
-        it("should handle GET_ENV_VARS command", async () => {
-            const mockMessage = {
-                command: "GET_ENV_VARS",
-                profileName: "testProfile",
-            };
-
-            const handleGetEnvVarsSpy = vi.spyOn((configEditor as any).messageHandlers, "handleGetEnvVars").mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(handleGetEnvVarsSpy).toHaveBeenCalledWith(mockMessage);
+        it.each([
+            {
+                handler: "handleGetProfiles",
+                message: {
+                    command: "GET_PROFILES",
+                },
+                noArgs: true,
+            },
+            {
+                handler: "handleOpenConfigFile",
+                message: {
+                    command: "OPEN_CONFIG_FILE",
+                    configPath: "/test/config/path",
+                },
+                noArgs: false,
+            },
+            {
+                handler: "handleRevealInFinder",
+                message: {
+                    command: "REVEAL_IN_FINDER",
+                    configPath: "/test/config/path",
+                },
+                noArgs: false,
+            },
+            {
+                handler: "handleOpenSchemaFile",
+                message: {
+                    command: "OPEN_SCHEMA_FILE",
+                    schemaPath: "/test/schema/path",
+                },
+                noArgs: false,
+            },
+            {
+                handler: "handleGetEnvInformation",
+                message: {
+                    command: "GET_ENV_INFORMATION",
+                },
+                noArgs: true,
+            },
+            {
+                handler: "handleGetEnvVars",
+                message: {
+                    command: "GET_ENV_VARS",
+                    profileName: "testProfile",
+                },
+                noArgs: false,
+            },
+            {
+                handler: "handleSelectFile",
+                message: {
+                    command: "SELECT_FILE",
+                    fileType: "config",
+                },
+                noArgs: false,
+            },
+            {
+                handler: "handleGetLocalStorageValue",
+                message: {
+                    command: "GET_LOCAL_STORAGE_VALUE",
+                    key: "testKey",
+                },
+                noArgs: false,
+            },
+            {
+                handler: "handleOpenVscodeSettings",
+                message: {
+                    command: "OPEN_VSCODE_SETTINGS",
+                    setting: "zowe.logger",
+                },
+                noArgs: false,
+            },
+            {
+                handler: "handleSetLocalStorageValue",
+                message: {
+                    command: "SET_LOCAL_STORAGE_VALUE",
+                    key: "testKey",
+                    value: "testValue",
+                },
+                noArgs: false,
+            },
+        ] as const)("routes $message.command", async ({ handler, message, noArgs }) => {
+            const handle = vi.spyOn(configEditor["messageHandlers"], handler).mockResolvedValue(undefined);
+            await Reflect.apply(configEditor["onDidReceiveMessage"], configEditor, [message]);
+            expect(handle).toHaveBeenCalledExactlyOnceWith(...(noArgs ? [] : [message]));
         });
 
         it("should handle INITIAL_SELECTION command", async () => {
@@ -1122,19 +954,6 @@ describe("configEditor", () => {
             });
         });
 
-        it("should handle SELECT_FILE command", async () => {
-            const mockMessage = {
-                command: "SELECT_FILE",
-                fileType: "config",
-            };
-
-            const handleSelectFileSpy = vi.spyOn((configEditor as any).messageHandlers, "handleSelectFile").mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(handleSelectFileSpy).toHaveBeenCalledWith(mockMessage);
-        });
-
         it("should handle CREATE_NEW_CONFIG command", async () => {
             const mockMessage = {
                 command: "CREATE_NEW_CONFIG",
@@ -1170,52 +989,6 @@ describe("configEditor", () => {
             });
         });
 
-        it("should handle GET_LOCAL_STORAGE_VALUE command", async () => {
-            const mockMessage = {
-                command: "GET_LOCAL_STORAGE_VALUE",
-                key: "testKey",
-            };
-
-            const handleGetLocalStorageValueSpy = vi
-                .spyOn((configEditor as any).messageHandlers, "handleGetLocalStorageValue")
-                .mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(handleGetLocalStorageValueSpy).toHaveBeenCalledWith(mockMessage);
-        });
-
-        it("should handle OPEN_VSCODE_SETTINGS command", async () => {
-            const mockMessage = {
-                command: "OPEN_VSCODE_SETTINGS",
-                setting: "zowe.logger",
-            };
-
-            const handleOpenVscodeSettingsSpy = vi
-                .spyOn((configEditor as any).messageHandlers, "handleOpenVscodeSettings")
-                .mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(handleOpenVscodeSettingsSpy).toHaveBeenCalledWith(mockMessage);
-        });
-
-        it("should handle SET_LOCAL_STORAGE_VALUE command", async () => {
-            const mockMessage = {
-                command: "SET_LOCAL_STORAGE_VALUE",
-                key: "testKey",
-                value: "testValue",
-            };
-
-            const handleSetLocalStorageValueSpy = vi
-                .spyOn((configEditor as any).messageHandlers, "handleSetLocalStorageValue")
-                .mockResolvedValue(undefined);
-
-            await (configEditor as any).onDidReceiveMessage(mockMessage);
-
-            expect(handleSetLocalStorageValueSpy).toHaveBeenCalledWith(mockMessage);
-        });
-
         it("should handle SHOW_ERROR_MESSAGE command", async () => {
             const mockMessage = {
                 command: "SHOW_ERROR_MESSAGE",
@@ -1227,15 +1000,6 @@ describe("configEditor", () => {
             await (configEditor as any).onDidReceiveMessage(mockMessage);
 
             expect(showErrorMessageSpy).toHaveBeenCalledWith("Test error message");
-        });
-
-        it("should handle unknown command gracefully", async () => {
-            const mockMessage = {
-                command: "UNKNOWN_COMMAND",
-                data: "test",
-            };
-
-            await expect((configEditor as any).onDidReceiveMessage(mockMessage)).resolves.not.toThrow();
         });
     });
 });

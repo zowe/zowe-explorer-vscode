@@ -69,8 +69,6 @@ export {
     extractPendingProfiles,
     isProfileOrParentDeleted,
     getAvailableProfilesByType,
-    getProfileTypeFromPath,
-    getOrderedProfileKeys,
     getReplacementProfileAfterDelete,
     applyRenamesToProfileKeys,
     mergePendingProfileKeys,

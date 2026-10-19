@@ -9,11 +9,12 @@
  *
  */
 
-import { FlattenedConfig, FlattenedProfilesMap, PendingChange, PendingChanges } from "../types";
-export type { FlattenedConfig, FlattenedProfilesMap, PendingChange, PendingChanges };
+import { FlattenedConfig, FlattenedProfilesMap, PendingChange, PendingChanges, ProfileMap, ProfileData } from "../types";
+export { profileKeyToPath } from "./profilePaths";
+export type { FlattenedConfig, FlattenedProfilesMap, PendingChange, PendingChanges, ProfileMap, ProfileData };
 
 export function flattenKeys(obj: { [key: string]: any }, parentKey: string = ""): FlattenedConfig {
-    let result: FlattenedConfig = {};
+    const result: FlattenedConfig = {};
 
     for (const [key, value] of Object.entries(obj)) {
         const newKey = parentKey ? `${parentKey}.${key}` : key;
@@ -21,7 +22,7 @@ export function flattenKeys(obj: { [key: string]: any }, parentKey: string = "")
 
         if (typeof value === "object" && value !== null) {
             const nestedObject = flattenKeys(value, newKey);
-            result = { ...result, ...nestedObject };
+            Object.assign(result, nestedObject);
         } else {
             result[newKey] = { value: value, path: newPath };
         }
@@ -54,9 +55,15 @@ export function flattenProfiles(
     return result;
 }
 
-/** Converts a dotted profile key into its nested JSON path, without property suffixes. */
-export function profileKeyToPath(profileKey: string): string[] {
-    return profileKey.split(".").flatMap((part) => ["profiles", part]);
+/** Look up one saved profile by walking its ancestors, without flattening the whole tree. */
+export function findProfile(profiles: ProfileMap | undefined, profileKey: string): ProfileData | undefined {
+    let profile: ProfileData | undefined;
+    for (const name of profileKey.split(".")) {
+        profile = profiles?.[name];
+        if (!profile) return undefined;
+        profiles = profile.profiles;
+    }
+    return profile;
 }
 
 export function pathFromArray(arr: string[]): string {

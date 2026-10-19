@@ -9,6 +9,7 @@
  *
  */
 
+import { mapProfilePath, splitProfilePath, applyRenameChainToProfileName } from "../../../../src/webviews/src/config-editor/utils/profilePaths";
 import { profileKeyToPath } from "../../../../src/webviews/src/config-editor/utils/configUtils";
 
 describe("profileKeyToPath", () => {
@@ -18,5 +19,40 @@ describe("profileKeyToPath", () => {
         ["profiles.type", ["profiles", "profiles", "profiles", "type"]],
     ])("builds the JSON path for %s without discarding name segments", (key, path) => {
         expect(profileKeyToPath(key as string)).toEqual(path);
+    });
+});
+
+describe("profile paths", () => {
+    it("preserves profile names that resemble JSON field names", () => {
+        const path = ["profiles", "properties", "profiles", "type", "secure", "password"];
+        expect(splitProfilePath(path)).toEqual({ profileKey: "properties.type", suffix: ["secure", "password"] });
+        expect(mapProfilePath(path, () => "renamed.child")).toEqual(["profiles", "renamed", "profiles", "child", "secure", "password"]);
+        expect(path).toEqual(["profiles", "properties", "profiles", "type", "secure", "password"]);
+    });
+
+    it("leaves property-only paths and properties containing profiles untouched", () => {
+        expect(mapProfilePath(["properties", "host"], () => "renamed")).toEqual(["properties", "host"]);
+        expect(mapProfilePath("profiles.base.properties.profiles.host", () => "renamed")).toBe("profiles.renamed.properties.profiles.host");
+    });
+
+    it("resolves long rename chains without reapplying nested moves or looping", () => {
+        const renames = Array.from({ length: 15 }, (_, index) => ({
+            originalKey: `p${index}`,
+            newKey: `p${index + 1}`,
+            configPath: "/mock/team.json",
+        }));
+        expect(applyRenameChainToProfileName("p0.child", renames)).toBe("p15.child");
+        expect(applyRenameChainToProfileName("a", [{ originalKey: "a", newKey: "a.child", configPath: "/mock/team.json" }])).toBe("a.child");
+        expect(
+            applyRenameChainToProfileName("a", [
+                { originalKey: "a", newKey: "b", configPath: "/mock/team.json" },
+                { originalKey: "b", newKey: "a", configPath: "/mock/team.json" },
+            ])
+        ).toBe("a");
+    });
+
+    it("retains the original array when no rename applies", () => {
+        const path = ["profiles", "base", "type"];
+        expect(mapProfilePath(path, (key) => key)).toBe(path);
     });
 });

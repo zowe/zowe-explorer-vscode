@@ -9,12 +9,12 @@
  *
  */
 
-import { profileKeyToPath } from "../utils/configUtils";
+import { findProfile, profileKeyToPath } from "../utils/configUtils";
 import { useEffect, useRef } from "react";
 import { VscodeToolbarButton } from "@vscode-elements/react-elements";
 import { RenderConfig } from "./renderConfig";
 import { ConfirmableDeleteButton } from "./ConfirmableDeleteButton";
-import { flattenProfiles } from "../utils";
+import { getOriginalProfileKeyWithNested } from "../utils/profileRenames";
 import { getPropertyDescriptions } from "../utils/propertyUtils";
 import * as l10n from "@vscode/l10n";
 import { useEditorFields, useEditorStore } from "../context/EditorStoreContext";
@@ -206,49 +206,23 @@ export const RenderProfileDetails = () => {
           if (!currentConfig) {
             return null;
           }
-          const flatProfiles = flattenProfiles(currentConfig.properties?.profiles || {});
           const currentConfigPath = currentConfig.configPath;
           const pendingProfiles = extractPendingProfiles(currentConfigPath);
 
-          let effectiveProfileKey = selectedProfileKey;
-          if (renames[currentConfigPath] && Object.keys(renames[currentConfigPath]).length > 0) {
-            const sortedRenames = Object.entries(renames[currentConfigPath]).sort(([, a], [, b]) => b.length - a.length);
-            let changed = true;
-            while (changed) {
-              changed = false;
-              for (const [originalKey, newKey] of sortedRenames) {
-                if (effectiveProfileKey === newKey) {
-                  effectiveProfileKey = originalKey;
-                  changed = true;
-                  break;
-                }
-                if (effectiveProfileKey.startsWith(newKey + ".")) {
-                  effectiveProfileKey = effectiveProfileKey.replace(newKey + ".", originalKey + ".");
-                  changed = true;
-                  break;
-                }
-              }
-            }
-          }
+          const effectiveProfileKey = getOriginalProfileKeyWithNested(selectedProfileKey, currentConfigPath, renames);
 
           const pathProfileKey = pendingProfiles[selectedProfileKey] ? selectedProfileKey : effectiveProfileKey;
 
           const effectivePath = profileKeyToPath(pathProfileKey);
 
-          const effectiveProfile =
-            flatProfiles[effectiveProfileKey] || pendingProfiles[effectiveProfileKey] || pendingProfiles[selectedProfileKey] || {};
+          const effectiveProfile = {
+            ...(findProfile(currentConfig.properties?.profiles, effectiveProfileKey) ||
+              pendingProfiles[effectiveProfileKey] ||
+              pendingProfiles[selectedProfileKey] ||
+              {}),
+          };
+          delete effectiveProfile.profiles;
 
-          Object.values(renames[currentConfigPath] || {}).some((newKey) => {
-            if (newKey === selectedProfileKey) return true;
-            const profileParts = selectedProfileKey.split(".");
-            for (let i = 1; i <= profileParts.length; i++) {
-              const parentKey = profileParts.slice(0, i).join(".");
-              if (Object.values(renames[currentConfigPath] || {}).some((renamedKey) => renamedKey === parentKey)) {
-                return true;
-              }
-            }
-            return false;
-          });
           const propertyDescriptions =
             selectedTab !== null && currentConfig
               ? getPropertyDescriptions({ path: effectivePath, selectedTab, configurations, schemaValidations, pendingChanges, renames })

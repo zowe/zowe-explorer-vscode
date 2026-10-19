@@ -10,9 +10,43 @@
  */
 
 import { flattenProfiles } from "./configUtils";
-import { Configuration, ConfigStateContext, ProfileMap } from "../types";
+import { Configuration, ConfigStateContext, ProfileMap, RenamesMap, DeletionsMap, ProfileSortOrder } from "../types";
 import { getProfileType } from "./profileTypeResolution";
-import { getAllQualifiedProfileKeys, getRenamedProfileKeyWithNested } from "./profileRenames";
+import {
+    getAllQualifiedProfileKeys,
+    getRenamedProfileKeyWithNested,
+    getDeletedProfileKeys,
+    applyRenamesToProfileKeys,
+    mergePendingProfileKeys,
+    filterConflictingProfileKeys,
+} from "./profileRenames";
+import { sortProfilesAtLevel } from "./sortingUtils";
+
+/** Ordered effective names shared by the profile list and parent-profile choices. */
+export function getVisibleProfileKeys(params: {
+    profiles: ProfileMap;
+    pendingProfiles: ProfileMap;
+    configPath: string;
+    renames: RenamesMap;
+    deletions: DeletionsMap;
+    sortOrder: ProfileSortOrder | null;
+}): string[] {
+    const { profiles, pendingProfiles, configPath, renames, deletions, sortOrder } = params;
+    const deletedKeys = getDeletedProfileKeys(deletions, configPath, renames);
+    const isDeleted = (key: string) => deletedKeys.some((deleted) => key === deleted || key.startsWith(deleted + "."));
+    // An extracted child survives deletion of its former parent.
+    const orderedProfileKeys = getAllQualifiedProfileKeys(profiles).filter(
+        (key) => !isDeleted(key) || !isDeleted(getRenamedProfileKeyWithNested(key, configPath, renames))
+    );
+    const uniqueRenamedProfileKeys = applyRenamesToProfileKeys({ orderedProfileKeys, configPath, renames });
+    const renamedPendingProfileKeys = mergePendingProfileKeys({ pendingProfiles, configPath, renames, deletions, uniqueRenamedProfileKeys });
+    const savedKeys =
+        sortOrder === "natural" || !sortOrder
+            ? uniqueRenamedProfileKeys.filter((key) => !isDeleted(key))
+            : filterConflictingProfileKeys({ uniqueRenamedProfileKeys, renamedPendingProfileKeys, pendingProfiles, deletions, configPath, renames });
+    // Existing profiles keep their disk order; genuinely new names follow them.
+    return sortProfilesAtLevel([...new Set([...savedKeys, ...renamedPendingProfileKeys])], sortOrder);
+}
 
 interface GetAvailableProfilesByTypeParams extends ConfigStateContext {
     profileType: string;
@@ -120,53 +154,6 @@ export function getAvailableProfilesByType(params: GetAvailableProfilesByTypePar
     });
 
     return Array.from(allProfiles);
-}
-
-interface GetOrderedProfileKeysParams {
-    profiles: ProfileMap;
-    parentKey?: string;
-    deletedProfiles?: string[];
-    isProfileOrParentDeleted?: (profileKey: string, deletedProfiles: string[]) => boolean;
-}
-
-export function getOrderedProfileKeys(params: GetOrderedProfileKeysParams): string[] {
-    const { profiles, parentKey = "", deletedProfiles = [], isProfileOrParentDeleted } = params;
-
-    const keys: string[] = [];
-    for (const key of Object.keys(profiles)) {
-        const profile = profiles[key];
-        const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
-
-        if (!isProfileOrParentDeleted || !isProfileOrParentDeleted(qualifiedKey, deletedProfiles)) {
-            keys.push(qualifiedKey);
-        }
-
-        if (profile.profiles) {
-            keys.push(
-                ...getOrderedProfileKeys({
-                    profiles: profile.profiles as ProfileMap,
-                    parentKey: qualifiedKey,
-                    deletedProfiles,
-                    isProfileOrParentDeleted,
-                })
-            );
-        }
-    }
-    return keys;
-}
-
-export function getAllProfileKeys(profiles: ProfileMap, parentKey = ""): string[] {
-    const keys: string[] = [];
-    for (const key of Object.keys(profiles)) {
-        const profile = profiles[key];
-        const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
-        keys.push(qualifiedKey);
-
-        if (profile.profiles) {
-            keys.push(...getAllProfileKeys(profile.profiles as ProfileMap, qualifiedKey));
-        }
-    }
-    return keys;
 }
 
 export function getReplacementProfileAfterDelete(orderedList: string[], deletedProfileKey: string): string | null {

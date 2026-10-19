@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import type { IConfigLayer } from "@zowe/imperative";
 import { Gui } from "@zowe/zowe-explorer-api";
 import { createEditorConfig } from "../../../__mocks__/mockCreators/configEditor";
+import { ConfigEditorProfileOperations } from "../../../../src/utils/ConfigEditorProfileOperations";
 import { ConfigEditorSaveOperations } from "../../../../src/utils/ConfigEditorSaveOperations";
 import { ConfigUtils } from "../../../../src/utils/ConfigUtils";
 import { ConfigChangeHandlers } from "../../../../src/utils/ConfigChangeHandlers";
@@ -82,6 +83,31 @@ describe("ConfigEditorSaveOperations", () => {
         vi.restoreAllMocks();
         vi.clearAllMocks();
         vi.mocked(Gui.warningMessage).mockResolvedValue(undefined);
+    });
+
+    it("redirects edits and deletions independently when layers rename the same profile", () => {
+        setup();
+        const row = (configPath: string) => ({
+            configPath,
+            profile: "base",
+            key: "profiles.base.properties.host",
+            path: ["profiles", "base", "properties", "host"],
+            value: "new",
+            secure: false,
+        });
+        const changes = [row("/mock/team.json"), row("/mock/user.json")];
+        const result = new ConfigEditorProfileOperations().updateProfileChangesForRenames({ changes, deletions: changes }, [
+            { configPath: "/mock/team.json", originalKey: "base", newKey: "team" },
+            { configPath: "/mock/user.json", originalKey: "base", newKey: "user" },
+        ]);
+        for (const rows of [result.changes, result.deletions]) {
+            expect(rows?.map((change) => [change.profile, change.key, change.path])).toEqual([
+                ["team", "profiles.team.properties.host", ["profiles", "team", "properties", "host"]],
+                ["user", "profiles.user.properties.host", ["profiles", "user", "properties", "host"]],
+            ]);
+        }
+        expect(changes.map((change) => change.profile)).toEqual(["base", "base"]);
+        expect(ConfigUtils.createProfileInfoAndLoad).not.toHaveBeenCalled();
     });
 
     it("preserves profiles dragged beneath a newly added unsaved parent", async () => {

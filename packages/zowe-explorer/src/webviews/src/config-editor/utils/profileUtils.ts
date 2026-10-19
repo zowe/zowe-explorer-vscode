@@ -134,22 +134,6 @@ export function mergePendingChangesForProfile(params: MergePendingChangesParams)
     return { ...baseObj, ...pendingChangesAtLevel };
 }
 
-export function getProfileTypeFromPath(path: string[]): string | null {
-    if (path.length < 2 || path[0] !== "profiles") {
-        return null;
-    }
-
-    let profileName = "";
-    for (let i = 1; i < path.length; i++) {
-        if (path[i] !== "profiles" && path[i] !== "properties" && path[i] !== "secure") {
-            profileName = path[i];
-            break;
-        }
-    }
-
-    return profileName || null;
-}
-
 export function extractPendingProfiles(pendingChanges: PendingChangesMap, configPath: string): string[] {
     const configPendingChanges = pendingChanges[configPath];
     if (!configPendingChanges) return [];

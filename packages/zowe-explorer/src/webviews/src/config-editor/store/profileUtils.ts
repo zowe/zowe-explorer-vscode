@@ -12,9 +12,11 @@
 import type { EditorRuntime } from "./types";
 import { extractPendingProfiles, isProfileOrParentDeleted } from "../utils";
 import { buildFormattedPendingChanges } from "../utils/renameUtils";
-import { flattenProfiles, getRenamedProfileKeyWithNested, sortProfilesAtLevel } from "../utils";
+import { getAllQualifiedProfileKeys } from "../utils/profileRenames";
+import { getVisibleProfileKeys } from "../utils/profileKeyListing";
+import { selectHasPendingChanges } from "./selectors";
 import { doesSavedProfileExist as doesSavedProfileExistInConfig } from "../utils/profileKeyListing";
-import type { FormattedPendingChanges, ProfileData } from "../types";
+import type { FormattedPendingChanges } from "../types";
 
 export function createProfileUtils(
     state: Pick<
@@ -31,18 +33,7 @@ export function createProfileUtils(
         | "configEditorSettings"
     >
 ) {
-    const {
-        configurations,
-        selectedTab,
-        pendingChanges,
-        deletions,
-        pendingDefaults,
-        defaultsDeletions,
-        autostoreChanges,
-        renames,
-        dragDroppedProfiles,
-        configEditorSettings,
-    } = state;
+    const { configurations, selectedTab, pendingChanges, deletions, pendingDefaults, defaultsDeletions, renames, configEditorSettings } = state;
 
     const { profileSortOrder } = configEditorSettings;
 
@@ -52,59 +43,19 @@ export function createProfileUtils(
     const getAvailableProfiles = () => {
         if (selectedTab === null) return ["root"];
 
-        const config = configurations[selectedTab].properties;
-        const flatProfiles = flattenProfiles(config.profiles);
-        const profileNames = Object.keys(flatProfiles);
-
-        const pendingProfiles = new Set<string>();
-        Object.entries(pendingChanges[configurations[selectedTab].configPath] || {}).forEach(([_, entry]) => {
-            if (entry.profile) {
-                pendingProfiles.add(entry.profile);
-            }
-        });
-
-        const deletedProfiles = new Set<string>();
-        const configPath = configurations[selectedTab].configPath;
-        const deletedKeys = deletions[configPath] || [];
-        deletedKeys.forEach((key) => {
-            const keyParts = key.split(".");
-            if (keyParts[0] === "profiles" && keyParts.length >= 2) {
-                const profileParts: string[] = [];
-                for (let i = 1; i < keyParts.length; i++) {
-                    if (keyParts[i] !== "profiles") {
-                        profileParts.push(keyParts[i]);
-                    }
-                }
-                const profileName = profileParts.join(".");
-                deletedProfiles.add(profileName);
-
-                const renamedDeletedProfile = getRenamedProfileKeyWithNested(profileName, configPath, renames);
-                if (renamedDeletedProfile !== profileName) {
-                    deletedProfiles.add(renamedDeletedProfile);
-                }
-
-                profileNames.forEach((existingProfile) => {
-                    if (existingProfile.startsWith(profileName + ".")) {
-                        deletedProfiles.add(existingProfile);
-                        const renamedProfile = getRenamedProfileKeyWithNested(existingProfile, configPath, renames);
-                        deletedProfiles.add(renamedProfile);
-                    }
-                });
-            }
-        });
-
-        const renamedProfileNames = profileNames.map((profileName) => {
-            const configPath = configurations[selectedTab].configPath;
-            return getRenamedProfileKeyWithNested(profileName, configPath, renames);
-        });
-
-        const allProfiles = new Set(["root", ...renamedProfileNames, ...Array.from(pendingProfiles)]);
-        deletedProfiles.forEach((profile) => allProfiles.delete(profile));
-
-        const profilesToSort = Array.from(allProfiles);
-        const result = sortProfilesAtLevel(profilesToSort, profileSortOrder);
-
-        return result;
+        const config = configurations[selectedTab];
+        const pendingProfiles = Object.fromEntries(extractPendingProfiles(pendingChanges, config.configPath).map((key) => [key, {}]));
+        return [
+            "root",
+            ...getVisibleProfileKeys({
+                profiles: config.properties.profiles,
+                pendingProfiles,
+                configPath: config.configPath,
+                renames,
+                deletions,
+                sortOrder: profileSortOrder,
+            }),
+        ];
     };
 
     const getAvailableProfilesForConfig = (configPath: string): string[] => {
@@ -116,24 +67,7 @@ export function createProfileUtils(
 
         const pendingProfiles = extractPendingProfiles(pendingChanges, configPath);
 
-        const getAvailableProfiles = (profiles: Record<string, ProfileData>, parentKey = ""): string[] => {
-            const available: string[] = [];
-            for (const key of Object.keys(profiles)) {
-                const profile = profiles[key];
-                const qualifiedKey = parentKey ? `${parentKey}.${key}` : key;
-
-                if (!isProfileOrParentDeleted(qualifiedKey, deletions, configPath)) {
-                    available.push(qualifiedKey);
-                }
-
-                if (profile.profiles) {
-                    available.push(...getAvailableProfiles(profile.profiles, qualifiedKey));
-                }
-            }
-            return available;
-        };
-
-        const existingProfiles = getAvailableProfiles(profilesObj);
+        const existingProfiles = getAllQualifiedProfileKeys(profilesObj).filter((key) => !isProfileOrParentDeleted(key, deletions, configPath));
         const pendingProfileKeys = pendingProfiles.filter(
             (key) => !existingProfiles.includes(key) && !isProfileOrParentDeleted(key, deletions, configPath)
         );
@@ -149,19 +83,7 @@ export function createProfileUtils(
     const doesSavedProfileExist = (profileKey: string, configPath: string): boolean =>
         doesSavedProfileExistInConfig(profileKey, configPath, configurations);
 
-    const hasPendingChanges = () => {
-        const hasChanges = Object.keys(pendingChanges).length > 0;
-        const hasDeletions = Object.entries(deletions).some(([_, keys]) => keys.length > 0);
-        const hasPendingDefaults = Object.keys(pendingDefaults).length > 0;
-        const hasDefaultsDeletions = Object.entries(defaultsDeletions).some(([_, keys]) => keys.length > 0);
-        const hasAutostoreChanges = Object.keys(autostoreChanges).length > 0;
-        const hasRenames = Object.entries(renames).some(([_, configRenames]) => Object.keys(configRenames).length > 0);
-        const hasDragDroppedProfiles = Object.entries(dragDroppedProfiles).some(([_, profiles]) => profiles.size > 0);
-
-        return (
-            hasChanges || hasDeletions || hasPendingDefaults || hasDefaultsDeletions || hasAutostoreChanges || hasRenames || hasDragDroppedProfiles
-        );
-    };
+    const hasPendingChanges = () => selectHasPendingChanges(state);
 
     return {
         formatPendingChanges,

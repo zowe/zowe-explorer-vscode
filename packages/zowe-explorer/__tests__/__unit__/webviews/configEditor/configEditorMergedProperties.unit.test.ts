@@ -23,8 +23,9 @@ vi.mock("../../../../src/utils/ConfigUtils", () => ({
     },
 }));
 
-vi.mock("../../../../src/utils/ConfigChangeHandlers", () => ({
+vi.mock("../../../../src/utils/ConfigChangeHandlers", async (importOriginal) => ({
     ConfigChangeHandlers: {
+        stageChanges: (await importOriginal<typeof import("../../../../src/utils/ConfigChangeHandlers")>()).ConfigChangeHandlers.stageChanges,
         handleDefaultChanges: vi.fn(),
         handleProfileChanges: vi.fn(),
     },
@@ -115,7 +116,7 @@ describe("ConfigEditorMergedProperties", () => {
             (ConfigUtils.createProfileInfoAndLoad as Mock).mockResolvedValue(mockProfileInfo);
 
             const renames = [{ originalKey: "profiles.old", newKey: "profiles.new", configPath }];
-            (mockProfileOperations.updateProfileChangesForRenames as Mock).mockResolvedValue({ configPath, changes: [], deletions: [] });
+            (mockProfileOperations.updateProfileChangesForRenames as Mock).mockReturnValue({ configPath, changes: [], deletions: [] });
             await mergedProperties.getPendingMergedArgsForProfile("profiles.old", configPath, {} as any, renames);
 
             expect(mockProfileOperations.simulateProfileRenames).toHaveBeenCalledWith(renames, teamConfig);
@@ -133,7 +134,7 @@ describe("ConfigEditorMergedProperties", () => {
             const changes = { configPath, changes: [{ key: "a" }], deletions: [], defaultsChanges: [], defaultsDeleteKeys: [] } as any;
             const renames = [{ originalKey: "profiles.old", newKey: "profiles.new", configPath }];
             const effectiveChanges = { configPath, changes: [{ key: "b" }], deletions: [], defaultsChanges: [], defaultsDeleteKeys: [] };
-            (mockProfileOperations.updateProfileChangesForRenames as Mock).mockResolvedValue(effectiveChanges);
+            (mockProfileOperations.updateProfileChangesForRenames as Mock).mockReturnValue(effectiveChanges);
 
             await mergedProperties.getPendingMergedArgsForProfile("profiles.old", configPath, changes, renames);
 

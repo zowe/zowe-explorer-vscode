@@ -64,7 +64,12 @@ export function selectFlattenedDefaults(state: Pick<EditorData, "configurations"
     return result;
 }
 
-export function selectHasPendingChanges(state: EditorData): boolean {
+export function selectHasPendingChanges(
+    state: Pick<
+        EditorData,
+        "pendingChanges" | "deletions" | "pendingDefaults" | "defaultsDeletions" | "autostoreChanges" | "renames" | "dragDroppedProfiles"
+    >
+): boolean {
     return (
         Object.keys(state.pendingChanges).length > 0 ||
         Object.values(state.deletions).some((keys) => keys.length > 0) ||
