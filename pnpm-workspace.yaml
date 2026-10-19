@@ -65,3 +65,6 @@ overrides:
   "http-cache-semantics": "^4.3.0"
 # Previously set using `pnpm config set network-timeout`
 fetchTimeout: 60000
+audit:
+  ignore:
+    - GHSA-vfj7-8cjw-p6xm
