@@ -1338,7 +1338,7 @@ Would you like to do this now?`,
      */
     protected findMatchInLoadedChildren(parentNode: IZoweUSSTreeNode, fullPath: string): IZoweUSSTreeNode {
         ZoweLogger.trace("USSTree.findMatchInLoadedChildren called.");
-        // // Is match direct child?
+        // Is match direct child?
         const match = parentNode.children.find((child) => child.fullPath === fullPath);
         if (match === undefined) {
             // Is match contained within one of the children?

@@ -21,6 +21,21 @@ import { Then, When } from "@cucumber/cucumber";
 //
 When(/a user clicks on the first profile in the (.*) view/, async function (tree: string) {
     const dsPane = await paneDivForTree(tree);
+    // Wait for tree to be fully loaded and try to find the profile
+    await browser.waitUntil(
+        async () => {
+            try {
+                const items = await dsPane.getVisibleItems();
+                return items.length > 0;
+            } catch {
+                return false;
+            }
+        },
+        {
+            timeout: 5000,
+            timeoutMsg: `${tree} tree did not load within timeout`,
+        }
+    );
     const treeItems = (await dsPane.getVisibleItems()) as TreeItem[];
     // index is "1" because Favorites is the first node in the array
     await treeItems[1].select();
