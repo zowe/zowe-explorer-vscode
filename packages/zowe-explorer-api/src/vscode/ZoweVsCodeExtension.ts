@@ -223,7 +223,6 @@ export class ZoweVsCodeExtension {
         // record that this request is to get a token
         imperative.AuthOrder.makingRequestForToken(updSession.ISession);
 
-        // todo here use allowed login method
         const qpItems: vscode.QuickPickItem[] = [
             { label: "$(account) User and Password", description: "Log in with basic authentication" },
             { label: "$(note) Certificate", description: "Log in with PEM format certificate file" },

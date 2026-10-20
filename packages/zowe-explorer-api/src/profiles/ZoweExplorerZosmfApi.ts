@@ -46,8 +46,6 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public getSessionFromCommandArgument(cmdArgs: imperative.ICommandArguments): imperative.Session {
             const sessCfg = zosmf.ZosmfSession.createSessCfgFromArgs(cmdArgs);
             imperative.ConnectionPropsForSessCfg.resolveSessCfgProps(sessCfg, cmdArgs);
-            // todo remove when SDK fixed
-            sessCfg.allowedLoginMethod = cmdArgs.allowedLoginMethod;
             const sessionToUse = new imperative.Session(sessCfg);
             sessionToUse.ISession.socketConnectTimeout = VscSettings.getDirectValue(
                 "zowe.settings.socketConnectTimeout",
