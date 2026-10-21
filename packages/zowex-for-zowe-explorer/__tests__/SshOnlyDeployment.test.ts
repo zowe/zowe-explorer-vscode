@@ -16,7 +16,7 @@ import * as os from "os";
 import * as path from "path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
-import { SessionContext, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { SessionContext } from "@zowe/zowex-for-zowe-sdk";
 import { parseSections, posixCksum, PROBE_DATA, RECEIVE_SCRIPT, SshOnlyDeployment } from "../src/SshOnlyDeployment";
 
 vi.mock("@zowe/zowex-for-zowe-sdk", () => {
@@ -28,7 +28,7 @@ vi.mock("@zowe/zowex-for-zowe-sdk", () => {
     return {
         SessionContext,
         ZSshClient: { BIN_NAME: "zo", REQUIRED_DEPLOY_SIZE_MB: 20 },
-        ZSshUtils: { quotePath: (p: string) => p, pathExists: vi.fn(), getAvailableMb: vi.fn() },
+        ZSshUtils: { quotePath: (p: string) => p },
     };
 });
 
@@ -101,8 +101,6 @@ describe("SshOnlyDeployment", () => {
         };
         context = new SessionContext({} as any);
         vi.mocked(context.getSsh).mockResolvedValue(ssh);
-        vi.mocked(ZSshUtils.pathExists).mockResolvedValue({ exists: false, stderr: "" });
-        vi.mocked(ZSshUtils.getAvailableMb).mockResolvedValue({ mb: 500, stderr: "" });
         vi.spyOn(vscode.workspace.fs, "readFile").mockResolvedValue(pax);
     });
 
@@ -216,16 +214,6 @@ describe("SshOnlyDeployment", () => {
         expect(commands).not.toContain("pax -rzf server.pax.Z");
     });
 
-    it("should not upload when the user declines the low disk space warning", async () => {
-        vi.mocked(ZSshUtils.getAvailableMb).mockResolvedValue({ mb: 1, stderr: "" });
-        const result = await SshOnlyDeployment.install(context, "/srv/zowe", "/local/server.pax.Z", {
-            onInsufficientSpaceWarning: vi.fn().mockResolvedValue(false),
-        });
-
-        expect(result).toBe(false);
-        expect(ssh.connection.exec).not.toHaveBeenCalled();
-    });
-
     it("should report extraction failure and remove partial files", async () => {
         ssh.execCommand.mockImplementation(async (cmd: string) => ({
             code: cmd.startsWith("pax") ? 1 : 0,
@@ -240,7 +228,6 @@ describe("SshOnlyDeployment", () => {
         expect(onError).toHaveBeenCalledWith(expect.objectContaining({ errorCode: "EDEPLOYFAIL" }), "extract");
         const commands = ssh.execCommand.mock.calls.map((c: any[]) => c[0]);
         expect(commands).toContain("rm -f /srv/zowe/zo");
-        expect(commands).toContain("rmdir /srv/zowe");
     });
 
     it("should split probe output into sections", () => {

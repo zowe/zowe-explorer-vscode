@@ -36,7 +36,12 @@ export class Utilities {
             vscode.commands.registerCommand(`zowe.zowex.connectSshOnly`, async (profName?: string) => {
                 // The server PAX ships in the extension's bin directory, same as for the SFTP-based deploy
                 const localPaxPath = path.join(context.extensionPath, "bin", "server.pax.Z");
-                await Utilities.connectCallback(zoweExplorerApi, profName, (session, dir) => deploySshOnlyWithProgress(session, dir, localPaxPath));
+                await Utilities.connectCallback(
+                    zoweExplorerApi,
+                    profName,
+                    (session, dir) => deploySshOnlyWithProgress(session, dir, localPaxPath),
+                    true
+                );
             }),
         ];
     }
@@ -44,12 +49,16 @@ export class Utilities {
     private static async connectCallback(
         zoweExplorerApi: IApiExplorerExtender,
         profName?: string,
-        deploy: (session: SessionContext, serverPath: string) => Thenable<boolean> = deployWithProgress
+        deploy: (session: SessionContext, serverPath: string) => Thenable<boolean> = deployWithProgress,
+        skipPreChecks = false
     ): Promise<void> {
         imperative.Logger.getAppLogger().trace("Running connect command for profile %s", profName);
         const profCache = zoweExplorerApi.getProfilesCache();
         const vscePromptApi = new VscePromptApi(await profCache.getProfileInfo());
-        const profile = await vscePromptApi.promptForProfile(profName, { prioritizeProjectLevelConfig: false });
+        // Validation opens its own SSH connection, which means an extra MFA prompt, so skip it when asked to
+        const profile = skipPreChecks
+            ? await Utilities.promptForUnvalidatedProfile(profCache, vscePromptApi, profName)
+            : await vscePromptApi.promptForProfile(profName, { prioritizeProjectLevelConfig: false });
         if (!profile?.profile) {
             return;
         }
@@ -57,10 +66,10 @@ export class Utilities {
         const sshSession = ZSshUtils.buildSession(profile.profile);
         using sessionHandle = new SessionContext(sshSession);
         let onEnvPathServer: string | undefined = undefined;
-        if (configuredServerPath == null) {
+        if (configuredServerPath == null && !skipPreChecks) {
             onEnvPathServer = await SshClientCache.inst.detectServerOnPath(sessionHandle);
-            configuredServerPath = onEnvPathServer ?? ZSshClient.DEFAULT_SERVER_PATH;
         }
+        configuredServerPath ??= onEnvPathServer ?? ZSshClient.DEFAULT_SERVER_PATH;
 
         const deployDirectory = onEnvPathServer
             ? configuredServerPath
@@ -69,7 +78,7 @@ export class Utilities {
             return;
         }
         let deployStatus = false;
-        if (!(await ZSshUtils.lacksWriteAccess(sessionHandle, deployDirectory))) {
+        if (skipPreChecks || !(await ZSshUtils.lacksWriteAccess(sessionHandle, deployDirectory))) {
             deployStatus = await deploy(sessionHandle, deployDirectory);
             if (!deployStatus) {
                 return;
@@ -86,6 +95,55 @@ export class Utilities {
             imperative.Logger.getAppLogger().info(infoMsg);
             await Gui.showMessage(infoMsg);
         }
+    }
+
+    /**
+     * Select an SSH profile without opening any connection to validate it. Credentials missing from the profile
+     * are prompted for and kept in memory only, so the deploy session is the first and only authentication.
+     */
+    private static async promptForUnvalidatedProfile(
+        profCache: ReturnType<IApiExplorerExtender["getProfilesCache"]>,
+        vscePromptApi: VscePromptApi,
+        profName?: string
+    ): Promise<imperative.IProfileLoaded | undefined> {
+        let name = profName;
+        if (!name) {
+            const profiles = (await profCache.fetchAllProfilesByType("ssh")).filter((prof) => prof.name && prof.profile?.host);
+            const selected = await Gui.showQuickPick(
+                profiles.map((prof) => ({ label: prof.name!, description: prof.profile!.host as string })),
+                { placeHolder: vscode.l10n.t("Select configured SSH host"), ignoreFocusOut: true }
+            );
+            name = selected?.label;
+            if (!name) {
+                return undefined;
+            }
+        }
+        // With a profile name this returns the merged profile (including secure values) without validating it
+        const profile = await vscePromptApi.promptForProfile(name);
+        if (!profile?.profile) {
+            return undefined;
+        }
+        const props = profile.profile;
+        if (!props.user) {
+            props.user = await Gui.showInputBox({
+                title: vscode.l10n.t("Enter user for host: '{0}'", props.host as string),
+                ignoreFocusOut: true,
+            });
+            if (!props.user) {
+                return undefined;
+            }
+        }
+        if (!props.password && !props.privateKey && !props.identityAgent) {
+            props.password = await Gui.showInputBox({
+                title: vscode.l10n.t("{0}@{1}'s password:", props.user as string, props.host as string),
+                password: true,
+                ignoreFocusOut: true,
+            });
+            if (!props.password) {
+                return undefined;
+            }
+        }
+        return profile;
     }
 
     private static async restartCallback(zoweExplorerApi: IApiExplorerExtender, profName?: string): Promise<void> {

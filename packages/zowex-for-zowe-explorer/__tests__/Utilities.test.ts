@@ -48,6 +48,8 @@ vi.mock("@zowe/zowe-explorer-api", () => {
     return {
         Gui: {
             showMessage: vi.fn(),
+            showQuickPick: vi.fn(),
+            showInputBox: vi.fn(),
             setStatusBarMessage: vi.fn(() => ({ dispose: vi.fn() })),
         },
         ZoweExplorerApiType: {
@@ -350,6 +352,86 @@ describe("Utilities", () => {
             } catch (e) {
                 expect(e.toString()).toContain("You do not have write access");
             }
+        });
+    });
+
+    describe("connectCallback without pre-checks (SSH-only deploy)", () => {
+        const setup = async (profile: any, profiles: any[] = []) => {
+            const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
+            const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
+            const promptForProfile = vi.fn().mockResolvedValue(profile);
+            VscePromptApi.mockImplementation(function () {
+                return { promptForProfile, promptForDeployDirectory: vi.fn().mockResolvedValue("/dir") };
+            });
+            const api = {
+                getProfilesCache: () => ({
+                    getProfileInfo: vi.fn().mockResolvedValue({}),
+                    fetchAllProfilesByType: vi.fn().mockResolvedValue(profiles),
+                }),
+            };
+            const deploy = vi.fn().mockResolvedValue(true);
+            vi.mocked(ZSshUtils.lacksWriteAccess).mockClear();
+            vi.mocked(SshClientCache.inst.detectServerOnPath).mockClear();
+            vi.spyOn((await vi.importMock("../src/ConfigUtils")).ConfigUtils, "getServerPath").mockReturnValue(undefined as any);
+            return { mockedExplorer, promptForProfile, api, deploy };
+        };
+
+        it("should select a profile without validating it and skip detection and the write-access check", async () => {
+            const profile = { name: "p", profile: { host: "h", user: "u", password: "pw" } };
+            const { mockedExplorer, promptForProfile, api, deploy } = await setup(profile, [{ name: "p", profile: { host: "h" } }]);
+            vi.mocked(mockedExplorer.Gui.showQuickPick).mockResolvedValue({ label: "p" } as any);
+
+            await (Utilities as any).connectCallback(api, undefined, deploy, true);
+
+            expect(promptForProfile).toHaveBeenCalledTimes(1);
+            expect(promptForProfile).toHaveBeenCalledWith("p");
+            expect(SshClientCache.inst.detectServerOnPath).not.toHaveBeenCalled();
+            expect(ZSshUtils.lacksWriteAccess).not.toHaveBeenCalled();
+            expect(deploy).toHaveBeenCalledWith(expect.any(SessionContext), "/dir");
+            expect(mockedExplorer.Gui.showInputBox).not.toHaveBeenCalled();
+        });
+
+        it("should use the given profile name without showing a quick pick", async () => {
+            const profile = { name: "p", profile: { host: "h", user: "u", privateKey: "key" } };
+            const { mockedExplorer, promptForProfile, api, deploy } = await setup(profile);
+            vi.mocked(mockedExplorer.Gui.showQuickPick).mockClear();
+
+            await (Utilities as any).connectCallback(api, "p", deploy, true);
+
+            expect(mockedExplorer.Gui.showQuickPick).not.toHaveBeenCalled();
+            expect(promptForProfile).toHaveBeenCalledWith("p");
+            expect(deploy).toHaveBeenCalled();
+        });
+
+        it("should prompt for a missing user and password and keep them in memory", async () => {
+            const profile = { name: "p", profile: { host: "h" } };
+            const { mockedExplorer, api, deploy } = await setup(profile);
+            vi.mocked(mockedExplorer.Gui.showInputBox).mockResolvedValueOnce("me").mockResolvedValueOnce("secret");
+
+            await (Utilities as any).connectCallback(api, "p", deploy, true);
+
+            expect(profile.profile).toMatchObject({ user: "me", password: "secret" });
+            expect(ZSshUtils.buildSession).toHaveBeenCalledWith(profile.profile);
+            expect(deploy).toHaveBeenCalled();
+        });
+
+        it("should abort when no profile is picked", async () => {
+            const { mockedExplorer, promptForProfile, api, deploy } = await setup({}, [{ name: "p", profile: { host: "h" } }]);
+            vi.mocked(mockedExplorer.Gui.showQuickPick).mockResolvedValue(undefined);
+
+            await (Utilities as any).connectCallback(api, undefined, deploy, true);
+
+            expect(promptForProfile).not.toHaveBeenCalled();
+            expect(deploy).not.toHaveBeenCalled();
+        });
+
+        it("should abort when the password prompt is cancelled", async () => {
+            const { mockedExplorer, api, deploy } = await setup({ name: "p", profile: { host: "h", user: "u" } });
+            vi.mocked(mockedExplorer.Gui.showInputBox).mockResolvedValue(undefined);
+
+            await (Utilities as any).connectCallback(api, "p", deploy, true);
+
+            expect(deploy).not.toHaveBeenCalled();
         });
     });
 

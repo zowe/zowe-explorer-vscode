@@ -13,7 +13,6 @@ import { Gui, imperative, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import { type ISshCallbacks, type SessionContext, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import * as path from "path";
 import * as vscode from "vscode";
-import { promptInsufficientSpace } from "./ServerDeployment";
 import { SshErrorHandler } from "./SshErrorHandler";
 
 type NodeSSH = Awaited<ReturnType<SessionContext["getSsh"]>>;
@@ -332,7 +331,8 @@ export interface ISshOnlyCallbacks extends ISshCallbacks {
 export class SshOnlyDeployment {
     /**
      * Deploy the server PAX using only SSH exec channels (no SFTP, no SCP).
-     * Mirrors ZSshUtils.installServer: mkdir -p, space check, upload, `pax -rzf`, cleanup, verify.
+     * Mirrors ZSshUtils.installServer minus the optional pre-checks (existence, free space) so that everything runs
+     * over the one SSH session: mkdir -p, upload, `pax -rzf`, cleanup, verify.
      * @param session Pre-established SSH session
      * @param serverPath USS directory to deploy into
      * @param localPaxPath Local path to server.pax.Z
@@ -348,7 +348,6 @@ export class SshOnlyDeployment {
         const remoteScript = path.posix.join(remoteDir, RECEIVE_SCRIPT_FILE);
         const remoteProbe = path.posix.join(remoteDir, PROBE_FILE);
         const tempFiles = [remotePax, remoteScript, remoteProbe].map((file) => ZSshUtils.quotePath(file)).join(" ");
-        const dirExistedBefore = (await ZSshUtils.pathExists(ssh, remoteDir)).exists;
         let extractionStarted = false;
 
         // Reports a failed step; resolves to the retried install if the user asked to retry, else false
@@ -368,15 +367,6 @@ export class SshOnlyDeployment {
                     `mkdir -p ${remoteDir} RC=${mkdir.code}: ${mkdir.stderr}`,
                     "deploy"
                 );
-            }
-
-            const available = await ZSshUtils.getAvailableMb(ssh, remoteDir);
-            if (
-                available.mb < ZSshClient.REQUIRED_DEPLOY_SIZE_MB &&
-                !((await callbacks.onInsufficientSpaceWarning?.(available.mb, ZSshClient.REQUIRED_DEPLOY_SIZE_MB)) ?? true)
-            ) {
-                logger.info(`[SshOnlyDeployment] User declined to deploy to '${remoteDir}' due to lack of available space`);
-                return false;
             }
 
             callbacks.onStatus?.(vscode.l10n.t("Uploading server..."));
@@ -495,9 +485,6 @@ export class SshOnlyDeployment {
                 if (extractionStarted) {
                     await ssh.execCommand(`rm -f ${ZSshUtils.quotePath(path.posix.join(remoteDir, ZSshClient.BIN_NAME))}`);
                 }
-                if (!dirExistedBefore) {
-                    await ssh.execCommand(`rmdir ${quotedDir}`);
-                }
             } catch (cleanupErr) {
                 logger.error(`Error was thrown during post-failure cleanup: ${(cleanupErr as Error).message}`);
             }
@@ -541,7 +528,6 @@ export function deploySshOnlyWithProgress(session: SessionContext, serverPath: s
                 onProgress: (increment) => progress.report({ increment }),
                 onStatus: (message) => progress.report({ message }),
                 onError: SshErrorHandler.getInstance().createErrorCallback(ZoweExplorerApiType.All, "Server installation (without SFTP)"),
-                onInsufficientSpaceWarning: (remaining, recommended) => promptInsufficientSpace(serverPath, remaining, recommended),
             })
     );
 }
