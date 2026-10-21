@@ -150,6 +150,7 @@
   "zowe.commands.alwaysEdit": "Allow commands to be edited before submitting",
   "zowe.commands.useIntegratedTerminals": "Allow commands to be executed using integrated terminals",
   "zowe.commands.zowex.connect": "Deploy SSH server to host...",
+  "zowe.commands.zowex.connectSshOnly": "Deploy SSH server to host (without SFTP)...",
   "zowe.commands.zowex.restart": "Restart SSH server on host...",
   "zowe.commands.zowex.uninstall": "Uninstall SSH server from host...",
   "zowe.automaticProfileValidation": "Allow automatic validation of profiles.",

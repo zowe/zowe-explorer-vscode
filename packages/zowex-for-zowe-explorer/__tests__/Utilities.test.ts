@@ -155,10 +155,11 @@ describe("Utilities", () => {
 
         Utilities.registerCommands({} as ExtensionContext, mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi());
 
-        expect(registerCommandSpy).toHaveBeenCalledTimes(3);
+        expect(registerCommandSpy).toHaveBeenCalledTimes(4);
         expect(registerCommandSpy).toHaveBeenCalledWith("zowe.zowex.connect", expect.any(Function));
         expect(registerCommandSpy).toHaveBeenCalledWith("zowe.zowex.restart", expect.any(Function));
         expect(registerCommandSpy).toHaveBeenCalledWith("zowe.zowex.uninstall", expect.any(Function));
+        expect(registerCommandSpy).toHaveBeenCalledWith("zowe.zowex.connectSshOnly", expect.any(Function));
     });
 
     it("should invoke the underlying callbacks when the registered commands are called", async () => {

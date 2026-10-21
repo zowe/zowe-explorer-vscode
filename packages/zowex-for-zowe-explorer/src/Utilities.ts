@@ -17,10 +17,12 @@ import { VscePromptApi } from "./VscePromptApi";
 import { SshClientCache } from "./SshClientCache";
 import { SshErrorHandler } from "./SshErrorHandler";
 import { deployWithProgress } from "./ServerDeployment";
+import { deploySshOnlyWithProgress } from "./SshOnlyDeployment";
+import * as path from "path";
 import { ImperativeError } from "@zowe/imperative";
 
 export class Utilities {
-    public static registerCommands(_context: vscode.ExtensionContext, zoweExplorerApi: IApiExplorerExtender): vscode.Disposable[] {
+    public static registerCommands(context: vscode.ExtensionContext, zoweExplorerApi: IApiExplorerExtender): vscode.Disposable[] {
         return [
             vscode.commands.registerCommand(`zowe.zowex.connect`, async (profName?: string) => {
                 await Utilities.connectCallback(zoweExplorerApi, profName);
@@ -31,10 +33,19 @@ export class Utilities {
             vscode.commands.registerCommand(`zowe.zowex.uninstall`, async (profName?: string) => {
                 await Utilities.uninstallCallback(zoweExplorerApi, profName);
             }),
+            vscode.commands.registerCommand(`zowe.zowex.connectSshOnly`, async (profName?: string) => {
+                // The server PAX ships in the extension's bin directory, same as for the SFTP-based deploy
+                const localPaxPath = path.join(context.extensionPath, "bin", "server.pax.Z");
+                await Utilities.connectCallback(zoweExplorerApi, profName, (session, dir) => deploySshOnlyWithProgress(session, dir, localPaxPath));
+            }),
         ];
     }
 
-    private static async connectCallback(zoweExplorerApi: IApiExplorerExtender, profName?: string): Promise<void> {
+    private static async connectCallback(
+        zoweExplorerApi: IApiExplorerExtender,
+        profName?: string,
+        deploy: (session: SessionContext, serverPath: string) => Thenable<boolean> = deployWithProgress
+    ): Promise<void> {
         imperative.Logger.getAppLogger().trace("Running connect command for profile %s", profName);
         const profCache = zoweExplorerApi.getProfilesCache();
         const vscePromptApi = new VscePromptApi(await profCache.getProfileInfo());
@@ -59,7 +70,7 @@ export class Utilities {
         }
         let deployStatus = false;
         if (!(await ZSshUtils.lacksWriteAccess(sessionHandle, deployDirectory))) {
-            deployStatus = await deployWithProgress(sessionHandle, deployDirectory);
+            deployStatus = await deploy(sessionHandle, deployDirectory);
             if (!deployStatus) {
                 return;
             }

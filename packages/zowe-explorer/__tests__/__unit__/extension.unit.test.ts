@@ -281,6 +281,7 @@ async function createGlobalMocks() {
             "zowe.zowex.connect",
             "zowe.zowex.restart",
             "zowe.zowex.uninstall",
+            "zowe.zowex.connectSshOnly",
             "zowe.editHistory",
             "zowe.displayReleaseNotes",
             "zowe.promptCredentials",

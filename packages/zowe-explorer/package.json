@@ -804,6 +804,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.zowex.connectSshOnly",
+        "title": "%zowe.commands.zowex.connectSshOnly%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.zowex.restart",
         "title": "%zowe.commands.zowex.restart%",
         "category": "Zowe Explorer"

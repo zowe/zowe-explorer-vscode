@@ -452,6 +452,9 @@
   "zowe.commands.zowex.connect": {
     "Deploy SSH server to host...": ""
   },
+  "zowe.commands.zowex.connectSshOnly": {
+    "Deploy SSH server to host (without SFTP)...": ""
+  },
   "zowe.commands.zowex.restart": {
     "Restart SSH server on host...": ""
   },

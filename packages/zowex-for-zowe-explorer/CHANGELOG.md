@@ -8,6 +8,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ### New features and enhancements
 
+- Added the `Zowe Explorer: Deploy SSH server to host (without SFTP)...` command, which deploys the server PAX over plain SSH exec channels using a base64-encoded transfer, for hosts where SFTP is unavailable.
+
 ### Bug fixes
 
 - Updated Zowex SDK to `1.0.2` for technical currency. [#4526](https://github.com/zowe/zowe-explorer-vscode/pull/4526)
