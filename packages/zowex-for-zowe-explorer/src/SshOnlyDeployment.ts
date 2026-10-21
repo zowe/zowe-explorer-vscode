@@ -20,6 +20,31 @@ type NodeSSH = Awaited<ReturnType<SessionContext["getSsh"]>>;
 
 const SERVER_PAX_FILE = "server.pax.Z";
 const RECEIVE_SCRIPT_FILE = ".zowe-receive-pax.sh";
+const PROBE_FILE = ".zowe-deploy-probe.bin";
+/** EBCDIC code pages the exec-channel conversion may use; tried in order when undoing it for raw uploads. */
+const ICONV_CODESETS = [
+    "IBM-1047",
+    "IBM-037",
+    "IBM-1140",
+    "IBM-500",
+    "IBM-273",
+    "IBM-277",
+    "IBM-278",
+    "IBM-280",
+    "IBM-284",
+    "IBM-285",
+    "IBM-297",
+    "IBM-871",
+];
+const BYTE_VALUES = 256;
+const CR = 0x0d;
+const LF = 0x0a;
+/** Every byte value plus CR/LF runs, so a probe catches any transport that drops, merges or remaps bytes. */
+export const PROBE_DATA = Buffer.from([
+    ...Array(BYTE_VALUES).keys(),
+    ...[CR, LF, LF, CR, CR, LF],
+    ...Array.from({ length: BYTE_VALUES }, (_, i) => BYTE_VALUES - 1 - i),
+]);
 const BYTES_PER_KIB = 1024;
 /** Raw bytes encoded per write to the SSH channel (must be a multiple of 3 so chunks concatenate to valid base64). */
 const RAW_CHUNK_BYTES = 48 * BYTES_PER_KIB;
@@ -31,7 +56,9 @@ const PRINTF_BYTES_PER_LINE = 2048;
 const BASE64_LINE_WIDTH = 76;
 
 /**
- * Script installed on z/OS to receive the PAX over a plain SSH exec channel.
+ * Script installed on z/OS to receive the PAX over a plain SSH exec channel. This is the last-resort upload
+ * method: it needs only sh, awk and wc, but decodes about 40x slower than `uudecode` or raw bytes plus `iconv`,
+ * which are tried first (see {@link SshOnlyDeployment.install}).
  *
  * The z/OS SSH daemon converts exec-channel data between ASCII and EBCDIC, so raw bytes cannot be
  * piped through. Base64 survives the conversion, so the client sends base64 text and this script
@@ -115,7 +142,12 @@ interface ExecResult {
  * Run a command on the remote system, feeding it the strings produced by `input` on stdin.
  * Honors channel backpressure so a large upload does not buffer entirely in memory.
  */
-async function execWithStdin(ssh: NodeSSH, command: string, input: Iterable<string>, onStderrLine?: (line: string) => boolean): Promise<ExecResult> {
+async function execWithStdin(
+    ssh: NodeSSH,
+    command: string,
+    input: Iterable<string | Uint8Array>,
+    onStderrLine?: (line: string) => boolean
+): Promise<ExecResult> {
     const connection = ssh.connection;
     if (connection == null) {
         throw new Error("SSH connection is not established");
@@ -162,12 +194,134 @@ async function execWithStdin(ssh: NodeSSH, command: string, input: Iterable<stri
     });
 }
 
-function* base64Chunks(data: Uint8Array): Generator<string> {
+/** Base64 in 76-column lines; `onSent` receives the raw bytes covered once each chunk has been flushed. */
+function* base64Chunks(data: Uint8Array, onSent?: (rawBytes: number) => void): Generator<string> {
     for (let offset = 0; offset < data.length; offset += RAW_CHUNK_BYTES) {
         yield Buffer.from(data.subarray(offset, offset + RAW_CHUNK_BYTES))
             .toString("base64")
             .replace(new RegExp(`.{1,${BASE64_LINE_WIDTH}}`, "g"), "$&\n");
+        onSent?.(Math.min(offset + RAW_CHUNK_BYTES, data.length));
     }
+}
+
+/** POSIX `uuencode -m` format; the base64 alphabet is invariant across EBCDIC code pages, unlike classic uuencode. */
+function* uuencodeBase64(data: Uint8Array, name: string, onSent?: (rawBytes: number) => void): Generator<string> {
+    yield `begin-base64 644 ${name}\n`;
+    yield* base64Chunks(data, onSent);
+    yield "====\n";
+}
+
+function* rawChunks(data: Uint8Array, onSent?: (rawBytes: number) => void): Generator<Uint8Array> {
+    for (let offset = 0; offset < data.length; offset += RAW_CHUNK_BYTES) {
+        yield data.subarray(offset, offset + RAW_CHUNK_BYTES);
+        onSent?.(Math.min(offset + RAW_CHUNK_BYTES, data.length));
+    }
+}
+
+const BITS_PER_BYTE = 8;
+const BYTE_MASK = 0xff;
+const CRC_TOP_BYTE_SHIFT = 24;
+const CRC_TOP_BIT = 0x80000000;
+/** CRC-32 polynomial used by POSIX cksum */
+const CKSUM_POLYNOMIAL = 0x04c11db7;
+const CRC_TABLE = Uint32Array.from({ length: BYTE_VALUES }, (_, i) => {
+    let c = i << CRC_TOP_BYTE_SHIFT;
+    for (let bit = 0; bit < BITS_PER_BYTE; bit++) {
+        c = c & CRC_TOP_BIT ? (c << 1) ^ CKSUM_POLYNOMIAL : c << 1;
+    }
+    return c >>> 0;
+});
+
+/** The CRC printed by POSIX `cksum`: CRC-32/CKSUM over the data followed by its length in bytes. */
+export function posixCksum(data: Uint8Array): number {
+    let crc = 0;
+    const add = (byte: number): void => {
+        crc = ((crc << BITS_PER_BYTE) ^ CRC_TABLE[((crc >>> CRC_TOP_BYTE_SHIFT) ^ byte) & BYTE_MASK]) >>> 0;
+    };
+    for (const byte of data) {
+        add(byte);
+    }
+    for (let n = data.length; n > 0; n = Math.floor(n / BYTE_VALUES)) {
+        add(n & BYTE_MASK);
+    }
+    return ~crc >>> 0;
+}
+
+function hexDigits(text: string | undefined): string {
+    return (text ?? "").replace(/[^0-9a-f]/gi, "").toLowerCase();
+}
+
+/** Splits the output of `echo =name; command; echo =other; ...` into the text printed under each marker. */
+export function parseSections(stdout: string): Map<string, string> {
+    const sections = new Map<string, string>();
+    let current: string | undefined;
+    for (const line of stdout.split(/\r?\n/)) {
+        if (line.startsWith("=")) {
+            current = line.slice(1).trim();
+            sections.set(current, "");
+        } else if (current != null) {
+            sections.set(current, `${sections.get(current)}${line}\n`);
+        }
+    }
+    return sections;
+}
+
+interface RawProbeResult {
+    /** Command that turns the bytes the channel delivers back into the bytes that were sent, if one was found */
+    receiver?: string;
+    /** Whether the remote `cksum` matches {@link posixCksum}, so it can verify uploads byte for byte */
+    cksum: boolean;
+}
+
+/**
+ * Sends {@link PROBE_DATA} as raw bytes and inspects what arrived. If the channel applies a one-to-one code page
+ * conversion (z/OS sshd converts ISO8859-1 to EBCDIC), finds the iconv codeset that reverses it exactly.
+ * Uses `cat`, `od`, `cksum` and `iconv`; any of them missing or misbehaving just means that path is not used.
+ */
+async function probeRaw(ssh: NodeSSH, probePath: string): Promise<RawProbeResult> {
+    const quoted = ZSshUtils.quotePath(probePath);
+    const sent = await execWithStdin(ssh, `cat > ${quoted}`, [PROBE_DATA]);
+    if (sent.code !== 0) {
+        return { cksum: false };
+    }
+    const script = [
+        "echo =received",
+        `od -An -tx1 -v ${quoted}`,
+        "echo =cksum",
+        `cksum ${quoted}`,
+        ...ICONV_CODESETS.map((codeset) => `echo =${codeset}; iconv -f ${codeset} -t ISO8859-1 ${quoted} | od -An -tx1 -v`),
+    ].join("; ");
+    const sections = parseSections((await ssh.execCommand(script)).stdout);
+    const received = Buffer.from(hexDigits(sections.get("received")), "hex");
+    const [crc, size] = (sections.get("cksum") ?? "").trim().split(/\s+/);
+    const cksum = received.length > 0 && crc === String(posixCksum(received)) && size === String(received.length);
+    const expected = PROBE_DATA.toString("hex");
+    if (received.toString("hex") === expected) {
+        return { receiver: "cat", cksum };
+    }
+    const codeset = ICONV_CODESETS.find((cs) => hexDigits(sections.get(cs)) === expected);
+    return { receiver: codeset ? `iconv -f ${codeset} -t ISO8859-1` : undefined, cksum };
+}
+
+/** Round-trips {@link PROBE_DATA} through `uudecode` and checks every byte came back. */
+async function probeUudecode(ssh: NodeSSH, quotedDir: string, probePath: string): Promise<boolean> {
+    const sent = await execWithStdin(ssh, `cd ${quotedDir} && rm -f ${PROBE_FILE} && uudecode`, uuencodeBase64(PROBE_DATA, PROBE_FILE));
+    if (sent.code !== 0) {
+        return false;
+    }
+    const read = await ssh.execCommand(`od -An -tx1 -v ${ZSshUtils.quotePath(probePath)}`);
+    return read.code === 0 && hexDigits(read.stdout) === PROBE_DATA.toString("hex");
+}
+
+interface UploadMethod {
+    name: string;
+    /** Probes or installs what the method needs on the remote system; false skips it */
+    prepare: () => Promise<boolean>;
+    /** Remote command that reads the encoded PAX on stdin and writes the decoded file */
+    command: () => string;
+    encode: (data: Uint8Array, onSent: (rawBytes: number) => void) => Iterable<string | Uint8Array>;
+    /** The remote command reports `PROGRESS <bytes>` on stderr (client-side flush progress runs ahead of it) */
+    remoteProgress?: boolean;
 }
 
 export interface ISshOnlyCallbacks extends ISshCallbacks {
@@ -192,7 +346,8 @@ export class SshOnlyDeployment {
         const quotedDir = ZSshUtils.quotePath(remoteDir);
         const remotePax = path.posix.join(remoteDir, SERVER_PAX_FILE);
         const remoteScript = path.posix.join(remoteDir, RECEIVE_SCRIPT_FILE);
-        const tempFiles = `${ZSshUtils.quotePath(remotePax)} ${ZSshUtils.quotePath(remoteScript)}`;
+        const remoteProbe = path.posix.join(remoteDir, PROBE_FILE);
+        const tempFiles = [remotePax, remoteScript, remoteProbe].map((file) => ZSshUtils.quotePath(file)).join(" ");
         const dirExistedBefore = (await ZSshUtils.pathExists(ssh, remoteDir)).exists;
         let extractionStarted = false;
 
@@ -224,43 +379,95 @@ export class SshOnlyDeployment {
                 return false;
             }
 
-            logger.info(`[SshOnlyDeployment] Step 2/6: Installing receive script ${remoteScript}`);
-            const scriptInstall = await execWithStdin(ssh, `cat > ${ZSshUtils.quotePath(remoteScript)}`, [RECEIVE_SCRIPT]);
-            if (scriptInstall.code !== 0) {
-                return fail(
-                    "Failed to create the upload helper script on the remote system.",
-                    `cat > ${remoteScript} RC=${scriptInstall.code}: ${scriptInstall.stderr}`,
-                    "upload"
-                );
-            }
             callbacks.onStatus?.(vscode.l10n.t("Uploading server..."));
-            logger.info(`[SshOnlyDeployment] Step 3/6: Uploading ${SERVER_PAX_FILE} as base64 to ${remotePax}`);
             const pax = await vscode.workspace.fs.readFile(vscode.Uri.file(localPaxPath));
             let lastPercent = 0;
-            const onRemoteProgress = (line: string): boolean => {
-                if (!line.startsWith(PROGRESS_PREFIX)) {
-                    return false;
-                }
-                const percent = Math.min(PERCENT, Math.floor((Number(line.slice(PROGRESS_PREFIX.length)) / pax.length) * PERCENT));
+            const onBytesDone = (bytes: number): void => {
+                const percent = Math.min(PERCENT, Math.floor((bytes / pax.length) * PERCENT));
                 if (percent > lastPercent) {
                     callbacks.onProgress?.(percent - lastPercent);
                     callbacks.onStatus?.(vscode.l10n.t({ message: "Uploading server... {0}%", args: [percent], comment: ["Upload percentage"] }));
                     lastPercent = percent;
                 }
+            };
+            const onRemoteProgress = (line: string): boolean => {
+                if (!line.startsWith(PROGRESS_PREFIX)) {
+                    return false;
+                }
+                onBytesDone(Number(line.slice(PROGRESS_PREFIX.length)));
                 return true;
             };
-            const upload = await execWithStdin(
-                ssh,
-                `sh ${ZSshUtils.quotePath(remoteScript)} ${ZSshUtils.quotePath(remotePax)} ${pax.length}`,
-                base64Chunks(pax),
-                onRemoteProgress
-            );
-            if (upload.code !== 0) {
-                return fail(
-                    "Failed to upload the server binary to the remote system.",
-                    `Upload ${SERVER_PAX_FILE} RC=${upload.code}: ${upload.stderr}`,
-                    "upload"
-                );
+
+            // Fastest first. Each method is probed with a known payload before use and the full upload is verified
+            // afterwards, so a missing or misbehaving utility only costs a fallback; awk (sh, awk, wc) is last resort.
+            logger.info("[SshOnlyDeployment] Step 2/6: Probing upload methods");
+            let raw: RawProbeResult = { cksum: false };
+            const methods: UploadMethod[] = [
+                {
+                    // Needs cksum: this path relies most on sshd converting the whole stream the way it converted the probe
+                    name: "raw bytes",
+                    prepare: async (): Promise<boolean> => {
+                        raw = await probeRaw(ssh, remoteProbe);
+                        return raw.receiver != null && raw.cksum;
+                    },
+                    command: () => `${raw.receiver} > ${ZSshUtils.quotePath(remotePax)}`,
+                    encode: rawChunks,
+                },
+                {
+                    name: "uudecode",
+                    prepare: () => probeUudecode(ssh, quotedDir, remoteProbe),
+                    command: () => `cd ${quotedDir} && rm -f ${SERVER_PAX_FILE} && uudecode`,
+                    encode: (data, onSent) => uuencodeBase64(data, SERVER_PAX_FILE, onSent),
+                },
+                {
+                    name: "awk",
+                    prepare: async () => (await execWithStdin(ssh, `cat > ${ZSshUtils.quotePath(remoteScript)}`, [RECEIVE_SCRIPT])).code === 0,
+                    command: () => `sh ${ZSshUtils.quotePath(remoteScript)} ${ZSshUtils.quotePath(remotePax)} ${pax.length}`,
+                    encode: (data) => base64Chunks(data),
+                    remoteProgress: true,
+                },
+            ];
+            const verifyUpload = async (): Promise<string | undefined> => {
+                if (raw.cksum) {
+                    const check = await ssh.execCommand(`cksum ${ZSshUtils.quotePath(remotePax)}`);
+                    const [crc, size] = check.stdout.trim().split(/\s+/);
+                    const expected = `${posixCksum(pax)} ${pax.length}`;
+                    return `${crc} ${size}` === expected ? undefined : `cksum mismatch: expected ${expected}, got ${crc} ${size}`;
+                }
+                const check = await ssh.execCommand(`wc -c < ${ZSshUtils.quotePath(remotePax)}`);
+                const size = Number(check.stdout.trim());
+                return size === pax.length ? undefined : `size mismatch: expected ${pax.length} bytes, got ${check.stdout.trim() || "none"}`;
+            };
+
+            const attempts: string[] = [];
+            let uploaded = false;
+            for (const method of methods) {
+                try {
+                    if (!(await method.prepare())) {
+                        attempts.push(`${method.name}: not available`);
+                        logger.info(`[SshOnlyDeployment] Upload method ${method.name} is not available on this system`);
+                        continue;
+                    }
+                    logger.info(`[SshOnlyDeployment] Step 3/6: Uploading ${SERVER_PAX_FILE} to ${remotePax} using ${method.name}`);
+                    const upload = await execWithStdin(
+                        ssh,
+                        method.command(),
+                        method.encode(pax, method.remoteProgress ? (): void => undefined : onBytesDone),
+                        method.remoteProgress ? onRemoteProgress : undefined
+                    );
+                    const problem = upload.code === 0 ? await verifyUpload() : `RC=${upload.code}: ${upload.stderr.trim()}`;
+                    if (problem == null) {
+                        uploaded = true;
+                        break;
+                    }
+                    attempts.push(`${method.name}: ${problem}`);
+                } catch (methodErr) {
+                    attempts.push(`${method.name}: ${(methodErr as Error).message}`);
+                }
+                logger.warn(`[SshOnlyDeployment] Upload using ${method.name} failed, trying the next method: ${attempts[attempts.length - 1]}`);
+            }
+            if (!uploaded) {
+                return fail("Failed to upload the server binary to the remote system.", attempts.join("\n"), "upload");
             }
             // Top the bar up to 100% since remote reports only arrive every ~64 KB
             callbacks.onProgress?.(PERCENT - lastPercent);
