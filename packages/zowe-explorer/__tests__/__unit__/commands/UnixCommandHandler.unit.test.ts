@@ -999,4 +999,62 @@ describe("UnixCommand Actions Unit Testing", () => {
             expect(createdSessCfg.hostKey).toBe("my-pinned-key");
         });
     });
+
+    describe("runCommand", () => {
+        it("wraps the command with the SSH_TTY redirect when isSshRequiredForProf is true", () => {
+            const actions = getUnixActions();
+            actions.isSshRequiredForProf = true;
+            const issueUnixCommand = vi.fn().mockResolvedValue("output");
+            vi.spyOn(ZoweExplorerApiRegister, "getCommandApi").mockReturnValue({ issueUnixCommand } as any);
+
+            actions.runCommand(profileOne, "ls -l");
+
+            expect(issueUnixCommand).toHaveBeenCalledWith(
+                `if [ -n "$SSH_TTY" ]; then $SHELL <$SSH_TTY >$SSH_TTY 2>$SSH_TTY | ls -l; else ls -l; fi`,
+                actions.sshCwd,
+                actions.sshSession
+            );
+        });
+
+        it("passes the command as-is when isSshRequiredForProf is false (extender profile)", () => {
+            const actions = getUnixActions();
+            actions.isSshRequiredForProf = false;
+            const issueUnixCommand = vi.fn().mockResolvedValue("output");
+            vi.spyOn(ZoweExplorerApiRegister, "getCommandApi").mockReturnValue({ issueUnixCommand } as any);
+
+            actions.runCommand(profileOne, "ls -l");
+
+            expect(issueUnixCommand).toHaveBeenCalledWith("ls -l", actions.sshCwd, actions.sshSession);
+        });
+
+        it("clears nodeProfile and sshProfile when useIntegratedTerminal is false", () => {
+            const actions = getUnixActions();
+            (actions as any).useIntegratedTerminal = false;
+            (actions as any).nodeProfile = profileOne;
+            actions.sshProfile = { name: "ssh", type: "ssh", message: "", failNotFound: false } as any;
+            actions.isSshRequiredForProf = false;
+            const issueUnixCommand = vi.fn().mockResolvedValue("output");
+            vi.spyOn(ZoweExplorerApiRegister, "getCommandApi").mockReturnValue({ issueUnixCommand } as any);
+
+            actions.runCommand(profileOne, "pwd");
+
+            expect((actions as any).nodeProfile).toBeUndefined();
+            expect(actions.sshProfile).toBeUndefined();
+        });
+
+        it("does not clear nodeProfile and sshProfile when useIntegratedTerminal is true", () => {
+            const actions = getUnixActions();
+            (actions as any).useIntegratedTerminal = true;
+            (actions as any).nodeProfile = profileOne;
+            actions.sshProfile = { name: "ssh", type: "ssh", message: "", failNotFound: false } as any;
+            actions.isSshRequiredForProf = false;
+            const issueUnixCommand = vi.fn().mockResolvedValue("output");
+            vi.spyOn(ZoweExplorerApiRegister, "getCommandApi").mockReturnValue({ issueUnixCommand } as any);
+
+            actions.runCommand(profileOne, "pwd");
+
+            expect((actions as any).nodeProfile).toBe(profileOne);
+            expect(actions.sshProfile).toBeDefined();
+        });
+    });
 });
