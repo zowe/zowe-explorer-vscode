@@ -176,6 +176,24 @@ describe("ProfileManagement unit tests", () => {
             expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.removeSession", mocks.mockDsSessionNode, null, false);
         });
     });
+    describe("unit tests around unknown auth selections", () => {
+        afterAll(() => {
+            vi.restoreAllMocks();
+        });
+        it("should still allow hiding the profile when getting the session fails (e.g., undefined host)", async () => {
+            const mocks = createGlobalMocks();
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockImplementation(() => {
+                throw new Error("Required parameter 'hostname' must be defined");
+            });
+            const warnSpy = vi.spyOn(ZoweLogger, "warn").mockImplementation(vi.fn());
+            mocks.mockDsSessionNode.getProfile = vi.fn().mockReturnValue(mocks.mockBasicAuthProfile);
+            mocks.mockResolveQp.mockResolvedValueOnce(ProfileManagement.hideProfileQpItems[ProfileManagement.AuthQpLabels.hide]);
+            mocks.mockResolveQp.mockResolvedValueOnce(Profiles["getPromptChangeForAllTreesOptions"]()[1]);
+            await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
+            expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Unable to determine authentication method"));
+            expect(mocks.commandSpy).toHaveBeenLastCalledWith("zowe.removeSession", mocks.mockDsSessionNode, null, false);
+        });
+    });
     describe("unit tests around token auth selections", () => {
         beforeEach(() => {
             vi.resetModules();

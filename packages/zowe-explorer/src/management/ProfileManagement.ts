@@ -41,7 +41,15 @@ export class ProfileManagement {
     public static async manageProfile(node: IZoweTreeNode): Promise<void> {
         const profile = node.getProfile();
         const allowedLoginMethod = Profiles.getInstance().getAllowedLoginMethod(profile);
-        const sessTypeFromProf = AuthHandler.sessTypeFromSession(AuthHandler.getSessFromProfile(profile));
+        let sessTypeFromProf: imperative.SessConstants.AUTH_TYPE_CHOICES;
+        try {
+            sessTypeFromProf = AuthHandler.sessTypeFromSession(AuthHandler.getSessFromProfile(profile));
+        } catch (err) {
+            // Session creation can fail for incomplete profiles (e.g., missing host); still allow actions like Edit and Hide
+            ZoweLogger.warn(
+                `Unable to determine authentication method for profile ${profile.name}: ${err instanceof Error ? err.message : String(err)}`
+            );
+        }
         const selected: vscode.QuickPickItem = await this.setupProfileManagementQp(sessTypeFromProf, node, allowedLoginMethod);
         await this.handleAuthSelection(selected, node, profile);
     }
