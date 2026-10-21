@@ -95,9 +95,7 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.editHistory",
-                mock: [
-                    { spy: vi.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders, test.value] },
-                ],
+                mock: [{ spy: vi.spyOn(SharedHistoryView, "SharedHistoryView"), arg: [test.context, test.value.providers, cmdProviders] }],
             },
             {
                 name: "zowe.displayReleaseNotes",
@@ -781,11 +779,11 @@ describe("Test src/shared/extension", () => {
             const dummyWatcher: any = {
                 subscribeUser: (_event, cb) => {
                     onVaultUpdatedCallback = cb;
-                    return { close: () => { } } as any;
+                    return { close: () => {} } as any;
                 },
                 subscribeShared: (_event, cb) => {
                     onCredentialManagerUpdatedCallback = cb;
-                    return { close: () => { } } as any;
+                    return { close: () => {} } as any;
                 },
             };
             const spyWatcher = vi.spyOn(imperative.EventOperator, "getWatcher").mockReturnValue(dummyWatcher);
