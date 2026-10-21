@@ -333,6 +333,7 @@ Both approaches return the same `IApiRegisterClient` instance that provides acce
 - **Explorer extender API** via `getExplorerExtenderApi()`:
   - [`ProfilesCache`](packages/zowe-explorer-api/src/profiles/ProfilesCache.ts): Access to loaded profiles and profile management
   - Profile operations: `reloadProfiles()`, `initForZowe()` for profile type registration
+  - SSO authentication: `ssoLogin()`, `ssoLogout()` for token-based login/logout against the API ML or a profile type's registered auth API
   - [`ErrorCorrelator`](packages/zowe-explorer-api/src/utils/ErrorCorrelator.ts): Contribute user-friendly error messages and tips
   - [`ILocalStorageAccess`](packages/zowe-explorer-api/src/extend/ILocalStorageAccess.ts): Access to Zowe Explorer's local storage
   - [`TableProviderRegistry`](packages/zowe-explorer-api/src/vscode/ui/utils/TableProviderRegistry.ts): Register custom table views

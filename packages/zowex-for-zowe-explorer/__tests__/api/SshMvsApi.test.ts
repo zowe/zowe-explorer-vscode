@@ -386,8 +386,8 @@ describe("SshMvsApi", () => {
             await mvsApi.getContents("USER.DATA", { stream } as any);
 
             expect(readDatasetSpy).toHaveBeenCalledWith({ dsname: "USER.DATA", encoding: undefined, stream: undefined });
-            // "Zm9v" is base64 for "foo"; verify the response was actually B64String.decode'd before writing.
-            expect(writeSpy).toHaveBeenCalledWith("foo");
+            // "Zm9v" is base64 for "foo"; verify raw bytes are written via decodeBytes.
+            expect(writeSpy).toHaveBeenCalledWith(Buffer.from("foo"));
             expect(endSpy).toHaveBeenCalled();
         });
 
@@ -1315,6 +1315,22 @@ describe("SshMvsApi", () => {
             const mvsApi = new SshMvsApi();
             const response = (mvsApi as any).buildZosFilesResponse({ success: false });
             expect(response.success).toEqual(false);
+        });
+    });
+
+    describe("resolveAlias", () => {
+        it("should call the resolveDsAlias", async () => {
+            const mvsApi = new SshMvsApi();
+            const aliasName = "MY.ALIAS";
+            const resolveAliasSpy = vi.fn().mockResolvedValue({ success: true });
+            vi.spyOn(mvsApi as any, "resolveAlias");
+            vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { resolveDsAlias: resolveAliasSpy } });
+
+            await mvsApi.resolveAlias(aliasName);
+
+            expect(resolveAliasSpy).toHaveBeenCalledWith({
+                dsname: aliasName,
+            });
         });
     });
 });

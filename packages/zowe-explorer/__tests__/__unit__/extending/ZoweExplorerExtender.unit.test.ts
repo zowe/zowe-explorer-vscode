@@ -29,6 +29,7 @@ import { USSTree } from "../../../src/trees/uss/USSTree";
 import { JobTree } from "../../../src/trees/job/JobTree";
 import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
 import { Profiles } from "../../../src/configuration/Profiles";
+import { Constants } from "../../../src/configuration/Constants";
 import { ZoweTreeProvider } from "../../../src/trees/ZoweTreeProvider";
 
 vi.mock("fs");
@@ -328,6 +329,65 @@ describe("ZoweExplorerExtender unit tests", () => {
         it("returns the singleton instance of LocalStorageAccess", () => {
             const blockMocks = createBlockMocks();
             expect(blockMocks.instTest.getLocalStorage()).toBe(LocalStorageAccess);
+        });
+    });
+
+    describe("ssoLogin/ssoLogout", () => {
+        let originalProfilesCache: Profiles;
+
+        beforeEach(() => {
+            originalProfilesCache = Constants.PROFILES_CACHE;
+        });
+
+        afterEach(() => {
+            Constants.PROFILES_CACHE = originalProfilesCache;
+        });
+
+        function mockProfilesCacheSso(blockMocks: { profiles: Profiles; instTest: ZoweExplorerExtender }) {
+            Constants.PROFILES_CACHE = blockMocks.profiles;
+            Object.defineProperty(blockMocks.profiles, "ssoLogin", { value: vi.fn().mockResolvedValue(true), configurable: true });
+            Object.defineProperty(blockMocks.profiles, "ssoLogout", { value: vi.fn().mockResolvedValue(true), configurable: true });
+            return {
+                ssoLoginSpy: vi.spyOn(blockMocks.profiles, "ssoLogin"),
+                ssoLogoutSpy: vi.spyOn(blockMocks.profiles, "ssoLogout"),
+            };
+        }
+
+        it("ssoLogin delegates to the profiles cache with a profile name", async () => {
+            const blockMocks = createBlockMocks();
+            const { ssoLoginSpy } = mockProfilesCacheSso(blockMocks);
+            await expect(blockMocks.instTest.ssoLogin("prof1")).resolves.toBe(true);
+            expect(ssoLoginSpy).toHaveBeenCalledWith(null, "prof1");
+        });
+
+        it("ssoLogin resolves the profile name from a loaded profile", async () => {
+            const blockMocks = createBlockMocks();
+            const { ssoLoginSpy } = mockProfilesCacheSso(blockMocks);
+            await expect(blockMocks.instTest.ssoLogin({ name: "prof1" } as imperative.IProfileLoaded)).resolves.toBe(true);
+            expect(ssoLoginSpy).toHaveBeenCalledWith(null, "prof1");
+        });
+
+        it("ssoLogout delegates to the profiles cache with a profile name", async () => {
+            const blockMocks = createBlockMocks();
+            const { ssoLogoutSpy } = mockProfilesCacheSso(blockMocks);
+            await expect(blockMocks.instTest.ssoLogout("prof1")).resolves.toBe(true);
+            expect(ssoLogoutSpy).toHaveBeenCalledWith(null, "prof1");
+        });
+
+        it("ssoLogout resolves the profile name from a loaded profile", async () => {
+            const blockMocks = createBlockMocks();
+            const { ssoLogoutSpy } = mockProfilesCacheSso(blockMocks);
+            await expect(blockMocks.instTest.ssoLogout({ name: "prof1" } as imperative.IProfileLoaded)).resolves.toBe(true);
+            expect(ssoLogoutSpy).toHaveBeenCalledWith(null, "prof1");
+        });
+
+        it("passes through a false result from the profiles cache", async () => {
+            const blockMocks = createBlockMocks();
+            mockProfilesCacheSso(blockMocks);
+            vi.spyOn(blockMocks.profiles, "ssoLogin").mockResolvedValue(false);
+            vi.spyOn(blockMocks.profiles, "ssoLogout").mockResolvedValue(false);
+            await expect(blockMocks.instTest.ssoLogin("prof1")).resolves.toBe(false);
+            await expect(blockMocks.instTest.ssoLogout("prof1")).resolves.toBe(false);
         });
     });
 

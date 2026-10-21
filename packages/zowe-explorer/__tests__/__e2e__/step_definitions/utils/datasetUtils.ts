@@ -118,6 +118,18 @@ export async function deleteDsOrMember(...nodePaths: string[]): Promise<void> {
     }
 }
 
+/**
+ * Lists a data set directory through the file system provider, which is the same request Zowe
+ * Explorer makes when a PDS node is expanded or refreshed.
+ *
+ * @param nodePath Path of the PDS within the `zowe-ds` file system, e.g. `/myProfile/MY.PDS`
+ */
+export async function readDsDirectory(nodePath: string): Promise<void> {
+    await browser.executeWorkbench(async (vscode, path: string) => {
+        await vscode.workspace.fs.readDirectory(vscode.Uri.from({ scheme: "zowe-ds", path }));
+    }, nodePath);
+}
+
 export async function refreshDsTree(): Promise<void> {
     await browser.executeWorkbench(async (vscode) => {
         await vscode.commands.executeCommand("zowe.ds.refreshAll");

@@ -215,7 +215,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             stream: options.file ? (): Stream.Writable => writeStream : undefined,
         });
         if (options.stream != null) {
-            options.stream.write(B64String.decode(response.data));
+            options.stream.write(B64String.decodeBytes(response.data));
             options.stream.end();
         }
         return this.buildZosFilesResponse({ etag: response.etag });
@@ -645,6 +645,11 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
         ).ds.deleteDataset({
             dsname: dataSetName,
         });
+        return this.buildZosFilesResponse(response);
+    }
+
+    public async resolveAlias(aliasName: string): Promise<zosfiles.IZosFilesResponse> {
+        const response = await (await this.client).ds.resolveDsAlias({ dsname: aliasName });
         return this.buildZosFilesResponse(response);
     }
 

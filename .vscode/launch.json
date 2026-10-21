@@ -75,7 +75,7 @@
     },
     {
       "type": "node",
-      "name": "Zowex Unit Tests (Vitest)",
+      "name": "Zo Unit Tests (Vitest)",
       "request": "launch",
       "runtimeArgs": ["--inspect-brk", "${workspaceFolder}/node_modules/vitest/vitest.mjs", "run"],
       "cwd": "${workspaceFolder}/packages/zowex-for-zowe-explorer",

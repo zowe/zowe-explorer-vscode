@@ -34,6 +34,7 @@ Steps to reproduce the behavior:
 
 - OS:
 - Zowe Explorer Version:
+- (Optional) Profile type (e.g. `zosmf`, `ssh`): 
 - (Optional) Zowe CLI Version:
 - (Optional) Do you have secure credentials enabled?
 - (Optional) Are you using a custom credential manager?

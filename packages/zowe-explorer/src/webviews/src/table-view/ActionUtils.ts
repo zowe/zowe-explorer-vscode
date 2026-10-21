@@ -50,6 +50,17 @@ export interface ActionState {
 export type EvaluableItem = Table.Action | Table.ContextMenuOption;
 
 /**
+ * Maps an action kind to the props of a `vscode-button`.
+ * The default (`primary`) needs no attribute; `icon` is a secondary button with a transparent background.
+ */
+export function getActionButtonProps(kind?: Table.ActionKind): { secondary: boolean; style?: Record<string, string> } {
+    return {
+        secondary: kind === "secondary" || kind === "icon",
+        style: kind === "icon" ? { "--vscode-button-secondaryBackground": "transparent" } : undefined,
+    };
+}
+
+/**
  * Gets the dynamic title for an action or context menu option if it has one
  * @param item The action or context menu option to get the title for
  * @param context The context data for evaluation

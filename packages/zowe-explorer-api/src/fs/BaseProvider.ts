@@ -30,6 +30,7 @@ export class BaseProvider {
     protected root: DirEntry;
     public openedUris: vscode.Uri[] = [];
     public onDocClosedEventDisposable: vscode.Disposable = null;
+    public encodingMap: Record<string, ZosEncoding> = {};
 
     protected constructor() {}
 
@@ -172,6 +173,18 @@ export class BaseProvider {
         entry.entries.clear();
         this.lookupParentDirectory(uri).entries.delete(entry.name);
         return true;
+    }
+
+    /**
+     * Silently removes a cached entry from its parent directory, forcing the next
+     * read to fetch fresh content from the mainframe. Does not fire a change event.
+     * @param uri the URI of the entry to remove from the cache
+     */
+    public invalidateCache(uri: vscode.Uri): void {
+        const parent = this.lookupParentDirectory(uri, true);
+        if (parent) {
+            parent.entries.delete(path.posix.basename(uri.path));
+        }
     }
 
     /**

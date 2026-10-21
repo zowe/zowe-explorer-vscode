@@ -10,11 +10,11 @@ The Zowe Remote SSH API for Zowe Explorer offers several features, enabling deve
 
 ## Usage
 
-To deploy an instance of the Zowe Remote SSH server, run the `Zowe Explorer: Connect to zowex server on host...` command from the command palette. Select an SSH profile from the list of profiles to start the deployment and connection process. Once complete, the SSH profile is added to the Zowe Explorer tree views.
+To deploy an instance of the Zowe Remote SSH server, run the `Zowe Explorer: Deploy SSH server on host and connect....` command from the command palette. Select an SSH profile from the list of profiles to start the deployment and connection process. Once complete, the SSH profile is added to the Zowe Explorer tree views.
 
-In the event that the server is unresponsive, you can restart the server with the `Zowe Explorer: Restart zowex server on host...` command.
+In the event that the server is unresponsive, you can restart the server with the `Zowe Explorer: Restart SSH server on host...` command.
 
-To remove the server instance entirely, run the `Zowe Explorer: Uninstall zowex server on host...` command.
+To remove the server instance entirely, run the `Zowe Explorer: Uninstall SSH server on host...` command.
 
 ## Development
 

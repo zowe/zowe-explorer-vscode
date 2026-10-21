@@ -26,6 +26,7 @@ export function createUSSTree(favoriteNodes: ZoweUSSNode[], sessionNodes: ZoweUS
     newTree.getSessions = vi.fn().mockReturnValue([]);
     newTree.getFavorites = vi.fn();
     newTree.getSearchHistory = vi.fn();
+    newTree.getSearchHistoryGroupLabel = vi.fn();
     newTree.removeSearchHistory = vi.fn();
     newTree.resetSearchHistory = vi.fn();
     newTree.resetFileHistory = vi.fn();

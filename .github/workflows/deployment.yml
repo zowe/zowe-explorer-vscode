@@ -46,7 +46,7 @@ jobs:
           node-version: lts/-1
 
       - name: Install pnpm and Lerna
-        run: npm install -g pnpm lerna@6
+        run: npm install -g pnpm@11 lerna@6
 
       - name: Build Source
         run: |

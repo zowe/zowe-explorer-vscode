@@ -12,7 +12,7 @@
 import type { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { Gui, imperative, ProfilesCache, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { type ClientOptions, type ExistingClientRequest, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { type ClientOptions, type ExistingClientRequest, SessionContext, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils } from "./ConfigUtils";
 import { deployWithProgress } from "./ServerDeployment";
 import { SshErrorHandler } from "./SshErrorHandler";
@@ -114,7 +114,7 @@ export class SshClientCache extends vscode.Disposable {
      * @param session - established SSH session used to detect the server
      * @returns true if a usable version of the SSH backend server is detected on the user's path
      */
-    public async detectServerOnPath(session: SshSession): Promise<string | undefined> {
+    public async detectServerOnPath(session: SshSession | SessionContext): Promise<string | undefined> {
         try {
             const pathServer = await ZSshUtils.detectServerOnPath(session);
             imperative.Logger.getAppLogger().debug("detectServerOnPath return value: %s", JSON.stringify(pathServer));
@@ -149,7 +149,11 @@ export class SshClientCache extends vscode.Disposable {
 
         if (!this.mClientSessionMap.has(clientId)) {
             using _lock = this.acquireProfileLock(clientId);
+            const statusBarMsg = Gui.setStatusBarMessage(
+                `$(sync~spin) ${opts.restart ? "Restarting" : "Starting"} Zowe Remote SSH server for profile "${profile.name as string}"...`
+            );
             const session = ZSshUtils.buildSession(profile.profile!);
+            using sessionHandle = new SessionContext(session);
 
             let serverPath = ConfigUtils.getServerPath(profile.profile) ?? ZSshClient.DEFAULT_SERVER_PATH;
 
@@ -192,68 +196,75 @@ export class SshClientCache extends vscode.Disposable {
             };
 
             try {
-                serverShouldDeploy = await launchServer();
-            } catch (err) {
-                if (err instanceof imperative.ImperativeError && err.errorCode === "ENOTFOUND") {
-                    serverNotFound = true;
-                    imperative.Logger.getAppLogger().info(`Server is missing, deploying to ${profile.name}`);
-                } else {
-                    throw err;
-                }
-            }
-            if (serverShouldDeploy) {
-                if (serverNotFound) {
-                    const onEnvPathServer = await this.detectServerOnPath(session);
-                    if (onEnvPathServer) {
-                        try {
-                            serverPath = onEnvPathServer;
-                            imperative.Logger.getAppLogger().info(`Launching the server found at the user's $PATH at ${onEnvPathServer}`);
-                            serverShouldDeploy = await launchServer();
-                        } catch (err) {
-                            imperative.Logger.getAppLogger().error(
-                                `Failed to launch server for profile ${profile.name} after detecting it on the user's $PATH:`,
-                                err
-                            );
-                            throw err;
-                        }
-                    }
-                }
-
-                if (serverShouldDeploy) {
-                    if (await ZSshUtils.lacksWriteAccess(session, serverPath)) {
-                        if (serverNotFound) {
-                            // the user has no usable instance of the SSH server so we should notify them
-                            const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, serverPath);
-                            imperative.Logger.getAppLogger().error(errMsg);
-                            throw new ImperativeError({ msg: errMsg });
-                        } else {
-                            // otherwise we were just trying to update and the user can use the old version
-                            imperative.Logger.getAppLogger().warn("Skipped deploy step as server path '%s' is not writeable by the user", serverPath);
-                        }
+                try {
+                    serverShouldDeploy = await launchServer();
+                } catch (err) {
+                    if (err instanceof imperative.ImperativeError && err.errorCode === "ENOTFOUND") {
+                        serverNotFound = true;
+                        imperative.Logger.getAppLogger().info(`Server is missing, deploying to ${profile.name}`);
                     } else {
-                        // The user appears to have write access
-                        await deployWithProgress(session, serverPath);
-                        newClient?.dispose();
-                        newClient = await this.buildClient(session, clientId, {
-                            serverPath,
-                            keepAliveInterval,
-                            numWorkers,
-                            requestTimeout,
-                            responseTimeout,
-                            requests: replayRequests,
-                            useNativeSsh,
-                        });
+                        throw err;
                     }
                 }
-            }
+                if (serverShouldDeploy) {
+                    if (serverNotFound) {
+                        const onEnvPathServer = await this.detectServerOnPath(sessionHandle);
+                        if (onEnvPathServer) {
+                            try {
+                                serverPath = onEnvPathServer;
+                                imperative.Logger.getAppLogger().info(`Launching the server found at the user's $PATH at ${onEnvPathServer}`);
+                                serverShouldDeploy = await launchServer();
+                            } catch (err) {
+                                imperative.Logger.getAppLogger().error(
+                                    `Failed to launch server for profile ${profile.name} after detecting it on the user's $PATH:`,
+                                    err
+                                );
+                                throw err;
+                            }
+                        }
+                    }
 
-            this.mClientSessionMap.set(clientId, {
-                client: newClient!,
-                profile: profile,
-                status: ServerStatus.UP,
-                startTime: Date.now(),
-                responseTimeoutMillis: responseTimeout * 1000,
-            });
+                    if (serverShouldDeploy) {
+                        if (await ZSshUtils.lacksWriteAccess(sessionHandle, serverPath)) {
+                            if (serverNotFound) {
+                                // the user has no usable instance of the SSH server so we should notify them
+                                const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, serverPath);
+                                imperative.Logger.getAppLogger().error(errMsg);
+                                throw new ImperativeError({ msg: errMsg });
+                            } else {
+                                // otherwise we were just trying to update and the user can use the old version
+                                imperative.Logger.getAppLogger().warn(
+                                    "Skipped deploy step as server path '%s' is not writeable by the user",
+                                    serverPath
+                                );
+                            }
+                        } else {
+                            // The user appears to have write access
+                            await deployWithProgress(sessionHandle, serverPath);
+                            newClient?.dispose();
+                            newClient = await this.buildClient(session, clientId, {
+                                serverPath,
+                                keepAliveInterval,
+                                numWorkers,
+                                requestTimeout,
+                                responseTimeout,
+                                requests: replayRequests,
+                                useNativeSsh,
+                            });
+                        }
+                    }
+                }
+
+                this.mClientSessionMap.set(clientId, {
+                    client: newClient!,
+                    profile: profile,
+                    status: ServerStatus.UP,
+                    startTime: Date.now(),
+                    responseTimeoutMillis: responseTimeout * 1000,
+                });
+            } finally {
+                statusBarMsg.dispose();
+            }
         }
 
         return this.mClientSessionMap.get(clientId)?.client as ZSshClient;
@@ -275,7 +286,7 @@ export class SshClientCache extends vscode.Disposable {
         try {
             // Reconnecting can take up to the server startup timeout, so surface progress
             // rather than leaving the user with no feedback after they click Reload
-            await Gui.withProgress(
+            const reconnectPromise = Gui.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,
                     title: `Reconnecting to Zowe Remote SSH for profile "${profile.name as string}"...`,
@@ -295,6 +306,11 @@ export class SshClientCache extends vscode.Disposable {
                     });
                 }
             );
+            Gui.setStatusBarMessage(
+                `$(sync~spin) ${clientSession != null ? "Restarting" : "Starting"} Zowe Remote SSH server for profile "${profile.name as string}"...`,
+                reconnectPromise
+            );
+            await reconnectPromise;
             Gui.showMessage(`Reconnected to Zowe Remote SSH for profile "${profile.name as string}".`);
         } catch (err) {
             if (clientSession) {

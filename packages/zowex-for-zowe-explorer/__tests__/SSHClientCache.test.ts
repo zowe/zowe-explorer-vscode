@@ -12,7 +12,7 @@
 import { Gui, imperative, ZoweExplorerApiType, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
-import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { SessionContext, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { SshClientCache } from "../src/SshClientCache";
 import { deployWithProgress } from "../src/ServerDeployment";
 import { ConfigUtils } from "../src/ConfigUtils";
@@ -34,6 +34,7 @@ vi.mock("@zowe/zowe-explorer-api", () => {
         Gui: {
             withProgress: vi.fn(async (_opts: unknown, task: (progress: unknown) => Promise<unknown>) => task({ report: vi.fn() })),
             showMessage: vi.fn(),
+            setStatusBarMessage: vi.fn(() => ({ dispose: vi.fn() })),
         },
         ZoweExplorerApiType: {
             All: "all",
@@ -80,6 +81,10 @@ vi.mock("@zowe/zowe-explorer-api", () => {
 
 vi.mock("@zowe/zowex-for-zowe-sdk", () => {
     return {
+        SessionContext: class {
+            public constructor(public readonly session: unknown) {}
+            public [Symbol.dispose](): void {}
+        },
         ZSshClient: {
             create: vi.fn(),
         },
@@ -250,6 +255,37 @@ describe("SshClientCache", () => {
             expect(map.has(clientId)).toBe(true);
         });
 
+        it("should show a status bar spinner while connecting a new session and always dispose it", async () => {
+            const disposeSpy = vi.fn();
+            vi.mocked(Gui.setStatusBarMessage).mockReturnValue({ dispose: disposeSpy } as any);
+
+            await cache.connect(mockProfile);
+
+            expect(Gui.setStatusBarMessage).toHaveBeenCalledWith(expect.stringContaining("Starting Zowe Remote SSH server"));
+            expect(disposeSpy).toHaveBeenCalled();
+        });
+
+        it("should dispose the status bar spinner even when connect throws an error", async () => {
+            const disposeSpy = vi.fn();
+            vi.mocked(Gui.setStatusBarMessage).mockReturnValue({ dispose: disposeSpy } as any);
+            vi.mocked(ZSshClient.create).mockRejectedValueOnce(new Error("connection failed"));
+
+            await expect(cache.connect(mockProfile)).rejects.toThrow("connection failed");
+
+            expect(disposeSpy).toHaveBeenCalled();
+        });
+
+        it("should not show a status bar spinner when reusing a cached session", async () => {
+            // First connect — populates the cache
+            await cache.connect(mockProfile);
+            vi.mocked(Gui.setStatusBarMessage).mockClear();
+
+            // Second connect — cache hit, no new session built
+            await cache.connect(mockProfile);
+
+            expect(Gui.setStatusBarMessage).not.toHaveBeenCalled();
+        });
+
         it("should restart the client if restart flag is true", async () => {
             const endSpy = vi.spyOn(cache, "end");
 
@@ -272,6 +308,22 @@ describe("SshClientCache", () => {
 
             expect(deployWithProgress).toHaveBeenCalledWith(expect.anything(), "/mock/server/path");
             expect(ZSshClient.create).toHaveBeenCalledTimes(2);
+        });
+
+        it("shares one utility connection scope across detection, permission check, and deployment", async () => {
+            vi.mocked(ZSshClient.create)
+                .mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }))
+                .mockResolvedValueOnce({ dispose: vi.fn() } as any);
+            const detectSpy = vi.spyOn(cache, "detectServerOnPath").mockResolvedValue(undefined);
+            const disposeSpy = vi.spyOn(SessionContext.prototype, Symbol.dispose);
+
+            await cache.connect(mockProfile);
+
+            const context = detectSpy.mock.calls[0][0];
+            expect(context).toBeInstanceOf(SessionContext);
+            expect(ZSshUtils.lacksWriteAccess).toHaveBeenCalledWith(context, "/mock/server/path");
+            expect(deployWithProgress).toHaveBeenCalledWith(context, "/mock/server/path");
+            expect(disposeSpy).toHaveBeenCalledTimes(1);
         });
 
         it("should throw an error if the current one is missing (ENOTFOUND) but the user does not have write permission", async () => {
@@ -571,6 +623,32 @@ describe("SshClientCache", () => {
                 expect.any(Function)
             );
             expect(Gui.showMessage).toHaveBeenCalledWith(expect.stringContaining("Reconnected"));
+        });
+
+        it("should show a status bar spinner while reconnecting", async () => {
+            vi.spyOn(cache, "connect").mockResolvedValue({} as any);
+            vi.mocked(Gui.setStatusBarMessage).mockReturnValue({ dispose: vi.fn() } as any);
+
+            await (cache as any).reloadClient(mockProfile);
+
+            expect(Gui.setStatusBarMessage).toHaveBeenCalledWith(
+                expect.stringContaining("Restarting Zowe Remote SSH server"),
+                expect.anything() // the reconnectPromise thenable — VS Code auto-disposes when it settles
+            );
+        });
+
+        it("should show the status bar spinner but not dispose it manually when reconnecting fails", async () => {
+            vi.spyOn(cache, "connect").mockRejectedValue(new Error("still down"));
+            const disposeSpy = vi.fn();
+            vi.mocked(Gui.setStatusBarMessage).mockReturnValue({ dispose: disposeSpy } as any);
+
+            await expect((cache as any).reloadClient(mockProfile)).rejects.toThrow("still down");
+
+            // The spinner is shown immediately (before the await), so it is always created.
+            // VS Code auto-dismisses it when the hideAfterTimeout promise rejects; dispose() is
+            // only called explicitly on the success path.
+            expect(Gui.setStatusBarMessage).toHaveBeenCalledWith(expect.stringContaining("Restarting Zowe Remote SSH server"), expect.anything());
+            expect(disposeSpy).not.toHaveBeenCalled();
         });
 
         it("should not report success when reconnecting fails", async () => {

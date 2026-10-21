@@ -94,6 +94,8 @@ export class Constants {
     public static readonly SETTINGS_ZOSMF_QUEUE_TIMEOUT = "zowe.settings.zosmfRequestQueueTimeout";
     public static readonly LOGGER_SETTINGS = "zowe.logger";
     public static readonly SETTINGS_OVERRIDE_WITH_ENV_VAR = "zowe.settings.overrideWithEnvironmentVariables";
+    public static readonly SETTINGS_HISTORY_GROUP_BY_HOST = "zowe.settings.historyGroupByHost";
+    public static readonly SETTINGS_MAX_SEARCH_HISTORY = "zowe.settings.maxSearchHistory";
     public static EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
     public static readonly ZOWE_CLI_SCM = "@zowe/cli";
     public static readonly MAX_DATASET_LENGTH = 44;
@@ -108,7 +110,7 @@ export class Constants {
     public static readonly WORKSPACE_UTIL_MAX_EMPTY_WINDOWS_IN_THE_ROW = 3;
     public static readonly WORKSPACE_UTIL_FILE_SAVE_INTERVAL = 200;
     public static readonly WORKSPACE_UTIL_FILE_SAVE_MAX_ITERATION_COUNT = 25;
-    public static readonly SHARED_HISTORY_PANEL_TITLE = vscode.l10n.t("Edit History");
+    public static readonly SHARED_HISTORY_PANEL_TITLE = vscode.l10n.t("Manage Saved Data");
     public static readonly RELEASE_NOTES_PANEL_TITLE = vscode.l10n.t("Release Notes");
     public static readonly SET_JOB_SPOOL_COMMAND = "command:zowe.jobs.setJobSpool";
     public static configurationDictionary: { [k: string]: string } = {

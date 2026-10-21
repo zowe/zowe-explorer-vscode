@@ -59,12 +59,7 @@ export class AuthUtils {
      * @throws {AuthCancelledError} When the user cancels the authentication prompt
      */
     public static async handleProfileAuthOnError(err: Error, profile: imperative.IProfileLoaded): Promise<void> {
-        if (
-            (err instanceof imperative.ImperativeError &&
-                (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
-                    err.message.includes("All configured authentication methods failed"))) ||
-            err.message.includes("HTTP(S) status 401")
-        ) {
+        if (AuthUtils.isAuthError(err)) {
             // In the case of an authentication error, find a more user-friendly error message if available.
             const errorCorrelation = ErrorCorrelator.getInstance().correlateError(ZoweExplorerApiType.All, err, {
                 templateArgs: {
@@ -72,14 +67,10 @@ export class AuthUtils {
                 },
             });
 
-            const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
             const authOpts: AuthPromptParams = {
                 authMethods: Constants.PROFILES_CACHE,
                 imperativeError: err as unknown as imperative.ImperativeError,
-                isUsingTokenAuth:
-                    sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
-                    (await Constants.PROFILES_CACHE.profileHasSecureToken(profile)) ||
-                    sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
+                isUsingTokenAuth: await AuthUtils.profileUsesTokenAuth(profile),
                 errorCorrelation,
                 throwErrorOnCancel: true,
             };
@@ -91,10 +82,53 @@ export class AuthUtils {
         }
     }
 
+    /**
+     * Whether the profile authenticates with a token, either through the session built for the profile or
+     * through a token stored in the secure vault.
+     */
+    public static async profileUsesTokenAuth(profile: imperative.IProfileLoaded): Promise<boolean> {
+        const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
+        return (
+            sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
+            sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER ||
+            (await Constants.PROFILES_CACHE.profileHasSecureToken(profile))
+        );
+    }
+
+    /**
+     * Prompts the user to authenticate when a profile has no credentials available for a request, such as
+     * after logging out of the authentication service. No request is sent while credentials are missing, so
+     * there is no failed response for {@link handleProfileAuthOnError} to react to and the authentication
+     * flow has to start here instead.
+     *
+     * @param profile {imperative.IProfileLoaded} The profile that the request would have been sent with
+     * @throws {AuthCancelledError} When the user cancels the authentication prompt
+     */
+    public static async promptForMissingCredentials(profile: imperative.IProfileLoaded): Promise<void> {
+        const usesTokenAuth = await AuthUtils.profileUsesTokenAuth(profile);
+        // These messages are matched by the error correlator to reuse the summary shown for an expired
+        // token, so they are deliberately not localized.
+        const details = usesTokenAuth
+            ? `Token value is missing for profile ${profile.name}`
+            : `No credentials are available for profile ${profile.name}`;
+        await AuthUtils.handleProfileAuthOnError(
+            new imperative.ImperativeError({
+                msg: details,
+                // AuthHandler only offers to log in to the authentication service when the error carries
+                // additional details alongside the token-based authentication flag.
+                additionalDetails: details,
+                errorCode: imperative.RestConstants.HTTP_STATUS_401.toString(),
+            }),
+            profile
+        );
+    }
+
     public static async retryRequest(profile: imperative.IProfileLoaded, callback: () => Promise<void>): Promise<void> {
         const executeWithRetries = async (): Promise<void> => {
-            // eslint-disable-next-line no-constant-condition
-            while (true) {
+            let attempts = 0;
+            let lastError: unknown;
+            while (attempts < 3) {
+                attempts++;
                 try {
                     await AuthHandler.waitForUnlock(profile);
                     AuthUtils.ensureAuthNotCancelled(profile);
@@ -102,22 +136,15 @@ export class AuthUtils {
                     AuthHandler.disableSequentialRequests(profile);
                     return callbackValue;
                 } catch (err) {
+                    lastError = err;
                     await handleError(err, (error) => {
                         ZoweLogger.error(error.message);
                     });
-                    if (
-                        (err instanceof imperative.ImperativeError &&
-                            (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
-                                err.message.includes("All configured authentication methods failed"))) ||
-                        err.message.includes("HTTP(S) status 401")
-                    ) {
+                    if (AuthUtils.isAuthError(err)) {
                         if (profile) {
                             const authPromptLock = AuthHandler.authPromptLocks.get(profile.name);
                             if (authPromptLock?.isLocked()) {
-                                await authPromptLock.waitForUnlock();
-                                if (AuthHandler.isProfileLocked(profile)) {
-                                    throw vscode.FileSystemError.Unavailable();
-                                }
+                                await AuthHandler.waitForAuthFlow(profile);
                                 continue;
                             }
                             await this.handleProfileAuthOnError(err, profile);
@@ -127,6 +154,8 @@ export class AuthUtils {
                     }
                 }
             }
+
+            throw lastError;
         };
 
         return AuthHandler.runSequentialIfEnabled(profile, executeWithRetries);
@@ -163,19 +192,11 @@ export class AuthUtils {
         });
         if (typeof errorDetails !== "string" && (errorDetails as imperative.ImperativeError)?.mDetails !== undefined) {
             const imperativeError: imperative.ImperativeError = errorDetails as imperative.ImperativeError;
-            const httpErrorCode = Number(imperativeError.mDetails.errorCode);
             // open config file for missing hostname error
             if (imperativeError.toString().includes("hostname") && !imperativeError.toString().includes("protocol")) {
                 await AuthUtils.openConfigForMissingHostname(profile);
                 return false;
-            } else if (
-                profile != null &&
-                (httpErrorCode === imperative.RestConstants.HTTP_STATUS_401 ||
-                    imperativeError.message.includes("All configured authentication methods failed"))
-            ) {
-                if (!AuthHandler.isProfileLocked(profile)) {
-                    await AuthHandler.lockProfile(profile);
-                }
+            } else if (profile != null && AuthUtils.isAuthError(imperativeError)) {
                 const addDet = imperativeError.mDetails.additionalDetails;
                 if (addDet?.includes("Auth order:") && addDet?.includes("Auth type:") && addDet?.includes("Available creds:")) {
                     const additionalDetails = [addDet.split("\n")[0]];
@@ -204,7 +225,8 @@ export class AuthUtils {
                 }
 
                 const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
-                return await AuthHandler.promptForAuthentication(profile, {
+                AuthHandler.enableSequentialRequests(profile);
+                const stillLocked = await AuthHandler.getOrCreateAuthFlow(profile, {
                     authMethods: Constants.PROFILES_CACHE,
                     imperativeError,
                     isUsingTokenAuth:
@@ -212,6 +234,7 @@ export class AuthUtils {
                         sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
                     errorCorrelation,
                 });
+                return !stillLocked;
             }
         }
         if (errorDetails.toString().includes("Could not find profile")) {
@@ -246,6 +269,21 @@ export class AuthUtils {
         return false;
     }
 
+    /**
+     * Builds a tooltip for a favorited node, keeping the profile/type keys and ordering in one place.
+     * @param profileName The profile name to display
+     * @param profileType The profile type to display
+     * @param extra An optional additional line to append (e.g. pattern or path)
+     * @returns The formatted tooltip string
+     */
+    public static buildFavoriteTooltip(profileName: string, profileType: string, extra?: string): string {
+        const toolTipList: string[] = [`${vscode.l10n.t("Profile: ")}${profileName}`, `${vscode.l10n.t("Profile Type: ")}${profileType}`];
+        if (extra) {
+            toolTipList.push(extra);
+        }
+        return toolTipList.join("\n");
+    }
+
     public static updateNodeToolTip(sessionNode: IZoweTreeNode, profile: imperative.IProfileLoaded): void {
         const iSessFromProf = AuthHandler.getSessFromProfile(profile).ISession;
         imperative.AuthOrder.addCredsToSession(iSessFromProf, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
@@ -253,6 +291,7 @@ export class AuthUtils {
         let usingBasicAuth: boolean = false;
         let usingTokenAuth: boolean = false;
         let usingCertAuth: boolean = false;
+        let usingSshKey: boolean = false;
         switch (iSessFromProf.type) {
             case imperative.SessConstants.AUTH_TYPE_BASIC:
                 usingBasicAuth = true;
@@ -265,6 +304,14 @@ export class AuthUtils {
                 usingCertAuth = true;
                 break;
         }
+
+        if (profile.type === "ssh") {
+            if (profile.profile.privateKey) {
+                usingBasicAuth = false;
+                usingSshKey = true;
+            }
+        }
+
         const tooltipValue: string | undefined =
             sessionNode.tooltip instanceof vscode.MarkdownString ? sessionNode.tooltip.value : sessionNode.tooltip;
         const toolTipList = tooltipValue ? tooltipValue.split("\n") : [];
@@ -283,6 +330,11 @@ export class AuthUtils {
                 }
                 case Boolean(usingCertAuth): {
                     toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Certificate Authentication")}`);
+                    break;
+                }
+                case Boolean(usingSshKey): {
+                    toolTipList.push(`${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("SSH Key")}`);
+                    toolTipList.push(`${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
                     break;
                 }
                 default: {
@@ -310,6 +362,16 @@ export class AuthUtils {
                     toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Certificate Authentication")}`;
                     break;
                 }
+                case Boolean(usingSshKey): {
+                    toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("SSH Key")}`;
+                    const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
+                    if (userIDIndex !== -1) {
+                        toolTipList[userIDIndex] = `${vscode.l10n.t("User: ")}${profile.profile.user as string}`;
+                    } else {
+                        toolTipList.splice(authMethodIndex + 1, 0, `${vscode.l10n.t("User: ")}${profile.profile.user as string}`);
+                    }
+                    break;
+                }
                 default: {
                     toolTipList[authMethodIndex] = `${vscode.l10n.t("Auth Method: ")}${vscode.l10n.t("Unknown")}`;
                     const patternIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Pattern: ")));
@@ -330,7 +392,7 @@ export class AuthUtils {
                     }
                 }
             }
-            if (!usingBasicAuth) {
+            if (!usingBasicAuth && !usingSshKey) {
                 const userIDIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("User: ")));
                 if (userIDIndex !== -1) {
                     toolTipList.splice(userIDIndex, 1);
@@ -338,7 +400,7 @@ export class AuthUtils {
             }
         }
 
-        if (usingTokenAuth || usingBasicAuth || usingCertAuth) {
+        if (usingTokenAuth || usingBasicAuth || usingCertAuth || usingSshKey) {
             switch (true) {
                 case Boolean(sessionNode.fullPath): {
                     const pathIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Path: ")));
@@ -450,5 +512,14 @@ export class AuthUtils {
         const baseProps = await Constants.PROFILES_CACHE.getPropsForProfile(baseProfile?.name, false);
         // eslint-disable-next-line deprecation/deprecation
         return AuthHandler.isUsingTokenAuth(props, baseProps);
+    }
+
+    public static isAuthError(err: unknown): boolean {
+        return (
+            (err instanceof imperative.ImperativeError &&
+                (Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_401 ||
+                    err.message.includes("All configured authentication methods failed"))) ||
+            (err instanceof Error && err.message.includes("HTTP(S) status 401"))
+        );
     }
 }
