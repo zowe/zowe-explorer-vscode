@@ -306,7 +306,7 @@ describe("ZoweJobNode unit tests - Function onDidConfiguration", () => {
     it("Tests that onDidConfiguration is executed successfully", async () => {
         const globalMocks = await createGlobalMocks();
 
-        const Event = vi.fn().mockImplementation(() => {
+        const Event = vi.fn().mockImplementation(function () {
             return {
                 affectsConfiguration: globalMocks.mockAffectsConfig,
             };
