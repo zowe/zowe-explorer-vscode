@@ -691,6 +691,105 @@ describe("UnixCommand Actions Unit Testing", () => {
         expect(showInformationMessage.mock.calls.length).toBe(0);
     });
 
+    describe("host key verification (private methods)", () => {
+        const keyInfo = { fingerprint: "SHA256:presented", key: "presented-key-b64", changed: false };
+        const sshProfile = { name: "ssh", type: "ssh", profile: { host: "host.com", port: 22 } };
+
+        const setup = (autoStore = true) => {
+            const actions = getUnixActions();
+            const session = { ISshSession: { hostname: "host.com" } } as any;
+            const updateProperty = vi.fn().mockResolvedValue(undefined);
+            actions.sshProfile = sshProfile as any;
+            (actions.profileInstance as any).getProfileInfo = vi.fn().mockResolvedValue({
+                getTeamConfig: () => ({ properties: { autoStore } }),
+                updateProperty,
+            });
+            (actions as any).attachHostKeyVerifier(session);
+            return { session, updateProperty };
+        };
+
+        beforeEach(() => {
+            vi.spyOn(ZoweLogger, "warn").mockImplementation(() => undefined);
+            vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+            vi.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+        });
+
+        it("should trust an unknown key the user accepts and save it to the selected ssh profile", async () => {
+            const { session, updateProperty } = setup();
+            vi.spyOn(Gui, "showQuickPick").mockResolvedValue("Trust and continue" as any);
+
+            const trusted = await session.hostKeyVerifier(keyInfo);
+
+            expect(trusted).toBe(true);
+            expect(session.ISshSession.hostKey).toBe("presented-key-b64");
+            expect(updateProperty).toHaveBeenCalledWith({
+                profileName: "ssh",
+                profileType: "ssh",
+                property: "hostKey",
+                value: "presented-key-b64",
+                setSecure: false,
+            });
+        });
+
+        it("should reject an unknown key the user declines and save nothing", async () => {
+            const { session, updateProperty } = setup();
+            vi.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined as any);
+
+            const trusted = await session.hostKeyVerifier(keyInfo);
+
+            expect(trusted).toBe(false);
+            expect(session.ISshSession.hostKey).toBeUndefined();
+            expect(updateProperty).not.toHaveBeenCalled();
+        });
+
+        it("should refuse a changed key without prompting or saving", async () => {
+            const { session, updateProperty } = setup();
+            const quickPick = vi.spyOn(Gui, "showQuickPick");
+
+            const trusted = await session.hostKeyVerifier({ ...keyInfo, changed: true, pinnedFingerprint: "SHA256:saved" });
+
+            expect(trusted).toBe(false);
+            expect(quickPick).not.toHaveBeenCalled();
+            expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining("does not match the host key saved in the ssh profile"));
+            expect(updateProperty).not.toHaveBeenCalled();
+        });
+
+        it("should still trust the key for this connection but warn when autoStore is disabled", async () => {
+            const { session, updateProperty } = setup(false);
+            vi.spyOn(Gui, "showQuickPick").mockResolvedValue("Trust and continue" as any);
+
+            const trusted = await session.hostKeyVerifier(keyInfo);
+
+            expect(trusted).toBe(true);
+            expect(updateProperty).not.toHaveBeenCalled();
+            expect(Gui.warningMessage).toHaveBeenCalledWith(expect.stringContaining("autoStore is disabled"));
+        });
+
+        it("should still trust the key for this connection but warn when saving it fails", async () => {
+            const { session, updateProperty } = setup();
+            updateProperty.mockRejectedValue(new Error("cannot write config"));
+            vi.spyOn(Gui, "showQuickPick").mockResolvedValue("Trust and continue" as any);
+
+            const trusted = await session.hostKeyVerifier(keyInfo);
+
+            expect(trusted).toBe(true);
+            expect(Gui.warningMessage).toHaveBeenCalledWith(expect.stringContaining("Could not save the host key"));
+        });
+
+        it("should fail gracefully and log warnings if getProfileInfo throws inside saveHostKey", async () => {
+            const { session } = setup();
+            const actions = getUnixActions();
+            actions.sshProfile = sshProfile as any;
+            (actions.profileInstance as any).getProfileInfo = vi.fn().mockRejectedValue(new Error("Database offline"));
+            vi.spyOn(Gui, "showQuickPick").mockResolvedValue("Trust and continue" as any);
+
+            const trusted = await session.hostKeyVerifier(keyInfo);
+
+            expect(trusted).toBe(true);
+            expect(Gui.warningMessage).toHaveBeenCalledWith(expect.stringContaining("Could not save the host key"));
+        });
+    });
+
     describe("validateSshConnection (private method)", () => {
         it("should return 'inactive' when Shell.isConnectionValid returns false", async () => {
             const actions = getUnixActions();
@@ -722,6 +821,34 @@ describe("UnixCommand Actions Unit Testing", () => {
 
             expect(result).toBe("active");
             expect(Shell.isConnectionValid).toHaveBeenCalledWith(sampleSshSession);
+        });
+
+        it("should return 'inactive' when Shell.isConnectionValid rejects because the host key was refused", async () => {
+            const actions = getUnixActions();
+            const sampleSshSession = { ISshSession: { hostname: "host.com", privateKey: "someKey" } };
+            const sampleSshProfile = { profile: { host: "host.com" }, type: "ssh" };
+
+            actions.sshSession = sampleSshSession as any;
+            actions.sshProfile = sampleSshProfile as any;
+
+            (Shell.isConnectionValid as Mock).mockRejectedValue(new Error("Host key verification failed"));
+
+            const result = await (actions as any).validateSshConnection(sampleSshProfile, "ssh");
+
+            expect(result).toBe("inactive");
+        });
+
+        it("should rethrow the error when Shell.isConnectionValid rejects with other errors", async () => {
+            const actions = getUnixActions();
+            const sampleSshSession = { ISshSession: { hostname: "host.com", privateKey: "someKey" } };
+            const sampleSshProfile = { profile: { host: "host.com" }, type: "ssh" };
+
+            actions.sshSession = sampleSshSession as any;
+            actions.sshProfile = sampleSshProfile as any;
+
+            (Shell.isConnectionValid as Mock).mockRejectedValue(new Error("Connection timeout"));
+
+            await expect((actions as any).validateSshConnection(sampleSshProfile, "ssh")).rejects.toThrow("Connection timeout");
         });
 
         it("should return 'unverified' when profile type is not ssh", async () => {
@@ -804,6 +931,72 @@ describe("UnixCommand Actions Unit Testing", () => {
             expect(result).toBe("active");
             expect(sampleSshSession.ISshSession.user).toBe("newUser");
             expect(Shell.isConnectionValid).toHaveBeenCalledWith(sampleSshSession);
+        });
+    });
+
+    describe("getSshCmdArgs and issueUnixCommand integrations", () => {
+        it("should pass the profile hostKey to the session configuration and call attachHostKeyVerifier", async () => {
+            const actions = getUnixActions();
+            const spyAttach = vi.spyOn(actions as any, "attachHostKeyVerifier");
+            const profileWithHostKey = {
+                name: "ssh-profile",
+                type: "ssh",
+                profile: {
+                    host: "pinnedhost.com",
+                    port: 22,
+                    user: "pinneduser",
+                    hostKey: "my-pinned-key",
+                },
+                message: "",
+                failNotFound: false,
+            };
+
+            vi.spyOn(actions.profileInstance, "fetchAllProfilesByType").mockResolvedValue([profileWithHostKey]);
+            vi.spyOn(actions, "selectServiceProfile").mockResolvedValue(profileWithHostKey);
+            vi.spyOn(actions.profileInstance, "profileValidationHelper").mockResolvedValue("active");
+
+            showQuickPick.mockResolvedValue("ssh-profile");
+            showInputBox.mockResolvedValue("/u/path");
+
+            let createdSessCfg: any = null;
+            SshSession.createSshSessCfgFromArgs = vi.fn((args: any) => {
+                createdSessCfg = args;
+                return { hostKey: args.hostKey };
+            });
+
+            const originalGetInstance = ZoweExplorerApiRegister.getInstance;
+            Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
+                value: vi.fn(() => ({
+                    getCommandApi: vi.fn(() => ({
+                        sshProfileRequired: vi.fn().mockReturnValue(true),
+                        issueUnixCommand: vi.fn().mockReturnValue(Promise.resolve("")),
+                    })),
+                })),
+                configurable: true,
+            });
+
+            // Re-mock getCommandApi directly on the register mock
+            Object.defineProperty(ZoweExplorerApiRegister, "getCommandApi", {
+                value: vi.fn(() => ({
+                    sshProfileRequired: vi.fn().mockReturnValue(true),
+                    issueUnixCommand: vi.fn().mockReturnValue(Promise.resolve("")),
+                })),
+                configurable: true,
+            });
+
+            // Set nodeProfile so that selection steps are bypassed if appropriate, or ensure it uses a node mock
+            (actions as any).nodeProfile = profileOne;
+
+            await actions.issueUnixCommand();
+
+            Object.defineProperty(ZoweExplorerApiRegister, "getInstance", {
+                value: originalGetInstance,
+                configurable: true,
+            });
+
+            expect(spyAttach).toHaveBeenCalled();
+            expect(createdSessCfg).not.toBeNull();
+            expect(createdSessCfg.hostKey).toBe("my-pinned-key");
         });
     });
 });

@@ -9,6 +9,9 @@
  *
  */
 
+import "@vscode-elements/elements/dist/vscode-button/index.js";
+import "@vscode-elements/elements/dist/vscode-divider/index.js";
+import "@vscode-elements/elements/dist/vscode-textarea/index.js";
 import { render } from "preact";
 import { App } from "./App";
 
