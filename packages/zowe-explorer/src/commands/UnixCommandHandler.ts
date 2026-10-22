@@ -344,10 +344,11 @@ export class UnixCommandHandler extends ZoweCommandProvider {
         if (!this.useIntegratedTerminal) {
             this.nodeProfile = this.sshProfile = undefined;
         }
+        const commandApi = ZoweExplorerApiRegister.getCommandApi(profile);
         // Only wrap the command with the SSH_TTY redirect for SSH-based profiles.
-        const cmdToIssue = this.isSshRequiredForProf
+        const cmdToIssue = commandApi.sshProfileRequired?.()
             ? `if [ -n "$SSH_TTY" ]; then $SHELL <$SSH_TTY >$SSH_TTY 2>$SSH_TTY | ${command}; else ${command}; fi`
             : command;
-        return ZoweExplorerApiRegister.getCommandApi(profile).issueUnixCommand(cmdToIssue, this.sshCwd, this.sshSession);
+        return commandApi.issueUnixCommand(cmdToIssue, this.sshCwd, this.sshSession);
     }
 }

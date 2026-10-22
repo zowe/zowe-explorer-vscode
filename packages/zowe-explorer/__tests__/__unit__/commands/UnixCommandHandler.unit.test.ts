@@ -1001,11 +1001,13 @@ describe("UnixCommand Actions Unit Testing", () => {
     });
 
     describe("runCommand", () => {
-        it("wraps the command with the SSH_TTY redirect when isSshRequiredForProf is true", () => {
+        it("wraps the command with the SSH_TTY redirect when the profile's command API requires SSH", () => {
             const actions = getUnixActions();
-            actions.isSshRequiredForProf = true;
             const issueUnixCommand = vi.fn().mockResolvedValue("output");
-            vi.spyOn(ZoweExplorerApiRegister, "getCommandApi").mockReturnValue({ issueUnixCommand } as any);
+            vi.spyOn(ZoweExplorerApiRegister, "getCommandApi").mockReturnValue({
+                sshProfileRequired: vi.fn().mockReturnValue(true),
+                issueUnixCommand,
+            } as any);
 
             actions.runCommand(profileOne, "ls -l");
 
@@ -1016,15 +1018,45 @@ describe("UnixCommand Actions Unit Testing", () => {
             );
         });
 
-        it("passes the command as-is when isSshRequiredForProf is false (extender profile)", () => {
+        it("passes the command as-is when the profile's command API does not require SSH (extender profile)", () => {
             const actions = getUnixActions();
-            actions.isSshRequiredForProf = false;
+            const issueUnixCommand = vi.fn().mockResolvedValue("output");
+            vi.spyOn(ZoweExplorerApiRegister, "getCommandApi").mockReturnValue({
+                sshProfileRequired: vi.fn().mockReturnValue(false),
+                issueUnixCommand,
+            } as any);
+
+            actions.runCommand(profileOne, "ls -l");
+
+            expect(issueUnixCommand).toHaveBeenCalledWith("ls -l", actions.sshCwd, actions.sshSession);
+        });
+
+        it("passes the command as-is when the command API does not implement sshProfileRequired", () => {
+            const actions = getUnixActions();
             const issueUnixCommand = vi.fn().mockResolvedValue("output");
             vi.spyOn(ZoweExplorerApiRegister, "getCommandApi").mockReturnValue({ issueUnixCommand } as any);
 
             actions.runCommand(profileOne, "ls -l");
 
             expect(issueUnixCommand).toHaveBeenCalledWith("ls -l", actions.sshCwd, actions.sshSession);
+        });
+
+        it("ignores the shared isSshRequiredForProf flag and uses the profile argument's command API", () => {
+            const actions = getUnixActions();
+            actions.isSshRequiredForProf = false;
+            const issueUnixCommand = vi.fn().mockResolvedValue("output");
+            vi.spyOn(ZoweExplorerApiRegister, "getCommandApi").mockReturnValue({
+                sshProfileRequired: vi.fn().mockReturnValue(true),
+                issueUnixCommand,
+            } as any);
+
+            actions.runCommand(profileOne, "ls -l");
+
+            expect(issueUnixCommand).toHaveBeenCalledWith(
+                `if [ -n "$SSH_TTY" ]; then $SHELL <$SSH_TTY >$SSH_TTY 2>$SSH_TTY | ls -l; else ls -l; fi`,
+                actions.sshCwd,
+                actions.sshSession
+            );
         });
 
         it("clears nodeProfile and sshProfile when useIntegratedTerminal is false", () => {
