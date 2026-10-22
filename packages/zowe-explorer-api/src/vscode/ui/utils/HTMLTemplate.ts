@@ -31,7 +31,7 @@ const HTMLTemplate: string = /*html*/ `
         <link type="text/css" rel="stylesheet" href="{{ uris.resource.css }}" />
         {{/uris.resource.css}}
         {{#uris.resource.codicons}}
-        <link type="text/css" rel="stylesheet" href="{{ uris.resource.codicons }}" />
+        <link type="text/css" rel="stylesheet" id="vscode-codicon-stylesheet" href="{{ uris.resource.codicons }}" />
         {{/uris.resource.codicons}}
         {{{ style }}}
     </head>

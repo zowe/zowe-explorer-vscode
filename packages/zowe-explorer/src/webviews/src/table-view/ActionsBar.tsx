@@ -1,12 +1,11 @@
 import { RefObject } from "preact";
 import { Dispatch, useEffect, useState } from "preact/hooks";
 import type { Table } from "@zowe/zowe-explorer-api";
-import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 import { GridApi } from "ag-grid-community";
 import { FocusableItem, Menu, MenuGroup, MenuItem } from "@szhsin/react-menu";
 import "@szhsin/react-menu/dist/index.css";
 import * as l10n from "@vscode/l10n";
-import { evaluateItemsState, sendItemCommand, ActionEvaluationContext, ActionState } from "./ActionUtils";
+import { evaluateItemsState, sendItemCommand, getActionButtonProps, ActionEvaluationContext, ActionState } from "./ActionUtils";
 
 interface ActionsProps {
   actions: Table.Action[];
@@ -109,13 +108,14 @@ export const ActionsBar = (props: ActionsProps) => {
           &nbsp;{props.selectionCount > 1 || props.selectionCount === 0 ? l10n.t("items") : l10n.t("item")} {l10n.t("selected")}
         </p>
         {actionStates.map((actionState, i) => {
+          const { secondary, style: kindStyle } = getActionButtonProps("type" in actionState.item ? actionState.item.type : "secondary");
           return (
-            <VSCodeButton
+            <vscode-button
               disabled={!actionState.isEnabled}
               key={`${actionState.item.command}-action-bar-${i}`}
-              appearance={"type" in actionState.item ? actionState.item.type : "secondary"}
-              style={{ fontWeight: "bold", marginTop: "3px", marginRight: "0.25em" }}
-              onClick={async (_event: any) => {
+              secondary={secondary}
+              style={{ ...kindStyle, fontWeight: "bold", marginTop: "3px", marginRight: "0.25em" }}
+              onClick={async () => {
                 const selectedNodes = (props.gridRef.current.api as GridApi).getSelectedNodes();
                 const callbackType: string =
                   "callback" in actionState.item && actionState.item.callback ? actionState.item.callback.typ : "single-row";
@@ -137,7 +137,7 @@ export const ActionsBar = (props: ActionsProps) => {
               }}
             >
               {actionState.title}
-            </VSCodeButton>
+            </vscode-button>
           );
         })}
         <div
@@ -154,9 +154,9 @@ export const ActionsBar = (props: ActionsProps) => {
             <Menu
               boundingBoxPadding="55 20 40 0"
               menuButton={
-                <VSCodeButton appearance="secondary">
+                <vscode-button secondary>
                   <span className="codicon codicon-gear"></span>
-                </VSCodeButton>
+                </vscode-button>
               }
               menuClassName="toggle-cols-menu"
               overflow="auto"
@@ -164,15 +164,15 @@ export const ActionsBar = (props: ActionsProps) => {
             >
               <FocusableItem style={{ marginBottom: "0.5rem" }}>
                 {({ ref }: { ref: any }) => (
-                  <VSCodeTextField
+                  <vscode-textfield
                     ref={ref}
                     type="text"
                     placeholder="Search"
                     value={searchFilter}
-                    onInput={(e: any) => setSearchFilter((e.target!.value as string).toLowerCase())}
+                    onInput={(e) => setSearchFilter(e.currentTarget.value.toLowerCase())}
                   >
-                    <span slot="start" className="codicon codicon-search"></span>
-                  </VSCodeTextField>
+                    <span slot="content-before" className="codicon codicon-search"></span>
+                  </vscode-textfield>
                 )}
               </FocusableItem>
               <MenuGroup takeOverflow>{columnDropdownItems(props.visibleColumns)}</MenuGroup>

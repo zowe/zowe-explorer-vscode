@@ -9,7 +9,6 @@
  *
  */
 
-import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 import { useDataPanelContext } from "../PersistentUtils";
 import * as l10n from "@vscode/l10n";
@@ -18,39 +17,44 @@ export default function PersistentDropdownOptions({ handleChange }: Readonly<{ h
   const dataPanelContext = useDataPanelContext();
 
   const options = [
-    <VSCodeOption value="search" key="search">
+    <vscode-option value="search" key="search">
       {l10n.t("Search History")}
-    </VSCodeOption>,
-    <VSCodeOption value="favorites" key="favorites">
+    </vscode-option>,
+    <vscode-option value="favorites" key="favorites">
       {l10n.t("Favorites")}
-    </VSCodeOption>,
-    <VSCodeOption value="fileHistory" key="fileHistory">
+    </vscode-option>,
+    <vscode-option value="fileHistory" key="fileHistory">
       {l10n.t("File History")}
-    </VSCodeOption>,
-    <VSCodeOption value="sessions" key="sessions">
+    </vscode-option>,
+    <vscode-option value="sessions" key="sessions">
       {l10n.t("Sessions")}
-    </VSCodeOption>,
+    </vscode-option>,
   ];
 
   const optionsEncodingHistory = [
-    <VSCodeOption value="encodingHistory" key="encodingHistory">
+    <vscode-option value="encodingHistory" key="encodingHistory">
       {l10n.t("Encoding History")}
-    </VSCodeOption>,
+    </vscode-option>,
   ].filter((option) => dataPanelContext.type === "uss" || dataPanelContext.type === "ds" || option.props.value !== "encodingHistory");
 
   const searchKeywordsHistory = [
-    <VSCodeOption value="searchedKeywordHistory" key="searchedKeywordHistory">
+    <vscode-option value="searchedKeywordHistory" key="searchedKeywordHistory">
       {l10n.t("Search Keyword History")}
-    </VSCodeOption>,
+    </vscode-option>,
   ].filter((option) => dataPanelContext.type === "ds" || option.props.value !== "searchedKeywordHistory");
 
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center", margin: "15px 15px 15px 0px" }}>
-      <VSCodeDropdown id="dropdown-persistent-items" style={{ maxWidth: "20vw" }} onChange={(event: any) => handleChange(event.target.value)}>
+      <vscode-single-select
+        id="dropdown-persistent-items"
+        style={{ maxWidth: "20vw" }}
+        value={dataPanelContext.selection[dataPanelContext.type]}
+        onChange={(event) => handleChange(event.currentTarget.value)}
+      >
         {options}
         {optionsEncodingHistory}
         {searchKeywordsHistory}
-      </VSCodeDropdown>
+      </vscode-single-select>
     </div>
   );
 }

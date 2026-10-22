@@ -1,4 +1,3 @@
-import { VSCodeButton, VSCodeDivider, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react";
 import { CorrelatedError } from "@zowe/zowe-explorer-api";
 import { TipList } from "./TipList";
 import { useState } from "preact/hooks";
@@ -34,16 +33,16 @@ export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {
           <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
             <span style={{ display: "flex", alignItems: "center" }}>
               {errorDisplayed ? (
-                <span slot="start" className="codicon codicon-chevron-down" style={{ marginTop: "1px" }}></span>
+                <span className="codicon codicon-chevron-down" style={{ marginTop: "1px" }}></span>
               ) : (
-                <span slot="start" className="codicon codicon-chevron-right" style={{ marginTop: "1px" }}></span>
+                <span className="codicon codicon-chevron-right" style={{ marginTop: "1px" }}></span>
               )}
               &nbsp; Full error summary
             </span>
             <span>
-              <VSCodeButton
-                appearance="secondary"
-                onClick={(e: MouseEvent) => {
+              <vscode-button
+                secondary
+                onClick={(e) => {
                   e.stopImmediatePropagation();
                   PersistentVSCodeAPI.getVSCodeAPI().postMessage({
                     command: "copy",
@@ -51,22 +50,23 @@ export const ErrorInfo = ({ error, stackTrace }: ErrorInfoProps) => {
                 }}
               >
                 Copy details
-              </VSCodeButton>
+              </vscode-button>
             </span>
           </span>
         </summary>
-        <VSCodeTextArea
+        <vscode-textarea
+          readonly
           value={stackTrace ?? error.message}
           resize="vertical"
           rows={10}
           style={{ height: "fit-content", marginTop: "0.5rem", width: "100%" }}
         />
       </details>
-      <VSCodeDivider />
+      <vscode-divider />
       {error.properties.correlation?.tips ? (
         <>
           <TipList tips={error.properties.correlation?.tips} />
-          <VSCodeDivider />
+          <vscode-divider />
         </>
       ) : null}
       <h2>Additional resources</h2>

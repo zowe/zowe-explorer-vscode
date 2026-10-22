@@ -9,7 +9,6 @@
  *
  */
 
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { JSXInternal } from "preact/src/jsx";
 import { useDataPanelContext } from "../PersistentUtils";
 import PersistentVSCodeAPI from "../../../PersistentVSCodeAPI";
@@ -31,9 +30,9 @@ export default function PersistentAddNewHistoryItemButton(): JSXInternal.Element
 
   const renderAddItemButton = () => {
     return selection && selection[type] === "search" && type !== "jobs" ? (
-      <VSCodeButton title={newHistoryItemText} appearance="secondary" style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
+      <vscode-button title={newHistoryItemText} secondary style={{ maxWidth: "20vw", marginRight: "15px" }} onClick={handleClick}>
         {l10n.t("Add")}
-      </VSCodeButton>
+      </vscode-button>
     ) : null;
   };
 
