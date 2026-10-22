@@ -627,7 +627,7 @@
     "Time in milliseconds to wait for the SSH handshake to complete.": ""
   },
   "zowe.confirmSshServerDeploy": {
-    "Require user confirmation before connecting with an SSH profile": ""
+    "Require user confirmation before automatically installing or updating the SSH server": ""
   },
   "#### Connecting to a host": "",
   "#### Copy across LPAR updates": "",
