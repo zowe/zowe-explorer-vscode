@@ -165,6 +165,94 @@ describe("AuthUtils", () => {
         });
     });
 
+    describe("promptForMissingCredentials", () => {
+        const setupProfilesCache = (hasSecureToken: boolean) =>
+            new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: {
+                    ssoLogin: vi.fn(),
+                    promptCredentials: vi.fn(),
+                    profileHasSecureToken: vi.fn().mockResolvedValue(hasSecureToken),
+                } as any,
+                configurable: true,
+            });
+
+        it("starts the auth flow with an error that reuses the expired token summary", async () => {
+            const profile = { name: "aProfile", type: "zosmf" } as any;
+            const profilesCacheMock = setupProfilesCache(true);
+            vi.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue(imperative.SessConstants.AUTH_TYPE_NONE);
+            const getOrCreateAuthFlowMock = vi.spyOn(AuthHandler, "getOrCreateAuthFlow").mockResolvedValueOnce(undefined);
+
+            await AuthUtils.promptForMissingCredentials(profile);
+
+            expect(getOrCreateAuthFlowMock).toHaveBeenCalledWith(
+                profile,
+                expect.objectContaining({
+                    isUsingTokenAuth: true,
+                    errorCorrelation: expect.objectContaining({
+                        // the same summary shown when a token expires, rather than a bespoke message
+                        message: expect.stringContaining(
+                            "Your connection is no longer active for profile aProfile. " +
+                                "Please log in to an authentication service to restore the connection."
+                        ),
+                    }),
+                })
+            );
+            const { imperativeError } = getOrCreateAuthFlowMock.mock.calls[0][1];
+            expect(imperativeError.message).toBe("Token value is missing for profile aProfile");
+            expect(imperativeError.errorCode).toBe("401");
+            // additional details are required for the login prompt to be offered
+            expect(imperativeError.additionalDetails).toBeTruthy();
+
+            profilesCacheMock[Symbol.dispose]();
+        });
+
+        it("reports missing credentials when the profile does not use token authentication", async () => {
+            const profile = { name: "aProfile", type: "zosmf" } as any;
+            const profilesCacheMock = setupProfilesCache(false);
+            vi.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue(imperative.SessConstants.AUTH_TYPE_NONE);
+            const getOrCreateAuthFlowMock = vi.spyOn(AuthHandler, "getOrCreateAuthFlow").mockResolvedValueOnce(undefined);
+
+            await AuthUtils.promptForMissingCredentials(profile);
+
+            expect(getOrCreateAuthFlowMock).toHaveBeenCalledWith(profile, expect.objectContaining({ isUsingTokenAuth: false }));
+            expect(getOrCreateAuthFlowMock.mock.calls[0][1].imperativeError.message).toBe("No credentials are available for profile aProfile");
+
+            profilesCacheMock[Symbol.dispose]();
+        });
+
+        it("propagates AuthCancelledError when the user dismisses the prompt", async () => {
+            const profile = { name: "aProfile", type: "zosmf" } as any;
+            const profilesCacheMock = setupProfilesCache(true);
+            vi.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue(imperative.SessConstants.AUTH_TYPE_TOKEN);
+            const cancelledError = new AuthCancelledError(profile.name, "User cancelled authentication");
+            vi.spyOn(AuthHandler, "getOrCreateAuthFlow").mockRejectedValueOnce(cancelledError);
+
+            await expect(AuthUtils.promptForMissingCredentials(profile)).rejects.toThrow(cancelledError);
+
+            profilesCacheMock[Symbol.dispose]();
+        });
+    });
+
+    describe("profileUsesTokenAuth", () => {
+        it.each([
+            [imperative.SessConstants.AUTH_TYPE_TOKEN, false, true],
+            [imperative.SessConstants.AUTH_TYPE_BEARER, false, true],
+            [imperative.SessConstants.AUTH_TYPE_NONE, true, true],
+            [imperative.SessConstants.AUTH_TYPE_BASIC, false, false],
+        ])("returns %s for session type %s with secure token %s", async (sessType, hasSecureToken, expected) => {
+            const profile = { name: "aProfile", type: "zosmf" } as any;
+            const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: { profileHasSecureToken: vi.fn().mockResolvedValue(hasSecureToken) } as any,
+                configurable: true,
+            });
+            vi.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue(sessType as any);
+
+            await expect(AuthUtils.profileUsesTokenAuth(profile)).resolves.toBe(expected);
+
+            profilesCacheMock[Symbol.dispose]();
+        });
+    });
+
     describe("retryRequest", () => {
         let loadNamedProfileMock;
         let mockMvsApi;
@@ -592,6 +680,142 @@ describe("AuthUtils", () => {
             await getChildrenSpy;
             expect(getChildrenSpy).toHaveBeenCalled();
             expect(sessionNode.tooltip).toContain("Auth Method: Basic Authentication");
+        });
+
+        it("To check for node tooltip when profile is using SSH Key authentication", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            vi.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = vi.fn();
+            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = vi.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                }) as any;
+
+            const testProfile = {
+                name: "sestest",
+                profile: {
+                    host: "fake",
+                    port: 22,
+                    user: "testuser",
+                    privateKey: "/path/to/key",
+                },
+                type: "ssh",
+                message: "",
+                failNotFound: false,
+            };
+            loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
+
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(sessionNode.tooltip).toContain("Auth Method: SSH Key");
+            expect(sessionNode.tooltip).toContain("User: testuser");
+        });
+        it("To check for node tooltip when profile is using SSH Key authentication and Auth Method is already present", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            sessionNode.tooltip = "Auth Method: Unknown\nUser: olduser";
+            vi.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = vi.fn();
+            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = vi.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                }) as any;
+
+            const testProfile = {
+                name: "sestest",
+                profile: {
+                    host: "fake",
+                    port: 22,
+                    user: "testuser",
+                    privateKey: "/path/to/key",
+                },
+                type: "ssh",
+                message: "",
+                failNotFound: false,
+            };
+            loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
+
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(sessionNode.tooltip).toContain("Auth Method: SSH Key");
+            expect(sessionNode.tooltip).toContain("User: testuser");
+            expect(sessionNode.tooltip).not.toContain("User: olduser");
+        });
+
+        it("To check for node tooltip when profile is using SSH Key authentication and Auth Method is present but User is not", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            sessionNode.tooltip = "Auth Method: Unknown";
+            vi.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = vi.fn();
+            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = vi.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                }) as any;
+
+            const testProfile = {
+                name: "sestest",
+                profile: {
+                    host: "fake",
+                    port: 22,
+                    user: "testuser",
+                    privateKey: "/path/to/key",
+                },
+                type: "ssh",
+                message: "",
+                failNotFound: false,
+            };
+            loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
+
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(sessionNode.tooltip).toContain("Auth Method: SSH Key");
+            expect(sessionNode.tooltip).toContain("User: testuser");
+        });
+
+        it("To check for node tooltip when profile is using SSH Key authentication and Auth Method and User is already present", async () => {
+            const sessionNode = createDatasetSessionNode(createISession(), serviceProfile);
+            sessionNode.tooltip = "Auth Method: Unknown\nUser: olduser";
+            vi.spyOn(sessionNode, "getChildren").mockResolvedValueOnce([]);
+            const refreshElementMock = vi.fn();
+            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({
+                refreshElement: refreshElementMock,
+            } as any);
+            const getSessionMock = vi.fn().mockReturnValue(createISession());
+            const sessionForProfile = (_profile) =>
+                ({
+                    getSession: getSessionMock,
+                }) as any;
+
+            const testProfile = {
+                name: "sestest",
+                profile: {
+                    host: "fake",
+                    port: 22,
+                    user: "testuser",
+                    privateKey: "/path/to/key",
+                },
+                type: "ssh",
+                message: "",
+                failNotFound: false,
+            };
+            loadNamedProfileMock.mockClear().mockReturnValue(testProfile);
+
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+            await AuthUtils.syncSessionNode(sessionForProfile, sessionNode, sessionNode);
+            expect(sessionNode.tooltip).toContain("Auth Method: SSH Key");
+            expect(sessionNode.tooltip).toContain("User: testuser");
+            expect(sessionNode.tooltip).not.toContain("User: olduser");
         });
 
         it("To check for node tooltip when profile is using Certificate based authentication and when Auth Method is not initially present in the toolTip", async () => {

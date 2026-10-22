@@ -27,6 +27,8 @@ const config = (mode) => ({
         filename: "[name].extension.js",
         libraryTarget: "commonjs2",
         devtoolModuleFilenameTemplate: "webpack:///[absolute-resource-path]",
+        // Match Node's CommonJS behavior for modules that throw while loading. See comment in zowe-explorer's webpack config for more details.
+        strictModuleErrorHandling: true,
     },
     devtool: "source-map",
     externals: ["vscode", "cpu-features"],

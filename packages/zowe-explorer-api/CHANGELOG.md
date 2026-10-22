@@ -6,7 +6,12 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added the `notifyFileChanged` method to `IZoweExplorerFileApi` (the file API returned by `getFileApi()`) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
+
 ### Bug fixes
+
+- Fixed an issue where the `ProfilesCache.requireKeyring` function could return an erroneous `undefined` error instead of reporting when the Secrets SDK failed to load, causing callers to treat an unavailable credential manager as available. [#4360](https://github.com/zowe/zowe-explorer-vscode/issues/4360)
+- Removed `PLX` from the `.pli` entry in `DS_EXTENSION_MAP`, so data sets with a `PLX` qualifier no longer get a PL/I file extension. [#3801](https://github.com/zowe/zowe-explorer-vscode/issues/3801)
 
 ## `3.6.0`
 
@@ -23,6 +28,9 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Improved the error message during SSO login/logout when no base profile is found for a flat profile. The message now explains how to resolve the issue by either converting to a nested profile or adding a default base profile. [#4428](https://github.com/zowe/zowe-explorer-vscode/issues/4428)
+- Added `AuthHandler.waitForAuthFlow` and `FileManagement.reloadTabsForProfile` functions to fix authentication race conditions and to recover open editor tabs after a profile's credentials are refreshed. [#4495](https://github.com/zowe/zowe-explorer-vscode/pull/4495)
+- Fixed an issue where the `AuthHandler.getOrCreateAuthFlow` function discarded the result of a profile's authentication attempt. Now, the function resolves with a boolean value to clarify whether authentication succeeded. [#4495](https://github.com/zowe/zowe-explorer-vscode/pull/4495)
 - Fixed an issue where the `promptUserPass` function would incorrectly reject an empty username when its `rePrompt` parameter was false. [#4378](https://github.com/zowe/zowe-explorer-vscode/pull/4378)
 - Fixed an issue where the `ZoweVsCodeExtension.workspaceRoot` function getter could return a non-existent local directory. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are considered as the workspace root. [#4271](https://github.com/zowe/zowe-explorer-vscode/issues/4271)
 - Fixed an issue where executing Unix commands could fail if the current working directory path contained certain special characters. [#4330](https://github.com/zowe/zowe-explorer-vscode/pull/4330)
