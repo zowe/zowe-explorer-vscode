@@ -522,6 +522,116 @@ describe("SshClientCache", () => {
         });
     });
 
+    describe("adopted connections", () => {
+        const makeSsh = (connected = true) => ({
+            connection: { id: "ssh2-client" },
+            isConnected: vi.fn().mockReturnValue(connected),
+            dispose: vi.fn(),
+        });
+
+        beforeEach(() => {
+            vi.mocked(ZSshUtils.buildSession).mockReturnValue({ host: "fake-mock-host" } as any);
+            vi.mocked(ZSshClient.create).mockClear();
+        });
+
+        it("should start the server on the adopted connection instead of opening a new one", async () => {
+            const ssh = makeSsh();
+            cache.adoptConnection(mockProfile, ssh as any);
+
+            await cache.connect(mockProfile);
+
+            expect(ZSshClient.create).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ existingConnection: ssh.connection }));
+            // The client owns it now, so the cache must not close it
+            expect(ssh.dispose).not.toHaveBeenCalled();
+            expect((cache as any).mAdoptedConnections.has(clientId)).toBe(false);
+        });
+
+        it("should only use the adopted connection for the first launch", async () => {
+            const ssh = makeSsh();
+            cache.adoptConnection(mockProfile, ssh as any);
+            vi.mocked(ZSshClient.create).mockRejectedValueOnce(
+                Object.assign(new imperative.ImperativeError("missing" as any), { errorCode: "ENOTFOUND" })
+            );
+            vi.mocked(ZSshUtils.lacksWriteAccess).mockResolvedValue(false);
+
+            await cache.connect(mockProfile);
+
+            const calls = vi.mocked(ZSshClient.create).mock.calls;
+            expect(calls[0][1]).toMatchObject({ existingConnection: ssh.connection });
+            expect(calls[1][1].existingConnection).toBeUndefined();
+        });
+
+        it("should not use a different profile's adopted connection", async () => {
+            const ssh = makeSsh();
+            cache.adoptConnection({ ...mockProfile, name: "other" }, ssh as any);
+
+            await cache.connect(mockProfile);
+
+            expect(vi.mocked(ZSshClient.create).mock.calls[0][1].existingConnection).toBeUndefined();
+            expect(ssh.dispose).not.toHaveBeenCalled();
+        });
+
+        it("should drop an adopted connection that has since disconnected", async () => {
+            const ssh = makeSsh(false);
+            cache.adoptConnection(mockProfile, ssh as any);
+
+            await cache.connect(mockProfile);
+
+            expect(ssh.dispose).toHaveBeenCalledTimes(1);
+            expect(vi.mocked(ZSshClient.create).mock.calls[0][1].existingConnection).toBeUndefined();
+        });
+
+        it("should close the adopted connection instead of using it with the native client", async () => {
+            const ssh = makeSsh();
+            cache.adoptConnection(mockProfile, ssh as any);
+            const config: any = { ...mockVSCodeConfig, "zowex.experimentalNativeSsh": true };
+            vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
+                get: vi.fn().mockImplementation((key, def) => config[key] ?? def),
+            } as any);
+
+            await cache.connect(mockProfile);
+
+            expect(ssh.dispose).toHaveBeenCalledTimes(1);
+            expect(vi.mocked(ZSshClient.create).mock.calls[0][1].existingConnection).toBeUndefined();
+        });
+
+        it("should replace and close an earlier adopted connection for the same profile", () => {
+            const first = makeSsh();
+            const second = makeSsh();
+            cache.adoptConnection(mockProfile, first as any);
+            cache.adoptConnection(mockProfile, second as any);
+
+            expect(first.dispose).toHaveBeenCalledTimes(1);
+            expect(second.dispose).not.toHaveBeenCalled();
+        });
+
+        it("should close an adopted connection nobody used after the 10 minute timeout", () => {
+            vi.useFakeTimers();
+            try {
+                const ssh = makeSsh();
+                cache.adoptConnection(mockProfile, ssh as any);
+
+                vi.advanceTimersByTime(10 * 60 * 1000 - 1);
+                expect(ssh.dispose).not.toHaveBeenCalled();
+
+                vi.advanceTimersByTime(1);
+                expect(ssh.dispose).toHaveBeenCalledTimes(1);
+                expect((cache as any).mAdoptedConnections.size).toBe(0);
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+
+        it("should close adopted connections when the cache is disposed", () => {
+            const ssh = makeSsh();
+            cache.adoptConnection(mockProfile, ssh as any);
+
+            cache.dispose();
+
+            expect(ssh.dispose).toHaveBeenCalledTimes(1);
+        });
+    });
+
     describe("end()", () => {
         it("should pass the restart boolean when calling client.dispose()", () => {
             const mockClient = { dispose: vi.fn() };

@@ -30,6 +30,13 @@ class AsyncMutex extends imperative.DeferredPromise<void> implements Disposable 
     }
 }
 
+type NodeSSH = Awaited<ReturnType<SessionContext["getSsh"]>>;
+
+type AdoptedConnection = {
+    ssh: NodeSSH;
+    expiry: NodeJS.Timeout;
+};
+
 type ZSshRestartOptions = {
     restart: boolean;
     retryRequests: boolean;
@@ -54,6 +61,9 @@ export class SshClientCache extends vscode.Disposable {
     private static mInstance: SshClientCache;
     private readonly mClientSessionMap: Map<string, ZSshClientSessions> = new Map();
     private mMutexMap: Map<string, AsyncMutex> = new Map();
+    // Authenticated connections handed over by a deploy, waiting to host the server for that profile
+    private readonly mAdoptedConnections: Map<string, AdoptedConnection> = new Map();
+    private static readonly ADOPTED_CONNECTION_TTL_MS = 10 * 60 * 1000;
     // Profiles with a reload prompt already on screen. One dropped connection can fail
     // several in-flight requests, and each would otherwise stack its own prompt.
     private readonly mActivePrompts: Set<string> = new Set();
@@ -78,6 +88,9 @@ export class SshClientCache extends vscode.Disposable {
         `or grant yourself write permission to the deployment directory if possible. `;
 
     public dispose(opts?: ZSshRestartOptions): void {
+        for (const clientId of [...this.mAdoptedConnections.keys()]) {
+            this.discardAdoptedConnection(clientId);
+        }
         for (const session of this.mClientSessionMap.values()) {
             session.client.dispose(opts?.restart);
         }
@@ -95,6 +108,44 @@ export class SshClientCache extends vscode.Disposable {
     public get profilesCache(): ProfilesCache {
         return this.mProfilesCache;
     }
+    /**
+     * Hand an authenticated connection (e.g. the one a deploy just used) to the next server launch for this profile,
+     * so the user does not have to authenticate again. Unused connections are closed after 10 minutes.
+     * @param profile - profile the connection was authenticated for
+     * @param ssh - connected SSH connection; the cache takes ownership
+     */
+    public adoptConnection(profile: imperative.IProfileLoaded, ssh: NodeSSH): void {
+        const clientId = this.getClientId(profile);
+        this.discardAdoptedConnection(clientId);
+        const expiry = setTimeout(() => this.discardAdoptedConnection(clientId), SshClientCache.ADOPTED_CONNECTION_TTL_MS);
+        expiry.unref?.();
+        this.mAdoptedConnections.set(clientId, { ssh, expiry });
+    }
+
+    private discardAdoptedConnection(clientId: string): void {
+        const adopted = this.mAdoptedConnections.get(clientId);
+        if (adopted) {
+            clearTimeout(adopted.expiry);
+            adopted.ssh.dispose();
+            this.mAdoptedConnections.delete(clientId);
+        }
+    }
+
+    /** Removes the adopted connection for the profile and returns it if it is still connected. */
+    private takeAdoptedConnection(clientId: string): NodeSSH | undefined {
+        const adopted = this.mAdoptedConnections.get(clientId);
+        if (!adopted) {
+            return undefined;
+        }
+        this.mAdoptedConnections.delete(clientId);
+        clearTimeout(adopted.expiry);
+        if (!adopted.ssh.isConnected()) {
+            adopted.ssh.dispose();
+            return undefined;
+        }
+        return adopted.ssh;
+    }
+
     /**
      * Store the SSH server path for the given host
      * @param host - host from the profile
@@ -164,12 +215,25 @@ export class SshClientCache extends vscode.Disposable {
             const responseTimeout = vsceConfig.get<number>("zowex.responseTimeout") ?? 60;
             const useNativeSsh = vsceConfig.get<boolean>("zowex.experimentalNativeSsh", false);
 
+            // Only the first launch can use the connection handed over by a deploy; the native client cannot use it
+            let adoptedSsh = this.takeAdoptedConnection(clientId);
+            if (useNativeSsh && adoptedSsh) {
+                imperative.Logger.getAppLogger().debug(
+                    "Closing the connection handed over by the deploy: the experimental native SSH client cannot reuse it"
+                );
+                adoptedSsh.dispose();
+                adoptedSsh = undefined;
+            }
+
             let newClient: ZSshClient | undefined;
             let serverNotFound = false;
             let serverShouldDeploy = true;
 
             const launchServer = async (): Promise<boolean> => {
                 newClient?.dispose();
+                // The client owns the connection from here on, including closing it if startup fails
+                const existingConnection = adoptedSsh?.connection ?? undefined;
+                adoptedSsh = undefined;
                 newClient = await this.buildClient(session, clientId, {
                     serverPath,
                     keepAliveInterval,
@@ -178,6 +242,7 @@ export class SshClientCache extends vscode.Disposable {
                     responseTimeout,
                     requests: replayRequests,
                     useNativeSsh,
+                    existingConnection,
                 });
                 imperative.Logger.getAppLogger().debug(`Server version: ${newClient.serverVersion}`);
                 serverNotFound = false;
