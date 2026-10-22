@@ -4,12 +4,10 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ## TBD Release
 
-- Added SSH host key verification when issuing UNIX commands so the identity of a z/OS SSH server is confirmed before credentials are sent. [#4529](https://github.com/zowe/zowe-explorer-vscode/pull/4529)
-- Fixed redundant SSH server deployment confirmations when connecting to an already installed, up-to-date server. Confirmation is now requested only when automatic installation or updating is needed. [#4563](https://github.com/zowe/zowe-explorer-vscode/pull/4563)
-
 ### New features and enhancements
 
 - Added the `notifyFileChanged` method to `IZoweExplorerFileApi` (the file API returned by `getFileApi()`) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
+- Added SSH host key verification when issuing UNIX commands so the identity of a z/OS SSH server is confirmed before credentials are sent. [#4529](https://github.com/zowe/zowe-explorer-vscode/pull/4529)
 
 ### Bug fixes
 
@@ -25,6 +23,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where using "Allocate Like" on a data set caused the tree nodes to disappear until the profile was collapsed and re-expanded. [#4444](https://github.com/zowe/zowe-explorer-vscode/issues/4444)
 - Fixed an issue where data sets with a `PLX` qualifier, and their members, opened as PL/I files. Use the VS Code `files.associations` setting to choose a language for those data sets. [#3801](https://github.com/zowe/zowe-explorer-vscode/issues/3801)
 - Fixed an issue where UNIX commands were always wrapped in an `SSH_TTY` terminal redirect, even for profiles that do not use SSH. [#4564](https://github.com/zowe/zowe-explorer-vscode/pull/4564)
+- Fixed redundant SSH server deployment confirmations when connecting to an already installed, up-to-date server. Confirmation is now requested only when automatic installation or updating is needed. [#4563](https://github.com/zowe/zowe-explorer-vscode/pull/4563)
 
 ## `3.6.0`
 
