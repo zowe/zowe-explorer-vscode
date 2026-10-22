@@ -139,13 +139,56 @@ describe("ConfigEditorSaveOperations", () => {
         });
     });
 
-    it("rejects an unavailable credential before deleting the source", async () => {
+    it.each(["cut", "copy"])("preserves unset secure fields in a subprofile during cross-layer %s", async (operation) => {
+        const { store, config, saved, commit, configs } = setup();
+        config.set("profiles.base.profiles.leaf.secure", ["password", "tokenValue"]);
+        configs[0].properties.profiles.base.profiles.leaf.secure = ["password", "tokenValue"];
+        store.getState().copyProfile("base", operation === "cut");
+        store.getState().handleTabChange(1);
+        store.getState().pasteProfile(null);
+
+        await expect(commit()).resolves.toBe(true);
+
+        const destination = saved.get(configs[1].configPath)?.profiles.base;
+        expect(destination.properties.password).toBe("synthetic-credential");
+        expect(destination.profiles.leaf.secure).toEqual(["password", "tokenValue"]);
+        expect(destination.profiles.leaf.properties).toEqual({ host: "child" });
+        expect(saved.get(configs[0].configPath)?.profiles.base !== undefined).toBe(operation === "copy");
+    });
+
+    it("preserves an explicitly empty secure value during a cross-layer move", async () => {
+        const { store, config, saved, commit, configs } = setup();
+        config.set("profiles.base.properties.password", "", { secure: true });
+        store.getState().copyProfile("base", true);
+        store.getState().handleTabChange(1);
+        store.getState().pasteProfile(null);
+
+        await expect(commit()).resolves.toBe(true);
+
+        expect(saved.get(configs[0].configPath)?.profiles).toEqual({});
+        expect(saved.get(configs[1].configPath)?.profiles.base).toMatchObject({ properties: { password: "" }, secure: ["password"] });
+    });
+
+    it("rejects an unavailable source profile before saving", async () => {
         const { store, config, saved, commit, configs, save } = setup();
         store.getState().copyProfile("base", true);
         store.getState().handleTabChange(1);
         store.getState().pasteProfile(null);
-        config.delete("profiles.base.properties.password");
-        await expect(commit()).rejects.toThrow("source credential is unavailable");
+        config.delete("profiles.base");
+        await expect(commit()).rejects.toThrow("source profile is unavailable");
+        expect(save).not.toHaveBeenCalled();
+        expect(saved.get(configs[0].configPath)?.profiles.base).toBeDefined();
+    });
+
+    it("rejects a secure-storage load failure before deleting the source", async () => {
+        const { store, config, saved, commit, configs, save } = setup();
+        store.getState().copyProfile("base", true);
+        store.getState().handleTabChange(1);
+        store.getState().pasteProfile(null);
+        vi.spyOn(config.api.secure, "loadFailed", "get").mockReturnValue(true);
+
+        await expect(commit()).rejects.toThrow("Secure storage could not be loaded");
+
         expect(save).not.toHaveBeenCalled();
         expect(saved.get(configs[0].configPath)?.profiles.base).toBeDefined();
     });

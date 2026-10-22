@@ -128,7 +128,7 @@ export function AddConfigModal({ isOpen, configurations, hasWorkspace, onAdd, on
               fontStyle: "italic",
             }}
           >
-            {l10n.t("Warning: Creation/deletion of configuration files are immediately written to disk and cannot be undone by refreshing")}
+            {l10n.t("Warning: Creation/deletion of configuration files are immediately written to disk and cannot be undone by reverting")}
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>

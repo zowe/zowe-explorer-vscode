@@ -7,7 +7,7 @@ import { RenameProfileModal } from "./modals/RenameProfileModal";
 import { useEditorFields } from "../context/EditorStoreContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 import { getPropertyTypeForAddProfile, fetchTypeOptions, getPropertyDescriptions } from "../utils/propertyUtils";
-import { getAllQualifiedProfileKeys, resolveOriginalProfileKeyFromRenames } from "../utils";
+import { getAllQualifiedProfileKeys } from "../utils";
 
 export function EditorDialogs() {
   const {
@@ -188,8 +188,7 @@ export function EditorDialogs() {
           const configPath = configurations[selectedTab!]?.configPath;
           const config = configurations[selectedTab!];
           if (configPath && config && selectedProfileKey) {
-            const trueOriginalKey = resolveOriginalProfileKeyFromRenames(selectedProfileKey, configPath, config.properties?.profiles, renames);
-            handleRenameProfile(trueOriginalKey, newName);
+            handleRenameProfile(selectedProfileKey, newName);
           }
         }}
         onCancel={() => setRenameProfileModalOpen(false)}

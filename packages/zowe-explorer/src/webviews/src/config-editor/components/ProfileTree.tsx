@@ -1,13 +1,14 @@
 import { ProfileContextMenu } from "./ProfileContextMenu";
 import { useProfileContextMenu } from "../hooks/useProfileContextMenu";
 import { useProfileClipboard } from "../hooks/useProfileClipboard";
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import * as l10n from "@vscode/l10n";
-import { getOriginalProfileKeyWithNested } from "../utils/profileUtils";
+import { getAllQualifiedProfileKeys } from "../utils/profileRenames";
 import { useIsLightTheme } from "../hooks/useIsLightTheme";
 import { useScrollToSelected } from "../hooks/useScrollToSelected";
 import { ProfileTypeBadge } from "./ProfileTypeBadge";
 import { DefaultStarButton } from "./DefaultStarButton";
+import { getEffectiveProfileKeys, resolveProfileDestination } from "../utils/profileConflicts";
 import { suppressClickAfterDrag } from "../utils/dragDropUtils";
 
 // Re-exported for backward compatibility with existing importers (e.g. ProfileList, tests).
@@ -27,65 +28,23 @@ function resolveDropTargetKey(params: {
   renames?: { [configPath: string]: { [originalKey: string]: string } };
   configurations?: any[];
   selectedTab?: number | null;
-  findOriginalKey: (currentKey: string) => string;
 }): string {
-  const { proposedKey, draggedProfile, profileKeys, pendingProfiles, renames, configurations, selectedTab, findOriginalKey } = params;
-
-  // Get all current profile keys (including pending profiles and targets of pending renames)
-  const allCurrentProfileKeys = [...profileKeys, ...Object.keys(pendingProfiles)];
-
-  // Add profiles that are targets of pending renames to avoid conflicts
-  if (renames && configurations && selectedTab !== null && selectedTab !== undefined) {
-    const configPath = configurations[selectedTab]?.configPath;
-    if (configPath && renames[configPath]) {
-      const configRenames = renames[configPath];
-      const renameTargets = Object.values(configRenames);
-      allCurrentProfileKeys.push(...renameTargets);
-    }
-  }
-
-  // Check if the new profile key already exists and is not the dragged profile itself
-  if (allCurrentProfileKeys.includes(proposedKey) && proposedKey !== draggedProfile) {
-    // Find the original key for the dragged profile to get all names in its rename chain
-    const originalKey = findOriginalKey(draggedProfile);
-
-    // Get all names that are part of the current rename chain for this profile
-    const namesInRenameChain = new Set<string>();
-    if (renames && configurations && selectedTab !== null && selectedTab !== undefined) {
-      const configPath = configurations[selectedTab]?.configPath;
-      if (configPath && renames[configPath]) {
-        const configRenames = renames[configPath];
-
-        // Add the original key
-        namesInRenameChain.add(originalKey);
-
-        // Follow the rename chain to collect all intermediate names
-        let currentKey = originalKey;
-        const visited = new Set<string>();
-        while (configRenames[currentKey] && !visited.has(currentKey)) {
-          visited.add(currentKey);
-          namesInRenameChain.add(configRenames[currentKey]);
-          currentKey = configRenames[currentKey];
-        }
-      }
-    }
-
-    // Only create a unique name if the conflict is not with a name in our rename chain
-    if (!namesInRenameChain.has(proposedKey)) {
-      // Find a unique name by appending a number
-      let counter = 1;
-      let uniqueNewProfileKey = `${proposedKey}_${counter}`;
-
-      while (allCurrentProfileKeys.includes(uniqueNewProfileKey)) {
-        counter++;
-        uniqueNewProfileKey = `${proposedKey}_${counter}`;
-      }
-
-      return uniqueNewProfileKey;
-    }
-  }
-
-  return proposedKey;
+  const { proposedKey, draggedProfile, profileKeys, pendingProfiles, configurations, selectedTab, renames } = params;
+  const config = selectedTab === null || selectedTab === undefined ? undefined : configurations?.[selectedTab];
+  const occupiedKeys = config
+    ? getEffectiveProfileKeys(
+        getAllQualifiedProfileKeys(config.properties?.profiles),
+        Object.keys(pendingProfiles),
+        renames?.[config.configPath] || {}
+      )
+    : [...profileKeys, ...Object.keys(pendingProfiles)];
+  const result = resolveProfileDestination({
+    proposedKey,
+    sourceKey: draggedProfile,
+    profileKeys: occupiedKeys,
+    onConflict: "suffix",
+  });
+  return result.status === "conflict" ? draggedProfile : result.key;
 }
 
 interface ProfileTreeProps {
@@ -159,22 +118,6 @@ export function ProfileTree({
   useEffect(() => {
     return () => activeDragCleanupRef.current?.();
   }, []);
-
-  // Memoized helper function to find the original key from a current profile key
-  const findOriginalKey = useMemo(() => {
-    return (currentKey: string): string => {
-      if (!configurations || selectedTab === null || selectedTab === undefined || !renames) {
-        return currentKey;
-      }
-
-      const configPath = configurations[selectedTab]?.configPath;
-      if (!configPath || !renames[configPath]) {
-        return currentKey;
-      }
-
-      return getOriginalProfileKeyWithNested(currentKey, configPath, renames);
-    };
-  }, [configurations, selectedTab, renames]);
 
   const { contextMenu, setContextMenu, contextMenuRef, openContextMenu } = useProfileContextMenu();
 
@@ -264,19 +207,7 @@ export function ProfileTree({
   const computeDropResultKey = (sourceProfile: string, targetProfileKey: string): string => {
     const sourceProfileName = sourceProfile.split(".").pop() || sourceProfile;
 
-    let proposedKey: string;
-
-    if (sourceProfile === targetProfileKey) {
-      proposedKey = targetProfileKey;
-    } else if (sourceProfile === `${targetProfileKey}.${sourceProfileName}`) {
-      proposedKey = targetProfileKey;
-    } else if (targetProfileKey === sourceProfileName) {
-      proposedKey = targetProfileKey;
-    } else if (targetProfileKey.endsWith(`.${sourceProfileName}`)) {
-      proposedKey = targetProfileKey;
-    } else {
-      proposedKey = `${targetProfileKey}.${sourceProfileName}`;
-    }
+    const proposedKey = `${targetProfileKey}.${sourceProfileName}`;
 
     return resolveDropTargetKey({
       proposedKey,
@@ -286,7 +217,6 @@ export function ProfileTree({
       renames,
       configurations,
       selectedTab,
-      findOriginalKey,
     });
   };
 
@@ -305,13 +235,11 @@ export function ProfileTree({
             renames,
             configurations,
             selectedTab,
-            findOriginalKey,
           })
         : computeDropResultKey(sourceProfile, targetProfileKey);
 
     if (sourceProfile !== newProfileKey) {
-      const originalKey = findOriginalKey(sourceProfile);
-      onProfileRename(originalKey, newProfileKey, true);
+      onProfileRename(sourceProfile, newProfileKey, true);
     }
   };
 
@@ -368,9 +296,9 @@ export function ProfileTree({
   // so they'd otherwise keep closing over stale profileKeys/renames/configurations for the whole
   // drag if any of that data changes mid-drag (e.g. an external config reload). Routing calls
   // through this ref (refreshed every render) keeps them reading the latest data instead.
-  const dragHelpersRef = useRef({ isInvalidDrop, computeDropResultKey, performDrop, findOriginalKey });
+  const dragHelpersRef = useRef({ isInvalidDrop, computeDropResultKey, performDrop });
   useEffect(() => {
-    dragHelpersRef.current = { isInvalidDrop, computeDropResultKey, performDrop, findOriginalKey };
+    dragHelpersRef.current = { isInvalidDrop, computeDropResultKey, performDrop };
   });
 
   const DRAG_MOVE_THRESHOLD_PX = 4;
@@ -750,7 +678,6 @@ export function ProfileTree({
                     renames,
                     configurations,
                     selectedTab,
-                    findOriginalKey,
                   })
                 : ""
             }"`

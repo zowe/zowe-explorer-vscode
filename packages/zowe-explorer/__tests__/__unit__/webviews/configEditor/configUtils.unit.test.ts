@@ -53,10 +53,12 @@ const mockReadProfilesFromDisk = vi.fn();
 const mockGetTeamConfig = vi.fn();
 
 vi.mock("@zowe/imperative", () => ({
-    ProfileInfo: vi.fn().mockImplementation(() => ({
-        readProfilesFromDisk: mockReadProfilesFromDisk,
-        getTeamConfig: mockGetTeamConfig,
-    })),
+    ProfileInfo: vi.fn().mockImplementation(function () {
+        return {
+            readProfilesFromDisk: mockReadProfilesFromDisk,
+            getTeamConfig: mockGetTeamConfig,
+        };
+    }),
     ProfileCredentials: {
         defaultCredMgrWithKeytar: vi.fn(),
     },

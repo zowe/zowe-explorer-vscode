@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { VscodeButton, VscodeTextfield } from "@vscode-elements/react-elements";
 import { ModalShell } from "../ModalShell";
+import { getEffectiveProfileKeys, resolveProfileDestination } from "../../utils/profileConflicts";
 import { isValidProfileNamePath, isValidProfileNameSegment, sanitizeProfileNamePath, sanitizeProfileNameSegment } from "../../utils/profileNames";
 
 interface RenameProfileModalProps {
@@ -82,68 +83,13 @@ export function RenameProfileModal({
       newFullKey = parentPath ? `${parentPath}.${name.trim()}` : name.trim();
     }
 
-    // Check existing profiles, but exclude profiles that are being renamed from the current profile
-    if (existingProfiles.includes(newFullKey)) {
-      // Check if this existing profile is being renamed from the current profile
-      const isBeingRenamedFromCurrent = Object.entries(pendingRenames).some(
-        ([originalKey, newKey]) => originalKey === currentProfileKey && newKey === newFullKey
-      );
-
-      // Check if this existing profile is being renamed away (i.e., it's the original key in a rename)
-      const isBeingRenamedAway = Object.entries(pendingRenames).some(([originalKey]) => originalKey === newFullKey);
-
-      // Check if any other profile is being renamed TO this target location
-      const isBeingRenamedTo = Object.entries(pendingRenames).some(
-        ([originalKey, newKey]) => newKey === newFullKey && originalKey !== currentProfileKey
-      );
-
-      if (!isBeingRenamedFromCurrent && !isBeingRenamedAway && !isBeingRenamedTo) {
-        return `Profile '${newFullKey}' already exists`;
-      }
-    }
-
-    // Check pending profiles, but exclude profiles that are being renamed from the current profile
-    if (pendingProfiles.includes(newFullKey)) {
-      // Check if this pending profile is being renamed from the current profile
-      const isBeingRenamedFromCurrent = Object.entries(pendingRenames).some(
-        ([originalKey, newKey]) => originalKey === currentProfileKey && newKey === newFullKey
-      );
-
-      // Check if this pending profile is being renamed away (i.e., it's the original key in a rename)
-      const isBeingRenamedAway = Object.entries(pendingRenames).some(([originalKey]) => originalKey === newFullKey);
-
-      // Check if any other profile is being renamed TO this target location
-      const isBeingRenamedTo = Object.entries(pendingRenames).some(
-        ([originalKey, newKey]) => newKey === newFullKey && originalKey !== currentProfileKey
-      );
-
-      if (!isBeingRenamedFromCurrent && !isBeingRenamedAway && !isBeingRenamedTo) {
-        return `Profile '${newFullKey}' is pending creation`;
-      }
-    }
-
-    // Check for circular renames
-    if (pendingRenames[newFullKey] === currentProfileKey) {
-      return `Cannot rename '${currentProfileKey}' to '${newFullKey}': This would create a circular rename (${newFullKey} -> ${currentProfileKey})`;
-    }
-
-    // Check for circular dependency (when new key contains current key as a parent)
-    const newParts = newFullKey.split(".");
-    for (let i = 0; i < newParts.length; i++) {
-      const partialKey = newParts.slice(0, i + 1).join(".");
-      if (partialKey === currentProfileKey) {
-        return `Cannot rename '${currentProfileKey}' to '${newFullKey}': Would create circular dependency`;
-      }
-    }
-
-    // Check if any other profile is being renamed TO this target location (even if not in existing/pending lists)
-    const isBeingRenamedToByOther = Object.entries(pendingRenames).some(
-      ([originalKey, newKey]) => newKey === newFullKey && originalKey !== currentProfileKey
-    );
-
-    if (isBeingRenamedToByOther) {
-      return `Profile '${newFullKey}' is already a target of a pending rename`;
-    }
+    const result = resolveProfileDestination({
+      proposedKey: newFullKey,
+      sourceKey: currentProfileKey,
+      profileKeys: getEffectiveProfileKeys(existingProfiles, pendingProfiles, pendingRenames),
+      onConflict: "reject",
+    });
+    if (result.status === "conflict") return result.message;
 
     return null;
   };

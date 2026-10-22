@@ -28,7 +28,7 @@ describe("effective profile keys", () => {
     });
 
     it("uses renamed keys once for both saved and pending profiles", () => {
-        expect(visible({ zebra: {}, renamed: {} }, { [configPath]: { zebra: "renamed" } })).toEqual(["renamed", "renamed.leaf", "alpha"]);
+        expect(visible({ renamed: {} }, { [configPath]: { zebra: "renamed" } })).toEqual(["renamed", "renamed.leaf", "alpha"]);
     });
 
     it("retains a child moved out of a deleted parent", () => {

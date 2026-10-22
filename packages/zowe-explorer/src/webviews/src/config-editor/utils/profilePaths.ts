@@ -17,39 +17,15 @@ export function profileKeyToPath(profileKey: string): string[] {
 }
 
 /**
- * Resolves a dotted profile name through a chain of renames (e.g. a -> b, b -> c yields "a" -> "c"),
+ * Resolves an original profile identity to its final name using the most specific rename,
  * also covering renames of an ancestor segment (e.g. rename "a" -> "x" updates "a.child" -> "x.child").
  * Handles renames that change nesting depth in either direction (e.g. "b" -> "a.b" or "a.b" -> "c").
  */
 export const applyRenameChainToProfileName = (profileName: string, renames: RenameChange[]): string => {
-    let effectiveName = profileName;
-    const appliedRenames = new Set<string>();
-    let changed = true;
-
-    while (changed) {
-        changed = false;
-
-        for (const rename of renames) {
-            const renameKey = `${rename.originalKey}->${rename.newKey}`;
-            if (appliedRenames.has(renameKey)) {
-                continue;
-            }
-
-            if (effectiveName === rename.originalKey) {
-                effectiveName = rename.newKey;
-            } else if (effectiveName.startsWith(rename.originalKey + ".")) {
-                effectiveName = rename.newKey + effectiveName.slice(rename.originalKey.length);
-            } else {
-                continue;
-            }
-
-            appliedRenames.add(renameKey);
-            changed = true;
-            break;
-        }
-    }
-
-    return effectiveName;
+    const rename = [...renames]
+        .sort((a, b) => b.originalKey.length - a.originalKey.length)
+        .find((entry) => profileName === entry.originalKey || profileName.startsWith(entry.originalKey + "."));
+    return rename ? rename.newKey + profileName.slice(rename.originalKey.length) : profileName;
 };
 
 /** Split the alternating profiles/name prefix from a JSON path's property suffix. */

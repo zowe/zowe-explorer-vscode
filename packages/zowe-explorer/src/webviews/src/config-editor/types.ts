@@ -96,6 +96,7 @@ export interface IConfigLayer {
     };
 }
 
+/** Saved profile identities mapped directly to their final displayed paths, scoped by layer. */
 export type RenamesMap = { [configPath: string]: { [originalKey: string]: string } };
 export type DeletionsMap = { [configPath: string]: string[] };
 export type PendingChangesMap = { [configPath: string]: { [key: string]: PendingChange } };
@@ -160,6 +161,7 @@ export interface FormattedChange {
 
 /** Payload returned by `formatPendingChanges()` for save / merged-properties requests. */
 export interface FormattedPendingChanges {
+    profilePathsAreEffective?: boolean;
     changes: FormattedChange[];
     deletions: Array<{ key: string; configPath: string; secure: boolean }>;
     defaultsChanges: Array<{ key: string; value: string; path: string[]; configPath: string; secure: boolean }>;

@@ -10,9 +10,17 @@
  */
 
 import type { EditorRuntime } from "./types";
+import { mapProfilePath } from "../utils/profilePaths";
 import { selectFlattenedConfig, selectFlattenedDefaults } from "./selectors";
 import { createUtilityHelpers } from "./utilityHelpers";
-import { extractProfileKeyFromPath, getRenamedProfileKeyWithNested, parseValueByType, getNestedProperty, stringifyValueByType } from "../utils";
+import {
+    extractProfileKeyFromPath,
+    getRenamedProfileKeyWithNested,
+    getOriginalProfileKeyWithNested,
+    parseValueByType,
+    getNestedProperty,
+    stringifyValueByType,
+} from "../utils";
 import { getPropertyTypeForAddProfile } from "../utils/propertyUtils";
 import { getProfileType } from "../utils/profileUtils";
 import { isProfileDefault } from "../utils/profileHelpers";
@@ -57,11 +65,7 @@ export function createPropertyActions(state: EditorRuntime) {
         const configPath = configurations[selectedTab!]!.configPath;
         const path = flattenedConfig[key]?.path ?? key.split(".");
 
-        let profileKey = selectedProfileKey || extractProfileKeyFromPath(path);
-
-        if (selectedProfileKey && renames[configPath]) {
-            profileKey = getRenamedProfileKeyWithNested(selectedProfileKey, configPath, renames);
-        }
+        const profileKey = selectedProfileKey || extractProfileKeyFromPath(path);
 
         const isProfileLevelType = path[path.length - 1] === "type" && !path.includes("properties");
         if (isProfileLevelType) {
@@ -91,7 +95,14 @@ export function createPropertyActions(state: EditorRuntime) {
 
         const displayKey = path[path.length - 1];
         const currentSecure = utilityHelpers.isPropertySecure(key, displayKey, path, undefined);
-        const originalValue = getNestedProperty(configurations[selectedTab!].properties, path);
+        const originalProfile = getOriginalProfileKeyWithNested(profileKey, configPath, renames);
+        const originalValue =
+            getRenamedProfileKeyWithNested(originalProfile, configPath, renames) === profileKey
+                ? getNestedProperty(
+                      configurations[selectedTab!].properties,
+                      mapProfilePath(path, (key) => getOriginalProfileKeyWithNested(key, configPath, renames))
+                  )
+                : undefined;
         const isBackToOriginal =
             stringifyValueByType(value) === stringifyValueByType((originalValue !== undefined && originalValue !== null ? originalValue : "") as any);
 

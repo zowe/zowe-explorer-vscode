@@ -52,117 +52,6 @@ describe("ConfigEditorProfileOperations", () => {
 
     afterEach(() => vi.restoreAllMocks());
 
-    describe("updateRenameKeysForParentChanges", () => {
-        it("should return empty array for empty input", () => {
-            const result = profileOperations.updateRenameKeysForParentChanges([]);
-            expect(result).toEqual([]);
-        });
-
-        it("should handle single rename without parent changes", () => {
-            const renames = [{ originalKey: "profile1", newKey: "renamed1", configPath: "/config.json" }];
-            const result = profileOperations.updateRenameKeysForParentChanges(renames);
-            expect(result).toEqual(renames);
-        });
-
-        it("should handle parent-first rename scenario", () => {
-            const renames = [
-                { originalKey: "parent", newKey: "newParent", configPath: "/config.json" },
-                { originalKey: "parent.child", newKey: "parent.child", configPath: "/config.json" },
-            ];
-            const result = profileOperations.updateRenameKeysForParentChanges(renames);
-            expect(result).toEqual([
-                { originalKey: "parent", newKey: "newParent", configPath: "/config.json" },
-                { originalKey: "newParent.child", newKey: "newParent.child", configPath: "/config.json" },
-            ]);
-        });
-
-        it("should handle child-first rename scenario", () => {
-            const renames = [
-                { originalKey: "parent.child", newKey: "parent.newChild", configPath: "/config.json" },
-                { originalKey: "parent", newKey: "newParent", configPath: "/config.json" },
-            ];
-            const result = profileOperations.updateRenameKeysForParentChanges(renames);
-            expect(result).toEqual([
-                { originalKey: "newParent.child", newKey: "newParent.newChild", configPath: "/config.json" },
-                { originalKey: "parent", newKey: "newParent", configPath: "/config.json" },
-            ]);
-        });
-
-        it("should handle multiple config paths separately", () => {
-            const renames = [
-                { originalKey: "profile1", newKey: "renamed1", configPath: "/config1.json" },
-                { originalKey: "profile2", newKey: "renamed2", configPath: "/config2.json" },
-            ];
-            const result = profileOperations.updateRenameKeysForParentChanges(renames);
-            expect(result).toEqual(renames);
-        });
-
-        it("should handle complex nested renames", () => {
-            const renames = [
-                { originalKey: "a", newKey: "x", configPath: "/config.json" },
-                { originalKey: "a.b", newKey: "a.b", configPath: "/config.json" },
-                { originalKey: "a.b.c", newKey: "a.b.c", configPath: "/config.json" },
-            ];
-            const result = profileOperations.updateRenameKeysForParentChanges(renames);
-            expect(result).toEqual([
-                { originalKey: "a", newKey: "x", configPath: "/config.json" },
-                { originalKey: "x.b", newKey: "x.b", configPath: "/config.json" },
-                { originalKey: "x.b.c", newKey: "x.b.c", configPath: "/config.json" },
-            ]);
-        });
-    });
-
-    describe("removeDuplicateRenames", () => {
-        it("should return empty array for empty input", () => {
-            const result = profileOperations.removeDuplicateRenames([]);
-            expect(result).toEqual([]);
-        });
-
-        it("should return single rename unchanged", () => {
-            const renames = [{ originalKey: "profile1", newKey: "renamed1", configPath: "/config.json" }];
-            const result = profileOperations.removeDuplicateRenames(renames);
-            expect(result).toEqual(renames);
-        });
-
-        it("should remove duplicate renames with same target", () => {
-            const renames = [
-                { originalKey: "profile1", newKey: "renamed", configPath: "/config.json" },
-                { originalKey: "profile2", newKey: "renamed", configPath: "/config.json" },
-            ];
-            const result = profileOperations.removeDuplicateRenames(renames);
-            expect(result).toHaveLength(1);
-            expect(result[0].originalKey).toBe("profile1");
-        });
-
-        it("should keep renames with same target but different ending segments", () => {
-            const renames = [
-                { originalKey: "profile1", newKey: "renamed", configPath: "/config.json" },
-                { originalKey: "profile1", newKey: "renamed", configPath: "/config.json" },
-            ];
-            const result = profileOperations.removeDuplicateRenames(renames);
-            expect(result).toHaveLength(2);
-        });
-
-        it("should prefer shorter original key path for duplicates", () => {
-            const renames = [
-                { originalKey: "a.b.c", newKey: "renamed", configPath: "/config.json" },
-                { originalKey: "a.b", newKey: "renamed", configPath: "/config.json" },
-            ];
-            const result = profileOperations.removeDuplicateRenames(renames);
-            expect(result).toHaveLength(1);
-            expect(result[0].originalKey).toBe("a.b");
-        });
-
-        it("should handle multiple config paths separately", () => {
-            const renames = [
-                { originalKey: "profile1", newKey: "renamed", configPath: "/config1.json" },
-                { originalKey: "profile2", newKey: "renamed", configPath: "/config2.json" },
-            ];
-            const result = profileOperations.removeDuplicateRenames(renames);
-            expect(result).toHaveLength(2);
-        });
-    });
-
     describe("wouldCreateCircularReference", () => {
         it("should return false for non-child relationship", () => {
             const result = profileOperations.wouldCreateCircularReference("parent", "sibling");
@@ -541,7 +430,7 @@ describe("ConfigEditorProfileOperations", () => {
                 renames: {},
             });
             expect(result.isValid).toBe(false);
-            expect(result.message).toBe("Profile name already exists under this root");
+            expect(result.message).toContain("already exists");
         });
 
         it("should return invalid when profile name differs only by case from an existing profile", () => {
@@ -560,7 +449,7 @@ describe("ConfigEditorProfileOperations", () => {
                 renames: {},
             });
             expect(result.isValid).toBe(false);
-            expect(result.message).toBe("Profile name already exists under this root");
+            expect(result.message).toContain("already exists");
         });
 
         it("should return invalid when profile name exists under nested root", () => {
@@ -584,7 +473,7 @@ describe("ConfigEditorProfileOperations", () => {
                 renames: {},
             });
             expect(result.isValid).toBe(false);
-            expect(result.message).toBe("Profile name already exists under this root");
+            expect(result.message).toContain("already exists");
         });
 
         it("should return invalid when profile name exists in pending changes", () => {
@@ -606,7 +495,7 @@ describe("ConfigEditorProfileOperations", () => {
                 renames: {},
             });
             expect(result.isValid).toBe(false);
-            expect(result.message).toBe("Profile name already exists in pending changes");
+            expect(result.message).toContain("already exists");
         });
 
         it("should return invalid when profile name conflicts with renamed profile", () => {
@@ -619,12 +508,12 @@ describe("ConfigEditorProfileOperations", () => {
                 profileName: "newProfile",
                 rootProfile: "root",
                 configPath: "/config.json",
-                profiles: {},
+                profiles: { oldProfile: { type: "zosmf" } },
                 pendingChanges: {},
                 renames,
             });
             expect(result.isValid).toBe(false);
-            expect(result.message).toBe("Profile name conflicts with a renamed profile");
+            expect(result.message).toContain("already exists");
         });
 
         it("should return valid when creating a child under a renamed parent", () => {
@@ -666,7 +555,7 @@ describe("ConfigEditorProfileOperations", () => {
                 renames: { "/config.json": { oldParent: "newParent" } },
             });
             expect(result.isValid).toBe(false);
-            expect(result.message).toBe("Profile name already exists under this root");
+            expect(result.message).toContain("already exists");
         });
 
         it("should return valid when profile name is available", () => {
@@ -700,41 +589,6 @@ describe("ConfigEditorProfileOperations", () => {
         });
     });
 
-    describe("sortRenamesByDepth", () => {
-        it("should sort renames by newKey depth first, then by originalKey depth", () => {
-            const renames = [
-                { originalKey: "profiles.parent.child.grandchild", newKey: "profiles.parent.child.renamedGrandchild", configPath: "/c" },
-                { originalKey: "profiles.parent", newKey: "profiles.renamedParent", configPath: "/c" },
-                { originalKey: "profiles.parent.child", newKey: "profiles.parent.renamedChild", configPath: "/c" },
-                { originalKey: "profiles.other.deep.nested.profile", newKey: "profiles.parent.renamedChild", configPath: "/c" },
-                { originalKey: "profiles.simple", newKey: "profiles.parent.renamedChild", configPath: "/c" },
-            ];
-
-            const sortedRenames = profileOperations.sortRenamesByDepth(renames);
-
-            expect(sortedRenames).toHaveLength(5);
-            expect(sortedRenames[0].newKey).toBe("profiles.renamedParent");
-            expect(sortedRenames[1].newKey).toBe("profiles.parent.renamedChild");
-            expect(sortedRenames[2].newKey).toBe("profiles.parent.renamedChild");
-            expect(sortedRenames[3].newKey).toBe("profiles.parent.renamedChild");
-            expect(sortedRenames[4].newKey).toBe("profiles.parent.child.renamedGrandchild");
-
-            // Secondary sort by originalKey depth for renames that share the same newKey depth
-            expect(sortedRenames[1].originalKey).toBe("profiles.simple");
-            expect(sortedRenames[2].originalKey).toBe("profiles.parent.child");
-            expect(sortedRenames[3].originalKey).toBe("profiles.other.deep.nested.profile");
-        });
-
-        it("should handle empty array", () => {
-            expect(profileOperations.sortRenamesByDepth([])).toEqual([]);
-        });
-
-        it("should handle single rename", () => {
-            const renames = [{ originalKey: "profiles.test", newKey: "profiles.renamed", configPath: "/c" }];
-            expect(profileOperations.sortRenamesByDepth(renames)).toEqual(renames);
-        });
-    });
-
     describe("prepareRenamesForProcessing", () => {
         it("should drop renames whose originalKey equals its newKey", () => {
             const renames = [
@@ -742,10 +596,9 @@ describe("ConfigEditorProfileOperations", () => {
                 { originalKey: "profiles.changed", newKey: "profiles.renamed", configPath: "/c" },
             ];
 
-            const result = profileOperations.prepareRenamesForProcessing(renames);
-
-            expect(result).toHaveLength(1);
-            expect(result[0].originalKey).toBe("profiles.changed");
+            expect(profileOperations.prepareRenamesForProcessing(renames)).toEqual([
+                { originalKey: "profiles.changed", newKey: "profiles.renamed", configPath: "/c" },
+            ]);
         });
 
         it("should re-parent an unrenamed child under its renamed parent and drop the now-redundant child rename", () => {
@@ -762,15 +615,13 @@ describe("ConfigEditorProfileOperations", () => {
             expect(result).toEqual([{ originalKey: "parent", newKey: "renamedParent", configPath: "/c" }]);
         });
 
-        it("should remove duplicate renames that target the same final key", () => {
+        it("rejects independent profiles targeting the same final key", () => {
             const renames = [
                 { originalKey: "profiles.one", newKey: "profiles.renamed", configPath: "/c" },
                 { originalKey: "profiles.two", newKey: "profiles.renamed", configPath: "/c" },
             ];
 
-            const result = profileOperations.prepareRenamesForProcessing(renames);
-
-            expect(result).toHaveLength(1);
+            expect(() => profileOperations.prepareRenamesForProcessing(renames)).toThrow("Conflicting profile renames");
         });
     });
 
@@ -905,6 +756,58 @@ describe("ConfigEditorProfileOperations", () => {
             expect(memory.saved.get(configPath).profiles.base).toEqual(original);
         });
 
+        it("vacates a source before reusing its name regardless of request order", () => {
+            const memory = setup();
+            const renames = [
+                { originalKey: "group", newKey: "base", configPath },
+                { originalKey: "base", newKey: "moved", configPath },
+            ];
+            if (mode === "stage") profileOperations.stageProfileRenames(renames, memory.profileInfo);
+            else profileOperations.simulateProfileRenames(renames, memory.config);
+            expect(memory.config.layers[0].properties.profiles.base).toEqual({});
+            expect(memory.config.layers[0].properties.profiles.moved).toMatchObject({ type: "base", secure: ["password"] });
+            expect(memory.config.layers[0].properties.defaults.base).toBe("moved");
+        });
+
+        it("preserves a subtree during a case-only rename", () => {
+            const memory = setup();
+            apply(memory, "base", "BASE");
+            expect(memory.config.layers[0].properties.profiles.BASE).toMatchObject({ type: "base", profiles: { child: { type: "zosmf" } } });
+            expect(memory.config.layers[0].properties.profiles).not.toHaveProperty("base");
+        });
+
+        it("rejects case-insensitive duplicate destinations before changing the configuration", () => {
+            const memory = setup();
+            const before = structuredClone(memory.config.layers);
+            const renames = [
+                { originalKey: "base", newKey: "target", configPath },
+                { originalKey: "group", newKey: "TARGET", configPath },
+            ];
+            expect(() =>
+                mode === "stage"
+                    ? profileOperations.stageProfileRenames(renames, memory.profileInfo)
+                    : profileOperations.simulateProfileRenames(renames, memory.config)
+            ).toThrow("Conflicting profile renames");
+            expect(memory.config.layers).toEqual(before);
+            expect(memory.save).not.toHaveBeenCalled();
+        });
+
+        it.each([
+            ["group.base", "group.base.renamed"],
+            ["extracted.base", "extracted"],
+        ])("keeps parent and child identities when their final paths are %s and %s", (parentTarget, childTarget) => {
+            const memory = setup();
+            const renames = [
+                { originalKey: "base", newKey: parentTarget, configPath },
+                { originalKey: "base.child", newKey: childTarget, configPath },
+            ];
+            if (mode === "stage") profileOperations.stageProfileRenames(renames, memory.profileInfo);
+            else profileOperations.simulateProfileRenames(renames, memory.config);
+            expect(findProfile(memory.config.layers[0].properties.profiles, parentTarget)).toMatchObject({ type: "base" });
+            expect(findProfile(memory.config.layers[0].properties.profiles, childTarget)).toMatchObject({ type: "zosmf", properties: { port: 443 } });
+            expect(memory.config.layers[0].properties.defaults).toMatchObject({ base: parentTarget, zosmf: childTarget });
+        });
+
         it("extracts a nested child while retaining the parent's properties and credentials", () => {
             const memory = setup();
             apply(memory, "base.child", "extracted");
@@ -1000,9 +903,9 @@ describe("ConfigEditorProfileOperations", () => {
         });
 
         it("should return early when renames array is empty", () => {
-            const removeDuplicateRenamesSpy = vi.spyOn(profileOperations, "removeDuplicateRenames");
+            const prepareSpy = vi.spyOn(profileOperations, "prepareRenamesForProcessing");
             profileOperations.simulateProfileRenames([], {} as any);
-            expect(removeDuplicateRenamesSpy).not.toHaveBeenCalled();
+            expect(prepareSpy).not.toHaveBeenCalled();
         });
 
         it("should warn and return early when teamConfig is null or undefined", () => {

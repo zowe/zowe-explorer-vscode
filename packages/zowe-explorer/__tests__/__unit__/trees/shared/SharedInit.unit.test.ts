@@ -781,7 +781,9 @@ describe("Test src/shared/extension", () => {
                     visible: true,
                 },
             };
-            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(function () {
+                return mockConfigEditorInstance;
+            });
 
             const result = await cmd({});
 
@@ -805,7 +807,9 @@ describe("Test src/shared/extension", () => {
                     promise: Promise.resolve("success"),
                 },
             };
-            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(function () {
+                return mockConfigEditorInstance;
+            });
 
             // First call to create it
             cmd({});
@@ -832,7 +836,9 @@ describe("Test src/shared/extension", () => {
                 },
                 userSubmission: { promise: Promise.resolve() }, // Add promise to prevent await issues if returned
             };
-            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(function () {
+                return mockConfigEditorInstance;
+            });
 
             const result = await cmd("prof1", "path/1", "type1");
 
@@ -861,7 +867,9 @@ describe("Test src/shared/extension", () => {
                 initialSelection: {},
                 userSubmission: { promise: Promise.resolve("success") },
             };
-            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(function () {
+                return mockConfigEditorInstance;
+            });
 
             // Initialize
             initCmd({});
@@ -894,7 +902,9 @@ describe("Test src/shared/extension", () => {
                 },
                 userSubmission: { promise: Promise.resolve() },
             };
-            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(function () {
+                return mockConfigEditorInstance;
+            });
 
             initCmd({});
 
@@ -931,7 +941,9 @@ describe("Test src/shared/extension", () => {
                     dispose: vi.fn(),
                 },
             };
-            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(function () {
+                return mockConfigEditorInstance;
+            });
 
             // Mock l10n to match the check
             vi.spyOn(vscode.l10n, "t").mockReturnValue("Config Editor");
@@ -1720,7 +1732,9 @@ describe("Test src/shared/extension", () => {
                 initialSelection: {} as any,
                 userSubmission: { promise: Promise.resolve("success") },
             };
-            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(function () {
+                return mockConfigEditorInstance;
+            });
 
             // First call — creates the instance
             await cmd(undefined); // no URI → no cursor context
@@ -1764,7 +1778,9 @@ describe("Test src/shared/extension", () => {
                 },
                 userSubmission: { promise: Promise.resolve("done") },
             };
-            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(function () {
+                return mockConfigEditorInstance;
+            });
 
             const resolveSpy = vi
                 .spyOn(SharedInit, "resolveZoweConfigCursorContext")
@@ -1797,7 +1813,9 @@ describe("Test src/shared/extension", () => {
                 },
                 userSubmission: { promise: Promise.resolve("done") },
             };
-            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(function () {
+                return mockConfigEditorInstance;
+            });
 
             const resolveSpy = vi.spyOn(SharedInit, "resolveZoweConfigCursorContext").mockReturnValue(undefined);
 
@@ -1853,7 +1871,9 @@ describe("Test src/shared/extension", () => {
                 },
                 userSubmission: { promise: Promise.resolve("done") },
             };
-            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(function () {
+                return mockConfigEditorInstance;
+            });
 
             const resolveSpy = vi
                 .spyOn(SharedInit, "resolveZoweConfigCursorContext")
@@ -1883,7 +1903,9 @@ describe("Test src/shared/extension", () => {
                 },
                 userSubmission: { promise: Promise.resolve("done") },
             };
-            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(function () {
+                return mockConfigEditorInstance;
+            });
 
             // Cursor context resolves to a different profile than the one this CodeLens targets —
             // e.g. a stale cursor position left over from browsing elsewhere in the file.
@@ -1918,7 +1940,9 @@ describe("Test src/shared/extension", () => {
                 initialSelection: {} as any,
                 userSubmission: { promise: Promise.resolve("success") },
             };
-            (ConfigEditor as Mock).mockImplementation(() => mockConfigEditorInstance);
+            (ConfigEditor as Mock).mockImplementation(function () {
+                return mockConfigEditorInstance;
+            });
 
             // First call — creates the instance (no cursor context needed for this one)
             vi.spyOn(SharedInit, "resolveZoweConfigCursorContext").mockReturnValue(undefined);

@@ -9,6 +9,7 @@
  *
  */
 
+import { getEffectiveProfileKeys, resolveProfileDestination } from "../utils/profileConflicts";
 import { profileKeyToPath } from "../utils/configUtils";
 import { parseValueByType, flattenProfiles } from "../utils";
 import {
@@ -148,35 +149,21 @@ export function createWizardActions(state: EditorRuntime) {
 
         const configPath = configurations[selectedTab!]!.configPath;
 
-        // Check if profile already exists under the selected root
-        const config = configurations[selectedTab!].properties;
-        const flatProfiles = flattenProfiles(config.profiles);
-
-        const newProfileKeyLower = (
-            wizardRootProfile === "root" ? wizardProfileName.trim() : `${wizardRootProfile}.${wizardProfileName.trim()}`
-        ).toLowerCase();
-
-        // Get all existing profile names under the selected root
-        const existingProfilesUnderRoot = Object.keys(flatProfiles).filter((profileKey) => {
-            const profileKeyLower = profileKey.toLowerCase();
-            return profileKeyLower === newProfileKeyLower || profileKeyLower.startsWith(`${newProfileKeyLower}.`);
+        const newProfileKey = wizardRootProfile === "root" ? wizardProfileName.trim() : `${wizardRootProfile}.${wizardProfileName.trim()}`;
+        const result = resolveProfileDestination({
+            proposedKey: newProfileKey,
+            profileKeys: getEffectiveProfileKeys(
+                Object.keys(flattenProfiles(configurations[selectedTab!].properties.profiles)),
+                Object.values(pendingChanges[configPath] || {}).map((entry) => entry.profile),
+                renames[configPath] || {}
+            ),
+            onConflict: "reject",
         });
-
-        // check pending changes for profiles being created
-        const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([_, entry]) => {
-            if (entry.profile) {
-                const entryProfileLower = entry.profile.toLowerCase();
-                return entryProfileLower === newProfileKeyLower || entryProfileLower.startsWith(`${newProfileKeyLower}.`);
-            }
-            return false;
-        });
-
-        if (existingProfilesUnderRoot.length > 0 || pendingProfilesUnderRoot) {
-            // Profile already exists don't create it
+        if (result.status === "conflict") {
+            setWizardProfileNameValidation({ isValid: false, message: result.message });
             return;
         }
 
-        const newProfileKey = wizardRootProfile === "root" ? wizardProfileName : `${wizardRootProfile}.${wizardProfileName}`;
         const profilePath = profileKeyToPath(newProfileKey);
 
         // Add type property only if selected

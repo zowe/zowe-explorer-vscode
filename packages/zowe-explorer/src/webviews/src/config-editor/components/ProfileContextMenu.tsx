@@ -12,7 +12,6 @@
 import * as l10n from "@vscode/l10n";
 import type { RefObject } from "react";
 import { useEditorFields } from "../context/EditorStoreContext";
-import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 import type { useProfileClipboard } from "../hooks/useProfileClipboard";
 import type { ProfileContextMenuState } from "../hooks/useProfileContextMenu";
 
@@ -36,7 +35,6 @@ export function ProfileContextMenu({
   pasteProfile,
 }: ProfileContextMenuProps) {
   const { setRenameProfileModalOpen } = useEditorFields("setRenameProfileModalOpen");
-  const { isProfileAffectedByDragDrop } = useUtilityHelpers();
   return (
     <div ref={contextMenuRef} className="tab-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }} onClick={(e) => e.stopPropagation()}>
       {contextMenu.profileKey !== null ? (
@@ -103,19 +101,12 @@ export function ProfileContextMenu({
             <span>{l10n.t("Duplicate")}</span>
           </div>
           <div
-            className={`tab-context-menu-item ${isProfileAffectedByDragDrop(contextMenu.profileKey) ? "disabled" : ""}`}
+            className="tab-context-menu-item"
             id="context-menu-rename-profile"
-            title={
-              isProfileAffectedByDragDrop(contextMenu.profileKey)
-                ? l10n.t("Cannot rename: This profile or a related profile has been moved via drag-and-drop. Save and refresh to enable renaming.")
-                : undefined
-            }
             onClick={() => {
-              if (!isProfileAffectedByDragDrop(contextMenu.profileKey!)) {
-                onProfileSelect(contextMenu.profileKey!);
-                setRenameProfileModalOpen(true);
-                onClose();
-              }
+              onProfileSelect(contextMenu.profileKey!);
+              setRenameProfileModalOpen(true);
+              onClose();
             }}
           >
             <span className="codicon codicon-edit codicon-tab-menu-icon"></span>

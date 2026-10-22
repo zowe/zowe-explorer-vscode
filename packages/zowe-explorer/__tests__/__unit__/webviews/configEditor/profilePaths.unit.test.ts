@@ -35,20 +35,20 @@ describe("profile paths", () => {
         expect(mapProfilePath("profiles.base.properties.profiles.host", () => "renamed")).toBe("profiles.renamed.properties.profiles.host");
     });
 
-    it("resolves long rename chains without reapplying nested moves or looping", () => {
+    it("resolves each original identity once even when another profile reuses its name", () => {
         const renames = Array.from({ length: 15 }, (_, index) => ({
             originalKey: `p${index}`,
             newKey: `p${index + 1}`,
             configPath: "/mock/team.json",
         }));
-        expect(applyRenameChainToProfileName("p0.child", renames)).toBe("p15.child");
+        expect(applyRenameChainToProfileName("p0.child", renames)).toBe("p1.child");
         expect(applyRenameChainToProfileName("a", [{ originalKey: "a", newKey: "a.child", configPath: "/mock/team.json" }])).toBe("a.child");
         expect(
             applyRenameChainToProfileName("a", [
                 { originalKey: "a", newKey: "b", configPath: "/mock/team.json" },
                 { originalKey: "b", newKey: "a", configPath: "/mock/team.json" },
             ])
-        ).toBe("a");
+        ).toBe("b");
     });
 
     it("retains the original array when no rename applies", () => {

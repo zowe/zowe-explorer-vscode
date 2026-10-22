@@ -9,6 +9,7 @@
  *
  */
 
+import { resolveProfileDestination } from "./profileConflicts";
 import { flattenProfiles, profileKeyToPath } from "./configUtils";
 import {
     getOriginalProfileKeyWithNested,
@@ -29,7 +30,7 @@ import type {
 
 interface CollectClipboardProfilesParams extends ConfigStateContext {
     profileKey: string;
-    profileKeys: string[];
+    profileKeys?: string[];
     pendingProfiles: Record<string, unknown>;
     getProfileType: (profileKey: string) => string | null;
     deletions?: DeletionsMap;
@@ -47,24 +48,23 @@ function deleteProfileField(profile: Record<string, unknown>, field: string): vo
 
 /** Snapshot the selected profile and descendants, including pending values and secure flags. */
 export function collectClipboardProfiles(params: CollectClipboardProfilesParams): ProfileClipboard["profiles"] {
-    const { profileKey, profileKeys, pendingProfiles, getProfileType, selectedTab, configurations, pendingChanges, renames, deletions = {} } = params;
+    const { profileKey, pendingProfiles, getProfileType, selectedTab, configurations, pendingChanges, renames, deletions = {} } = params;
     const config = selectedTab === null ? undefined : configurations[selectedTab];
     if (!config) return {};
 
     const flatProfiles = flattenProfiles(config.properties?.profiles || {});
     const allKeys = new Set(
-        [...profileKeys, ...Object.keys(flatProfiles), ...Object.keys(pendingProfiles)].map((key) =>
-            getRenamedProfileKeyWithNested(key, config.configPath, renames)
-        )
+        Object.keys(flatProfiles)
+            .map((key) => getRenamedProfileKeyWithNested(key, config.configPath, renames))
+            .concat(Object.keys(pendingProfiles))
     );
     const profiles: ProfileClipboard["profiles"] = {};
     for (const key of allKeys) {
         if (key !== profileKey && !key.startsWith(profileKey + ".")) continue;
         const profilePath = profileKeyToPath(key);
         const originalKey = getOriginalProfileKeyWithNested(key, config.configPath, renames);
-        if (isProfileOrParentDeleted(key, deletions, config.configPath) || isProfileOrParentDeleted(originalKey, deletions, config.configPath))
-            continue;
-        const baseProfile = flatProfiles[originalKey] || {};
+        if (isProfileOrParentDeleted(key, deletions, config.configPath)) continue;
+        const baseProfile = getRenamedProfileKeyWithNested(originalKey, config.configPath, renames) === key ? flatProfiles[originalKey] || {} : {};
         const profile = mergePendingChangesForProfile({
             baseObj: structuredClone(baseProfile),
             path: profilePath,
@@ -107,11 +107,7 @@ export function collectClipboardProfiles(params: CollectClipboardProfilesParams)
             secureSources[propertyKey] = { configPath: config.configPath, profileKey: originalKey, propertyKey };
         }
         for (const entry of Object.values(pendingChanges[config.configPath] ?? {})) {
-            if (
-                getRenamedProfileKeyWithNested(entry.profile, config.configPath, renames) === key &&
-                entry.secureSource &&
-                Object.prototype.hasOwnProperty.call(properties, entry.path[entry.path.length - 1])
-            ) {
+            if (entry.profile === key && entry.secureSource && Object.prototype.hasOwnProperty.call(properties, entry.path[entry.path.length - 1])) {
                 secureSources[entry.path[entry.path.length - 1]] = entry.secureSource;
             }
         }
@@ -128,10 +124,9 @@ export function collectClipboardProfiles(params: CollectClipboardProfilesParams)
 }
 
 export function getUniqueProfileKey(proposedKey: string, existingKeys: string[]): string {
-    const keys = new Set(existingKeys);
-    let result = proposedKey;
-    for (let suffix = 1; keys.has(result); suffix++) result = `${proposedKey}_${suffix}`;
-    return result;
+    const result = resolveProfileDestination({ proposedKey, profileKeys: existingKeys, onConflict: "suffix" });
+    if (result.status === "conflict") throw new Error(result.message);
+    return result.key;
 }
 
 /** Rebase a clipboard subtree into the pending-change shape used by save and merge requests. */

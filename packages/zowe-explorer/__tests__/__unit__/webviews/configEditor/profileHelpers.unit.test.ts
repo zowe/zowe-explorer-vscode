@@ -88,7 +88,7 @@ describe("profileHelpers", () => {
                     configPath,
                     properties: {
                         defaults: { zowe: "oldBase" },
-                        profiles: { base: { type: "zowe", properties: {} } },
+                        profiles: { oldBase: { type: "zowe", properties: {} } },
                     },
                 },
             ] as any;
@@ -125,13 +125,13 @@ describe("profileHelpers", () => {
             ).toBe(false);
         });
         it("returns true when default matches via rename loop (defaultValue === originalKey && newKey === profileKey)", () => {
-            const renames = { [configPath]: { old1: "base", old2: "base" } };
+            const renames = { [configPath]: { old1: "base", old2: "other" } };
             const configsMulti = [
                 {
                     configPath,
                     properties: {
                         defaults: { zowe: "old1" },
-                        profiles: { base: { type: "zowe", properties: {} } },
+                        profiles: { old1: { type: "zowe", properties: {} } },
                     },
                 },
             ] as any;
@@ -154,7 +154,7 @@ describe("profileHelpers", () => {
                     properties: {
                         defaults: { zowe: "parentNew.old" },
                         profiles: {
-                            parentX: { type: "zowe", profiles: { old: { type: "zowe", properties: {} } } },
+                            parentNew: { type: "zowe", profiles: { old: { type: "zowe", properties: {} } } },
                         },
                     },
                 },

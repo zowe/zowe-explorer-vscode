@@ -27,8 +27,7 @@ export function createProfileActions(state: EditorRuntime) {
             state.setPendingProfileDeletion(null);
             state.setRenameProfileModalOpen(true);
         },
-        handleRenameProfile: (originalKey: string, newKey: string, isDragDrop = false) =>
-            handleRenameProfile(originalKey, newKey, isDragDrop, context),
+        handleRenameProfile: (profileKey: string, newKey: string, isDragDrop = false) => handleRenameProfile(profileKey, newKey, isDragDrop, context),
         confirmDeleteProfile: (profileKey: string) => {
             handleDeleteProfile(profileKey, context);
             state.setPendingProfileDeletion(null);

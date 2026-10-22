@@ -10,513 +10,105 @@
  */
 
 import { profileKeyToPath } from "../utils/configUtils";
-import { checkIfRenameCancelsOut, consolidateRenames, detectClosedLoops } from "../utils/renameUtils";
-import { getRenamedProfileKeyWithNested } from "../utils/profileUtils";
+import { mapProfilePath } from "../utils/profilePaths";
+import { getEffectiveProfileKeys, planProfileRename, rebaseProfileKey, resolveProfileDestination } from "../utils/profileConflicts";
+import { getRenamedProfileKeyWithNested, getOriginalProfileKeyWithNested } from "../utils/profileUtils";
 import { flattenProfiles } from "../utils";
 
 // Types
 import type { PendingChange } from "../types";
 import type { ProfileHandlerContext } from "../store/profileActions";
 
-// Profile handler props interface
-// Replaced by ProfileHandlerContext from ../hooks/useProfileHandlerContext
-
-// Applies a rename (originalKey -> newKey) on top of the existing renames map, consolidating
-// chains and dropping any closed loops. Shared by handleRenameProfile's renames-state update and
-// resolveKeyAfterRename below, so the two never compute a different result for the same input.
-function buildConsolidatedRenames(
-    currentRenames: { [originalKey: string]: string },
-    originalKey: string,
-    newKey: string
-): { [originalKey: string]: string } {
-    let updatedRenames = { ...currentRenames };
-    const wouldCancelOut = checkIfRenameCancelsOut(currentRenames, originalKey, newKey);
-
-    if (wouldCancelOut) {
-        const renamesToRemove = new Set<string>();
-        renamesToRemove.add(originalKey);
-        let currentKey = originalKey;
-        while (currentRenames[currentKey]) {
-            const targetKey = currentRenames[currentKey];
-            renamesToRemove.add(currentKey);
-            currentKey = targetKey;
-        }
-        for (const keyToRemove of renamesToRemove) {
-            delete updatedRenames[keyToRemove];
-        }
-    } else {
-        updatedRenames[originalKey] = newKey;
-    }
-
-    updatedRenames = consolidateRenames(updatedRenames, originalKey, newKey);
-
-    const closedLoops = detectClosedLoops(updatedRenames);
-    if (closedLoops.length > 0) {
-        const keysToRemove = new Set<string>();
-        closedLoops.forEach((loop) => loop.forEach((key) => keysToRemove.add(key)));
-        keysToRemove.forEach((key) => delete updatedRenames[key]);
-    }
-
-    return updatedRenames;
-}
-
-// Resolves what a profile key (selection, expanded-node entry, etc.) becomes after a rename of
-// originalKey -> newKey. Used everywhere handleRenameProfile needs to update a key that might be
-// the renamed profile itself, a child of it, or part of a chained rename.
-function resolveKeyAfterRename(
-    key: string,
-    originalKey: string,
-    newKey: string,
-    oldRenames: { [originalKey: string]: string },
-    updatedRenames: { [originalKey: string]: string }
-): string {
-    const oldRenamedValue = oldRenames[originalKey];
-
-    if (key === originalKey) {
-        return newKey;
-    }
-    if (key.startsWith(originalKey + ".")) {
-        return newKey + "." + key.substring(originalKey.length + 1);
-    }
-    if (oldRenamedValue && key.startsWith(oldRenamedValue + ".")) {
-        return newKey + "." + key.substring(oldRenamedValue.length + 1);
-    }
-    if (key === oldRenamedValue) {
-        return newKey;
-    }
-    for (const [origKey, renamedValue] of Object.entries(updatedRenames)) {
-        if (key === origKey) {
-            return renamedValue;
-        }
-        if (key === renamedValue) {
-            return key;
-        }
-    }
-    return key;
-}
-
-export const handleRenameProfile = (originalKey: string, newKey: string, isDragDrop: boolean = false, props: ProfileHandlerContext): boolean => {
-    const {
-        selectedTab,
-        configurations,
-        renames,
-        selectedProfileKey,
-        extractPendingProfiles,
-        vscodeApi,
-        setRenames,
-        setSelectedProfileKey,
-        setSortOrderVersion,
-        setSelectedProfilesByConfig,
-        setExpandedNodesByConfig,
-        setPendingDefaults,
-        setPendingChanges,
-        setRenameProfileModalOpen,
-        setDragDroppedProfiles,
-    } = props;
-
-    if (selectedTab === null) return false;
-    const configPath = configurations[selectedTab!]!.configPath;
-
-    // Check if we need to use the current effective name instead of the original key
-    const currentEffectiveName = getRenamedProfileKeyWithNested(originalKey, configPath, renames);
-    if (currentEffectiveName !== originalKey) {
-        // Use the current effective name as the original key
-        originalKey = currentEffectiveName;
-    }
-
-    // Check for circular renames before proceeding (same validation as rename modal)
+/** All draft references use effective paths; only the rename map retains saved identities. */
+export const handleRenameProfile = (currentKey: string, newKey: string, _isDragDrop: boolean = false, props: ProfileHandlerContext): boolean => {
+    const { selectedTab, configurations, renames, pendingChanges, extractPendingProfiles } = props;
+    const config = selectedTab === null ? undefined : configurations[selectedTab];
+    if (!config) return false;
+    const configPath = config.configPath;
+    const savedKeys = Object.keys(flattenProfiles(config.properties.profiles));
     const currentRenames = renames[configPath] || {};
-
-    // Special case: if renaming back to the original key, cancel the rename operation
-    if (newKey === originalKey) {
-        // Remove the rename entry to restore the profile to its original state
-        setRenames((prev) => {
-            const updatedRenames = { ...prev[configPath] };
-            delete updatedRenames[originalKey];
-            return {
-                ...prev,
-                [configPath]: updatedRenames,
-            };
-        });
-        return true; // Return true to indicate success (rename was canceled)
+    const originalKey = getOriginalProfileKeyWithNested(currentKey, configPath, renames);
+    const pendingProfiles = extractPendingProfiles(configPath);
+    const profileKeys = getEffectiveProfileKeys(savedKeys, Object.keys(pendingProfiles), currentRenames);
+    const destination = resolveProfileDestination({ proposedKey: newKey, sourceKey: currentKey, profileKeys, onConflict: "reject" });
+    if (destination.status === "conflict") {
+        props.vscodeApi.postMessage({ command: "SHOW_ERROR_MESSAGE", message: destination.message });
+        return false;
     }
-
-    // Check for circular renames, but allow cancellations
-    if (currentRenames[newKey] === originalKey) {
-        // Check if this is actually a cancellation (moving back to original location)
-        const isCancellation = Object.entries(currentRenames).some(([origKey, targetKey]) => targetKey === originalKey && origKey === newKey);
-
-        if (isCancellation) {
-            // This is a cancellation, not a circular rename - allow it to proceed
-        } else {
-            // Show error message for circular rename
-            vscodeApi.postMessage({
-                command: "SHOW_ERROR_MESSAGE",
-                message: `Cannot rename '${originalKey}' to '${newKey}': This would create a circular rename (${newKey} -> ${originalKey})`,
-            });
-            return false; // Return false to indicate failure
-        }
+    if (destination.status === "noop") {
+        props.setRenameProfileModalOpen(false);
+        return true;
     }
-
-    // Build the consolidated renames map once; every downstream consumer below (renames state,
-    // selected profile, per-config selection, expanded nodes) resolves against this same map,
-    // so they can no longer drift out of sync with each other.
-    const updatedRenames = buildConsolidatedRenames(currentRenames, originalKey, newKey);
-
-    setRenames((prev) => ({ ...prev, [configPath]: updatedRenames }));
-
-    const newSelectedProfileKey = selectedProfileKey
-        ? resolveKeyAfterRename(selectedProfileKey, originalKey, newKey, currentRenames, updatedRenames)
-        : selectedProfileKey;
-
-    if (newSelectedProfileKey !== selectedProfileKey) {
-        setSelectedProfileKey(newSelectedProfileKey);
-
-        if (newSelectedProfileKey) {
-            // Increment sort order version to trigger re-render with updated merged properties
-            setSortOrderVersion((prev) => prev + 1);
-        }
-    }
-
-    // Update the selected profiles by config to reflect the rename
-    setSelectedProfilesByConfig((prev) => {
-        const currentSelectedProfile = prev[configPath];
-        if (!currentSelectedProfile) {
-            return prev;
-        }
-
-        const newCurrentSelectedProfile = resolveKeyAfterRename(currentSelectedProfile, originalKey, newKey, currentRenames, updatedRenames);
-
-        if (newCurrentSelectedProfile !== currentSelectedProfile) {
-            return {
-                ...prev,
-                [configPath]: newCurrentSelectedProfile,
-            };
-        }
-        return prev;
+    if (!profileKeys.includes(currentKey)) return false;
+    const rebase = (key: string) => rebaseProfileKey(key, currentKey, newKey);
+    // Pending-only profiles are moved by rebasing their changes, without inventing a saved source.
+    const updatedRenames =
+        savedKeys.includes(originalKey) && getRenamedProfileKeyWithNested(originalKey, configPath, renames) === currentKey
+            ? planProfileRename(currentRenames, originalKey, currentKey, newKey)
+            : Object.fromEntries(Object.entries(currentRenames).map(([key, target]) => [key, rebase(target)]));
+    props.setRenames((prev) => {
+        const next = { ...prev };
+        if (Object.keys(updatedRenames).length) next[configPath] = updatedRenames;
+        else delete next[configPath];
+        return next;
     });
-
-    // Update expanded nodes to reflect the rename
-    setExpandedNodesByConfig((prev) => {
-        const currentExpandedNodes = prev[configPath] || new Set();
-        const newExpandedNodes = new Set<string>();
-
-        for (const expandedKey of currentExpandedNodes) {
-            newExpandedNodes.add(resolveKeyAfterRename(expandedKey, originalKey, newKey, currentRenames, updatedRenames));
-        }
-
-        return {
-            ...prev,
-            [configPath]: newExpandedNodes,
-        };
+    if (props.selectedProfileKey) props.setSelectedProfileKey(rebase(props.selectedProfileKey));
+    props.setSortOrderVersion((prev) => prev + 1);
+    props.setSelectedProfilesByConfig((prev) => {
+        const selected = prev[configPath];
+        return { ...prev, [configPath]: selected ? rebase(selected) : newKey };
     });
-
-    // Auto-expand parent profiles when a profile is moved to a nested path
-    if (newKey !== originalKey && newKey.includes(".")) {
-        // Extract the parent path from the new key
-        const parentPath = newKey.substring(0, newKey.lastIndexOf("."));
-
-        // Add the parent path to expanded nodes if it's not already expanded
-        setExpandedNodesByConfig((prev) => {
-            const currentExpandedNodes = prev[configPath] || new Set();
-            if (!currentExpandedNodes.has(parentPath)) {
-                const newExpandedNodes = new Set(currentExpandedNodes);
-                newExpandedNodes.add(parentPath);
-                return {
-                    ...prev,
-                    [configPath]: newExpandedNodes,
-                };
-            }
-            return prev;
-        });
-    }
-
-    // Update any pending defaults that reference the old profile name or consolidated renames
-    setPendingDefaults((prev) => {
-        const configDefaults = prev[configPath] || {};
-        const updatedDefaults = { ...configDefaults };
-        let hasChanges = false;
-
-        // Check each default entry against all consolidated renames
-        Object.entries(updatedDefaults).forEach(([profileType, defaultEntry]) => {
-            // Check direct rename (full path match)
-            if (defaultEntry.value === originalKey) {
-                updatedDefaults[profileType] = {
-                    ...defaultEntry,
-                    value: newKey,
-                };
-                hasChanges = true;
-            }
-            // Check child renames (for nested profiles)
-            else if (defaultEntry.value.startsWith(originalKey + ".")) {
-                const childPath = defaultEntry.value.substring(originalKey.length + 1);
-                updatedDefaults[profileType] = {
-                    ...defaultEntry,
-                    value: newKey + "." + childPath,
-                };
-                hasChanges = true;
-            }
-            // Check consolidated renames
-            else {
-                for (const [origKey, renamedValue] of Object.entries(updatedRenames)) {
-                    if (defaultEntry.value === origKey) {
-                        updatedDefaults[profileType] = {
-                            ...defaultEntry,
-                            value: renamedValue,
-                        };
-                        hasChanges = true;
-                        break;
-                    }
-                }
-            }
-        });
-
-        // Check if the renamed profile was a default profile and create a pending default change
-        const config = configurations[selectedTab!].properties;
-        const defaults = config.defaults || {};
-
-        // Check if the original profile was a default for any profile type
-        for (const [profileType, defaultProfileName] of Object.entries(defaults)) {
-            const defaultProfileNameStr = String(defaultProfileName);
-
-            // Check if this profile was a default
-            if (defaultProfileNameStr === originalKey) {
-                // The renamed profile was a default, create a pending default change
-                updatedDefaults[profileType] = {
-                    value: newKey,
-                    path: [profileType],
-                };
-                hasChanges = true;
-            }
-
-            // Check if any child profiles of the renamed profile were defaults
-            // This handles cases like: tso.zosmf is default, tso is renamed to tso1, so tso1.zosmf should remain default
-            if (defaultProfileNameStr.startsWith(originalKey + ".")) {
-                // This is a child profile that was a default
-                const childPath = defaultProfileNameStr.substring(originalKey.length + 1);
-                const newChildDefault = newKey + "." + childPath;
-                updatedDefaults[profileType] = {
-                    value: newChildDefault,
-                    path: [profileType],
-                };
-                hasChanges = true;
-            }
-        }
-
-        if (hasChanges) {
-            return {
-                ...prev,
-                [configPath]: updatedDefaults,
-            };
-        }
-
-        return prev;
+    props.setExpandedNodesByConfig((prev) => {
+        const expanded = new Set([...(prev[configPath] || [])].map(rebase));
+        const parts = newKey.split(".");
+        for (let i = 1; i < parts.length; i++) expanded.add(parts.slice(0, i).join("."));
+        return { ...prev, [configPath]: expanded };
     });
-
-    // Update any pending changes that reference the old profile name
-    setPendingChanges((prev) => {
-        const configChanges = prev[configPath] || {};
-        const updatedChanges: { [key: string]: PendingChange } = {};
-        let hasChanges = false;
-
-        // Process each pending change entry
-        Object.entries(configChanges).forEach(([changeKey, changeEntry]) => {
-            let newChangeKey = changeKey;
-            let newChangeEntry = { ...changeEntry };
-
-            // Check if this pending change belongs to the profile being renamed
-            if (changeEntry.profile === originalKey) {
-                // Update the profile field
-                newChangeEntry.profile = newKey;
-
-                // Update the key path to reflect the new profile structure
-                const oldProfilePath = profileKeyToPath(originalKey).join(".");
-                const newProfilePath = profileKeyToPath(newKey).join(".");
-
-                if (changeKey.startsWith(oldProfilePath)) {
-                    newChangeKey = changeKey.replace(oldProfilePath, newProfilePath);
-                    hasChanges = true;
-                }
-            }
-            // Check if this pending change belongs to a child profile being renamed
-            else if (changeEntry.profile.startsWith(originalKey + ".")) {
-                const childPath = changeEntry.profile.substring(originalKey.length + 1);
-                newChangeEntry.profile = newKey + "." + childPath;
-
-                // Update the key path for child profiles
-                const oldChildProfilePath = profileKeyToPath(changeEntry.profile).join(".");
-                const newChildProfilePath = profileKeyToPath(newKey + "." + childPath).join(".");
-
-                if (changeKey.startsWith(oldChildProfilePath)) {
-                    newChangeKey = changeKey.replace(oldChildProfilePath, newChildProfilePath);
-                    hasChanges = true;
-                }
-            }
-            // Check consolidated renames
-            else {
-                for (const [origKey, renamedValue] of Object.entries(updatedRenames)) {
-                    if (changeEntry.profile === origKey) {
-                        newChangeEntry.profile = renamedValue;
-
-                        const oldProfilePath = profileKeyToPath(origKey).join(".");
-                        const newProfilePath = profileKeyToPath(renamedValue).join(".");
-
-                        if (changeKey.startsWith(oldProfilePath)) {
-                            newChangeKey = changeKey.replace(oldProfilePath, newProfilePath);
-                            hasChanges = true;
-                        }
-                        break;
-                    }
-                    // Check child profiles of consolidated renames
-                    else if (changeEntry.profile.startsWith(origKey + ".")) {
-                        const childPath = changeEntry.profile.substring(origKey.length + 1);
-                        newChangeEntry.profile = renamedValue + "." + childPath;
-
-                        const oldChildProfilePath = profileKeyToPath(changeEntry.profile).join(".");
-                        const newChildProfilePath = profileKeyToPath(renamedValue + "." + childPath).join(".");
-
-                        if (changeKey.startsWith(oldChildProfilePath)) {
-                            newChangeKey = changeKey.replace(oldChildProfilePath, newChildProfilePath);
-                            hasChanges = true;
-                        }
-                        break;
-                    }
-                }
-            }
-
-            // Add the entry (either updated or original)
-            updatedChanges[newChangeKey] = newChangeEntry;
-        });
-
-        if (hasChanges) {
-            return {
-                ...prev,
-                [configPath]: updatedChanges,
-            };
+    props.setPendingDefaults((prev) => {
+        const defaults = { ...prev[configPath] };
+        for (const [type, entry] of Object.entries(defaults)) defaults[type] = { ...entry, value: rebase(entry.value) };
+        for (const [type, value] of Object.entries(config.properties.defaults || {})) {
+            if (prev[configPath]?.[type] || typeof value !== "string") continue;
+            const effective = getRenamedProfileKeyWithNested(value, configPath, renames);
+            if (rebase(effective) !== effective) defaults[type] = { value: rebase(effective), path: [type] };
         }
-
-        return prev;
+        for (const [type, entry] of Object.entries(defaults)) {
+            if (entry.value === config.properties.defaults?.[type]) delete defaults[type];
+        }
+        const next = { ...prev };
+        if (Object.keys(defaults).length) next[configPath] = defaults;
+        else delete next[configPath];
+        return next;
     });
-
-    // If the new key is nested, create parent profiles as pending profiles
-    if (newKey.includes(".")) {
-        const parentParts = newKey.split(".");
-        const parentKeys: string[] = [];
-
-        // Create all parent profile keys
-        for (let i = 1; i < parentParts.length; i++) {
-            parentKeys.push(parentParts.slice(0, i).join("."));
-        }
-
-        // Check which parent profiles need to be created
-        const config = configurations[selectedTab!];
-        const existingProfiles = flattenProfiles(config.properties.profiles);
-        const existingProfileKeys = Object.keys(existingProfiles);
-
-        // Get all current profile keys including renamed ones
-        const allCurrentProfileKeys = existingProfileKeys.map((key) => getRenamedProfileKeyWithNested(key, configPath, renames));
-
-        // Also include pending profiles
-        const pendingProfiles = extractPendingProfiles(configPath);
-        const pendingProfileKeys = Object.keys(pendingProfiles);
-        allCurrentProfileKeys.push(...pendingProfileKeys);
-
-        // Add pending changes for parent profiles that don't exist
-        setPendingChanges((prev) => {
-            const newState = { ...prev };
-            newState[configPath] = { ...prev[configPath] };
-
-            parentKeys.forEach((parentKey) => {
-                // Check if this parent key is already a target of another rename operation
-                const isRenameTarget = Object.values(renames[configPath] || {}).includes(parentKey);
-                if (isRenameTarget) {
-                    // This parent profile is already being created by another rename, skip it
-                    return;
-                }
-
-                // Check if the parent profile exists in original profiles or as a renamed profile
-                const existsAsOriginal = existingProfileKeys.includes(parentKey);
-                const existsAsRenamed = allCurrentProfileKeys.includes(parentKey);
-
-                if (!existsAsOriginal && !existsAsRenamed) {
-                    // Create a pending change for the parent profile (without type)
-                    const fullPath = profileKeyToPath(parentKey);
-
-                    const fullPathKey = fullPath.join(".");
-                    newState[configPath][fullPathKey] = {
-                        value: {}, // Empty object to create the profile structure
-                        path: [],
-                        profile: parentKey,
-                        secure: false,
-                    };
-                }
-            });
-
-            return newState;
-        });
+    const changes: Record<string, PendingChange> = {};
+    for (const [key, entry] of Object.entries(pendingChanges[configPath] || {})) {
+        changes[mapProfilePath(key, rebase)] = { ...entry, profile: rebase(entry.profile), path: mapProfilePath(entry.path, rebase) };
     }
-
-    // Track drag-drop operations to disable rename button for affected profiles
-    if (isDragDrop) {
-        setDragDroppedProfiles((prev) => {
-            const newState = { ...prev };
-            newState[configPath] = new Set(prev[configPath]);
-
-            // Add the original profile and all its parents/children to the drag-dropped set
-            const addProfileAndRelated = (profileKey: string) => {
-                newState[configPath].add(profileKey);
-
-                // Add all parent profiles
-                const parts = profileKey.split(".");
-                for (let i = 1; i < parts.length; i++) {
-                    const parentKey = parts.slice(0, i).join(".");
-                    newState[configPath].add(parentKey);
-                }
-
-                // Add all child profiles that exist in the configuration or renames
-                const config = configurations[selectedTab].properties;
-                const flatProfiles = flattenProfiles(config.profiles);
-                Object.keys(flatProfiles).forEach((existingProfile) => {
-                    if (existingProfile.startsWith(profileKey + ".")) {
-                        newState[configPath].add(existingProfile);
-                    }
-                });
-
-                // Also check renamed profiles
-                Object.keys(renames[configPath] || {}).forEach((origProfile) => {
-                    if (origProfile.startsWith(profileKey + ".")) {
-                        newState[configPath].add(origProfile);
-                    }
-                });
-                Object.values(renames[configPath] || {}).forEach((renamedProfile) => {
-                    if (renamedProfile.startsWith(profileKey + ".")) {
-                        newState[configPath].add(renamedProfile);
-                    }
-                });
-            };
-
-            // Add both the original and new profile keys and their related profiles
-            addProfileAndRelated(originalKey);
-            addProfileAndRelated(newKey);
-
-            return newState;
-        });
+    // Materialize only missing ancestors, using the effective namespace rather than saved names.
+    const parts = newKey.split(".");
+    for (let i = 1; i < parts.length; i++) {
+        const parent = parts.slice(0, i).join(".");
+        if (profileKeys.map(rebase).includes(parent)) continue;
+        changes[profileKeyToPath(parent).join(".")] = { value: {}, path: [], profile: parent, secure: false };
     }
-
-    // Note: Secure properties are handled by the backend moveProfile function
-    // No need to create pending changes for secure properties during renames
-
-    // Close the modal
-    setRenameProfileModalOpen(false);
-
-    return true; // Return true to indicate success
+    props.setPendingChanges((prev) => {
+        const next = { ...prev };
+        if (Object.keys(changes).length) next[configPath] = changes;
+        else delete next[configPath];
+        return next;
+    });
+    props.setDeletions((prev) => ({ ...prev, [configPath]: (prev[configPath] || []).map((key) => mapProfilePath(key, rebase)) }));
+    props.setProfileClipboard((clipboard) =>
+        clipboard?.type === "cut" && clipboard.configPath === configPath ? { ...clipboard, sourceKey: rebase(clipboard.sourceKey) } : clipboard
+    );
+    props.setRenameProfileModalOpen(false);
+    return true;
 };
 
 export const handleDeleteProfile = (profileKey: string, props: ProfileHandlerContext): void => {
     const {
         selectedTab,
         configurations,
-        renames,
         selectedProfileKey,
         setDeletions,
         setPendingChanges,
@@ -529,7 +121,7 @@ export const handleDeleteProfile = (profileKey: string, props: ProfileHandlerCon
     const configPath = configurations[selectedTab].configPath;
 
     // Get the current effective profile key considering pending renames
-    const effectiveProfileKey = getRenamedProfileKeyWithNested(profileKey, configPath, renames);
+    const effectiveProfileKey = profileKey;
 
     // Construct the full profile path using the effective profile key
     const fullProfilePath = profileKeyToPath(effectiveProfileKey).join(".");

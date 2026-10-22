@@ -45,14 +45,8 @@ export class ConfigEditorMergedProperties {
             (renames ?? []).filter((rename) => rename.configPath === configPath)
         );
 
-        // Look for the profile using the original name first
-        // The allProfiles array contains profiles from the original configuration
-        let profile = allProfiles.find((prof) => prof.profName === profPath && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
-
-        // If not found with original name, try with the current effective name
-        if (!profile && profileNameToLookup !== profPath) {
-            profile = allProfiles.find((prof) => prof.profName === profileNameToLookup && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
-        }
+        // The simulated configuration already uses final names; an original name may now belong to another profile.
+        const profile = allProfiles.find((prof) => prof.profName === profileNameToLookup && prof.profLoc.osLoc?.includes(path.normalize(configPath)));
 
         if (!profile) {
             return;
@@ -115,10 +109,12 @@ export class ConfigEditorMergedProperties {
             }
         }
 
-        const actualRootProfile = applyRenameChainToProfileName(
-            rootProfile,
-            (renames ?? []).filter((rename) => rename.configPath === configPath)
-        );
+        const actualRootProfile = changes?.profilePathsAreEffective
+            ? rootProfile
+            : applyRenameChainToProfileName(
+                  rootProfile,
+                  (renames ?? []).filter((rename) => rename.configPath === configPath)
+              );
         const tempProfileName = profileName || `temp_${Date.now()}`;
         const expectedProfileName = actualRootProfile === "root" ? tempProfileName : `${actualRootProfile}.${tempProfileName}`;
         const tempProfilePath = profileKeyToPath(expectedProfileName).join(".");

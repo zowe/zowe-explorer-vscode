@@ -9,130 +9,26 @@
  *
  */
 
+import { resolveProfileKey } from "./profileConflicts";
 import { splitProfilePath } from "./profilePaths";
 import { RenamesMap, DeletionsMap, ProfileMap } from "../types";
 
+/** Original identities resolve directly to final paths; a vacated name may belong to another profile. */
 export function getRenamedProfileKey(originalKey: string, configPath: string, renames: RenamesMap): string {
-    const configRenames = renames[configPath];
-    return configRenames?.[originalKey] || originalKey;
+    return renames[configPath]?.[originalKey] || originalKey;
 }
 
 export function getRenamedProfileKeyWithNested(profileKey: string, configPath: string, renames: RenamesMap): string {
-    if (!profileKey.includes(".")) {
-        return getRenamedProfileKey(profileKey, configPath, renames);
-    }
-
-    const directRename = getRenamedProfileKey(profileKey, configPath, renames);
-    if (directRename !== profileKey) {
-        return directRename;
-    }
-
-    const configRenames = renames[configPath] || {};
-    let renamedPath = profileKey;
-
-    let changed = true;
-    while (changed) {
-        changed = false;
-        const sortedRenames = Object.entries(configRenames).sort(([a], [b]) => b.length - a.length);
-
-        for (const [originalKey, newKey] of sortedRenames) {
-            if (renamedPath === originalKey) {
-                renamedPath = newKey;
-                changed = true;
-                break;
-            }
-
-            if (renamedPath.startsWith(originalKey + ".")) {
-                renamedPath = renamedPath.replace(originalKey + ".", newKey + ".");
-                changed = true;
-                break;
-            }
-        }
-    }
-
-    return renamedPath;
+    return resolveProfileKey(profileKey, renames[configPath] || {});
 }
 
 export function getOriginalProfileKey(renamedKey: string, configPath: string, renames: RenamesMap): string {
-    const configRenames = renames[configPath];
-    if (configRenames) {
-        const visited = new Set<string>();
-        let currentKey = renamedKey;
-
-        while (true) {
-            let foundOriginal = false;
-            for (const [originalKey, newKey] of Object.entries(configRenames)) {
-                if (newKey === currentKey && !visited.has(originalKey)) {
-                    visited.add(originalKey);
-                    currentKey = originalKey;
-                    foundOriginal = true;
-                    break;
-                }
-            }
-
-            if (!foundOriginal) {
-                break;
-            }
-        }
-
-        return currentKey;
-    }
-    return renamedKey;
+    return Object.entries(renames[configPath] || {}).find(([, target]) => target === renamedKey)?.[0] || renamedKey;
 }
 
 export function getOriginalProfileKeyWithNested(renamedKey: string, configPath: string, renames: RenamesMap): string {
-    if (!renamedKey.includes(".")) {
-        return getOriginalProfileKey(renamedKey, configPath, renames);
-    }
-
-    const directOriginal = getOriginalProfileKey(renamedKey, configPath, renames);
-    if (directOriginal !== renamedKey) {
-        return directOriginal;
-    }
-
-    const profileParts = renamedKey.split(".");
-    let originalPath = "";
-
-    const configRenames = renames[configPath] || {};
-    for (const [origKey, _] of Object.entries(configRenames)) {
-        if (origKey.includes(".")) {
-            const wouldProduce = getRenamedProfileKeyWithNested(origKey, configPath, renames);
-            if (wouldProduce === renamedKey) {
-                return origKey;
-            }
-        }
-    }
-
-    for (let i = 0; i < profileParts.length; i++) {
-        const currentPath = profileParts.slice(0, i + 1).join(".");
-        const original = getOriginalProfileKey(currentPath, configPath, renames);
-
-        if (original !== currentPath) {
-            const remainingParts = profileParts.slice(i + 1);
-            originalPath = original + (remainingParts.length > 0 ? "." + remainingParts.join(".") : "");
-            break;
-        } else if (i === 0) {
-            originalPath = profileParts[i];
-        } else {
-            originalPath = originalPath + "." + profileParts[i];
-        }
-    }
-
-    const profilePartsForParentCheck = originalPath.split(".");
-
-    for (let i = 0; i < profilePartsForParentCheck.length; i++) {
-        const parentPath = profilePartsForParentCheck.slice(0, i + 1).join(".");
-
-        for (const [origKey, newKey] of Object.entries(configRenames)) {
-            if (newKey === parentPath) {
-                const remainingParts = profilePartsForParentCheck.slice(i + 1);
-                originalPath = origKey + (remainingParts.length > 0 ? "." + remainingParts.join(".") : "");
-                break;
-            }
-        }
-    }
-
-    return originalPath;
+    const inverse = Object.fromEntries(Object.entries(renames[configPath] || {}).map(([original, target]) => [target, original]));
+    return resolveProfileKey(renamedKey, inverse);
 }
 
 /**
@@ -146,13 +42,12 @@ export function isProfileOrParentDeleted(profileKey: string, deletions: Deletion
 }
 
 /** Whole-profile deletions only; deleting a property must not hide its owning profile. */
-export function getDeletedProfileKeys(deletions: DeletionsMap, configPath: string, renames: RenamesMap = {}): string[] {
+export function getDeletedProfileKeys(deletions: DeletionsMap, configPath: string, _renames: RenamesMap = {}): string[] {
     const result = new Set<string>();
     for (const key of deletions[configPath] ?? []) {
         const parsed = splitProfilePath(key.split("."));
         if (!parsed || parsed.suffix.length) continue;
         result.add(parsed.profileKey);
-        result.add(getRenamedProfileKeyWithNested(parsed.profileKey, configPath, renames));
     }
     return [...result];
 }
@@ -170,31 +65,7 @@ export function applyRenamesToProfileKeys(params: ApplyRenamesToProfileKeysParam
         return getRenamedProfileKeyWithNested(profileKey, configPath, renames);
     });
 
-    const configRenames = renames[configPath] || {};
-    const finalRenamedProfileKeys = renamedProfileKeys.filter((renamedKey) => {
-        return !Object.keys(configRenames).includes(renamedKey);
-    });
-
-    const renamedOnlyProfiles = Object.keys(configRenames).filter((originalKey) => {
-        if (orderedProfileKeys.includes(originalKey)) {
-            return false;
-        }
-
-        const newKey = configRenames[originalKey];
-        const isIntermediate = Object.values(configRenames).includes(originalKey) && Object.keys(configRenames).includes(newKey);
-        if (isIntermediate) {
-            return false;
-        }
-
-        return true;
-    });
-
-    const renamedOnlyProfileKeys = renamedOnlyProfiles.map((profileKey) => {
-        return getRenamedProfileKeyWithNested(profileKey, configPath, renames);
-    });
-
-    const allRenamedProfileKeys = [...finalRenamedProfileKeys, ...renamedOnlyProfileKeys];
-    return Array.from(new Set(allRenamedProfileKeys));
+    return [...new Set(renamedProfileKeys)];
 }
 
 /**

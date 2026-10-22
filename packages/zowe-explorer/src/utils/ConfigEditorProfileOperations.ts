@@ -12,7 +12,7 @@
 import type { Config, IConfigLayer as ImperativeConfigLayer, ProfileInfo } from "@zowe/imperative";
 import { ConfigMoveAPI, IConfigLayer } from "../webviews/src/config-editor/types";
 import { updateDefaultsAfterRename } from "../webviews/src/config-editor/utils/moveUtils";
-import { getRenamedProfileKeyWithNested } from "../webviews/src/config-editor/utils/profileRenames";
+import { getEffectiveProfileKeys, resolveProfileDestination, resolveProfileKey } from "../webviews/src/config-editor/utils/profileConflicts";
 import { ConfigUtils } from "./ConfigUtils";
 import { ConfigEditorPathUtils } from "./ConfigEditorPathUtils";
 import type {
@@ -60,217 +60,17 @@ export class ConfigEditorProfileOperations {
             };
         }
 
-        const flatProfiles = ConfigUtils.flattenProfiles(profiles);
         const newProfileKey = rootProfile === "root" ? profileName.trim() : `${rootProfile}.${profileName.trim()}`;
-
-        const newProfileKeyLower = newProfileKey.toLowerCase();
-
-        // The parent dropdown offers effective (post-rename) keys, so saved keys have to be resolved
-        // through pending renames before comparing; otherwise a sibling of a renamed profile looks free.
-        const existingProfilesUnderRoot = Object.keys(flatProfiles).some((profileKey) => {
-            const profileKeyLower = getRenamedProfileKeyWithNested(profileKey, configPath, renames).toLowerCase();
-            return profileKeyLower === newProfileKeyLower || profileKeyLower.startsWith(`${newProfileKeyLower}.`);
+        const result = resolveProfileDestination({
+            proposedKey: newProfileKey,
+            profileKeys: getEffectiveProfileKeys(
+                Object.keys(ConfigUtils.flattenProfiles(profiles)),
+                Object.values(pendingChanges[configPath] || {}).flatMap((entry) => (entry.profile ? [entry.profile] : [])),
+                renames[configPath] || {}
+            ),
+            onConflict: "reject",
         });
-
-        if (existingProfilesUnderRoot) {
-            return { isValid: false, message: "Profile name already exists under this root" };
-        }
-
-        const pendingProfilesUnderRoot = Object.entries(pendingChanges[configPath] || {}).some(([_, entry]) => {
-            if (entry.profile) {
-                const entryProfileLower = entry.profile.toLowerCase();
-                return entryProfileLower === newProfileKeyLower || entryProfileLower.startsWith(`${newProfileKeyLower}.`);
-            }
-            return false;
-        });
-
-        if (pendingProfilesUnderRoot) {
-            return { isValid: false, message: "Profile name already exists in pending changes" };
-        }
-
-        const renamesForConfig = renames[configPath] || {};
-        const renameIsOccupyingName = Object.entries(renamesForConfig).some(([, newName]) => {
-            const newNameLower = newName.toLowerCase();
-            if (newNameLower === newProfileKeyLower) {
-                return true;
-            }
-            if (newNameLower.startsWith(newProfileKeyLower + ".")) {
-                return true;
-            }
-            return false;
-        });
-
-        if (renameIsOccupyingName) {
-            return { isValid: false, message: "Profile name conflicts with a renamed profile" };
-        }
-
-        return { isValid: true };
-    }
-
-    /**
-     * Updates rename keys to handle both parent-first and child-first rename scenarios.
-     */
-    updateRenameKeysForParentChanges(
-        renames: Array<{ originalKey: string; newKey: string; configPath: string }>
-    ): Array<{ originalKey: string; newKey: string; configPath: string }> {
-        const updatedRenames: Array<{ originalKey: string; newKey: string; configPath: string }> = [];
-
-        const renamesByConfigPath = new Map<string, Array<{ originalKey: string; newKey: string; configPath: string }>>();
-
-        for (const rename of renames) {
-            if (!renamesByConfigPath.has(rename.configPath)) {
-                renamesByConfigPath.set(rename.configPath, []);
-            }
-            renamesByConfigPath.get(rename.configPath)!.push(rename);
-        }
-
-        for (const [configPath, configRenames] of renamesByConfigPath) {
-            const processedRenames = new Map<string, string>();
-
-            const allRenames = new Map<string, string>();
-            for (const rename of configRenames) {
-                allRenames.set(rename.originalKey, rename.newKey);
-            }
-
-            for (const rename of configRenames) {
-                let updatedOriginalKey = rename.originalKey;
-                let updatedNewKey = rename.newKey;
-
-                const originalParts = rename.originalKey.split(".");
-                const newParts = rename.newKey.split(".");
-
-                for (let i = 0; i < originalParts.length; i++) {
-                    const parentPath = originalParts.slice(0, i + 1).join(".");
-                    if (processedRenames.has(parentPath)) {
-                        const newParentPath = processedRenames.get(parentPath)!;
-                        const remainingParts = originalParts.slice(i + 1);
-                        updatedOriginalKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
-                        break;
-                    }
-                }
-
-                for (let i = 0; i < newParts.length; i++) {
-                    const parentPath = newParts.slice(0, i + 1).join(".");
-                    if (processedRenames.has(parentPath)) {
-                        const newParentPath = processedRenames.get(parentPath)!;
-                        const remainingParts = newParts.slice(i + 1);
-                        updatedNewKey = remainingParts.length > 0 ? `${newParentPath}.${remainingParts.join(".")}` : newParentPath;
-                        break;
-                    }
-                }
-
-                if (originalParts.length === 1) {
-                    const parentOriginalKey = rename.originalKey;
-                    const parentNewKey = rename.newKey;
-
-                    for (let i = 0; i < updatedRenames.length; i++) {
-                        const childRename = updatedRenames[i];
-
-                        if (childRename.configPath !== configPath) {
-                            continue;
-                        }
-
-                        const childOriginalParts = childRename.originalKey.split(".");
-                        const childNewParts = childRename.newKey.split(".");
-
-                        // Check if child is an extraction (moving OUT of the parent entirely)
-                        const staysUnderOldParent =
-                            childRename.newKey.startsWith(parentOriginalKey + ".") || childRename.newKey === parentOriginalKey;
-                        const movesToUnderNewParent = childRename.newKey.startsWith(parentNewKey + ".") || childRename.newKey === parentNewKey;
-                        const isExtraction = !staysUnderOldParent && !movesToUnderNewParent;
-                        const childOriginalStartsWithParent = childOriginalParts.length > 1 && childOriginalParts[0] === parentOriginalKey;
-
-                        if (childOriginalStartsWithParent && isExtraction) {
-                            // For extractions, don't update the keys - the extraction is sorted first
-                            continue;
-                        }
-
-                        const childStartsWithParent =
-                            childOriginalStartsWithParent || (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey);
-
-                        if (childStartsWithParent) {
-                            let updatedChildOriginalKey = childRename.originalKey;
-                            if (childOriginalStartsWithParent) {
-                                const childRemainingParts = childOriginalParts.slice(1);
-                                updatedChildOriginalKey = `${parentNewKey}.${childRemainingParts.join(".")}`;
-                            }
-
-                            let updatedChildNewKey = childRename.newKey;
-                            if (childNewParts.length > 1 && childNewParts[0] === parentOriginalKey) {
-                                const childNewRemainingParts = childNewParts.slice(1);
-                                updatedChildNewKey = `${parentNewKey}.${childNewRemainingParts.join(".")}`;
-                            }
-
-                            updatedRenames[i] = {
-                                originalKey: updatedChildOriginalKey,
-                                newKey: updatedChildNewKey,
-                                configPath: childRename.configPath,
-                            };
-                        }
-                    }
-                }
-
-                updatedRenames.push({
-                    originalKey: updatedOriginalKey,
-                    newKey: updatedNewKey,
-                    configPath: rename.configPath,
-                });
-
-                processedRenames.set(updatedOriginalKey, updatedNewKey);
-            }
-        }
-
-        return updatedRenames;
-    }
-
-    /**
-     * Removes duplicate renames that target the same final key
-     */
-    removeDuplicateRenames(
-        renames: Array<{ originalKey: string; newKey: string; configPath: string }>
-    ): Array<{ originalKey: string; newKey: string; configPath: string }> {
-        const finalRenames: Array<{ originalKey: string; newKey: string; configPath: string }> = [];
-
-        const renamesByConfigPath = new Map<string, Array<{ originalKey: string; newKey: string; configPath: string }>>();
-
-        for (const rename of renames) {
-            if (!renamesByConfigPath.has(rename.configPath)) {
-                renamesByConfigPath.set(rename.configPath, []);
-            }
-            renamesByConfigPath.get(rename.configPath)!.push(rename);
-        }
-
-        for (const [, configRenames] of renamesByConfigPath) {
-            const seenTargets = new Map<string, { originalKey: string; newKey: string; configPath: string }>();
-
-            for (const rename of configRenames) {
-                const targetKey = rename.newKey;
-                const renameTail = rename.originalKey.split(".").pop()!;
-
-                if (seenTargets.has(targetKey)) {
-                    const existing = seenTargets.get(targetKey)!;
-                    const existingTail = existing.originalKey.split(".").pop()!;
-
-                    if (renameTail === existingTail) {
-                        finalRenames.push(rename);
-                        continue;
-                    }
-
-                    if (rename.originalKey.split(".").length < existing.originalKey.split(".").length) {
-                        const index = finalRenames.findIndex((r) => r === existing);
-                        if (index !== -1) {
-                            finalRenames[index] = rename;
-                            seenTargets.set(targetKey, rename);
-                        }
-                    }
-                } else {
-                    finalRenames.push(rename);
-                    seenTargets.set(targetKey, rename);
-                }
-            }
-        }
-
-        return finalRenames;
+        return result.status === "conflict" ? { isValid: false, message: result.message } : { isValid: true };
     }
 
     /**
@@ -413,56 +213,46 @@ export class ConfigEditorProfileOperations {
         return redacted;
     }
 
-    /**
-     * Sorts renames so that parent-of renames are processed before extractions, and shallower
-     * target depths are applied before deeper ones.
-     */
-    sortRenamesByDepth(renames: ProfileRenameEntry[]): ProfileRenameEntry[] {
-        return [...renames].sort((a, b) => {
-            const aIsParentOfB = b.originalKey.startsWith(a.originalKey + ".");
-            const bIsParentOfA = a.originalKey.startsWith(b.originalKey + ".");
-
-            if (aIsParentOfB) {
-                // B is an extraction if its new location is NOT under A's old OR new location
-                const bStaysUnderAOld = b.newKey.startsWith(a.originalKey + ".") || b.newKey === a.originalKey;
-                const bMovesToUnderANew = b.newKey.startsWith(a.newKey + ".") || b.newKey === a.newKey;
-                const bIsExtraction = !bStaysUnderAOld && !bMovesToUnderANew;
-                if (bIsExtraction) {
-                    return 1;
-                }
-            }
-
-            if (bIsParentOfA) {
-                // A is an extraction if its new location is NOT under B's old OR new location
-                const aStaysUnderBOld = a.newKey.startsWith(b.originalKey + ".") || a.newKey === b.originalKey;
-                const aMovesToUnderBNew = a.newKey.startsWith(b.newKey + ".") || a.newKey === b.newKey;
-                const aIsExtraction = !aStaysUnderBOld && !aMovesToUnderBNew;
-                if (aIsExtraction) {
-                    return -1;
-                }
-            }
-
-            const depthA = a.newKey.split(".").length;
-            const depthB = b.newKey.split(".").length;
-
-            if (depthA !== depthB) {
-                return depthA - depthB;
-            }
-
-            const originalDepthA = a.originalKey.split(".").length;
-            const originalDepthB = b.originalKey.split(".").length;
-            return originalDepthA - originalDepthB;
-        });
-    }
-
-    /**
-     * Sorts, re-parents, and de-duplicates a batch of renames before they are applied or simulated.
-     */
+    /** Validate independent identities and order moves before reusing their vacated paths. */
     prepareRenamesForProcessing(renames: ProfileRenameEntry[]): ProfileRenameEntry[] {
-        const sortedRenames = this.sortRenamesByDepth(renames);
-        const updatedRenames = this.updateRenameKeysForParentChanges(sortedRenames);
-        const finalRenames = this.removeDuplicateRenames(updatedRenames);
-        return finalRenames.filter((rename) => rename.originalKey !== rename.newKey);
+        const unique = new Map<string, ProfileRenameEntry>();
+        const targets = new Map<string, ProfileRenameEntry>();
+        for (const rename of renames) {
+            const source = JSON.stringify([rename.configPath, rename.originalKey]);
+            const target = JSON.stringify([rename.configPath, rename.newKey.toLowerCase()]);
+            const priorSource = unique.get(source);
+            const priorTarget = targets.get(target);
+            if ((priorSource && priorSource.newKey !== rename.newKey) || (priorTarget && priorTarget.originalKey !== rename.originalKey)) {
+                throw new Error(`Conflicting profile renames target '${rename.newKey}'`);
+            }
+            unique.set(source, rename);
+            targets.set(target, rename);
+        }
+        const remaining = [...unique.values()].filter((rename) => rename.originalKey !== rename.newKey);
+        const result: ProfileRenameEntry[] = [];
+        const applied = new Map<string, Record<string, string>>();
+        const dependsOn = (rename: ProfileRenameEntry, other: ProfileRenameEntry): boolean => {
+            if (rename === other || rename.configPath !== other.configPath) return false;
+            const childOfOther = rename.originalKey.startsWith(other.originalKey + ".");
+            const otherChild = other.originalKey.startsWith(rename.originalKey + ".");
+            // Extract a child first when it will become the moved parent's destination ancestor.
+            if (otherChild) return rename.newKey.startsWith(other.newKey + ".");
+            if (childOfOther) return !other.newKey.startsWith(rename.newKey + ".");
+            // Vacate a saved source before another independent profile reuses its path.
+            if (rename.newKey === other.originalKey || rename.newKey.startsWith(other.originalKey + ".")) return true;
+            return rename.newKey.startsWith(other.newKey + ".");
+        };
+        while (remaining.length) {
+            const index = remaining.findIndex((rename) => !remaining.some((other) => dependsOn(rename, other)));
+            if (index === -1) throw new Error("Profile renames contain a circular dependency");
+            const [rename] = remaining.splice(index, 1);
+            const configRenames = applied.get(rename.configPath) || {};
+            const originalKey = resolveProfileKey(rename.originalKey, configRenames);
+            if (originalKey !== rename.newKey) result.push({ ...rename, originalKey });
+            configRenames[rename.originalKey] = rename.newKey;
+            applied.set(rename.configPath, configRenames);
+        }
+        return result;
     }
 
     /** Stage the entire rename batch before any configuration or credential writes. */
@@ -593,7 +383,16 @@ export class ConfigEditorProfileOperations {
             return { skip: true };
         }
 
-        const existingTargetProfile = this.getProfileFromTeamConfig(teamConfig, newPath);
+        const sourceKey = rename.originalKey.toLowerCase();
+        const targetKey = rename.newKey.toLowerCase();
+        const keys = Object.keys(ConfigUtils.flattenProfiles(teamConfig.api.layers.get().properties.profiles));
+        const existingTargetProfile = keys.some(
+            (key) =>
+                key !== rename.originalKey &&
+                (key.toLowerCase() === targetKey || key.toLowerCase().startsWith(targetKey + ".")) &&
+                !(sourceKey === targetKey && key.startsWith(rename.originalKey + ".")) &&
+                !(targetKey.startsWith(sourceKey + ".") && key.startsWith(rename.originalKey + "."))
+        );
         if (existingTargetProfile) {
             throw new Error(`Cannot rename profile '${rename.originalKey}' to '${rename.newKey}': Profile '${rename.newKey}' already exists`);
         }
@@ -615,7 +414,7 @@ export class ConfigEditorProfileOperations {
      * This prevents duplicate profiles by ensuring changes target the correct names
      */
     public updateProfileChangesForRenames(message: LayerChangesPayload, renames: ProfileRenameEntry[]): LayerChangesPayload {
-        if (!renames || renames.length === 0) {
+        if (message.profilePathsAreEffective || !renames || renames.length === 0) {
             return message;
         }
 

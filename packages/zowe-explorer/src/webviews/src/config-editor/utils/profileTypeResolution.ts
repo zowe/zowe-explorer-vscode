@@ -11,7 +11,7 @@
 
 import { findProfile } from "./configUtils";
 import { ConfigStateContext } from "../types";
-import { getOriginalProfileKey, getOriginalProfileKeyWithNested } from "./profileRenames";
+import { getRenamedProfileKeyWithNested, getOriginalProfileKeyWithNested } from "./profileRenames";
 
 interface GetProfileTypeParams extends ConfigStateContext {
     profileKey: string;
@@ -33,7 +33,7 @@ export function getProfileType(params: GetProfileTypeParams): string | null {
     const originalProfileKey = getOriginalProfileKeyWithNested(profileKey, configPath, renames);
 
     const pendingType = Object.entries(pendingChanges[configPath] ?? {}).find(([key, entry]) => {
-        if (entry.profile !== profileKey && entry.profile !== originalProfileKey) return false;
+        if (entry.profile !== profileKey) return false;
         const keyParts = key.split(".");
         const isProfileLevelType = keyParts[keyParts.length - 1] === "type" && !keyParts.includes("properties");
         return isProfileLevelType;
@@ -48,38 +48,10 @@ export function getProfileType(params: GetProfileTypeParams): string | null {
     }
 
     const config = configurations[selectedTab!].properties;
-    let profile = findProfile(config.profiles, profileKey);
-
-    if (!profile) {
-        profile = findProfile(config.profiles, originalProfileKey);
-    }
-
-    if (!profile && profileKey.includes(".")) {
-        const profileParts = profileKey.split(".");
-        let originalPath = "";
-
-        for (let i = 0; i < profileParts.length; i++) {
-            const currentLevelPath = profileParts.slice(0, i + 1).join(".");
-            const originalLevelPath = getOriginalProfileKey(currentLevelPath, configPath, renames);
-
-            if (i === 0) {
-                originalPath = originalLevelPath;
-            } else {
-                if (originalLevelPath !== currentLevelPath) {
-                    const originalParentParts = originalLevelPath.split(".");
-                    const remainingParts = profileParts.slice(originalParentParts.length);
-                    originalPath = originalLevelPath + (remainingParts.length > 0 ? "." + remainingParts.join(".") : "");
-                    break;
-                } else {
-                    originalPath = originalPath + "." + profileParts[i];
-                }
-            }
-        }
-
-        if (originalPath !== profileKey && originalPath !== originalProfileKey) {
-            profile = findProfile(config.profiles, originalPath);
-        }
-    }
+    const profile =
+        getRenamedProfileKeyWithNested(originalProfileKey, configPath, renames) === profileKey
+            ? findProfile(config.profiles, originalProfileKey)
+            : undefined;
 
     if (profile && typeof profile.type === "string") {
         const t = profile.type.trim();

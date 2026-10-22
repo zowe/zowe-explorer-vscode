@@ -26,6 +26,7 @@ export type ChangeEntry = {
 
 /** Incoming layer modification blob (before parseConfigChanges groups by configPath). */
 export type LayerModifications = {
+    profilePathsAreEffective?: boolean;
     configPath?: string;
     changes: ChangeEntry[];
     deletions: ChangeEntry[];
@@ -166,6 +167,8 @@ export type WebviewPostMessageTarget = {
 
 /** Layer edits from webview (save or merged-properties simulation) without command field. */
 export interface LayerChangesPayload {
+    /** Draft paths already follow pending renames; do not resolve them a second time. */
+    profilePathsAreEffective?: boolean;
     configPath?: string;
     changes?: ChangeEntry[];
     deletions?: ChangeEntry[];

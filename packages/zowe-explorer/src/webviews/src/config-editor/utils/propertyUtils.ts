@@ -10,8 +10,8 @@
  */
 
 import { getRelevantPropertySchemas, collectSchemaPropertyKeys, collectSchemaPropertyDescriptions } from "./schemaProperties";
-import { extractProfileKeyFromPath, flattenProfiles, profileKeyToPath } from "./configUtils";
-import { getProfileType, getOriginalProfileKeyWithNested } from "./profileUtils";
+import { extractProfileKeyFromPath, flattenProfiles } from "./configUtils";
+import { getProfileType } from "./profileUtils";
 import { SchemaContext, FullConfigContext, RenamesMap, DeletionsMap, SchemaValidationsMap } from "../types";
 
 interface PropertyTypeFromSchemaParams {
@@ -103,7 +103,7 @@ interface IsPropertyPendingDeletionParams {
 }
 
 export function isPropertyPendingDeletion(params: IsPropertyPendingDeletionParams): boolean {
-    const { propertyKey, path, configPath, deletions, renames } = params;
+    const { propertyKey, path, configPath, deletions } = params;
 
     if (path.length === 0 || path[path.length - 1] !== "properties") {
         return false;
@@ -115,20 +115,7 @@ export function isPropertyPendingDeletion(params: IsPropertyPendingDeletionParam
         return true;
     }
 
-    const currentProfileKey = extractProfileKeyFromPath(path);
-    const originalProfileKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
-    if (originalProfileKey === currentProfileKey) {
-        return false;
-    }
-
-    const currentParts = currentProfileKey.split(".");
-    const suffixIndex = 2 * currentParts.length;
-    const suffix = path.slice(suffixIndex);
-
-    const originalPathPrefix = profileKeyToPath(originalProfileKey);
-
-    const originalFullKey = [...originalPathPrefix, ...suffix, propertyKey].join(".");
-    return deletionsList.includes(originalFullKey);
+    return false;
 }
 
 interface FetchTypeOptionsParams extends FullConfigContext {

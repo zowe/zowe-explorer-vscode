@@ -11,7 +11,6 @@
 
 import { extractProfileKeyFromPath } from "./configUtils";
 import { RenamesMap, PendingChangesMap } from "../types";
-import { getOriginalProfileKeyWithNested, getRenamedProfileKeyWithNested } from "./profileRenames";
 
 // Split by concern into sibling modules; re-exported here so every existing
 // `from "./profileUtils"` / `from "../utils/profileUtils"` import keeps working unchanged.
@@ -30,39 +29,13 @@ interface MergePendingChangesParams {
 }
 
 export function mergePendingChangesForProfile(params: MergePendingChangesParams): Record<string, unknown> {
-    const { baseObj, path, configPath, pendingChanges, renames } = params;
+    const { baseObj, path, configPath, pendingChanges } = params;
 
     const currentProfileKey = extractProfileKeyFromPath(path);
     const pendingChangesAtLevel: Record<string, unknown> = {};
 
-    const originalProfileKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
-
-    const isProfileKeyMatch = (entryProfileKey: string): boolean => {
-        if (entryProfileKey === currentProfileKey || entryProfileKey === originalProfileKey) {
-            return true;
-        }
-
-        if (getRenamedProfileKeyWithNested(originalProfileKey, configPath, renames) === entryProfileKey) {
-            return true;
-        }
-
-        if (entryProfileKey.includes(".") || currentProfileKey.includes(".")) {
-            const renamedEntryProfileKey = getRenamedProfileKeyWithNested(entryProfileKey, configPath, renames);
-            if (renamedEntryProfileKey === currentProfileKey) {
-                return true;
-            }
-
-            const originalOfCurrentKey = getOriginalProfileKeyWithNested(currentProfileKey, configPath, renames);
-            if (entryProfileKey === originalOfCurrentKey) {
-                return true;
-            }
-        }
-
-        return false;
-    };
-
     Object.entries(pendingChanges[configPath] ?? {}).forEach(([key, entry]) => {
-        if (!isProfileKeyMatch(entry.profile)) {
+        if (entry.profile !== currentProfileKey) {
             return;
         }
 

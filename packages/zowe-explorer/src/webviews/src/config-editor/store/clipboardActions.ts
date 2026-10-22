@@ -19,9 +19,10 @@ import {
     getUniqueProfileKey,
     removeCutProfileChanges,
 } from "../utils/profileClipboard";
-import { createProfileUtils } from "./profileUtils";
 import { createUtilityHelpers } from "./utilityHelpers";
 import { createProfileActions } from "./profileActions";
+import { getEffectiveProfileKeys, resolveProfileDestination } from "../utils/profileConflicts";
+import { getAllQualifiedProfileKeys } from "../utils/profileRenames";
 import { getProfileType, getRenamedProfileKeyWithNested } from "../utils/profileUtils";
 
 export function createClipboardActions(state: EditorRuntime) {
@@ -37,12 +38,14 @@ export function createClipboardActions(state: EditorRuntime) {
         renames,
     } = state;
     const config = selectedTab === null ? undefined : configurations[selectedTab];
-    const profileKeys = config
-        ? createProfileUtils(state)
-              .getAvailableProfilesForConfig(config.configPath)
-              .map((key) => getRenamedProfileKeyWithNested(key, config.configPath, renames))
-        : [];
     const pendingProfiles = config ? createUtilityHelpers(state).extractPendingProfiles(config.configPath) : {};
+    const profileKeys = config
+        ? getEffectiveProfileKeys(
+              getAllQualifiedProfileKeys(config.properties.profiles),
+              Object.keys(pendingProfiles),
+              renames[config.configPath] || {}
+          )
+        : [];
     const { handleProfileSelection: onProfileSelect, handleRenameProfile: onProfileRename } = createProfileActions(state);
 
     const collectProfiles = (profileKey: string, sourceTab = selectedTab) => {
@@ -51,7 +54,6 @@ export function createClipboardActions(state: EditorRuntime) {
         if (!sourcePath) return {};
         return collectClipboardProfiles({
             profileKey,
-            profileKeys: createProfileUtils(sourceState).getAvailableProfilesForConfig(sourcePath),
             pendingProfiles: createUtilityHelpers(sourceState).extractPendingProfiles(sourcePath),
             getProfileType: (key) => getProfileType({ ...sourceState, profileKey: key }),
             selectedTab: sourceTab,
@@ -61,8 +63,7 @@ export function createClipboardActions(state: EditorRuntime) {
             deletions: state.deletions,
         });
     };
-    const uniqueKey = (proposedKey: string) =>
-        getUniqueProfileKey(proposedKey, [...profileKeys, ...Object.keys(pendingProfiles), ...Object.values(renames[config!.configPath] || {})]);
+    const uniqueKey = (proposedKey: string) => getUniqueProfileKey(proposedKey, profileKeys);
     const addProfiles = (profiles: NonNullable<typeof profileClipboard>["profiles"], sourceKey: string, destinationKey: string) => {
         const changes = buildClipboardChanges(profiles, sourceKey, destinationKey);
         setPendingChanges((prev) => ({ ...prev, [config!.configPath]: { ...prev[config!.configPath], ...changes } }));
@@ -74,7 +75,13 @@ export function createClipboardActions(state: EditorRuntime) {
         setProfileClipboard({
             type: isCut ? "cut" : "copy",
             sourceKey: profileKey,
-            originalKey: getOriginalProfileKeyWithNested(profileKey, config.configPath, renames),
+            originalKey: (() => {
+                const original = getOriginalProfileKeyWithNested(profileKey, config.configPath, renames);
+                return getRenamedProfileKeyWithNested(original, config.configPath, renames) === profileKey &&
+                    getAllQualifiedProfileKeys(config.properties.profiles).includes(original)
+                    ? original
+                    : undefined;
+            })(),
             configPath: config.configPath,
             profiles: collectProfiles(profileKey),
         });
@@ -91,15 +98,27 @@ export function createClipboardActions(state: EditorRuntime) {
         const sourceTab = configurations.findIndex((entry) => entry.configPath === profileClipboard.configPath);
         const sourceKey =
             profileClipboard.type === "cut"
-                ? getRenamedProfileKeyWithNested(profileClipboard.originalKey ?? profileClipboard.sourceKey, profileClipboard.configPath, renames)
+                ? profileClipboard.originalKey &&
+                  configurations[sourceTab]?.properties?.profiles &&
+                  getAllQualifiedProfileKeys(configurations[sourceTab].properties.profiles).includes(profileClipboard.originalKey)
+                    ? getRenamedProfileKeyWithNested(profileClipboard.originalKey, profileClipboard.configPath, renames)
+                    : profileClipboard.sourceKey
                 : profileClipboard.sourceKey;
         const profiles = profileClipboard.type === "cut" ? (sourceTab < 0 ? {} : collectProfiles(sourceKey, sourceTab)) : profileClipboard.profiles;
         if (!profiles[sourceKey]) return;
         const leafName = sourceKey.split(".").pop() || sourceKey;
-        const destinationKey = uniqueKey(targetProfileKey ? `${targetProfileKey}.${leafName}` : leafName);
-        if (profileClipboard.type === "cut" && profileClipboard.configPath === config.configPath) {
-            if (destinationKey === sourceKey || targetProfileKey === sourceKey || targetProfileKey?.startsWith(sourceKey + ".")) return;
-            if (onProfileRename(getOriginalProfileKeyWithNested(sourceKey, config.configPath, renames), destinationKey, true)) {
+        const proposedKey = targetProfileKey ? `${targetProfileKey}.${leafName}` : leafName;
+        const sameLayerMove = profileClipboard.type === "cut" && profileClipboard.configPath === config.configPath;
+        const destination = resolveProfileDestination({
+            proposedKey,
+            sourceKey: sameLayerMove ? sourceKey : undefined,
+            profileKeys,
+            onConflict: "suffix",
+        });
+        if (destination.status === "conflict" || destination.status === "noop") return;
+        const destinationKey = destination.key;
+        if (sameLayerMove) {
+            if (onProfileRename(sourceKey, destinationKey, true)) {
                 setProfileClipboard(null);
             }
             return;

@@ -89,6 +89,7 @@ export function createConfigurationActions(state: EditorRuntime) {
 
         vscodeApi.postMessage({
             command: "SAVE_CHANGES",
+            profilePathsAreEffective: true,
             saveRequestId,
             revisions: Object.fromEntries(configurations.map((config) => [config.configPath, config.revision])),
             changes,

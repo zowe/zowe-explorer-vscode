@@ -32,68 +32,11 @@ export function isPropertyActuallyInherited(params: IsPropertyActuallyInheritedP
         return false;
     }
 
-    if (propertyName) {
-        const currentProfilePath = `profiles.${currentProfileKey}`;
-        const propertyPendingKey = `${currentProfilePath}.properties.${propertyName}`;
-
-        const configRenames = renames[configPath] || {};
-        let originalProfileKey = currentProfileKey;
-
-        for (const [originalKey, newKey] of Object.entries(configRenames)) {
-            if (newKey === currentProfileKey) {
-                originalProfileKey = originalKey;
-                break;
-            }
-        }
-
-        const originalProfilePath = `profiles.${originalProfileKey}`;
-        const originalPropertyPendingKey = `${originalProfilePath}.properties.${propertyName}`;
-
-        let nestedPropertyPendingKey = "";
-        if (originalProfileKey.includes(".")) {
-            const pathParts = profileKeyToPath(originalProfileKey);
-            pathParts.push("properties", propertyName);
-            nestedPropertyPendingKey = pathParts.join(".");
-        }
-
-        const hasPendingChanges =
-            pendingChanges[configPath]?.[propertyPendingKey] !== undefined ||
-            pendingChanges[configPath]?.[originalPropertyPendingKey] !== undefined ||
-            (nestedPropertyPendingKey && pendingChanges[configPath]?.[nestedPropertyPendingKey] !== undefined);
-
-        if (hasPendingChanges) {
-            return false;
-        }
+    if (propertyName && pendingChanges[configPath]?.[[...profileKeyToPath(currentProfileKey), "properties", propertyName].join(".")]) {
+        return false;
     }
 
-    const renamesForConfig = renames[configPath] || {};
-
-    const getOriginalName = (profileName: string): string => {
-        let originalName = profileName;
-
-        let changed = true;
-        while (changed) {
-            changed = false;
-
-            const sortedRenames = Object.entries(renamesForConfig).sort(([, a], [, b]) => b.length - a.length);
-
-            for (const [originalKey, newKey] of sortedRenames) {
-                if (originalName === newKey) {
-                    originalName = originalKey;
-                    changed = true;
-                    break;
-                }
-
-                if (originalName.startsWith(newKey + ".")) {
-                    originalName = originalName.replace(newKey + ".", originalKey + ".");
-                    changed = true;
-                    break;
-                }
-            }
-        }
-
-        return originalName;
-    };
+    const getOriginalName = (profileName: string) => getOriginalProfileKeyWithNested(profileName, configPath, renames);
 
     const originalSourcePath = getOriginalName(profilePath);
     const originalCurrentPath = getOriginalName(currentProfileKey);
@@ -182,43 +125,11 @@ export function mergeMergedProperties(params: MergeMergedPropertiesParams): Reco
     const allowedProperties = Object.keys(propertySchema);
     const fullPath = path.join(".");
 
-    const currentProfileKey = extractProfileKeyFromPath(path);
-
-    const configRenames = renames[configPath] || {};
-    let originalProfileKey = currentProfileKey;
-
-    for (const [originalKey, newKey] of Object.entries(configRenames)) {
-        if (newKey === currentProfileKey) {
-            originalProfileKey = originalKey;
-            break;
-        }
-    }
-
-    if (currentProfileKey !== originalProfileKey) {
-        // Profile was renamed - continue to merge merged properties
-    }
-
     Object.entries(mergedProps).forEach(([key, propData]) => {
         const pendingKey = `${fullPath}.properties.${key}`;
 
-        const currentPK = extractProfileKeyFromPath(path);
-        const originalPK = getOriginalProfileKeyWithNested(currentPK, configPath, renames);
-
-        const originalPath = profileKeyToPath(originalPK).join(".");
-
-        const originalPendingKey = `${originalPath}.properties.${key}`;
-
-        const isInPendingChanges =
-            pendingChanges[configPath]?.[pendingKey] !== undefined || pendingChanges[configPath]?.[originalPendingKey] !== undefined;
-
-        let isInDeletions = (deletions[configPath] ?? []).includes(pendingKey) || (deletions[configPath] ?? []).includes(originalPendingKey);
-
-        if (!isInDeletions && originalPK.includes(".")) {
-            const pathParts = profileKeyToPath(originalPK);
-            pathParts.push("properties", key);
-            const nestedPendingKey = pathParts.join(".");
-            isInDeletions = (deletions[configPath] ?? []).includes(nestedPendingKey);
-        }
+        const isInPendingChanges = pendingChanges[configPath]?.[pendingKey] !== undefined;
+        const isInDeletions = (deletions[configPath] ?? []).includes(pendingKey);
 
         const isAllowedBySchema = showMergedProperties === "unfiltered" || allowedProperties.includes(key);
 

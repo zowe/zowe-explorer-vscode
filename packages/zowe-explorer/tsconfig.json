@@ -59,7 +59,6 @@
     "src/webviews/src/config-editor/utils/configUtils.ts",
     "src/webviews/src/config-editor/utils/profileHelpers.ts",
     "src/webviews/src/config-editor/utils/defaultsValidation.ts",
-    "src/webviews/src/config-editor/utils/profileNames.ts",
     "src/webviews/src/config-editor/utils/undoHistory.ts",
     "src/webviews/src/config-editor/utils/authOrder.ts",
     "src/webviews/src/config-editor/utils/panelWidths.ts",

@@ -70,9 +70,9 @@ describe("profileUtils", () => {
             const renames = { [configPath]: { orig: "p1" } };
             expect(getOriginalProfileKey("p1", configPath, renames)).toBe("orig");
         });
-        it("follows chain of renames", () => {
+        it("preserves independent identities when names are reused", () => {
             const renames = { [configPath]: { a: "b", b: "c" } };
-            expect(getOriginalProfileKey("c", configPath, renames)).toBe("a");
+            expect(getOriginalProfileKey("c", configPath, renames)).toBe("b");
         });
     });
 
@@ -597,16 +597,15 @@ describe("profileUtils", () => {
             const renames = { [configPath]: { a: "x" } };
             expect(applyRenamesToProfileKeys({ orderedProfileKeys: ["a", "b"], configPath, renames })).toEqual(["x", "b"]);
         });
-        it("filters out intermediate renamed keys", () => {
+        it("keeps the final name even when it is another source identity", () => {
             const renames = { [configPath]: { a: "b", b: "c" } };
             const result = applyRenamesToProfileKeys({ orderedProfileKeys: ["a"], configPath, renames });
-            expect(result).toContain("c");
-            expect(result).not.toContain("b");
+            expect(result).toEqual(["b"]);
         });
-        it("includes renamed-only profiles not in ordered keys", () => {
+        it("does not invent profiles from stale rename entries", () => {
             const renames = { [configPath]: { newProfile: "renamedNew" } };
             const result = applyRenamesToProfileKeys({ orderedProfileKeys: ["p1"], configPath, renames });
-            expect(result).toContain("renamedNew");
+            expect(result).not.toContain("renamedNew");
             expect(result).toContain("p1");
         });
     });
@@ -769,13 +768,13 @@ describe("profileUtils", () => {
             const result = mergePendingChangesForProfile({ baseObj, path, configPath, pendingChanges, renames: {} });
             expect(result.properties).toEqual({ host: "localhost" });
         });
-        it("merges under original path when profile was renamed", () => {
+        it("merges edits from the effective path after a rename", () => {
             const baseObj = { type: "zowe", properties: {} };
             const path = ["profiles", "renamed"];
             const renames = { [configPath]: { orig: "renamed" } };
             const pendingChanges = {
                 [configPath]: {
-                    "profiles.orig.properties.host": { value: "h", path: [], profile: "orig" },
+                    "profiles.renamed.properties.host": { value: "h", path: [], profile: "renamed" },
                 },
             };
             const result = mergePendingChangesForProfile({ baseObj, path, configPath, pendingChanges, renames });
@@ -1119,12 +1118,17 @@ describe("profileUtils", () => {
             const result = mergePendingSecureProperties({ value, path: ["profiles", "p1"], configPath, pendingChanges, renames: undefined });
             expect(result).toContain("password");
         });
-        it("matches entry by renamed profile when key is under current path and entry.profile is original name", () => {
+        it("matches secure entries by their effective profile identity", () => {
             const value: string[] = [];
             const renames = { [configPath]: { orig: "renamed" } };
             const pendingChanges = {
                 [configPath]: {
-                    "profiles.renamed.secure.token": { value: "t", path: ["profiles", "renamed", "secure", "token"], profile: "orig", secure: true },
+                    "profiles.renamed.secure.token": {
+                        value: "t",
+                        path: ["profiles", "renamed", "secure", "token"],
+                        profile: "renamed",
+                        secure: true,
+                    },
                 },
             };
             const result = mergePendingSecureProperties({ value, path: ["profiles", "renamed"], configPath, pendingChanges, renames });

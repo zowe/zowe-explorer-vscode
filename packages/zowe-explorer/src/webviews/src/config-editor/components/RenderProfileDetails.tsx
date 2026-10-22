@@ -14,7 +14,7 @@ import { useEffect, useRef } from "react";
 import { VscodeToolbarButton } from "@vscode-elements/react-elements";
 import { RenderConfig } from "./renderConfig";
 import { ConfirmableDeleteButton } from "./ConfirmableDeleteButton";
-import { getOriginalProfileKeyWithNested } from "../utils/profileRenames";
+import { getOriginalProfileKeyWithNested, getRenamedProfileKeyWithNested } from "../utils/profileRenames";
 import { getPropertyDescriptions } from "../utils/propertyUtils";
 import * as l10n from "@vscode/l10n";
 import { useEditorFields, useEditorStore } from "../context/EditorStoreContext";
@@ -72,7 +72,7 @@ export const RenderProfileDetails = () => {
 
   const { propertySortOrder } = configEditorSettings;
 
-  const { isProfileDefault, getProfileType, extractPendingProfiles, isCurrentProfileUntyped, isProfileAffectedByDragDrop } = useUtilityHelpers();
+  const { isProfileDefault, getProfileType, extractPendingProfiles, isCurrentProfileUntyped } = useUtilityHelpers();
 
   // Ref for the card container — used to apply the blink animation.
   const cardRef = useRef<HTMLDivElement>(null);
@@ -175,17 +175,7 @@ export const RenderProfileDetails = () => {
               <span className={`codicon codicon-${isProfileDefault(selectedProfileKey) ? "star-full" : "star-empty"}`}></span>
             </VscodeToolbarButton>
 
-            <VscodeToolbarButton
-              id="rename-profile"
-              onClick={selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey) ? undefined : () => openRenameProfile()}
-              title={
-                selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey)
-                  ? l10n.t("Cannot rename: This profile or a related profile has been moved via drag-and-drop. Save and refresh to enable renaming.")
-                  : l10n.t("Rename profile")
-              }
-              aria-disabled={selectedProfileKey ? isProfileAffectedByDragDrop(selectedProfileKey) : false}
-              tabIndex={selectedProfileKey && isProfileAffectedByDragDrop(selectedProfileKey) ? -1 : 0}
-            >
+            <VscodeToolbarButton id="rename-profile" onClick={() => openRenameProfile()} title={l10n.t("Rename profile")}>
               <span className="codicon codicon-edit"></span>
             </VscodeToolbarButton>
             <ConfirmableDeleteButton
@@ -211,15 +201,14 @@ export const RenderProfileDetails = () => {
 
           const effectiveProfileKey = getOriginalProfileKeyWithNested(selectedProfileKey, currentConfigPath, renames);
 
-          const pathProfileKey = pendingProfiles[selectedProfileKey] ? selectedProfileKey : effectiveProfileKey;
-
-          const effectivePath = profileKeyToPath(pathProfileKey);
+          const effectivePath = profileKeyToPath(selectedProfileKey);
+          const savedProfile =
+            getRenamedProfileKeyWithNested(effectiveProfileKey, currentConfigPath, renames) === selectedProfileKey
+              ? findProfile(currentConfig.properties?.profiles, effectiveProfileKey)
+              : undefined;
 
           const effectiveProfile = {
-            ...(findProfile(currentConfig.properties?.profiles, effectiveProfileKey) ||
-              pendingProfiles[effectiveProfileKey] ||
-              pendingProfiles[selectedProfileKey] ||
-              {}),
+            ...(savedProfile || pendingProfiles[selectedProfileKey] || {}),
           };
           delete effectiveProfile.profiles;
 

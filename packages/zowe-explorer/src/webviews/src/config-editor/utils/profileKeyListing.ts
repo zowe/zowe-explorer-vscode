@@ -9,17 +9,11 @@
  *
  */
 
+import { getEffectiveProfileKeys } from "./profileConflicts";
 import { flattenProfiles } from "./configUtils";
 import { Configuration, ConfigStateContext, ProfileMap, RenamesMap, DeletionsMap, ProfileSortOrder } from "../types";
 import { getProfileType } from "./profileTypeResolution";
-import {
-    getAllQualifiedProfileKeys,
-    getRenamedProfileKeyWithNested,
-    getDeletedProfileKeys,
-    applyRenamesToProfileKeys,
-    mergePendingProfileKeys,
-    filterConflictingProfileKeys,
-} from "./profileRenames";
+import { getAllQualifiedProfileKeys, getRenamedProfileKeyWithNested } from "./profileRenames";
 import { sortProfilesAtLevel } from "./sortingUtils";
 
 /** Ordered effective names shared by the profile list and parent-profile choices. */
@@ -32,20 +26,10 @@ export function getVisibleProfileKeys(params: {
     sortOrder: ProfileSortOrder | null;
 }): string[] {
     const { profiles, pendingProfiles, configPath, renames, deletions, sortOrder } = params;
-    const deletedKeys = getDeletedProfileKeys(deletions, configPath, renames);
-    const isDeleted = (key: string) => deletedKeys.some((deleted) => key === deleted || key.startsWith(deleted + "."));
-    // An extracted child survives deletion of its former parent.
-    const orderedProfileKeys = getAllQualifiedProfileKeys(profiles).filter(
-        (key) => !isDeleted(key) || !isDeleted(getRenamedProfileKeyWithNested(key, configPath, renames))
+    return sortProfilesAtLevel(
+        getEffectiveProfileKeys(getAllQualifiedProfileKeys(profiles), Object.keys(pendingProfiles), renames[configPath] || {}, deletions[configPath]),
+        sortOrder
     );
-    const uniqueRenamedProfileKeys = applyRenamesToProfileKeys({ orderedProfileKeys, configPath, renames });
-    const renamedPendingProfileKeys = mergePendingProfileKeys({ pendingProfiles, configPath, renames, deletions, uniqueRenamedProfileKeys });
-    const savedKeys =
-        sortOrder === "natural" || !sortOrder
-            ? uniqueRenamedProfileKeys.filter((key) => !isDeleted(key))
-            : filterConflictingProfileKeys({ uniqueRenamedProfileKeys, renamedPendingProfileKeys, pendingProfiles, deletions, configPath, renames });
-    // Existing profiles keep their disk order; genuinely new names follow them.
-    return sortProfilesAtLevel([...new Set([...savedKeys, ...renamedPendingProfileKeys])], sortOrder);
 }
 
 interface GetAvailableProfilesByTypeParams extends ConfigStateContext {
@@ -83,13 +67,13 @@ export function getAvailableProfilesByType(params: GetAvailableProfilesByTypePar
         });
 
         const profilesOfType = profileNames.filter((profileKey) => {
-            if (profilesWithPendingTypeChanges.has(profileKey)) {
+            if (profilesWithPendingTypeChanges.has(getRenamedProfileKeyWithNested(profileKey, config.configPath, renames))) {
                 return false;
             }
 
             const configIndex = configurations.findIndex((c) => c.configPath === config.configPath);
             const profileTypeValue = getProfileType({
-                profileKey,
+                profileKey: getRenamedProfileKeyWithNested(profileKey, config.configPath, renames),
                 selectedTab: configIndex,
                 configurations,
                 pendingChanges,
@@ -117,9 +101,7 @@ export function getAvailableProfilesByType(params: GetAvailableProfilesByTypePar
         });
 
         const renamedProfilesOfType = profilesOfType.map((profileKey) => getRenamedProfileKeyWithNested(profileKey, config.configPath, renames));
-        const renamedPendingProfiles = Array.from(pendingProfiles).map((profileKey) =>
-            getRenamedProfileKeyWithNested(profileKey, config.configPath, renames)
-        );
+        const renamedPendingProfiles = Array.from(pendingProfiles);
 
         return [...renamedProfilesOfType, ...renamedPendingProfiles];
     };

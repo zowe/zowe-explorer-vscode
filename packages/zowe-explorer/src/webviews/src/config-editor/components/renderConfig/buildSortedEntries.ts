@@ -122,7 +122,10 @@ export function buildSortedEntries(
             if (i > 0) parentConfigPath.push("profiles");
             parentConfigPath.push(originalPartsForDisk[i]);
         }
-        const parentConfig = getNestedProperty(configurations[selectedTab!]?.properties, parentConfigPath) as Record<string, unknown> | undefined;
+        const parentConfig =
+            getRenamedProfileKeyWithNested(originalProfileKeyForDisk, configPath, renames) === currentProfileKeyForDisk
+                ? (getNestedProperty(configurations[selectedTab!]?.properties, parentConfigPath) as Record<string, unknown> | undefined)
+                : undefined;
         const parentSecure = parentConfig?.secure;
         if (parentSecure && Array.isArray(parentSecure)) {
             parentSecure.forEach((securePropertyName: string) => {

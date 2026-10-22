@@ -11,6 +11,11 @@
 
 import { vi } from "vitest";
 import type { Configuration } from "../../../../src/webviews/src/config-editor/types";
+import { createEditorConfig, createEditorLayer } from "../../../__mocks__/mockCreators/configEditor";
+import { ConfigEditorProfileOperations } from "../../../../src/utils/ConfigEditorProfileOperations";
+import { ConfigChangeHandlers } from "../../../../src/utils/ConfigChangeHandlers";
+import type { LayerChangesPayload } from "../../../../src/utils/ConfigTypes";
+import { getProfileType } from "../../../../src/webviews/src/config-editor/utils/profileTypeResolution";
 import { createEditorStore } from "../../../../src/webviews/src/config-editor/store/editorStore";
 
 function makeEditor() {
@@ -148,6 +153,95 @@ describe("editorStore", () => {
         expect(store.getState().selectedProfileKey).toBe(`target.${selectedProfile}`);
         expect(store.getState().selectedProfilesByConfig[team.configPath]).toBe(`target.${selectedProfile}`);
         expect(store.getState().expandedNodesByConfig[team.configPath].has("target")).toBe(true);
+    });
+
+    it("preserves identities, edits and defaults through vacated-name reuse, preview and staging", async () => {
+        const { store, team } = makeEditor();
+        team.properties.profiles.other = { type: "ssh", properties: { host: "second" } };
+        store.getState().handleChange("profiles.base.properties.host", "first edit");
+        store.getState().handleRenameProfile("base", "moved");
+        store.getState().handleProfileSelection("other");
+        store.getState().handleChange("profiles.other.properties.host", "second edit");
+        expect(store.getState().handleRenameProfile("other", "base")).toBe(true);
+        expect(store.getState().renames[team.configPath]).toEqual({ base: "moved", other: "base" });
+        expect(store.getState().getAvailableProfiles()).toEqual(["root", "moved", "base"]);
+        expect(getProfileType({ ...store.getState(), profileKey: "base" })).toBe("ssh");
+        store.getState().copyProfile("base", false);
+        expect(store.getState().profileClipboard?.profiles.base).toMatchObject({ type: "ssh", properties: { host: "second edit" } });
+        const draft = store.getState().formatPendingChanges();
+        expect(draft.profilePathsAreEffective).toBe(true);
+        expect(draft.changes.find((entry) => entry.profile === "base")?.value).toBe("second edit");
+        const operations = new ConfigEditorProfileOperations();
+        for (const mode of ["preview", "stage"]) {
+            const memory = createEditorConfig([createEditorLayer({ properties: structuredClone(team.properties) })]);
+            if (mode === "preview") operations.simulateProfileRenames(draft.renames, memory.config);
+            else operations.stageProfileRenames(draft.renames, memory.profileInfo);
+            await ConfigChangeHandlers.stageChanges(
+                operations.updateProfileChangesForRenames(draft as unknown as LayerChangesPayload, draft.renames),
+                memory.config
+            );
+            expect(memory.config.layers[0].properties).toMatchObject({
+                profiles: { moved: { type: "base", properties: { host: "first edit" } }, base: { type: "ssh", properties: { host: "second edit" } } },
+                defaults: { base: "moved" },
+            });
+            expect(memory.config.layers[0].properties.profiles).not.toHaveProperty("other");
+            expect(memory.save).not.toHaveBeenCalled();
+        }
+    });
+
+    it("moves a new profile independently after reusing a saved profile's old name", () => {
+        const { store, team } = makeEditor();
+        store.getState().handleRenameProfile("base", "moved");
+        store.setState({ wizardProfileName: "base", wizardSelectedType: "ssh", wizardProperties: [{ key: "host", value: "new host" }] });
+        store.getState().handleWizardCreateProfile();
+        expect(store.getState().selectedProfileKey).toBe("base");
+        expect(store.getState().handleRenameProfile("base", "created")).toBe(true);
+        expect(store.getState().renames[team.configPath]).toEqual({ base: "moved" });
+        expect(store.getState().getAvailableProfiles()).toEqual(["root", "moved", "created"]);
+        expect(store.getState().pendingChanges[team.configPath]["profiles.created.properties.host"].value).toBe("new host");
+    });
+
+    it("rejects a conflict without modifying the draft or history", () => {
+        const { store, team } = makeEditor();
+        team.properties.profiles.other = { type: "ssh" };
+        const before = store.getState();
+        expect(store.getState().handleRenameProfile("base", "OTHER")).toBe(false);
+        expect(store.getState().renames).toEqual(before.renames);
+        expect(store.getState().pendingChanges).toEqual(before.pendingChanges);
+        expect(store.getState().undoStack).toHaveLength(0);
+    });
+
+    it.each([null, "group"])("keeps a cut profile in its current location when pasted into %s", (parent) => {
+        const { store, team } = makeEditor();
+        const source = parent ? "group.base" : "base";
+        if (parent) team.properties.profiles = { group: { profiles: team.properties.profiles } };
+        store.getState().copyProfile(source, true);
+        store.getState().pasteProfile(parent);
+        expect(store.getState().renames).toEqual({});
+        expect(store.getState().pendingChanges).toEqual({});
+        expect(store.getState().undoStack).toHaveLength(0);
+        expect(store.getState().profileClipboard?.type).toBe("cut");
+    });
+
+    it("clears a cancelled move when no other edits remain", () => {
+        const { store } = makeEditor();
+        store.getState().handleRenameProfile("base", "renamed", true);
+        store.getState().handleRenameProfile("renamed", "base");
+        expect(store.getState()).toMatchObject({ renames: {}, pendingChanges: {}, pendingDefaults: {} });
+        expect(store.getState().hasPendingChanges()).toBe(false);
+    });
+
+    it("cancels a move and keeps a renamed child, selection and pending edits attached", () => {
+        const { store, team } = makeEditor();
+        team.properties.profiles.base.profiles = { child: { type: "zosmf" } };
+        store.getState().handleRenameProfile("base", "renamed");
+        store.getState().handleRenameProfile("renamed.child", "renamed.other");
+        store.getState().handleProfileSelection("renamed.other");
+        store.getState().handleChange("profiles.renamed.profiles.other.properties.host", "child edit");
+        expect(store.getState().handleRenameProfile("renamed", "base")).toBe(true);
+        expect(store.getState().renames[team.configPath]).toEqual({ "base.child": "base.other" });
+        expect(store.getState().selectedProfileKey).toBe("base.other");
+        expect(store.getState().pendingChanges[team.configPath]["profiles.base.profiles.other.properties.host"].value).toBe("child edit");
     });
 
     it("creates a wizard profile with one history entry and resets the wizard session", () => {

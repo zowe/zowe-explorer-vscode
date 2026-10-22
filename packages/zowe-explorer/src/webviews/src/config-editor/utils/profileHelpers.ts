@@ -10,7 +10,7 @@
  */
 
 import type { Dispatch, SetStateAction } from "react";
-import { getProfileType, getOriginalProfileKeyWithNested } from "./profileUtils";
+import { getProfileType, getRenamedProfileKeyWithNested } from "./profileUtils";
 import { Configuration, PendingChange, PendingDefault, ConfigStateContext, PendingDefaultsMap } from "../types";
 export type { Configuration, PendingChange, PendingDefault };
 
@@ -67,39 +67,10 @@ export function isProfileDefault(params: IsProfileDefaultParams): boolean {
 
     if (!profileType) return false;
 
-    const originalProfileKey = getOriginalProfileKeyWithNested(profileKey, configPath, renames);
-
     const pendingDefault = pendingDefaults[configPath]?.[profileType];
-    if (pendingDefault) {
-        return pendingDefault.value === profileKey || pendingDefault.value === originalProfileKey;
-    }
-
-    const config = configurations[selectedTab!].properties;
-    const defaults = config.defaults || {};
-
-    const defaultValue = defaults[profileType];
-    if (defaultValue === profileKey || defaultValue === originalProfileKey) {
-        return true;
-    }
-
-    if (defaultValue && typeof defaultValue === "string") {
-        const configRenames = renames[configPath] || {};
-        for (const [originalKey, newKey] of Object.entries(configRenames)) {
-            if (defaultValue === originalKey && newKey === profileKey) {
-                return true;
-            }
-
-            if (defaultValue.startsWith(originalKey + ".") && profileKey.startsWith(newKey + ".")) {
-                const originalChildPath = defaultValue.substring(originalKey.length + 1);
-                const currentChildPath = profileKey.substring(newKey.length + 1);
-                if (originalChildPath === currentChildPath) {
-                    return true;
-                }
-            }
-        }
-    }
-
-    return false;
+    if (pendingDefault) return pendingDefault.value === profileKey;
+    const savedDefault = configurations[selectedTab].properties.defaults?.[profileType];
+    return typeof savedDefault === "string" && getRenamedProfileKeyWithNested(savedDefault, configPath, renames) === profileKey;
 }
 
 interface IsCurrentProfileUntypedParams extends ConfigStateContext {

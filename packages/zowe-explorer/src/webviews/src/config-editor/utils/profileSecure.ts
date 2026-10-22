@@ -9,11 +9,10 @@
  *
  */
 
-import { profileKeyToPath } from "./configUtils";
 import { extractProfileKeyFromPath } from "./configUtils";
 import { Configuration, SchemaContext, RenamesMap, PendingChangesMap, MergedPropertiesMap, DeletionsMap } from "../types";
 import { getProfileType } from "./profileTypeResolution";
-import { getRenamedProfileKeyWithNested, getOriginalProfileKeyWithNested } from "./profileRenames";
+import { getOriginalProfileKeyWithNested, getRenamedProfileKeyWithNested } from "./profileRenames";
 
 export function isMergedPropertySecure(_displayKey: string, jsonLoc: string, _osLoc?: string[], secure?: boolean): boolean {
     if (!jsonLoc) return false;
@@ -106,26 +105,7 @@ export function isPropertySecure(params: IsPropertySecureParams): boolean {
         const config = configurations[selectedTab];
         if (config) {
             const configPath = config.configPath;
-            let pendingChange = pendingChanges[configPath]?.[fullKey];
-
-            if (!pendingChange && renames && renames[configPath]) {
-                const currentProfileKey = extractProfileKeyFromPath(path);
-                const renamedProfileKey = getRenamedProfileKeyWithNested(currentProfileKey, configPath, renames);
-
-                if (renamedProfileKey !== currentProfileKey) {
-                    const newProfileParts = profileKeyToPath(renamedProfileKey);
-                    const newPrefix = newProfileParts.join(".");
-
-                    const currentProfilePartsCount = currentProfileKey.split(".").length;
-                    const segmentsToSkip = currentProfilePartsCount * 2;
-                    const originalFullKeyParts = fullKey.split(".");
-                    const propertyPart = originalFullKeyParts.slice(segmentsToSkip).join(".");
-
-                    const renamedFullKey = propertyPart ? `${newPrefix}.${propertyPart}` : newPrefix;
-
-                    pendingChange = pendingChanges[configPath]?.[renamedFullKey];
-                }
-            }
+            const pendingChange = pendingChanges[configPath]?.[fullKey];
 
             if (pendingChange && pendingChange.secure !== undefined) {
                 return pendingChange.secure;
@@ -150,6 +130,7 @@ export function isPropertySecure(params: IsPropertySecureParams): boolean {
                         ? getOriginalProfileKeyWithNested(currentProfileName, config.configPath, renames)
                         : currentProfileName;
 
+                if (renames && getRenamedProfileKeyWithNested(originalProfileKey, config.configPath, renames) !== currentProfileName) return false;
                 const profileParts = originalProfileKey.split(".");
                 let profileNode = config.properties?.profiles;
                 for (let i = 0; i < profileParts.length - 1 && profileNode; i++) {
@@ -197,10 +178,7 @@ export function handleToggleSecure(params: HandleToggleSecureParams): void {
 
     const currentSecure = isPropertySecure({ fullKey, displayKey, path, selectedTab, configurations, pendingChanges, renames });
 
-    let profileKey = selectedProfileKey || extractProfileKeyFromPath(path);
-    if (selectedProfileKey && renames && renames[configPath]) {
-        profileKey = getRenamedProfileKeyWithNested(selectedProfileKey, configPath, renames);
-    }
+    const profileKey = selectedProfileKey || extractProfileKeyFromPath(path);
 
     const newSecure = !currentSecure;
 
@@ -291,21 +269,20 @@ interface MergePendingSecurePropertiesParams {
 }
 
 export function mergePendingSecureProperties(params: MergePendingSecurePropertiesParams): string[] {
-    const { value, path, configPath, pendingChanges, renames } = params;
+    const { value, path, configPath, pendingChanges } = params;
 
     const profileKey = extractProfileKeyFromPath(path);
-    const originalProfileKey = renames ? getOriginalProfileKeyWithNested(profileKey, configPath, renames) : profileKey;
-    const renamedProfileKey = renames ? getRenamedProfileKeyWithNested(profileKey, configPath, renames) : profileKey;
-    const relevantProfiles = new Set([profileKey, originalProfileKey, renamedProfileKey]);
 
     const configPendingChanges = Object.entries(pendingChanges[configPath] ?? {});
     const lastSegment = (key: string) => key.split(".").pop()!;
 
     const pendingSecureProps = configPendingChanges
-        .filter(([_, entry]) => entry.secure && relevantProfiles.has(entry.profile))
+        .filter(([_, entry]) => entry.secure && entry.profile === profileKey)
         .map(([key]) => lastSegment(key));
 
-    const pendingInsecureProps = new Set(configPendingChanges.filter(([_, entry]) => !entry.secure).map(([key]) => lastSegment(key)));
+    const pendingInsecureProps = new Set(
+        configPendingChanges.filter(([_, entry]) => !entry.secure && entry.profile === profileKey).map(([key]) => lastSegment(key))
+    );
 
     const combined = [...(value || []), ...pendingSecureProps].filter((prop) => !pendingInsecureProps.has(prop));
 

@@ -86,10 +86,16 @@ export class ConfigEditorSaveOperations {
             const source = change.secureSource;
             ConfigChangeHandlers.activateLayerIfNeeded(config, source.configPath);
             await this.assertUnchanged(source.configPath, ConfigEditorSaveOperations.revision(contentsByPath.get(source.configPath)));
-            const key = `${ConfigEditorPathUtils.constructNestedProfilePath(source.profileKey)}.properties.${source.propertyKey}`;
-            const value = this.getValue(config.api.layers.get().properties, key);
+            const profilePath = ConfigEditorPathUtils.constructNestedProfilePath(source.profileKey);
+            const sourceProperties = config.api.layers.get().properties;
+            if (!this.getValue(sourceProperties, profilePath)) {
+                throw new Error("A source profile is unavailable. Your changes have not been saved.");
+            }
+            const value = this.getValue(sourceProperties, `${profilePath}.properties.${source.propertyKey}`);
+            // A secure declaration may have no stored value. Keep the copied secure array,
+            // but omit the webview placeholder rather than creating an empty credential.
             if (value === undefined) {
-                throw new Error("A source credential is unavailable. The source profile has not been deleted.");
+                continue;
             }
             changes.push({ ...change, value: value as string, secure: true });
         }
