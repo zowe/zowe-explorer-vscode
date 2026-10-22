@@ -63,5 +63,19 @@ overrides:
   "smol-toml": "^1.9.0"
   "source-map-js": "^1.2.2"
   "http-cache-semantics": "^4.3.0"
+
+  # "@zowe/core-for-zowe-sdk": "file:../zowe-cli/packages/core"
+  # "@zowe/imperative": "file:../zowe-cli/packages/imperative"
+  # "@zowe/zos-console-for-zowe-sdk": "file:../zowe-cli/packages/zosconsole"
+  # "@zowe/zos-files-for-zowe-sdk": "file:../zowe-cli/packages/zosfiles"
+  # "@zowe/zos-jobs-for-zowe-sdk": "file:../zowe-cli/packages/zosjobs"
+  # "@zowe/zos-tso-for-zowe-sdk": "file:../zowe-cli/packages/zostso"
+  # "@zowe/zos-uss-for-zowe-sdk": "file:../zowe-cli/packages/zosuss"
+  # "@zowe/zosmf-for-zowe-sdk": "file:../zowe-cli/packages/zosmf"
+
+# Uncomment the above to use local versions of CLI SDK packages
+# replace ../zowe-cli if the path to your CLI repo is different.
+# Then do "pnpm fresh-clone && pnpm install".
+
 # Previously set using `pnpm config set network-timeout`
 fetchTimeout: 60000
