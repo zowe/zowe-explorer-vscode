@@ -4,6 +4,8 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+- Updated the minimum supported Visual Studio Code version to 1.101.0.
+
 ## `2.18.6`
 
 ### Bug fixes

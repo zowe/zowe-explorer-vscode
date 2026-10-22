@@ -6,6 +6,8 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Updated the minimum supported Visual Studio Code version to 1.101.0.
+
 ## `2.18.6`
 
 ### Bug fixes
