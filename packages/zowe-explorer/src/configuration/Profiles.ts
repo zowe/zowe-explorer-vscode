@@ -686,21 +686,34 @@ export class Profiles extends ProfilesCache {
         ZoweLogger.trace("Profiles.promptCredentials called.");
         const isProfileString = typeof profile === "string";
         const profilename = isProfileString ? profile : profile.name;
+        // When re-prompting, a blank value is rejected, so the "leave blank" hint would be misleading.
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t(`User Name`),
-            prompt: vscode.l10n.t({
-                message: "Enter the user name for the {0} connection. Leave blank to not store.",
-                args: [profilename],
-                comment: ["Profile name"],
-            }),
+            prompt: rePrompt
+                ? vscode.l10n.t({
+                      message: "Enter the user name for the {0} connection.",
+                      args: [profilename],
+                      comment: ["Profile name"],
+                  })
+                : vscode.l10n.t({
+                      message: "Enter the user name for the {0} connection. Leave blank to cancel.",
+                      args: [profilename],
+                      comment: ["Profile name"],
+                  }),
         };
         const passwordInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t(`Password`),
-            prompt: vscode.l10n.t({
-                message: "Enter the password for the {0} connection. Leave blank to not store.",
-                args: [profilename],
-                comment: ["Profile name"],
-            }),
+            prompt: rePrompt
+                ? vscode.l10n.t({
+                      message: "Enter the password for the {0} connection.",
+                      args: [profilename],
+                      comment: ["Profile name"],
+                  })
+                : vscode.l10n.t({
+                      message: "Enter the password for the {0} connection. Leave blank to cancel.",
+                      args: [profilename],
+                      comment: ["Profile name"],
+                  }),
         };
 
         let mProfileInfo: imperative.ProfileInfo;
