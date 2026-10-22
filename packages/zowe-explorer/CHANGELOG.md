@@ -5,6 +5,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## TBD Release
 
 - Added SSH host key verification when issuing UNIX commands so the identity of a z/OS SSH server is confirmed before credentials are sent. [#4529](https://github.com/zowe/zowe-explorer-vscode/pull/4529)
+- Fixed redundant SSH server deployment confirmations when connecting to an already installed, up-to-date server. Confirmation is now requested only when automatic installation or updating is needed. [#4563](https://github.com/zowe/zowe-explorer-vscode/pull/4563)
 
 ### New features and enhancements
 
