@@ -54,7 +54,7 @@ import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider"
 import { Constants } from "../../../src/configuration/Constants";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
-import { FilterDescriptor } from "../../../src/management/FilterManagement";
+import { FilterDescriptor, FilterItem } from "../../../src/management/FilterManagement";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../../src/trees/uss/USSTree";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
@@ -489,6 +489,33 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         expect(errorSpy).toHaveBeenCalledTimes(1);
         expect(errorSpy).toHaveBeenCalledWith(Error("test error"));
         errorSpy.mockClear();
+    });
+
+    it("Tests that createZoweSession does not add the profile when the apply-to-all-trees prompt is cancelled", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const addSessionSpy = vi.spyOn(blockMocks.testDatasetTree, "addSession");
+        // Drop values an earlier test queued but never consumed, so this test picks the profile.
+        vi.spyOn(Gui, "resolveQuickPick")
+            .mockReset()
+            .mockResolvedValueOnce(new FilterItem({ text: "sestest" }));
+        vi.spyOn(Profiles, "handleChangeForAllTrees").mockResolvedValueOnce(undefined);
+        await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
+        expect(addSessionSpy).not.toHaveBeenCalled();
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile selection has been cancelled.");
+    });
+
+    it("Tests that createZoweSession adds the profile with the answer from the apply-to-all-trees prompt", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const addSessionSpy = vi.spyOn(blockMocks.testDatasetTree, "addSession");
+        // Drop values an earlier test queued but never consumed, so this test picks the profile.
+        vi.spyOn(Gui, "resolveQuickPick")
+            .mockReset()
+            .mockResolvedValueOnce(new FilterItem({ text: "sestest" }));
+        vi.spyOn(Profiles, "handleChangeForAllTrees").mockResolvedValueOnce(false);
+        await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
+        expect(addSessionSpy).toHaveBeenCalledWith({ sessionName: "sestest", addToAllTrees: false });
     });
 });
 
