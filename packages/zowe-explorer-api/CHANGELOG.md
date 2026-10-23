@@ -14,6 +14,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added support for the `tsoAccount` and `tsoProcedure` z/OSMF profile properties, which are now passed as the `X-IBM-Request-Acctnum` and `X-IBM-Request-Proc` z/OSMF headers on data set operations that support them. [#4485] (https://github.com/zowe/zowe-explorer-vscode/pull/4485)
 - Added optional `ssoLogin` and `ssoLogout` functions to the `IApiExplorerExtender` interface to expose SSO login and logout capabilities to Zowe Explorer extenders. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Added the `vscode-codicon-stylesheet` id to the codicons `<link>` in the webview HTML template so VS Code Elements components can render icons. [#4534](https://github.com/zowe/zowe-explorer-vscode/pull/4534)
+- Added the `changePassword` API which allows the user to update their password on the remote system, alongside its `IChangePasswordResponse` interface. [#4212](https://github.com/zowe/zowe-explorer-vscode/pull/4212)
 
 ### Bug fixes
 
