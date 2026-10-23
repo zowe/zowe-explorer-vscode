@@ -114,6 +114,8 @@ vi.mock("vscode", () => ({
         }),
     },
     Disposable: class {},
+    CancellationError: class extends Error {},
+    ConfigurationTarget: { Global: 1 },
     ProgressLocation: { Notification: 15 },
     window: {
         showErrorMessage: vi.fn(),
@@ -158,7 +160,11 @@ describe("SshClientCache", () => {
         cache = SshClientCache.initialize(mockGetProfilesCache);
 
         // Default mocks
+        vi.mocked(vscode.l10n.t).mockImplementation((message) => (typeof message === "string" ? message : message.message));
+        vi.mocked(Gui.showMessage).mockResolvedValue("Connect");
+        vi.mocked(deployWithProgress).mockResolvedValue(true);
         vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
+            update: vi.fn().mockResolvedValue(undefined),
             get: vi.fn().mockImplementation((key, defaultVal) => {
                 const config: any = mockVSCodeConfig;
                 return config[key] === undefined ? defaultVal : config[key];
@@ -310,6 +316,108 @@ describe("SshClientCache", () => {
             expect(ZSshClient.create).toHaveBeenCalledTimes(2);
         });
 
+        it("should connect to an installed current server and reuse it without deployment confirmation", async () => {
+            const first = await cache.connect(mockProfile);
+            expect(await cache.connect(mockProfile)).toBe(first);
+            expect(ZSshClient.create).toHaveBeenCalledTimes(1);
+            expect(Gui.showMessage).not.toHaveBeenCalled();
+            expect(deployWithProgress).not.toHaveBeenCalled();
+        });
+
+        it("should not prompt when a current server is discovered on PATH", async () => {
+            vi.mocked(ZSshClient.create).mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }));
+            vi.spyOn(cache, "detectServerOnPath").mockResolvedValue("/existing/server");
+
+            await cache.connect(mockProfile);
+
+            expect(ZSshClient.create).toHaveBeenCalledTimes(2);
+            expect(Gui.showMessage).not.toHaveBeenCalled();
+            expect(deployWithProgress).not.toHaveBeenCalled();
+        });
+
+        it.each(["missing", "outdated"])("should confirm before deploying a %s server", async (state) => {
+            if (state === "missing") {
+                vi.mocked(ZSshClient.create).mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }));
+                vi.spyOn(cache, "detectServerOnPath").mockResolvedValue(undefined);
+            } else {
+                vi.mocked(ZSshUtils.checkIfOutdated).mockReturnValueOnce(true);
+            }
+            vi.mocked(Gui.showMessage).mockImplementationOnce(() => {
+                expect(deployWithProgress).not.toHaveBeenCalled();
+                return Promise.resolve("Connect");
+            });
+
+            await cache.connect(mockProfile);
+
+            expect(Gui.showMessage).toHaveBeenCalledTimes(1);
+            expect(deployWithProgress).toHaveBeenCalledTimes(1);
+            expect(vscode.workspace.getConfiguration("zowe").update).not.toHaveBeenCalled();
+        });
+
+        it.each([
+            ["missing", "Cancel"],
+            ["missing", undefined],
+            ["outdated", "Cancel"],
+            ["outdated", undefined],
+        ])("should stop connecting to a %s server when confirmation returns %s", async (state, selection) => {
+            const client = { dispose: vi.fn() } as unknown as ZSshClient;
+            vi.mocked(ZSshClient.create).mockResolvedValue(client);
+            const statusDispose = vi.fn();
+            vi.mocked(Gui.setStatusBarMessage).mockReturnValue({ dispose: statusDispose });
+            if (state === "missing") {
+                vi.mocked(ZSshClient.create).mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }));
+                vi.spyOn(cache, "detectServerOnPath").mockResolvedValue(undefined);
+            } else {
+                vi.mocked(ZSshUtils.checkIfOutdated).mockReturnValueOnce(true);
+            }
+            vi.mocked(Gui.showMessage).mockResolvedValueOnce(selection);
+
+            await expect(cache.connect(mockProfile)).rejects.toBeInstanceOf(vscode.CancellationError);
+
+            expect(deployWithProgress).not.toHaveBeenCalled();
+            expect(statusDispose).toHaveBeenCalled();
+            if (state === "outdated") {
+                expect(client.dispose).toHaveBeenCalled();
+            }
+            // Cancellation must release the lock and leave no cached client.
+            vi.mocked(ZSshClient.create).mockClear();
+            await cache.connect(mockProfile);
+            expect(ZSshClient.create).toHaveBeenCalledTimes(1);
+        });
+
+        it("should deploy without prompting when confirmation is disabled", async () => {
+            const config = vscode.workspace.getConfiguration("zowe");
+            vi.spyOn(config, "get").mockImplementation((key, defaultValue) => (key === "confirmSshServerDeploy" ? false : defaultValue));
+            vi.mocked(ZSshUtils.checkIfOutdated).mockReturnValueOnce(true);
+
+            await cache.connect(mockProfile);
+
+            expect(Gui.showMessage).not.toHaveBeenCalled();
+            expect(deployWithProgress).toHaveBeenCalledTimes(1);
+        });
+
+        it("should save the don't-ask-again choice before deployment", async () => {
+            vi.mocked(ZSshUtils.checkIfOutdated).mockReturnValueOnce(true);
+            vi.mocked(Gui.showMessage).mockResolvedValueOnce("Connect, don't ask me again");
+
+            await cache.connect(mockProfile);
+
+            expect(vscode.workspace.getConfiguration("zowe").update).toHaveBeenCalledWith(
+                "confirmSshServerDeploy",
+                false,
+                vscode.ConfigurationTarget.Global
+            );
+            expect(deployWithProgress).toHaveBeenCalledTimes(1);
+        });
+
+        it("should stop connecting when deployment is declined inside the installer", async () => {
+            vi.mocked(ZSshUtils.checkIfOutdated).mockReturnValueOnce(true);
+            vi.mocked(deployWithProgress).mockResolvedValueOnce(false);
+
+            await expect(cache.connect(mockProfile)).rejects.toBeInstanceOf(vscode.CancellationError);
+            expect(ZSshClient.create).toHaveBeenCalledTimes(1);
+        });
+
         it("shares one utility connection scope across detection, permission check, and deployment", async () => {
             vi.mocked(ZSshClient.create)
                 .mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }))
@@ -336,6 +444,7 @@ describe("SshClientCache", () => {
             );
 
             expect(deployWithProgress).not.toHaveBeenCalled();
+            expect(Gui.showMessage).not.toHaveBeenCalled();
             expect(ZSshClient.create).toHaveBeenCalledTimes(1);
         });
         it("should deploy a new server if the current one is outdated and there is no explicit setting for autoUpdate", async () => {
@@ -376,6 +485,7 @@ describe("SshClientCache", () => {
             await cache.connect(autoUpdateFalseProfile);
 
             expect(deployWithProgress).not.toHaveBeenCalled();
+            expect(Gui.showMessage).not.toHaveBeenCalled();
             expect(ZSshClient.create).toHaveBeenCalledTimes(1);
         });
         it("should deploy a new server if the current one is outdated, ignoring the removed zowe.zowex.serverAutoUpdate setting", async () => {
@@ -401,6 +511,7 @@ describe("SshClientCache", () => {
             await cache.connect(mockProfile);
 
             expect(deployWithProgress).not.toHaveBeenCalled();
+            expect(Gui.showMessage).not.toHaveBeenCalled();
             expect(ZSshClient.create).toHaveBeenCalledTimes(1);
         });
 
@@ -413,6 +524,7 @@ describe("SshClientCache", () => {
 
             // autoUpdate disabled => keep the existing client, no redeploy
             expect(deployWithProgress).not.toHaveBeenCalled();
+            expect(Gui.showMessage).not.toHaveBeenCalled();
             expect(ZSshClient.create).toHaveBeenCalledTimes(1);
         });
 
