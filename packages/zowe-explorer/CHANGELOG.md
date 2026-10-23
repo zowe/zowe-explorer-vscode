@@ -5,6 +5,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ## TBD Release
 
 - Added SSH host key verification when issuing UNIX commands so the identity of a z/OS SSH server is confirmed before credentials are sent. [#4529](https://github.com/zowe/zowe-explorer-vscode/pull/4529)
+- Fixed redundant SSH server deployment confirmations when connecting to an already installed, up-to-date server. Confirmation is now requested only when automatic installation or updating is needed. [#4563](https://github.com/zowe/zowe-explorer-vscode/pull/4563)
 
 ### New features and enhancements
 
@@ -35,6 +36,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where data sets with a `PLX` qualifier, and their members, opened as PL/I files. Use the VS Code `files.associations` setting to choose a language for those data sets. [#3801](https://github.com/zowe/zowe-explorer-vscode/issues/3801)
 - Fixed an issue where searching data set contents with an FTP profile failed with the error `c.searchDataSets is not a function`. The search options are now hidden for FTP profiles, as Copy and Paste already are, and Zowe Explorer shows a message when a search starts for a profile type that does not support it. [#4511](https://github.com/zowe/zowe-explorer-vscode/issues/4511)
 - Fixed an issue where the profile actions menu (including "Hide Profile") failed to open for profiles missing required properties like host. [#4557](https://github.com/zowe/zowe-explorer-vscode/pull/4557)
+- Fixed an issue where UNIX commands were always wrapped in an `SSH_TTY` terminal redirect, even for profiles that do not use SSH. [#4564](https://github.com/zowe/zowe-explorer-vscode/pull/4564)
 
 ## `3.6.0`
 
