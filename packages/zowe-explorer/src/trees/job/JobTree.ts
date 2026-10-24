@@ -14,6 +14,7 @@ import * as path from "path";
 import { IJob } from "@zowe/zos-jobs-for-zowe-sdk";
 import {
     Gui,
+    handleError,
     Validation,
     imperative,
     IZoweJobTreeNode,
@@ -69,7 +70,7 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
             label: `Job Prefix`,
             value: "*",
             show: true,
-            placeHolder: vscode.l10n.t("Enter job prefix"),
+            placeHolder: vscode.l10n.t("Enter job prefix, use a comma to separate multiple prefixes"),
             validateInput: (text: string): string | null => SharedUtils.jobStringValidator(text, "prefix"),
         },
         {
@@ -308,9 +309,9 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 profile,
             });
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.warn(`Skipping creation of favorited profile. ${err.toString()}`);
-            }
+            void handleError(err, (error) => {
+                ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
+            });
             return null;
         }
 
@@ -391,9 +392,6 @@ export class JobTree extends ZoweTreeProvider<IZoweJobTreeNode> implements Types
                 profile: parentNode.getProfile(),
                 job: new JobDetail(label),
             });
-            if (!JobFSProvider.instance.exists(favJob.resourceUri)) {
-                JobFSProvider.instance.createDirectory(favJob.resourceUri, { job: favJob.job });
-            }
         } else {
             // for search
             favJob = new ZoweJobNode({
@@ -480,6 +478,9 @@ Would you like to do this now?`,
             if (!favorite.owner) {
                 // Needed for setting tooltip
                 favorite.owner = session.ISession.user;
+            }
+            if (SharedContext.isJob(favorite) && !JobFSProvider.instance.exists(favorite.resourceUri)) {
+                JobFSProvider.instance.createDirectory(favorite.resourceUri, { job: favorite.job });
             }
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
             if (favorite.getProfile() && favorite.getSession()) {
@@ -591,7 +592,7 @@ Would you like to do this now?`,
                 favoritesArray.push(favoriteEntry);
             });
         });
-        this.mPersistence.updateFavorites(favoritesArray);
+        this.mPersistence.updateFavorites({ favorites: favoritesArray });
     }
 
     /**
@@ -666,15 +667,15 @@ Would you like to do this now?`,
         return this.mPersistence.readFavorites();
     }
 
-    public async getUserJobsMenuChoice(): Promise<FilterItem | undefined> {
+    public async getUserJobsMenuChoice(profile?: imperative.IProfileLoaded): Promise<FilterItem | undefined> {
         ZoweLogger.trace("JobTree.getUserJobsMenuChoice called.");
         const items: FilterItem[] = this.mPersistence
-            .getSearchHistory()
+            .getSearchHistory(profile)
             .map((element) => new FilterItem({ text: element, menuType: Definitions.JobPickerTypes.History }));
 
         // VSCode route to create a QuickPick
         const quickpick = Gui.createQuickPick();
-        quickpick.items = [this.searchByQuery, this.searchById, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+        quickpick.items = [this.searchByQuery, this.searchById, this.mPersistence.getSearchHistorySeparator(profile), ...items];
         quickpick.placeholder = vscode.l10n.t("Select a filter");
         quickpick.ignoreFocusOut = true;
         quickpick.show();
@@ -715,7 +716,7 @@ Would you like to do this now?`,
 
     public async applyRegularSessionSearchLabel(node: IZoweJobTreeNode): Promise<string | undefined> {
         ZoweLogger.trace("JobTree.applyRegularSessionsSearchLabel called.");
-        const choice = await this.getUserJobsMenuChoice();
+        const choice = await this.getUserJobsMenuChoice(node.getProfile());
         const searchCriteriaObj = await this.getUserSearchQueryInput(choice, node);
 
         if (!searchCriteriaObj) {
@@ -871,7 +872,7 @@ Would you like to do this now?`,
                         }
                     }
                     node.tooltip = toolTipList.join("\n");
-                    this.addSearchHistory(searchCriteria);
+                    this.addSearchHistory(searchCriteria, node.getProfile());
                     await TreeViewUtils.expandNode(node, this);
                 }
             } else {
@@ -901,6 +902,9 @@ Would you like to do this now?`,
                 setting.history = [];
                 await SettingsConfig.setDirectValue(JobTree.persistenceSchema, setting);
             }
+        }
+        if (e.affectsConfiguration(Constants.SETTINGS_MAX_SEARCH_HISTORY)) {
+            this.mPersistence.updateMaxSearchHistory();
         }
         if (e.affectsConfiguration(Constants.SETTINGS_JOBS_DEFAULT_SORT)) {
             const sortOpts = SharedUtils.getDefaultSortOptions(JobUtils.JOB_SORT_OPTS, Constants.SETTINGS_JOBS_DEFAULT_SORT, Sorting.JobSortOpts);
@@ -1084,6 +1088,10 @@ Would you like to do this now?`,
                 args: [path.posix.basename(uri.path)],
                 comment: ["URI path"],
             }),
+            prompt: vscode.l10n.t(
+                "Polling automatically checks for job status updates at regular intervals. Enter the time in milliseconds between each check (minimum 1000ms)."
+            ),
+            placeHolder: vscode.l10n.t("e.g., 5000 for checking every 5 seconds"),
             value: pollValue.toString(),
             validateInput: (value: string) => this.validatePollInterval(value),
         });
@@ -1197,6 +1205,20 @@ Would you like to do this now?`,
             return;
         }
 
+        // Show informational message about polling before prompting for interval
+        const infoMessage = vscode.l10n.t(
+            "Job polling will automatically check active jobs for status changes at regular intervals. You will be notified when jobs complete. You can stop polling at any time by running this command again."
+        );
+        const continueButton = vscode.l10n.t("Continue");
+        const userResponse = await Gui.infoMessage(infoMessage, { items: [continueButton], vsCodeOpts: { modal: false } });
+
+        // Accessibility: Check if user clicked Continue button or dismissed the dialog.
+        // By capturing and validating the response, screen readers properly announce this as an
+        // actionable button rather than just informational text, improving accessibility.
+        if (!userResponse) {
+            return;
+        }
+
         // Always prompt the user for a poll interval
         const pollInterval = await this.showPollOptions(session.resourceUri);
         if (pollInterval === 0) {
@@ -1272,15 +1294,18 @@ Would you like to do this now?`,
                         if (status && status !== "ACTIVE") {
                             const sessProfileName = session.getProfileName();
                             const args = [sessProfileName, job.job.jobid];
-                            const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                             const jobDisplayName = `${job.job.jobname}(${job.job.jobid})`;
-                            Gui.showMessage(
-                                vscode.l10n.t({
-                                    message: "Job {0} completed - {1}",
-                                    args: [`[${jobDisplayName}](${setJobCmd})`, job.job.retcode],
-                                    comment: ["Job name and ID with clickable link", "Job status"],
-                                })
-                            );
+                            const openJobButton = vscode.l10n.t("Open Job");
+                            const message = vscode.l10n.t({
+                                message: "Job {0} completed - {1}",
+                                args: [jobDisplayName, job.job.retcode],
+                                comment: ["Job name and ID", "Job status"],
+                            });
+                            Gui.showMessage(message, { items: [openJobButton] }).then((selection) => {
+                                if (selection === openJobButton) {
+                                    vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                                }
+                            });
 
                             // Remove polling context from completed jobs
                             this.updatePollContext(job);
@@ -1391,9 +1416,7 @@ Would you like to do this now?`,
             query = query.toUpperCase();
             job["children"] = actual_jobs.filter((item) =>
                 item["job"]["exec-member"]
-                    ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"] as string} - ${item["job"].retcode}`.includes(
-                          query
-                      )
+                    ? `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"]["exec-member"]} - ${item["job"].retcode}`.includes(query)
                     : `${item["job"].jobname}(${item["job"].jobid}) - ${item["job"].retcode}`.includes(query)
             );
             SharedTreeProviders.job.refresh();

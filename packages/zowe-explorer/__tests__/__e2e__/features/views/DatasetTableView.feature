@@ -46,7 +46,7 @@ Scenario: User wants to focus on a PDS to view its members
 Scenario: User wants to reveal PDS member in tree from table view
     Given a user who has the dataset table view opened with PDS members
     When the user right-clicks on a member row
-    And selects "Display in Tree" from the context menu
+    And selects "Locate in Tree" from the context menu
     Then the PDS member is revealed and focused in the Data Sets tree
 
 Scenario: User wants to navigate back from PDS members view
@@ -58,7 +58,7 @@ Scenario: User wants to navigate back from PDS members view
 Scenario: User wants to reveal dataset in tree from table view
     Given a user who has the dataset table view opened
     When the user right-clicks on a dataset row
-    And selects "Display in Tree" from the context menu
+    And selects "Locate in Tree" from the context menu
     Then the dataset is revealed and focused in the Data Sets tree
 
 Scenario: User wants to use hierarchical tree view for datasets with PDS

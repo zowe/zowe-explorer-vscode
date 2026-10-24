@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
 import {
+    handleError,
     IZoweTreeNode,
     ZoweTreeNode,
     FileManagement,
@@ -21,6 +22,8 @@ import {
     imperative,
     ZoweVsCodeExtension,
     AuthHandler,
+    FsAbstractUtils,
+    Types,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
@@ -35,6 +38,17 @@ export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
     private static noConfigDialogShown = false;
     private static mProfileInfo: imperative.ProfileInfo;
+
+    private static apiRegister: Types.IApiRegisterClient;
+
+    /**
+     * Sets the API Register instance to be used by ProfilesUtils.
+     * This is called by ZoweExplorerApiRegister to inject itself.
+     * @param apiRegister The API Register instance
+     */
+    public static setApiRegister(apiRegister: Types.IApiRegisterClient): void {
+        ProfilesUtils.apiRegister = apiRegister;
+    }
 
     /**
      * Check if the credential manager's vsix is installed for use
@@ -106,7 +120,10 @@ export class ProfilesUtils {
             ProfilesUtils.PROFILE_SECURITY = credentialManager ?? Constants.ZOWE_CLI_SCM;
             ZoweLogger.info(vscode.l10n.t(`Zowe Explorer profiles are being set as secured.`));
         }
-        if (currentProfileSecurity !== ProfilesUtils.PROFILE_SECURITY) {
+        // `PROFILE_SECURITY` is `false` when profiles are unsecured, which is an internal marker rather than a
+        // credential manager name. `recordCredMgrInConfig` only accepts known credential manager display names and
+        // throws for anything else, so skip it when there is no credential manager to record.
+        if (currentProfileSecurity !== ProfilesUtils.PROFILE_SECURITY && typeof ProfilesUtils.PROFILE_SECURITY === "string") {
             imperative.CredentialManagerOverride.recordCredMgrInConfig(ProfilesUtils.PROFILE_SECURITY);
         }
     }
@@ -187,7 +204,10 @@ export class ProfilesUtils {
     public static checkDefaultCredentialManager(): boolean {
         try {
             ProfilesCache.requireKeyring();
-        } catch (_error) {
+        } catch (error) {
+            // Log the underlying error so the actual cause (missing prebuild, dlopen failure,
+            // unavailable platform API, ...) is recoverable from the logs instead of being discarded.
+            ZoweLogger.error(`Failed to load the default Zowe credentials manager: ${error instanceof Error ? error.stack : String(error)}`);
             ZoweLogger.info(
                 vscode.l10n.t(
                     "Default Zowe credentials manager not found on current platform. This is typically the case when running in container-based environments or Linux systems that miss required security libraries or user permissions."
@@ -542,7 +562,7 @@ export class ProfilesUtils {
                     })
                 );
             } catch (err) {
-                if (err instanceof Error) {
+                void handleError(err, (error) => {
                     const errorMsg = vscode.l10n.t({
                         message: "Failed to parse JSON file {0}. Will try to re-create the file.",
                         args: [settingsFile],
@@ -555,7 +575,7 @@ export class ProfilesUtils {
                         encoding: "utf-8",
                         flag: "w",
                     });
-                }
+                });
             }
             if (settings?.overrides?.CredentialManager === ProfilesUtils.PROFILE_SECURITY) {
                 return;
@@ -750,18 +770,28 @@ export class ProfilesUtils {
 
     private static extenderProfileReady: Map<string, imperative.DeferredPromise<void>> = new Map();
 
-    public static async awaitExtenderType(profileName: string, profCache: ProfilesCache): Promise<void> {
-        const profLoaded = profCache.allProfiles.find((prof) => prof.name === profileName);
-        if (!profLoaded && !ProfilesUtils.extenderProfileReady.has(profileName)) {
+    public static async awaitExtenderType(uri: vscode.Uri, profCache: ProfilesCache): Promise<void> {
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
+        const name = uriInfo.profileName;
+        // Search allProfiles directly to avoid reloading profiles from disk
+        const profLoaded = profCache.allProfiles.find((prof) => prof.name === uriInfo.profileName);
+        const type = profLoaded?.type;
+
+        const apiRegister = profLoaded ? ProfilesUtils.apiRegister : undefined;
+        const isApiRegistered = apiRegister?.registeredApiTypes().includes(type);
+
+        if (!isApiRegistered && !ProfilesUtils.extenderProfileReady.has(name)) {
             const deferredPromise = new imperative.DeferredPromise<void>();
-            ProfilesUtils.extenderProfileReady.set(profileName, deferredPromise);
+            ProfilesUtils.extenderProfileReady.set(name, deferredPromise);
         }
-        const profilePromise = ProfilesUtils.extenderProfileReady.get(profileName);
+
+        const profilePromise = ProfilesUtils.extenderProfileReady.get(name);
         const promiseTimeout = 10000;
-        if (profilePromise) {
+
+        if (profilePromise && !isApiRegistered) {
             let timeoutHandle: NodeJS.Timeout;
             const timeoutPromise = new Promise<void>((_, reject) => {
-                timeoutHandle = setTimeout(() => reject(new Error("Timeout waiting for profile")), promiseTimeout);
+                timeoutHandle = setTimeout(() => reject(new Error(`Timeout waiting profile type: ${type}`)), promiseTimeout);
             });
             await Promise.race([profilePromise.promise.finally(() => clearTimeout(timeoutHandle)), timeoutPromise]);
         }
@@ -778,5 +808,20 @@ export class ProfilesUtils {
 
     public static hasNoAuthType(session: ISession, profile: IProfileLoaded): boolean {
         return session.type === SessConstants.AUTH_TYPE_NONE && profile.type !== "ssh";
+    }
+
+    /**
+     * Whether the profile is set up for token authentication, but has no token to send.
+     * This is the state that a profile is left in after logging out of the authentication service.
+     */
+    public static isMissingToken(session: ISession, profile: IProfileLoaded): boolean {
+        return session.type === SessConstants.AUTH_TYPE_TOKEN && !profile.profile.tokenValue;
+    }
+
+    /**
+     * Whether the profile has no credentials available to send with a request.
+     */
+    public static hasNoCredentials(session: ISession, profile: IProfileLoaded): boolean {
+        return ProfilesUtils.hasNoAuthType(session, profile) || ProfilesUtils.isMissingToken(session, profile);
     }
 }

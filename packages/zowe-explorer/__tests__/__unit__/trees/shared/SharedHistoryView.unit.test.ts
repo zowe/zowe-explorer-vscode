@@ -27,8 +27,8 @@ import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
 import * as fs from "fs";
 
-jest.mock("fs");
-async function initializeHistoryViewMock(blockMocks: any, globalMocks: any): Promise<SharedHistoryView> {
+vi.mock("fs");
+async function initializeHistoryViewMock(blockMocks: any, globalMocks: any, invokingNode?: any): Promise<SharedHistoryView> {
     return new SharedHistoryView(
         {
             extensionPath: "",
@@ -37,7 +37,9 @@ async function initializeHistoryViewMock(blockMocks: any, globalMocks: any): Pro
             ds: await createDatasetTree(blockMocks.datasetSessionNode, globalMocks.treeView),
             uss: createUSSTree([blockMocks.datasetSessionNode], [globalMocks.testSession], globalMocks.treeView),
             jobs: await createJobsTree(globalMocks.testSession, createIJobObject(), globalMocks.testProfile, createTreeView()),
-        } as any
+        } as any,
+        undefined,
+        invokingNode
     );
 }
 
@@ -48,28 +50,28 @@ function createGlobalMocks(): any {
         treeView: createTreeView(),
         imperativeProfile: createIProfile(),
         FileSystemProvider: {
-            createDirectory: jest.fn(),
+            createDirectory: vi.fn(),
         },
     };
 
-    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
-    Object.defineProperty(Gui, "showMessage", { value: jest.fn(), configurable: true });
-    Object.defineProperty(Gui, "resolveQuickPick", { value: jest.fn(), configurable: true });
-    Object.defineProperty(Gui, "createQuickPick", { value: jest.fn(), configurable: true });
+    vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
+    Object.defineProperty(Gui, "showMessage", { value: vi.fn(), configurable: true });
+    Object.defineProperty(Gui, "resolveQuickPick", { value: vi.fn(), configurable: true });
+    Object.defineProperty(Gui, "createQuickPick", { value: vi.fn(), configurable: true });
     Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn().mockReturnValue(createInstanceOfProfile(globalMocks.imperativeProfile)),
+        value: vi.fn().mockReturnValue(createInstanceOfProfile(globalMocks.imperativeProfile)),
         configurable: true,
     });
-    Object.defineProperty(vscode.window, "createTreeView", { value: jest.fn().mockReturnValue(globalMocks.treeView), configurable: true });
+    Object.defineProperty(vscode.window, "createTreeView", { value: vi.fn().mockReturnValue(globalMocks.treeView), configurable: true });
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
-            update: jest.fn(),
+            update: vi.fn(),
             keys: () => [],
         },
         configurable: true,
     });
-    const spyReadFile = jest.fn((path, encoding, callback) => {
+    const spyReadFile = vi.fn((path, encoding, callback) => {
         callback(null, "file contents");
     });
     Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
@@ -77,8 +79,8 @@ function createGlobalMocks(): any {
 }
 
 function createBlockMocks(globalMocks: any): any {
-    const localStorageGet = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
-    const localStorageSet = jest.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined);
+    const localStorageGet = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+    const localStorageSet = vi.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined);
 
     return {
         datasetSessionNode: createDatasetSessionNode(globalMocks.session, globalMocks.imperativeProfile),
@@ -107,8 +109,8 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            const postMessageSpy = jest.spyOn(historyView.panel.webview, "postMessage");
-            jest.spyOn(historyView as any, "getHistoryData").mockReturnValue([]);
+            const postMessageSpy = vi.spyOn(historyView.panel.webview, "postMessage");
+            vi.spyOn(historyView as any, "getHistoryData").mockReturnValue([]);
             await historyView["onDidReceiveMessage"]({ command: "refresh", attrs: { type: "USS" } });
             expect(postMessageSpy).toHaveBeenCalledTimes(1);
             expect(historyView["currentTab"]).toEqual("uss-panel-tab");
@@ -118,8 +120,8 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            const postMessageSpy = jest.spyOn(historyView.panel.webview, "postMessage");
-            jest.spyOn(historyView as any, "getHistoryData").mockReturnValue([]);
+            const postMessageSpy = vi.spyOn(historyView.panel.webview, "postMessage");
+            vi.spyOn(historyView as any, "getHistoryData").mockReturnValue([]);
             await historyView["onDidReceiveMessage"]({ command: "ready" });
             expect(postMessageSpy).toHaveBeenCalledWith({
                 ds: [],
@@ -140,7 +142,7 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+            const errorMessageSpy = vi.spyOn(Gui, "errorMessage");
             await historyView["onDidReceiveMessage"]({ command: "show-error", attrs: { errorMsg: "test error" } });
             expect(errorMessageSpy).toHaveBeenCalledWith("test error");
         });
@@ -157,20 +159,20 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            jest.spyOn(Gui, "showInputBox").mockResolvedValue("test");
-            const addSearchHistorySpy = jest.spyOn(historyView["treeProviders"].uss, "addSearchHistory");
-            jest.spyOn(historyView as any, "refreshView").mockImplementation();
+            vi.spyOn(Gui, "showInputBox").mockResolvedValue("test");
+            const addSearchHistorySpy = vi.spyOn(historyView["treeProviders"].uss, "addSearchHistory");
+            vi.spyOn(historyView as any, "refreshView").mockImplementation((() => undefined) as any);
             await historyView["onDidReceiveMessage"]({ command: "add-item", attrs: { type: "uss" } });
             expect(historyView["currentSelection"]).toEqual({ ds: "search", jobs: "search", uss: "search", cmds: "mvs" });
-            expect(addSearchHistorySpy).toHaveBeenCalledWith("test");
+            expect(addSearchHistorySpy).toHaveBeenCalledWith("test", undefined);
         });
 
         it("should handle the case where 'remove-item' is the command sent and the selection is 'search'", async () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            jest.spyOn(historyView as any, "refreshView").mockImplementation();
-            const removeSearchHistorySpy = jest.spyOn(historyView["treeProviders"].ds as any, "removeSearchHistory");
+            vi.spyOn(historyView as any, "refreshView").mockImplementation((() => undefined) as any);
+            const removeSearchHistorySpy = vi.spyOn(historyView["treeProviders"].ds as any, "removeSearchHistory");
             await historyView["onDidReceiveMessage"]({
                 command: "remove-item",
                 attrs: { type: "ds", selection: "search", selectedItems: { test: "test1" } },
@@ -183,8 +185,8 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            jest.spyOn(historyView as any, "refreshView").mockImplementation();
-            const removeFileHistorySpy = jest.spyOn(historyView["treeProviders"].ds, "removeFileHistory");
+            vi.spyOn(historyView as any, "refreshView").mockImplementation((() => undefined) as any);
+            const removeFileHistorySpy = vi.spyOn(historyView["treeProviders"].ds, "removeFileHistory");
             await historyView["onDidReceiveMessage"]({
                 command: "remove-item",
                 attrs: { type: "ds", selection: "fileHistory", selectedItems: { test: "test1" } },
@@ -197,8 +199,8 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            jest.spyOn(historyView as any, "refreshView").mockImplementation();
-            const removeSearchedKeywordHistorySpy = jest.spyOn(historyView["treeProviders"].ds, "removeSearchedKeywordHistory");
+            vi.spyOn(historyView as any, "refreshView").mockImplementation((() => undefined) as any);
+            const removeSearchedKeywordHistorySpy = vi.spyOn(historyView["treeProviders"].ds, "removeSearchedKeywordHistory");
             await historyView["onDidReceiveMessage"]({
                 command: "remove-item",
                 attrs: { type: "ds", selection: "searchedKeywordHistory", selectedItems: { test: "test1" } },
@@ -211,8 +213,8 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            jest.spyOn(historyView as any, "refreshView").mockImplementation();
-            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+            vi.spyOn(historyView as any, "refreshView").mockImplementation((() => undefined) as any);
+            const showMessageSpy = vi.spyOn(Gui, "showMessage");
             await historyView["onDidReceiveMessage"]({
                 command: "remove-item",
                 attrs: { type: "ds", selection: "favorites", selectedItems: { test: "test1" } },
@@ -225,7 +227,7 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            jest.spyOn(historyView as any, "refreshView").mockImplementation();
+            vi.spyOn(historyView as any, "refreshView").mockImplementation((() => undefined) as any);
             blockMocks.localStorageGet.mockReturnValueOnce(["test"]);
             const removeEncodingHistorySpy = blockMocks.localStorageSet;
 
@@ -241,10 +243,10 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            jest.spyOn(historyView as any, "refreshView").mockImplementation();
-            jest.spyOn(Gui, "showMessage").mockResolvedValue("Yes");
+            vi.spyOn(historyView as any, "refreshView").mockImplementation((() => undefined) as any);
+            vi.spyOn(Gui, "showMessage").mockResolvedValue("Yes");
 
-            const resetSearchHistorySpy = jest.spyOn(historyView["treeProviders"].ds as any, "resetSearchHistory");
+            const resetSearchHistorySpy = vi.spyOn(historyView["treeProviders"].ds as any, "resetSearchHistory");
             await historyView["onDidReceiveMessage"]({
                 command: "clear-all",
                 attrs: { type: "ds", selection: "search" },
@@ -257,10 +259,10 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            jest.spyOn(historyView as any, "refreshView").mockImplementation();
-            jest.spyOn(Gui, "showMessage").mockResolvedValue("Yes");
+            vi.spyOn(historyView as any, "refreshView").mockImplementation((() => undefined) as any);
+            vi.spyOn(Gui, "showMessage").mockResolvedValue("Yes");
 
-            const resetFileHistorySpy = jest.spyOn(historyView["treeProviders"].ds as any, "resetFileHistory");
+            const resetFileHistorySpy = vi.spyOn(historyView["treeProviders"].ds as any, "resetFileHistory");
             await historyView["onDidReceiveMessage"]({
                 command: "clear-all",
                 attrs: { type: "ds", selection: "fileHistory" },
@@ -273,10 +275,10 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            jest.spyOn(historyView as any, "refreshView").mockImplementation();
-            jest.spyOn(Gui, "showMessage").mockResolvedValue("Yes");
+            vi.spyOn(historyView as any, "refreshView").mockImplementation((() => undefined) as any);
+            vi.spyOn(Gui, "showMessage").mockResolvedValue("Yes");
 
-            const resetSearchedKeywordHistorySpy = jest.spyOn(historyView["treeProviders"].ds, "resetSearchedKeywordHistory");
+            const resetSearchedKeywordHistorySpy = vi.spyOn(historyView["treeProviders"].ds, "resetSearchedKeywordHistory");
             await historyView["onDidReceiveMessage"]({
                 command: "clear-all",
                 attrs: { type: "ds", selection: "searchedKeywordHistory" },
@@ -289,9 +291,9 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            jest.spyOn(historyView as any, "refreshView").mockImplementation();
-            jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("Yes");
-            const showMessageSpy = jest.spyOn(Gui, "showMessage");
+            vi.spyOn(historyView as any, "refreshView").mockImplementation((() => undefined) as any);
+            vi.spyOn(Gui, "showMessage").mockResolvedValueOnce("Yes");
+            const showMessageSpy = vi.spyOn(Gui, "showMessage");
             await historyView["onDidReceiveMessage"]({
                 command: "clear-all",
                 attrs: { type: "ds", selection: "favorites" },
@@ -304,8 +306,8 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            jest.spyOn(historyView as any, "refreshView").mockImplementation();
-            jest.spyOn(Gui, "showMessage").mockResolvedValue("Yes");
+            vi.spyOn(historyView as any, "refreshView").mockImplementation((() => undefined) as any);
+            vi.spyOn(Gui, "showMessage").mockResolvedValue("Yes");
 
             const resetEncodingHistorySpy = blockMocks.localStorageSet;
             await historyView["onDidReceiveMessage"]({
@@ -320,7 +322,7 @@ describe("HistoryView Unit Tests", () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
             const historyView = await initializeHistoryViewMock(blockMocks, globalMocks);
-            const postMessageSpy = jest.spyOn(historyView.panel.webview, "postMessage");
+            const postMessageSpy = vi.spyOn(historyView.panel.webview, "postMessage");
             await historyView["onDidReceiveMessage"]({ command: "GET_LOCALIZATION" });
             expect(postMessageSpy).toHaveBeenCalledWith({
                 command: "GET_LOCALIZATION",
@@ -340,7 +342,7 @@ describe("HistoryView Unit Tests", () => {
         it("if read file throwing an error in GET_LOCALIZATION", async () => {
             const globalMocks = await createGlobalMocks();
             const blockMocks = createBlockMocks(globalMocks);
-            const spyReadFile = jest.fn((path, encoding, callback) => {
+            const spyReadFile = vi.fn((path, encoding, callback) => {
                 callback("error", "file contents");
             });
             Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
@@ -364,6 +366,20 @@ describe("HistoryView Unit Tests", () => {
                 sessions: [],
                 encodingHistory: [],
             });
+        });
+
+        it("should scope the search history subset to the invoking node's type and profile", async () => {
+            const globalMocks = await createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const historyView = await initializeHistoryViewMock(blockMocks, globalMocks, blockMocks.datasetSessionNode);
+            const dsSearchHistorySpy = vi.spyOn(historyView["treeProviders"].ds, "getSearchHistory");
+            const ussSearchHistorySpy = vi.spyOn(historyView["treeProviders"].uss, "getSearchHistory");
+
+            historyView["getHistoryData"]("ds");
+            historyView["getHistoryData"]("uss");
+
+            expect(dsSearchHistorySpy).toHaveBeenCalledWith(blockMocks.datasetSessionNode.getProfile());
+            expect(ussSearchHistorySpy).toHaveBeenCalledWith(undefined);
         });
     });
 });

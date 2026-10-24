@@ -26,6 +26,8 @@ export namespace IconUtils {
         "sessionOpen" = "sessionOpen",
         "sessionFavourite" = "sessionFavourite",
         "sessionFavouriteOpen" = "sessionFavouriteOpen",
+        "symlinkFile" = "symlinkFile",
+        "symlinkFolder" = "symlinkFolder",
         "filterFolder" = "filterFolder",
         "filterFolderOpen" = "filterFolderOpen",
         "folder" = "folder",
@@ -48,7 +50,7 @@ export namespace IconUtils {
     export interface IIconItem {
         id: IconId;
         type: IconHierarchyType;
-        path: { light: string; dark: string };
+        path: vscode.IconPath;
         check: (node: TreeNode) => boolean;
     }
 }

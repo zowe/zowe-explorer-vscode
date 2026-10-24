@@ -30,7 +30,11 @@ interface OtherEncoding {
     codepage: string;
 }
 
-export type ZosEncoding = TextEncoding | BinaryEncoding | OtherEncoding;
+interface AutoDetectEncoding {
+    kind: "auto-detect";
+}
+
+export type ZosEncoding = TextEncoding | BinaryEncoding | OtherEncoding | AutoDetectEncoding;
 
 export type EncodingMap = Record<string, ZosEncoding>;
 
@@ -190,6 +194,17 @@ export interface IZoweDatasetTreeNode extends IZoweTreeNode {
      * Whether the node is currently being updated through a filter prompt
      */
     inFilterPrompt?: boolean;
+
+    /**
+     * True if this node represents an alias to another target data set.
+     */
+    isAlias?: boolean;
+
+    /**
+     * If this node represents an alias, this field will contain the data set name
+     * that the alias points to if the MVS API for its profile supports resolving aliases.
+     */
+    aliasTargetDsn?: string;
 
     /**
      * Retrieves child nodes of this IZoweDatasetTreeNode

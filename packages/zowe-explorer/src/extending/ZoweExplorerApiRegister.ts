@@ -10,18 +10,22 @@
  */
 
 import * as vscode from "vscode";
+import * as zowex from "zowex-for-zowe-explorer";
 import {
+    BaseProvider,
     DataSetAttributesProvider,
     IApiExplorerExtender,
     MainframeInteraction,
     Types,
     Validation,
+    ZosEncoding,
     ZoweExplorerZosmf,
     ZoweScheme,
     imperative,
 } from "@zowe/zowe-explorer-api";
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { ZoweLogger } from "../tools/ZoweLogger";
+import { ProfilesUtils } from "../utils/ProfilesUtils";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -33,6 +37,8 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
 
     public onProfileUpdatedEmitter: vscode.EventEmitter<imperative.IProfileLoaded> = new vscode.EventEmitter();
     public readonly onProfileUpdated = this.onProfileUpdatedEmitter.event;
+    #fsProviders = new Map<ZoweScheme, BaseProvider>();
+    #fileApi?: Types.IZoweExplorerFileApi;
 
     /**
      * Access the singleton instance.
@@ -121,10 +127,17 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
      * It automatically registers the zosmf implementation as it is the default for Zowe Explorer.
      */
     private constructor() {
+        ProfilesUtils.setApiRegister(this);
+
         this.registerUssApi(new ZoweExplorerZosmf.UssApi());
         this.registerMvsApi(new ZoweExplorerZosmf.MvsApi());
         this.registerJesApi(new ZoweExplorerZosmf.JesApi());
         this.registerCommandApi(new ZoweExplorerZosmf.CommandApi());
+
+        this.registerMvsApi(new zowex.SshMvsApi());
+        this.registerUssApi(new zowex.SshUssApi());
+        this.registerJesApi(new zowex.SshJesApi());
+        this.registerCommandApi(new zowex.SshCommandApi());
     }
 
     // TODO: the redundant functions that follow could be done with generics, but as we are using
@@ -399,5 +412,55 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
      */
     public static addFileSystemEvent(scheme: ZoweScheme | string, event: vscode.Event<vscode.FileChangeEvent[]>): void {
         ZoweExplorerApiRegister.eventMap[scheme] = event;
+    }
+
+    /**
+     * Registers a filesystem provider so it can be queried through {@link getFileApi}.
+     * Called by each FS provider during singleton construction.
+     * @param scheme the Zowe URI scheme the provider handles
+     * @param provider the provider instance
+     */
+    public registerFSProvider(scheme: ZoweScheme, provider: BaseProvider): void {
+        this.#fsProviders.set(scheme, provider);
+        this.#fileApi = undefined; // reset cached API so next call picks up the new provider
+    }
+
+    /**
+     * Invalidates the cached entry for the given URI and fires a `FileChangeType.Changed`
+     * event so VS Code re-reads the file from the provider.
+     * @param uri the URI of the resource that changed
+     */
+    public static doNotifyFileChanged(uri: vscode.Uri): void {
+        ZoweLogger.info(`[ZoweExplorerApiRegister] notifyFileChanged called for ${uri.toString()}`);
+        const provider = ZoweExplorerApiRegister.getInstance().#fsProviders.get(uri.scheme as ZoweScheme);
+        if (provider) {
+            provider.invalidateCache(uri);
+            provider.fireSoon({ type: vscode.FileChangeType.Changed, uri });
+        }
+    }
+
+    /**
+     * Gets the helper API for mainframe file-system and cache queries.
+     * @returns the Zowe Explorer file API instance
+     */
+    public getFileApi(): Types.IZoweExplorerFileApi {
+        if (this.#fileApi) {
+            return this.#fileApi;
+        }
+        this.#fileApi = {
+            getEncodingForUri: (uri: vscode.Uri): ZosEncoding | undefined => {
+                const provider = this.#fsProviders.get(uri.scheme as ZoweScheme);
+                if (!provider) {
+                    return undefined;
+                }
+                try {
+                    return provider.getEncodingForFile(uri) ?? provider.encodingMap[uri.path];
+                } catch {
+                    return provider.encodingMap[uri.path];
+                }
+            },
+            notifyFileChanged: (uri: vscode.Uri): void => ZoweExplorerApiRegister.doNotifyFileChanged(uri),
+        };
+        return this.#fileApi;
     }
 }

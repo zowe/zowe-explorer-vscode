@@ -1,0 +1,40 @@
+name: ZEDC CI
+
+on:
+  push:
+    paths:
+      - zedc/**
+      - .github/workflows/zedc-ci.yml
+  pull_request:
+    paths:
+      - zedc/**
+      - .github/workflows/zedc-ci.yml
+
+jobs:
+  zedc-build:
+    runs-on: ubuntu-22.04
+
+    timeout-minutes: 20
+
+    concurrency:
+      group: zedc-ci-${{ github.ref }}
+      cancel-in-progress: true
+
+    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !contains(github.event.head_commit.message, '[ci skip]')
+
+    defaults:
+      run:
+        working-directory: zedc
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Run tests
+        run: cargo test --locked
+
+      - name: Build release
+        run: cargo build --release --locked

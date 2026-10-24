@@ -13,6 +13,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import {
     BaseProvider,
+    handleError,
     BufferBuilder,
     FsAbstractUtils,
     imperative,
@@ -25,6 +26,8 @@ import {
     UriFsInfo,
     ZoweExplorerApiType,
     AuthHandler,
+    IFileSystemEntry,
+    ConflictViewSelection,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { USSFileStructure } from "./USSFileStructure";
@@ -33,18 +36,26 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
+import dayjs = require("dayjs");
 
 export class UssFSProvider extends BaseProvider implements vscode.FileSystemProvider {
     // Event objects for provider
 
+    private readonly PROFILE_URI_SEGMENTS = 1; // /PROFILE
+    /**
+     * Directories whose contents this provider has listed at least once, which is what makes their cached
+     * entries usable as a baseline for diffing a later listing. Tracked alongside `entries.size` so that a
+     * directory that was empty when it was listed still reports the entries that appear in it later.
+     */
+    private readonly listedDirectories = new WeakSet<UssDirectory>();
     private static _instance: UssFSProvider;
     private constructor() {
         super();
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.USS, this.onDidChangeFile);
+        ZoweExplorerApiRegister.getInstance().onProfileUpdated((profile) => this.updateProfile(profile));
+        ZoweExplorerApiRegister.getInstance().registerFSProvider(ZoweScheme.USS, this);
         this.root = new UssDirectory();
     }
-
-    public encodingMap: Record<string, ZosEncoding> = {};
 
     /**
      * @returns the USS FileSystemProvider singleton instance
@@ -57,15 +68,62 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return UssFSProvider._instance;
     }
 
-    /* Public functions: File operations */
+    /**
+     * Fires the given file change events, adding a `Changed` event for the parent directory whenever
+     * one of its entries is created or deleted. VS Code does not derive parent events from child ones,
+     * so a watcher on a directory would otherwise see nothing when its contents change.
+     *
+     * @param events The file change events to fire
+     */
+    public fireSoon(...events: vscode.FileChangeEvent[]): void {
+        // Consolidate existing events
+        const queuedParents = new Set(
+            [...this._bufferedEvents, ...events].filter((event) => event.type === vscode.FileChangeType.Changed).map((event) => event.uri.path)
+        );
+        const parentEvents: vscode.FileChangeEvent[] = [];
+
+        for (const event of events) {
+            if (event.type === vscode.FileChangeType.Changed || !this.hasParentDirectory(event.uri)) {
+                continue;
+            }
+            const parentUri = event.uri.with({ path: path.posix.join(event.uri.path, ".."), query: "" });
+            if (queuedParents.has(parentUri.path)) {
+                continue;
+            }
+            queuedParents.add(parentUri.path);
+            parentEvents.push({ type: vscode.FileChangeType.Changed, uri: parentUri });
+        }
+
+        super.fireSoon(...events, ...parentEvents);
+    }
 
     /**
-     * Returns file statistics about a given URI.
-     * @param uri A URI that must exist as an entry in the provider
-     * @returns A structure containing file type, time, size and other metrics
+     * @param uri A URI within this provider
+     * @returns Whether the URI has a parent directory in the file system, i.e. it is not a profile root
      */
-    public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        ZoweLogger.trace(`[UssFSProvider] stat called with ${uri.toString()}`);
+    private hasParentDirectory(uri: vscode.Uri): boolean {
+        return uri.path.split("/").filter(Boolean).length > this.PROFILE_URI_SEGMENTS;
+    }
+
+    protected async lookupWithCache(uri: vscode.Uri): Promise<UssDirectory | UssFile | IFileSystemEntry> {
+        // Check cache for resource
+        const localLookup = this.lookup(uri, true);
+        if (localLookup) {
+            return localLookup;
+        }
+        // If resource not found, remote lookup
+        return this.remoteLookupForResource(uri);
+    }
+
+    /**
+     * Executes the core logic for the stat operation on a given URI.
+     * This is separated to facilitate caching and testing.
+     * @param uri The URI of the resource to stat.
+     * @returns A promise that resolves to a vscode.FileStat object.
+     */
+    private async statImplementation(uri: vscode.Uri, isVisibleEditor: boolean = false): Promise<vscode.FileStat> {
+        ZoweLogger.trace(`[UssFSProvider] statImplementation called with ${uri.toString()}`);
+
         let isFetching = false;
 
         if (uri.query) {
@@ -78,7 +136,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             isFetching = queryParams.has("fetch") && queryParams.get("fetch") === "true";
         }
 
-        const entry = isFetching ? await this.remoteLookupForResource(uri) : this.lookup(uri, false);
+        const shouldFetch = isFetching || isVisibleEditor;
+
+        const entry = isFetching ? await this.remoteLookupForResource(uri) : await this.lookupWithCache(uri);
+
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const apiRegister = ZoweExplorerApiRegister.getInstance();
         const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
@@ -86,15 +147,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             registeredTypes: apiRegister.registeredApiTypes(),
         });
         const session = commonApi.getSession(uriInfo.profile);
-        if (
-            ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
-            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
-        ) {
-            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+        if (ProfilesUtils.hasNoCredentials(session.ISession, uriInfo.profile)) {
+            await AuthUtils.promptForMissingCredentials(uriInfo.profile);
         }
 
         // Do not perform remote lookup for profile or directory URIs; the code below is for change detection on USS files only
-        if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry)) {
+        if (uriInfo.isRoot || FsAbstractUtils.isDirectoryEntry(entry) || !shouldFetch) {
             return entry;
         }
 
@@ -103,36 +161,86 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             // Wait for any ongoing authentication process to complete
             const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-            await AuthUtils.ensureAuthNotCancelled(profile);
-            await AuthHandler.waitForUnlock(entry.metadata.profile);
-
-            // Check if the profile is locked (indicating an auth error is being handled)
-            // If it's locked, we should wait and not make additional requests
-            if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-                ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
-                return entry;
-            }
+            AuthUtils.ensureAuthNotCancelled(profile);
+            await AuthHandler.waitForAuthFlow(profile);
 
             const fileResp = await this.listFiles(entry.metadata.profile, uri, true);
 
             if (fileResp.success) {
                 // Regardless of the resource type, it will be the first item in a successful response.
                 // When listing a folder, the folder's stats will be represented as the "." entry.
-                const newTime = (fileResp.apiResponse?.items ?? [])?.[0]?.mtime ?? entry.mtime;
+                const apiMtime = (fileResp.apiResponse?.items ?? [])?.[0]?.mtime;
 
-                if (entry.mtime != newTime) {
-                    entry.mtime = newTime;
-                    // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
+                if (apiMtime == null) {
+                    // No modification time was returned by the API. Invalidate the cache to force a
+                    // re-fetch on the next read, but leave `entry.mtime` untouched. Bumping `mtime`
+                    // here triggers VS Code's built-in stale-write detection (see
+                    // `FileService.validateWriteFile`) to compare the stored model mtime against an
+                    // always-advancing stat mtime, falsely raising a "content of the file is newer"
+                    // conflict on save. Etag-based conflict detection still runs in `writeFile` via
+                    // the 412 response from the mainframe.
                     entry.wasAccessed = false;
+                } else {
+                    const newTime = dayjs(apiMtime).valueOf();
+                    if (entry.mtime != newTime) {
+                        entry.mtime = newTime;
+                        // if the modification time has changed, invalidate the previous contents to signal to `readFile` that data needs to be fetched
+                        entry.wasAccessed = false;
+                    }
                 }
             }
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.error(err.message);
-            }
+            void handleError(err, (error) => {
+                ZoweLogger.error(error.message);
+            });
         }
 
         return entry;
+    }
+
+    /**
+     * Returns file statistics about a given URI.
+     * @param uri A URI that must exist as an entry in the provider
+     * @returns A structure containing file type, time, size and other metrics
+     */
+    public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
+        const isVisibleEditor = vscode.window.visibleTextEditors.some((editor) => editor.document.uri.toString() === uri.toString());
+
+        const result = await this.executeWithReuse<vscode.FileStat>(uri, {
+            keyGenerator: (u) => {
+                const queryKey = this.getQueryKey(u);
+                const cleanUri = this.pathWithoutTrailingSlash(u);
+                const selfKey = "list_" + queryKey + cleanUri;
+
+                const parentPath = path.posix.dirname(cleanUri);
+                if (parentPath && parentPath !== cleanUri && parentPath !== "/") {
+                    const parentKey = "list_" + queryKey + parentPath;
+                    if (this.requestCache.has(parentKey)) {
+                        return parentKey;
+                    }
+                }
+
+                return selfKey;
+            },
+            checkLocal: () => (isVisibleEditor ? false : !!this.lookup(uri, true)),
+            execute: () => this.statImplementation(uri, isVisibleEditor),
+        });
+
+        const entry = result as UssDirectory | UssFile;
+
+        if (!entry || !entry.metadata || !entry.metadata.path) {
+            return result;
+        }
+
+        const uriInfo = this._getInfoFromUri(uri);
+
+        const entryPath = entry.metadata.path.replace(/\/+/g, "/");
+        const reqPath = uriInfo.path.replace(/\/+/g, "/");
+        if (entryPath !== reqPath) {
+            return this.lookup(uri, false);
+        }
+
+        return result;
     }
 
     /**
@@ -154,7 +262,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         try {
             await AuthUtils.retryRequest(info.profile, async () => {
-                await AuthUtils.ensureAuthNotCancelled(info.profile);
+                AuthUtils.ensureAuthNotCancelled(info.profile);
                 await AuthHandler.waitForUnlock(info.profile);
                 await ussApi.move(oldInfo.path, info.path);
             });
@@ -180,24 +288,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const ussPath = queryParams.has("searchPath") ? queryParams.get("searchPath") : uri.path.substring(uri.path.indexOf("/", 1));
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(profile);
-        await AuthHandler.waitForUnlock(profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${profile.name} is locked, waiting for authentication`);
-            return {
-                success: false,
-                commandResponse: "Profile is locked due to authentication error",
-                apiResponse: { items: [] },
-            };
-        }
+        AuthUtils.ensureAuthNotCancelled(profile);
+        await AuthHandler.waitForAuthFlow(profile);
 
         const loadedProfile = Profiles.getInstance().loadNamedProfile(profile.name);
 
-        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
-        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
 
         let response: IZosFilesResponse;
         let symlinkResponse: IZosFilesResponse = null;
@@ -237,9 +333,31 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 }
             }
 
-            // If request was successful, create directories for the path if it doesn't exist
-            if (response.success && !keepRelative && response.apiResponse.items?.[0]?.mode?.startsWith("d") && !this.exists(uri)) {
-                await vscode.workspace.fs.createDirectory(uri.with({ query: "" }));
+            if (response.success && !keepRelative && !this.exists(uri)) {
+                const rawItems = response.apiResponse?.items ?? [];
+                const uriBasename = path.posix.basename(uri.path);
+                // Classic z/OSMF responses include a "." entry (mode "d") as the first item.
+                // Some extenders omit that entry and return only child entries. In that case,
+                // detect a directory listing by verifying that the response represents the
+                // directory itself (not a child file with a matching name).
+                //
+                // Edge case: A directory may contain a file whose name matches the URI basename.
+                // For example, listing /u/users/ibmuser/temp (directory) might return a child
+                // file named "temp". We distinguish by checking: if there's no "." entry and
+                // only a single item that is a non-directory file matching the basename, then
+                // fileList was called on that file. Otherwise, it's a directory listing.
+                const hasSelfEntry = rawItems.some((item) => item.name === ".");
+                const isSingleFileMatch =
+                    rawItems.length === 1 &&
+                    (rawItems[0].name === uriBasename || rawItems[0].name === ussPath) &&
+                    !(rawItems[0].mode as string | undefined)?.startsWith("d");
+                const isDirectoryResponse =
+                    (hasSelfEntry && (rawItems.find((item) => item.name === ".")?.mode as string | undefined)?.startsWith("d")) ||
+                    (rawItems.length > 0 && !hasSelfEntry && !isSingleFileMatch) ||
+                    (rawItems.length === 0 && !hasSelfEntry); // Handle empty directories;
+                if (isDirectoryResponse) {
+                    this._createDirectoryRecursive(uri);
+                }
             }
         });
 
@@ -255,7 +373,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         // Add isSymlink property to items that were detected as symlinks
-        const items = (response.apiResponse.items ?? [])
+        const items = (response.apiResponse?.items ?? [])
             .filter(keepRelative ? Boolean : (it: Record<string, unknown>): boolean => !/^\.{1,3}$/.test(it.name as string))
             .map((item: Record<string, unknown>) => ({
                 ...item,
@@ -265,40 +383,40 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return {
             ...response,
             apiResponse: {
-                ...response.apiResponse,
+                ...(response.apiResponse ?? {}),
                 items,
             },
         };
     }
 
+    private _createDirectoryRecursive(uri: vscode.Uri): void {
+        const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
+        if (parentUri.path !== uri.path && parentUri.path !== "/" && !this.exists(parentUri)) {
+            this._createDirectoryRecursive(parentUri);
+        }
+
+        if (!this.exists(uri)) {
+            this.createDirectory(uri);
+        }
+    }
+
     private async fetchEntries(uri: vscode.Uri, uriInfo: UriFsInfo): Promise<UssDirectory | UssFile> {
         const entryExists = this.exists(uri);
         const apiRegister = ZoweExplorerApiRegister.getInstance();
+
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const commonApi = FsAbstractUtils.getApiOrThrowUnavailable(uriInfo.profile, () => apiRegister.getCommonApi(uriInfo.profile), {
             apiName: vscode.l10n.t("Common API"),
             registeredTypes: apiRegister.registeredApiTypes(),
         });
         const session = commonApi.getSession(uriInfo.profile);
-        if (
-            ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
-            (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
-        ) {
-            throw vscode.FileSystemError.Unavailable("Profile is using token type but missing a token");
+        if (ProfilesUtils.hasNoCredentials(session.ISession, uriInfo.profile)) {
+            await AuthUtils.promptForMissingCredentials(uriInfo.profile);
         }
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
-        await AuthHandler.waitForUnlock(uriInfo.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(uriInfo.profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${uriInfo.profile.name} is locked, waiting for authentication`);
-            if (entryExists) {
-                return this.lookup(uri, false) as UssDirectory | UssFile;
-            }
-            throw vscode.FileSystemError.FileNotFound(uri);
-        }
+        AuthUtils.ensureAuthNotCancelled(uriInfo.profile);
+        await AuthHandler.waitForAuthFlow(uriInfo.profile);
 
         let resp: IZosFilesResponse;
         if (!entryExists) {
@@ -313,32 +431,61 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         if (FsAbstractUtils.isFileEntry(entry)) {
             return entry;
         }
+
+        // TODO fix: Undefined behavior when creating FS entries with dot-segments i.e "/u/users/<user>/a/b/c/../../../TEST";
         if (entry == null && resp?.success) {
             // if entry is null, listFiles did not create a new directory entry - this is a file
             let parentDir = this.lookupParentDirectory(uri, true);
             if (parentDir == null) {
                 const parentPath = path.posix.join(uri.path, "..");
                 const parentUri = uri.with({ path: parentPath, query: "" });
-                await vscode.workspace.fs.createDirectory(parentUri);
+                this._createDirectoryRecursive(parentUri);
                 parentDir = this.lookupParentDirectory(uri, false);
                 parentDir.metadata = this._getInfoFromUri(parentUri);
             }
             const filename = path.posix.basename(uri.path);
             const file = new UssFile(filename);
+
+            if (resp.apiResponse.items && resp.apiResponse.items.length > 0) {
+                const item = resp.apiResponse.items[0];
+                if (item.mtime) {
+                    file.mtime = dayjs(item.mtime).valueOf();
+                }
+                if (item.size) {
+                    file.size = item.size;
+                }
+            }
+
             file.metadata = { profile: uriInfo.profile, path: path.posix.join(parentDir.metadata.path, filename) };
             parentDir.entries.set(filename, file);
             return parentDir.entries.get(filename) as UssFile;
         }
 
         const fileList = entryExists ? await this.listFiles(entry.metadata.profile, uri) : resp;
-        for (const item of fileList.apiResponse?.items ?? []) {
+        const listedItems = fileList.apiResponse?.items;
+        // Only diff against a cache that an earlier listing populated. A non-empty cache is enough on its own,
+        // since the tree can populate it without the provider ever listing the directory itself.
+        const canDiffEntries = (entry.entries.size > 0 || this.listedDirectories.has(entry)) && Array.isArray(listedItems);
+        const staleEntryNames = new Set(entry.entries.keys());
+        if (Array.isArray(listedItems)) {
+            this.listedDirectories.add(entry);
+        }
+
+        for (const item of listedItems ?? []) {
             const itemName = item.name as string;
+            staleEntryNames.delete(itemName);
 
             const isDirectory = item.mode?.startsWith("d") ?? false;
             const newEntryType = isDirectory ? vscode.FileType.Directory : vscode.FileType.File;
             // skip over existing entries if they are the same type
             const existingEntry = entry.entries.get(itemName);
             if (existingEntry && existingEntry.type === newEntryType) {
+                if (item.mtime) {
+                    existingEntry.mtime = dayjs(item.mtime).valueOf();
+                }
+                if (item.size) {
+                    existingEntry.size = item.size;
+                }
                 continue;
             }
 
@@ -346,13 +493,39 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             const UssType = item.mode?.startsWith("d") ? UssDirectory : UssFile;
             const newEntry = new UssType(itemName);
             newEntry.metadata = { ...entry.metadata, path: path.posix.join(entry.metadata.path, itemName) };
+
+            if (item.mtime) {
+                newEntry.mtime = dayjs(item.mtime).valueOf();
+            }
+            if (item.size) {
+                newEntry.size = item.size;
+            }
+
             entry.entries.set(itemName, newEntry);
+
+            if (canDiffEntries) {
+                this.fireSoon({
+                    type: vscode.FileChangeType.Created,
+                    uri: uri.with({ path: path.posix.join(uri.path, itemName), query: "" }),
+                });
+            }
+        }
+
+        if (canDiffEntries) {
+            for (const staleEntryName of staleEntryNames) {
+                entry.entries.delete(staleEntryName);
+                this.fireSoon({
+                    type: vscode.FileChangeType.Deleted,
+                    uri: uri.with({ path: path.posix.join(uri.path, staleEntryName), query: "" }),
+                });
+            }
         }
 
         return entry;
     }
 
     public async remoteLookupForResource(uri: vscode.Uri): Promise<UssDirectory | UssFile> {
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const profileUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: uriInfo.profileName });
 
@@ -372,12 +545,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return this.fetchEntries(uri, uriInfo);
     }
 
-    /**
-     * Reads a directory located at the given URI.
-     * @param uri A valid URI within the provider
-     * @returns An array of tuples containing each entry name and type
-     */
-    public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
+    private async readDirectoryImplementation(uri: vscode.Uri): Promise<UssDirectory> {
         /**
          * TODOs:
          * - Look into pre-fetching a directory level below the one given
@@ -386,16 +554,29 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         try {
             this._lookupAsDirectory(uri, false) as UssDirectory;
         } catch (err) {
-            // Errors unrelated to the filesystem cannot be handled here
             if (!(err instanceof vscode.FileSystemError) || err.code !== "FileNotFound") {
                 throw err;
             }
         }
 
         // check to see if contents have updated on the remote system before returning its children.
-        const dir = (await this.remoteLookupForResource(uri)) as UssDirectory;
+        return (await this.remoteLookupForResource(uri)) as UssDirectory;
+    }
 
-        return Array.from(dir.entries.entries()).map((e: [string, UssDirectory | UssFile]) => [e[0], e[1].type]);
+    /**
+     * Reads a directory located at the given URI.
+     * @param uri A valid URI within the provider
+     * @returns An array of tuples containing each entry name and type
+     */
+    public async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
+        const dir = await this.executeWithReuse<UssDirectory>(uri, {
+            keyGenerator: (u) => "list_" + this.getQueryKey(u) + this.pathWithoutTrailingSlash(u),
+            checkLocal: () => !!this._lookupAsDirectory(uri, true),
+            execute: () => this.readDirectoryImplementation(uri),
+            action: "readDirectory",
+        });
+
+        return Array.from(dir.entries.entries()).map((e) => [e[0], e[1].type]);
     }
 
     /**
@@ -408,7 +589,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         ZoweLogger.trace(`[UssFSProvider] fetchFileAtUri called with ${uri.toString()}`);
         const file = this._lookupAsFile(uri) as UssFile;
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
-        const bufBuilder = new BufferBuilder();
+        let bufBuilder = new BufferBuilder();
         const filePath = uri.path.substring(uriInfo.slashAfterProfilePos);
         const profile = Profiles.getInstance().loadNamedProfile(file.metadata.profile.name);
 
@@ -418,16 +599,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profileEncoding = file.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(profile);
-        await AuthHandler.waitForUnlock(file.metadata.profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
+        await AuthHandler.waitForAuthFlow(profile);
 
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(file.metadata.profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${file.metadata.profile.name} is locked, waiting for authentication`);
-            return;
-        }
         await AuthUtils.retryRequest(uriInfo.profile, async () => {
+            bufBuilder = new BufferBuilder();
             try {
                 resp = await ZoweExplorerApiRegister.getUssApi(profile).getContents(filePath, {
                     binary: file.encoding?.kind === "binary",
@@ -437,9 +613,9 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     stream: bufBuilder,
                 });
             } catch (err) {
-                if (err instanceof Error) {
-                    ZoweLogger.error(`[UssFSProvider] fetchFileAtUri failed due to an error. Details: \n${err.message}`);
-                }
+                void handleError(err, (error) => {
+                    ZoweLogger.error(`[UssFSProvider] fetchFileAtUri failed due to an error. Details: \n${error.message}`);
+                });
                 if (
                     !(
                         (err instanceof imperative.ImperativeError &&
@@ -469,12 +645,16 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             };
         } else {
             file.data = data;
+            if (file.etag !== resp.apiResponse.etag) {
+                if (file.etag) {
+                    this.fireSoon({ type: vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
+                }
+            }
             file.etag = resp.apiResponse.etag;
             file.size = file.data.byteLength;
         }
 
-        ZoweLogger.trace(`[UssFSProvider] fetchFileAtUri fired a change event for ${uri.toString()}`);
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
+        ZoweLogger.trace(`[UssFSProvider] fetchFileAtUri finished for ${uri.toString()}`);
 
         if (options?.editor) {
             await this._updateResourceInEditor(uri);
@@ -490,15 +670,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-        await AuthUtils.ensureAuthNotCancelled(profile);
-        await AuthHandler.waitForUnlock(entry.metadata.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
-            return;
-        }
+        AuthUtils.ensureAuthNotCancelled(profile);
+        await AuthHandler.waitForAuthFlow(profile);
 
         const ussApi = ZoweExplorerApiRegister.getUssApi(profile);
         await AuthUtils.retryRequest(entry.metadata.profile, async () => {
@@ -516,25 +689,23 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         });
     }
 
+    /**
+     * Attempts to fetches the encoding for a file at the given URI.
+     * @param uri The URI pointing to a valid file on the remote system
+     * @returns The file's encoding
+     */
     public async fetchEncodingForUri(uri: vscode.Uri): Promise<ZosEncoding> {
         const file = this._lookupAsFile(uri) as UssFile;
         await this.autoDetectEncoding(file);
-
         return file.encoding;
     }
 
-    /**
-     * Reads a file at the given URI and fetches it from the remote system (if not yet accessed).
-     * @param uri The URI pointing to a valid file on the remote system
-     * @returns The file's contents as an array of bytes
-     */
-    public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
+    private async readFileImplementation(uri: vscode.Uri): Promise<Uint8Array> {
         let file: UssFile | UssDirectory;
 
         // Check if the profile for URI is not zosmf, if it is not, create a deferred promise for the profile.
         // If the extenderProfileReady map does not contain the profile, create a deferred promise for the profile.
-        const uriInfo = FsAbstractUtils.getInfoForUri(uri);
-        await ProfilesUtils.awaitExtenderType(uriInfo.profileName, Profiles.getInstance());
+        await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
         try {
             file = this._lookupAsFile(uri) as UssFile;
         } catch (err) {
@@ -559,7 +730,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const profInfo = this._getInfoFromUri(uri);
 
         if (profInfo.profile == null) {
-            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("Profile does not exist for this file."));
+            throw vscode.FileSystemError.FileNotFound(vscode.l10n.t("A profile does not exist for this file."));
         }
 
         const urlQuery = new URLSearchParams(uri.query);
@@ -578,10 +749,27 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         return isConflict ? file.conflictData.contents : file.data;
     }
 
+    /**
+     * Reads a file at the given URI and fetches it from the remote system (if not yet accessed).
+     * @param uri The URI pointing to a valid file on the remote system
+     * @returns The file's contents as an array of bytes
+     */
+    public async readFile(uri: vscode.Uri): Promise<Uint8Array> {
+        return this.executeWithReuse<Uint8Array>(uri, {
+            keyGenerator: (u) => "readFile_" + this.getQueryKey(u) + this.pathWithoutTrailingSlash(u),
+            checkLocal: () => {
+                const entry = this._lookupAsFile(uri, { silent: true }) as UssFile;
+                return entry?.wasAccessed ?? false;
+            },
+            execute: () => this.readFileImplementation(uri),
+            action: "readFile",
+        });
+    }
+
     private async uploadEntry(
         entry: UssFile,
         content: Uint8Array,
-        options?: { forceUpload?: boolean; noStatusMsg?: boolean }
+        options?: { forceUpload?: boolean; noStatusMsg?: boolean; isNew?: boolean }
     ): Promise<IZosFilesResponse> {
         const statusMsg =
             // only show a status message if "noStatusMsg" is not specified,
@@ -592,22 +780,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
-        await AuthUtils.ensureAuthNotCancelled(profile);
-        await AuthHandler.waitForUnlock(entry.metadata.profile);
+        AuthUtils.ensureAuthNotCancelled(profile);
+        await AuthHandler.waitForAuthFlow(profile);
 
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-            statusMsg.dispose();
-            ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
-            throw new Error(`Profile ${entry.metadata.profile.name} is locked due to authentication error`);
-        }
         const ussApi = ZoweExplorerApiRegister.getUssApi(profile);
 
         let resp: IZosFilesResponse;
         try {
             await AuthUtils.retryRequest(entry.metadata.profile, async () => {
-                await this.autoDetectEncoding(entry);
+                if (!options?.isNew) {
+                    await this.autoDetectEncoding(entry);
+                }
                 const profileEncoding = entry.encoding ? null : profile.profile?.encoding; // use profile encoding rather than metadata encoding
 
                 resp = await ussApi.uploadFromBuffer(Buffer.from(content), entry.metadata.path, {
@@ -653,46 +836,51 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             throw vscode.FileSystemError.FileExists(uri);
         }
 
+        // This determines whether to fire a Created or Changed notification.
+        const isNew = !entry;
+
+        if (isNew) {
+            entry = new UssFile(fileName);
+            // Build the metadata for the file using the parent's metadata (if available),
+            // or build it using the helper function
+            entry.metadata = {
+                ...parentDir.metadata,
+                path: path.posix.join(parentDir.metadata.path, fileName),
+            };
+            entry.data = new Uint8Array();
+            parentDir.entries.set(fileName, entry);
+            parentDir.mtime = Date.now();
+            parentDir.size += 1;
+        }
+
         // Attempt to write data to remote system, and handle any conflicts from e-tag mismatch
         const urlQuery = new URLSearchParams(uri.query);
         const forceUpload = urlQuery.has("forceUpload");
+
         try {
-            if (!entry) {
-                entry = new UssFile(fileName);
-                // Build the metadata for the file using the parent's metadata (if available),
-                // or build it using the helper function
-                entry.metadata = {
-                    ...parentDir.metadata,
-                    path: path.posix.join(parentDir.metadata.path, fileName),
-                };
-
-                if (content.byteLength > 0) {
-                    // user is trying to edit a file that was just deleted: make the API call
-                    const resp = await this.uploadEntry(entry as UssFile, content, { forceUpload });
-                    entry.etag = resp.apiResponse.etag;
-                }
+            if (entry.inDiffView || urlQuery.has("inDiff")) {
+                // Allow users to edit the local copy of a file in the diff view, but don't make any API calls.
+                entry.inDiffView = true;
                 entry.data = content;
-                parentDir.entries.set(fileName, entry);
-                this._fireSoon({ type: vscode.FileChangeType.Created, uri });
-            } else {
-                if (entry.inDiffView || urlQuery.has("inDiff")) {
-                    // Allow users to edit the local copy of a file in the diff view, but don't make any API calls.
-                    entry.inDiffView = true;
-                    entry.data = content;
-                    entry.mtime = Date.now();
-                    entry.size = content.byteLength;
-                    return;
-                }
-
-                if (entry.wasAccessed || content.length > 0) {
-                    const resp = await this.uploadEntry(entry as UssFile, content, { forceUpload });
-                    entry.etag = resp.apiResponse.etag;
-                }
-                entry.data = content;
+                entry.mtime = Date.now();
+                entry.size = content.byteLength;
+                return;
             }
+
+            const resp = await this.uploadEntry(entry as UssFile, content, { forceUpload, isNew });
+            entry.etag = resp.apiResponse.etag;
+            entry.data = content;
+            entry.mtime = Date.now();
+            entry.size = content.byteLength;
+
+            this.fireSoon({ type: isNew ? vscode.FileChangeType.Created : vscode.FileChangeType.Changed, uri: uri.with({ query: "" }) });
         } catch (err) {
             if (!err.message.includes("Rest API failure with HTTP(S) status 412")) {
-                // Some unknown error happened, don't update the entry
+                // Some unknown error happened, rollback optimistic entry creation
+                if (isNew && parentDir.entries.has(fileName)) {
+                    parentDir.entries.delete(fileName);
+                    parentDir.size -= 1;
+                }
                 this._handleError(err, {
                     apiType: ZoweExplorerApiType.Uss,
                     retry: {
@@ -707,13 +895,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
             entry.data = content;
             // Prompt the user with the conflict dialog
-            await this._handleConflict(uri, entry);
+            const selection = await this._handleConflict(uri, entry);
+            if (selection !== ConflictViewSelection.Overwrite) {
+                // Rollback optimistic entry creation if user chooses not to overwrite
+                if (isNew && parentDir.entries.has(fileName)) {
+                    parentDir.entries.delete(fileName);
+                    parentDir.size -= 1;
+                }
+                throw vscode.FileSystemError.Unavailable(vscode.l10n.t("Conflict: Remote contents have changed."));
+            }
             return;
         }
-
-        entry.mtime = Date.now();
-        entry.size = content.byteLength;
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri });
     }
 
     public makeEmptyFileWithEncoding(uri: vscode.Uri, encoding: ZosEncoding): void {
@@ -747,14 +939,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
 
-        await AuthUtils.ensureAuthNotCancelled(profile);
-        await AuthHandler.waitForUnlock(entry.metadata.profile);
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(entry.metadata.profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${entry.metadata.profile.name} is locked, waiting for authentication`);
-            return;
-        }
+        AuthUtils.ensureAuthNotCancelled(profile);
+        await AuthHandler.waitForAuthFlow(profile);
 
         try {
             await AuthUtils.retryRequest(entry.metadata.profile, async () => {
@@ -768,13 +954,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                         Gui.errorMessage(err.message);
                         return;
                     }
-                } catch (err) {
-                    if (err.name === "Error" && Number(err.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
+                } catch (listError) {
+                    if (listError.name === "Error" && Number(listError.errorCode) === imperative.RestConstants.HTTP_STATUS_404) {
                         const parent = this.lookupParentDirectory(newUri);
                         parent.entries.delete(path.posix.basename(newUri.path));
                         await ZoweExplorerApiRegister.getUssApi(profile).rename(entry.metadata.path, newPath);
                     } else {
-                        throw err;
+                        throw listError;
                     }
                 }
             } else {
@@ -805,7 +991,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             this._updateChildPaths(entry);
         }
         parentDir.entries.set(newName, entry);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
     }
 
     /**
@@ -817,15 +1003,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Wait for any ongoing authentication process to complete
         const profile = Profiles.getInstance().loadNamedProfile(parent.metadata.profile.name);
-        await AuthUtils.ensureAuthNotCancelled(profile);
-        await AuthHandler.waitForUnlock(parent.metadata.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(parent.metadata.profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${parent.metadata.profile.name} is locked, waiting for authentication`);
-            return;
-        }
+        AuthUtils.ensureAuthNotCancelled(profile);
+        await AuthHandler.waitForAuthFlow(profile);
 
         try {
             await AuthUtils.retryRequest(parent.metadata.profile, async () => {
@@ -853,7 +1032,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.mtime = Date.now();
         parent.size -= 1;
 
-        this._fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
+        this.fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
     }
 
     public async copy(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
@@ -889,6 +1068,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param source The source URI for the file/folder to copy
      * @param destination The new, destination URI for the file/folder
      * @param options Options for copying the file/folder
+            // Detect whether the response is a directory listing.
+            // Classic z/OSMF responses include a "." entry with a "d" mode as the first item.
+            // Some extenders omit that entry and return only the directory's children. In that
+            // case we fall back to checking whether ANY raw item is a non-directory file whose
+            // name matches the URI's own basename – if such an item exists the caller stat'd a
+            // plain file; otherwise the list represents the contents of a directory.
      * - `overwrite` - Overwrites the entry at the destination URI if it exists
      * - `tree` - A tree representation of the file structure to copy
      * @returns
@@ -902,15 +1087,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const sourceInfo = this._getInfoFromUri(source);
 
         // Wait for any ongoing authentication process to complete
-        await AuthUtils.ensureAuthNotCancelled(destInfo.profile);
-        await AuthHandler.waitForUnlock(destInfo.profile);
-
-        // Check if the profile is locked (indicating an auth error is being handled)
-        // If it's locked, we should wait and not make additional requests
-        if (AuthHandler.isProfileLocked(destInfo.profile)) {
-            ZoweLogger.warn(`[UssFSProvider] Profile ${destInfo.profile.name} is locked, waiting for authentication`);
-            return;
-        }
+        AuthUtils.ensureAuthNotCancelled(destInfo.profile);
+        await AuthHandler.waitForAuthFlow(destInfo.profile);
 
         const api = ZoweExplorerApiRegister.getUssApi(destInfo.profile);
 
@@ -959,12 +1137,16 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                         }
                     }
                 } else {
-                    const fileEntry = this.lookup(source);
+                    const fileEntry = this._lookupAsFile(source) as UssFile;
                     if (!fileEntry.wasAccessed) {
                         // must fetch contents of file first before pasting in new path
                         await this.readFile(source);
                     }
-                    await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath);
+                    const destProfile = Profiles.getInstance().loadNamedProfile(destInfo.profile.name);
+                    await api.uploadFromBuffer(Buffer.from(fileEntry.data), outputPath, {
+                        binary: fileEntry.encoding?.kind === "binary",
+                        encoding: fileEntry.encoding?.kind === "other" ? fileEntry.encoding.codepage : destProfile.profile?.encoding,
+                    });
                 }
             });
         } catch (err) {
@@ -984,6 +1166,53 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             });
             throw err;
         }
+    }
+
+    /**
+     * Creates a new USS file or directory entry in the provider at the given URI.
+     * @param uri The URI that represents the new file or directory path
+     * @param ussType The type of entry to create ("file" or "directory")
+     * @returns The newly created USS entry (either UssFile or UssDirectory)
+     * @throws lookupParentDirectory throws an error if the parent directory is not found
+     */
+    public createEntry(uri: vscode.Uri, ussType: "file" | "directory"): UssFile | UssDirectory {
+        const basename = path.posix.basename(uri.path);
+        const parent = this.lookupParentDirectory(uri);
+        let entry: UssFile | UssDirectory;
+        if (ussType === "directory") {
+            entry = new UssDirectory(basename);
+        } else {
+            entry = new UssFile(basename);
+            entry.data = new Uint8Array();
+        }
+
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+        const profInfo = !uriInfo.isRoot
+            ? {
+                  profile: uriInfo.profile,
+                  path: path.posix.join(parent.metadata.path, basename),
+              }
+            : this._getInfoFromUri(uri);
+        entry.metadata = profInfo;
+
+        parent.entries.set(entry.name, entry);
+        parent.mtime = Date.now();
+        parent.size += 1;
+        return entry;
+    }
+
+    /**
+     * Creates any missing directory entries leading up to the given URI, without making any API requests.
+     * @param uri The URI whose ancestor directories should exist in the provider
+     */
+    public createParentDirectories(uri: vscode.Uri): void {
+        const parentUri = uri.with({ path: path.posix.dirname(uri.path) });
+        if (parentUri.path === uri.path || parentUri.path === "/" || this.exists(parentUri)) {
+            return;
+        }
+
+        this.createParentDirectories(parentUri);
+        this.createDirectory(parentUri);
     }
 
     /**
@@ -1011,10 +1240,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;
-        this._fireSoon(
-            { type: vscode.FileChangeType.Changed, uri: uri.with({ path: path.posix.join(uri.path, "..") }) },
-            { type: vscode.FileChangeType.Created, uri }
-        );
     }
 
     public watch(_resource: vscode.Uri, _options?: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
@@ -1030,5 +1255,12 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     private _getInfoFromUri(uri: vscode.Uri): EntryMetadata {
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         return { profile: uriInfo.profile, path: uriInfo.isRoot ? "/" : uri.path.substring(uriInfo.slashAfterProfilePos) };
+    }
+
+    /**
+     * Helper to clean URI string for cache keys (removes trailing slash)
+     */
+    private pathWithoutTrailingSlash(uri: vscode.Uri): string {
+        return uri.path.endsWith("/") ? uri.path.slice(0, -1) : uri.path;
     }
 }

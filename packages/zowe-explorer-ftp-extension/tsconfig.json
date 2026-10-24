@@ -18,18 +18,18 @@
     "removeComments": true,
     "resolveJsonModule": true,
     "rootDir": ".",
+    "composite": true,
     "paths": {
       "@zowe/zowe-explorer-api": ["../zowe-explorer-api"]
-    }
+    },
+    "types": ["node"]
   },
   "exclude": ["node_modules", ".vscode-test"],
   "include": [
     "src/**/*.ts",
     // Needed in production for vscode-nls localization to work:
     "./node_modules/vscode/vscode.d.ts",
-    "./node_modules/vscode/lib/*",
-    "__tests__",
-    "__mocks__"
+    "./node_modules/vscode/lib/*"
   ],
   "references": [{ "path": "../zowe-explorer-api" }]
 }

@@ -14,7 +14,7 @@ import { createIProfile, createISession, createInstanceOfProfile } from "../../.
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { createUSSNode, createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
-import { imperative, ProfilesCache, Gui, ZosEncoding, BaseProvider, Sorting } from "@zowe/zowe-explorer-api";
+import { imperative, ProfilesCache, Gui, ZosEncoding, BaseProvider, Sorting, CorrelatedError } from "@zowe/zowe-explorer-api";
 import { Constants } from "../../../../src/configuration/Constants";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { FilterItem } from "../../../../src/management/FilterManagement";
@@ -30,18 +30,18 @@ import { createIJobFile, createJobSessionNode } from "../../../__mocks__/mockCre
 import { JobFSProvider } from "../../../../src/trees/job/JobFSProvider";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 
-jest.mock("../../../../src/tools/ZoweLocalStorage");
+vi.mock("../../../../src/tools/ZoweLocalStorage");
 
 function createGlobalMocks() {
     const newMocks = {
         session: createISession(),
         profileOne: createIProfile(),
-        mockGetInstance: jest.fn(),
+        mockGetInstance: vi.fn(),
         mockProfileInstance: null,
         mockProfilesCache: null,
-        createDirectory: jest.fn(),
+        createDirectory: vi.fn(),
     };
-    jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.createDirectory);
+    vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.createDirectory);
     newMocks.mockProfilesCache = new ProfilesCache(imperative.Logger.getAppLogger());
     newMocks.mockProfileInstance = createInstanceOfProfile(createIProfile());
     Object.defineProperty(Constants, "PROFILES_CACHE", {
@@ -50,7 +50,7 @@ function createGlobalMocks() {
     });
 
     Object.defineProperty(newMocks.mockProfilesCache, "getConfigInstance", {
-        value: jest.fn(() => {
+        value: vi.fn(() => {
             return {
                 usingTeamConfig: false,
             };
@@ -62,15 +62,15 @@ function createGlobalMocks() {
 
 function makeFakeMvsApi(items: any[] = []) {
     return {
-        dataSet: jest.fn().mockResolvedValue({ apiResponse: { items } }),
-        allMembers: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }),
+        dataSet: vi.fn().mockResolvedValue({ apiResponse: { items } }),
+        allMembers: vi.fn().mockResolvedValue({ apiResponse: { items: [] } }),
     };
 }
 
 beforeEach(() => {
-    jest.resetAllMocks();
-    jest.clearAllMocks();
-    jest.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockImplementation(() => makeFakeMvsApi());
+    vi.resetAllMocks();
+    vi.clearAllMocks();
+    vi.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockImplementation(() => makeFakeMvsApi());
 });
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {
@@ -294,15 +294,15 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
     const otherEncoding: ZosEncoding = { kind: "other", codepage: "IBM-1047" };
 
     function createBlockMocks() {
-        const showInputBox = jest.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
-        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
-        const localStorageGet = jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
-        const localStorageSet = jest.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined);
-        const getEncodingForFile = jest.spyOn((BaseProvider as any).prototype, "getEncodingForFile");
-        const setEncodingForFile = jest.spyOn((BaseProvider as any).prototype, "setEncodingForFile").mockReturnValue(undefined);
-        const fetchEncodingForUri = jest.spyOn(UssFSProvider.instance, "fetchEncodingForUri").mockResolvedValue(undefined as any);
-        const createDirectorySpy = jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation();
-        const getEncodingForFileSpy = jest.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValue({ kind: "binary" });
+        const showInputBox = vi.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
+        const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
+        const localStorageGet = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const localStorageSet = vi.spyOn(ZoweLocalStorage, "setValue").mockReturnValue(undefined);
+        const getEncodingForFile = vi.spyOn((BaseProvider as any).prototype, "getEncodingForFile").mockReturnValue(undefined);
+        const setEncodingForFile = vi.spyOn((BaseProvider as any).prototype, "setEncodingForFile").mockReturnValue(undefined);
+        const fetchEncodingForUri = vi.spyOn(UssFSProvider.instance, "fetchEncodingForUri").mockResolvedValue(undefined as any);
+        const createDirectorySpy = vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+        const getEncodingForFileSpy = vi.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValue({ kind: "binary" });
 
         return {
             profile: createIProfile(),
@@ -320,9 +320,9 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
     }
 
     beforeEach(() => {
-        jest.resetAllMocks();
-        jest.clearAllMocks();
-        jest.restoreAllMocks();
+        vi.resetAllMocks();
+        vi.clearAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("prompts for text encoding for USS file", async () => {
@@ -335,7 +335,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[0]);
-        blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce(undefined);
         const encoding = await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(encoding).toEqual(textEncoding);
@@ -435,7 +435,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             profile: blockMocks.profile,
             parentPath: "/root",
         });
-        blockMocks.getEncodingForFile.mockReturnValueOnce({ kind: "text" });
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce({ kind: "text" });
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({
@@ -455,7 +455,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             profile: blockMocks.profile,
             parentPath: "/root",
         });
-        blockMocks.getEncodingForFile.mockReturnValueOnce({ kind: "text" });
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce({ kind: "text" });
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(await blockMocks.showQuickPick.mock.calls[0][0][0]).toEqual({
@@ -475,7 +475,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         node.setEncoding(otherEncoding);
-        blockMocks.getEncodingForFile.mockReturnValueOnce(otherEncoding);
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce(otherEncoding);
         const encodingHistory = ["IBM-123", "IBM-456", "IBM-789"];
         blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
         blockMocks.showQuickPick.mockImplementationOnce(async (items) => items[4]);
@@ -496,7 +496,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentPath: "/root",
         });
         node.setEncoding(binaryEncoding);
-        blockMocks.getEncodingForFile.mockReturnValueOnce(binaryEncoding);
+        blockMocks.getEncodingForFileSpy.mockReturnValueOnce(binaryEncoding);
         await SharedUtils.promptForEncoding(node);
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         expect(blockMocks.showQuickPick.mock.calls[0][1]).toEqual(expect.objectContaining({ placeHolder: "Current encoding is Binary" }));
@@ -533,7 +533,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             parentNode,
             contextOverride: Constants.DS_MEMBER_CONTEXT,
         });
-        const existsMock = jest.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(true);
+        const existsMock = vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValueOnce(true);
         node.setEncoding(otherEncoding);
         expect(existsMock).toHaveBeenCalled();
         blockMocks.getEncodingForFile.mockReturnValueOnce(undefined);
@@ -674,18 +674,15 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
 
 describe("Shared utils unit tests - function promptForUploadEncoding", () => {
     beforeEach(() => {
-        jest.resetAllMocks();
-        jest.clearAllMocks();
-        jest.restoreAllMocks();
+        vi.resetAllMocks();
+        vi.clearAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("returns binary when Binary is selected", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: jest.fn().mockReturnValue(undefined), update: jest.fn() },
-            configurable: true,
-        });
-        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Binary") } as any);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Binary") } as any);
         const enc = await SharedUtils.promptForUploadEncoding(profile as any, "some/path");
         expect(showQuickPick).toHaveBeenCalled();
         expect(enc).toEqual({ kind: "binary" });
@@ -693,11 +690,8 @@ describe("Shared utils unit tests - function promptForUploadEncoding", () => {
 
     it("returns text when EBCDIC is selected", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: jest.fn().mockReturnValue(undefined), update: jest.fn() },
-            configurable: true,
-        });
-        const showQuickPick = jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("EBCDIC") } as any);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("EBCDIC") } as any);
         const enc = await SharedUtils.promptForUploadEncoding(profile as any, "some/path");
         expect(enc).toEqual({ kind: "text" });
         expect(showQuickPick).toHaveBeenCalled();
@@ -705,16 +699,98 @@ describe("Shared utils unit tests - function promptForUploadEncoding", () => {
 
     it("prompts for codepage when Other is selected and stores it in history", async () => {
         const profile = createIProfile();
-        Object.defineProperty(ZoweLocalStorage, "globalState", {
-            value: { get: jest.fn().mockReturnValue([]), update: jest.fn() },
-            configurable: true,
-        });
-        jest.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
-        jest.spyOn(Gui, "showInputBox").mockResolvedValue("IBM-1047");
-        const setValueSpy = jest.spyOn(ZoweLocalStorage, "setValue").mockResolvedValueOnce(undefined);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue([]);
+        vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
+        vi.spyOn(Gui, "showInputBox").mockResolvedValue("IBM-1047");
+        const setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockResolvedValueOnce(undefined);
         const enc = await SharedUtils.promptForUploadEncoding(profile as any, "some/path");
         expect(enc).toEqual({ kind: "other", codepage: "IBM-1047" });
         expect(setValueSpy).toHaveBeenCalled();
+    });
+});
+
+describe("Shared utils unit tests - function promptForDownloadEncoding", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+        vi.clearAllMocks();
+        vi.restoreAllMocks();
+    });
+
+    it("returns binary when Binary is selected", async () => {
+        const profile = createIProfile();
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Binary") } as any);
+        const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+        expect(showQuickPick).toHaveBeenCalled();
+        expect(enc).toEqual({ kind: "binary" });
+    });
+
+    it("returns text when EBCDIC is selected", async () => {
+        const profile = createIProfile();
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("EBCDIC") } as any);
+        const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+        expect(enc).toEqual({ kind: "text" });
+        expect(showQuickPick).toHaveBeenCalled();
+    });
+
+    it("prompts for codepage when Other is selected and stores it in history", async () => {
+        const profile = createIProfile();
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue([]);
+        vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
+        vi.spyOn(Gui, "showInputBox").mockResolvedValue("ISO8859-1");
+        const setValueSpy = vi.spyOn(ZoweLocalStorage, "setValue").mockResolvedValueOnce(undefined);
+        const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+        expect(enc).toEqual({ kind: "other", codepage: "ISO8859-1" });
+        expect(setValueSpy).toHaveBeenCalled();
+    });
+
+    it("returns undefined when user cancels selection", async () => {
+        const profile = createIProfile();
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        vi.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
+        const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+        expect(enc).toBeUndefined();
+    });
+
+    it("returns undefined when user cancels codepage input", async () => {
+        const profile = createIProfile();
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue([]);
+        vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: vscode.l10n.t("Other") } as any);
+        vi.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
+        vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+        const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+        expect(enc).toBeUndefined();
+    });
+
+    it("uses profile encoding in options when available", async () => {
+        const profile = createIProfile();
+        if (profile.profile) {
+            profile.profile.encoding = "IBM-037";
+        }
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue([]);
+        const mockShowQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: "IBM-037" } as any);
+
+        const enc = await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+
+        const callArgs = mockShowQuickPick.mock.calls[0][0] as any[];
+        const profileEncodingOption = callArgs.find((item: any) => item.label === "IBM-037");
+        expect(profileEncodingOption).toBeDefined();
+        expect(profileEncodingOption.description).toContain("From profile");
+        expect(enc).toEqual({ kind: "other", codepage: "IBM-037" });
+    });
+
+    it("includes encoding history in options", async () => {
+        const profile = createIProfile();
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(["IBM-1047", "ISO8859-1"]);
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(["IBM-1047", "ISO8859-1"]);
+        const mockShowQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue({ label: "IBM-1047" } as any);
+
+        await SharedUtils.promptForDownloadEncoding(profile as any, "TEST.DS");
+
+        const callArgs = mockShowQuickPick.mock.calls[0][0] as any[];
+        expect(callArgs.some((item: any) => item.label === "IBM-1047")).toBe(true);
+        expect(callArgs.some((item: any) => item.label === "ISO8859-1")).toBe(true);
     });
 });
 
@@ -741,7 +817,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = { kind: "binary" };
 
-            const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri?.path);
@@ -767,7 +843,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = { kind: "text" };
 
-            const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri?.path);
@@ -793,7 +869,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = { kind: "other", codepage: "IBM-1147" };
 
-            const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri?.path);
@@ -819,7 +895,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = undefined;
 
-            const encodingMapSpy = jest.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(node, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(node);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(node.resourceUri?.path);
@@ -840,7 +916,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = { kind: "binary" };
 
-            const encodingMapSpy = jest.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(ussNode);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.resourceUri?.path);
@@ -859,7 +935,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = { kind: "text" };
 
-            const encodingMapSpy = jest.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(ussNode);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.resourceUri?.path);
@@ -878,7 +954,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = { kind: "other", codepage: "IBM-1147" };
 
-            const encodingMapSpy = jest.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(ussNode);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.resourceUri?.path);
@@ -897,7 +973,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
             });
             const encoding = undefined;
 
-            const encodingMapSpy = jest.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
+            const encodingMapSpy = vi.spyOn(ussNode, "getEncodingInMap").mockResolvedValue(encoding);
             const response = await SharedUtils.getCachedEncoding(ussNode);
 
             expect(encodingMapSpy).toHaveBeenCalledWith(ussNode.resourceUri?.path);
@@ -919,7 +995,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = { kind: "binary" };
 
-                const encodingMapSpy = jest.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(dsNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.resourceUri?.path);
@@ -938,7 +1014,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = { kind: "test" };
 
-                const encodingMapSpy = jest.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(dsNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.resourceUri?.path);
@@ -957,7 +1033,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = { kind: "other", codepage: "IBM-1147" };
 
-                const encodingMapSpy = jest.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(dsNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.resourceUri?.path);
@@ -976,7 +1052,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = undefined;
 
-                const encodingMapSpy = jest.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(dsNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(dsNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(dsNode.resourceUri?.path);
@@ -1005,7 +1081,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = { kind: "binary" };
 
-                const encodingMapSpy = jest.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(memNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(memNode.resourceUri?.path);
@@ -1032,7 +1108,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = { kind: "text" };
 
-                const encodingMapSpy = jest.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(memNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(memNode.resourceUri?.path);
@@ -1059,7 +1135,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = { kind: "other", codepage: "IBM-1147" };
 
-                const encodingMapSpy = jest.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(memNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(memNode.resourceUri?.path);
@@ -1086,7 +1162,7 @@ describe("Shared utils unit tests - function getCachedEncoding", () => {
                 });
                 const encoding = undefined;
 
-                const encodingMapSpy = jest.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
+                const encodingMapSpy = vi.spyOn(memNode, "getEncodingInMap").mockResolvedValue(encoding);
                 const response = await SharedUtils.getCachedEncoding(memNode);
 
                 expect(encodingMapSpy).toHaveBeenCalledWith(memNode.resourceUri?.path);
@@ -1107,7 +1183,7 @@ describe("Shared utils unit tests - function parseFavorites", () => {
     });
 
     it("filters out an incomplete favorite entry (missing label and context)", () => {
-        const warnSpy = jest.spyOn(ZoweLogger, "warn");
+        const warnSpy = vi.spyOn(ZoweLogger, "warn");
         const favData = SharedUtils.parseFavorites(["[testProfile]: "]);
         expect(favData.length).toBe(0);
         expect(warnSpy).toHaveBeenCalledWith("Failed to parse a saved favorite. Attempted to parse: [testProfile]: ");
@@ -1122,7 +1198,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
             contextOverride: Constants.DS_PDS_CONTEXT,
             profile: createIProfile(),
         });
-        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        const updateWorkspaceFoldersMock = vi.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation((() => undefined) as any);
         SharedUtils.addToWorkspace(datasetNode, null as any);
         expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, {
             uri: datasetNode.resourceUri,
@@ -1136,7 +1212,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
             contextOverride: Constants.USS_TEXT_FILE_CONTEXT,
             profile: createIProfile(),
         });
-        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        const updateWorkspaceFoldersMock = vi.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation((() => undefined) as any);
         SharedUtils.addToWorkspace(ussNode, null as any);
         expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, { uri: ussNode.resourceUri, name: `[sestest] ${ussNode.fullPath}` });
     });
@@ -1153,7 +1229,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
             contextOverride: Constants.DS_PDS_CONTEXT,
             profile: createIProfile(),
         });
-        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        const updateWorkspaceFoldersMock = vi.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation((() => undefined) as any);
         SharedUtils.addToWorkspace(null as any, [datasetNode1, datasetNode2]);
         expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(
             0,
@@ -1177,7 +1253,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
             session: createISession(),
         });
         ussNode.fullPath = "/u/users/smpluser";
-        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        const updateWorkspaceFoldersMock = vi.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation((() => undefined) as any);
         SharedUtils.addToWorkspace(ussNode, null as any);
         expect(updateWorkspaceFoldersMock).toHaveBeenCalledWith(0, null, {
             uri: ussNode.resourceUri?.with({ path: `/sestest${ussNode.fullPath}` }),
@@ -1193,8 +1269,8 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
             session: createISession(),
         });
         ussNode.fullPath = "";
-        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
-        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+        const updateWorkspaceFoldersMock = vi.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation((() => undefined) as any);
+        const infoMessageSpy = vi.spyOn(Gui, "infoMessage");
         updateWorkspaceFoldersMock.mockClear();
         SharedUtils.addToWorkspace(ussNode, null as any);
         expect(updateWorkspaceFoldersMock).not.toHaveBeenCalledWith(0, null, {
@@ -1213,7 +1289,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
         const workspaceFolders = new MockedProperty(vscode.workspace, "workspaceFolders", {
             value: [{ uri: ussNode.resourceUri, name: ussNode.label }],
         });
-        const updateWorkspaceFoldersMock = jest.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation();
+        const updateWorkspaceFoldersMock = vi.spyOn(vscode.workspace, "updateWorkspaceFolders").mockImplementation((() => undefined) as any);
         updateWorkspaceFoldersMock.mockClear();
         SharedUtils.addToWorkspace(ussNode, null as any);
         expect(updateWorkspaceFoldersMock).not.toHaveBeenCalledWith(0, null, {
@@ -1226,7 +1302,7 @@ describe("Shared utils unit tests - function addToWorkspace", () => {
 
 describe("Shared utils unit tests - function copyExternalLink", () => {
     it("does nothing for an invalid node or one without a resource URI", async () => {
-        const copyClipboardMock = jest.spyOn(vscode.env.clipboard, "writeText");
+        const copyClipboardMock = vi.spyOn(vscode.env.clipboard, "writeText");
         const ussNode = createUSSNode(createISession(), createIProfile());
         ussNode.resourceUri = undefined;
         await SharedUtils.copyExternalLink({ extension: { id: "Zowe.vscode-extension-for-zowe" } } as any, ussNode);
@@ -1234,7 +1310,7 @@ describe("Shared utils unit tests - function copyExternalLink", () => {
     });
 
     it("copies a link for a node with a resource URI", async () => {
-        const copyClipboardMock = jest.spyOn(vscode.env.clipboard, "writeText");
+        const copyClipboardMock = vi.spyOn(vscode.env.clipboard, "writeText");
         const ussNode = createUSSNode(createISession(), createIProfile());
         await SharedUtils.copyExternalLink({ extension: { id: "Zowe.vscode-extension-for-zowe" } } as any, ussNode);
         expect(copyClipboardMock).toHaveBeenCalledWith(`vscode://Zowe.vscode-extension-for-zowe?${ussNode.resourceUri?.toString()}`);
@@ -1243,30 +1319,30 @@ describe("Shared utils unit tests - function copyExternalLink", () => {
 
 describe("Shared utils unit tests - function debounce", () => {
     beforeAll(() => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
     });
 
     afterAll(() => {
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     it("executes a function twice when time between calls is long", () => {
-        const mockEventHandler = jest.fn();
+        const mockEventHandler = vi.fn();
         const debouncedFn = SharedUtils.debounce(mockEventHandler, 100);
         debouncedFn();
-        jest.runAllTimers();
+        vi.runAllTimers();
         debouncedFn();
-        jest.runAllTimers();
+        vi.runAllTimers();
         expect(mockEventHandler).toHaveBeenCalledTimes(2);
     });
 
     it("executes a function only once when time between calls is short", () => {
-        const mockEventHandler = jest.fn();
+        const mockEventHandler = vi.fn();
         const debouncedFn = SharedUtils.debounce(mockEventHandler, 100);
         debouncedFn();
-        jest.advanceTimersByTime(10);
+        vi.advanceTimersByTime(10);
         debouncedFn();
-        jest.runAllTimers();
+        vi.runAllTimers();
         expect(mockEventHandler).toHaveBeenCalledTimes(1);
     });
 });
@@ -1329,7 +1405,7 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
             UserId: 3,
         };
 
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(undefined);
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(undefined);
 
         const result = SharedUtils.getDefaultSortOptions(sortOptions, settingsKey, sortMethod);
 
@@ -1349,7 +1425,7 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
             UserId: 3,
         };
 
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
             method: "DateModified",
             direction: "Descending",
         });
@@ -1373,7 +1449,7 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
             UserId: 3,
         };
 
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
             method: "UserId",
             direction: "Ascending",
         });
@@ -1397,7 +1473,7 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
             UserId: 3,
         };
 
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
             method: "InvalidMethod",
             direction: "InvalidDirection",
         });
@@ -1421,7 +1497,7 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
             UserId: 3,
         };
 
-        jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce({
             method: undefined,
             direction: undefined,
         });
@@ -1438,30 +1514,30 @@ describe("Shared utils unit tests - getDefaultSortOptions", () => {
 
 describe("Shared utils unit tests - function debounceAsync", () => {
     beforeAll(() => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
     });
 
     afterAll(() => {
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     it("executes a function twice when time between calls is long", async () => {
-        const mockEventHandler = jest.fn().mockResolvedValue(undefined);
+        const mockEventHandler = vi.fn().mockResolvedValue(undefined);
         const debouncedFn = SharedUtils.debounceAsync(mockEventHandler, 100);
         void debouncedFn();
-        jest.runAllTimers();
+        vi.runAllTimers();
         void debouncedFn();
-        jest.runAllTimers();
+        vi.runAllTimers();
         expect(mockEventHandler).toHaveBeenCalledTimes(2);
     });
 
     it("executes a function only once when time between calls is short", async () => {
-        const mockEventHandler = jest.fn().mockResolvedValue(undefined);
+        const mockEventHandler = vi.fn().mockResolvedValue(undefined);
         const debouncedFn = SharedUtils.debounceAsync(mockEventHandler, 100);
         void debouncedFn();
-        jest.advanceTimersByTime(10);
+        vi.advanceTimersByTime(10);
         void debouncedFn();
-        jest.runAllTimers();
+        vi.runAllTimers();
         expect(mockEventHandler).toHaveBeenCalledTimes(1);
     });
 });
@@ -1511,7 +1587,7 @@ describe("SharedUtils.handleProfileChange", () => {
             contextOverride: Constants.DS_SESSION_CONTEXT,
             profile,
         });
-        jest.spyOn(dsSession, "setProfileToChoice").mockImplementation(() => {
+        vi.spyOn(dsSession, "setProfileToChoice").mockImplementation(() => {
             throw new Error("error while updating profile on node");
         });
         const providers = {
@@ -1519,7 +1595,7 @@ describe("SharedUtils.handleProfileChange", () => {
             uss: { getChildren: () => [] } as any,
             job: { getChildren: () => [] } as any,
         };
-        const errorSpy = jest.spyOn(ZoweLogger, "error");
+        const errorSpy = vi.spyOn(ZoweLogger, "error");
         await SharedUtils.handleProfileChange(providers, newProfile);
         // verify that nodes still have the old data as the `setProfileToChoice` function failed
         expect(dsSession.getProfile().profile?.user).toBe(profile.profile?.user);
@@ -1529,13 +1605,469 @@ describe("SharedUtils.handleProfileChange", () => {
     });
 });
 
+describe("Shared utils unit tests - function promptForDirectoryEncoding", () => {
+    const binaryEncoding: ZosEncoding = { kind: "binary" };
+    const textEncoding: ZosEncoding = { kind: "text" };
+    const otherEncoding: ZosEncoding = { kind: "other", codepage: "IBM-1047" };
+
+    function createBlockMocks() {
+        const showInputBox = vi.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
+        const showQuickPick = vi.spyOn(Gui, "showQuickPick").mockResolvedValue(undefined);
+        const localStorageGet = vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined);
+        const localStorageSet = vi.spyOn(ZoweLocalStorage, "setValue").mockResolvedValue(undefined);
+        const infoMessage = vi.spyOn(Gui, "infoMessage").mockResolvedValue(undefined);
+
+        return {
+            profile: createIProfile(),
+            showInputBox,
+            showQuickPick,
+            localStorageGet,
+            localStorageSet,
+            infoMessage,
+        };
+    }
+
+    beforeEach(() => {
+        vi.resetAllMocks();
+        vi.clearAllMocks();
+        vi.restoreAllMocks();
+    });
+
+    it("returns auto-detect when Auto-detect option is selected", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Auto-detect from file tags") });
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(result).toEqual({ kind: "auto-detect" });
+    });
+
+    it("returns text encoding when EBCDIC is selected", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("EBCDIC") });
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(result).toEqual(textEncoding);
+    });
+
+    it("returns binary encoding when Binary is selected", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Binary") });
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(result).toEqual(binaryEncoding);
+    });
+
+    it("returns other encoding when Other is selected and codepage is provided", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Other") });
+        blockMocks.showInputBox.mockResolvedValueOnce("IBM-1047");
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(blockMocks.showInputBox).toHaveBeenCalled();
+        expect(result).toEqual(otherEncoding);
+    });
+
+    it("returns undefined when Other is selected but no codepage is provided", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Other") });
+        blockMocks.showInputBox.mockResolvedValueOnce(undefined);
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(blockMocks.showInputBox).toHaveBeenCalled();
+        expect(blockMocks.infoMessage).toHaveBeenCalledWith(vscode.l10n.t("Operation cancelled"));
+        expect(result).toBeUndefined();
+    });
+
+    it("returns undefined when quick pick is cancelled", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce(undefined);
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        expect(result).toBeUndefined();
+    });
+
+    it("handles current directory encoding as auto-detect", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Binary") });
+
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", { kind: "auto-detect" });
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        const callArgs = blockMocks.showQuickPick.mock.calls[0][1];
+        expect(callArgs?.placeHolder).toContain(vscode.l10n.t("Auto-detect from file tags"));
+    });
+
+    it("handles current directory encoding as binary", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("EBCDIC") });
+
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", binaryEncoding);
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        const callArgs = blockMocks.showQuickPick.mock.calls[0][1];
+        expect(callArgs?.placeHolder).toContain(vscode.l10n.t("Binary"));
+    });
+
+    it("handles current directory encoding as text", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("EBCDIC") });
+
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", textEncoding);
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        const callArgs = blockMocks.showQuickPick.mock.calls[0][1];
+        expect(callArgs?.placeHolder).toContain(vscode.l10n.t("EBCDIC"));
+    });
+
+    it("handles current directory encoding as other codepage", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("EBCDIC") });
+
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", otherEncoding);
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        const callArgs = blockMocks.showQuickPick.mock.calls[0][1];
+        expect(callArgs?.placeHolder).toContain("OTHER-IBM-1047");
+    });
+
+    it("handles profile encoding in options", async () => {
+        const blockMocks = createBlockMocks();
+        (blockMocks.profile.profile as any).encoding = "IBM-1047";
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("EBCDIC") });
+
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        const items = await blockMocks.showQuickPick.mock.calls[0][0];
+        expect(Array.isArray(items) && items.some((item: any) => item.label === "IBM-1047" && item.description.includes("From profile"))).toBe(true);
+    });
+
+    it("includes encoding history in options", async () => {
+        const blockMocks = createBlockMocks();
+        const encodingHistory = ["IBM-1147", "UTF-8"];
+        blockMocks.localStorageGet.mockReturnValueOnce(encodingHistory);
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: encodingHistory[0] });
+
+        const result = await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.showQuickPick).toHaveBeenCalled();
+        const items = await blockMocks.showQuickPick.mock.calls[0][0];
+        expect(Array.isArray(items) && items.some((item: any) => item.label === "IBM-1147")).toBe(true);
+        expect(result).toEqual({ kind: "other", codepage: "IBM-1147" });
+    });
+
+    it("saves custom encoding to history", async () => {
+        const blockMocks = createBlockMocks();
+        const existingHistory = ["IBM-1147"];
+        blockMocks.localStorageGet.mockReturnValueOnce(existingHistory);
+        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Other") });
+        blockMocks.showInputBox.mockResolvedValueOnce("UTF-8");
+
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
+
+        expect(blockMocks.localStorageSet).toHaveBeenCalledWith(expect.anything(), expect.arrayContaining(["UTF-8"]));
+    });
+});
+
+describe("Shared utils unit tests - function handleDownloadResponse", () => {
+    function createBlockMocks() {
+        const showMessage = vi.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
+        const errorMessage = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+        const warningMessage = vi.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+        const loggerTrace = vi.spyOn(ZoweLogger, "trace").mockReturnValue(undefined);
+        const loggerInfo = vi.spyOn(ZoweLogger, "info").mockReturnValue(undefined);
+        const loggerWarn = vi.spyOn(ZoweLogger, "warn").mockReturnValue(undefined);
+        const executeCommand = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+
+        return {
+            showMessage,
+            errorMessage,
+            warningMessage,
+            loggerTrace,
+            loggerInfo,
+            loggerWarn,
+            executeCommand,
+        };
+    }
+
+    beforeEach(() => {
+        vi.resetAllMocks();
+        vi.clearAllMocks();
+        vi.restoreAllMocks();
+    });
+
+    it("shows simple success message when response is falsy", async () => {
+        const blockMocks = createBlockMocks();
+
+        await SharedUtils.handleDownloadResponse(null, "File");
+
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(vscode.l10n.t("{0} download completed.", "File"));
+    });
+
+    it("shows simple success message when response is undefined", async () => {
+        const blockMocks = createBlockMocks();
+
+        await SharedUtils.handleDownloadResponse(undefined, "Directory");
+
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(vscode.l10n.t("{0} download completed.", "Directory"));
+    });
+
+    it("shows simple success message for successful response without warnings", async () => {
+        const blockMocks = createBlockMocks();
+        const response = { success: true };
+
+        await SharedUtils.handleDownloadResponse(response, "Data set");
+
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(vscode.l10n.t("{0} downloaded successfully.", "Data set"));
+    });
+
+    it("shows error message when success is false", async () => {
+        const blockMocks = createBlockMocks();
+        const response = { success: false };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        const errorMsg = vscode.l10n.t("{0} download completed with errors.", "File");
+        const fullErrorMsg = vscode.l10n.t("{0}\n\nSome files may not have been downloaded.", errorMsg);
+        expect(blockMocks.errorMessage).toHaveBeenCalledWith(
+            fullErrorMsg,
+            expect.objectContaining({
+                items: [vscode.l10n.t("View Details")],
+                vsCodeOpts: { modal: false },
+            })
+        );
+    });
+
+    it("shows warning message when commandResponse contains 'already exists'", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: true,
+            commandResponse: "file already exists and was skipped",
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.loggerInfo).toHaveBeenCalledWith("Download response details: file already exists and was skipped");
+        const successMsg = vscode.l10n.t("{0} downloaded successfully.", "File");
+        const warningMsg = vscode.l10n.t("{0}\n\nSome files may have been skipped.", successMsg);
+        expect(blockMocks.warningMessage).toHaveBeenCalledWith(
+            warningMsg,
+            expect.objectContaining({
+                items: [vscode.l10n.t("View Details")],
+                vsCodeOpts: { modal: false },
+            })
+        );
+    });
+
+    it("shows warning message when commandResponse contains 'skipped'", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: true,
+            commandResponse: "some files were skipped",
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "Directory");
+
+        expect(blockMocks.warningMessage).toHaveBeenCalled();
+    });
+
+    it("shows error message when commandResponse contains 'failed'", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: true,
+            commandResponse: "download failed for some items",
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.loggerInfo).toHaveBeenCalledWith("Download response details: download failed for some items");
+        expect(blockMocks.errorMessage).toHaveBeenCalled();
+    });
+
+    it("shows error message when commandResponse contains 'error'", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: true,
+            commandResponse: "an error occurred during download",
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.errorMessage).toHaveBeenCalled();
+    });
+
+    it("handles apiResponse with failed items", async () => {
+        const blockMocks = createBlockMocks();
+        const failedItems = [
+            { name: "file1.txt", error: "Permission denied" },
+            { name: "file2.txt", status: "failed" },
+        ];
+        const response = {
+            success: true,
+            apiResponse: [{ name: "file3.txt", status: "success" }, ...failedItems],
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "Directory");
+
+        expect(blockMocks.loggerWarn).toHaveBeenCalledWith(`2 items failed to download: ${JSON.stringify(failedItems)}`);
+        expect(blockMocks.errorMessage).toHaveBeenCalled();
+    });
+
+    it("handles both commandResponse warnings and apiResponse errors", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: true,
+            commandResponse: "some files were skipped",
+            apiResponse: [
+                { name: "file1.txt", error: "Failed" },
+                { name: "file2.txt", status: "success" },
+            ],
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.errorMessage).toHaveBeenCalled();
+    });
+
+    it("executes troubleshoot command when View Details is selected for errors", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.errorMessage.mockResolvedValueOnce(vscode.l10n.t("View Details"));
+        const response = { success: false };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.executeCommand).toHaveBeenCalledWith("zowe.troubleshootError", expect.any(CorrelatedError), expect.any(String));
+    });
+
+    it("executes troubleshoot command when View Details is selected for warnings", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.warningMessage.mockImplementation((_msg, _options) => {
+            return Promise.resolve(vscode.l10n.t("View Details"));
+        });
+        const response = {
+            success: true,
+            commandResponse: "file already exists",
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "Directory");
+
+        expect(blockMocks.executeCommand).toHaveBeenCalledWith("zowe.troubleshootError", expect.any(CorrelatedError), expect.any(String));
+    });
+
+    it("does not execute troubleshoot command when View Details is not selected", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.errorMessage.mockResolvedValueOnce(undefined);
+        const response = { success: false };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.executeCommand).not.toHaveBeenCalled();
+    });
+
+    it("handles complex response with all types of information", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: false,
+            commandResponse: "Some files failed to download and others were skipped because they already exist",
+            apiResponse: [
+                { name: "file1.txt", status: "success" },
+                { name: "file2.txt", error: "Permission denied" },
+                { name: "file3.txt", status: "failed" },
+            ],
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "Directory");
+
+        expect(blockMocks.loggerInfo).toHaveBeenCalled();
+        expect(blockMocks.loggerWarn).toHaveBeenCalled();
+        expect(blockMocks.errorMessage).toHaveBeenCalled();
+    });
+
+    it("handles numeric commandResponse correctly", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: true,
+            commandResponse: 12345,
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "File");
+
+        expect(blockMocks.loggerInfo).toHaveBeenCalledWith("Download response details: 12345");
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(vscode.l10n.t("{0} downloaded successfully.", "File"));
+    });
+
+    it("shows info message with download counts when download was cancelled and downloadResult is available", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: false,
+            commandResponse: "The download was cancelled by the user.",
+            apiResponse: {
+                downloadResult: { downloaded: 3, total: 10 },
+            },
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "Data set members", "", true);
+
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(
+            vscode.l10n.t("{0} download was cancelled. {1} of {2} item(s) were downloaded.", "Data set members", 3, 10)
+        );
+        expect(blockMocks.errorMessage).not.toHaveBeenCalled();
+        expect(blockMocks.warningMessage).not.toHaveBeenCalled();
+    });
+
+    it("shows info message without counts when download was cancelled and downloadResult is not available", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: false,
+            commandResponse: "The download was cancelled by the user.",
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "Data set members", "", true);
+
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(vscode.l10n.t("{0} download was cancelled.", "Data set members"));
+        expect(blockMocks.errorMessage).not.toHaveBeenCalled();
+        expect(blockMocks.warningMessage).not.toHaveBeenCalled();
+    });
+
+    it("does not parse warning/error keywords in commandResponse when download was cancelled", async () => {
+        const blockMocks = createBlockMocks();
+        const response = {
+            success: false,
+            commandResponse: "The download was cancelled - some files failed and already exists",
+            apiResponse: {
+                downloadResult: { downloaded: 0, total: 5 },
+            },
+        };
+
+        await SharedUtils.handleDownloadResponse(response, "File", "", true);
+
+        expect(blockMocks.showMessage).toHaveBeenCalledWith(
+            vscode.l10n.t("{0} download was cancelled. {1} of {2} item(s) were downloaded.", "File", 0, 5)
+        );
+        expect(blockMocks.errorMessage).not.toHaveBeenCalled();
+        expect(blockMocks.warningMessage).not.toHaveBeenCalled();
+    });
+});
+
 describe("SharedUtils helpers", () => {
-    const mockGetMvsApi = jest.fn();
+    const mockGetMvsApi = vi.fn();
     let originalGetMvsApi: any;
 
     beforeEach(() => {
-        jest.resetAllMocks();
-        jest.clearAllMocks();
+        vi.resetAllMocks();
+        vi.clearAllMocks();
 
         originalGetMvsApi = (ZoweExplorerApiRegister as any).getMvsApi;
         (ZoweExplorerApiRegister as any).getMvsApi = mockGetMvsApi;
@@ -1543,7 +2075,7 @@ describe("SharedUtils helpers", () => {
 
     afterEach(() => {
         (ZoweExplorerApiRegister as any).getMvsApi = originalGetMvsApi;
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("isSamePhysicalDataset returns true when dsname and vols match", async () => {
@@ -1562,8 +2094,8 @@ describe("SharedUtils helpers", () => {
             },
         };
 
-        const srcApi = { dataSet: jest.fn().mockResolvedValue(srcResp) };
-        const dstApi = { dataSet: jest.fn().mockResolvedValue(dstResp) };
+        const srcApi = { dataSet: vi.fn().mockResolvedValue(srcResp) };
+        const dstApi = { dataSet: vi.fn().mockResolvedValue(dstResp) };
 
         mockGetMvsApi.mockImplementationOnce(() => srcApi);
         mockGetMvsApi.mockImplementationOnce(() => dstApi);
@@ -1581,8 +2113,8 @@ describe("SharedUtils helpers", () => {
         const dstProfile = { name: "DST" } as any;
         const dsn = "NON.EXISTENT";
 
-        const srcApi = { dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [{ dsname: dsn, vols: "VOL01" }] } }) };
-        const dstApi = { dataSet: jest.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
+        const srcApi = { dataSet: vi.fn().mockResolvedValue({ apiResponse: { items: [{ dsname: dsn, vols: "VOL01" }] } }) };
+        const dstApi = { dataSet: vi.fn().mockResolvedValue({ apiResponse: { items: [] } }) };
 
         mockGetMvsApi.mockImplementationOnce(() => srcApi);
         mockGetMvsApi.mockImplementationOnce(() => dstApi);
@@ -1615,11 +2147,164 @@ describe("SharedUtils helpers", () => {
         expect(SharedUtils.hasNameCollision(src2, dst2)).toBe(false);
     });
 
-    it("isLikelySameUssObjectByUris normalizes and compares paths", async () => {
+    it("isLikelySameUssObjectByUris normalizes and compares paths", () => {
         const srcNode = { fullPath: "/u/foo/bar" } as any;
         const targetParent = { fullPath: "/u/foo" } as any;
         const label = "bar";
-        expect(await SharedUtils.isLikelySameUssObjectByUris(srcNode, targetParent, label)).toBe(true);
-        expect(await SharedUtils.isLikelySameUssObjectByUris({ fullPath: "/u/other" } as any, targetParent, "bar")).toBe(false);
+        expect(SharedUtils.isLikelySameUssObjectByUris(srcNode, targetParent, label)).toBe(true);
+        expect(SharedUtils.isLikelySameUssObjectByUris({ fullPath: "/u/other" } as any, targetParent, "bar")).toBe(false);
+    });
+
+    describe("showMultiSelectQuickPick", () => {
+        let mockQuickPick: any;
+
+        beforeEach(() => {
+            mockQuickPick = {
+                title: "",
+                placeholder: "",
+                ignoreFocusOut: false,
+                canSelectMany: false,
+                items: [],
+                selectedItems: [],
+                onDidAccept: vi.fn(),
+                onDidHide: vi.fn(),
+                show: vi.fn(),
+                hide: vi.fn(),
+                dispose: vi.fn(),
+            };
+            vi.spyOn(Gui, "createQuickPick").mockReturnValue(mockQuickPick as any);
+        });
+
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it("returns selected items when the user accepts", async () => {
+            const items: vscode.QuickPickItem[] = [
+                { label: "Option A", picked: true },
+                { label: "Option B", picked: false },
+            ];
+
+            mockQuickPick.onDidAccept.mockImplementation((cb: () => void) => {
+                mockQuickPick.selectedItems = [items[0]];
+                cb();
+            });
+
+            const result = await SharedUtils.showMultiSelectQuickPick(items, {
+                title: "Test Title",
+                placeholder: "Test Placeholder",
+            });
+
+            expect(result).toEqual([items[0]]);
+            expect(mockQuickPick.title).toBe("Test Title");
+            expect(mockQuickPick.placeholder).toBe("Test Placeholder");
+            expect(mockQuickPick.ignoreFocusOut).toBe(true);
+            expect(mockQuickPick.canSelectMany).toBe(true);
+            expect(mockQuickPick.show).toHaveBeenCalled();
+            expect(mockQuickPick.dispose).toHaveBeenCalled();
+        });
+
+        it("returns null when the user dismisses the quick pick", async () => {
+            const items: vscode.QuickPickItem[] = [{ label: "Option A" }];
+
+            mockQuickPick.onDidHide.mockImplementation((cb: () => void) => {
+                cb();
+            });
+
+            const result = await SharedUtils.showMultiSelectQuickPick(items, {
+                title: "Test Title",
+                placeholder: "Test Placeholder",
+            });
+
+            expect(result).toBeNull();
+            expect(mockQuickPick.dispose).toHaveBeenCalled();
+        });
+
+        it("pre-selects items that have picked set to true", async () => {
+            const items: vscode.QuickPickItem[] = [
+                { label: "Option A", picked: true },
+                { label: "Option B", picked: true },
+                { label: "Option C", picked: false },
+            ];
+
+            mockQuickPick.onDidAccept.mockImplementation((cb: () => void) => {
+                mockQuickPick.selectedItems = [items[0], items[1]];
+                cb();
+            });
+
+            const result = await SharedUtils.showMultiSelectQuickPick(items, {
+                title: "Test",
+                placeholder: "Test",
+            });
+
+            expect(result).toEqual([items[0], items[1]]);
+            // Verify selectedItems were set from picked items
+            expect(mockQuickPick.selectedItems).toEqual([items[0], items[1]]);
+        });
+
+        it("returns empty array when user accepts with no selections", async () => {
+            const items: vscode.QuickPickItem[] = [
+                { label: "Option A", picked: false },
+                { label: "Option B", picked: false },
+            ];
+
+            mockQuickPick.onDidAccept.mockImplementation((cb: () => void) => {
+                mockQuickPick.selectedItems = [];
+                cb();
+            });
+
+            const result = await SharedUtils.showMultiSelectQuickPick(items, {
+                title: "Test",
+                placeholder: "Test",
+            });
+
+            expect(result).toEqual([]);
+        });
+    });
+});
+
+describe("Shared utils unit tests - jobStringValidator", () => {
+    describe("owner validation", () => {
+        it("returns null for a valid owner (≤8 chars)", () => {
+            expect(SharedUtils.jobStringValidator("MYUSER", "owner")).toBeNull();
+        });
+
+        it("returns an error for an owner exceeding 8 chars", () => {
+            expect(SharedUtils.jobStringValidator("TOOLONGOWNER", "owner")).not.toBeNull();
+        });
+    });
+
+    describe("prefix validation", () => {
+        it("returns null for a simple valid prefix", () => {
+            expect(SharedUtils.jobStringValidator("ABC*", "prefix")).toBeNull();
+        });
+
+        it("returns null for a prefix without wildcard (bare name, ≤8 chars)", () => {
+            expect(SharedUtils.jobStringValidator("ABC", "prefix")).toBeNull();
+        });
+
+        it("returns an error for a prefix exceeding 8 chars", () => {
+            expect(SharedUtils.jobStringValidator("TOOLONGPR", "prefix")).not.toBeNull();
+        });
+
+        it("returns null for comma-separated prefixes where each part is ≤8 chars", () => {
+            expect(SharedUtils.jobStringValidator("ABC*, DEF*", "prefix")).toBeNull();
+        });
+
+        it("returns null for comma-separated prefixes without wildcards", () => {
+            expect(SharedUtils.jobStringValidator("ABC,DEF,GHI", "prefix")).toBeNull();
+        });
+
+        it("returns an error when any comma-separated part exceeds 8 chars", () => {
+            expect(SharedUtils.jobStringValidator("ABC*, TOOLONGPREFIX", "prefix")).not.toBeNull();
+        });
+
+        it("returns an error for an empty part (trailing comma)", () => {
+            expect(SharedUtils.jobStringValidator("ABC,", "prefix")).not.toBeNull();
+        });
+
+        it("returns an error for an empty part (leading comma)", () => {
+            expect(SharedUtils.jobStringValidator(",ABC", "prefix")).not.toBeNull();
+        });
     });
 });

@@ -96,7 +96,8 @@ export class DatasetTableViewPage {
 
     /** Get a button by title and appearance */
     buttonSelector(title: string, appearance: string = "primary") {
-        return this.browser.$$(`vscode-button[appearance='${appearance}']`);
+        // VS Code Elements has no `appearance` attribute: primary is the default and secondary is marked with the `secondary` attribute
+        return this.browser.$$(appearance === "secondary" ? "vscode-button[secondary]" : "vscode-button:not([secondary])");
     }
 
     // ==================== Webview Management ====================
@@ -107,7 +108,7 @@ export class DatasetTableViewPage {
      */
     public async ensureMainFrame(): Promise<void> {
         try {
-            await this.browser.switchToFrame(null);
+            await this.browser.switchFrame(null);
         } catch {
             // Already in main frame or frame switch failed, continue
         }

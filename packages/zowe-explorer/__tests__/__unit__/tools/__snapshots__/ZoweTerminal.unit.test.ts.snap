@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ZoweTerminal Unit Tests should not change the keys 1`] = `
+exports[`ZoweTerminal Unit Tests > should not change the keys 1`] = `
 {
   "BACKSPACE": "",
   "CLEAR_ALL": "[2J[3J[;H",

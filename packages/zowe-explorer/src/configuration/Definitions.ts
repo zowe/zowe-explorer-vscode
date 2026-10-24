@@ -15,7 +15,7 @@ import { Types, IZoweTreeNode, imperative, ZosEncoding, IZoweTree, Sorting } fro
 import type { DatasetTree } from "../trees/dataset/DatasetTree";
 import type { JobTree } from "../trees/job/JobTree";
 import type { USSTree } from "../trees/uss/USSTree";
-import type { MvsCommandHandler } from "../commands/MvsCommandHandler";
+import type { ConsoleCommandHandler } from "../commands/ConsoleCommandHandler";
 import type { TsoCommandHandler } from "../commands/TsoCommandHandler";
 import type { UnixCommandHandler } from "../commands/UnixCommandHandler";
 import type { IListOptions } from "@zowe/zos-files-for-zowe-sdk";
@@ -34,10 +34,47 @@ export namespace Definitions {
         favorites: string[];
         encodingHistory: string[];
         searchedKeywordHistory: string[];
+        /** The host/group that `search` is scoped to, when history grouping is on; otherwise `undefined`. */
+        groupLabel?: { key: string; source: "host" | "group" };
     };
     export type DataSetSearchOptions = {
         caseSensitive?: boolean;
         regex?: boolean;
+    };
+    export type DataSetDownloadOptions = {
+        overwrite?: boolean;
+        generateDirectory?: boolean;
+        uppercaseNames?: boolean;
+        chooseEncoding?: boolean;
+        encoding?: ZosEncoding;
+        selectedPath?: vscode.Uri;
+        overrideExtension?: boolean;
+        fileExtension?: string;
+    };
+    export type UssDownloadOptions = {
+        overwrite?: boolean;
+        generateDirectory?: boolean;
+        chooseEncoding?: boolean;
+        encoding?: ZosEncoding | null;
+        selectedPath?: vscode.Uri;
+        dirOptions?: UssDirOptions;
+        dirFilterOptions?: UssDirFilterOptions;
+    };
+    export type UssDirOptions = {
+        followSymlinks?: boolean;
+        chooseFilterOptions?: boolean;
+        directoryEncoding?: ZosEncoding;
+    };
+    export type UssDirFilterOptions = {
+        group?: number | string;
+        user?: number | string;
+        mtime?: number | string;
+        size?: number | string;
+        perm?: string;
+        type?: string;
+        depth?: number;
+        filesys?: boolean;
+        includeHidden?: boolean;
     };
     export type FavoriteData = {
         profileName: string;
@@ -52,9 +89,15 @@ export namespace Definitions {
     export type ZowePersistentFilter = {
         persistence: boolean;
         favorites: string[];
+        vsamFavorites?: string[];
+        memberFavorites?: string[];
+        migratedFavorites?: string[];
         history: string[];
         sessions: string[];
+        /** Ungrouped search history. Always maintained, so older Zowe Explorer versions can still read it. */
         searchHistory: string[];
+        /** Search history grouped by host, populated only while `zowe.settings.historyGroupByHost` is enabled. */
+        searchHistoryByGroup?: Record<string, string[]>;
         fileHistory: string[];
         encodingHistory: string[];
         templates: Types.DataSetAllocTemplate[];
@@ -79,6 +122,8 @@ export namespace Definitions {
     export interface IZoweDatasetTreeOpts extends IZoweTreeOpts {
         encoding?: ZosEncoding;
         etag?: string;
+        isAlias?: boolean;
+        aliasTargetDsn?: string;
     }
 
     export type DatasetListOpts = Omit<IListOptions, "volume" | "recall"> & { profile?: imperative.IProfileLoaded };
@@ -94,7 +139,7 @@ export namespace Definitions {
         job: Types.IZoweJobTreeType;
     }
     export interface IZoweCommandProviders {
-        mvs: MvsCommandHandler;
+        mvs: ConsoleCommandHandler;
         tso: TsoCommandHandler;
         uss: UnixCommandHandler;
     }
@@ -145,7 +190,16 @@ export namespace Definitions {
         OtherUserJobs,
         AllJobs,
     }
+    export enum PdsFavoriteState {
+        NotFavorited,
+        EntirePds,
+        SpecificMembers,
+    }
     export enum V1MigrationStatus {
+        None,
+        JustMigrated,
+    }
+    export enum V3MigrationStatus {
         None,
         JustMigrated,
     }
@@ -155,7 +209,10 @@ export namespace Definitions {
         SETTINGS_LOCAL_STORAGE_MIGRATED = "zowe.settings.localStorageMigrated",
         SETTINGS_OLD_SETTINGS_MIGRATED = "zowe.settings.oldSettingsMigrated",
         V1_MIGRATION_STATUS = "zowe.v1MigrationStatus",
+        V3_MIGRATION_STATUS = "zowe.v3MigrationStatus",
         DS_SEARCH_OPTIONS = "zowe.dsSearchOptions",
         DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
+        DS_DOWNLOAD_OPTIONS = "zowe.dsDownloadOptions",
+        USS_DOWNLOAD_OPTIONS = "zowe.ussDownloadOptions",
     }
 }

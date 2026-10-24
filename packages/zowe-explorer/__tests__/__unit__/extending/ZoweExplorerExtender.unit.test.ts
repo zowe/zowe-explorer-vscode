@@ -29,10 +29,10 @@ import { USSTree } from "../../../src/trees/uss/USSTree";
 import { JobTree } from "../../../src/trees/job/JobTree";
 import { SharedTreeProviders } from "../../../src/trees/shared/SharedTreeProviders";
 import { Profiles } from "../../../src/configuration/Profiles";
+import { Constants } from "../../../src/configuration/Constants";
 import { ZoweTreeProvider } from "../../../src/trees/ZoweTreeProvider";
 
-jest.mock("fs");
-jest.mock("vscode");
+vi.mock("fs");
 
 describe("ZoweExplorerExtender unit tests", () => {
     function createBlockMocks() {
@@ -45,22 +45,22 @@ describe("ZoweExplorerExtender unit tests", () => {
             treeView: createTreeView(),
             instTest: ZoweExplorerExtender.getInstance(),
             profiles: createInstanceOfProfile(imperativeProfile),
-            mockGetConfiguration: jest.fn(),
-            mockErrorMessage: jest.fn(),
-            mockExistsSync: jest.fn(),
-            mockTextDocument: jest.fn(),
+            mockGetConfiguration: vi.fn(),
+            mockErrorMessage: vi.fn(),
+            mockExistsSync: vi.fn(),
+            mockTextDocument: vi.fn(),
             FileSystemProvider: {
-                createDirectory: jest.fn(),
+                createDirectory: vi.fn(),
             },
         };
 
-        jest.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
+        vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(newMocks.FileSystemProvider.createDirectory);
 
         Object.defineProperty(fs, "existsSync", { value: newMocks.mockExistsSync, configurable: true });
-        jest.spyOn(Profiles, "getInstance").mockReturnValue(newMocks.profiles);
-        jest.spyOn(ZoweExplorerExtender.prototype, "getProfilesCache").mockReturnValue(newMocks.profiles);
+        vi.spyOn(Profiles, "getInstance").mockReturnValue(newMocks.profiles);
+        vi.spyOn(ZoweExplorerExtender.prototype, "getProfilesCache").mockReturnValue(newMocks.profiles);
         Object.defineProperty(vscode.window, "createTreeView", {
-            value: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
+            value: vi.fn().mockReturnValue({ onDidCollapseElement: vi.fn() }),
             configurable: true,
         });
         Object.defineProperty(vscode.window, "showErrorMessage", {
@@ -74,17 +74,17 @@ describe("ZoweExplorerExtender unit tests", () => {
         Object.defineProperty(ZoweLocalStorage, "globalState", {
             value: {
                 get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
-                update: jest.fn(),
+                update: vi.fn(),
                 keys: () => [],
             },
             configurable: true,
         });
         Object.defineProperty(ZoweLogger, "error", {
-            value: jest.fn(),
+            value: vi.fn(),
             configurable: true,
         });
         Object.defineProperty(ZoweLogger, "trace", {
-            value: jest.fn(),
+            value: vi.fn(),
             configurable: true,
         });
         return newMocks;
@@ -95,8 +95,8 @@ describe("ZoweExplorerExtender unit tests", () => {
         const datasetSessionNode = createDatasetSessionNode(blockMocks.session, blockMocks.altTypeProfile);
         const datasetTree = createDatasetTree(datasetSessionNode, blockMocks.altTypeProfile);
         ZoweExplorerExtender.createInstance(datasetTree, undefined, undefined);
-        jest.spyOn(blockMocks.instTest.datasetProvider, "addSession");
-        jest.spyOn(blockMocks.instTest.datasetProvider, "refreshFavorites").mockImplementation();
+        vi.spyOn(blockMocks.instTest.datasetProvider, "addSession");
+        vi.spyOn(blockMocks.instTest.datasetProvider, "refreshFavorites").mockImplementation((() => undefined) as any);
         await blockMocks.instTest.reloadProfiles();
         expect(blockMocks.instTest.datasetProvider.addSession).toHaveBeenCalled();
     });
@@ -105,7 +105,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         const ussSessionNode = createUSSSessionNode(blockMocks.session, blockMocks.imperativeProfile);
         const ussTree = createUSSTree([], [ussSessionNode], blockMocks.treeView);
         ZoweExplorerExtender.createInstance(undefined, ussTree, undefined);
-        jest.spyOn(blockMocks.instTest.ussFileProvider, "addSession");
+        vi.spyOn(blockMocks.instTest.ussFileProvider, "addSession");
         await blockMocks.instTest.reloadProfiles();
         expect(blockMocks.instTest.ussFileProvider.addSession).toHaveBeenCalled();
     });
@@ -114,7 +114,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         const testJob = createIJobObject();
         const jobsTree = createJobsTree(blockMocks.session, testJob, blockMocks.altTypeProfile, blockMocks.treeView);
         ZoweExplorerExtender.createInstance(undefined, undefined, jobsTree);
-        jest.spyOn(blockMocks.instTest.jobsProvider, "addSession");
+        vi.spyOn(blockMocks.instTest.jobsProvider, "addSession");
         await blockMocks.instTest.reloadProfiles();
         expect(blockMocks.instTest.jobsProvider.addSession).toHaveBeenCalled();
     });
@@ -128,12 +128,12 @@ describe("ZoweExplorerExtender unit tests", () => {
         const testJob = createIJobObject();
         const jobsTree = createJobsTree(blockMocks.session, testJob, blockMocks.altTypeProfile, blockMocks.treeView);
         ZoweExplorerExtender.createInstance(datasetTree, ussTree, jobsTree);
-        jest.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({ ds: datasetTree, uss: ussTree, job: jobsTree });
-        jest.spyOn(blockMocks.instTest.datasetProvider, "addSession").mockImplementation(DatasetTree.prototype.addSession);
-        jest.spyOn(blockMocks.instTest.datasetProvider, "refreshFavorites").mockImplementation();
-        jest.spyOn(blockMocks.instTest.ussFileProvider, "addSession").mockImplementation(USSTree.prototype.addSession);
-        jest.spyOn(blockMocks.instTest.jobsProvider, "addSession").mockImplementation(JobTree.prototype.addSession);
-        const loadProfileSpy = jest.spyOn(ZoweTreeProvider.prototype as any, "loadProfileByPersistedProfile");
+        vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({ ds: datasetTree, uss: ussTree, job: jobsTree });
+        vi.spyOn(blockMocks.instTest.datasetProvider, "addSession").mockImplementation(DatasetTree.prototype.addSession);
+        vi.spyOn(blockMocks.instTest.datasetProvider, "refreshFavorites").mockImplementation((() => undefined) as any);
+        vi.spyOn(blockMocks.instTest.ussFileProvider, "addSession").mockImplementation(USSTree.prototype.addSession);
+        vi.spyOn(blockMocks.instTest.jobsProvider, "addSession").mockImplementation(JobTree.prototype.addSession);
+        const loadProfileSpy = vi.spyOn(ZoweTreeProvider.prototype as any, "loadProfileByPersistedProfile");
         await blockMocks.instTest.reloadProfiles();
         expect(blockMocks.instTest.datasetProvider.addSession).toHaveBeenCalledTimes(1);
         expect(blockMocks.instTest.ussFileProvider.addSession).toHaveBeenCalledTimes(1);
@@ -153,8 +153,8 @@ describe("ZoweExplorerExtender unit tests", () => {
         const blockMocks = await createBlockMocks();
         ZoweExplorerExtender.createInstance();
 
-        Object.defineProperty(vscode.Uri, "file", { value: jest.fn(), configurable: true });
-        const showTextDocumentSpy = jest.spyOn(Gui, "showTextDocument").mockResolvedValue({} as any);
+        Object.defineProperty(vscode.Uri, "file", { value: vi.fn(), configurable: true });
+        const showTextDocumentSpy = vi.spyOn(Gui, "showTextDocument").mockResolvedValue({} as any);
 
         const zoweDir = FileManagement.getZoweDir();
         const userInputs = [
@@ -242,9 +242,9 @@ describe("ZoweExplorerExtender unit tests", () => {
             configurable: true,
         });
 
-        const readProfilesFromDiskSpy = jest.fn();
-        const refreshProfilesQueueAddSpy = jest.spyOn((ZoweExplorerExtender as any).refreshProfilesQueue, "add");
-        jest.spyOn(ProfilesUtils, "setupProfileInfo").mockReturnValueOnce({
+        const readProfilesFromDiskSpy = vi.fn();
+        const refreshProfilesQueueAddSpy = vi.spyOn((ZoweExplorerExtender as any).refreshProfilesQueue, "add");
+        vi.spyOn(ProfilesUtils, "setupProfileInfo").mockReturnValueOnce({
             readProfilesFromDisk: readProfilesFromDiskSpy,
         } as any);
         await expect(blockMocks.instTest.initForZowe("USS", ["" as any])).resolves.not.toThrow();
@@ -258,17 +258,17 @@ describe("ZoweExplorerExtender unit tests", () => {
             addProfileTypeToSchemaMock: (
                 profileType: string,
                 typeInfo: { sourceApp: string; schema: any; version?: string | undefined }
-            ) => any = jest.fn()
+            ) => any = vi.fn()
         ) => {
             // bypass "if (hasSecureCredentialManagerEnabled)" check for sake of testing
-            jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
-            jest.spyOn(ZoweLogger, "trace").mockImplementation();
-            jest.spyOn(ZoweLogger, "info").mockImplementation();
+            vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(false);
+            vi.spyOn(ZoweLogger, "trace").mockImplementation((() => undefined) as any);
+            vi.spyOn(ZoweLogger, "info").mockImplementation((() => undefined) as any);
             const profInfo = new imperative.ProfileInfo("zowe", {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
             });
-            const addProfTypeToSchema = jest
+            const addProfTypeToSchema = vi
                 .spyOn(imperative.ProfileInfo.prototype, "addProfileTypeToSchema")
                 .mockImplementation(addProfileTypeToSchemaMock as unknown as any);
             ProfilesUtils.updateSchema(profInfo, [
@@ -285,7 +285,7 @@ describe("ZoweExplorerExtender unit tests", () => {
         });
 
         it("should throw an error if the schema is read-only", async () => {
-            const errorMessageSpy = jest.spyOn(Gui, "errorMessage");
+            const errorMessageSpy = vi.spyOn(Gui, "errorMessage");
             await updateSchema((_filepath, _contents) => {
                 const err = new Error("test error");
                 Object.defineProperty(err, "code", {
@@ -301,11 +301,11 @@ describe("ZoweExplorerExtender unit tests", () => {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 credMgrOverride: imperative.ProfileCredentials.defaultCredMgrWithKeytar(ProfilesCache.requireKeyring),
             });
-            const addProfTypeToSchema = jest.spyOn(imperative.ProfileInfo.prototype, "addProfileTypeToSchema").mockReturnValue({
+            const addProfTypeToSchema = vi.spyOn(imperative.ProfileInfo.prototype, "addProfileTypeToSchema").mockReturnValue({
                 success: false,
                 info: "Schema version is older than the installed version",
             });
-            const warnSpy = jest.spyOn(ZoweLogger, "warn");
+            const warnSpy = vi.spyOn(ZoweLogger, "warn");
             ProfilesUtils.updateSchema(profInfo, [
                 {
                     type: "test-type",
@@ -332,24 +332,83 @@ describe("ZoweExplorerExtender unit tests", () => {
         });
     });
 
+    describe("ssoLogin/ssoLogout", () => {
+        let originalProfilesCache: Profiles;
+
+        beforeEach(() => {
+            originalProfilesCache = Constants.PROFILES_CACHE;
+        });
+
+        afterEach(() => {
+            Constants.PROFILES_CACHE = originalProfilesCache;
+        });
+
+        function mockProfilesCacheSso(blockMocks: { profiles: Profiles; instTest: ZoweExplorerExtender }) {
+            Constants.PROFILES_CACHE = blockMocks.profiles;
+            Object.defineProperty(blockMocks.profiles, "ssoLogin", { value: vi.fn().mockResolvedValue(true), configurable: true });
+            Object.defineProperty(blockMocks.profiles, "ssoLogout", { value: vi.fn().mockResolvedValue(true), configurable: true });
+            return {
+                ssoLoginSpy: vi.spyOn(blockMocks.profiles, "ssoLogin"),
+                ssoLogoutSpy: vi.spyOn(blockMocks.profiles, "ssoLogout"),
+            };
+        }
+
+        it("ssoLogin delegates to the profiles cache with a profile name", async () => {
+            const blockMocks = createBlockMocks();
+            const { ssoLoginSpy } = mockProfilesCacheSso(blockMocks);
+            await expect(blockMocks.instTest.ssoLogin("prof1")).resolves.toBe(true);
+            expect(ssoLoginSpy).toHaveBeenCalledWith(null, "prof1");
+        });
+
+        it("ssoLogin resolves the profile name from a loaded profile", async () => {
+            const blockMocks = createBlockMocks();
+            const { ssoLoginSpy } = mockProfilesCacheSso(blockMocks);
+            await expect(blockMocks.instTest.ssoLogin({ name: "prof1" } as imperative.IProfileLoaded)).resolves.toBe(true);
+            expect(ssoLoginSpy).toHaveBeenCalledWith(null, "prof1");
+        });
+
+        it("ssoLogout delegates to the profiles cache with a profile name", async () => {
+            const blockMocks = createBlockMocks();
+            const { ssoLogoutSpy } = mockProfilesCacheSso(blockMocks);
+            await expect(blockMocks.instTest.ssoLogout("prof1")).resolves.toBe(true);
+            expect(ssoLogoutSpy).toHaveBeenCalledWith(null, "prof1");
+        });
+
+        it("ssoLogout resolves the profile name from a loaded profile", async () => {
+            const blockMocks = createBlockMocks();
+            const { ssoLogoutSpy } = mockProfilesCacheSso(blockMocks);
+            await expect(blockMocks.instTest.ssoLogout({ name: "prof1" } as imperative.IProfileLoaded)).resolves.toBe(true);
+            expect(ssoLogoutSpy).toHaveBeenCalledWith(null, "prof1");
+        });
+
+        it("passes through a false result from the profiles cache", async () => {
+            const blockMocks = createBlockMocks();
+            mockProfilesCacheSso(blockMocks);
+            vi.spyOn(blockMocks.profiles, "ssoLogin").mockResolvedValue(false);
+            vi.spyOn(blockMocks.profiles, "ssoLogout").mockResolvedValue(false);
+            await expect(blockMocks.instTest.ssoLogin("prof1")).resolves.toBe(false);
+            await expect(blockMocks.instTest.ssoLogout("prof1")).resolves.toBe(false);
+        });
+    });
+
     describe("registerTableActionProvider", () => {
         it("should register a provider with the table provider registry", () => {
             const blockMocks = createBlockMocks();
             const mockProvider = {
-                provideActions: jest.fn(),
-                provideContextMenuItems: jest.fn(),
+                provideActions: vi.fn(),
+                provideContextMenuItems: vi.fn(),
             };
             const tableId = "test-table";
 
             // Mock the registry's registerProvider method
             const mockRegistry = {
-                registerProvider: jest.fn(),
-                unregisterProvider: jest.fn(),
-                getActions: jest.fn(),
-                getContextMenuItems: jest.fn(),
-                getRegisteredTableIds: jest.fn(),
+                registerProvider: vi.fn(),
+                unregisterProvider: vi.fn(),
+                getActions: vi.fn(),
+                getContextMenuItems: vi.fn(),
+                getRegisteredTableIds: vi.fn(),
             };
-            jest.spyOn(blockMocks.instTest, "getTableProviderRegistry").mockReturnValue(mockRegistry as any);
+            vi.spyOn(blockMocks.instTest, "getTableProviderRegistry").mockReturnValue(mockRegistry as any);
 
             // Test the method
             blockMocks.instTest.registerTableActionProvider(tableId, mockProvider);
@@ -361,19 +420,19 @@ describe("ZoweExplorerExtender unit tests", () => {
         it("should pass through parameters correctly", () => {
             const blockMocks = createBlockMocks();
             const mockProvider = {
-                provideActions: jest.fn(),
-                provideContextMenuItems: jest.fn(),
+                provideActions: vi.fn(),
+                provideContextMenuItems: vi.fn(),
             };
             const tableId = "my-custom-table";
 
             const mockRegistry = {
-                registerProvider: jest.fn(),
-                unregisterProvider: jest.fn(),
-                getActions: jest.fn(),
-                getContextMenuItems: jest.fn(),
-                getRegisteredTableIds: jest.fn(),
+                registerProvider: vi.fn(),
+                unregisterProvider: vi.fn(),
+                getActions: vi.fn(),
+                getContextMenuItems: vi.fn(),
+                getRegisteredTableIds: vi.fn(),
             };
-            jest.spyOn(blockMocks.instTest, "getTableProviderRegistry").mockReturnValue(mockRegistry as any);
+            vi.spyOn(blockMocks.instTest, "getTableProviderRegistry").mockReturnValue(mockRegistry as any);
 
             blockMocks.instTest.registerTableActionProvider(tableId, mockProvider);
 
@@ -384,14 +443,16 @@ describe("ZoweExplorerExtender unit tests", () => {
         it("should unregister when the disposable is disposed", () => {
             const blockMocks = createBlockMocks();
             const mockProvider = {
-                provideActions: jest.fn(),
-                provideContextMenuItems: jest.fn(),
+                provideActions: vi.fn(),
+                provideContextMenuItems: vi.fn(),
             };
             const tableId = "test-table";
 
             const mockRegistry = blockMocks.instTest.getTableProviderRegistry();
-            jest.spyOn(mockRegistry, "registerProvider").mockClear().mockImplementation();
-            jest.spyOn(mockRegistry, "unregisterProvider").mockImplementation();
+            vi.spyOn(mockRegistry, "registerProvider")
+                .mockClear()
+                .mockImplementation((() => undefined) as any);
+            vi.spyOn(mockRegistry, "unregisterProvider").mockImplementation((() => undefined) as any);
 
             const disposable = blockMocks.instTest.registerTableActionProvider(tableId, mockProvider);
 
@@ -411,18 +472,18 @@ describe("ZoweExplorerExtender unit tests", () => {
 
             // Mock the TableProviderRegistry.getInstance method
             const mockRegistryInstance = {
-                registerProvider: jest.fn(),
-                unregisterProvider: jest.fn(),
-                getActions: jest.fn(),
-                getContextMenuItems: jest.fn(),
-                getRegisteredTableIds: jest.fn(),
+                registerProvider: vi.fn(),
+                unregisterProvider: vi.fn(),
+                getActions: vi.fn(),
+                getContextMenuItems: vi.fn(),
+                getRegisteredTableIds: vi.fn(),
             };
 
             // We need to import and mock the TableProviderRegistry class
-            jest.doMock("@zowe/zowe-explorer-api", () => ({
-                ...jest.requireActual("@zowe/zowe-explorer-api"),
+            vi.doMock("@zowe/zowe-explorer-api", async () => ({
+                ...(await vi.importActual<typeof import("@zowe/zowe-explorer-api")>("@zowe/zowe-explorer-api")),
                 TableProviderRegistry: {
-                    getInstance: jest.fn(() => mockRegistryInstance),
+                    getInstance: vi.fn(() => mockRegistryInstance),
                 },
             }));
 

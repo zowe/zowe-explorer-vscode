@@ -12,6 +12,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import {
+    errorMessage,
+    handleError,
     FsAbstractUtils,
     Gui,
     imperative,
@@ -37,6 +39,7 @@ import { isDataTransfer, isPayload, SharedUtils } from "../shared/SharedUtils";
 import { ZoweUSSNode } from "./ZoweUSSNode";
 import { FilterDescriptor, FilterItem } from "../../management/FilterManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
+import { SettingsConfig } from "../../configuration/SettingsConfig";
 
 /**
  * A tree that contains nodes of sessions and USS Files
@@ -149,11 +152,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 );
             } catch (err) {
                 // If the write fails, we cannot move to the next file.
-                if (err instanceof Error) {
+                void handleError(err, (error) => {
                     Gui.errorMessage(
-                        vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), err.message)
+                        vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), error.message)
                     );
-                }
+                });
                 return;
             }
 
@@ -191,8 +194,12 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             droppedItems = { value: effectiveDataTransfer.value };
         }
 
-        if (!droppedItems || !Array.isArray(droppedItems.value)) return;
-        if (!resolvedTargetNode || !resolvedTargetNode.fullPath) return;
+        if (!droppedItems || !Array.isArray(droppedItems.value)) {
+            return;
+        }
+        if (!resolvedTargetNode || !resolvedTargetNode.fullPath) {
+            return;
+        }
 
         if (!resolvedTargetNode.fullPath.includes("\\") && !resolvedTargetNode.fullPath.includes("/")) {
             Gui.errorMessage(vscode.l10n.t("You must specify a directory before moving."));
@@ -207,17 +214,25 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         }
 
         // Helper to find the dragged node when keys differ (profile prefix, etc.)
-        const findDraggedNode = (itemUri: { path: string }, label?: string) => {
-            let node = this.draggedNodes && this.draggedNodes[itemUri.path];
-            if (node) return node;
+        const findDraggedNode = (itemUri: { path: string }, label?: string): IZoweUSSTreeNode => {
+            const node = this.draggedNodes && this.draggedNodes[itemUri.path];
+            if (node) {
+                return node;
+            }
             const nodes = Object.values(this.draggedNodes || {});
             for (const n of nodes) {
                 try {
                     const rpath = n?.resourceUri?.path;
-                    if (rpath === itemUri.path) return n;
-                    if (typeof rpath === "string" && rpath.endsWith(itemUri.path)) return n;
+                    if (rpath === itemUri.path) {
+                        return n;
+                    }
+                    if (typeof rpath === "string" && rpath.endsWith(itemUri.path)) {
+                        return n;
+                    }
                     const nlabel = SharedUtils.getNodeProperty(n, "label");
-                    if (label && nlabel === label) return n;
+                    if (label && nlabel === label) {
+                        return n;
+                    }
                 } catch {
                     // ignore malformed entries
                 }
@@ -253,7 +268,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
 
             // Skip nodes that are direct children of the target node
-            if (node.getParent() === target) continue;
+            if (node.getParent() === target) {
+                continue;
+            }
 
             const nodeLabel = SharedUtils.getNodeProperty(node, "label") || (item.label as string);
 
@@ -269,7 +286,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
 
             // Check for same-object by comparing normalized USS paths (ignoring profile)
-            if (await SharedUtils.isLikelySameUssObjectByUris(node, resolvedTargetNode, nodeLabel)) {
+            if (SharedUtils.isLikelySameUssObjectByUris(node, resolvedTargetNode, nodeLabel)) {
                 Gui.errorMessage(vscode.l10n.t(SharedUtils.ERROR_SAME_OBJECT_DROP));
                 this.draggedNodes = {};
                 return;
@@ -282,8 +299,12 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
         for (const item of droppedItems.value) {
             const node = findDraggedNode(item.uri, item.label);
-            if (!node) continue;
-            if (node.getParent() === target) continue;
+            if (!node) {
+                continue;
+            }
+            if (node.getParent() === target) {
+                continue;
+            }
 
             const nodeLabel = SharedUtils.getNodeProperty(node, "label") || (item.label as string);
             const newUriForNode = vscode.Uri.from({
@@ -339,6 +360,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             ignoreFocusOut: true,
             validateInput: (value) => this.checkDuplicateLabel(parentPath + value, loadedNodes),
         };
+        const oldName = originalNode.label.toString().replace(/^\[.+\]:\s/, "");
         const newName = await Gui.showInputBox(options);
         if (newName && parentPath + newName !== originalNode.fullPath) {
             try {
@@ -385,14 +407,30 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 }
                 this.mOnDidChangeTreeData.fire();
                 this.updateFavorites();
+
+                // Restore focus to the renamed node and show confirmation message
+                // Use setImmediate to allow tree to refresh before revealing
+                setImmediate(() => {
+                    Promise.resolve(this.getTreeView().reveal(originalNode, { select: true, focus: true })).catch((revealErr) => {
+                        // If reveal fails, just log it - the rename was still successful
+                        ZoweLogger.warn(`Could not reveal renamed node: ${errorMessage(revealErr)}`);
+                    });
+                });
+                Gui.showMessage(
+                    vscode.l10n.t({
+                        message: "{0} renamed from {1} to {2}",
+                        args: [nodeType === "folder" ? "Directory" : "File", oldName, newName],
+                        comment: ["Node type", "Old name", "New name"],
+                    })
+                );
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Uss,
                         profile: originalNode.getProfile(),
                         scenario: vscode.l10n.t("Unable to rename node:"),
                     });
-                }
+                });
                 throw err;
             }
         }
@@ -520,7 +558,12 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 const favsForProfile = await this.loadProfilesForFavorites(this.log, element);
                 return favsForProfile;
             }
-            return element.getChildren();
+            const prevDescription = element.description;
+            const children = await element.getChildren();
+            if (element.description !== prevDescription) {
+                this.nodeDataChanged(element);
+            }
+            return children;
         }
         return this.mSessionNodes;
     }
@@ -579,6 +622,41 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     public deleteSession(node: IZoweUSSTreeNode, hideFromAllTrees?: boolean): void {
         ZoweLogger.trace("USSTree.deleteSession called.");
         super.deleteSession(node, hideFromAllTrees);
+    }
+
+    public async onDidChangeConfiguration(e: vscode.ConfigurationChangeEvent): Promise<void> {
+        ZoweLogger.trace("USSTree.onDidChangeConfiguration called.");
+        // Handle persistence setting changes
+        if (e.affectsConfiguration(USSTree.persistenceSchema)) {
+            const setting: any = {
+                ...SettingsConfig.getDirectValue(USSTree.persistenceSchema),
+            };
+            if (!setting.persistence) {
+                setting.favorites = [];
+                setting.history = [];
+                await SettingsConfig.setDirectValue(USSTree.persistenceSchema, setting);
+            }
+        }
+        if (e.affectsConfiguration(Constants.SETTINGS_MAX_SEARCH_HISTORY)) {
+            this.mPersistence.updateMaxSearchHistory();
+        }
+        // Handle showHiddenFiles setting changes - refresh the tree to show/hide hidden files
+        if (e.affectsConfiguration("zowe.files.showHiddenFiles")) {
+            ZoweLogger.debug("showHiddenFiles setting changed, refreshing USS tree");
+            for (const sessionNode of this.mSessionNodes) {
+                if (!sessionNode.contextValue.includes(Constants.FAVORITE_CONTEXT)) {
+                    sessionNode.children = [];
+                    sessionNode.dirty = true;
+                }
+            }
+            for (const favProfile of this.mFavorites) {
+                for (const child of favProfile.children) {
+                    child.children = [];
+                    child.dirty = true;
+                }
+            }
+            this.refresh();
+        }
     }
 
     /**
@@ -652,7 +730,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     public async saveSearch(node: IZoweUSSTreeNode): Promise<void> {
         ZoweLogger.trace("USSTree.saveSearch called.");
         const fullPathLabel = node.fullPath;
-        node.label = node.tooltip = fullPathLabel;
+        node.label = fullPathLabel;
         node.contextValue = Constants.USS_SESSION_CONTEXT + Constants.FAV_SUFFIX;
         await this.checkCurrentProfile(node);
     }
@@ -689,7 +767,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 favoritesArray.push(favoriteEntry);
             });
         });
-        this.mPersistence.updateFavorites(favoritesArray);
+        this.mPersistence.updateFavorites({ favorites: favoritesArray });
     }
 
     /**
@@ -811,7 +889,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         }
         node.dirty = true;
         if (addHistory) {
-            this.addSearchHistory(sanitizedPath);
+            this.addSearchHistory(sanitizedPath, node.getProfile());
         }
         await TreeViewUtils.expandNode(node, this);
         this.refresh();
@@ -830,8 +908,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             let remotepath: string;
             if (SharedContext.isSessionNotFav(node)) {
                 ZoweLogger.debug(vscode.l10n.t("Prompting the user for a USS path"));
-                if (this.mPersistence.getSearchHistory().length > 0) {
-                    const items: vscode.QuickPickItem[] = this.mPersistence.getSearchHistory().map((element) => new FilterItem({ text: element }));
+                if (this.mPersistence.getSearchHistory(node.getProfile()).length > 0) {
+                    const items: vscode.QuickPickItem[] = this.mPersistence
+                        .getSearchHistory(node.getProfile())
+                        .map((element) => new FilterItem({ text: element }));
+                    const historySeparator = this.mPersistence.getSearchHistorySeparator(node.getProfile());
                     const quickpick = Gui.createQuickPick();
                     quickpick.placeholder = vscode.l10n.t("Select a filter or type to create a new one");
                     quickpick.ignoreFocusOut = true;
@@ -842,11 +923,11 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                         const createPick = trimmedValue
                             ? new FilterDescriptor(`$(plus) ${vscode.l10n.t("Create a new filter")}: "${value.trim()}"`)
                             : new FilterDescriptor(USSTree.defaultDialogText);
-                        quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+                        quickpick.items = [createPick, historySeparator, ...items];
                     });
 
                     const createPick = new FilterDescriptor(USSTree.defaultDialogText);
-                    quickpick.items = [createPick, Constants.SEPARATORS.RECENT_FILTERS, ...items];
+                    quickpick.items = [createPick, historySeparator, ...items];
 
                     quickpick.show();
                     const choice = await Gui.resolveQuickPick(quickpick);
@@ -965,9 +1046,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 profile,
             });
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.warn(`Skipping creation of favorited profile. ${err.toString()}`);
-            }
+            void handleError(err, (error) => {
+                ZoweLogger.warn(`Skipping creation of favorited profile. ${error.toString()}`);
+            });
             return null;
         }
 
@@ -1022,7 +1103,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
 
             // Initialize and attach favorited item nodes under their respective profile node in Favorites
-            const favChildNode = await this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
+            const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
             favProfileNode.children.push(favChildNode);
         }
     }
@@ -1035,7 +1116,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      * @param parentNode The profile node in this.mFavorites that the favorite belongs to
      * @returns IZoweUssTreeNode
      */
-    public async initializeFavChildNodeForProfile(label: string, context: string, parentNode: IZoweUSSTreeNode): Promise<ZoweUSSNode> {
+    public initializeFavChildNodeForProfile(label: string, context: string, parentNode: IZoweUSSTreeNode): ZoweUSSNode {
         ZoweLogger.trace("USSTree.initializeFavChildNodeForProfile called.");
         const profile = parentNode.getProfile();
         let node: ZoweUSSNode;
@@ -1048,12 +1129,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     profile,
                 });
                 node.description = path.dirname(label);
-                if (
-                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type) &&
-                    !UssFSProvider.instance.exists(node.resourceUri)
-                ) {
-                    await vscode.workspace.fs.createDirectory(node.resourceUri);
-                }
                 break;
             case Constants.USS_SESSION_CONTEXT:
                 node = new ZoweUSSNode({
@@ -1064,7 +1139,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     profile,
                 });
                 node.fullPath = label;
-                node.label = node.tooltip = label;
+                node.label = label;
                 break;
             default:
                 // assume context is "textFile"
@@ -1075,16 +1150,6 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     profile,
                 });
                 node.description = path.dirname(label);
-                if (
-                    ZoweExplorerApiRegister.getInstance().registeredApiTypes().includes(profile.type) &&
-                    !UssFSProvider.instance.exists(node.resourceUri)
-                ) {
-                    const parentUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, "..") });
-                    if (!UssFSProvider.instance.exists(parentUri)) {
-                        await vscode.workspace.fs.createDirectory(parentUri);
-                    }
-                    await vscode.workspace.fs.writeFile(node.resourceUri, new Uint8Array());
-                }
                 break;
         }
         node.contextValue = SharedContext.asFavorite(node);
@@ -1161,6 +1226,19 @@ Would you like to do this now?`,
         const profileInFavs = this.findMatchingProfileInArray(this.mFavorites, profileName);
         const favsForProfile = profileInFavs.children;
         for (const favorite of favsForProfile) {
+            // Seed a placeholder entry in the FS provider so the favorite has a backing resource.
+            // These must be local-only operations: going through `vscode.workspace.fs` would upload
+            // an empty file to the remote system, which fails without write access (and truncates the
+            // file when the user does have access).
+            if (!UssFSProvider.instance.exists(favorite.resourceUri)) {
+                if (SharedContext.isUssDirectory(favorite)) {
+                    UssFSProvider.instance.createParentDirectories(favorite.resourceUri);
+                    UssFSProvider.instance.createDirectory(favorite.resourceUri);
+                } else if (SharedContext.isText(favorite) || SharedContext.isBinary(favorite)) {
+                    UssFSProvider.instance.createParentDirectories(favorite.resourceUri);
+                    UssFSProvider.instance.createEntry(favorite.resourceUri, "file");
+                }
+            }
             // If profile and session already exists for favorite node, add to updatedFavsForProfile and go to next array item
             if (favorite.getProfile() && favorite.getSession()) {
                 updatedFavsForProfile.push(favorite);
@@ -1239,7 +1317,7 @@ Would you like to do this now?`,
         sessionNode.tooltip = sessionNode.fullPath = `/${nodePath.slice(0, nodePath.length - 1).join("/")}`;
         sessionNode.label = `${sessionNode.getProfileName()} [/${nodePath.join("/")}]`;
         sessionNode.dirty = true;
-        this.addSearchHistory(`[${sessionNode.getProfileName()}]: /${nodePath.join("/")}`);
+        this.addSearchHistory(`[${sessionNode.getProfileName()}]: /${nodePath.join("/")}`, sessionNode.getProfile());
         const children = await sessionNode.getChildren();
 
         // Reveal the searched item in the tree
@@ -1260,7 +1338,7 @@ Would you like to do this now?`,
      */
     protected findMatchInLoadedChildren(parentNode: IZoweUSSTreeNode, fullPath: string): IZoweUSSTreeNode {
         ZoweLogger.trace("USSTree.findMatchInLoadedChildren called.");
-        // // Is match direct child?
+        // Is match direct child?
         const match = parentNode.children.find((child) => child.fullPath === fullPath);
         if (match === undefined) {
             // Is match contained within one of the children?

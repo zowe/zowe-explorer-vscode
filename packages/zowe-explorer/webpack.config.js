@@ -19,7 +19,7 @@ const fs = require("fs");
 const TerserPlugin = require("terser-webpack-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
-const config = (mode) => ({
+const nodeConfig = (mode) => ({
     target: "node",
     entry: "./src/extension.ts",
     output: {
@@ -27,6 +27,11 @@ const config = (mode) => ({
         filename: "[name].extension.js",
         libraryTarget: "commonjs2",
         devtoolModuleFilenameTemplate: "webpack:///[absolute-resource-path]",
+        // Match Node's CommonJS behavior for modules that throw while loading. By default webpack
+        // leaves the failed module in its require cache with empty exports, so a later require of
+        // the same module silently resolves to `undefined` instead of re-throwing. That turns a
+        // one-time load failure (e.g. the Secrets SDK keyring) into a confusing downstream error.
+        strictModuleErrorHandling: true,
     },
     devtool: "source-map",
     externals: ["vscode", "cpu-features"],
@@ -34,11 +39,12 @@ const config = (mode) => ({
         extensions: [".ts", ".js"],
         alias: {
             "@zowe/zowe-explorer-api$": path.resolve(__dirname, "..", "zowe-explorer-api/src"),
+            "@zowe/zowex-for-zowe-explorer$": path.resolve(__dirname, "..", "zowex-for-zowe-explorer/src"),
         },
         conditionNames: ["@zowe:bundler", "..."],
     },
     watchOptions: {
-        ignored: /node_modules/,
+        ignored: /node_modules\/(?!.*zowex-for-zowe-sdk)/,
     },
     stats: {
         warnings: false,
@@ -82,6 +88,12 @@ const config = (mode) => ({
                 test: /\.node$/,
                 loader: "node-loader",
             },
+            {
+                // Patch russh/lib/native.js to load .node binaries from prebuilds/
+                // using __non_webpack_require__ so webpack doesn't try to bundle them.
+                test: /russh[\\/]lib[\\/]native\.js$/,
+                loader: path.resolve(__dirname, "russh-native-loader.js"),
+            },
         ],
     },
     plugins: [
@@ -99,4 +111,47 @@ const config = (mode) => ({
     ],
 });
 
-module.exports = (_, { mode }) => config(mode);
+// Minimal web extension bundle: runs in the VS Code web extension host.
+const webConfig = (mode) => ({
+    target: "webworker",
+    entry: { web: "./src/web/extension.ts" },
+    output: {
+        path: path.resolve(__dirname, "out/src"),
+        filename: "[name].extension.js",
+        libraryTarget: "commonjs2",
+    },
+    devtool: "source-map",
+    externals: ["vscode"],
+    resolve: {
+        extensions: [".ts", ".js"],
+        mainFields: ["browser", "module", "main"],
+    },
+    stats: {
+        warnings: false,
+    },
+    optimization: {
+        minimize: mode !== "development",
+        minimizer: [
+            new TerserPlugin({
+                parallel: true,
+                minify: TerserPlugin.esbuildMinify,
+            }),
+        ],
+    },
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                exclude: /node_modules/,
+                use: [
+                    {
+                        loader: "esbuild-loader",
+                    },
+                ],
+            },
+        ],
+    },
+    plugins: [new webpack.BannerPlugin(fs.readFileSync("../../scripts/LICENSE_HEADER", "utf-8"))],
+});
+
+module.exports = (_, { mode }) => [nodeConfig(mode), webConfig(mode)];

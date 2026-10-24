@@ -44,10 +44,10 @@ Then("the user can select a PS in the list and open it", async function () {
 });
 When("the user edits the PDS member", async function () {
     await this.editorForFile.clearText();
-    await this.editorForFile.setText(`Hello from a Data Set test for a ${this.editingFavorite ? "favorited " : ""}PDS member!`);
+    await browser.keys(`Hello from a Data Set test for a ${this.editingFavorite ? "favorited " : ""}PDS member!`);
     await this.pds.collapse();
 });
 When("the user edits the PS", async function () {
     await this.editorForFile.clearText();
-    await this.editorForFile.setText("Hello from a Data Set test for a PS!");
+    await browser.keys("Hello from a Data Set test for a PS!");
 });

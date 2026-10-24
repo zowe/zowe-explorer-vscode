@@ -3,11 +3,8 @@
 
 use std::{
     path::{Path, PathBuf},
-    process::Command,
+    process::{Command, Stdio},
 };
-
-#[cfg(target_os = "macos")]
-use std::process::Stdio;
 
 use anyhow::bail;
 cfg_if::cfg_if! {
@@ -151,7 +148,10 @@ async fn extract_code_zip(
 /// * Builds a URL and performs a `GET` request to fetch the VS Code archive
 /// * Extracts the VS Code archive into its corresponding directory in into `zedc_data`
 pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> {
-    println!("💿 Downloading VS Code...");
+    let json = crate::output::json_enabled();
+    if !json {
+        println!("💿 Downloading VS Code...");
+    }
     let ver = match version {
         Some(v) => v,
         None => "latest".to_owned(),
@@ -171,10 +171,13 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
                     tokio::fs::remove_dir_all(&vsc_path).await?;
                 }
                 _ => {
-                    println!(
-                        "  ⏭️  {}",
-                        format!("Found VS Code {} in cache, skipping download...", ver).italic()
-                    );
+                    if !json {
+                        println!(
+                            "  ⏭️  {}",
+                            format!("Found VS Code {} in cache, skipping download...", ver)
+                                .italic()
+                        );
+                    }
                     return Ok(code_cli_binary(&vsc_path).to_str().unwrap().to_owned());
                 }
             }
@@ -205,7 +208,11 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
 
     let mut resp = client.get(url).send().await.expect("request failed");
 
-    let progress_bar = ProgressBar::new(download_size);
+    let progress_bar = if json {
+        ProgressBar::hidden()
+    } else {
+        ProgressBar::new(download_size)
+    };
     progress_bar.set_style(
         ProgressStyle::with_template(
             "{spinner:.green} {elapsed_precise} [{bar:.cyan/blue}] ({bytes}/{total_bytes})",
@@ -233,7 +240,9 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
     }
 
     progress_bar.finish();
-    println!("📤 Unpacking VS Code archive...");
+    if !json {
+        println!("📤 Unpacking VS Code archive...");
+    }
 
     // If the VS Code folder exists for the latest version, remove its contents before downloading
     if vsc_path.exists() {
@@ -269,7 +278,9 @@ pub async fn download_vscode(version: Option<String>) -> anyhow::Result<String> 
                 "com.apple.quarantine",
                 vsc_path.join("Visual Studio Code.app").to_str().unwrap(),
             ])
-            .spawn();
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status();
     }
 
     Ok(code_cli_binary(&vsc_path).to_str().unwrap().to_owned())

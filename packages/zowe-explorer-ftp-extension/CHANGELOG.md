@@ -6,6 +6,26 @@ All notable changes to the "zowe-explorer-ftp-extension" extension will be docum
 
 ### Bug fixes
 
+## `3.6.0`
+
+## `3.5.0`
+
+### Bug fixes
+
+- Updated Zowe SDKs to `8.32.0` for technical currency. [#4209](https://github.com/zowe/zowe-explorer-vscode/pull/4209)
+- Fixed an issue where the FTP extension failed to load `zftp` profiles that do not have credentials defined. [#4110](https://github.com/zowe/zowe-explorer-vscode/issues/4110)
+
+## `3.4.2`
+
+### Bug fixes
+
+- Fixed an issue where the `zftp` session type is set to `none` on VS Code reload. [#4049](https://github.com/zowe/zowe-explorer-vscode/pull/4049)
+- Updated Zowe SDKs to `8.30.1` for technical currency. [#4079](https://github.com/zowe/zowe-explorer-vscode/pull/4079)
+
+## `3.4.1`
+
+### Bug fixes
+
 - Updated Zowe SDKs to `8.29.9` for technical currency. [#4040](https://github.com/zowe/zowe-explorer-vscode/pull/4040)
 
 ## `3.4.0`

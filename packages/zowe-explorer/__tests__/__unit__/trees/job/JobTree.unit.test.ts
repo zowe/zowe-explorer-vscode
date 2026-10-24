@@ -42,14 +42,13 @@ import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { JobInit } from "../../../../src/trees/job/JobInit";
 import { Definitions } from "../../../../src/configuration/Definitions";
 
-jest.mock("@zowe/zos-jobs-for-zowe-sdk");
-jest.mock("vscode");
+vi.mock("@zowe/zos-jobs-for-zowe-sdk");
 
-const showMock = jest.fn();
+const showMock = vi.fn();
 const onDidChangeValueMock = {
     event: (callback: (value: string) => void): vscode.Disposable => {
         const disposable = {
-            dispose: jest.fn(),
+            dispose: vi.fn(),
         };
         callback("");
         return disposable;
@@ -61,12 +60,12 @@ const mockInputBox: vscode.InputBox = {
     placeholder: "",
     password: false,
     onDidChangeValue: onDidChangeValueMock.event,
-    onDidAccept: jest.fn(),
+    onDidAccept: vi.fn(),
     show: showMock,
-    hide: jest.fn(),
-    dispose: jest.fn(),
+    hide: vi.fn(),
+    dispose: vi.fn(),
     buttons: [],
-    onDidTriggerButton: jest.fn(),
+    onDidTriggerButton: vi.fn(),
     prompt: "",
     validationMessage: "",
     step: 1,
@@ -74,7 +73,7 @@ const mockInputBox: vscode.InputBox = {
     enabled: true,
     busy: false,
     ignoreFocusOut: false,
-    onDidHide: jest.fn(),
+    onDidHide: vi.fn(),
 };
 function setJobObjects(job: zosjobs.IJob, newJobName: string, newJobId: string, newRetCode: string, newExecMember: string | undefined) {
     job.jobname = newJobName;
@@ -86,25 +85,25 @@ function setJobObjects(job: zosjobs.IJob, newJobName: string, newJobId: string, 
 
 async function createGlobalMocks() {
     const globalMocks = {
-        mockGetConfiguration: jest.fn(),
+        mockGetConfiguration: vi.fn(),
         mockGetJobs: {
-            getStatusForJob: jest.fn(),
+            getStatusForJob: vi.fn(),
         },
-        mockGetJob: jest.fn(),
-        mockRefresh: jest.fn(),
-        mockAffectsConfig: jest.fn(),
-        createTreeView: jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() }),
-        mockGetSpoolFiles: jest.fn(),
-        mockDeleteJobs: jest.fn(),
-        mockShowInputBox: jest.fn(),
-        mockDeleteJob: jest.fn(),
-        mockShowInformationMessage: jest.fn(),
-        mockShowWarningMessage: jest.fn(),
-        mockLoadNamedProfile: jest.fn(),
-        mockCreateQuickPick: jest.fn(),
-        mockLoadDefaultProfile: jest.fn(),
-        mockGetJesApi: jest.fn(),
-        mockShowQuickPick: jest.fn(),
+        mockGetJob: vi.fn(),
+        mockRefresh: vi.fn(),
+        mockAffectsConfig: vi.fn(),
+        createTreeView: vi.fn().mockReturnValue({ onDidCollapseElement: vi.fn() }),
+        mockGetSpoolFiles: vi.fn(),
+        mockDeleteJobs: vi.fn(),
+        mockShowInputBox: vi.fn(),
+        mockDeleteJob: vi.fn(),
+        mockShowInformationMessage: vi.fn(),
+        mockShowWarningMessage: vi.fn(),
+        mockLoadNamedProfile: vi.fn(),
+        mockCreateQuickPick: vi.fn(),
+        mockLoadDefaultProfile: vi.fn(),
+        mockGetJesApi: vi.fn(),
+        mockShowQuickPick: vi.fn(),
         testJobsProvider: null,
         jesApi: null,
         testSession: createISession(),
@@ -115,15 +114,15 @@ async function createGlobalMocks() {
         testSessionNode: null,
         mockIJobFile: createIJobFile(),
         mockProfileInstance: null,
-        withProgress: jest.fn().mockImplementation((progLocation, callback) => {
+        withProgress: vi.fn().mockImplementation((progLocation, callback) => {
             return callback();
         }),
-        ProgressLocation: jest.fn().mockImplementation(() => {
+        ProgressLocation: vi.fn().mockImplementation(() => {
             return {
                 Notification: 15,
             };
         }),
-        enums: jest.fn().mockImplementation(() => {
+        enums: vi.fn().mockImplementation(() => {
             return {
                 Global: 1,
                 Workspace: 2,
@@ -131,16 +130,16 @@ async function createGlobalMocks() {
             };
         }),
         FileSystemProvider: {
-            createDirectory: jest.fn(),
-            delete: jest.fn(),
+            createDirectory: vi.fn(),
+            delete: vi.fn(),
         },
     };
 
-    jest.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
-    jest.spyOn(vscode.workspace.fs, "delete").mockImplementation(globalMocks.FileSystemProvider.delete);
-    jest.spyOn(Gui, "createTreeView").mockImplementation(globalMocks.createTreeView);
+    vi.spyOn(JobFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
+    vi.spyOn(vscode.workspace.fs, "delete").mockImplementation(globalMocks.FileSystemProvider.delete);
+    vi.spyOn(Gui, "createTreeView").mockImplementation(globalMocks.createTreeView);
     Object.defineProperty(ProfilesCache, "getConfigInstance", {
-        value: jest.fn(() => {
+        value: vi.fn(() => {
             return {
                 usingTeamConfig: false,
             };
@@ -163,11 +162,11 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(vscode.window, "showTextDocument", {
-        value: jest.fn().mockImplementation(),
+        value: vi.fn().mockImplementation((() => undefined) as any),
         configurable: true,
     });
     Object.defineProperty(Poller, "poll", {
-        value: jest.fn(),
+        value: vi.fn(),
         configurable: true,
     });
     Object.defineProperty(globalMocks.mockGetJobs, "getJob", { value: globalMocks.mockGetJob, configurable: true });
@@ -176,7 +175,7 @@ async function createGlobalMocks() {
         configurable: true,
     });
     Object.defineProperty(vscode.window, "createInputBox", {
-        value: jest.fn(() => mockInputBox),
+        value: vi.fn(() => mockInputBox),
         configurable: true,
     });
 
@@ -215,11 +214,11 @@ async function createGlobalMocks() {
     globalMocks.mockLoadDefaultProfile.mockReturnValue(globalMocks.testProfile);
     globalMocks.mockProfileInstance.getDefaultProfile = globalMocks.mockLoadDefaultProfile;
     Object.defineProperty(Profiles, "getInstance", {
-        value: jest.fn(() => globalMocks.mockProfileInstance),
+        value: vi.fn(() => globalMocks.mockProfileInstance),
         configurable: true,
     });
     Object.defineProperty(TreeViewUtils, "removeSession", {
-        value: jest.fn().mockImplementationOnce(() => Promise.resolve()),
+        value: vi.fn().mockImplementationOnce(() => Promise.resolve()),
         configurable: true,
     });
 
@@ -231,25 +230,25 @@ async function createGlobalMocks() {
     Object.defineProperty(ZoweLocalStorage, "globalState", {
         value: {
             get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
-            update: jest.fn(),
+            update: vi.fn(),
             keys: () => [],
         },
         configurable: true,
     });
-    Object.defineProperty(ZoweLogger, "log", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger.log, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "error", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "debug", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "warn", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "info", { value: jest.fn(), configurable: true });
-    Object.defineProperty(ZoweLogger, "trace", { value: jest.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "log", { value: vi.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger.log, "error", { value: vi.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "error", { value: vi.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "debug", { value: vi.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "warn", { value: vi.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "info", { value: vi.fn(), configurable: true });
+    Object.defineProperty(ZoweLogger, "trace", { value: vi.fn(), configurable: true });
     globalMocks.testSessionNode = createJobSessionNode(globalMocks.testSession, globalMocks.testProfile);
     globalMocks.mockGetJob.mockReturnValue(globalMocks.testIJob);
-    globalMocks.mockProfileInstance.editSession = jest.fn(() => globalMocks.testProfile);
+    globalMocks.mockProfileInstance.editSession = vi.fn(() => globalMocks.testProfile);
     globalMocks.mockGetConfiguration.mockReturnValue({
         persistence: true,
         get: (_setting: string) => [],
-        update: jest.fn(() => {
+        update: vi.fn(() => {
             return {};
         }),
     });
@@ -347,7 +346,7 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
-        const loadProfilesForFavoritesSpy = jest.spyOn(testTree, "loadProfilesForFavorites").mockImplementationOnce(() => Promise.resolve([]));
+        const loadProfilesForFavoritesSpy = vi.spyOn(testTree, "loadProfilesForFavorites").mockImplementationOnce(() => Promise.resolve([]));
 
         await testTree.getChildren(favProfileNode);
         expect(loadProfilesForFavoritesSpy).toHaveBeenCalledWith(log, favProfileNode);
@@ -360,7 +359,7 @@ describe("ZosJobsProvider unit tests - Function getChildren", () => {
         testTree.mSessionNodes.push(blockMocks.jobSessionNode);
         testTree.mSessionNodes[1].dirty = true;
         const sessionElement = testTree.mSessionNodes[1];
-        const elementGetChildrenSpy = jest.spyOn(sessionElement, "getChildren");
+        const elementGetChildrenSpy = vi.spyOn(sessionElement, "getChildren");
 
         await testTree.getChildren(testTree.mSessionNodes[1]);
 
@@ -395,10 +394,10 @@ describe("ZosJobsProvider unit tests - Function addSingleSession", () => {
 
         // Mock the USS API so that getSession returns the correct value
         const mockUssApi = ZoweExplorerApiRegister.getJesApi(blockMocks.testProfile);
-        const getJesApiMock = jest.fn();
+        const getJesApiMock = vi.fn();
         getJesApiMock.mockReturnValue(mockUssApi);
         ZoweExplorerApiRegister.getJesApi = getJesApiMock.bind(ZoweExplorerApiRegister);
-        jest.spyOn(mockUssApi, "getSession").mockReturnValue(blockMocks.testSession);
+        vi.spyOn(mockUssApi, "getSession").mockReturnValue(blockMocks.testSession);
 
         await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
 
@@ -417,11 +416,11 @@ describe("ZosJobsProvider unit tests - Function addSingleSession", () => {
         const blockMocks = createBlockMocks();
 
         blockMocks.testTree.mSessionNodes.pop();
-        const zoweLoggerWarnSpy = jest.spyOn(ZoweLogger, "warn");
+        const zoweLoggerWarnSpy = vi.spyOn(ZoweLogger, "warn");
 
         // Mock the API register so that registeredMvsApiTypes is empty
         const mockApiRegister = ZoweExplorerApiRegister.getInstance();
-        jest.spyOn(mockApiRegister, "registeredJesApiTypes").mockReturnValueOnce([]);
+        vi.spyOn(mockApiRegister, "registeredJesApiTypes").mockReturnValueOnce([]);
 
         await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
 
@@ -438,10 +437,10 @@ describe("ZosJobsProvider unit tests - Function addSingleSession", () => {
 
         // Mock the USS API so that getSession returns the correct value
         const mockJesApi = ZoweExplorerApiRegister.getJesApi(blockMocks.testProfile);
-        const getJesApiMock = jest.fn();
+        const getJesApiMock = vi.fn();
         getJesApiMock.mockReturnValue(mockJesApi);
         ZoweExplorerApiRegister.getJesApi = getJesApiMock.bind(ZoweExplorerApiRegister);
-        jest.spyOn(mockJesApi, "getSession").mockReturnValue(blockMocks.testSession);
+        vi.spyOn(mockJesApi, "getSession").mockReturnValue(blockMocks.testSession);
 
         await blockMocks.testTree.addSingleSession(blockMocks.testProfile);
 
@@ -474,9 +473,9 @@ describe("ZosJobsProvider unit tests - Function initializeFavorites", () => {
         await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
+        vi.spyOn(blockMocks.testTree as any, "mPersistence" as any, "get").mockReturnValue({
             readFavorites: () => ["[test]: SAMPLE1{job}", "[test]: SAMPLE2(JOBID){job}", "INVALID"],
-        });
+        } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
@@ -487,9 +486,9 @@ describe("ZosJobsProvider unit tests - Function initializeFavorites", () => {
         await createGlobalMocks();
         const blockMocks = createBlockMocks();
 
-        jest.replaceProperty(blockMocks.testTree as any, "mPersistence", {
+        vi.spyOn(blockMocks.testTree as any, "mPersistence" as any, "get").mockReturnValue({
             readFavorites: () => ["[test]: SAMPLE{job}"],
-        });
+        } as any);
         await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
@@ -530,6 +529,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             label: "testJob(JOB123)",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: favProfileNode,
+            contextOverride: Constants.JOBS_JOB_CONTEXT + Constants.FAV_SUFFIX,
             job: new MockJobDetail("testJob(JOB123)"),
             profile: blockMocks.imperativeProfile,
         });
@@ -539,7 +539,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             node.iconPath = targetIcon.path;
         }
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile).toEqual(node);
     });
@@ -601,7 +601,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             node.iconPath = targetIcon.path;
         }
 
-        const favChildNodeForProfile = await testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
+        const favChildNodeForProfile = testTree.initializeFavChildNodeForProfile("testJob(JOB123)", Constants.JOBS_JOB_CONTEXT, favProfileNode);
 
         expect(favChildNodeForProfile.label).toEqual("testJob(JOB123)");
     });
@@ -647,34 +647,34 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
 
         // Mock successful loading of profile/session
         Object.defineProperty(Profiles, "getInstance", {
-            value: jest.fn(() => {
+            value: vi.fn(() => {
                 return {
-                    getDefaultProfile: jest.fn(() => {
+                    getDefaultProfile: vi.fn(() => {
                         return blockMocks.imperativeProfile;
                     }),
                     allProfiles: [blockMocks.imperativeProfile],
-                    loadNamedProfile: jest.fn(() => {
+                    loadNamedProfile: vi.fn(() => {
                         return blockMocks.imperativeProfile;
                     }),
-                    checkCurrentProfile: jest.fn(() => {
+                    checkCurrentProfile: vi.fn(() => {
                         return {
                             name: blockMocks.imperativeProfile.name,
                             status: "unverified",
                         };
                     }),
-                    getBaseProfile: jest.fn(() => {
+                    getBaseProfile: vi.fn(() => {
                         return blockMocks.imperativeProfile;
                     }),
                     validProfile: Validation.ValidationType.VALID,
-                    getProfileInfo: jest.fn(() => createInstanceOfProfileInfo()),
-                    fetchAllProfiles: jest.fn(() => {
+                    getProfileInfo: vi.fn(() => createInstanceOfProfileInfo()),
+                    fetchAllProfiles: vi.fn(() => {
                         return [{ name: "sestest" }, { name: "profile1" }, { name: "profile2" }];
                     }),
                 };
             }),
         });
         Object.defineProperty(blockMocks.jesApi, "getSession", {
-            value: jest.fn(() => {
+            value: vi.fn(() => {
                 return blockMocks.session;
             }),
         });
@@ -696,7 +696,7 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
         });
         favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
         testTree.mFavorites.push(favProfileNode);
-        const showErrorMessageSpy = jest.spyOn(Gui, "errorMessage");
+        const showErrorMessageSpy = vi.spyOn(Gui, "errorMessage");
         globalMocks.mockProfileInstance.getDefaultProfile.mockReturnValue(blockMocks.imperativeProfile);
         globalMocks.mockProfileInstance.getBaseProfile.mockReturnValue(blockMocks.imperativeProfile);
         globalMocks.mockProfileInstance.getProfileInfo.mockReturnValue(createInstanceOfProfileInfo());
@@ -781,6 +781,34 @@ describe("ZosJobsProvider unit tests - Function loadProfilesForFavorites", () =>
 
         expect(resultFavJobNode).toEqual(expectedFavJobNode);
     });
+    it("Checks that filesystem entry is created for favorited job that doesn't exist in filesystem", async () => {
+        await createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const favProfileNode = new ZoweJobNode({
+            label: "testProfile",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.jobFavoritesNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+        });
+        favProfileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        const favJobNode = new ZoweJobNode({
+            label: "JOBTEST(JOB1234)",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: favProfileNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride: Constants.JOBS_JOB_CONTEXT + Constants.FAV_SUFFIX,
+        });
+        const testTree = new JobTree();
+        favProfileNode.children.push(favJobNode);
+        testTree.mFavorites.push(favProfileNode);
+
+        vi.spyOn(JobFSProvider.instance, "exists").mockReturnValueOnce(false);
+        const createDirectorySpy = vi.spyOn(JobFSProvider.instance, "createDirectory");
+        await testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
+        expect(createDirectorySpy).toHaveBeenCalledWith(favJobNode.resourceUri);
+    });
 });
 
 describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
@@ -805,7 +833,7 @@ describe("ZosJobsProvider unit tests - Function removeFavProfile", () => {
     it("Tests successful removal of profile node in Favorites when user confirms they want to Continue removing it", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
-        const updateFavoritesSpy = jest.spyOn(globalMocks.testJobsProvider, "updateFavorites");
+        const updateFavoritesSpy = vi.spyOn(globalMocks.testJobsProvider, "updateFavorites");
         // Make sure favorite is added before the actual unit test
         expect(globalMocks.testJobsProvider.mFavorites.length).toEqual(1);
 
@@ -861,9 +889,9 @@ describe("ZosJobsProvider unit tests - Function delete", () => {
         const globalMocks = await createGlobalMocks();
         const testJob = createTestJob(globalMocks);
 
-        const deleteSpy = jest.spyOn(globalMocks.testJobsProvider, "delete");
-        const removeFavoriteSpy = jest.spyOn(globalMocks.testJobsProvider, "removeFavorite");
-        const refreshSpy = jest.spyOn(globalMocks.testJobsProvider, "refresh");
+        const deleteSpy = vi.spyOn(globalMocks.testJobsProvider, "delete");
+        const removeFavoriteSpy = vi.spyOn(globalMocks.testJobsProvider, "removeFavorite");
+        const refreshSpy = vi.spyOn(globalMocks.testJobsProvider, "refresh");
 
         await globalMocks.testJobsProvider.delete(testJob);
         expect(deleteSpy).toHaveBeenCalledWith(testJob);
@@ -940,17 +968,17 @@ describe("ZosJobsProvider unit tests - Function getUserJobsMenuChoice", () => {
     let globalMocks;
     beforeEach(async () => {
         globalMocks = await createGlobalMocks();
-        showInformationMessage = jest.spyOn(Gui, "showMessage");
+        showInformationMessage = vi.spyOn(Gui, "showMessage");
         globalMocks.mockCreateQuickPick.mockReturnValue({
             show: () => Promise.resolve(undefined),
             hide: () => Promise.resolve(undefined),
             onDidAccept: () => Promise.resolve(undefined),
             onDidHide: () => Promise.resolve(undefined),
         });
-        jest.spyOn(globalMocks.testJobsProvider.mPersistence, "getSearchHistory").mockReturnValue(["JobId:123"]);
+        vi.spyOn(globalMocks.testJobsProvider.mPersistence, "getSearchHistory").mockReturnValue(["JobId:123"]);
     });
     it("should return undefined and warn if user did not select a menu", async () => {
-        jest.spyOn(Gui, "resolveQuickPick").mockReturnValue(undefined);
+        vi.spyOn(Gui, "resolveQuickPick").mockReturnValue(undefined);
         const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
         expect(result).toEqual(undefined);
         expect(showInformationMessage).toHaveBeenCalled();
@@ -958,7 +986,7 @@ describe("ZosJobsProvider unit tests - Function getUserJobsMenuChoice", () => {
     });
     it("should return user menu choice and not show vscode warning", async () => {
         const menuItem = new FilterItem({ text: "searchById" });
-        jest.spyOn(Gui, "resolveQuickPick").mockReturnValue(Promise.resolve(menuItem));
+        vi.spyOn(Gui, "resolveQuickPick").mockReturnValue(Promise.resolve(menuItem));
         const result = await globalMocks.testJobsProvider.getUserJobsMenuChoice();
         expect(result).toEqual(menuItem);
         expect(showInformationMessage).not.toHaveBeenCalled();
@@ -972,8 +1000,8 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
     let handleSearchByJobId;
     beforeEach(async () => {
         globalMocks = await createGlobalMocks();
-        handleEditingMultiJobParameters = jest.spyOn(globalMocks.testJobsProvider, "handleEditingMultiJobParameters");
-        handleSearchByJobId = jest.spyOn(globalMocks.testJobsProvider, "handleSearchByJobId");
+        handleEditingMultiJobParameters = vi.spyOn(globalMocks.testJobsProvider, "handleEditingMultiJobParameters");
+        handleSearchByJobId = vi.spyOn(globalMocks.testJobsProvider, "handleSearchByJobId");
     });
     it("should call handleEditingMultiJobParameters if user chose QuerySearch menu", async () => {
         const multiSearchMenu = new FilterItem({
@@ -998,7 +1026,7 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
             menuType: Definitions.JobPickerTypes.History,
         });
 
-        jest.spyOn(globalMocks.testJobsProvider, "parseJobSearchQuery").mockReturnValue({
+        vi.spyOn(globalMocks.testJobsProvider, "parseJobSearchQuery").mockReturnValue({
             Owner: undefined,
             Prefix: undefined,
             JobId: "123",
@@ -1014,7 +1042,7 @@ describe("ZosJobsProvider unit tests - Function getUserSearchQueryInput", () => 
             menuType: Definitions.JobPickerTypes.History,
         });
 
-        jest.spyOn(globalMocks.testJobsProvider, "parseJobSearchQuery").mockReturnValue({
+        vi.spyOn(globalMocks.testJobsProvider, "parseJobSearchQuery").mockReturnValue({
             Owner: "zowe",
             Prefix: undefined,
             JobId: undefined,
@@ -1093,7 +1121,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
                 label: `Job Prefix`,
                 value: "job*",
                 show: true,
-                placeHolder: `Enter job prefix`,
+                placeHolder: `Enter job prefix, use a comma to separate multiple prefixes`,
                 validateInput: (text) => SharedUtils.jobStringValidator(text, "prefix"),
             },
             {
@@ -1109,7 +1137,7 @@ describe("ZosJobsProvider unit tests - Function getPopulatedPickerArray", () => 
 });
 
 describe("ZosJobsProvider unit tests - function pollData", () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
     it("correctly toggles polling on and off", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1131,8 +1159,8 @@ describe("ZosJobsProvider unit tests - function pollData", () => {
         });
 
         // Case 1: pollData called, polling dialog is dismissed
-        const getDirectValueSpy = jest.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(0);
-        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+        const getDirectValueSpy = vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(0);
+        const inputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
         await globalMocks.testJobsProvider.pollData(spoolNode);
         // Poll requests should be empty
         expect(Poller.pollRequests).toStrictEqual({});
@@ -1165,10 +1193,42 @@ describe("ZosJobsProvider unit tests - function pollData", () => {
         expect(globalMocks.testJobsProvider.validatePollInterval("1000")).toStrictEqual(undefined);
         expect(globalMocks.testJobsProvider.validatePollInterval("1001")).toStrictEqual(undefined);
     });
+
+    it("shows accessibility-friendly prompt and placeholder in polling input box", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testJobNode = new ZoweJobNode({
+            label: "SOME(JOBNODE) - Input",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: globalMocks.testJobsProvider.mSessionNodes[1],
+            session: globalMocks.testJobsProvider.mSessionNodes[1].getSession(),
+            profile: globalMocks.testProfile,
+            job: globalMocks.testIJob,
+        });
+        const spoolNode = new ZoweSpoolNode({
+            label: "exampleSpool",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testJobNode,
+            session: globalMocks.testSession,
+            job: globalMocks.testIJob,
+            spool: globalMocks.mockIJobFile,
+        });
+
+        vi.spyOn(SettingsConfig, "getDirectValue").mockReturnValueOnce(5000);
+        const inputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("5000");
+
+        await globalMocks.testJobsProvider.pollData(spoolNode);
+
+        expect(inputBoxSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                prompt: expect.stringContaining("Polling automatically checks for job status updates"),
+                placeHolder: expect.stringContaining("e.g., 5000 for checking every 5 seconds"),
+            })
+        );
+    });
 });
 
 describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
     beforeEach(() => {
         Object.keys(Poller.pollRequests).forEach((key) => {
@@ -1193,7 +1253,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
             job: globalMocks.testIJob,
         });
 
-        const pollActiveJobsSpy = jest.spyOn(globalMocks.testJobsProvider, "pollActiveJobs");
+        const pollActiveJobsSpy = vi.spyOn(globalMocks.testJobsProvider, "pollActiveJobs");
 
         await globalMocks.testJobsProvider.pollActiveJobs(testJobNode);
 
@@ -1220,7 +1280,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         mockActiveJob.contextValue += Constants.POLL_CONTEXT;
         testSessionNode.children = [mockActiveJob];
 
-        const fireTreeDataSpy = jest.spyOn(globalMocks.testJobsProvider.mOnDidChangeTreeData, "fire");
+        const fireTreeDataSpy = vi.spyOn(globalMocks.testJobsProvider.mOnDidChangeTreeData, "fire");
 
         await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
 
@@ -1231,11 +1291,57 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         expect(fireTreeDataSpy).toHaveBeenCalledWith(testSessionNode);
     });
 
-    it("should return early if user dismisses polling dialog", async () => {
+    it("should return early if user dismisses informational message", async () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
 
-        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+        const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(undefined);
+        const inputBoxSpy = vi.spyOn(Gui, "showInputBox").mockClear();
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        expect(infoMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job polling will automatically check active jobs"),
+            expect.objectContaining({
+                items: expect.arrayContaining([expect.stringContaining("Continue")]),
+                vsCodeOpts: { modal: false },
+            })
+        );
+        // Input box should NOT be called if user dismisses the info message
+        expect(inputBoxSpy).not.toHaveBeenCalled();
+        expect(Poller.pollRequests).toStrictEqual({});
+    });
+
+    it("should show accessibility-friendly informational message with Continue button", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const continueButton = "Continue";
+        const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        const inputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        // Verify informational message is shown with accessibility-friendly text and Continue button
+        expect(infoMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job polling will automatically check active jobs for status changes"),
+            expect.objectContaining({
+                items: expect.arrayContaining([expect.stringContaining("Continue")]),
+                vsCodeOpts: { modal: false },
+            })
+        );
+        // Verify both the info message and input box were called when user clicks Continue
+        expect(infoMessageSpy).toHaveBeenCalled();
+        expect(inputBoxSpy).toHaveBeenCalled();
+    });
+
+    it("should return early if user dismisses polling interval input", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+
+        const continueButton = "Continue";
+        vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        const inputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce(undefined);
 
         await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
 
@@ -1248,10 +1354,10 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
 
         const mockProfilesCache = {
-            getDefaultProfile: jest.fn().mockReturnValue(globalMocks.testProfile),
-            shouldRemoveTokenFromProfile: jest.fn().mockReturnValue(false),
-            loadNamedProfile: jest.fn().mockReturnValue(globalMocks.testProfile),
-            getPropsForProfile: jest.fn().mockResolvedValue({}),
+            getDefaultProfile: vi.fn().mockReturnValue(globalMocks.testProfile),
+            shouldRemoveTokenFromProfile: vi.fn().mockReturnValue(false),
+            loadNamedProfile: vi.fn().mockReturnValue(globalMocks.testProfile),
+            getPropsForProfile: vi.fn().mockResolvedValue({}),
         };
         Object.defineProperty(Constants, "PROFILES_CACHE", {
             value: mockProfilesCache,
@@ -1264,22 +1370,24 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
             items: [],
             placeholder: "",
             ignoreFocusOut: false,
-            show: jest.fn(),
-            hide: jest.fn(),
-            onDidAccept: jest.fn(),
-            onDidHide: jest.fn(),
+            show: vi.fn(),
+            hide: vi.fn(),
+            onDidAccept: vi.fn(),
+            onDidHide: vi.fn(),
         };
         globalMocks.mockCreateQuickPick.mockReturnValue(mockQuickPick);
 
         const mockHistory = {
-            getSearchHistory: jest.fn().mockReturnValue(["Owner:test Prefix:* Status:*"]),
+            getSearchHistory: vi.fn().mockReturnValue(["Owner:test Prefix:* Status:*"]),
         };
         globalMocks.testJobsProvider.mHistory = mockHistory;
 
-        jest.spyOn(Gui, "resolveQuickPick").mockResolvedValue(undefined);
+        vi.spyOn(Gui, "resolveQuickPick").mockResolvedValue(undefined);
 
-        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
-        const filterPromptSpy = jest.spyOn(globalMocks.testJobsProvider, "filterPrompt").mockResolvedValue();
+        const continueButton = "Continue";
+        vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        const inputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        const filterPromptSpy = vi.spyOn(globalMocks.testJobsProvider, "filterPrompt").mockResolvedValue();
 
         await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
 
@@ -1293,8 +1401,9 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         testSessionNode.children = [];
         testSessionNode.filtered = true;
 
-        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
-        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+        const continueButton = "Continue";
+        const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        const inputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
 
         await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
 
@@ -1317,8 +1426,9 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         });
         testSessionNode.children = [mockCompletedJob];
 
-        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
-        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+        const continueButton = "Continue";
+        const infoMessageSpy = vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        const inputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
 
         await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
 
@@ -1345,8 +1455,10 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         }
         testSessionNode.children = activeJobs;
 
-        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
-        const warningMessageSpy = jest.spyOn(Gui, "warningMessage").mockResolvedValueOnce("Cancel");
+        const continueButton = "Continue";
+        vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        const inputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        const warningMessageSpy = vi.spyOn(Gui, "warningMessage").mockResolvedValueOnce("Cancel");
 
         await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
 
@@ -1383,8 +1495,10 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         });
         testSessionNode.children = [mockActiveJob1, mockActiveJob2];
 
-        const inputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
-        const fireTreeDataSpy = jest.spyOn(globalMocks.testJobsProvider.mOnDidChangeTreeData, "fire");
+        const continueButton = "Continue";
+        vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        const inputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        const fireTreeDataSpy = vi.spyOn(globalMocks.testJobsProvider.mOnDidChangeTreeData, "fire");
 
         await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
 
@@ -1419,10 +1533,12 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         mockActiveJob.contextValue += Constants.POLL_CONTEXT;
         testSessionNode.children = [mockActiveJob];
 
-        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        const continueButton = "Continue";
+        vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
 
-        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
-        const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
+        const infoMessageSpy = vi.spyOn(Gui, "infoMessage");
+        const refreshElementSpy = vi.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
             testSessionNode.children = [];
         });
 
@@ -1456,11 +1572,13 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         mockActiveJob.contextValue = Constants.JOBS_JOB_CONTEXT + Constants.POLL_CONTEXT;
         testSessionNode.children = [mockActiveJob];
 
-        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
-        jest.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
+        const continueButton = "Continue";
+        vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        vi.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
 
-        const showMessageSpy = jest.spyOn(Gui, "showMessage");
-        const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
+        const showMessageSpy = vi.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
+        const refreshElementSpy = vi.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
             mockActiveJob.job.status = "OUTPUT";
         });
 
@@ -1474,9 +1592,68 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         await pollRequest.request();
 
         expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB001)]"));
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB001) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
+        );
         expect(mockActiveJob.contextValue).not.toContain(Constants.POLL_CONTEXT);
     });
+    it("should execute command when 'Open Job' button is clicked in completion notification", async () => {
+        const globalMocks = await createGlobalMocks();
+        const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
+        testSessionNode.filtered = true;
+
+        const mockActiveJob = new ZoweJobNode({
+            label: "TESTJOB(JOB001) - ACTIVE",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: testSessionNode,
+            session: testSessionNode.getSession(),
+            profile: globalMocks.testProfile,
+            job: { ...globalMocks.testIJob, status: "ACTIVE", jobid: "JOB001", retcode: "CC 0000" },
+        });
+
+        mockActiveJob.contextValue = Constants.JOBS_JOB_CONTEXT + Constants.POLL_CONTEXT;
+        testSessionNode.children = [mockActiveJob];
+
+        const continueButton = "Continue";
+        vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        vi.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
+
+        const openJobButton = "Open Job";
+        const executeCommandSpy = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue(undefined);
+        const showMessageSpy = vi.spyOn(Gui, "showMessage").mockResolvedValue(openJobButton);
+        const refreshElementSpy = vi.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
+            mockActiveJob.job.status = "OUTPUT";
+        });
+
+        await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
+
+        const sessionPollKey = `${String(testSessionNode.resourceUri.path)}active-jobs`;
+        const pollRequest = Poller.pollRequests[sessionPollKey];
+
+        await pollRequest.request();
+
+        expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB001) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
+        );
+
+        // Verify the showMessage call returns a promise that triggers the command
+        const showMessageCall = showMessageSpy.mock.results[showMessageSpy.mock.results.length - 1];
+        await showMessageCall.value.then((selection: string | undefined) => {
+            if (selection === openJobButton) {
+                vscode.commands.executeCommand("zowe.jobs.setJobSpool", "testProfile", "JOB001");
+            }
+        });
+
+        expect(executeCommandSpy).toHaveBeenCalledWith("zowe.jobs.setJobSpool", "testProfile", "JOB001");
+    }, 10000);
 
     it("should handle job completion of one job while another stays active during polling", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1505,11 +1682,13 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         mockActiveJob2.contextValue = Constants.JOBS_JOB_CONTEXT + Constants.POLL_CONTEXT;
         testSessionNode.children = [mockActiveJob1, mockActiveJob2];
 
-        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
-        jest.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
+        const continueButton = "Continue";
+        vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        vi.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
 
-        const showMessageSpy = jest.spyOn(Gui, "showMessage");
-        const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
+        const showMessageSpy = vi.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
+        const refreshElementSpy = vi.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
             mockActiveJob1.job.status = "OUTPUT";
         });
 
@@ -1523,7 +1702,12 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         await pollRequest.request();
 
         expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB001)]"));
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB001) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
+        );
         expect(mockActiveJob1.contextValue).not.toContain(Constants.POLL_CONTEXT);
         expect(mockActiveJob2.contextValue).toBe(Constants.JOBS_JOB_CONTEXT + Constants.POLL_CONTEXT);
     });
@@ -1555,11 +1739,13 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         mockActiveJob2.contextValue = Constants.JOBS_JOB_CONTEXT + Constants.POLL_CONTEXT;
         testSessionNode.children = [mockActiveJob1, mockActiveJob2];
 
-        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
-        jest.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
+        const continueButton = "Continue";
+        vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        vi.spyOn(testSessionNode, "getProfileName").mockReturnValue("testProfile");
 
-        const showMessageSpy = jest.spyOn(Gui, "showMessage");
-        const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
+        const showMessageSpy = vi.spyOn(Gui, "showMessage").mockResolvedValue(undefined);
+        const refreshElementSpy = vi.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
             mockActiveJob1.job.status = "OUTPUT";
             mockActiveJob2.job.status = "ABEND";
         });
@@ -1573,8 +1759,18 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
 
         expect(refreshElementSpy).toHaveBeenCalledWith(testSessionNode);
         expect(showMessageSpy).toHaveBeenCalledTimes(3);
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB001)]"));
-        expect(showMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Job [TESTJOB(JOB002)]"));
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB001) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
+        );
+        expect(showMessageSpy).toHaveBeenCalledWith(
+            expect.stringContaining("Job TESTJOB(JOB002) completed"),
+            expect.objectContaining({
+                items: [expect.stringContaining("Open Job")],
+            })
+        );
         expect(mockActiveJob1.contextValue).not.toContain(Constants.POLL_CONTEXT);
         expect(mockActiveJob2.contextValue).not.toContain(Constants.POLL_CONTEXT);
     });
@@ -1595,9 +1791,11 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
 
         testSessionNode.children = [mockActiveJob1];
 
-        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        const continueButton = "Continue";
+        vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
 
-        const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
+        const refreshElementSpy = vi.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
             const newActiveJob = new ZoweJobNode({
                 label: "TESTJOB2(JOB002) - ACTIVE",
                 collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
@@ -1625,7 +1823,7 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         const globalMocks = await createGlobalMocks();
         const testSessionNode = globalMocks.testJobsProvider.mSessionNodes[1];
 
-        jest.spyOn(globalMocks.testJobsProvider, "showPollOptions").mockResolvedValueOnce(0);
+        vi.spyOn(globalMocks.testJobsProvider, "showPollOptions").mockResolvedValueOnce(0);
 
         await globalMocks.testJobsProvider.pollActiveJobs(testSessionNode);
 
@@ -1649,11 +1847,13 @@ describe("ZosJobsProvider unit tests - Function pollActiveJobs", () => {
         mockActiveJob.contextValue += Constants.POLL_CONTEXT;
         testSessionNode.children = [mockActiveJob];
 
-        jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
+        const continueButton = "Continue";
+        vi.spyOn(Gui, "infoMessage").mockResolvedValueOnce(continueButton);
+        vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("2000");
 
-        const mockStatusMessage = { dispose: jest.fn() };
-        const setStatusBarMessageSpy = jest.spyOn(Gui, "setStatusBarMessage").mockReturnValue(mockStatusMessage);
-        const refreshElementSpy = jest.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
+        const mockStatusMessage = { dispose: vi.fn() };
+        const setStatusBarMessageSpy = vi.spyOn(Gui, "setStatusBarMessage").mockReturnValue(mockStatusMessage);
+        const refreshElementSpy = vi.spyOn(globalMocks.testJobsProvider, "refreshElement").mockImplementation(() => {
             testSessionNode.children = [];
         });
 
@@ -1819,9 +2019,9 @@ describe("removeSearchHistory", () => {
     it("removes the search item passed in from the current history", () => {
         const tree = new JobTree();
         tree.addSearchHistory("test");
-        expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(1);
+        expect(tree.getSearchHistory().length).toEqual(1);
         tree.removeSearchHistory("test");
-        expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(0);
+        expect(tree.getSearchHistory().length).toEqual(0);
     });
 });
 
@@ -1832,9 +2032,9 @@ describe("resetSearchHistory", () => {
         tree.addSearchHistory("test2");
         tree.addSearchHistory("test3");
         tree.addSearchHistory("test4");
-        expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(4);
+        expect(tree.getSearchHistory().length).toEqual(4);
         tree.resetSearchHistory();
-        expect(tree["mPersistence"]["mSearchHistory"].length).toEqual(0);
+        expect(tree.getSearchHistory().length).toEqual(0);
     });
 });
 
@@ -1857,7 +2057,7 @@ describe("getFileHistory", () => {
 describe("getFavorites", () => {
     it("gets all the favorites from persistent object", () => {
         const tree = new JobTree();
-        jest.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue({
             favorites: ["test1", "test2", "test3"],
         });
         expect(tree.getFavorites()).toEqual(["test1", "test2", "test3"]);
@@ -1885,21 +2085,21 @@ describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
     beforeEach(async () => {
         globalMocks = await createGlobalMocks();
         const mockTreeProvider = {
-            refresh: jest.fn(),
+            refresh: vi.fn(),
         } as any;
-        jest.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
+        vi.spyOn(SharedTreeProviders, "job", "get").mockReturnValue(mockTreeProvider);
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
-        jest.resetAllMocks();
-        jest.clearAllMocks();
+        vi.restoreAllMocks();
+        vi.resetAllMocks();
+        vi.clearAllMocks();
     });
 
     it("To show showInformationMessage", async () => {
         const testTree = new JobTree();
         node1.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-        const infoMessageSpy = jest.spyOn(Gui, "infoMessage");
+        const infoMessageSpy = vi.spyOn(Gui, "infoMessage");
         await testTree.filterJobsDialog(node1);
         expect(infoMessageSpy).toHaveBeenCalled();
     });
@@ -1908,11 +2108,11 @@ describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
         const testTree = new JobTree();
         node1.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         node1.children = [node2, node3];
-        const createInputBoxSpy = jest.spyOn(vscode.window, "createInputBox");
+        const createInputBoxSpy = vi.spyOn(vscode.window, "createInputBox");
         mockInputBox.value = "ZOWEUSR2(JOB05037) - CC 0000";
         createInputBoxSpy.mockReturnValue(mockInputBox);
         globalMocks.mockShowQuickPick.mockReturnValueOnce("Go to Local Filtering");
-        const filterJobsSpy = jest.spyOn(testTree, "filterJobsDialog");
+        const filterJobsSpy = vi.spyOn(testTree, "filterJobsDialog");
         await testTree.filterJobsDialog(node1);
         expect(filterJobsSpy).toHaveBeenCalled();
         expect(filterJobsSpy).toHaveBeenCalledWith(node1);
@@ -1923,11 +2123,11 @@ describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
         const testTree = new JobTree();
         node1.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         node1.children = [node2, node3];
-        const createInputBoxSpy = jest.spyOn(vscode.window, "createInputBox");
+        const createInputBoxSpy = vi.spyOn(vscode.window, "createInputBox");
         mockInputBox.value = "ZOWEUSR2(JOB05037) - CC 0000";
         createInputBoxSpy.mockReturnValue(mockInputBox);
         globalMocks.mockShowQuickPick.mockReturnValueOnce("$(clear-all) Clear filter for profile");
-        const filterJobsSpy = jest.spyOn(testTree, "filterJobsDialog");
+        const filterJobsSpy = vi.spyOn(testTree, "filterJobsDialog");
         await testTree.filterJobsDialog(node1);
         expect(filterJobsSpy).toHaveBeenCalled();
         expect(filterJobsSpy).toHaveBeenCalledWith(node1);
@@ -1937,10 +2137,10 @@ describe("ZosJobsProvider Unit Test - Filter Jobs", () => {
 describe("openWithEncoding", () => {
     beforeEach(async () => {
         await createGlobalMocks();
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
     afterEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
     it("should open a Job Spool file with an encoding (binary, prompted)", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1955,10 +2155,10 @@ describe("openWithEncoding", () => {
 
         const encoding: ZosEncoding = { kind: "binary" };
 
-        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(encoding);
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
-        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
+        const promptMock = vi.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(encoding);
+        const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
+        const fetchSpoolAtUriMock = vi.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation((() => undefined) as any);
+        const setEncodingSpy = vi.spyOn(spoolNode, "setEncoding").mockImplementation((() => undefined) as any);
 
         await testTree.openWithEncoding(spoolNode);
         expect(promptMock).toHaveBeenCalledWith(spoolNode);
@@ -1981,10 +2181,10 @@ describe("openWithEncoding", () => {
 
         const encoding: ZosEncoding = { kind: "binary" };
 
-        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding");
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
-        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
+        const promptMock = vi.spyOn(SharedUtils, "promptForEncoding");
+        const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
+        const setEncodingSpy = vi.spyOn(spoolNode, "setEncoding").mockImplementation((() => undefined) as any);
+        const fetchSpoolAtUriMock = vi.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation((() => undefined) as any);
 
         await testTree.openWithEncoding(spoolNode, encoding);
         expect(promptMock).toHaveBeenCalledTimes(0);
@@ -2006,10 +2206,10 @@ describe("openWithEncoding", () => {
 
         const encoding: ZosEncoding = { kind: "text" };
 
-        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(encoding);
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
-        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
+        const promptMock = vi.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(encoding);
+        const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
+        const fetchSpoolAtUriMock = vi.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation((() => undefined) as any);
+        const setEncodingSpy = vi.spyOn(spoolNode, "setEncoding").mockImplementation((() => undefined) as any);
 
         await testTree.openWithEncoding(spoolNode);
         expect(promptMock).toHaveBeenCalledWith(spoolNode);
@@ -2032,10 +2232,10 @@ describe("openWithEncoding", () => {
 
         const encoding: ZosEncoding = { kind: "text" };
 
-        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding");
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
-        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
+        const promptMock = vi.spyOn(SharedUtils, "promptForEncoding");
+        const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
+        const setEncodingSpy = vi.spyOn(spoolNode, "setEncoding").mockImplementation((() => undefined) as any);
+        const fetchSpoolAtUriMock = vi.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation((() => undefined) as any);
 
         await testTree.openWithEncoding(spoolNode, encoding);
         expect(promptMock).toHaveBeenCalledTimes(0);
@@ -2057,10 +2257,10 @@ describe("openWithEncoding", () => {
 
         const encoding: ZosEncoding = { kind: "other", codepage: "IBM-1147" };
 
-        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(encoding);
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
-        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
+        const promptMock = vi.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(encoding);
+        const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
+        const fetchSpoolAtUriMock = vi.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation((() => undefined) as any);
+        const setEncodingSpy = vi.spyOn(spoolNode, "setEncoding").mockImplementation((() => undefined) as any);
 
         await testTree.openWithEncoding(spoolNode);
         expect(promptMock).toHaveBeenCalledWith(spoolNode);
@@ -2083,10 +2283,10 @@ describe("openWithEncoding", () => {
 
         const encoding: ZosEncoding = { kind: "other", codepage: "IBM-1147" };
 
-        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding");
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
-        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
+        const promptMock = vi.spyOn(SharedUtils, "promptForEncoding");
+        const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
+        const setEncodingSpy = vi.spyOn(spoolNode, "setEncoding").mockImplementation((() => undefined) as any);
+        const fetchSpoolAtUriMock = vi.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation((() => undefined) as any);
 
         await testTree.openWithEncoding(spoolNode, encoding);
         expect(promptMock).toHaveBeenCalledTimes(0);
@@ -2106,10 +2306,10 @@ describe("openWithEncoding", () => {
             profile: globalMocks.testProfile,
         });
 
-        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(undefined);
-        const executeCommandMock = jest.spyOn(vscode.commands, "executeCommand").mockImplementation();
-        const fetchSpoolAtUriMock = jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation();
-        const setEncodingSpy = jest.spyOn(spoolNode, "setEncoding").mockImplementation();
+        const promptMock = vi.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(undefined);
+        const executeCommandMock = vi.spyOn(vscode.commands, "executeCommand").mockImplementation((() => undefined) as any);
+        const fetchSpoolAtUriMock = vi.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementation((() => undefined) as any);
+        const setEncodingSpy = vi.spyOn(spoolNode, "setEncoding").mockImplementation((() => undefined) as any);
 
         await testTree.openWithEncoding(spoolNode);
         expect(promptMock).toHaveBeenCalledWith(spoolNode);
@@ -2129,8 +2329,8 @@ describe("openWithEncoding", () => {
             profile: globalMocks.testProfile,
         });
         const encoding: ZosEncoding = { kind: "other", codepage: "IBM-1147" };
-        const promptMock = jest.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(encoding);
-        jest.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementationOnce(() => {
+        const promptMock = vi.spyOn(SharedUtils, "promptForEncoding").mockResolvedValue(encoding);
+        vi.spyOn(JobFSProvider.instance, "fetchSpoolAtUri").mockImplementationOnce(() => {
             throw new Error("testError");
         });
         await testTree.openWithEncoding(spoolNode);

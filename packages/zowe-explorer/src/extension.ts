@@ -23,6 +23,8 @@ import { SharedInit } from "./trees/shared/SharedInit";
 import { SharedTreeProviders } from "./trees/shared/SharedTreeProviders";
 import { USSInit } from "./trees/uss/USSInit";
 import { ProfilesUtils } from "./utils/ProfilesUtils";
+import { TableViewUtils } from "./utils/TableViewUtils";
+import { FeatureFlags } from "@zowe/zowe-explorer-api";
 
 /**
  * The function that runs when the extension is loaded
@@ -35,6 +37,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
     ZoweLocalStorage.initializeZoweLocalStorage(context.globalState, context.workspaceState);
     await SharedInit.initZoweLogger(context);
 
+    await FeatureFlags.init();
+
     await ProfilesUtils.initializeZoweProfiles((msg) => ZoweExplorerExtender.showZoweConfigError(msg));
     await ProfilesUtils.handleV1MigrationStatus();
     await Profiles.createInstance(ZoweLogger.imperativeLogger);
@@ -45,13 +49,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<ZoweEx
         job: () => JobInit.initJobsProvider(context),
     });
     SharedInit.registerCommonCommands(context, providers);
+    // eslint-disable-next-line deprecation/deprecation
     SharedInit.registerZosConsoleView(context);
     ZoweExplorerExtender.createInstance(providers.ds, providers.uss, providers.job);
+
+    // Initialize table view context management
+    await TableViewUtils.initialize(context);
 
     SharedInit.watchConfigProfile(context);
     await SharedInit.watchForZoweButtonClick();
 
     SharedInit.onDidActivateExtensionEmitter.fire();
+
     return ZoweExplorerApiRegister.getInstance();
 }
 /**

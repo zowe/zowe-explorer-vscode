@@ -14,6 +14,7 @@ import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import * as path from "path";
 import {
     Gui,
+    handleError,
     imperative,
     IZoweDatasetTreeNode,
     Validation,
@@ -25,7 +26,9 @@ import {
     type AttributeInfo,
     DataSetAttributesProvider,
     ZosEncoding,
+    MessageSeverity,
     Poller,
+    DsType,
 } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
@@ -46,6 +49,8 @@ import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
 import { DatasetTree } from "./DatasetTree";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
+import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
+import { DATASET_ATTR_DEFS, MEMBER_ATTR_DEFS } from "./DatasetAttributes";
 
 type ClipboardItem = {
     profileName: string;
@@ -74,7 +79,13 @@ export class DatasetActions {
     private static async handleUserSelection(): Promise<string> {
         // Create the array of items in the quickpick list
         const qpItems = [];
-        qpItems.push(new FilterItem({ text: `\u002B ${DatasetActions.localizedStrings.allocString}`, show: true }));
+        qpItems.push(
+            new FilterItem({
+                text: `\u002B ${DatasetActions.localizedStrings.allocString}`,
+                description: vscode.l10n.t("Create the data set using the current attributes"),
+                show: true,
+            })
+        );
         DatasetActions.newDSProperties?.forEach((prop) => {
             const propLabel = `\u270F ${prop.label as string}`;
             qpItems.push(new FilterItem({ text: propLabel, description: prop.value, show: true }));
@@ -82,10 +93,11 @@ export class DatasetActions {
 
         // Provide the settings for the quickpick's appearance & behavior
         const quickpick = Gui.createQuickPick();
-        quickpick.placeholder = vscode.l10n.t("Click on parameters to change them");
+        quickpick.title = vscode.l10n.t("Create Data Set: Edit Attributes");
+        quickpick.placeholder = vscode.l10n.t("Select an attribute to edit, or select Allocate Data Set to create the data set");
         quickpick.ignoreFocusOut = true;
         quickpick.items = [...qpItems];
-        quickpick.matchOnDescription = false;
+        quickpick.matchOnDescription = true;
         quickpick.onDidHide(() => {
             if (quickpick.selectedItems.length === 0) {
                 ZoweLogger.debug(DatasetActions.localizedStrings.opCancelled);
@@ -104,6 +116,12 @@ export class DatasetActions {
         const showPatternOptions = async (): Promise<void> => {
             const property = DatasetActions.newDSProperties?.find((prop) => pattern.includes(prop.label));
             const options: vscode.InputBoxOptions = {
+                title: vscode.l10n.t("Create Data Set: Update Attribute Value"),
+                prompt: vscode.l10n.t({
+                    message: "Enter a value for {0}, then press Enter to continue",
+                    args: [property?.label],
+                    comment: ["Attribute label"],
+                }),
                 value: property?.value,
                 placeHolder: property?.placeHolder,
             };
@@ -127,6 +145,8 @@ export class DatasetActions {
 
     private static async getDataSetName(): Promise<string> {
         const options: vscode.InputBoxOptions = {
+            title: vscode.l10n.t("Create Data Set: Name"),
+            prompt: vscode.l10n.t("Enter a data set name, then press Enter to continue"),
             placeHolder: vscode.l10n.t("Name of Data Set"),
             ignoreFocusOut: true,
             validateInput: (text) => {
@@ -143,6 +163,7 @@ export class DatasetActions {
 
     private static async getDsTypeForCreation(datasetProvider: Types.IZoweDatasetTreeType): Promise<string> {
         const stepTwoOptions: vscode.QuickPickOptions = {
+            title: vscode.l10n.t("Create Data Set: Type"),
             placeHolder: vscode.l10n.t("Template of Data Set to be Created"),
             ignoreFocusOut: true,
             canPickMany: false,
@@ -244,6 +265,8 @@ export class DatasetActions {
 
     private static async allocateOrEditAttributes(): Promise<string> {
         const stepThreeOptions: vscode.QuickPickOptions = {
+            title: vscode.l10n.t("Create Data Set: Review Attributes"),
+            placeHolder: vscode.l10n.t("Select Allocate Data Set to create now, or Edit Attributes to review values"),
             ignoreFocusOut: true,
             canPickMany: false,
         };
@@ -256,7 +279,7 @@ export class DatasetActions {
     private static async allocateNewDataSet(
         node: IZoweDatasetTreeNode,
         dsName: string,
-        dsPropsForAPI: {},
+        dsPropsForAPI: Partial<zosfiles.ICreateDataSetOptions>,
         datasetProvider: Types.IZoweDatasetTreeType
     ): Promise<void> {
         const profile = node.getProfile();
@@ -275,11 +298,16 @@ export class DatasetActions {
         } catch (err) {
             const errorMsg = vscode.l10n.t("Error encountered when creating data set.");
             ZoweLogger.error(errorMsg + JSON.stringify(err));
-            if (err instanceof Error) {
-                await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile(), scenario: errorMsg });
-            }
+            await handleError(err, async (error) => {
+                await AuthUtils.errorHandling(error, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile(), scenario: errorMsg });
+            });
             throw new Error(err);
         }
+
+        DatasetFSProvider.instance.fireSoon({
+            type: vscode.FileChangeType.Created,
+            uri: node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, dsName), query: "" }),
+        });
     }
 
     private static async focusOnNewDs(
@@ -419,14 +447,14 @@ export class DatasetActions {
             try {
                 await ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName);
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
                         profile,
                         dsName: newDSName,
                         scenario: vscode.l10n.t("Unable to create data set."),
                     });
-                }
+                });
                 throw err;
             }
         }
@@ -440,9 +468,9 @@ export class DatasetActions {
 
         const theFilter = datasetProvider.createFilterString(newDSName, currSession);
         currSession.pattern = theFilter.toUpperCase();
-        datasetProvider.refresh();
+        currSession.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         currSession.dirty = true;
-        datasetProvider.refreshElement(currSession);
+        datasetProvider.refresh();
         const newNode = (await currSession.getChildren()).find((child) => child.label.toString() === newDSName.toUpperCase());
         await datasetProvider.getTreeView().reveal(currSession, { select: true, focus: true });
         datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
@@ -625,6 +653,573 @@ export class DatasetActions {
         }
     }
 
+    private static async getDataSetDownloadOptions(node: IZoweDatasetTreeNode): Promise<Definitions.DataSetDownloadOptions> {
+        const dataSetDownloadOptions: Definitions.DataSetDownloadOptions =
+            ZoweLocalStorage.getValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS) ?? {};
+
+        dataSetDownloadOptions.overwrite ??= true;
+        dataSetDownloadOptions.generateDirectory ??= true;
+        dataSetDownloadOptions.uppercaseNames ??= true;
+        dataSetDownloadOptions.chooseEncoding ??= false;
+        dataSetDownloadOptions.overrideExtension ??= false;
+        dataSetDownloadOptions.selectedPath ??= LocalFileManagement.getDefaultUri();
+
+        const profile = node.getProfile();
+        const getEncodingDescription = (): string => {
+            if (dataSetDownloadOptions.encoding) {
+                if (dataSetDownloadOptions.encoding.kind === "binary") {
+                    return vscode.l10n.t("Choose encoding for download (current: Binary)");
+                } else if (dataSetDownloadOptions.encoding.kind === "text") {
+                    return vscode.l10n.t("Choose encoding for download (current: EBCDIC)");
+                } else if (dataSetDownloadOptions.encoding.kind === "other") {
+                    return vscode.l10n.t("Choose encoding for download (current: {0})", dataSetDownloadOptions.encoding.codepage);
+                }
+            }
+            if (profile.profile?.encoding) {
+                return vscode.l10n.t("Choose encoding for download (current: {0})", profile.profile.encoding);
+            }
+            return vscode.l10n.t("Choose encoding for download (current: EBCDIC)");
+        };
+
+        const getExtensionDescription = (): string => {
+            if (dataSetDownloadOptions.fileExtension) {
+                return vscode.l10n.t("Override file extension (current: {0})", dataSetDownloadOptions.fileExtension);
+            }
+            return vscode.l10n.t("Override file extension");
+        };
+
+        const optionItems: vscode.QuickPickItem[] = [
+            {
+                label: vscode.l10n.t("Overwrite"),
+                description: vscode.l10n.t("Overwrite existing files"),
+                picked: dataSetDownloadOptions.overwrite,
+            },
+            {
+                label: vscode.l10n.t("Generate Directory Structure"),
+                description: vscode.l10n.t("Generates sub-folders based on the data set name"),
+                picked: dataSetDownloadOptions.generateDirectory,
+            },
+            {
+                label: vscode.l10n.t("Use Uppercase Names"),
+                description: vscode.l10n.t("Downloads files and directories using uppercase names. When disabled, names are converted to lowercase"),
+                picked: dataSetDownloadOptions.uppercaseNames,
+            },
+            {
+                label: vscode.l10n.t("Override File Extension"),
+                description: getExtensionDescription(),
+                picked: dataSetDownloadOptions.overrideExtension,
+            },
+            {
+                label: vscode.l10n.t("Choose Encoding"),
+                description: getEncodingDescription(),
+                picked: dataSetDownloadOptions.chooseEncoding,
+            },
+        ];
+
+        const selectedOptions = await SharedUtils.showMultiSelectQuickPick(optionItems, {
+            title: vscode.l10n.t("Download Options"),
+            placeholder: vscode.l10n.t("Select download options"),
+        });
+
+        // Do this instead of checking for length because unchecking all options is a valid choice
+        if (selectedOptions === null) {
+            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+            return;
+        }
+
+        const getOption = (label: string): boolean => selectedOptions.some((opt) => opt.label === vscode.l10n.t(label));
+        dataSetDownloadOptions.overwrite = getOption("Overwrite");
+        dataSetDownloadOptions.generateDirectory = getOption("Generate Directory Structure");
+        dataSetDownloadOptions.uppercaseNames = getOption("Use Uppercase Names");
+        dataSetDownloadOptions.chooseEncoding = getOption("Choose Encoding");
+        dataSetDownloadOptions.overrideExtension = getOption("Override File Extension");
+
+        if (dataSetDownloadOptions.chooseEncoding) {
+            const encoding = await SharedUtils.promptForDownloadEncoding(profile, node.label as string);
+            if (encoding === undefined) {
+                Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+                return;
+            }
+            dataSetDownloadOptions.encoding = encoding;
+        } else {
+            dataSetDownloadOptions.encoding = undefined;
+        }
+
+        if (dataSetDownloadOptions.overrideExtension) {
+            const extensionInput = await Gui.showInputBox({
+                placeHolder: vscode.l10n.t("Enter file extension (e.g. csv)"),
+                value: dataSetDownloadOptions.fileExtension || "",
+                ignoreFocusOut: true,
+                validateInput: (text: string) => {
+                    if (!text || text.trim().length === 0) {
+                        return vscode.l10n.t("File extension cannot be empty");
+                    }
+                    const ext = text.trim().startsWith(".") ? text.trim().slice(1) : text.trim();
+                    if (!/^[a-zA-Z0-9_-]+$/.test(ext)) {
+                        return vscode.l10n.t("File extension can only contain letters, numbers, hyphens, and underscores");
+                    }
+                    return null;
+                },
+            });
+            if (extensionInput === undefined) {
+                Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+                return;
+            }
+            const normalizedExtension = extensionInput.trim().startsWith(".") ? extensionInput.trim().slice(1) : extensionInput.trim();
+            dataSetDownloadOptions.fileExtension = normalizedExtension;
+        }
+
+        const dialogOptions: vscode.OpenDialogOptions = {
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            openLabel: vscode.l10n.t("Select Download Location"),
+            defaultUri: dataSetDownloadOptions.selectedPath,
+        };
+
+        const downloadPath = await Gui.showOpenDialog(dialogOptions);
+        if (!downloadPath || downloadPath.length === 0) {
+            Gui.showMessage(DatasetActions.localizedStrings.opCancelled);
+            return;
+        }
+
+        const selectedPath = downloadPath[0].fsPath;
+        dataSetDownloadOptions.selectedPath = vscode.Uri.file(selectedPath);
+        await ZoweLocalStorage.setValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS, dataSetDownloadOptions);
+
+        return dataSetDownloadOptions;
+    }
+
+    private static generateDirectoryPath(datasetName: string, selectedPath: vscode.Uri, generateDirectory: boolean, uppercaseNames: boolean): string {
+        if (!generateDirectory) {
+            return selectedPath.fsPath;
+        }
+
+        const dirsFromDataset = zosfiles.ZosFilesUtils.getDirsFromDataSet(datasetName);
+        if (!dirsFromDataset) {
+            const fallbackDirs = datasetName.replace(/\./g, path.sep);
+            return uppercaseNames
+                ? path.join(selectedPath.fsPath, fallbackDirs.toUpperCase())
+                : path.join(selectedPath.fsPath, fallbackDirs.toLowerCase());
+        }
+        return uppercaseNames ? path.join(selectedPath.fsPath, dirsFromDataset.toUpperCase()) : path.join(selectedPath.fsPath, dirsFromDataset);
+    }
+
+    private static async executeDownloadWithProgress(
+        title: string,
+        downloadFn: (
+            progress?: vscode.Progress<{ message?: string; increment?: number }>,
+            token?: vscode.CancellationToken
+        ) => Promise<{ response?: any; downloadedPath?: string }>,
+        downloadType: string,
+        node: IZoweDatasetTreeNode,
+        cancellable: boolean = false
+    ): Promise<void> {
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title,
+                cancellable,
+            },
+            async (progress, token) => {
+                try {
+                    const { response, downloadedPath } = await downloadFn(progress, token);
+                    void SharedUtils.handleDownloadResponse(response, downloadType, downloadedPath, token?.isCancellationRequested);
+                } catch (e) {
+                    await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+                }
+            }
+        );
+    }
+
+    private static resolveMemberExtension(datasetName: string, overrideExtension?: string): string {
+        const resolvedExtension = overrideExtension ?? DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+        return resolvedExtension.startsWith(".") ? resolvedExtension.slice(1) : resolvedExtension;
+    }
+
+    private static buildMemberExtensionMap(membersToDownload: string[], uppercaseNames: boolean, extension: string): { [key: string]: string } {
+        const extensionMap: { [key: string]: string } = {};
+        for (let memberName of membersToDownload) {
+            if (!uppercaseNames) {
+                memberName = memberName.toLowerCase();
+            }
+            extensionMap[memberName] = extension;
+        }
+        return extensionMap;
+    }
+
+    /**
+     * Downloads all the members of a PDS
+     */
+    public static async downloadAllMembers(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("dataset.actions.downloadDataset called.");
+
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        const mvsApi = ZoweExplorerApiRegister.getMvsApi(profile);
+        if (!mvsApi.downloadAllMembers) {
+            Gui.errorMessage(
+                vscode.l10n.t("The downloadAllMembers API is not supported for this profile type. Please contact the extension developer.")
+            );
+            return;
+        }
+
+        const datasetName = node.label?.toString();
+
+        const allMembersRes = await mvsApi.allMembers(datasetName);
+        if (!allMembersRes?.success) {
+            await AuthUtils.errorHandling(allMembersRes?.commandResponse, {
+                apiType: ZoweExplorerApiType.Mvs,
+                profile,
+                dsName: datasetName,
+                scenario: vscode.l10n.t("Unable to retrieve members of data set."),
+            });
+            return;
+        }
+
+        const children = allMembersRes.apiResponse?.items ?? [];
+        if (children.length === 0) {
+            Gui.showMessage(vscode.l10n.t("The selected data set has no members to download."));
+            return;
+        }
+
+        if (children.length > Constants.MIN_WARN_DOWNLOAD_FILES) {
+            const proceed = await Gui.showMessage(
+                vscode.l10n.t(
+                    "This data set has {0} members. Downloading a large number of files can take a long time. Do you want to continue?",
+                    children.length
+                ),
+                { severity: MessageSeverity.WARN, items: [vscode.l10n.t("Yes"), vscode.l10n.t("No")], vsCodeOpts: { modal: true } }
+            );
+            if (proceed !== vscode.l10n.t("Yes")) {
+                return;
+            }
+        }
+
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions(node);
+        if (!dataSetDownloadOptions) {
+            return;
+        }
+        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath, overrideExtension, fileExtension } = dataSetDownloadOptions;
+
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading all members"),
+            async (progress, token) => {
+                let realPercentComplete = 0;
+                const realTotalEntries = children.length;
+                let numDownloaded = 0;
+                const task: imperative.ITaskWithStatus = {
+                    set percentComplete(value: number) {
+                        realPercentComplete = value;
+                        Gui.reportProgress(progress, realTotalEntries, numDownloaded++, "");
+                    },
+                    get percentComplete(): number {
+                        return realPercentComplete;
+                    },
+                    statusMessage: "",
+                    stageName: 0, // TaskStage.IN_PROGRESS
+                };
+
+                const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
+
+                const membersToDownload = children.map((child) => String(child.member ?? ""));
+                const extension = DatasetActions.resolveMemberExtension(datasetName, overrideExtension ? fileExtension : undefined);
+                const extensionMap = DatasetActions.buildMemberExtensionMap(membersToDownload, uppercaseNames, extension);
+
+                const generatedFileDirectory = DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames);
+
+                const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
+                const downloadOptions: zosfiles.IDownloadOptions = {
+                    directory: generatedFileDirectory,
+                    maxConcurrentRequests,
+                    preserveOriginalLetterCase: uppercaseNames,
+                    extensionMap,
+                    binary: encoding?.kind === "binary",
+                    record: isRecordEncoding,
+                    encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
+                    overwrite,
+                    task,
+                    responseTimeout: profile.profile?.responseTimeout,
+                    abortDownload: () => token?.isCancellationRequested ?? false,
+                };
+
+                const response = await mvsApi.downloadAllMembers(datasetName, downloadOptions);
+                return { response, downloadedPath: generatedFileDirectory };
+            },
+            vscode.l10n.t("Data set members"),
+            node,
+            true
+        );
+    }
+
+    private static async downloadSingleMember(
+        selectedNode: IZoweDatasetTreeNode,
+        dataSetDownloadOptions: Definitions.DataSetDownloadOptions,
+        extension: string
+    ): Promise<{ response?: any; downloadedPath?: string }> {
+        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath } = dataSetDownloadOptions;
+
+        const profile = selectedNode.getProfile();
+        const parent = selectedNode.getParent() as IZoweDatasetTreeNode;
+        const datasetName = parent.getLabel() as string;
+        const memberName = selectedNode.getLabel() as string;
+        const sanitizedMemberName = SharedUtils.stripBacktrackPathSegments(memberName);
+        const fullDatasetName = `${datasetName}(${memberName})`;
+        const fileName = uppercaseNames ? sanitizedMemberName : sanitizedMemberName.toLowerCase();
+
+        const targetDirectory = generateDirectory
+            ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
+            : selectedPath.fsPath;
+        const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
+
+        const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
+        const downloadOptions = {
+            file: filePath,
+            binary: encoding?.kind === "binary",
+            record: isRecordEncoding,
+            encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
+            overwrite,
+            responseTimeout: profile?.profile?.responseTimeout,
+        };
+
+        const response = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(fullDatasetName, downloadOptions);
+        return { response, downloadedPath: filePath };
+    }
+
+    /**
+     * Downloads a single member
+     */
+    public static async downloadMember(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("dataset.actions.downloadMember called.");
+
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions(node);
+        if (!dataSetDownloadOptions) {
+            return;
+        }
+
+        const parent = node.getParent() as IZoweDatasetTreeNode;
+        const datasetName = parent.getLabel() as string;
+        const extension = DatasetActions.resolveMemberExtension(
+            datasetName,
+            dataSetDownloadOptions.overrideExtension ? dataSetDownloadOptions.fileExtension : undefined
+        );
+
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading member"),
+            async () => DatasetActions.downloadSingleMember(node, dataSetDownloadOptions, extension),
+            vscode.l10n.t("Data set member"),
+            node
+        );
+    }
+
+    /**
+     * Downloads member with multiselect mmode
+     */
+    public static async downloadMembers(node: IZoweDatasetTreeNode, nodeList?: IZoweDatasetTreeNode[]): Promise<void> {
+        ZoweLogger.trace("dataset.actions.downloadMembers called.");
+
+        const selectedNodes = SharedUtils.getSelectedNodeList(node, nodeList)
+            .filter((selectedNode) => SharedContext.isDsMember(selectedNode))
+            .map((selectedNode) => selectedNode as IZoweDatasetTreeNode);
+        if (selectedNodes.length === 0) {
+            return;
+        }
+
+        if (selectedNodes.length === 1) {
+            await DatasetActions.downloadMember(selectedNodes[0]);
+            return;
+        }
+
+        const validSelectedNodes: IZoweDatasetTreeNode[] = [];
+        const invalidProfileResponses: string[] = [];
+        for (const selectedNode of selectedNodes) {
+            const profile = selectedNode.getProfile();
+            await Profiles.getInstance().checkCurrentProfile(profile);
+            if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+                const nodeLabel = String(selectedNode.getLabel() ?? "");
+                const profileName = String(profile?.name ?? "");
+                const profileSuffix = profileName ? ` (${profileName})` : "";
+                invalidProfileResponses.push(`Failed to download ${nodeLabel}${profileSuffix}: ${DatasetActions.localizedStrings.profileInvalid}`);
+                continue;
+            }
+
+            validSelectedNodes.push(selectedNode);
+        }
+
+        if (validSelectedNodes.length === 0) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions(validSelectedNodes[0]);
+        if (!dataSetDownloadOptions) {
+            return;
+        }
+
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading members"),
+            async (progress, token) => {
+                const commandResponses: string[] = [...invalidProfileResponses];
+                let hasErrors = invalidProfileResponses.length > 0;
+                let downloadedCount = 0;
+                let processedCount = 0;
+                const totalCount = selectedNodes.length;
+
+                invalidProfileResponses.forEach((_) => {
+                    if (progress) {
+                        Gui.reportProgress(progress, totalCount, processedCount++, "");
+                    }
+                });
+
+                for (const selectedNode of validSelectedNodes) {
+                    if (token?.isCancellationRequested) {
+                        break;
+                    }
+
+                    const profile = selectedNode.getProfile();
+
+                    try {
+                        const parent = selectedNode.getParent() as IZoweDatasetTreeNode;
+                        const datasetName = parent.getLabel() as string;
+                        const extension = DatasetActions.resolveMemberExtension(
+                            datasetName,
+                            dataSetDownloadOptions.overrideExtension ? dataSetDownloadOptions.fileExtension : undefined
+                        );
+                        const { response } = await DatasetActions.downloadSingleMember(selectedNode, dataSetDownloadOptions, extension);
+                        downloadedCount++;
+
+                        if (response?.success === false) {
+                            hasErrors = true;
+                        }
+
+                        if (response?.commandResponse) {
+                            commandResponses.push(response.commandResponse.toString());
+                        }
+                    } catch (e) {
+                        hasErrors = true;
+                        const nodeLabel = String(selectedNode.getLabel() ?? "");
+                        const profileName = String(profile?.name ?? "");
+                        const profileSuffix = profileName ? ` (${profileName})` : "";
+                        const message = e instanceof Error ? e.message : String(e);
+                        commandResponses.push(`Failed to download ${nodeLabel}${profileSuffix}: ${message}`);
+                        ZoweLogger.error(`Error downloading member ${nodeLabel}${profileSuffix}: ${message}`);
+                        await AuthUtils.errorHandling(e as Error, {
+                            apiType: ZoweExplorerApiType.Mvs,
+                            profile,
+                            scenario: vscode.l10n.t("Unable to download data set member."),
+                        });
+                        break;
+                    }
+
+                    if (progress) {
+                        Gui.reportProgress(progress, totalCount, processedCount++, "");
+                    }
+                }
+
+                const response = {
+                    success: !hasErrors,
+                    commandResponse: commandResponses.join("\n"),
+                    apiResponse: {
+                        downloadResult: {
+                            downloaded: downloadedCount,
+                            total: totalCount,
+                        },
+                    },
+                };
+
+                return { response, downloadedPath: dataSetDownloadOptions.selectedPath.fsPath };
+            },
+            vscode.l10n.t("Data set members"),
+            validSelectedNodes[0],
+            true
+        );
+    }
+
+    /**
+     * Downloads a sequential data set
+     */
+    public static async downloadDataSet(node: IZoweDatasetTreeNode): Promise<void> {
+        ZoweLogger.trace("dataset.actions.downloadDataSet called.");
+
+        const profile = node.getProfile();
+        await Profiles.getInstance().checkCurrentProfile(profile);
+        if (Profiles.getInstance().validProfile === Validation.ValidationType.INVALID) {
+            Gui.errorMessage(DatasetActions.localizedStrings.profileInvalid);
+            return;
+        }
+
+        if (SharedContext.isPds(node) || SharedContext.isVsam(node)) {
+            Gui.showMessage(vscode.l10n.t("Cannot download this type of data set."));
+            return;
+        }
+
+        const dataSetDownloadOptions = await DatasetActions.getDataSetDownloadOptions(node);
+        if (!dataSetDownloadOptions) {
+            return;
+        }
+        const { overwrite, generateDirectory, uppercaseNames, encoding, selectedPath, overrideExtension, fileExtension } = dataSetDownloadOptions;
+
+        await DatasetActions.executeDownloadWithProgress(
+            vscode.l10n.t("Downloading data set"),
+            async () => {
+                const datasetName = SharedUtils.stripBacktrackPathSegments(node.getLabel() as string);
+
+                let fileName: string;
+                let targetDirectory: string;
+                if (generateDirectory) {
+                    const pathParts = datasetName.split(".");
+                    const lastSegment = pathParts[pathParts.length - 1];
+                    fileName = uppercaseNames ? lastSegment : lastSegment.toLowerCase();
+                    if (pathParts.length > 1) {
+                        const directoryDatasetName = pathParts.slice(0, -1).join(".");
+                        targetDirectory = DatasetActions.generateDirectoryPath(directoryDatasetName, selectedPath, true, uppercaseNames);
+                    } else {
+                        targetDirectory = selectedPath.fsPath;
+                    }
+                } else {
+                    fileName = uppercaseNames ? datasetName : datasetName.toLowerCase();
+                    targetDirectory = selectedPath.fsPath;
+                }
+
+                let extension: string;
+                if (overrideExtension && fileExtension) {
+                    extension = fileExtension;
+                } else {
+                    extension = DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+                }
+
+                const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
+
+                const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
+                const downloadOptions = {
+                    file: filePath,
+                    binary: encoding?.kind === "binary",
+                    record: isRecordEncoding,
+                    encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
+                    overwrite,
+                    responseTimeout: profile?.profile?.responseTimeout,
+                };
+
+                const response = await ZoweExplorerApiRegister.getMvsApi(profile).getContents(datasetName, downloadOptions);
+                return { response, downloadedPath: filePath };
+            },
+            vscode.l10n.t("Data set"),
+            node
+        );
+    }
+
     /**
      * Deletes nodes from the data set tree & delegates deletion of data sets, members, and profiles
      *
@@ -670,11 +1265,16 @@ export class DatasetActions {
             return;
         }
 
+        if (nodes.filter((n) => n.isAlias).length > 0) {
+            Gui.showMessage(vscode.l10n.t("Deleting aliases is not supported. Deselect any alias data sets."));
+            return;
+        }
+
         // The names of the nodes that should be deleted
-        const deleteItemName = (node: IZoweDatasetTreeNode) =>
-            SharedContext.isDsMember(node)
-                ? ` ${node.getParent().getLabel().toString()}(${node.getLabel().toString()})`
-                : ` ${node.getLabel().toString()}`;
+        const deleteItemName = (aNode: IZoweDatasetTreeNode): string =>
+            SharedContext.isDsMember(aNode)
+                ? ` ${aNode.getParent().getLabel().toString()}(${aNode.getLabel().toString()})`
+                : ` ${aNode.getLabel().toString()}`;
         const namesToDelete: string[] = nodes.map(deleteItemName).sort((a, b) => a.localeCompare(b));
 
         // The member parent nodes that should be refreshed individually
@@ -761,9 +1361,25 @@ export class DatasetActions {
         // refresh Tree View & favorites
         datasetProvider.refresh();
         for (const member of memberParents) {
-            datasetProvider.refreshElement(member);
+            const equivalentParent = datasetProvider.findEquivalentNode(member, SharedContext.isFavorite(member)) as IZoweDatasetTreeNode;
+            const nodeToRefresh = equivalentParent ?? (SharedContext.isFavorite(member) ? undefined : member);
+
+            // When deleting the last member of a favorited PDS, the favorite parent can be removed.
+            // Refresh the surviving equivalent node when available to avoid stale tree-item references.
+            if (nodeToRefresh != null) {
+                datasetProvider.refreshElement(nodeToRefresh);
+            }
         }
-        await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, nodes[0].getParent());
+
+        let nodeForMultiSelect = nodes[0].getParent() as IZoweDatasetTreeNode;
+        if (nodeForMultiSelect != null && SharedContext.isFavorite(nodeForMultiSelect)) {
+            const equivalentNode = datasetProvider.findEquivalentNode(nodeForMultiSelect, true) as IZoweDatasetTreeNode;
+            nodeForMultiSelect =
+                equivalentNode ??
+                (datasetProvider.mSessionNodes.find((ses) => ses.label?.toString() === nodes[0].getProfileName()) as IZoweDatasetTreeNode) ??
+                nodeForMultiSelect;
+        }
+        await TreeViewUtils.fixVsCodeMultiSelect(datasetProvider, nodeForMultiSelect);
     }
 
     /**
@@ -793,22 +1409,32 @@ export class DatasetActions {
             const label = parent.label as string;
             const profile = parent.getProfile();
             let replace: Definitions.ShouldReplace;
+            const extension = DatasetUtils.getExtension(label);
+            const memberUri = parent.resourceUri.with({
+                path: path.posix.join(parent.resourceUri.path, `${name}${extension ?? ""}`),
+            });
+
             try {
-                replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem");
+                replace = await DatasetActions.determineReplacement(profile, `${label}(${name})`, "mem", memberUri);
                 if (replace !== "cancel") {
                     await ZoweExplorerApiRegister.getMvsApi(profile).createDataSetMember(label + "(" + name + ")", {
                         responseTimeout: profile.profile?.responseTimeout,
                     });
                 }
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
                         parentDsName: label,
                         scenario: vscode.l10n.t("Unable to create member."),
                     });
-                }
+                });
                 throw err;
+            }
+
+            if (!DatasetFSProvider.instance.exists(memberUri) || replace === "replace") {
+                const writeUri = replace === "replace" ? memberUri.with({ query: "forceUpload=true" }) : memberUri.with({ query: "skipUpload=true" });
+                await vscode.workspace.fs.writeFile(writeUri, new Uint8Array());
             }
 
             parent.dirty = true;
@@ -824,10 +1450,6 @@ export class DatasetActions {
             }
 
             if (newNode != null) {
-                if (replace === "notFound") {
-                    await vscode.workspace.fs.writeFile(newNode.resourceUri, new Uint8Array());
-                }
-
                 await vscode.commands.executeCommand("vscode.open", newNode.resourceUri);
             }
             datasetProvider.refresh();
@@ -922,7 +1544,7 @@ export class DatasetActions {
         }
         const isMatch = DatasetActions.compareDsProperties(type, datasetProvider);
         // Format properties for use by API
-        const dsPropsForAPI = {};
+        const dsPropsForAPI: Partial<zosfiles.ICreateDataSetOptions> = {};
         DatasetActions.newDSProperties?.forEach((property) => {
             if (property.value) {
                 if (property.key === `dsName`) {
@@ -990,7 +1612,7 @@ export class DatasetActions {
                         responseTimeout: nodeProfile?.profile?.responseTimeout,
                     });
                 } else {
-                    attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).dataSet(label, {
+                    attributes = await ZoweExplorerApiRegister.getMvsApi(nodeProfile).dataSet(node.aliasTargetDsn ?? label, {
                         attributes: true,
                         responseTimeout: nodeProfile?.profile?.responseTimeout,
                     });
@@ -998,7 +1620,7 @@ export class DatasetActions {
                 attributes = attributes.apiResponse.items;
                 if (SharedContext.isDs(node)) {
                     attributes = attributes.filter((dataSet) => {
-                        return dataSet.dsname.toUpperCase() === label.toUpperCase();
+                        return dataSet.dsname.toUpperCase() === (node.aliasTargetDsn ?? label).toUpperCase();
                     });
                 }
                 if (attributes.length === 0) {
@@ -1011,62 +1633,26 @@ export class DatasetActions {
                     );
                 }
             } catch (err) {
-                if (err instanceof Error) {
-                    await AuthUtils.errorHandling(err, {
+                await handleError(err, async (error) => {
+                    await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
                         profile: node.getProfile(),
                         scenario: vscode.l10n.t("Unable to list attributes."),
                     });
-                }
+                });
                 throw err;
             }
 
             const attributeRecord: Record<string, unknown> = attributes[0];
-            const datasetAttributeDefinitions: Array<[string, string, string]> = [
-                ["dsname", "Data Set Name", "The name of the dataset"],
-                ["member", "Member Name", "The name of the member"],
-                ["blksz", "Block Size", "The block size of the dataset"],
-                ["catnm", "Catalog Name", "The catalog in which the dataset entry is stored"],
-                ["cdate", "Create Date", "The dataset creation date"],
-                ["dev", "Device Type", "The type of the device the dataset is stored on"],
-                ["dsntp", "Data Set Type", "LIBRARY, (LIBRARY,1), (LIBRARY,2), PDS, HFS, EXTREQ, EXTPREF, BASIC or LARGE"],
-                ["dsorg", "Data Set Organization", "The organization of the data set as PS, PO, or DA"],
-                ["edate", "Expiration Date", "The dataset expiration date"],
-                ["extx", "Extensions", "The number of extensions the dataset has"],
-                ["lrecl", "Logical Record Length", "The length in bytes of each record"],
-                ["migr", "Migration", "Indicates if automatic migration is active"],
-                ["mvol", "Multivolume", "Whether the dataset is on multiple volumes"],
-                ["ovf", "Space overflow", "Indicates if space overflow was encountered (YES or NO)"],
-                ["rdate", "Reference Date", "Last referenced date"],
-                ["recfm", "Record Format", "Valid values: A, B, D, F, M, S, T, U, V (combinable)"],
-                ["sizex", "Size", "Size of the first extent in tracks"],
-                ["spacu", "Space Unit", "Type of space units measurement"],
-                ["used", "Used Space", "Used space percentage"],
-                ["vol", "Volume", "Volume serial numbers for data set"],
-                ["vols", "Volumes", "Multiple volume serial numbers"],
-            ];
-            const memberAttributeDefinitions: Array<[string, string, string]> = [
-                ["vers", "Version", "Member version number"],
-                ["mod", "Modification Level", "Member modification level"],
-                ["c4date", "Created Date", "Creation date (4-character year format)"],
-                ["m4date", "Modified Date", "Last change date (4-character year format)"],
-                ["mtime", "Modified Time", "Last change time (in format hh:mm)"],
-                ["msec", "Modified Seconds", "Seconds value of the last change time"],
-                ["cnorc", "Current Records", "Current number of records"],
-                ["inorc", "Initial Records", "Initial number of records"],
-                ["mnorc", "Maximum Records", "Maximum number of records"],
-                ["user", "User", "User ID of last user to change the given member"],
-                ["sclm", "Modified by ISPF/SCLM", "Indicates whether the member was last modified by SCLM or ISPF"],
-            ];
-            const attributeDefinitions = isMemberNode ? [...datasetAttributeDefinitions, ...memberAttributeDefinitions] : datasetAttributeDefinitions;
+            const attributeDefinitions = isMemberNode ? MEMBER_ATTR_DEFS : DATASET_ATTR_DEFS;
 
             const getAttributeValue = (key: string): string | number | boolean | undefined => {
+                const value = attributeRecord[key] as string | number | boolean | undefined;
                 if (isMemberNode) {
-                    if (key === "dsname") {
-                        return (attributeRecord[key] as string | number | boolean | undefined) ?? parentDsName;
-                    }
-                    if (key === "member") {
-                        return (attributeRecord[key] as string | number | boolean | undefined) ?? label;
+                    if (key === "dsname" && value == null) {
+                        return parentDsName;
+                    } else if (key === "member" && value == null) {
+                        return label;
                     }
                 }
                 return attributeRecord[key] as string | number | boolean | undefined;
@@ -1077,12 +1663,12 @@ export class DatasetActions {
                     title: "Zowe Explorer",
                     reference: "https://docs.zowe.org/stable/typedoc/interfaces/_zowe_zos_files_for_zowe_sdk.izosmflistresponse",
                     keys: new Map(
-                        attributeDefinitions.map(([key, displayName, description]) => [
-                            key,
+                        attributeDefinitions.map(({ id, name, description }) => [
+                            id,
                             {
-                                displayName: vscode.l10n.t(displayName),
+                                displayName: vscode.l10n.t(name),
                                 description: description ? vscode.l10n.t(description) : undefined,
-                                value: getAttributeValue(key) as string | number | boolean,
+                                value: getAttributeValue(id) as string | number | boolean,
                             },
                         ])
                     ),
@@ -1299,6 +1885,7 @@ export class DatasetActions {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJcl(doc.getText());
                 const args = [sessProfileName, job.jobid];
                 const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
+                const openJobButton = vscode.l10n.t("Open Job");
                 const notifyButton = vscode.l10n.t("Poll For Job Completion");
                 const jobDisplay = `${job.jobname}(${job.jobid})`;
                 const message = vscode.l10n.t({
@@ -1313,11 +1900,14 @@ export class DatasetActions {
                         comment: ["Job ID", "Profile name"],
                     })
                 );
-                Gui.showMessage(message, { items: [notifyButton] }).then((selection) => {
-                    if (selection === notifyButton) {
-                        DatasetActions.pollSubmittedJob(sessProfile, sessProfileName, job.jobid, job.jobname);
-                    }
-                });
+                // Accessibility: Capture the button response to ensure screen readers properly announce
+                // the buttons as actionable elements rather than just informational text.
+                const selection = await Gui.showMessage(message, { items: [openJobButton, notifyButton] });
+                if (selection === openJobButton) {
+                    vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                } else if (selection === notifyButton) {
+                    DatasetActions.pollSubmittedJob(sessProfile, sessProfileName, job.jobid, job.jobname);
+                }
             } catch (error) {
                 if (error instanceof Error) {
                     await AuthUtils.errorHandling(error, {
@@ -1414,10 +2004,18 @@ export class DatasetActions {
                 const lookup = await DatasetFSProvider.instance.remoteLookupForResource(datasetUri);
                 if (lookup && lookup instanceof PdsEntry) {
                     const datasetTree = SharedTreeProviders.ds as DatasetTree;
-                    const successful = await datasetTree.focusOnDsInTree(ds.dataSetName, sessProfile);
-                    if (!successful) {
-                        Gui.warningMessage(vscode.l10n.t("PDS {0} could not be found.", ds.dataSetName));
+                    const focused = await datasetTree.focusOnDsInTree(ds.dataSetName, sessProfile);
+                    if (!focused) {
+                        // Only show error if filtering failed (not just expansion)
+                        Gui.warningMessage(
+                            vscode.l10n.t({
+                                message: "Failed to filter tree for PDS {0}. The data set may not exist or there may be a connection issue.",
+                                args: [ds.dataSetName],
+                                comment: ["PDS name"],
+                            })
+                        );
                     }
+                    // Return regardless of focus result - if filtering succeeded, the PDS is visible in tree
                     return;
                 }
             }
@@ -1472,22 +2070,27 @@ export class DatasetActions {
 
         const confirmationOption: string = vscode.workspace.getConfiguration().get("zowe.jobs.confirmSubmission");
 
-        switch (Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption)) {
-            case Definitions.JobSubmitDialogOpts.OtherUserJobs:
-                if (!ownsJob && !(await showConfirmationDialog())) {
-                    return false;
+        // Handle undefined, null, or non-string values (e.g., legacy boolean values)
+        if (!confirmationOption || typeof confirmationOption !== "string") {
+            return true; // Default behavior: allow submission without confirmation
+        }
+
+        // Compare directly with localized values
+        const dialogOption = Constants.JOB_SUBMIT_DIALOG_OPTS.indexOf(confirmationOption);
+
+        switch (dialogOption) {
+            case Definitions.JobSubmitDialogOpts.YourJobs:
+                if (ownsJob) {
+                    return await showConfirmationDialog();
                 }
                 break;
-            case Definitions.JobSubmitDialogOpts.YourJobs:
-                if (ownsJob && !(await showConfirmationDialog())) {
-                    return false;
+            case Definitions.JobSubmitDialogOpts.OtherUserJobs:
+                if (!ownsJob) {
+                    return await showConfirmationDialog();
                 }
                 break;
             case Definitions.JobSubmitDialogOpts.AllJobs:
-                if (!(await showConfirmationDialog())) {
-                    return false;
-                }
-                break;
+                return await showConfirmationDialog();
             case Definitions.JobSubmitDialogOpts.Disabled:
             default:
                 break;
@@ -1521,7 +2124,7 @@ export class DatasetActions {
             const defaultMessage = vscode.l10n.t("Cannot submit, item invalid.");
             switch (true) {
                 // For favorited or non-favorited sequential DS:
-                case SharedContext.isFavorite(node):
+                case SharedContext.isFavorite(node) && !SharedContext.isDsMember(node):
                 case SharedContext.isSessionNotFav(node.getParent()):
                     sesName = node.getParent().getLabel() as string;
                     label = node.label as string;
@@ -1542,6 +2145,7 @@ export class DatasetActions {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
                 const args = [sesName, job.jobid];
                 const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
+                const openJobButton = vscode.l10n.t("Open Job");
                 const notifyButton = vscode.l10n.t("Poll For Job Completion");
                 const jobDisplay = `${job.jobname}(${job.jobid})`;
                 const message = vscode.l10n.t({
@@ -1556,11 +2160,14 @@ export class DatasetActions {
                         comment: ["Job ID", "Session name"],
                     })
                 );
-                Gui.showMessage(message, { items: [notifyButton] }).then((selection) => {
-                    if (selection === notifyButton) {
-                        DatasetActions.pollSubmittedJob(sessProfile, sesName, job.jobid, job.jobname);
-                    }
-                });
+                // Accessibility: Capture the button response to ensure screen readers properly announce
+                // the buttons as actionable elements rather than just informational text.
+                const selection = await Gui.showMessage(message, { items: [openJobButton, notifyButton] });
+                if (selection === openJobButton) {
+                    vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                } else if (selection === notifyButton) {
+                    DatasetActions.pollSubmittedJob(sessProfile, sesName, job.jobid, job.jobname);
+                }
             } catch (error) {
                 if (error instanceof Error) {
                     await AuthUtils.errorHandling(error, {
@@ -1639,9 +2246,31 @@ export class DatasetActions {
         } else {
             node.getSessionNode().dirty = true;
         }
-        await datasetProvider.removeFavorite(node);
 
         const isMember = SharedContext.isDsMember(node);
+
+        // If the deleted node is a member, and the PDS is "EntirePds" state, then don't downgrade it to "SpecificMembers"
+        // as the member no longer exists so the entire Pds is still favorited
+        // unless the deleted member is the only one left in the PDS, then remove the PDS from favorites
+        if (isMember) {
+            const parentPds = node.getParent();
+            const profileName = node.getProfileName();
+            const profileNodeInFavorites = datasetProvider.mFavorites.find((favProfile) => favProfile.label?.toString() === profileName);
+            const favPds = profileNodeInFavorites?.children.find(
+                (child) => child.label === parentPds?.label && SharedContext.isFavoritePds(child)
+            ) as ZoweDatasetNode | undefined;
+
+            const isEntirePdsFavorite =
+                favPds != null && (favPds.pdsFavoriteState == null || favPds.pdsFavoriteState === Definitions.PdsFavoriteState.EntirePds);
+            const knownMemberCount = (parentPds?.children ?? []).filter((c) => SharedContext.isDsMember(c)).length;
+            const hasOtherKnownMembers = knownMemberCount > 1;
+
+            if (!(isEntirePdsFavorite && hasOtherKnownMembers)) {
+                await datasetProvider.removeFavorite(node);
+            }
+        } else {
+            await datasetProvider.removeFavorite(node);
+        }
 
         // If the node is a dataset member, go up a level in the node tree
         // to find the relevant, matching node
@@ -1654,6 +2283,65 @@ export class DatasetActions {
         }
 
         datasetProvider.refreshElement(node.getSessionNode());
+
+        // Close the editor if the deleted dataset is open
+        if (node.resourceUri) {
+            const nodePath = node.resourceUri.path;
+            const tabsToClose = vscode.window.tabGroups.all
+                .flatMap((group) => group.tabs)
+                .filter((tab) => {
+                    const uri = (tab.input as any)?.uri;
+                    if (!uri) {
+                        return false;
+                    }
+                    return uri.path === nodePath || uri.path.startsWith(nodePath + "/");
+                });
+            if (tabsToClose.length > 0) {
+                await vscode.window.tabGroups.close(tabsToClose);
+            }
+        }
+    }
+
+    /**
+     * Refreshes a migrated dataset node
+     * @param node The migrated dataset node to refresh
+     */
+    private static async refreshMigratedDataSet(node: IZoweDatasetTreeNode): Promise<void> {
+        const dataSetName = node.label as string;
+        let statusMsg: vscode.Disposable;
+        try {
+            ZoweLogger.info(`Refreshing migrated data set ${dataSetName}`);
+            statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Checking migration status...")}`);
+            const mvsApi = ZoweExplorerApiRegister.getMvsApi(node.getProfile());
+            const resp = await mvsApi.dataSet(dataSetName, { attributes: true });
+            statusMsg.dispose();
+            if (resp.success && resp.apiResponse?.items?.[0]) {
+                const item = resp.apiResponse.items[0];
+                const isMigrated = item.migr?.toUpperCase() === "YES";
+                if (!isMigrated) {
+                    const isPds = item.dsorg?.startsWith("PO") ?? (node as ZoweDatasetNode).wasPds ?? false;
+                    (node as ZoweDatasetNode).justRecalled = false;
+                    await (node as ZoweDatasetNode).datasetRecalled(isPds);
+                    const datasetProvider = SharedTreeProviders.ds;
+                    if (datasetProvider) {
+                        const isFav = SharedContext.isFavoriteDescendant(node);
+                        const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
+                        if (equiv) {
+                            equiv.justRecalled = false;
+                            await equiv.datasetRecalled(isPds);
+                            datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                        }
+                        if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                            void datasetProvider.updateFavorites();
+                        }
+                    }
+                    datasetProvider.refreshElement(node.getParent());
+                }
+            }
+        } catch (err) {
+            statusMsg?.dispose();
+            await AuthUtils.errorHandling(err, { apiType: ZoweExplorerApiType.Mvs, profile: node.getProfile() });
+        }
     }
 
     /**
@@ -1664,11 +2352,16 @@ export class DatasetActions {
     // This is not a UI refresh.
     public static async refreshPS(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.refreshPS called.");
+        if (SharedContext.isMigrated(node)) {
+            await DatasetActions.refreshMigratedDataSet(node);
+            return;
+        }
         let label: string;
+        let statusMsg: vscode.Disposable;
         try {
             switch (true) {
                 // For favorited or non-favorited sequential DS:
-                case SharedContext.isFavorite(node):
+                case SharedContext.isFavorite(node) && !SharedContext.isDsMember(node):
                 case SharedContext.isSessionNotFav(node.getParent()):
                 case SharedContext.isDs(node):
                     label = node.label as string;
@@ -1686,12 +2379,13 @@ export class DatasetActions {
             }
 
             ZoweLogger.info(`Refreshing data set ${label}`);
-            const statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Fetching data set...")}`);
+            statusMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Fetching data set...")}`);
             await DatasetFSProvider.instance.fetchDatasetAtUri(node.resourceUri, {
                 editor: vscode.window.visibleTextEditors.find((v) => v.document.uri.path === node.resourceUri.path),
             });
             statusMsg.dispose();
         } catch (err) {
+            statusMsg?.dispose();
             if (err.message.includes(vscode.l10n.t("not found"))) {
                 ZoweLogger.error(
                     vscode.l10n.t({
@@ -1780,6 +2474,26 @@ export class DatasetActions {
                     })
                 );
                 const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hMigrateDataSet(dataSetName);
+                const resourceUri = node.resourceUri;
+                node.datasetMigrated();
+                if (resourceUri) {
+                    DatasetFSProvider.instance.invalidateCache(resourceUri);
+                }
+                if (datasetProvider) {
+                    const isFav = SharedContext.isFavoriteDescendant(node);
+                    const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
+                    if (equiv) {
+                        const equivUri = equiv.resourceUri;
+                        equiv.datasetMigrated();
+                        if (equivUri) {
+                            DatasetFSProvider.instance.invalidateCache(equivUri);
+                        }
+                        datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                    }
+                    if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                        void datasetProvider.updateFavorites();
+                    }
+                }
                 datasetProvider.refreshElement(node.getParent());
                 return response;
             } catch (err) {
@@ -1813,6 +2527,52 @@ export class DatasetActions {
                     })
                 );
                 const response = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).hRecallDataSet(dataSetName);
+                let isPds = node.wasPds ?? false;
+                let isStillMigrated = true;
+                try {
+                    const dsResp = await ZoweExplorerApiRegister.getMvsApi(node.getProfile()).dataSet(dataSetName, { attributes: true });
+                    if (dsResp.success && dsResp.apiResponse?.items?.[0]) {
+                        const item = dsResp.apiResponse.items[0];
+                        isStillMigrated = item.migr?.toUpperCase() === "YES";
+                        if (!isStillMigrated) {
+                            isPds = item.dsorg?.startsWith("PO") ?? node.wasPds ?? false;
+                        }
+                    }
+                } catch (e) {
+                    ZoweLogger.warn(`Failed to fetch recalled dataset attributes: ${e}`);
+                }
+
+                if (!isStillMigrated) {
+                    node.justRecalled = false;
+                    await node.datasetRecalled(isPds);
+                    if (node.resourceUri) {
+                        DatasetFSProvider.instance.invalidateCache(node.resourceUri);
+                    }
+                    if (datasetProvider) {
+                        const isFav = SharedContext.isFavoriteDescendant(node);
+                        const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
+                        if (equiv) {
+                            equiv.justRecalled = false;
+                            await equiv.datasetRecalled(isPds);
+                            if (equiv.resourceUri) {
+                                DatasetFSProvider.instance.invalidateCache(equiv.resourceUri);
+                            }
+                            datasetProvider.refreshElement(equiv.getParent() as IZoweDatasetTreeNode);
+                        }
+                        if (isFav || (equiv && SharedContext.isFavoriteDescendant(equiv))) {
+                            void datasetProvider.updateFavorites();
+                        }
+                    }
+                } else {
+                    node.justRecalled = true;
+                    if (datasetProvider) {
+                        const isFav = SharedContext.isFavoriteDescendant(node);
+                        const equiv = datasetProvider.findEquivalentNode(node, isFav) as ZoweDatasetNode;
+                        if (equiv) {
+                            equiv.justRecalled = true;
+                        }
+                    }
+                }
                 datasetProvider.refreshElement(node.getParent());
                 return response;
             } catch (err) {
@@ -1911,7 +2671,8 @@ export class DatasetActions {
                         },
                         async () => {
                             try {
-                                return await mvsApi.copyDataSet(lbl, dsname, null, replace === "replace");
+                                const shouldReplace = ["replace", "notFound"].includes(replace);
+                                return await mvsApi.copyDataSet(lbl, dsname, null, shouldReplace);
                             } catch (error) {
                                 Gui.errorMessage(error.message);
                                 return;
@@ -1982,9 +2743,9 @@ export class DatasetActions {
                             }
                         } catch (err) {
                             ZoweLogger.error(err);
-                            if (err instanceof Error) {
-                                Gui.errorMessage(err.message);
-                            }
+                            void handleError(err, (error) => {
+                                Gui.errorMessage(error.message);
+                            });
                         }
                     }
                 }
@@ -2086,9 +2847,9 @@ export class DatasetActions {
                                 });
                             }
                         } catch (err) {
-                            if (err instanceof Error) {
-                                Gui.errorMessage(err.message);
-                            }
+                            void handleError(err, (error) => {
+                                Gui.errorMessage(error.message);
+                            });
                             return;
                         }
                     }
@@ -2204,9 +2965,9 @@ export class DatasetActions {
                             await mvsApi.copyDataSetCrossLpar(dsname, undefined, options, sourceProfile);
                         } catch (err) {
                             ZoweLogger.error(err);
-                            if (err instanceof Error) {
-                                Gui.errorMessage(err.message);
-                            }
+                            void handleError(err, (error) => {
+                                Gui.errorMessage(error.message);
+                            });
                             return;
                         }
                     } else {
@@ -2219,15 +2980,15 @@ export class DatasetActions {
                             try {
                                 await DatasetActions.createDataSetFromSourceAttributes(sourceProfile, node.getProfile(), lbl, dsname);
                             } catch (err) {
-                                if (err instanceof Error) {
+                                void handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to create {0}: {1}",
-                                            args: [dsname, err.message],
+                                            args: [dsname, error.message],
                                             comment: ["Data set name", "Error message"],
                                         })
                                     );
-                                }
+                                });
                                 return;
                             }
                         }
@@ -2280,15 +3041,15 @@ export class DatasetActions {
                                 });
                             } catch (err) {
                                 ZoweLogger.error(err);
-                                if (err instanceof Error) {
+                                void handleError(err, (error) => {
                                     Gui.errorMessage(
                                         vscode.l10n.t({
                                             message: "Failed to copy member {0}: {1}",
-                                            args: [child, err.message],
+                                            args: [child, error.message],
                                             comment: ["Member name", "Error message"],
                                         })
                                     );
-                                }
+                                });
                             }
                         }
                     }
@@ -2308,7 +3069,8 @@ export class DatasetActions {
     public static async determineReplacement(
         nodeProfile: imperative.IProfileLoaded,
         name: string,
-        type: Definitions.ReplaceDSType
+        type: Definitions.ReplaceDSType,
+        uri?: vscode.Uri
     ): Promise<Definitions.ShouldReplace> {
         ZoweLogger.trace("dataset.actions.determineReplacement called.");
         const mvsApi = ZoweExplorerApiRegister.getMvsApi(nodeProfile);
@@ -2322,14 +3084,30 @@ export class DatasetActions {
             const member = name.split("(")[1].slice(0, -1);
             const res = await mvsApi.allMembers(dsname, options);
             if (res?.success && res.apiResponse?.items.some((m) => m.member == member.toUpperCase())) {
+                if (uri) {
+                    if (!DatasetFSProvider.instance.exists(uri)) {
+                        DatasetFSProvider.instance.createEntry(uri, DsType.PdsMember);
+                        DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                    }
+                }
                 q = vscode.l10n.t("The data set member already exists.\nDo you want to replace it?");
                 replace = stringReplace === (await Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
+                if (replace && uri && !DatasetFSProvider.instance.exists(uri)) {
+                    DatasetFSProvider.instance.createEntry(uri, DsType.PdsMember);
+                    DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                }
             }
         } else {
             const res = await mvsApi.dataSet(name, options);
             // Filter results to ensure exact match (e.g., A.B should not match A.B.C)
             const exactMatch = res?.success && res.apiResponse?.items.some((item) => item.dsname?.toUpperCase() === name.toUpperCase());
             if (exactMatch) {
+                if (uri) {
+                    if (!DatasetFSProvider.instance.exists(uri)) {
+                        DatasetFSProvider.instance.createEntry(uri, type === "po" ? DsType.Pds : DsType.Ps);
+                        DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                    }
+                }
                 if (type === "ps") {
                     q = vscode.l10n.t("The physical sequential (PS) data set already exists.\nDo you want to replace it?");
                 } else if (type === "po") {
@@ -2338,6 +3116,10 @@ export class DatasetActions {
                     );
                 }
                 replace = stringReplace === (await Gui.showMessage(q, { items: [stringReplace, stringCancel] }));
+                if (replace && uri && !DatasetFSProvider.instance.exists(uri)) {
+                    DatasetFSProvider.instance.createEntry(uri, type === "po" ? DsType.Pds : DsType.Ps);
+                    DatasetFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                }
             }
         }
         // Sonar cloud code-smell :'(
@@ -2391,10 +3173,9 @@ export class DatasetActions {
                 }
             } catch (error) {
                 if (error instanceof Error) {
-                    const nodelabels = await DatasetUtils.getNodeLabels(node);
                     await AuthUtils.errorHandling(error, {
                         apiType: ZoweExplorerApiType.Mvs,
-                        dsName: nodelabels[0].dataSetName,
+                        dsName: node.dataSetName,
                         scenario: vscode.l10n.t("Unable to copy data set."),
                     });
                 }
@@ -2551,16 +3332,19 @@ export class DatasetActions {
                     Poller.pollRequests[pollKey].dispose = true;
 
                     const args = [sessProfileName, jobId];
-                    const setJobCmd = `${Constants.SET_JOB_SPOOL_COMMAND}?${encodeURIComponent(JSON.stringify(args))}`;
                     const retcode = job?.retcode || vscode.l10n.t("unknown retcode");
+                    const openJobButton = vscode.l10n.t("Open Job");
+                    const message = vscode.l10n.t({
+                        message: "Job {0} completed - {1}",
+                        args: [displayName, retcode],
+                        comment: ["Job name and ID", "Job status"],
+                    });
 
-                    Gui.showMessage(
-                        vscode.l10n.t({
-                            message: "Job {0} completed - {1}",
-                            args: [`[${displayName}](${setJobCmd})`, retcode],
-                            comment: ["Job ID with clickable link", "Job status"],
-                        })
-                    );
+                    Gui.showMessage(message, { items: [openJobButton] }).then((selection) => {
+                        if (selection === openJobButton) {
+                            vscode.commands.executeCommand("zowe.jobs.setJobSpool", ...args);
+                        }
+                    });
                 } catch (error) {
                     // If cant get job status, stop polling
                     Poller.pollRequests[pollKey].dispose = true;
@@ -2656,8 +3440,9 @@ export class DatasetActions {
             return vscode.l10n.t("Data set pattern cannot be empty");
         }
 
-        // Allow member notation like HLQ.DATASET(MEMBER) or standard patterns
-        const validPattern = /^[A-Za-z0-9$#@*%][A-Za-z0-9$#@*%.\-()]*$/;
+        // Allow member notation like HLQ.DATASET(MEMBER) or HLQ.DATASET(A*,B*) or standard patterns
+        // Commas inside parentheses separate member filters; commas outside separate dataset patterns
+        const validPattern = /^[A-Za-z0-9$#@*%][A-Za-z0-9$#@*%.\-(),\s]*$/;
         if (!validPattern.test(trimmedInput)) {
             return vscode.l10n.t("Invalid data set pattern. Use alphanumeric characters, $, #, @, *, %, ., -, and () for members");
         }
@@ -2728,15 +3513,13 @@ export class DatasetActions {
             await datasetProvider.getTreeView().reveal(sessionNode, { select: true, focus: true, expand: true });
 
             if (targetMember && sessionNode.children && sessionNode.children.length > 0) {
-                const pdsNode = sessionNode.children.find((child) => child.label.toString().toUpperCase() === targetPattern) as IZoweDatasetTreeNode;
+                const pdsNode = sessionNode.children.find((child) => child.label.toString().toUpperCase() === targetPattern);
 
                 if (pdsNode && SharedContext.isPds(pdsNode)) {
                     await TreeViewUtils.expandNode(pdsNode, datasetProvider);
 
                     if (pdsNode.children) {
-                        const memberNode = pdsNode.children.find(
-                            (child) => child.label.toString().toUpperCase() === targetMember
-                        ) as IZoweDatasetTreeNode;
+                        const memberNode = pdsNode.children.find((child) => child.label.toString().toUpperCase() === targetMember);
 
                         if (memberNode) {
                             try {

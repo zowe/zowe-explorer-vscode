@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import * as imperative from "@zowe/imperative";
 import { DirEntry, FileEntry, IFileSystemEntry, FS_PROVIDER_DELAY, ConflictViewSelection, DeleteMetadata, HandleErrorOpts } from "./types";
 import * as path from "path";
 import { FsAbstractUtils } from "./utils";
@@ -29,8 +30,11 @@ export class BaseProvider {
     protected root: DirEntry;
     public openedUris: vscode.Uri[] = [];
     public onDocClosedEventDisposable: vscode.Disposable = null;
+    public encodingMap: Record<string, ZosEncoding> = {};
 
     protected constructor() {}
+
+    public requestCache = new Map<string, Promise<unknown>>();
 
     /**
      * Compares the data for 2 Uint8Arrays, byte by byte.
@@ -44,9 +48,16 @@ export class BaseProvider {
 
     /**
      * Action for overwriting the remote contents with local data from the provider.
-     * @param remoteUri The "remote conflict" URI shown in the diff view
+     * @param uri The URI shown in the diff view
      */
-    public async diffOverwrite(uri: vscode.Uri): Promise<void> {
+    public async diffOverwrite(uri: vscode.Uri): Promise<void>;
+    /**
+     * Action for overwriting the remote contents with local data from the provider.
+     * @param uri The URI shown in the diff view
+     * @param closeEditor Whether to close the editor after overwriting
+     */
+    public async diffOverwrite(uri: vscode.Uri, closeEditor: boolean): Promise<void>;
+    public async diffOverwrite(uri: vscode.Uri, closeEditor: boolean = true): Promise<void> {
         const fsEntry = this._lookupAsFile(uri);
         if (fsEntry == null) {
             return;
@@ -61,7 +72,11 @@ export class BaseProvider {
             this.FS_PROVIDER_UI_TIMEOUT
         );
         fsEntry.conflictData = null;
-        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+        if (closeEditor) {
+            vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+
+            await this._revertDirtyDocument(uri);
+        }
     }
 
     /**
@@ -90,6 +105,8 @@ export class BaseProvider {
         );
         fsEntry.conflictData = null;
         vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+
+        await this._revertDirtyDocument(uri);
     }
 
     public exists(uri: vscode.Uri): boolean {
@@ -113,7 +130,7 @@ export class BaseProvider {
         }
 
         parentEntry.entries.delete(entryName);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri: uri.with({ query: "" }) });
         return true;
     }
 
@@ -156,6 +173,42 @@ export class BaseProvider {
         entry.entries.clear();
         this.lookupParentDirectory(uri).entries.delete(entry.name);
         return true;
+    }
+
+    /**
+     * Silently removes a cached entry from its parent directory, forcing the next
+     * read to fetch fresh content from the mainframe. Does not fire a change event.
+     * @param uri the URI of the entry to remove from the cache
+     */
+    public invalidateCache(uri: vscode.Uri): void {
+        const parent = this.lookupParentDirectory(uri, true);
+        if (parent) {
+            parent.entries.delete(path.posix.basename(uri.path));
+        }
+    }
+
+    /**
+     * Updates the profile reference for all cached entries matching the profile name and type.
+     * Called when a profile is updated (reactivated, credentials changed, etc.)
+     * @param updatedProfile The updated profile object
+     */
+    public updateProfile(updatedProfile: imperative.IProfileLoaded): void {
+        this._updateProfileRecursive(this.root, updatedProfile);
+    }
+
+    private _updateProfileRecursive(entry: IFileSystemEntry, updatedProfile: imperative.IProfileLoaded): void {
+        if (!entry) return;
+
+        if (entry.metadata?.profile?.name === updatedProfile.name && entry.metadata?.profile?.type === updatedProfile.type) {
+            entry.metadata.profile = updatedProfile;
+        }
+
+        if ("entries" in entry && entry.entries) {
+            const dirEntry = entry as DirEntry;
+            for (const child of dirEntry.entries.values()) {
+                this._updateProfileRecursive(child, updatedProfile);
+            }
+        }
     }
 
     /**
@@ -271,7 +324,7 @@ export class BaseProvider {
         }
         // delete entry from old parent
         oldParent.entries.delete(entry.name);
-        this._fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri });
+        this.fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri.with({ query: "" }) });
         if (isFile) {
             return this._reopenEditorForRelocatedUri(oldUri, newUri);
         }
@@ -351,14 +404,26 @@ export class BaseProvider {
         }
 
         // User selected "Overwrite"
-        await this.diffOverwrite(uri);
+        // For backwards compatibility with extensions that expect _handleConflict to perform the overwrite,
+        // we still call diffOverwrite here. However, this means internal providers (like DatasetFSProvider)
+        // must NOT perform the overwrite themselves if they call this method, otherwise it will double-save.
+        await this.diffOverwrite(uri, false);
         return ConflictViewSelection.Overwrite;
     }
 
+    //TODO (v4): rename _fireSoon -> fireSoon since it is no longer private
     /**
+     * @deprecated Use `fireSoon` instead. This method will be removed in v4.
      * Internal VSCode function for the FileSystemProvider to fire events from the event queue
      */
-    protected _fireSoon(...events: vscode.FileChangeEvent[]): void {
+    public _fireSoon(...events: vscode.FileChangeEvent[]): void {
+        this.fireSoon(...events);
+    }
+
+    /**
+     * VSCode function for the FileSystemProvider to fire events from the event queue
+     */
+    public fireSoon(...events: vscode.FileChangeEvent[]): void {
         this._bufferedEvents.push(...events);
 
         if (this._fireSoonHandle) {
@@ -466,7 +531,7 @@ export class BaseProvider {
         const profInfo = { ...parent.metadata, path: filePath };
         entry.metadata = profInfo;
         parent.entries.set(basename, entry);
-        this._fireSoon({ type: vscode.FileChangeType.Created, uri });
+        this.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
         return entry;
     }
 
@@ -492,5 +557,118 @@ export class BaseProvider {
             }),
             silent ?? false
         );
+    }
+
+    // Helper function to parse uri query params into a string for the requestCache key
+    protected getQueryKey(uri: vscode.Uri): string {
+        if (!uri.query) {
+            return "";
+        }
+        const params = new URLSearchParams(uri.query);
+        const activeParams: string[] = [];
+
+        params.forEach((value, key) => {
+            if (value === "true") {
+                activeParams.push(`${key}=${value}`);
+            }
+        });
+
+        return activeParams.length > 0 ? "_" + activeParams.sort().join("_") : "";
+    }
+
+    /**
+     * Validates the result of a file system operation to ensure the type matches the requested action.
+     * @param result The result object to validate
+     * @param uri The URI of the resource being requested
+     * @param action The action being performed
+     * @returns The validated result
+     */
+    protected validateResult<T>(result: any, uri: vscode.Uri, action?: "readFile" | "readDirectory" | "stat"): T {
+        if (action === "readDirectory" && result?.type === vscode.FileType.File) {
+            throw vscode.FileSystemError.FileNotADirectory(uri);
+        } else if (action === "readFile" && result?.type === vscode.FileType.Directory) {
+            throw vscode.FileSystemError.FileIsADirectory(uri);
+        }
+        return result as T;
+    }
+
+    /**
+     * Executes the given operation with reuse logic to avoid duplicate network requests.
+     * @param uri The URI of the resource being requested
+     * @param options Logic options for key generation, local checks, and execution
+     */
+    protected async executeWithReuse<T>(
+        uri: vscode.Uri,
+        options: {
+            keyGenerator: (uri: vscode.Uri) => string;
+            checkLocal: () => boolean;
+            execute: () => Promise<T>;
+            action?: "readFile" | "readDirectory" | "stat";
+        }
+    ): Promise<T> {
+        const queryParams = new URLSearchParams(uri.query);
+        const isExplicitFetch = queryParams.get("fetch") === "true";
+        const hasConflictOrDiff = queryParams.has("conflict") || queryParams.has("inDiff");
+
+        // Generate fetch key (simulate fetch=true)
+        const fetchQueryParams = new URLSearchParams(uri.query);
+        fetchQueryParams.set("fetch", "true");
+        const fetchUri = uri.with({ query: fetchQueryParams.toString() });
+        const fetchKey = options.keyGenerator(fetchUri);
+
+        // Generate actual key (simulate no fetch param)
+        const actualQueryParams = new URLSearchParams(uri.query);
+        actualQueryParams.delete("fetch");
+        const actualUri = uri.with({ query: actualQueryParams.toString() });
+        const actualKey = options.keyGenerator(actualUri);
+
+        // Check local entry to see if it will fallback to a remote lookup
+        let localEntryFound = false;
+        if (!isExplicitFetch && !hasConflictOrDiff) {
+            try {
+                if (options.checkLocal()) {
+                    localEntryFound = true;
+                }
+            } catch {} // eslint-disable-line no-empty
+        }
+
+        const needNetwork = isExplicitFetch || (!hasConflictOrDiff && !localEntryFound);
+
+        if (needNetwork && this.requestCache.has(fetchKey)) {
+            return this.validateResult(await this.requestCache.get(fetchKey), uri, options.action);
+        }
+
+        const keyToUse = needNetwork ? fetchKey : actualKey;
+
+        if (this.requestCache.has(keyToUse)) {
+            return this.validateResult(await this.requestCache.get(keyToUse), uri, options.action);
+        }
+
+        const requestPromise = (async (): Promise<T> => {
+            try {
+                return this.validateResult(await options.execute(), uri, options.action);
+            } finally {
+                if (this.requestCache.get(keyToUse) === requestPromise) {
+                    this.requestCache.delete(keyToUse);
+                }
+            }
+        })();
+
+        this.requestCache.set(keyToUse, requestPromise);
+
+        return requestPromise;
+    }
+
+    /**
+     * Reverts a dirty document if it exists and is open in the workspace.
+     * @param uri The URI to check for a dirty document
+     */
+    private async _revertDirtyDocument(uri: vscode.Uri): Promise<void> {
+        const mainUri = uri.with({ query: "" });
+        const doc = vscode.workspace.textDocuments.find((d) => d.uri.toString() === mainUri.toString());
+        if (doc && doc.isDirty) {
+            await vscode.window.showTextDocument(doc);
+            await vscode.commands.executeCommand("workbench.action.files.revert");
+        }
     }
 }

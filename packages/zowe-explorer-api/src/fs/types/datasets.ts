@@ -23,7 +23,7 @@ export const DS_EXTENSION_MAP: Map<string, (string | RegExp)[]> = new Map([
     [".cbl", ["COBOL", "CBL", "COB", "SCBL"]],
     [".cpy", ["COPYBOOK", "COPY", "CPY", "COBCOPY"]],
     [".inc", ["INC", "INCLUDE", "PLINC"]],
-    [".pli", ["PLI", "PL1", "PLX", "PCX"]],
+    [".pli", ["PLI", "PL1", "PCX"]],
     [".sh", ["SH", "SHELL"]],
     [".rexx", ["REXX", "REXEC", "EXEC"]],
     [".xml", ["XML"]],
@@ -31,10 +31,18 @@ export const DS_EXTENSION_MAP: Map<string, (string | RegExp)[]> = new Map([
     [".log", ["LOG", /SPFLOG/]],
 ]);
 
+export enum DsType {
+    PdsMember,
+    Pds,
+    Ps,
+}
 export class DsEntry extends FileEntry implements DsEntryProps {
     public metadata: DsEntryMetadata;
 
-    public constructor(name: string, public isMember: boolean = false) {
+    public constructor(
+        name: string,
+        public isMember: boolean = false
+    ) {
         super(name);
     }
 

@@ -126,7 +126,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
 
     /**
      * Removes a favorite node
-     * @param favorite Adds a favorite node
+     * @param node Adds a favorite node
      */
     removeFavorite(node: IZoweTreeNode): void | Promise<void>;
 
@@ -143,13 +143,13 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
 
     /**
      * Refreshes an element of the tree
-     * @param favorite Node to refresh
+     * @param node Node to refresh
      */
     refreshElement(node: IZoweTreeNode): void;
 
     /**
      * Signals that node data has changed in the tree view
-     * @param element to pass to event listener callback
+     * @param node to pass to event listener callback
      */
     nodeDataChanged?(node: IZoweTreeNode): void;
 
@@ -180,7 +180,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
 
     /**
      * Rename the node. Begins a dialog.
-     * @param the node to be renamed
+     * @param node to be renamed
      */
     rename(node: IZoweTreeNode): void | Promise<void>;
 
@@ -249,13 +249,17 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
     /**
      * Adds a search history element to persisted settings.
      * @param node: the root node representing the operation
+     * @param profile: the profile the search was performed against, used to group history entries when
+     * the `zowe.settings.historyGroupByHost` setting is enabled
      */
-    addSearchHistory(element: string): void;
+    addSearchHistory(element: string, profile?: imperative.IProfileLoaded): void;
 
     /**
      * Retrieves search history elements from persisted settings.
+     * @param profile: when provided, returns only the history entries for this profile's group; when
+     * omitted, returns every entry across all groups
      */
-    getSearchHistory(): string[];
+    getSearchHistory(profile?: imperative.IProfileLoaded): string[];
 
     /**
      * Returns the type of the tree provider.

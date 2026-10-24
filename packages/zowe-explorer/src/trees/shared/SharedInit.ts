@@ -12,6 +12,7 @@
 import * as vscode from "vscode";
 import {
     FileManagement,
+    handleError,
     Gui,
     CorrelatedError,
     IZoweTree,
@@ -33,12 +34,13 @@ import { SharedTreeProviders } from "./SharedTreeProviders";
 import { JobActions } from "../job/JobActions";
 import { UssFSProvider } from "../uss/UssFSProvider";
 import { Constants } from "../../configuration/Constants";
-import { MvsCommandHandler } from "../../commands/MvsCommandHandler";
+import { ConsoleCommandHandler } from "../../commands/ConsoleCommandHandler";
 import { TsoCommandHandler } from "../../commands/TsoCommandHandler";
 import { UnixCommandHandler } from "../../commands/UnixCommandHandler";
 import { Profiles } from "../../configuration/Profiles";
 import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
+import { ConfigRedactManagement } from "../../management/ConfigRedactManagement";
 import { LocalFileManagement } from "../../management/LocalFileManagement";
 import { ProfileManagement } from "../../management/ProfileManagement";
 import { ZoweLogger } from "../../tools/ZoweLogger";
@@ -55,13 +57,114 @@ import { ZoweUriHandler } from "../../utils/UriHandler";
 import { TroubleshootError } from "../../utils/TroubleshootError";
 import { ReleaseNotes } from "../../utils/ReleaseNotes";
 import { JobFSProvider } from "../job/JobFSProvider";
+import { ZosmfRestClient } from "@zowe/core-for-zowe-sdk";
+import * as zowex from "zowex-for-zowe-explorer";
 
 export class SharedInit {
+    public static lastFocusedNode: { provider: IZoweTree<IZoweTreeNode>; node: IZoweTreeNode };
     public static onDidActivateExtensionEmitter = new vscode.EventEmitter<void>();
     public static onDidActivateExtension = SharedInit.onDidActivateExtensionEmitter.event;
 
+    private static isRestoringFocus = false;
+
     public static registerCommonCommands(context: vscode.ExtensionContext, providers: Definitions.IZoweProviders): void {
         ZoweLogger.trace("shared.init.registerCommonCommands called.");
+
+        context.subscriptions.push(
+            vscode.window.tabGroups.onDidChangeTabs(async (e) => {
+                if (e.closed.length > 0 && !SharedInit.isRestoringFocus) {
+                    const closedTab = e.closed[0];
+
+                    if (
+                        !(closedTab.input instanceof vscode.TabInputText) ||
+                        (closedTab.input.uri.scheme !== ZoweScheme.DS &&
+                            closedTab.input.uri.scheme !== ZoweScheme.USS &&
+                            closedTab.input.uri.scheme !== ZoweScheme.Jobs)
+                    ) {
+                        return;
+                    }
+
+                    SharedInit.isRestoringFocus = true;
+                    try {
+                        const closedUri = closedTab.input.uri;
+
+                        const allTabs = vscode.window.tabGroups.all.flatMap((group) => group.tabs);
+                        if (allTabs.length === 0) {
+                            return;
+                        }
+
+                        const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+
+                        let uriToFocus: vscode.Uri;
+
+                        if (!activeTab || !(activeTab.input instanceof vscode.TabInputText)) {
+                            // No active tab left (only tab was closed) — don't shift tree focus
+                            return;
+                        }
+                        const activeUri = activeTab.input.uri;
+                        const activeScheme = activeUri.scheme;
+
+                        if (activeUri.path === closedUri.path) {
+                            // Active tab is same as closed — focus closed node
+                            return;
+                        } else if (activeScheme !== ZoweScheme.DS && activeScheme !== ZoweScheme.USS && activeScheme !== ZoweScheme.Jobs) {
+                            return;
+                        } else {
+                            // Active tab is a different Zowe resource — focus it
+                            uriToFocus = activeUri;
+                        }
+
+                        const findNodeByUri = async (provider: IZoweTree<IZoweTreeNode>, uri: vscode.Uri): Promise<IZoweTreeNode | undefined> => {
+                            const searchInChildren = async (nodes: IZoweTreeNode[]): Promise<IZoweTreeNode | undefined> => {
+                                for (const node of nodes) {
+                                    if (node.resourceUri?.path === uri.path) {
+                                        return node;
+                                    }
+                                    if (node.children && node.children.length > 0) {
+                                        const found = await searchInChildren(node.children);
+                                        if (found) {
+                                            return found;
+                                        }
+                                    }
+                                }
+                                return undefined;
+                            };
+
+                            const rootNodes = provider.mSessionNodes;
+                            return searchInChildren(rootNodes);
+                        };
+
+                        const uriScheme = uriToFocus.scheme;
+                        let provider: IZoweTree<IZoweTreeNode> | undefined;
+                        if (uriScheme === ZoweScheme.DS && SharedTreeProviders.ds) {
+                            provider = SharedTreeProviders.ds;
+                        } else if (uriScheme === ZoweScheme.USS && SharedTreeProviders.uss) {
+                            provider = SharedTreeProviders.uss;
+                        } else if (uriScheme === ZoweScheme.Jobs && SharedTreeProviders.job) {
+                            provider = SharedTreeProviders.job;
+                        }
+
+                        if (!provider) {
+                            return;
+                        }
+
+                        const node = await findNodeByUri(provider, uriToFocus);
+                        if (!node) {
+                            return;
+                        }
+
+                        await provider.getTreeView().reveal(node, { select: true, focus: true });
+
+                        const nodeLabel = typeof node.label === "string" ? node.label : node.label?.label || "item";
+                        ZoweLogger.trace(`Focus restored to tree node: ${nodeLabel}`);
+                    } catch (err) {
+                        ZoweLogger.trace(`Could not restore focus to tree node: ${(err as Error).message ?? String(err)}`);
+                    } finally {
+                        SharedInit.isRestoringFocus = false;
+                    }
+                }
+            })
+        );
 
         // Update imperative.json to false only when VS Code setting is set to false
         context.subscriptions.push(
@@ -87,15 +190,23 @@ export class SharedInit {
         context.subscriptions.push(vscode.window.registerWebviewViewProvider("zowe-resources", TableViewProvider.getInstance()));
 
         const commandProviders: Definitions.IZoweCommandProviders = {
-            mvs: MvsCommandHandler.getInstance(),
+            mvs: ConsoleCommandHandler.getInstance(),
             tso: TsoCommandHandler.getInstance(),
             uss: UnixCommandHandler.getInstance(),
         };
 
+        // Zowe Native registrations
+        const zoweExplorerApi = ZoweExplorerApiRegister.getInstance().getExplorerExtenderApi();
+        context.subscriptions.push(...zowex.Utilities.registerCommands(context, zoweExplorerApi));
+        context.subscriptions.push(zowex.SshClientCache.initialize(zoweExplorerApi.getProfilesCache()));
+        zowex.handleNativeSshSettings(context);
+
+        zowex.registerSshErrorCorrelations();
+
         // Webview for editing persistent items on Zowe Explorer
         context.subscriptions.push(
-            vscode.commands.registerCommand("zowe.editHistory", () => {
-                return new SharedHistoryView(context, providers, commandProviders);
+            vscode.commands.registerCommand("zowe.editHistory", (node?: IZoweTreeNode) => {
+                return new SharedHistoryView(context, providers, commandProviders, node);
             })
         );
 
@@ -117,6 +228,12 @@ export class SharedInit {
         context.subscriptions.push(
             vscode.commands.registerCommand("zowe.profileManagement", async (node: IZoweTreeNode) => {
                 await ProfileManagement.manageProfile(node);
+            })
+        );
+
+        context.subscriptions.push(
+            vscode.commands.registerCommand("zowe.all.config.exportRedacted", async () => {
+                await ConfigRedactManagement.exportRedactedConfig();
             })
         );
 
@@ -163,6 +280,9 @@ export class SharedInit {
         // Register functions & event listeners
         context.subscriptions.push(
             vscode.workspace.onDidChangeConfiguration(async (e) => {
+                if (e.affectsConfiguration(Constants.SETTINGS_EXPERIMENTAL_NATIVE_SSH)) {
+                    zowex.handleNativeSshSettings(context);
+                }
                 // If the log folder location has been changed, update current log folder preference
                 if (e.affectsConfiguration(Constants.SETTINGS_LOGS_FOLDER_PATH) || e.affectsConfiguration(Constants.LOGGER_SETTINGS)) {
                     await SharedInit.initZoweLogger(context);
@@ -173,6 +293,26 @@ export class SharedInit {
                 }
                 if (e.affectsConfiguration(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
                     await vscode.commands.executeCommand("zowe.updateSecureCredentials");
+                }
+                if (e.affectsConfiguration(Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS)) {
+                    const maxConcurrentRequests = SettingsConfig.getDirectValue(
+                        Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS,
+                        Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS
+                    );
+                    ZosmfRestClient.setThrottlingOptions({
+                        maxConcurrentRequests,
+                    });
+                    ZoweLogger.info(`z/OSMF throttling set to ${maxConcurrentRequests} concurrent requests.`);
+                }
+                if (e.affectsConfiguration(Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT)) {
+                    const queueTimeout = SettingsConfig.getDirectValue(
+                        Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT,
+                        Constants.ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT
+                    );
+                    ZosmfRestClient.setThrottlingOptions({
+                        queueTimeout,
+                    });
+                    ZoweLogger.info(`z/OSMF queue timeout set to ${queueTimeout} milliseconds.`);
                 }
             })
         );
@@ -348,6 +488,15 @@ export class SharedInit {
             LocalFileManagement.resetCompareSelection();
         }
 
+        const maxConcurrentRequests = SettingsConfig.getDirectValue(
+            Constants.SETTINGS_ZOSMF_MAX_CONCURRENT_REQUESTS,
+            Constants.ZOSMF_DEFAULT_MAX_CONCURRENT_REQUESTS
+        );
+        const queueTimeout = SettingsConfig.getDirectValue(Constants.SETTINGS_ZOSMF_QUEUE_TIMEOUT, Constants.ZOSMF_DEFAULT_REQUEST_QUEUE_TIMEOUT);
+        ZosmfRestClient.setThrottlingOptions({ maxConcurrentRequests, queueTimeout });
+        ZoweLogger.info(`z/OSMF throttling set to ${maxConcurrentRequests} concurrent requests.`);
+        ZoweLogger.info(`z/OSMF queue timeout set to ${queueTimeout} milliseconds.`);
+
         SharedInit.onDidActivateExtension((_e) => vscode.commands.executeCommand("zowe.setupRemoteWorkspaceFolders", "zosmf"));
 
         // Prevent VS Code from restoring selected the webview panels after restart
@@ -364,7 +513,7 @@ export class SharedInit {
         );
     }
 
-    public static isDocumentASpool(uri: vscode.Uri): Boolean {
+    public static isDocumentASpool(uri: vscode.Uri): boolean {
         const entry = JobFSProvider.instance.lookup(uri, false);
         return FsJobsUtils.isSpoolEntry(entry);
     }
@@ -408,13 +557,16 @@ export class SharedInit {
         });
 
         try {
-            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(imperative.ZoweUserEvents.ON_VAULT_CHANGED, async () => {
-                ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
-                AuthHandler.unlockAllProfiles();
-                await ProfilesUtils.readConfigFromDisk();
-                await SharedActions.refreshAll();
-                ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
-            });
+            const zoweWatcher = imperative.EventOperator.getWatcher().subscribeUser(
+                imperative.ZoweUserEvents.ON_VAULT_CHANGED,
+                SharedUtils.debounceAsync(async () => {
+                    ZoweLogger.info(vscode.l10n.t("Changes in the credential vault detected, refreshing Zowe Explorer."));
+                    AuthHandler.unlockAllProfiles();
+                    await ProfilesUtils.readConfigFromDisk();
+                    await SharedActions.refreshAll();
+                    ZoweExplorerApiRegister.getInstance().onVaultUpdateEmitter.fire(Validation.EventType.UPDATE);
+                }, 100) // eslint-disable-line no-magic-numbers
+            );
             context.subscriptions.push(new vscode.Disposable(zoweWatcher.close.bind(zoweWatcher)));
         } catch (err) {
             Gui.errorMessage("Unable to watch for vault changes. " + JSON.stringify(err));
@@ -447,15 +599,21 @@ export class SharedInit {
         theTreeView.onDidExpandElement(async (e) => {
             await theProvider.onCollapsibleStateChange?.(e.element, vscode.TreeItemCollapsibleState.Expanded);
         });
+
+        theTreeView.onDidChangeSelection((e) => {
+            if (e.selection.length > 0) {
+                SharedInit.lastFocusedNode = {
+                    provider: theProvider,
+                    node: e.selection[0],
+                };
+            }
+        });
     }
 
     public static async setupRemoteWorkspaceFolders(e?: vscode.WorkspaceFoldersChangeEvent, profileType?: string): Promise<void> {
         const profInfo = Profiles.getInstance();
-
-        let uriMap = new Map<string, UriFsInfo>();
-
+        const uriMap = new Map<string, UriFsInfo>();
         const profileNames = new Set<string>(profInfo.getProfiles(profileType).map((prof) => prof.name));
-
         // Perform remote lookup for workspace folders that fit the `zowe-ds` or `zowe-uss` schemes.
         const newWorkspaces = (e?.added ?? vscode.workspace.workspaceFolders ?? [])
             .filter((f) => f.uri.scheme === ZoweScheme.DS || f.uri.scheme === ZoweScheme.USS)
@@ -464,34 +622,28 @@ export class SharedInit {
                 uriMap[f.uri.path] = uriInfo;
                 return profileNames.has(uriInfo.profileName);
             });
-
         const readDirRequests = [];
         for (const folder of newWorkspaces) {
             const uriInfo: UriFsInfo = uriMap[folder.uri.path];
             const session = ZoweExplorerApiRegister.getInstance().getCommonApi(uriInfo.profile).getSession(uriInfo.profile);
             try {
-                if (
-                    ProfilesUtils.hasNoAuthType(session.ISession, uriInfo.profile) ||
-                    (session.ISession.type === imperative.SessConstants.AUTH_TYPE_TOKEN && !uriInfo.profile.profile.tokenValue)
-                ) {
+                if (ProfilesUtils.hasNoCredentials(session.ISession, uriInfo.profile)) {
                     continue;
                 }
-                readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri.with({ query: "fetch=true" })));
+                readDirRequests.push(vscode.workspace.fs.readDirectory(folder.uri));
             } catch (err) {
-                if (err instanceof Error) {
-                    ZoweLogger.error(err.message);
-                }
+                void handleError(err, (error) => {
+                    ZoweLogger.error(error.message);
+                });
             }
         }
-
         try {
             await Promise.all(readDirRequests);
         } catch (err) {
-            if (err instanceof Error) {
-                ZoweLogger.error(err.message);
-            }
+            void handleError(err, (error) => {
+                ZoweLogger.error(error.message);
+            });
         }
-
         if (profileType !== "zosmf" && newWorkspaces.length > 0) {
             await vscode.commands.executeCommand("workbench.files.action.refreshFilesExplorer");
         }
@@ -532,7 +684,9 @@ export class SharedInit {
      * @param context @deprecated
      */
     public static registerZosConsoleView(context: vscode.ExtensionContext): void {
+        // eslint-disable-next-line deprecation/deprecation
         const provider = new ZosConsoleViewProvider(context.extensionUri);
+        // eslint-disable-next-line deprecation/deprecation
         context.subscriptions.push(vscode.window.registerWebviewViewProvider(ZosConsoleViewProvider.viewType, provider));
     }
 

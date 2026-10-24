@@ -120,8 +120,23 @@ export namespace MainframeInteraction {
          *
          * @param {string} ussFilePath
          * @param {zosfiles.IDownloadOptions} options
+         * @returns {Promise<zosfiles.IZosFilesResponse>}
          */
         getContents(ussFilePath: string, options: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse>;
+
+        /**
+         * Download a USS directory to the local file system.
+         *
+         * @param {string} ussDirectoryPath The path of the USS directory to download
+         * @param {zosfiles.IDownloadOptions} fileOptions Download options including local directory path
+         * @param {zosfiles.IUSSListOptions} listOptions Options for listing files in USS
+         * @returns {Promise<zosfiles.IZosFilesResponse>}
+         */
+        downloadDirectory?(
+            ussDirectoryPath: string,
+            fileOptions?: zosfiles.IDownloadOptions,
+            listOptions?: zosfiles.IUSSListOptions
+        ): Promise<zosfiles.IZosFilesResponse>;
 
         /**
          * Uploads a given buffer as the contents of a file on USS.
@@ -235,6 +250,15 @@ export namespace MainframeInteraction {
          * @returns {Promise<zosfiles.IZosFilesResponse>}
          */
         getContents(dataSetName: string, options?: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse>;
+
+        /**
+         * Retrieve all members of a partitioned data set and save them to a directory.
+         *
+         * @param {string} dataSetName
+         * @param {zosfiles.IDownloadOptions} [options]
+         * @returns {Promise<zosfiles.IZosFilesResponse>}
+         */
+        downloadAllMembers?(dataSetName: string, options?: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse>;
 
         /**
          * Uploads a given buffer as the contents of a file to a data set or member.
@@ -395,6 +419,13 @@ export namespace MainframeInteraction {
          * @param dataSetPatterns the list of data set patterns to obtain the total item count for.
          */
         getCount?(dataSetPatterns: string[]): Promise<IDataSetCount>;
+
+        /**
+         * Resolves an aliased data set to the original data set name
+         * @param {zosfiles.ISearchOptions} aliasName: data set name of the alias to resolve
+         * @returns {Promise<zosfiles.IZosFilesResponse>} response containing key targetDsn to point to the original data set.
+         */
+        resolveAlias?(aliasName: string): Promise<zosfiles.IZosFilesResponse>;
     }
 
     /**
@@ -530,7 +561,7 @@ export namespace MainframeInteraction {
         issueTsoCommandWithParms?(command: string, parms?: zostso.IStartTsoParms, useNewTsoApis?: boolean): Promise<zostso.IIssueResponse>;
 
         /**
-         * Issues a MVS Command and returns a Console Command API response.
+         * Issues a console Command and returns a Console Command API response.
          *
          * @param {string} command
          * @returns {Promise<zosconsole.IConsoleResponse>}

@@ -1,8 +1,11 @@
 use anyhow::Result;
 use owo_colors::OwoColorize;
+use serde::Serialize;
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::process::Command;
 
+use crate::output::{self, exit, OutputFormat};
 use crate::util::find_dir_match;
 use crate::{cmd, pm};
 
@@ -71,7 +74,7 @@ impl EnvironmentStatus {
     fn check_pm(&mut self) -> Result<()> {
         match pm::handle_cmd(vec!["--version".to_owned()]) {
             Ok(output) => {
-                self.pm_version = Some(output);
+                self.pm_version = Some(output.trim().to_string());
             }
             Err(e) => {
                 eprintln!("Failed to check package manager version: {}", e);
@@ -182,6 +185,82 @@ impl EnvironmentStatus {
     }
 }
 
+/// A single entry from `git status --porcelain`, split into its status code
+/// (e.g. `M`, `??`) and the affected path.
+#[derive(Serialize)]
+struct GitEntry {
+    status: String,
+    path: String,
+}
+
+/// Machine-readable view of [`EnvironmentStatus`], emitted by `--json`.
+#[derive(Serialize)]
+struct StatusReport {
+    node: Option<String>,
+    package_manager: PackageManagerInfo,
+    zowe_cli: Option<String>,
+    vscode: Option<String>,
+    workspace_path: String,
+    dependencies_installed: bool,
+    git_status: Vec<GitEntry>,
+    env_vars: BTreeMap<String, String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    zowe_env_report: Option<String>,
+}
+
+#[derive(Serialize)]
+struct PackageManagerInfo {
+    name: String,
+    version: Option<String>,
+}
+
+/// Parses raw `git status --porcelain` output into structured entries.
+fn parse_git_status(status: &str) -> Vec<GitEntry> {
+    status
+        .lines()
+        .filter_map(|line| {
+            if line.len() >= 2 {
+                let (code, path) = line.split_at(2);
+                Some(GitEntry {
+                    status: code.trim().to_string(),
+                    path: path.trim().to_string(),
+                })
+            } else if line.trim().is_empty() {
+                None
+            } else {
+                Some(GitEntry {
+                    status: String::new(),
+                    path: line.trim().to_string(),
+                })
+            }
+        })
+        .collect()
+}
+
+impl EnvironmentStatus {
+    /// Converts the collected status into its machine-readable representation.
+    fn into_report(self) -> StatusReport {
+        StatusReport {
+            node: self.node_version,
+            package_manager: PackageManagerInfo {
+                name: self.pkg_mgr,
+                version: self.pm_version,
+            },
+            zowe_cli: self.zowe_cli_version,
+            vscode: self.vscode_version,
+            workspace_path: self.workspace_path.display().to_string(),
+            dependencies_installed: self.dependencies_installed,
+            git_status: self
+                .git_status
+                .as_deref()
+                .map(parse_git_status)
+                .unwrap_or_default(),
+            env_vars: self.env_vars.into_iter().collect(),
+            zowe_env_report: self.zowe_env_report,
+        }
+    }
+}
+
 fn print_section_header(title: &str) {
     println!("\n{}", title.bold().blue());
     println!("{}", "─".repeat(title.len()).blue());
@@ -224,7 +303,7 @@ fn format_git_status(status: &str) -> String {
         .join("\n")
 }
 
-pub async fn handle_cmd(verbose: bool) -> Result<()> {
+pub async fn handle_cmd(verbose: bool) -> Result<i32> {
     let mut status = EnvironmentStatus::new()?;
 
     // Collect all status information
@@ -238,6 +317,11 @@ pub async fn handle_cmd(verbose: bool) -> Result<()> {
     status.check_git_status()?;
     status.check_dependencies()?;
     status.check_env_vars();
+
+    if output::format() == OutputFormat::Json {
+        output::emit_json(&status.into_report());
+        return Ok(exit::SUCCESS);
+    }
 
     // Print status information
     println!(
@@ -301,5 +385,5 @@ pub async fn handle_cmd(verbose: bool) -> Result<()> {
         }
     }
 
-    Ok(())
+    Ok(exit::SUCCESS)
 }

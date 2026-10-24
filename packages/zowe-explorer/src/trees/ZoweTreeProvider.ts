@@ -34,7 +34,10 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
     protected log: imperative.Logger = imperative.Logger.getAppLogger();
     protected validProfile: number = -1;
 
-    public constructor(protected persistenceSchema: PersistenceSchemaEnum, public mFavoriteSession: IZoweTreeNode) {
+    public constructor(
+        protected persistenceSchema: PersistenceSchemaEnum,
+        public mFavoriteSession: IZoweTreeNode
+    ) {
         this.mPersistence = new ZowePersistentFilters(this.persistenceSchema);
     }
 
@@ -140,6 +143,9 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             // Only mark as dirty when the node is collapsing to avoid a duplicate refresh
             // This prepares the node for a refresh once it is expanded again
             element.dirty = true;
+            if (!SharedContext.isSession(element)) {
+                element.description = undefined;
+            }
         }
     }
 
@@ -155,11 +161,24 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
                 await SettingsConfig.setDirectValue(this.persistenceSchema, setting);
             }
         }
+        if (e.affectsConfiguration(Constants.SETTINGS_MAX_SEARCH_HISTORY)) {
+            this.mPersistence.updateMaxSearchHistory();
+        }
     }
 
-    public getSearchHistory(): string[] {
+    public getSearchHistory(profile?: imperative.IProfileLoaded): string[] {
         ZoweLogger.trace("ZoweTreeProvider.getSearchHistory called.");
-        return this.mPersistence.getSearchHistory();
+        return this.mPersistence.getSearchHistory(profile);
+    }
+
+    /**
+     * The label to show for the profile's search history group, or `undefined` when grouping is disabled
+     * or the entries being shown for this profile aren't actually scoped to a group (e.g. the group is
+     * still empty and `getSearchHistory` is falling back to the shared list).
+     */
+    public getSearchHistoryGroupLabel(profile?: imperative.IProfileLoaded): { key: string; source: "host" | "group" } | undefined {
+        ZoweLogger.trace("ZoweTreeProvider.getSearchHistoryGroupLabel called.");
+        return this.mPersistence.getGroupLabel(profile);
     }
 
     public getTreeType(): PersistenceSchemaEnum {
@@ -167,10 +186,10 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         return this.persistenceSchema;
     }
 
-    public addSearchHistory(criteria: string): void {
+    public addSearchHistory(criteria: string, profile?: imperative.IProfileLoaded): void {
         ZoweLogger.trace("ZoweTreeProvider.addSearchHistory called.");
         if (criteria) {
-            this.mPersistence.addSearchHistory(criteria);
+            this.mPersistence.addSearchHistory(criteria, profile);
         }
     }
 

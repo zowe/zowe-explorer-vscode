@@ -3,6 +3,7 @@
 */**
 
 # Allowlist what we need
+!bin/**
 !l10n/bundle*.json
 !out/src/**.js
 !out/src/nls.metadata*.json
@@ -10,6 +11,7 @@
 !resources/**/*.svg
 !prebuilds/**
 !src/webviews/dist/**
+!feature-flags.json
 
 !CHANGELOG.md
 !LICENSE

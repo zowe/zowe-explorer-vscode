@@ -44,7 +44,9 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         RIGHT: "\x1b[C",
         LEFT: "\x1b[D",
         hasModKey: (key: string): boolean => {
-            if (key.startsWith("\x1b[1;") || key.startsWith("\x1b[3;")) return true;
+            if (key.startsWith("\x1b[1;") || key.startsWith("\x1b[3;")) {
+                return true;
+            }
             return false;
         },
     };
@@ -62,7 +64,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.command = options?.startup ?? "";
         this.charArrayCmd = [];
         this.cursorPosition = this.charArrayCmd.length;
-        this.formatCommandLine = options?.formatCommandLine ?? ((cmd: string) => `${ZoweTerminal.Keys.EMPTY_LINE}${cmd}`);
+        this.formatCommandLine = options?.formatCommandLine ?? ((cmd: string): string => `${ZoweTerminal.Keys.EMPTY_LINE}${cmd}`);
         this.chalk = imperative.TextUtils.chalk;
     }
 
@@ -78,15 +80,15 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     private mCols = -1;
 
     private writeEmitter = new vscode.EventEmitter<string>();
-    protected write(text: string) {
+    protected write(text: string): void {
         this.writeEmitter.fire(text);
     }
-    protected writeLine(text: string) {
+    protected writeLine(text: string): void {
         this.write(text);
         this.write(ZoweTerminal.Keys.NEW_LINE);
         this.writeCmd();
     }
-    protected clearLine(lines = 1) {
+    protected clearLine(lines = 1): void {
         while (lines--) {
             this.write(ZoweTerminal.Keys.CLEAR_LINE);
             if (lines > 0) {
@@ -95,12 +97,12 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         }
     }
     private getLine(cmd?: string): string {
-        return this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : cmd ?? this.command;
+        return this.formatCommandLine ? this.formatCommandLine(cmd ?? this.command) : (cmd ?? this.command);
     }
-    protected writeCmd(cmd?: string) {
+    protected writeCmd(cmd?: string): void {
         this.write(this.getLine(cmd));
     }
-    protected refreshCmd(lineOffset = 0) {
+    protected refreshCmd(lineOffset = 0): void {
         this.command = this.sanitizeInput(this.command);
         this.pressedCtrlC = false;
         if (!this.charArrayCmd.length || this.charArrayCmd.join("") !== this.command) {
@@ -109,8 +111,10 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         this.clearLine(Math.ceil((this.getLine(this.command).length + lineOffset) / this.mCols));
         this.writeCmd();
         if (this.charArrayCmd.length > this.cursorPosition) {
-            const getPos = (char: string) => {
-                if (char === ZoweTerminal.invalidChar) return 1;
+            const getPos = (char: string): number => {
+                if (char === ZoweTerminal.invalidChar) {
+                    return 1;
+                }
                 const charBytes = Buffer.from(char).length;
                 return charBytes > 2 ? 2 : 1;
             };
@@ -118,7 +122,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             [...Array(offset)].map(() => this.write(ZoweTerminal.Keys.LEFT));
         }
     }
-    protected clear() {
+    protected clear(): void {
         this.write(ZoweTerminal.Keys.CLEAR_ALL);
         this.writeLine(this.chalk.dim.italic(this.mMessage));
     }
@@ -165,11 +169,21 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
 
     private isPrintable(char: string): boolean {
         const codePoint = char.codePointAt(0);
-        if (codePoint === undefined) return false;
-        if (codePoint >= 0x20 && codePoint <= 0x7e) return true;
-        if (codePoint >= 0xa0 && codePoint <= 0xd7ff) return true; // Control characters
-        if (codePoint >= 0xe000 && codePoint <= 0xfffd) return true; // Private use area
-        if (codePoint >= 0x10000 && codePoint <= 0x10ffff) return true; // Supplemental planes
+        if (codePoint === undefined) {
+            return false;
+        }
+        if (codePoint >= 0x20 && codePoint <= 0x7e) {
+            return true;
+        }
+        if (codePoint >= 0xa0 && codePoint <= 0xd7ff) {
+            return true;
+        } // Control characters
+        if (codePoint >= 0xe000 && codePoint <= 0xfffd) {
+            return true;
+        } // Private use area
+        if (codePoint >= 0x10000 && codePoint <= 0x10ffff) {
+            return true;
+        } // Supplemental planes
         return false;
     }
 
@@ -196,7 +210,7 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
         }
     }
 
-    private async handleEnter() {
+    private async handleEnter(): Promise<void> {
         this.write(ZoweTerminal.Keys.NEW_LINE);
         const isAsyncCommand = this.command.startsWith(":async");
         const isForgetCommand = this.command.startsWith(":forget");
@@ -219,26 +233,34 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
             if (isForgetCommand || isAsyncCommand) {
                 this.writeLine(this.chalk.italic.yellow(`Output ${isAsyncCommand ? "deferred!" : "forgotten!"}`));
                 this.isCommandRunning = false;
-                this.processCmd(cmd).then((output: string) => {
+                void this.processCmd(cmd).then((output: string) => {
                     const currentCmd = this.command;
                     this.command = "";
                     this.charArrayCmd = [];
+
+                    // eslint-disable-next-line @typescript-eslint/no-this-alias
+                    const that = this;
                     // ---------------------------------------
                     // Note: `.call(this, ` is intentional since without it, it's possible for VSCode to not remember what `this` is
-                    (isForgetCommand ? this.writeLine : this.write).call(this, this.chalk.italic.yellow("\r\nOperation completed: ") + cmd + "\r\n");
-                    if (isAsyncCommand) this.writeLine.call(this, output.trim().split("\n").join("\r\n"));
-                    this.handleInput.call(this, currentCmd);
+                    // eslint-disable-next-line
+                    (isForgetCommand ? that.writeLine : that.write).call(that, that.chalk.italic.yellow("\r\nOperation completed: ") + cmd + "\r\n");
+                    if (isAsyncCommand) {
+                        that.writeLine.call(that, output.trim().split("\n").join("\r\n"));
+                    }
+                    that.handleInput.call(that, currentCmd);
                     // ---------------------------------------
                 });
             } else {
                 const output = await Promise.race([
                     this.processCmd(cmd),
-                    new Promise<null>((resolve, _reject) => {
+                    new Promise<null>((resolve) => {
                         this.controller.signal.addEventListener("abort", () => {
                             this.controller = new AbortController();
                             resolve(null);
                         });
-                        if (!this.isCommandRunning) resolve(null);
+                        if (!this.isCommandRunning) {
+                            resolve(null);
+                        }
                     }),
                 ]);
                 this.isCommandRunning = false;
@@ -258,18 +280,27 @@ export class ZoweTerminal implements vscode.Pseudoterminal {
     // Handle input from the terminal
     public async handleInput(data: string): Promise<void> {
         if (this.isCommandRunning) {
-            if ([ZoweTerminal.Keys.CTRL_C, ZoweTerminal.Keys.CTRL_D].includes(data)) this.controller.abort();
-            if (data === ZoweTerminal.Keys.CTRL_D) this.close();
-            else this.pressedCtrlC = true;
+            if ([ZoweTerminal.Keys.CTRL_C, ZoweTerminal.Keys.CTRL_D].includes(data)) {
+                this.controller.abort();
+            }
+            if (data === ZoweTerminal.Keys.CTRL_D) {
+                this.close();
+            } else {
+                this.pressedCtrlC = true;
+            }
             return;
         }
-        if (ZoweTerminal.Keys.hasModKey(data)) return;
+        if (ZoweTerminal.Keys.hasModKey(data)) {
+            return;
+        }
         switch (data) {
             case ZoweTerminal.Keys.CTRL_C:
-                if (this.pressedCtrlC) this.close();
+                if (this.pressedCtrlC) {
+                    this.close();
+                }
                 if (this.command.length > 0) {
                     this.command = "";
-                    this.handleEnter();
+                    void this.handleEnter();
                 } else {
                     this.writeLine(this.chalk.italic("(To exit, press Ctrl+C again or Ctrl+D or type :exit)"));
                     this.pressedCtrlC = true;

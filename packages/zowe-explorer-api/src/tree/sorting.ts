@@ -25,6 +25,8 @@ export namespace Sorting {
     export enum DatasetFilterOpts {
         LastModified,
         UserId,
+        Name,
+        DateCreated,
     }
 
     export type DatasetFilter = {

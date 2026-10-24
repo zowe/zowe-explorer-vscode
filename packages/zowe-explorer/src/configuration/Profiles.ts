@@ -105,11 +105,23 @@ export class Profiles extends ProfilesCache {
      * @returns True if the profile, a parent on the profile, or the default base profile has a secure token, false otherwise.
      */
     public async profileHasSecureToken(theProfile: imperative.IProfileLoaded): Promise<boolean> {
+        const sessTypeFromProf = AuthHandler.sessTypeFromProfile(theProfile);
+        if (
+            sessTypeFromProf !== imperative.SessConstants.AUTH_TYPE_TOKEN &&
+            sessTypeFromProf !== imperative.SessConstants.AUTH_TYPE_BEARER &&
+            sessTypeFromProf !== imperative.SessConstants.AUTH_TYPE_NONE
+        ) {
+            // The authOrder property has already been processed and determined
+            // that basic or cert auth should be used, so we shouldn't check
+            // for a token value.
+            return false;
+        }
+
         const teamConfig = (await this.getProfileInfo()).getTeamConfig();
         const profName = teamConfig.api.profiles.getProfilePathFromName(theProfile.name);
 
-        const getCumulativePaths = (profName: string): string[] => {
-            const parts = profName.split(".profiles.");
+        const getCumulativePaths = (pName: string): string[] => {
+            const parts = pName.split(".profiles.");
             return parts.slice(1).reduce(
                 (acc, part) => {
                     const previousPath = acc.length > 0 ? acc[acc.length - 1] : parts[0];
@@ -125,8 +137,8 @@ export class Profiles extends ProfilesCache {
 
         // Add all intermediate paths by working backwards
         const allPaths: string[] = [];
-        for (const path of paths) {
-            const segments = path.split(".profiles.");
+        for (const thePath of paths) {
+            const segments = thePath.split(".profiles.");
             for (let j = 1; j <= segments.length; j++) {
                 const subPath = segments.slice(0, j).join(".profiles.");
                 if (!allPaths.includes(subPath)) {
@@ -143,7 +155,7 @@ export class Profiles extends ProfilesCache {
             allPaths.push(profName);
         }
 
-        return allPaths.some((path) => teamConfig.api.secure.secureFields().includes(path + ".properties.tokenValue"));
+        return allPaths.some((thePath: string) => teamConfig.api.secure.secureFields().includes(thePath + ".properties.tokenValue"));
     }
 
     public async checkCurrentProfile(theProfile: imperative.IProfileLoaded, node?: Types.IZoweNodeType): Promise<Validation.IValidationProfile> {
@@ -178,7 +190,9 @@ export class Profiles extends ProfilesCache {
         let tokenType: string;
         try {
             tokenType = ZoweExplorerApiRegister.getInstance().getCommonApi(theProfile).getTokenTypeName();
-        } catch {}
+        } catch {
+            // Ignore error
+        }
 
         if (usingTokenAuth || ((await this.profileHasSecureToken(theProfile)) && tokenType)) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
@@ -226,7 +240,7 @@ export class Profiles extends ProfilesCache {
                 return { ...profileStatus, status: "inactive" };
             }
         } else if (!usingTokenAuth && !usingBasicAuth && usingCertAuth) {
-            if (!this.isCertFileValid(theProfile.profile.certFile)) {
+            if (theProfile.profile.certAccount == null && !this.isCertFileValid(theProfile.profile.certFile)) {
                 ZoweLogger.error(`Profile ${theProfile.name} has an invalid SSL certificate`);
                 Gui.errorMessage(
                     vscode.l10n.t({
@@ -492,16 +506,31 @@ export class Profiles extends ProfilesCache {
 
         const quickpick = Gui.createQuickPick();
         let addProfilePlaceholder = "";
+        const createNewInstruction = vscode.l10n.t(
+            "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles"
+        );
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the DATA SETS tree`);
+                addProfilePlaceholder = vscode.l10n.t({
+                    message: "{0}. Or select a profile to add to the DATA SETS tree.",
+                    args: [createNewInstruction],
+                    comment: ["Instruction for add profile quick pick"],
+                });
                 break;
             case PersistenceSchemaEnum.Job:
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the JOBS tree`);
+                addProfilePlaceholder = vscode.l10n.t({
+                    message: "{0}. Or select a profile to add to the JOBS tree.",
+                    args: [createNewInstruction],
+                    comment: ["Instruction for add profile quick pick"],
+                });
                 break;
             default:
                 // Use USS View as default for placeholder text
-                addProfilePlaceholder = vscode.l10n.t(`Choose "Create new..." to define or select a profile to add to the USS tree`);
+                addProfilePlaceholder = vscode.l10n.t({
+                    message: "{0}. Or select a profile to add to the USS tree.",
+                    args: [createNewInstruction],
+                    comment: ["Instruction for add profile quick pick"],
+                });
         }
         if (allProfiles.length > 0) {
             quickpick.items = [configPick, configEdit, ...items];
@@ -509,6 +538,7 @@ export class Profiles extends ProfilesCache {
             quickpick.items = [configPick, ...items];
         }
         quickpick.placeholder = addProfilePlaceholder;
+        quickpick.title = vscode.l10n.t("Add Profile to Tree");
         quickpick.ignoreFocusOut = true;
         quickpick.show();
         const choice = await Gui.resolveQuickPick(quickpick);
@@ -846,7 +876,11 @@ export class Profiles extends ProfilesCache {
                         comment: [`The profile name`],
                     })
                 );
-                await AuthUtils.errorHandling(error, { profile: theProfile });
+                const updated = await AuthUtils.errorHandling(error, { profile: theProfile });
+                if (updated) {
+                    this.profilesForValidation = this.profilesForValidation.filter((p) => p.name !== theProfile.name);
+                    return this.checkCurrentProfile(theProfile);
+                }
                 filteredProfile = {
                     status: "inactive",
                     name: theProfile.name,
@@ -1043,7 +1077,14 @@ export class Profiles extends ProfilesCache {
         }
         dsNode.description &&= "";
         dsNode.pattern &&= "";
-        SharedTreeProviders.ds.flipState(dsNode, false);
+
+        // ---------------------------------------------------------------
+        // Given that the providers defined in `SharedTreeProviders` (e.g. ds, uss, job) extend `ZoweTreeProvider`,
+        // we are guaranteed to have implemented the `onCollapsibleStateChange` function.
+        // Thus it is safe to ignore the compiler warning about using an optional function defined in `IZoweTree`
+        void SharedTreeProviders.ds.onCollapsibleStateChange(dsNode, vscode.TreeItemCollapsibleState.Collapsed);
+        // ---------------------------------------------------------------
+
         SharedTreeProviders.ds.refreshElement(dsNode);
     }
 
@@ -1059,7 +1100,14 @@ export class Profiles extends ProfilesCache {
         }
         ussNode.description &&= "";
         ussNode.fullPath &&= "";
-        SharedTreeProviders.uss.flipState(ussNode, false);
+
+        // ---------------------------------------------------------------
+        // Given that the providers defined in `SharedTreeProviders` (e.g. ds, uss, job) extend `ZoweTreeProvider`,
+        // we are guaranteed to have implemented the `onCollapsibleStateChange` function.
+        // Thus it is safe to ignore the compiler warning about using an optional function defined in `IZoweTree`
+        void SharedTreeProviders.uss.onCollapsibleStateChange(ussNode, vscode.TreeItemCollapsibleState.Collapsed);
+        // ---------------------------------------------------------------
+
         SharedTreeProviders.uss.refreshElement(ussNode);
     }
 
@@ -1079,7 +1127,14 @@ export class Profiles extends ProfilesCache {
         jobNode.status &&= "";
         jobNode.filtered &&= false;
         jobNode.children &&= [];
-        SharedTreeProviders.job.flipState(jobNode, false);
+
+        // ---------------------------------------------------------------
+        // Given that the providers defined in `SharedTreeProviders` (e.g. ds, uss, job) extend `ZoweTreeProvider`,
+        // we are guaranteed to have implemented the `onCollapsibleStateChange` function.
+        // Thus it is safe to ignore the compiler warning about using an optional function defined in `IZoweTree`
+        void SharedTreeProviders.job.onCollapsibleStateChange(jobNode, vscode.TreeItemCollapsibleState.Collapsed);
+        // ---------------------------------------------------------------
+
         SharedTreeProviders.job.refreshElement(jobNode);
     }
 
@@ -1089,11 +1144,13 @@ export class Profiles extends ProfilesCache {
         this.clearJobFilterFromTree(node);
     }
 
-    public async ssoLogout(node: Types.IZoweNodeType): Promise<void> {
+    public async ssoLogout(node?: Types.IZoweNodeType, label?: string): Promise<boolean> {
         ZoweLogger.trace("Profiles.ssoLogout called.");
-        const serviceProfile = node.getProfile();
+        const serviceProfile = node ? node.getProfile() : this.loadNamedProfile(label.trim());
         try {
-            this.clearFilterFromAllTrees(node);
+            if (node) {
+                this.clearFilterFromAllTrees(node);
+            }
             let logoutOk: boolean;
             const zeRegister = ZoweExplorerApiRegister.getInstance();
 
@@ -1124,6 +1181,7 @@ export class Profiles extends ProfilesCache {
                 );
                 ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(serviceProfile);
             }
+            return logoutOk;
         } catch (error) {
             const message = vscode.l10n.t({
                 message: "Unable to log out with {0}. {1}",
@@ -1132,6 +1190,7 @@ export class Profiles extends ProfilesCache {
             });
             ZoweLogger.error(message);
             Gui.errorMessage(message);
+            return false;
         }
     }
 

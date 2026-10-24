@@ -11,7 +11,10 @@ use zip::ZipArchive;
 /// * `refs` - A `Vec` of GitHub references to fetch artifacts from.
 /// * `gh` - An `octocrab` instance for interfacing with the GitHub API.
 async fn fetch_artifacts(refs: Vec<String>, gh: &Octocrab) -> anyhow::Result<Vec<String>> {
-    println!("💿 {}", "Fetching artifacts...".underline());
+    let text = crate::output::text_enabled();
+    if text {
+        println!("💿 {}", "Fetching artifacts...".underline());
+    }
 
     // Collect workflow runs from the Zowe Explorer repo.
     let workflow_runs = gh
@@ -35,14 +38,18 @@ async fn fetch_artifacts(refs: Vec<String>, gh: &Octocrab) -> anyhow::Result<Vec
 
     // Iterate over the references, fetching and extracting the artifacts from each one.
     for r in refs {
-        print!("\t{}: ", r);
+        if text {
+            print!("\t{}: ", r);
+        }
         let workflow_id = match workflow_runs
             .iter()
             .position(|wr| wr.head_branch == r || wr.head_sha == r)
         {
             Some(run) => run,
             None => {
-                println!("no artifacts found");
+                if text {
+                    println!("no artifacts found");
+                }
                 continue;
             }
         };
@@ -64,7 +71,9 @@ async fn fetch_artifacts(refs: Vec<String>, gh: &Octocrab) -> anyhow::Result<Vec
             .collect::<Vec<_>>();
 
         if artifact_list.is_empty() {
-            println!("no artifacts found");
+            if text {
+                println!("no artifacts found");
+            }
             continue;
         }
 
@@ -83,12 +92,16 @@ async fn fetch_artifacts(refs: Vec<String>, gh: &Octocrab) -> anyhow::Result<Vec
         let mut zip = match ZipArchive::new(&mut cursor) {
             Ok(z) => z,
             Err(e) => {
-                println!("Error extracting .zip archive from artifact: {}", e);
+                if text {
+                    println!("Error extracting .zip archive from artifact: {}", e);
+                }
                 continue;
             }
         };
         zip.extract(&vsix_dir)?;
-        println!("\t✔️ ");
+        if text {
+            println!("\t✔️ ");
+        }
     }
 
     // Walk the `vsix` directory and build a list of file paths to pass to `fs::install_from_paths`.

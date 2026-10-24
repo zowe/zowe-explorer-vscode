@@ -132,6 +132,22 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             });
         }
 
+        public downloadDirectory(
+            ussDirectoryPath: string,
+            fileOptions?: zosfiles.IDownloadOptions,
+            listOptions?: zosfiles.IUSSListOptions
+        ): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.Download.ussDir(
+                this.getSession(),
+                ussDirectoryPath,
+                {
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    ...fileOptions,
+                },
+                listOptions
+            );
+        }
+
         public copy(outputPath: string, options?: Omit<object, "request">): Promise<Buffer> {
             return zosfiles.Utilities.putUSSPayload(this.getSession(), outputPath, { ...options, request: "copy" });
         }
@@ -246,12 +262,19 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
      */
     export class MvsApi extends CommonApi implements MainframeInteraction.IMvs {
         public dataSet(filter: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.List.dataSet(this.getSession(), filter, { responseTimeout: this.profile?.profile?.responseTimeout, ...options });
+            return zosfiles.List.dataSet(this.getSession(), filter, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
+                ...options,
+            });
         }
 
         public allMembers(dataSetName: string, options?: zosfiles.IListOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.List.allMembers(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -259,6 +282,17 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public getContents(dataSetName: string, options?: zosfiles.IDownloadSingleOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Download.dataSet(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
+                ...options,
+            });
+        }
+
+        public downloadAllMembers(dataSetName: string, options?: zosfiles.IDownloadOptions): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.Download.allMembers(this.getSession(), dataSetName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -266,6 +300,8 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public uploadFromBuffer(buffer: Buffer, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Upload.bufferToDataSet(this.getSession(), buffer, dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -273,6 +309,8 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public putContents(inputFilePath: string, dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Upload.pathToDataSet(this.getSession(), inputFilePath, dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -284,6 +322,8 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         ): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Create.dataSet(this.getSession(), dataSetType, dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -291,6 +331,8 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public createDataSetMember(dataSetName: string, options?: zosfiles.IUploadOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Upload.bufferToDataSet(this.getSession(), Buffer.from(""), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -298,6 +340,8 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public allocateLikeDataSet(dataSetName: string, likeDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Create.dataSetLike(this.getSession(), dataSetName, likeDataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
             });
         }
 
@@ -326,6 +370,8 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                 { dsn: toDataSetName, member: toMemberName },
                 {
                     responseTimeout: this.profile?.profile?.responseTimeout,
+                    tsoAccount: this.profile?.profile?.tsoAccount,
+                    tsoProcedure: this.profile?.profile?.tsoProcedure,
                     ...newOptions,
                 }
             );
@@ -334,24 +380,32 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public renameDataSet(currentDataSetName: string, newDataSetName: string): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Rename.dataSet(this.getSession(), currentDataSetName, newDataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
             });
         }
 
         public renameDataSetMember(dataSetName: string, oldMemberName: string, newMemberName: string): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.Rename.dataSetMember(this.getSession(), dataSetName, oldMemberName, newMemberName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
             });
         }
 
         public hMigrateDataSet(dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.HMigrate.dataSet(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
             });
         }
 
         public hRecallDataSet(dataSetName: string): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.HRecall.dataSet(this.getSession(), dataSetName, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
             });
         }
 
@@ -359,11 +413,15 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             if (options?.volume === "*VSAM*") {
                 return zosfiles.Delete.vsam(this.getSession(), dataSetName, {
                     responseTimeout: this.profile?.profile?.responseTimeout,
+                    tsoAccount: this.profile?.profile?.tsoAccount,
+                    tsoProcedure: this.profile?.profile?.tsoProcedure,
                     ...options,
                 });
             } else {
                 return zosfiles.Delete.dataSet(this.getSession(), dataSetName, {
                     responseTimeout: this.profile?.profile?.responseTimeout,
+                    tsoAccount: this.profile?.profile?.tsoAccount,
+                    tsoProcedure: this.profile?.profile?.tsoProcedure,
                     ...options,
                 });
             }
@@ -372,6 +430,8 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public dataSetsMatchingPattern(filter: string[], options?: zosfiles.IDsmListOptions): Promise<zosfiles.IZosFilesResponse> {
             return zosfiles.List.dataSetsMatchingPattern(this.getSession(), filter, {
                 responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
                 ...options,
             });
         }
@@ -380,7 +440,14 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
             return zosfiles.Copy.dataSet(
                 this.getSession(),
                 { dsn: toDataSetName },
-                { "from-dataset": { dsn: fromDataSetName }, enq, replace, responseTimeout: this.profile?.profile?.responseTimeout }
+                {
+                    "from-dataset": { dsn: fromDataSetName },
+                    enq,
+                    replace,
+                    responseTimeout: this.profile?.profile?.responseTimeout,
+                    tsoAccount: this.profile?.profile?.tsoAccount,
+                    tsoProcedure: this.profile?.profile?.tsoProcedure,
+                }
             );
         }
         public searchDataSets(searchOptions: zosfiles.ISearchOptions): Promise<zosfiles.ISearchResponse> {
@@ -388,10 +455,14 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                 ...searchOptions,
                 getOptions: {
                     responseTimeout: this.profile?.profile?.responseTimeout,
+                    tsoAccount: this.profile?.profile?.tsoAccount,
+                    tsoProcedure: this.profile?.profile?.tsoProcedure,
                     ...searchOptions.getOptions,
                 },
                 listOptions: {
                     responseTimeout: this.profile?.profile?.responseTimeout,
+                    tsoAccount: this.profile?.profile?.tsoAccount,
+                    tsoProcedure: this.profile?.profile?.tsoProcedure,
                     ...searchOptions.listOptions,
                 },
             });
@@ -423,6 +494,14 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                     return arr;
                 }, new Set<string>());
             return { count: allDatasets.size, lastItem: Array.from(allDatasets).pop() };
+        }
+
+        public async resolveAlias(aliasName: string): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.List.resolveAlias(this.getSession(), aliasName, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                tsoAccount: this.profile?.profile?.tsoAccount,
+                tsoProcedure: this.profile?.profile?.tsoProcedure,
+            });
         }
     }
 
@@ -517,7 +596,7 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
                 await zosuss.Shell.executeSshCwd(
                     sshSession,
                     command,
-                    '"' + cwd + '"',
+                    cwd,
                     (data: string) => {
                         stdout += data;
                     },

@@ -10,11 +10,12 @@
  */
 
 import { realpathSync } from "fs";
+import { handleError } from "./ErrorUtils";
 import { platform } from "os";
 import { Constants } from "../globals";
 import { ImperativeConfig, ConfigUtils } from "@zowe/imperative";
 import { IFileSystemEntry, ZoweScheme } from "../fs/types";
-import { window, workspace } from "vscode";
+import { TabInputText, window, workspace } from "vscode";
 
 export class FileManagement {
     public static permStringToOctal(perms: string): number {
@@ -53,6 +54,29 @@ export class FileManagement {
         return realpathSync(anyPath);
     }
 
+    public static async reloadTabsForProfile(profileName: string): Promise<void> {
+        const tabs = window.tabGroups.all
+            .flatMap((tg) => tg.tabs)
+            .filter(
+                (t) =>
+                    t.input instanceof TabInputText &&
+                    !t.isDirty &&
+                    t.input.uri.path.startsWith(`/${profileName}/`) &&
+                    (Object.values(ZoweScheme) as string[]).includes(t.input.uri.scheme)
+            );
+
+        for (const tab of tabs) {
+            try {
+                const tabUri = (tab.input as TabInputText).uri;
+                const fsEntry = (await workspace.fs.stat(tabUri)) as IFileSystemEntry;
+                fsEntry.wasAccessed = false;
+                await workspace.fs.readFile(tabUri);
+            } catch (err) {
+                // todo: log?
+            }
+        }
+    }
+
     public static async reloadActiveEditorForProfile(profileName: string): Promise<void> {
         const document = window.activeTextEditor?.document;
         if (
@@ -73,14 +97,16 @@ export class FileManagement {
         );
         for (const folder of foldersWithProfile) {
             try {
+                // Force a fetch for each folder to ensure latest contents are in the cache.
+                // May be able to revisit in v4, but keeping as-is for v3 to prevent regressions (forcing a fetch = no downsides in this case).
                 await workspace.fs.stat(folder.uri.with({ query: "fetch=true" }));
             } catch (err) {
-                if (err instanceof Error) {
+                void handleError(err, (error) => {
                     // TODO: Remove console.error in favor of logger
                     // (need to move logger to ZE API)
                     // eslint-disable-next-line no-console
-                    console.error("reloadWorkspacesForProfile:", err.message);
-                }
+                    console.error("reloadWorkspacesForProfile:", error.message);
+                });
             }
         }
     }

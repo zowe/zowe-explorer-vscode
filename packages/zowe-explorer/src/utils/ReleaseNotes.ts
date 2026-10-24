@@ -110,6 +110,23 @@ export class ReleaseNotes extends WebView {
             await this.sendReleaseNotes();
         } else if (command === "toggleDisplayAfterUpdate" && typeof checked === "boolean") {
             SettingsConfig.setDirectValue(Constants.SETTINGS_DISPLAY_RELEASE_NOTES, checked);
+        } else if (command === "GET_LOCALIZATION") {
+            await this.sendLocalization();
+        }
+    }
+
+    private async sendLocalization(): Promise<void> {
+        const l10nUri = l10n.uri;
+        if (l10nUri) {
+            try {
+                const l10nContents = await fs.readFile(l10nUri.fsPath, { encoding: "utf8" });
+                await this.panel.webview.postMessage({
+                    command: "GET_LOCALIZATION",
+                    contents: l10nContents,
+                });
+            } catch (error) {
+                ZoweLogger.warn(`[ReleaseNotes] Could not load localization file: ${String(error)}`);
+            }
         }
     }
 

@@ -16,23 +16,23 @@ import { Gui } from "@zowe/zowe-explorer-api";
 import { ZoweSaveQueue } from "../../../src/tools/ZoweSaveQueue";
 import { ZoweLogger } from "../../../src/tools/ZoweLogger";
 
-jest.mock("../../../src/tools/ZoweLogger");
+vi.mock("../../../src/tools/ZoweLogger");
 
 describe("ZoweSaveQueue - unit tests", () => {
     const createGlobalMocks = () => {
         Object.defineProperty(ZoweLocalStorage, "globalState", {
             value: {
                 get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
-                update: jest.fn(),
+                update: vi.fn(),
                 keys: () => [],
             },
             configurable: true,
         });
-        jest.spyOn(Gui, "createTreeView").mockReturnValue({ onDidCollapseElement: jest.fn() } as any);
+        vi.spyOn(Gui, "createTreeView").mockReturnValue({ onDidCollapseElement: vi.fn() } as any);
         const globalMocks = {
-            errorMessageSpy: jest.spyOn(Gui, "errorMessage"),
-            processNextSpy: jest.spyOn(ZoweSaveQueue as any, "processNext"),
-            allSpy: jest.spyOn(ZoweSaveQueue, "all"),
+            errorMessageSpy: vi.spyOn(Gui, "errorMessage"),
+            processNextSpy: vi.spyOn(ZoweSaveQueue as any, "processNext"),
+            allSpy: vi.spyOn(ZoweSaveQueue, "all"),
             trees: {
                 uss: createUSSTree([], []),
             },
@@ -60,7 +60,7 @@ describe("ZoweSaveQueue - unit tests", () => {
 
     it("skips save in processNext if newer save is queued for the same document", async () => {
         globalMocks.processNextSpy.mockClear();
-        const uploadRequest = jest.fn().mockImplementation(async () => {});
+        const uploadRequest = vi.fn().mockImplementation(async () => {});
 
         for (let i = 0; i < 3; i++) {
             ZoweSaveQueue.push({
@@ -91,7 +91,7 @@ describe("ZoweSaveQueue - unit tests", () => {
         for (let i = 0; i < 3; i++) {
             ZoweSaveQueue.push({
                 fileProvider: globalMocks.trees.uss,
-                uploadRequest: jest.fn().mockImplementation(async () => {}),
+                uploadRequest: vi.fn().mockImplementation(async () => {}),
                 savedFile: {
                     isDirty: true,
                     uri: vscode.Uri.parse(`${i}`),

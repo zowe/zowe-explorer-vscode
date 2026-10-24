@@ -23,6 +23,8 @@ describe("Context helper tests", () => {
     const DS_DS_CONTEXT = "ds";
     const DS_MEMBER_CONTEXT = "member";
     const DS_MIGRATED_FILE_CONTEXT = "migr";
+    const VSAM_CONTEXT = "vsam";
+    const VSAM_FAV_CONTEXT = "vsam_fav";
     const USS_SESSION_CONTEXT = "ussSession";
     const USS_DIR_CONTEXT = "directory";
     const USS_FAV_DIR_CONTEXT = "directory_fav";
@@ -128,6 +130,35 @@ describe("Context helper tests", () => {
             }
         }
     });
+
+    it("isUssDirectory returns true for a filtered USS session node", () => {
+        // Plain filter-search session: ussSession_isFilterSearch
+        treeItem.contextValue = Constants.USS_SESSION_CONTEXT + "_" + Constants.FILTER_SEARCH;
+        expect(SharedContext.isUssDirectory(treeItem)).toBe(true);
+        expect(SharedContext.isUssSession(treeItem)).toBe(true);
+
+        // Filter-search session with a profile type suffix: ussSession_type=zosmf_isFilterSearch
+        treeItem.contextValue = Constants.USS_SESSION_CONTEXT + Constants.TYPE_SUFFIX + "zosmf_" + Constants.FILTER_SEARCH;
+        expect(SharedContext.isUssDirectory(treeItem)).toBe(true);
+        expect(SharedContext.isUssSession(treeItem)).toBe(true);
+    });
+
+    it("isUssDirectory returns false for a non-filtered USS session node", () => {
+        // Unfilitered session must NOT be treated as a directory
+        treeItem.contextValue = Constants.USS_SESSION_CONTEXT;
+        expect(SharedContext.isUssDirectory(treeItem)).toBe(false);
+
+        // Favorited session without a filter must NOT be treated as a directory
+        treeItem.contextValue = Constants.USS_SESSION_CONTEXT + Constants.FAV_SUFFIX;
+        expect(SharedContext.isUssDirectory(treeItem)).toBe(false);
+    });
+
+    it("isUssDirectory returns false for a favorited filtered USS session node", () => {
+        // Favorited filter sessions carry _fav; they should not be treated as plain directories
+        treeItem.contextValue = Constants.USS_SESSION_CONTEXT + Constants.FAV_SUFFIX + "_" + Constants.FILTER_SEARCH;
+        expect(SharedContext.isUssDirectory(treeItem)).toBe(false);
+    });
+
     it("Test is dataset", () => {
         for (const ctx of testList) {
             treeItem.contextValue = ctx;
@@ -481,6 +512,36 @@ describe("Context helper tests", () => {
             SharedContext.getSessionType(treeItem);
         } catch (err) {
             expect(err.message).toEqual("Session node passed in does not have a type");
+        }
+    });
+
+    it("Test Favorite VSAM", () => {
+        for (const ctx of testList) {
+            treeItem.contextValue = ctx;
+            switch (ctx) {
+                case VSAM_FAV_CONTEXT:
+                    expect(SharedContext.isFavoriteVsam(treeItem)).toBe(true);
+                    expect(SharedContext.isVsam(treeItem)).toBe(true);
+                    break;
+                default:
+                    expect(SharedContext.isFavoriteVsam(treeItem)).toBe(false);
+            }
+        }
+    });
+
+    it("Test Non Favorite VSAM", () => {
+        for (const ctx of testList) {
+            treeItem.contextValue = ctx;
+            switch (ctx) {
+                case VSAM_CONTEXT:
+                    expect(SharedContext.isVsam(treeItem)).toBe(true);
+                    expect(SharedContext.isFavoriteVsam(treeItem)).toBe(false);
+                    break;
+                default:
+                    if (ctx !== VSAM_FAV_CONTEXT) {
+                        expect(SharedContext.isVsam(treeItem)).toBe(false);
+                    }
+            }
         }
     });
 });

@@ -36,7 +36,7 @@ class QuickPick {
 
     public async isNotInViewport(): Promise<boolean> {
         await this.findElement();
-        return !(await this.elem.isDisplayedInViewport());
+        return !(await this.elem.isDisplayed({ withinViewport: true }));
     }
 
     public async hasOptions(): Promise<boolean> {
@@ -51,6 +51,33 @@ class QuickPick {
 
     public async findItemByIndex(i: number): Promise<ChainablePromiseElement> {
         return this.elem.$(`.monaco-list-row[role="option"][data-index="${i}"]`);
+    }
+
+    /**
+     * Clicks the quick-pick row whose visible label text matches {@link label}.
+     *
+     * Tries the `.label-name` span first (avoids mismatches when the aria-label
+     * includes a description suffix), then falls back to an exact aria-label match
+     * via {@link findItem}.
+     */
+    public async selectItemByLabel(label: string): Promise<void> {
+        await browser.waitUntil(() => this.isClickable(), { timeout: 10000 });
+        await this.findElement();
+        const rows = await this.elem.$$('.monaco-list-row[role="option"]');
+        for (const row of rows) {
+            try {
+                const nameEl = await row.$(".label-name");
+                if ((await nameEl.getText()).trim() === label) {
+                    await row.click();
+                    return;
+                }
+            } catch {
+                // label-name span absent; fall through to aria-label match
+            }
+        }
+        const item = await this.findItem(label);
+        await item.waitForClickable({ timeout: 5000 });
+        await item.click();
     }
 }
 

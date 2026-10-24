@@ -9,8 +9,6 @@
  *
  */
 
-jest.mock("vscode");
-
 import * as vscode from "vscode";
 import { imperative } from "@zowe/zowe-explorer-api";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
@@ -20,19 +18,19 @@ import { IconUtils } from "../../../src/icons/IconUtils";
 
 describe("Checking icon generator's basics", () => {
     const setGlobalMocks = () => {
-        const createTreeView = jest.fn().mockReturnValue({ onDidCollapseElement: jest.fn() });
+        const createTreeView = vi.fn().mockReturnValue({ onDidCollapseElement: vi.fn() });
 
         Object.defineProperty(vscode.window, "createTreeView", { value: createTreeView });
         Object.defineProperty(ZoweLocalStorage, "globalState", {
             value: {
                 get: () => ({ persistence: true, favorites: [], history: [], sessions: ["zosmf"], searchHistory: [], fileHistory: [] }),
-                update: jest.fn(),
+                update: vi.fn(),
                 keys: () => [],
             },
             configurable: true,
         });
-        jest.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-            get: jest.fn(),
+        vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
+            get: vi.fn(),
         } as any);
     };
     const generateTestSessionNode = () => {
@@ -80,7 +78,7 @@ describe("Checking icon generator's basics", () => {
 
         expect(resultIcon).toBeDefined();
         expect(resultIcon.id).toBe(IconUtils.IconId.folder);
-        expect(resultIcon.path.dark).toContain("folder-closed.svg");
+        expect((resultIcon.path as { dark: vscode.Uri }).dark.fsPath).toContain("folder-closed.svg");
     });
     it("Testing that you can correctly get Derived Icon By Node", () => {
         const sessionNode = generateTestSessionNode();
@@ -90,7 +88,7 @@ describe("Checking icon generator's basics", () => {
 
         expect(resultIcon).toBeDefined();
         expect(resultIcon.id).toBe(IconUtils.IconId.folderOpen);
-        expect(resultIcon.path.dark).toContain("folder-open.svg");
+        expect((resultIcon.path as { dark: vscode.Uri }).dark.fsPath).toContain("folder-open.svg");
     });
     it("Testing that you can't get Icon using incorrect Node", () => {
         const randomNode = {};

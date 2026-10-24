@@ -43,6 +43,7 @@ Then("the user can set an existing filter on the profile", async function () {
     const actionButtons = await (await this.profileNode.find()).getActionButtons();
     const searchButton = actionButtons[actionButtons.length - 1];
     await searchButton.wait();
+    await searchButton.elem.waitForClickable({ timeout: 5000 });
     await searchButton.elem.click();
 
     await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());

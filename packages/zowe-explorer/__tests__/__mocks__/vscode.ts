@@ -284,6 +284,10 @@ export interface CancellationToken {
     onCancellationRequested: Event<any>;
 }
 
+export class TabInputText {
+    constructor(public uri: Uri) {}
+}
+
 export class CancellationTokenSource {
     token: CancellationToken = { isCancellationRequested: false } as any;
     cancel(): void {
@@ -709,23 +713,23 @@ export namespace window {
             busy: false,
             buttons: [],
             canSelectMany: false,
-            dispose: jest.fn(),
+            dispose: vi.fn(),
             enabled: true,
-            hide: jest.fn(),
+            hide: vi.fn(),
             ignoreFocusOut: false,
             items: [],
             matchOnDetail: false,
             matchOnDescription: false,
-            onDidAccept: jest.fn(),
-            onDidChangeActive: jest.fn(),
-            onDidChangeSelection: jest.fn(),
-            onDidChangeValue: jest.fn(),
-            onDidHide: jest.fn(),
-            onDidTriggerButton: jest.fn(),
-            onDidTriggerItemButton: jest.fn(),
+            onDidAccept: vi.fn(),
+            onDidChangeActive: vi.fn(),
+            onDidChangeSelection: vi.fn(),
+            onDidChangeValue: vi.fn(),
+            onDidHide: vi.fn(),
+            onDidTriggerButton: vi.fn(),
+            onDidTriggerItemButton: vi.fn(),
             placeholder: undefined,
             selectedItems: [],
-            show: jest.fn(),
+            show: vi.fn(),
             step: undefined,
             title: undefined,
             totalSteps: undefined,
@@ -814,11 +818,11 @@ export namespace window {
         options?: any
     ): any {
         return {
-            onDidDispose: jest.fn(),
+            onDidDispose: vi.fn(),
             webview: {
-                asWebviewUri: jest.fn(),
-                postMessage: jest.fn(),
-                onDidReceiveMessage: jest.fn(),
+                asWebviewUri: vi.fn(),
+                postMessage: vi.fn(),
+                onDidReceiveMessage: vi.fn(),
             },
         };
     }
@@ -856,6 +860,12 @@ export namespace window {
     export function createOutputChannel(name: string, languageId?: string): any {
         return {};
     }
+
+    export const tabGroups = {
+        onDidChangeTabs: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+        all: [] as any[],
+        close: vi.fn(),
+    };
 }
 
 export namespace languages {
@@ -1110,7 +1120,7 @@ export class EventEmitter<T> {
     /**
      * The event listeners can subscribe to.
      */
-    event: Event<T> = jest.fn().mockImplementation((listener) => {
+    event: Event<T> = vi.fn().mockImplementation((listener) => {
         this.subscribers.push(listener);
         return new Disposable(() => {
             const idx = this.subscribers.findIndex((v) => v === listener);
@@ -1387,7 +1397,7 @@ export enum FileSystemProviderErrorCode {
  * This class has factory methods for common error-cases, like `FileNotFound` when
  * a file or folder doesn't exist, use them like so: `throw vscode.FileSystemError.FileNotFound(someUri);`
  */
-export const { FileSystemError, Selection, Position, ThemeIcon, CodeLensProvider } = require("jest-mock-vscode").createVSCodeMock(jest);
+export const { FileSystemError, Selection, Position, ThemeIcon, CodeLensProvider } = require("jest-mock-vscode").createVSCodeMock(vi);
 
 /**
  * Namespace for dealing with the current workspace. A workspace is the representation
@@ -1430,7 +1440,7 @@ export namespace workspace {
          */
         readonly removed: readonly WorkspaceFolder[];
     }
-    export const onDidChangeWorkspaceFolders: Event<WorkspaceFoldersChangeEvent> = jest.fn();
+    export const onDidChangeWorkspaceFolders: Event<WorkspaceFoldersChangeEvent> = vi.fn();
 
     export function onDidCloseTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
     export function onDidOpenTextDocument<T>(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]) {}
@@ -1637,7 +1647,8 @@ export namespace workspace {
 
 // We need to do this since "delete" is a reserved keyword and cannot be defined as a function name.
 Object.defineProperty(workspace.fs, "delete", {
-    value: jest.fn(),
+    value: vi.fn(),
+    configurable: true,
 });
 
 export interface InputBoxOptions {
@@ -1651,43 +1662,56 @@ export interface TextDocument {
 export class Uri {
     private static _regexp = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
     public static file(path: string): Uri {
-        return Uri.parse(path);
+        const uri = Uri.parse(path);
+        uri.fsPath = path;
+        return uri;
     }
+
     public static parse(value: string, _strict?: boolean): Uri {
         const match = Uri._regexp.exec(value);
         if (!match) {
             return new Uri();
         }
 
+        // Safe decoding helper to prevent throwing on bad percent-encoding sequences
+        const safeDecode = (val: string | undefined): string => {
+            if (!val) return "";
+            try {
+                return decodeURIComponent(val);
+            } catch {
+                return val;
+            }
+        };
+
         return Uri.from({
-            scheme: match[2] || "",
-            authority: match[4] || "",
-            path: match[5] || "",
-            query: match[7] || "",
-            fragment: match[9] || "",
+            scheme: safeDecode(match[2]),
+            authority: safeDecode(match[4]),
+            path: safeDecode(match[5]),
+            query: safeDecode(match[7]),
+            fragment: safeDecode(match[9]),
         });
     }
 
     public with(change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): Uri {
         let newUri = Uri.from(this);
 
-        if (change.scheme) {
+        if (change.scheme != null) {
             newUri.scheme = change.scheme;
         }
 
-        if (change.authority) {
+        if (change.authority != null) {
             newUri.authority = change.authority;
         }
 
-        if (change.path) {
+        if (change.path != null) {
             newUri.path = change.path;
         }
 
-        if (change.query) {
+        if (change.query != null) {
             newUri.query = change.query;
         }
 
-        if (change.fragment) {
+        if (change.fragment != null) {
             newUri.fragment = change.fragment;
         }
 
@@ -1705,16 +1729,16 @@ export class Uri {
         if (components.path != null) {
             uri.path = components.path;
         }
-        if (components.scheme) {
+        if (components.scheme != null) {
             uri.scheme = components.scheme;
         }
-        if (components.authority) {
+        if (components.authority != null) {
             uri.authority = components.authority;
         }
-        if (components.query) {
+        if (components.query != null) {
             uri.query = components.query;
         }
-        if (components.fragment) {
+        if (components.fragment != null) {
             uri.fragment = components.fragment;
         }
         return uri;
@@ -1770,22 +1794,29 @@ export class Uri {
     fsPath: string;
 
     public toString(): string {
-        let result = this.scheme ? `${this.scheme}://` : "";
+        let result = this.scheme ? `${encodeURIComponent(this.scheme)}:` : "";
 
         if (this.authority) {
-            result += `${this.authority}`;
+            result += `//${encodeURIComponent(this.authority)}`;
         }
 
         if (this.path) {
-            result += `${this.path}`;
+            // Encode path segments while preserving directory slashes
+            const encodedPath = this.path
+                .split("/")
+                .map((segment) => encodeURIComponent(segment))
+                .join("/");
+
+            // Ensure paths without an authority retain leading slash correctly
+            result += encodedPath;
         }
 
         if (this.query) {
-            result += `?${this.query}`;
+            result += `?${encodeURIComponent(this.query)}`;
         }
 
         if (this.fragment) {
-            result += `#${this.fragment}`;
+            result += `#${encodeURIComponent(this.fragment)}`;
         }
 
         return result;

@@ -17,3 +17,7 @@ export class SshSession {
         return {};
     }
 }
+
+export class ZosUssProfile {
+    public static type = "ssh";
+}

@@ -1,7 +1,7 @@
 # Zowe Explorer
 
-[![version](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/v/Zowe.vscode-extension-for-zowe.svg)
-[![downloads](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)](https://img.shields.io/visual-studio-marketplace/d/Zowe.vscode-extension-for-zowe.svg)
+[![version](https://img.shields.io/open-vsx/v/Zowe/vscode-extension-for-zowe?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=Zowe.vscode-extension-for-zowe)
+[![downloads](https://img.shields.io/badge/downloads-233k-brightgreen)](https://marketplace.visualstudio.com/items?itemName=Zowe.vscode-extension-for-zowe)
 [![codecov](https://codecov.io/gh/zowe/zowe-explorer-vscode/branch/main/graph/badge.svg)](https://codecov.io/gh/zowe/zowe-explorer-vscode)
 [![slack](https://img.shields.io/badge/chat-on%20Slack-blue)](https://slack.openmainframeproject.org/)
 
@@ -24,11 +24,11 @@ Host-side prerequisites for connection:
 
 Zowe Explorer repository includes several folders with files that let you build and configure various aspects of the extension. The bulk of the Zowe Explorer source code is in the `packages` directory. The `packages` folder has the following structure:
 
-- `├──`[`packages`](./packages) — includes source code of Zowe Explorer, various Zowe Explorer-related extensions, and the extensibility API<br>
-  - `├──`[`eslint-plugin-zowe-explorer`](./packages/eslint-plugin-zowe-explorer) — includes necessary files to configure ESLint plug-in for Zowe Explorer
-  - `├──`[`zowe-explorer-api`](./packages/zowe-explorer-api) — includes files to set up and use Extensibility API for Explorer. The API has two modules: Profiles API and Tree API.
-  - `├──`[`zowe-explorer-ftp-extension`](./packages/zowe-explorer-ftp-extension) — includes files to set up and use the FTP extension for Zowe Explorer.
-  - `├──`[`zowe-explorer`](./packages/zowe-explorer) — core Zowe Explorer source files, ReadMe, Changelog, and more.
+- `├──`[`packages`](./packages) - includes source code of Zowe Explorer, various Zowe Explorer-related extensions, and the extensibility API<br>
+  - `├──`[`eslint-plugin-zowe-explorer`](./packages/eslint-plugin-zowe-explorer) - includes necessary files to configure ESLint plug-in for Zowe Explorer
+  - `├──`[`zowe-explorer-api`](./packages/zowe-explorer-api) - includes files to set up and use Extensibility API for Explorer. The API has two modules: Profiles API and Tree API.
+  - `├──`[`zowe-explorer-ftp-extension`](./packages/zowe-explorer-ftp-extension) - includes files to set up and use the FTP extension for Zowe Explorer.
+  - `├──`[`zowe-explorer`](./packages/zowe-explorer) - core Zowe Explorer source files, ReadMe, Changelog, and more.
 
 ## Build Locally
 
@@ -72,17 +72,17 @@ The current repository of the VS Code extension Zowe Explorer includes several R
 
 Use the following list with the description and links to find the topics of your interest:
 
-[Core Zowe Explorer ReadMe](https://github.com/zowe/zowe-explorer-vscode/blob/main/packages/zowe-explorer/README.md) — contains information about how to install, configure, and use Zowe Explorer. This ReadMe helps you to familiarize yourself with the basic features of the extension.
+[Core Zowe Explorer ReadMe](https://github.com/zowe/zowe-explorer-vscode/blob/main/packages/zowe-explorer/README.md) - contains information about how to install, configure, and use Zowe Explorer. This ReadMe helps you to familiarize yourself with the basic features of the extension.
 
-[Zowe Explorer ESlint Plug-in ReadMe](https://github.com/zowe/zowe-explorer-vscode/blob/main/packages/eslint-plugin-zowe-explorer/README.md) — contains information about how to install ESLint and configure ESLint rules. ESLint helps you to find and fix problems in your JavaScript code.
+[Zowe Explorer ESlint Plug-in ReadMe](https://github.com/zowe/zowe-explorer-vscode/blob/main/packages/eslint-plugin-zowe-explorer/README.md) - contains information about how to install ESLint and configure ESLint rules. ESLint helps you to find and fix problems in your JavaScript code.
 
-[Zowe Explorer Extensibility API ReadMe](https://github.com/zowe/zowe-explorer-vscode/blob/main/packages/zowe-explorer-api/README.md) — contains information about how to extend the capabilities of Zowe Explorer, using the extensibility API.
+[Zowe Explorer Extensibility API ReadMe](https://github.com/zowe/zowe-explorer-vscode/blob/main/packages/zowe-explorer-api/README.md) - contains information about how to extend the capabilities of Zowe Explorer, using the extensibility API.
 
-[Zowe Explorer FTP Extension ReadMe](https://github.com/zowe/zowe-explorer-vscode/blob/main/packages/zowe-explorer-ftp-extension/README.md) — contains information about how to install and use the Zowe Explorer extension for FTP. The extension adds the FTP protocol to Zowe Explorer, enabling you to use z/OS FTP Plug-in for Zowe CLI profiles to connect and interact with z/OS USS and MVS.
+[Zowe Explorer FTP Extension ReadMe](https://github.com/zowe/zowe-explorer-vscode/blob/main/packages/zowe-explorer-ftp-extension/README.md) - contains information about how to install and use the Zowe Explorer extension for FTP. The extension adds the FTP protocol to Zowe Explorer, enabling you to use z/OS FTP Plug-in for Zowe CLI profiles to connect and interact with z/OS USS and MVS.
 
 **Note**: Zowe Explorer FTP extension is an example that shows how the extensibility API is used to add new capabilities to Zowe Explorer.
 
-[Zowe Explorer Developer Setup](https://github.com/zowe/zowe-explorer-vscode/wiki/Developer-Setup) — contains information on how to install, build, and test Zowe Explorer.
+[Zowe Explorer Developer Setup](https://github.com/zowe/zowe-explorer-vscode/wiki/Developer-Setup) - contains information on how to install, build, and test Zowe Explorer.
 
 ## How to Contribute
 

@@ -1,11 +1,11 @@
 //! "Root" module containing all related logic for the `setup` command.
 
-use anyhow::bail;
+use anyhow::{bail, Context};
 use homedir::get_my_home;
 use owo_colors::OwoColorize;
 use std::{
     io::Write,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::{Command, Stdio},
 };
 use tokio::{fs::OpenOptions, io::AsyncWriteExt};
@@ -20,7 +20,9 @@ pub use cmd::handle_cmd;
 pub fn activate_pkg_mgr(pkg_mgr: &String) -> anyhow::Result<()> {
     match crate::pm::corepack().arg("enable").arg(pkg_mgr).output() {
         Ok(_) => {
-            println!("✔️  {} setup complete", pkg_mgr);
+            if crate::output::text_enabled() {
+                println!("✔️  {} setup complete", pkg_mgr);
+            }
         }
         Err(_) => {
             bail!(
@@ -41,7 +43,9 @@ pub async fn install_node() -> anyhow::Result<()> {
         .status()
     {
         Ok(_) => {
-            println!("✔️  Installed fnm");
+            if crate::output::text_enabled() {
+                println!("✔️  Installed fnm");
+            }
             // TODO: Look into updating this - would like to avoid updating shell profiles if needed
             let mut bashrc = OpenOptions::new()
                 .create(true)
@@ -77,11 +81,15 @@ pub async fn setup_node_with_pkg_mgr(pkg_mgr: &String) -> anyhow::Result<()> {
         Ok(out) => {
             let mut ver = String::from_utf8(out.stdout)?;
             crate::util::trim_newline(&mut ver);
-            println!("✔️  Found node {}", ver);
+            if crate::output::text_enabled() {
+                println!("✔️  Found node {}", ver);
+            }
             activate_pkg_mgr(pkg_mgr)?;
         }
         Err(_) => {
-            println!("\t❌ No Node.js installation found - installing...");
+            if crate::output::text_enabled() {
+                println!("\t❌ No Node.js installation found - installing...");
+            }
             install_node().await?;
             activate_pkg_mgr(pkg_mgr)?;
         }
@@ -106,9 +114,17 @@ pub async fn setup_pkg_mgr(ze_dir: PathBuf) -> anyhow::Result<String> {
         Ok(out) => {
             let mut ver = String::from_utf8(out.stdout)?;
             crate::util::trim_newline(&mut ver);
-            println!("✔️  Using {} {}", pkg_mgr, ver);
+            if crate::output::text_enabled() {
+                println!("✔️  Using {} {}", pkg_mgr, ver);
+            }
         }
         Err(_) => {
+            if crate::output::json_enabled() {
+                bail!(
+                    "{} was not found. Run `zedc setup` without `--json` to install it.",
+                    pkg_mgr
+                );
+            }
             // Package manager was not found, prompt for installation
             print!(
                 "❌ {} was not found. Would you like to install it? (y/N) ",
@@ -134,4 +150,43 @@ pub async fn setup_pkg_mgr(ze_dir: PathBuf) -> anyhow::Result<String> {
     }
 
     Ok(pkg_mgr)
+}
+
+/// Removes root and package-level `node_modules` folders before a fresh dependency install.
+pub async fn clean_node_modules(ze_dir: &Path) -> anyhow::Result<()> {
+    let mut dirs = Vec::new();
+    let root_node_modules = ze_dir.join("node_modules");
+    if tokio::fs::try_exists(&root_node_modules).await? {
+        dirs.push(root_node_modules);
+    }
+
+    let packages_dir = ze_dir.join("packages");
+    if tokio::fs::try_exists(&packages_dir).await? {
+        let mut entries = tokio::fs::read_dir(&packages_dir)
+            .await
+            .with_context(|| format!("Failed to read {}", packages_dir.display()))?;
+        while let Some(entry) = entries.next_entry().await? {
+            if entry.file_type().await?.is_dir() {
+                let node_modules = entry.path().join("node_modules");
+                if tokio::fs::try_exists(&node_modules).await? {
+                    dirs.push(node_modules);
+                }
+            }
+        }
+    }
+
+    if dirs.is_empty() {
+        return Ok(());
+    }
+
+    if crate::output::text_enabled() {
+        println!("🧹 Cleaning node_modules...");
+    }
+    for dir in dirs {
+        tokio::fs::remove_dir_all(&dir)
+            .await
+            .with_context(|| format!("Failed to remove {}", dir.display()))?;
+    }
+
+    Ok(())
 }

@@ -134,6 +134,11 @@ export namespace Gui {
      * @see vscode.window.showOpenDialog for more details
      */
     export function showOpenDialog(options?: vscode.OpenDialogOptions): Thenable<vscode.Uri[]> {
+        // Workaround for VS Code bug: If cached URI points to remote system
+        // but user is no longer connected to one, then dialog fails to open
+        if (vscode.env.remoteName == null && options?.defaultUri?.scheme === "vscode-remote") {
+            options.defaultUri = undefined;
+        }
         return vscode.window.showOpenDialog(options);
     }
 
