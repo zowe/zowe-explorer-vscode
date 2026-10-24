@@ -437,8 +437,8 @@ export class Profiles extends ProfilesCache {
     }
 
     /**
-     * Adds a new Profile to the provided treeview by clicking the 'Plus' button and
-     * selecting which profile you would like to add from the drop-down that appears.
+     * Shows a profile in the provided treeview by clicking the 'Plus' button and
+     * selecting which profile you would like to show from the drop-down that appears.
      * The profiles that are in the tree view already will not appear in the
      * drop-down.
      *
@@ -505,31 +505,31 @@ export class Profiles extends ProfilesCache {
         }
 
         const quickpick = Gui.createQuickPick();
-        let addProfilePlaceholder = "";
+        let showProfilePlaceholder = "";
         const createNewInstruction = vscode.l10n.t(
             "Select 'Create a New Team Configuration File' to define profiles, or 'Edit Team Configuration File' to update existing profiles"
         );
         switch (zoweFileProvider.getTreeType()) {
             case PersistenceSchemaEnum.Dataset:
-                addProfilePlaceholder = vscode.l10n.t({
-                    message: "{0}. Or select a profile to add to the DATA SETS tree.",
+                showProfilePlaceholder = vscode.l10n.t({
+                    message: "{0}. Or select a profile to show in the DATA SETS tree.",
                     args: [createNewInstruction],
-                    comment: ["Instruction for add profile quick pick"],
+                    comment: ["Instruction for show profile quick pick"],
                 });
                 break;
             case PersistenceSchemaEnum.Job:
-                addProfilePlaceholder = vscode.l10n.t({
-                    message: "{0}. Or select a profile to add to the JOBS tree.",
+                showProfilePlaceholder = vscode.l10n.t({
+                    message: "{0}. Or select a profile to show in the JOBS tree.",
                     args: [createNewInstruction],
-                    comment: ["Instruction for add profile quick pick"],
+                    comment: ["Instruction for show profile quick pick"],
                 });
                 break;
             default:
                 // Use USS View as default for placeholder text
-                addProfilePlaceholder = vscode.l10n.t({
-                    message: "{0}. Or select a profile to add to the USS tree.",
+                showProfilePlaceholder = vscode.l10n.t({
+                    message: "{0}. Or select a profile to show in the USS tree.",
                     args: [createNewInstruction],
-                    comment: ["Instruction for add profile quick pick"],
+                    comment: ["Instruction for show profile quick pick"],
                 });
         }
         if (allProfiles.length > 0) {
@@ -537,8 +537,8 @@ export class Profiles extends ProfilesCache {
         } else {
             quickpick.items = [configPick, ...items];
         }
-        quickpick.placeholder = addProfilePlaceholder;
-        quickpick.title = vscode.l10n.t("Add Profile to Tree");
+        quickpick.placeholder = showProfilePlaceholder;
+        quickpick.title = vscode.l10n.t("Show Profile in Tree");
         quickpick.ignoreFocusOut = true;
         quickpick.show();
         const choice = await Gui.resolveQuickPick(quickpick);
@@ -580,7 +580,7 @@ export class Profiles extends ProfilesCache {
         } else if (chosenProfile) {
             ZoweLogger.info(
                 vscode.l10n.t({
-                    message: `The profile {0} has been added to the {1} tree.`,
+                    message: `The profile {0} has been shown in the {1} tree.`,
                     args: [chosenProfile, treeType],
                     comment: ["chosen profile", "tree type"],
                 })

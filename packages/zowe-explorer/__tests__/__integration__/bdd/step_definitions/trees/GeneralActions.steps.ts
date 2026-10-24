@@ -71,7 +71,7 @@ When(/a user clicks the plus button in the (.*) view/, async (tree: string) => {
     }
     await pane.elem.moveTo();
 
-    const plusIcon = await pane.getAction(`Add Profile to ${tree} View`);
+    const plusIcon = await pane.getAction(`Show Profile in ${tree} View`);
     await expect(plusIcon).toBeDefined();
     await expect(plusIcon.elem).toBeClickable();
     await plusIcon.elem.click();

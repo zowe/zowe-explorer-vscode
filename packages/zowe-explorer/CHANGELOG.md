@@ -19,6 +19,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added `Created` and `Deleted` file change events for PDS members and USS resources that are added or removed on the mainframe outside of Zowe Explorer. [#4497](https://github.com/zowe/zowe-explorer-vscode/pull/4497)
 - Added a `Changed` event for the parent PDS or USS directory when one of its entries is created or deleted. [#4497](https://github.com/zowe/zowe-explorer-vscode/pull/4497)
 - Renamed the "Edit History" command to "Manage Saved Data". [#3804](https://github.com/zowe/zowe-explorer-vscode/issues/3804)
+- Updated tree view terminology from "Add Profile" to "Show Profile" to be consistent with "Hide Profile". [#3617](https://github.com/zowe/zowe-explorer-vscode/issues/3617)
 - Migrated webviews from the deprecated Webview UI Toolkit to VS Code Elements. [#3443](https://github.com/zowe/zowe-explorer-vscode/issues/3443)
 
 ### Bug fixes
